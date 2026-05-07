@@ -1,0 +1,115 @@
+import React from "react";
+import { MUIDataTableColumn } from "mui-datatables";
+import { Button, Link } from "@mui/material";
+import {
+    cellAlignOptions,
+    defaultOptionStandardDataTable,
+    formatDateString,
+    smallSizeFooter,
+} from "../../../../functionHelpers";
+import { StandardDataTable } from "../../../_common";
+import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
+import { useMonitorTable } from "../../hooks/Monitor/useMonitorTable";
+
+const MonitorTable: React.FC = () => {
+    const { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect } = useMonitorTable();
+
+    const columns: MUIDataTableColumn[] = [
+        {
+            name: "",
+            label: "",
+            options: {
+                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (_value, tableMeta) => (
+                    <Button
+                        variant="contained"
+                        size="small"
+                        sx={{ backgroundColor: "#02579B", minWidth: 60 }}
+                        onClick={() => handleSelect(tableMeta.rowIndex)}
+                    >
+                        เลือก
+                    </Button>
+                ),
+            },
+        },
+        {
+            name: "appId",
+            label: "AppID",
+            options: {
+                filter: false,
+                sort: false,
+                ...cellAlignOptions({ align: "center" }),
+                customBodyRender: (value) => (
+                    <Link
+                        href={`/checkeligible/detail/${btoa(value)}/${btoa(value)}`}
+                        target="_blank"
+                        underline="hover"
+                    >
+                        {value}
+                    </Link>
+                ),
+            },
+        },
+        {
+            name: "customerName",
+            label: "ชื่อผู้เอาประกัน",
+            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+        },
+        {
+            name: "productName",
+            label: "ผลิตภัณฑ์",
+            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+        },
+        {
+            name: "productCategoryName",
+            label: "แผน",
+            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+        },
+        {
+            name: "startCoverDate",
+            label: "วันที่เริ่มคุ้มครอง",
+            options: {
+                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => formatDateString(value?.toString(), "DD/MM/BBBB"),
+            },
+        },
+        {
+            name: "endCoverDate",
+            label: "วันที่สิ้นสุดความคุ้มครอง",
+            options: {
+                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => (value ? formatDateString(value?.toString(), "DD/MM/BBBB") : "-"),
+            },
+        },
+    ];
+
+    const options = {
+        ...defaultOptionStandardDataTable,
+        setRowProps: (_row: any, dataIndex: number) => ({
+            style: {
+                backgroundColor: dataIndex === selectedRowIndex ? "#EEF9FF" : undefined,
+            },
+        }),
+    };
+
+    return (
+        <LinearLoading isLoading={isLoading}>
+            <StandardDataTable
+                name="MonitorTable"
+                title=""
+                data={data || []}
+                isLoading={isLoading}
+                columns={columns}
+                color="primary"
+                columnHeaderAlign="center"
+                setPaginated={setPaginated}
+                paginated={paginated}
+                displayToolbar={false}
+                options={options}
+                sx={smallSizeFooter}
+            />
+        </LinearLoading>
+    );
+};
+
+export default MonitorTable;

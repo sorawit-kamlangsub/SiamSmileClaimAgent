@@ -1,15 +1,14 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Grid, Button } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import PolicyIcon from "@mui/icons-material/Policy";
 import AddCommentIcon from "@mui/icons-material/AddComment";
-import { ClaimType, setIsContinuousClaim } from "../../store/checkeligibleSlice";
+import { ClaimType } from "../../store/checkeligibleSlice";
 import useCheckEligibleToolbar from "../../hooks/CheckEligibleDetail/useCheckEligibleToolbar";
 import { FormikCheckbox, FormikDropdown } from "../../../_common";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
-import { useDispatch } from "react-redux";
 
 const CLAIM_TYPE_OPTIONS: { value: ClaimType; label: string }[] = [
     { value: "OPD", label: "OPD" },
@@ -21,11 +20,6 @@ const CLAIM_TYPE_OPTIONS: { value: ClaimType; label: string }[] = [
 
 const SearchToolbar: React.FC = () => {
     const { formik } = useCheckEligibleToolbar();
-    const dispatch = useDispatch();
-
-    useEffect(() => {
-        dispatch(setIsContinuousClaim(formik.values.isContinuous));
-    }, [formik.values.isContinuous]);
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -74,7 +68,9 @@ const SearchToolbar: React.FC = () => {
                         <Button
                             variant="contained"
                             startIcon={<AddCommentIcon />}
-                            onClick={() => {}}
+                            onClick={() => {
+                                window.open(`/claim/ph`, "_blank");
+                            }}
                             disabled={!formik.values.claimType}
                             size="medium"
                             fullWidth

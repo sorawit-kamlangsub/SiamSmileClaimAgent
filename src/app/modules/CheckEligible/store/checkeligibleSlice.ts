@@ -7,7 +7,7 @@ import { ToolbarFormValues } from "../hooks/CheckEligibleDetail/useCheckEligible
 export type ClaimType = "" | "OPD" | "IPD" | "DayCaseSurgery" | "DeathClaim" | "Dismemberment";
 
 export type CoverageBenefit = {
-    id: string;
+    id: number;
     icon: React.ReactNode;
     title: string;
     ratePerUnit?: string; // เช่น "700/วัน"
@@ -15,6 +15,7 @@ export type CoverageBenefit = {
     usedAmount: number; // วงเงินที่ใช้ไปแล้ว
     maxDays?: number; // จำนวนวันสูงสุด
     usedDays?: number; // จำนวนวันที่ใช้ไป
+    dayUnit?: string; // เช่น "วัน"
 };
 
 export type ContinuousClaimRow = {
@@ -74,6 +75,15 @@ const checkeligibleSlice = createSlice({
             state.isSearchCheckeLigibleDetails = true;
         },
 
+        resetSearchCheckeLigibleDetails: (state) => {
+            state.CheckeLigibleDetails = {
+                claimType: "",
+                incidentDate: undefined,
+                isContinuous: false,
+            };
+            state.isSearchCheckeLigibleDetails = false;
+        },
+
         setIsContinuousClaim: (state, action: PayloadAction<boolean>) => {
             state.isContinuousClaim = action.payload;
             if (!action.payload) state.selectedContinuousClaims = [];
@@ -94,6 +104,7 @@ export const {
     setSearchcheckeligibleMonitor,
     resetSearchcheckeligibleMonitor,
     setSearchCheckeLigibleDetails,
+    resetSearchCheckeLigibleDetails,
     setIsContinuousClaim,
     toggleContinuousClaimSelection,
 } = checkeligibleSlice.actions;

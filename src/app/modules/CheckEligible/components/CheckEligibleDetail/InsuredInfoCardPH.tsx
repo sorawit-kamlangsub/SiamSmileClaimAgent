@@ -7,6 +7,8 @@ import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
 import PinDropIcon from "@mui/icons-material/PinDrop";
 import WorkIcon from "@mui/icons-material/Work";
 import useCheckEligibleDetail, { InsuredInfo } from "../../hooks/CheckEligibleDetail/useCheckEligibleDetail";
+import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
+import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
 
 const PH_DETAIL_URL = "https://sssph.siamsmile.co.th/Modules/PH/frmPHDetail";
 
@@ -34,34 +36,13 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => (
     </Box>
 );
 
-const InsuredInfoCard: React.FC<Props> = ({ insured }) => {
+const InsuredInfoCardPH: React.FC<Props> = ({ insured }) => {
     const { policyAge, currentAge, birthDateThai, fullName } = useCheckEligibleDetail(insured);
 
     return (
-        <Box
-            sx={{
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
-                p: 2.5,
-                bgcolor: "#fff",
-                mb: 2,
-            }}
-        >
+        <CustomBox>
             {/* Header */}
-            <Box
-                sx={{
-                    bgcolor: "#e8f0fb",
-                    borderLeft: "4px solid #1a5da8",
-                    px: 2,
-                    py: 1,
-                    mb: 2,
-                    borderRadius: "0 4px 4px 0",
-                }}
-            >
-                <Typography variant="subtitle1" fontWeight={700} color="#1a5da8">
-                    ข้อมูลผู้เอาประกัน
-                </Typography>
-            </Box>
+            <HeadingWithColor text="ข้อมูลผู้เอาประกันภัย" color="blue" />
 
             {/* Application ID */}
             <Box display="flex" alignItems="center" gap={1} py={0.6} pl={0.5}>
@@ -101,8 +82,8 @@ const InsuredInfoCard: React.FC<Props> = ({ insured }) => {
             <InfoRow icon={<PhoneIphoneIcon fontSize="small" />} label="เบอร์มือถือ" value={insured.mobilePhone} />
             <InfoRow icon={<PinDropIcon fontSize="small" />} label="จังหวัด" value={insured.province} />
             <InfoRow icon={<WorkIcon fontSize="small" />} label="อาชีพ" value={insured.occupation} />
-        </Box>
+        </CustomBox>
     );
 };
 
-export default InsuredInfoCard;
+export default InsuredInfoCardPH;

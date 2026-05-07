@@ -1,5 +1,8 @@
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
 import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
+import ClaimPHPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHPage";
+import ClaimPHSummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHSummaryPage";
+import MonitorPage from "../modules/CreatedClaim/pages/Monitor/MonitorPage";
 import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
 
@@ -45,9 +48,23 @@ const Routes: RouteMapType[] = [
 
     // ===== แจ้งเคลม =====
     {
-        path: "/claim",
-        title: "แจ้งเคลม",
-        element: <BlankPage body="แจ้งเคลม" />,
+        path: "/monitor-claim",
+        title: "Monitor - แจ้งเคลม",
+        element: <MonitorPage />,
+        permissions: [],
+        condition: "AND",
+    },
+    {
+        path: "/claim/ph",
+        title: "แจ้งเคลม - PH",
+        element: <ClaimPHPage />,
+        permissions: [],
+        condition: "AND",
+    },
+    {
+        path: "/claim/ph/summary",
+        title: "แจ้งเคลม - PH",
+        element: <ClaimPHSummaryPage />,
         permissions: [],
         condition: "AND",
     },

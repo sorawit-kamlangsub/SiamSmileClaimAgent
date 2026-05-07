@@ -119,7 +119,7 @@ export const handleOnePointInputChange = (event: React.FormEvent<HTMLInputElemen
 
 export const setBankLogo = (bankId?: number): string | undefined => {
     let avatarSrc: string | undefined;
-    const basePath = "/imgs";
+    const basePath = "/imgs/bankLogos";
 
     switch (bankId) {
         case 3:
@@ -169,7 +169,38 @@ export const setBankLogo = (bankId?: number): string | undefined => {
             avatarSrc = `${basePath}/GHB_Logo.jpg`;
             break;
         default:
-            // Handle default case if needed
+            break;
+    }
+    return avatarSrc;
+};
+
+export const setBenefitIcons = (benefitId?: number): string | undefined => {
+    let avatarSrc: string | undefined;
+    const basePath = "/imgs/benefitIcons";
+
+    switch (benefitId) {
+        case 2:
+            avatarSrc = `${basePath}/Doctor.png`;
+            break;
+        case 3:
+            avatarSrc = `${basePath}/Heal.png`;
+            break;
+        case 4:
+            avatarSrc = `${basePath}/ICU.png`;
+            break;
+        case 5:
+            avatarSrc = `${basePath}/IPD.png`;
+            break;
+        case 6:
+            avatarSrc = `${basePath}/OPD_Accident.png`;
+            break;
+        case 7:
+            avatarSrc = `${basePath}/OPD_Health.png`;
+            break;
+        case 8:
+            avatarSrc = `${basePath}/OR.png`;
+            break;
+        default:
             break;
     }
     return avatarSrc;

@@ -1,17 +1,19 @@
 import { Box, Typography } from "@mui/material";
+import { ReactNode } from "react";
 
 type ColorKey = "blue" | "green" | "red" | "yellow" | "pink" | "orange";
 
 type HeadingWithColorProps = {
     text?: string;
     color?: ColorKey;
+    button?: ReactNode | undefined;
 };
 
 const backgroundColor: Record<ColorKey, string> = {
     blue: "#e8f0fb",
     green: "#F7FEE7",
     red: "#FEF2F2",
-    yellow: "#FEF9C2",
+    yellow: "#fdf6e3",
     pink: "#FCE7F3",
     orange: "#FFF1CD",
 };
@@ -20,28 +22,13 @@ export const colorLine: Record<ColorKey, string> = {
     blue: "#1a5da8",
     green: "#05DF72",
     red: "#FF6467",
-    yellow: "#FDC745",
+    yellow: "#c8a415",
     pink: "#FB64B6",
     orange: "#FF8904",
 };
 
-export const HeadingWithColor = ({ text, color = "blue" }: HeadingWithColorProps) => {
+export const HeadingWithColor = ({ text, color = "blue", button }: HeadingWithColorProps) => {
     return (
-        // <Grid
-        //     container
-        //     sx={{
-        //         backgroundColor: backgroundColor[color],
-        //         padding: "0.5rem",
-        //         marginBottom: "1rem",
-        //         borderLeft: "5px solid " + colorLine[color],
-        //     }}
-        // >
-        //     <Grid item>
-        //         <Typography fontWeight="bold" fontSize={18}>
-        //             {text}
-        //         </Typography>
-        //     </Grid>
-        // </Grid>
         <Box
             sx={{
                 bgcolor: backgroundColor[color],
@@ -50,11 +37,15 @@ export const HeadingWithColor = ({ text, color = "blue" }: HeadingWithColorProps
                 py: 1,
                 mb: 2,
                 borderRadius: "0 4px 4px 0",
+                justifyContent: "space-between",
+                display: "flex",
+                alignItems: "center",
             }}
         >
             <Typography variant="subtitle1" fontWeight={700} color={colorLine[color]}>
                 {text}
             </Typography>
+            {button && <Box ml={2}>{button}</Box>}
         </Box>
     );
 };

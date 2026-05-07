@@ -29,7 +29,9 @@ const CheckEligibleMonitorToolbar = ({}: Props) => {
                             startIcon={<FontAwesomeIcon style={{ fontSize: 13 }} icon="search" />}
                             size="medium"
                             fullWidth
-                            onClick={() => formik.submitForm()}
+                            onClick={() => {
+                                formik.submitForm();
+                            }}
                         >
                             ค้นหา
                         </Button>

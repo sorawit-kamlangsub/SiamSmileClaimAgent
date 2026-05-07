@@ -3,10 +3,9 @@ import React, { useEffect } from "react";
 import { APP_INFO } from "../../Const";
 import { useAppDispatch, useAppSelector } from "../../redux";
 import { MenuItem, ParentMenu, selectLayout, setDrawerOpen } from "../layout";
-import ShieldSearchIcon from "../modules/_common/components/ClaimAgent/CustomIcon/ShieldSearchIcon";
+import PolicyIcon from "@mui/icons-material/Policy";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import MonitorIcon from "@mui/icons-material/Monitor";
-
 
 export const ASideMenuList = () => {
     const layoutReducer = useAppSelector(selectLayout);
@@ -47,15 +46,11 @@ export const ASideMenuList = () => {
             <ASideMenuListContainer dense aria-labelledby="nested-list-subheader">
                 <ASideMenuListTopMenu />
                 <MenuItem path="/" icon="home" text="Home" permissions={[]} />
-                <MenuItem
-                    path="/checkeligible/monitor"
-                    icon={<ShieldSearchIcon color="write" />}
-                    text="ตรวจสอบสิทธิ์"
-                    permissions={[]}
-                />
-                <ParentMenu icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]}>
+                <MenuItem path="/checkeligible/monitor" icon={<PolicyIcon />} text="ตรวจสอบสิทธิ์" permissions={[]} />
+                {/* <ParentMenu icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
-                </ParentMenu>
+                </ParentMenu> */}
+                <MenuItem path="/monitor-claim" icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]} />
                 <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
                 </ParentMenu>

@@ -2,6 +2,8 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
 import { PersonalExclusionNote } from "../../hooks/CheckEligibleDetail/useCheckEligibleDetail";
+import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
+import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
 
 type Props = {
     notes: PersonalExclusionNote[];
@@ -9,30 +11,9 @@ type Props = {
 
 const PersonalExclusionCard: React.FC<Props> = ({ notes }) => {
     return (
-        <Box
-            sx={{
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
-                p: 2.5,
-                bgcolor: "#fff",
-                mb: 2,
-            }}
-        >
+        <CustomBox>
             {/* Header */}
-            <Box
-                sx={{
-                    bgcolor: "#fdf6e3",
-                    borderLeft: "4px solid #c8a415",
-                    px: 2,
-                    py: 1,
-                    mb: 2,
-                    borderRadius: "0 4px 4px 0",
-                }}
-            >
-                <Typography variant="subtitle1" fontWeight={700} color="#c8a415">
-                    เงื่อนไขข้อยกเว้นเฉพาะบุคคล
-                </Typography>
-            </Box>
+            <HeadingWithColor text="เงื่อนไขข้อยกเว้นเฉพาะบุคคล" color="yellow" />
 
             {/* Notes list */}
             {notes.length === 0 ? (
@@ -62,7 +43,7 @@ const PersonalExclusionCard: React.FC<Props> = ({ notes }) => {
                     </Box>
                 ))
             )}
-        </Box>
+        </CustomBox>
     );
 };
 
