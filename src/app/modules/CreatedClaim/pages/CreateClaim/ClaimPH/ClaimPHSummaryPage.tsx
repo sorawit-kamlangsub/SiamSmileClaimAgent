@@ -111,8 +111,6 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect }
     </Card>
 );
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
-
 const ClaimPHSummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();

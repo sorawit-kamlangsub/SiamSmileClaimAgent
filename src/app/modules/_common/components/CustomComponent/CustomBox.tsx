@@ -13,7 +13,7 @@ const CustomBox = ({ children, sx }: CustomBoxProps) => {
                 borderRadius: 2,
                 p: 2.5,
                 bgcolor: "#fff",
-                mb: 2,
+                mb: 1,
                 ...sx,
             }}
         >

@@ -1,3 +1,4 @@
+import { Outlet } from "react-router-dom";
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
 import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
 import ClaimPHPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHPage";
@@ -53,20 +54,28 @@ const Routes: RouteMapType[] = [
         element: <MonitorPage />,
         permissions: [],
         condition: "AND",
+        children: [],
     },
     {
-        path: "/claim/ph",
+        path: "claim/ph",
         title: "แจ้งเคลม - PH",
-        element: <ClaimPHPage />,
+        element: <Outlet />,
         permissions: [],
         condition: "AND",
-    },
-    {
-        path: "/claim/ph/summary",
-        title: "แจ้งเคลม - PH",
-        element: <ClaimPHSummaryPage />,
-        permissions: [],
-        condition: "AND",
+        children: [
+            {
+                index: true,
+                title: "แจ้งเคลม - PH",
+                element: <ClaimPHPage />,
+            },
+            {
+                path: "summary",
+                title: "สรุปรายการเคลม",
+                element: <ClaimPHSummaryPage />,
+                permissions: [],
+                condition: "AND",
+            },
+        ],
     },
 
     // ===== พิจารณาเคลม =====
@@ -80,4 +89,3 @@ const Routes: RouteMapType[] = [
 ];
 
 export default Routes;
-

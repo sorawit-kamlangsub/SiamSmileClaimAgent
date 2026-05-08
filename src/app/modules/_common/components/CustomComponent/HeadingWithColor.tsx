@@ -27,7 +27,7 @@ export const colorLine: Record<ColorKey, string> = {
     orange: "#FF8904",
 };
 
-export const HeadingWithColor = ({ text, color = "blue", button }: HeadingWithColorProps) => {
+export const HeadingWithColor = ({ text, color = "blue", button, ...sx }: HeadingWithColorProps) => {
     return (
         <Box
             sx={{
@@ -40,12 +40,13 @@ export const HeadingWithColor = ({ text, color = "blue", button }: HeadingWithCo
                 justifyContent: "space-between",
                 display: "flex",
                 alignItems: "center",
+                ...sx,
             }}
         >
             <Typography variant="subtitle1" fontWeight={700} color={colorLine[color]}>
                 {text}
             </Typography>
-            {button && <Box ml={2}>{button}</Box>}
+            {button && <Box>{button}</Box>}
         </Box>
     );
 };

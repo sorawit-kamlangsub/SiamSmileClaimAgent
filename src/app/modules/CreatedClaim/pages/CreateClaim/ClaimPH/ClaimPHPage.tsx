@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
-import { Grid, Typography } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
+    claimPHSelector,
     setBankAccounts,
     setContacts,
     setInsured,
@@ -19,10 +20,10 @@ import ClaimFormSection from "../../../components/CreateClaim/ClaimPH/ClaimFormS
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { isContinuous, oldClaim, insured } = useAppSelector((state) => state.claimph);
+    const { isContinuous, oldClaim, insured } = useAppSelector(claimPHSelector);
 
     useEffect(() => {
-        const continuous = true; // TODO: รับจาก router params หรือ state จาก Monitor
+        const continuous = true;
         dispatch(setIsContinuous(continuous));
         dispatch(setOldClaim(continuous ? mockOldClaim : null));
         dispatch(setInsured(mockInsuredPH));
@@ -48,8 +49,6 @@ const ClaimPHPage: React.FC = () => {
                     <OldClaimSection data={oldClaim} onToggleHidden={() => dispatch(toggleOldClaimHidden())} />
                 </Grid>
             )}
-
-            {/* บันทึกข้อมูลเคลม */}
             <Grid item xs={12}>
                 <ClaimFormSection onNext={() => navigate("/claim/ph/summary")} />
             </Grid>

@@ -13,7 +13,7 @@ export const CustomTypographyWithOutGrid = ({ label, value, color = "#007AC1" }:
     if (typeof value == "string" || typeof value == "undefined")
         return (
             <>
-                <Typography>{label} :</Typography>
+                <Typography color="text.secondary">{label} :</Typography>
                 {value != undefined && value.trim() !== "" ? (
                     <Typography style={detailStyle}>{value}</Typography>
                 ) : (
@@ -24,8 +24,8 @@ export const CustomTypographyWithOutGrid = ({ label, value, color = "#007AC1" }:
 
     return (
         <>
-            <Typography>{label} :</Typography>
-            <Typography>{value}</Typography>
+            <Typography color="text.secondary">{label} :</Typography>
+            <Typography style={detailStyle}>{value}</Typography>
         </>
     );
 };
