@@ -10,87 +10,72 @@ import {
     InputAdornment,
     Radio,
     RadioGroup,
-    TextField,
 } from "@mui/material";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { useClaimPHForm } from "../../../hooks/CreateClaim/ClaimPH/useClaimPHForm";
-import { FormikDropdown } from "../../../../_common";
+import { FormikDropdown, FormikTextField, FormikTextNumber, FormikAutocomplete } from "../../../../_common";
+import FormikDatePicker from "../../../../_common/components/CustomFormik/FormikDatePicker";
 
 interface Props {
     onNext: () => void;
 }
 
-const SimpleSelect = ({ label, value, onChange, options, error, helperText, disabled }: any) => (
-    <TextField
-        select
-        fullWidth
-        size="small"
-        label={label}
-        value={value}
-        onChange={onChange}
-        error={error}
-        helperText={helperText}
-        disabled={disabled}
-        SelectProps={{ native: true }}
-        InputLabelProps={{ shrink: true }}
-    >
-        <option value="">-- เลือก --</option>
-        {options.map((o: string) => (
-            <option key={o} value={o}>
-                {o}
-            </option>
-        ))}
-    </TextField>
-);
-
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
-    const { formik, isIncidentDateDisabled, lockedIncidentDate } = useClaimPHForm({ onNext });
+    const { formik, isIncidentDateDisabled } = useClaimPHForm({ onNext });
     const { values, errors, touched, setFieldValue } = formik;
 
     return (
         <>
             <CustomPaper>
                 <HeadingWithColor text="บันทึกข้อมูลเคลม" color="blue" />
-                <Box component="form" onSubmit={formik.handleSubmit}>
+                <Box component="form" onSubmit={formik.handleSubmit} p={2}>
                     <Grid container spacing={2}>
-                        {/* ผู้รับเอกสาร */}
-                        <Grid item xs={12} sm={6} md={4}>
-                            <FormikDropdown
-                                label="ผู้รับเอกสาร"
-                                // value={values.documentReceiver}
-                                // onChange={(e: any) => setFieldValue("documentReceiver", e.target.value)}
-                                // options={["ผู้ให้บริการ", "FCNT (สกลนคร)", "Pivot"]}
-                                // error={touched.documentReceiver && !!errors.documentReceiver}
-                                // helperText={touched.documentReceiver && errors.documentReceiver}
-                                formik={formik}
-                                name="documentReceiver"
-                                fullWidth
-                            />
-                        </Grid>
+                        <Grid item xs={12}>
+                            {/* ผู้รับเอกสาร */}
+                            <Grid item xs={12} sm={6} md={4} mb={1.5}>
+                                <FormikDropdown
+                                    label="ผู้รับเอกสาร"
+                                    data={[{ value: "ผู้ให้บริการ" }, { value: "FCNT (สกลนคร)" }, { value: "Pivot" }]}
+                                    firstItemText="-- เลือก --"
+                                    displayFieldName="value"
+                                    valueFieldName="value"
+                                    formik={formik}
+                                    name="documentReceiver"
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
 
-                        {/* ผู้ให้บริการ */}
-                        <Grid item xs={12} sm={6} md={4}>
-                            <SimpleSelect
-                                label="ผู้ให้บริการ *"
-                                value={values.serviceProvider}
-                                onChange={(e: any) => setFieldValue("serviceProvider", e.target.value)}
-                                options={["06590 - นางสาวมัญฑิตา โลวักษา"]}
-                                error={touched.serviceProvider && !!errors.serviceProvider}
-                                helperText={touched.serviceProvider && errors.serviceProvider}
-                            />
-                        </Grid>
+                            {/* ผู้ให้บริการ */}
+                            <Grid item xs={12} sm={6} md={4} mb={1.5}>
+                                <FormikDropdown
+                                    label="ผู้ให้บริการ"
+                                    data={[{ value: "06590 - นางสาวมัญฑิตา โลวักษา" }]}
+                                    firstItemText="-- เลือก --"
+                                    displayFieldName="value"
+                                    valueFieldName="value"
+                                    formik={formik}
+                                    name="serviceProvider"
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
 
-                        {/* เจ้าของรถ */}
-                        <Grid item xs={12} sm={6} md={4}>
-                            <SimpleSelect
-                                label="เจ้าของรถ *"
-                                value={values.carOwner}
-                                onChange={(e: any) => setFieldValue("carOwner", e.target.value)}
-                                options={["006 - 00000 - คุณสำนักงาน - (-)"]}
-                                error={touched.carOwner && !!errors.carOwner}
-                                helperText={touched.carOwner && errors.carOwner}
-                            />
+                            {/* เจ้าของรถ */}
+                            <Grid item xs={12} sm={6} md={4}>
+                                <FormikDropdown
+                                    label="เจ้าของรถ"
+                                    data={[{ value: "006 - 00000 - คุณสำนักงาน - (-)" }]}
+                                    firstItemText="-- เลือก --"
+                                    displayFieldName="value"
+                                    valueFieldName="value"
+                                    formik={formik}
+                                    name="carOwner"
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
                         </Grid>
 
                         {/* ลักษณะการเคลม */}
@@ -139,13 +124,13 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                                 }
                                                 label="ห้องปกติ"
                                             />
-                                            <TextField
+                                            <FormikTextField
+                                                name="normalNights"
+                                                label="จำนวนคืน"
+                                                formik={formik}
                                                 size="small"
                                                 type="number"
-                                                label="จำนวนคืน"
                                                 disabled={!values.normalRoom}
-                                                value={values.normalNights}
-                                                onChange={(e) => setFieldValue("normalNights", Number(e.target.value))}
                                                 inputProps={{ min: 0, step: 1 }}
                                                 sx={{ width: 120 }}
                                             />
@@ -161,13 +146,13 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                                 }
                                                 label="ห้อง ICU"
                                             />
-                                            <TextField
+                                            <FormikTextField
+                                                name="icuNights"
+                                                label="จำนวน ICU"
+                                                formik={formik}
                                                 size="small"
                                                 type="number"
-                                                label="จำนวน ICU"
                                                 disabled={!values.icuRoom}
-                                                value={values.icuNights}
-                                                onChange={(e) => setFieldValue("icuNights", Number(e.target.value))}
                                                 inputProps={{ min: 0, step: 1 }}
                                                 sx={{ width: 120 }}
                                             />
@@ -197,35 +182,29 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         </Grid>
 
                         {/* วันที่เกิดเหตุ */}
-                        <Grid item xs={12} sm={6} md={4}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                type="date"
-                                label="วันที่เกิดเหตุ *"
-                                InputLabelProps={{ shrink: true }}
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                            <FormikDatePicker
+                                name="incidentDate"
+                                label="วันที่เกิดเหตุ"
+                                formik={formik}
                                 disabled={isIncidentDateDisabled}
-                                value={isIncidentDateDisabled ? lockedIncidentDate : values.incidentDate}
-                                onChange={(e) => setFieldValue("incidentDate", e.target.value)}
-                                error={touched.incidentDate && !!errors.incidentDate}
-                                helperText={touched.incidentDate && errors.incidentDate}
+                                slotProps={{ textField: { size: "small" } }}
+                                required
                             />
                         </Grid>
 
                         {/* จำนวนเงิน */}
-                        <Grid item xs={12} sm={6} md={4}>
-                            <TextField
-                                fullWidth
-                                size="small"
+                        <Grid item xs={12} sm={6} md={4} lg={3}>
+                            <FormikTextNumber
+                                name="claimAmount"
                                 label="จำนวนเงิน"
-                                value={values.claimAmount}
-                                onChange={(e) => {
-                                    if (/^\d*\.?\d*$/.test(e.target.value))
-                                        setFieldValue("claimAmount", e.target.value);
-                                }}
+                                formik={formik}
+                                decimalScale={2}
+                                fixedDecimalScale
                                 InputProps={{
                                     endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
                                 }}
+                                required
                             />
                         </Grid>
 
@@ -245,40 +224,48 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             </RadioGroup>
                         </Grid>
 
+                        {/* อาการสำคัญ */}
                         {values.symptomType === "ระบุอาการ" && (
-                            <Grid item xs={12} sm={8} md={6}>
-                                <SimpleSelect
-                                    label="อาการสำคัญ *"
-                                    value={values.chiefComplain}
-                                    onChange={(e: any) => setFieldValue("chiefComplain", e.target.value)}
-                                    options={["โดนมาร์จรั่น", "ไข้หวัดใหญ่", "ประสงค์เบิกยาแก้ปวดหัว"]}
-                                    error={touched.chiefComplain && !!errors.chiefComplain}
-                                    helperText={touched.chiefComplain && errors.chiefComplain}
+                            <Grid item xs={12} sm={12} md={12} lg={9}>
+                                <FormikAutocomplete
+                                    name="chiefComplain"
+                                    label="อาการสำคัญ"
+                                    formik={formik}
+                                    data={[
+                                        { value: "โดนมาร์จรั่น" },
+                                        { value: "ไข้หวัดใหญ่" },
+                                        { value: "ประสงค์เบิกยาแก้ปวดหัว" },
+                                    ]}
+                                    valueFieldName="value"
+                                    displayFieldName="value"
+                                    size="small"
+                                    required
                                 />
                             </Grid>
                         )}
 
+                        {/* หมายเหตุ */}
                         {values.symptomType === "อื่นๆ" && (
-                            <Grid item xs={12} sm={8} md={6}>
-                                <TextField
-                                    fullWidth
+                            <Grid item xs={12} sm={12} md={12} lg={9}>
+                                <FormikTextField
+                                    name="remark"
+                                    label="หมายเหตุ"
+                                    formik={formik}
                                     size="small"
-                                    label="หมายเหตุ *"
                                     multiline
                                     rows={2}
-                                    value={values.remark}
-                                    onChange={(e) => setFieldValue("remark", e.target.value)}
-                                    error={touched.remark && !!errors.remark}
-                                    helperText={touched.remark && errors.remark}
+                                    fullWidth
+                                    required
                                 />
                             </Grid>
                         )}
                     </Grid>
                 </Box>
             </CustomPaper>
+
             <Grid item xs={12}>
                 <Box display="flex" justifyContent="flex-end" mb={5}>
-                    <Button type="submit" variant="contained" color="primary" size="medium">
+                    <Button variant="contained" color="primary" size="medium" onClick={() => formik.handleSubmit()}>
                         ถัดไป
                     </Button>
                 </Box>

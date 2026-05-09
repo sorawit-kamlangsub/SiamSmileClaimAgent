@@ -1,86 +1,17 @@
 import React from "react";
-import { Box, Button, Grid, Link } from "@mui/material";
-import AddCommentIcon from "@mui/icons-material/AddComment";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
-import { MUIDataTableColumn } from "mui-datatables";
-import {
-    cellAlignOptions,
-    defaultOptionStandardDataTable,
-    formatDateString,
-    smallSizeFooter,
-} from "../../../../functionHelpers";
-import { StandardDataTable } from "../../../_common";
-import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
+import { formatDateString } from "../../../../functionHelpers";
 import { useMonitorClaimHistory } from "../../hooks/Monitor/useMonitorClaimHistory";
-import { ClaimHistoryItem } from "../../store/monitorSlice";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
+import ClaimHistoryTable from "./ClaimHistoryTable";
+import { Box, Button, Grid, Link } from "@mui/material";
 
 const ClaimHistoryPH: React.FC = () => {
-    const { selectedPolicy, claimHistory, isLoading, paginated, setPaginated, handleContinuousClaim, handleNewClaim } =
-        useMonitorClaimHistory();
+    const { selectedPolicy, handleContinuousClaim, handleNewClaim } = useMonitorClaimHistory();
 
     if (!selectedPolicy) return null;
-
-    const columns: MUIDataTableColumn[] = [
-        {
-            name: "claimNo",
-            label: "ClaimNo",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
-        },
-        {
-            name: "chiefComplain",
-            label: "อาการสำคัญ(ChiefComplain)",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
-        },
-        {
-            name: "incidentDate",
-            label: "วันที่เกิดเหตุ",
-            options: {
-                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
-                customBodyRender: (value) => formatDateString(value?.toString(), "DD/MM/BBBB"),
-            },
-        },
-        {
-            name: "totalClaim",
-            label: "ยอดเบิกรวม",
-            options: {
-                ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
-                customBodyRender: (value) => Number(value).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
-            },
-        },
-        {
-            name: "totalPaid",
-            label: "ยอดจ่ายรวม",
-            options: {
-                ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
-                customBodyRender: (value) => Number(value).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
-            },
-        },
-        {
-            name: "",
-            label: "",
-            options: {
-                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const item: ClaimHistoryItem = claimHistory[tableMeta.rowIndex];
-                    return (
-                        <Button
-                            variant="contained"
-                            size="small"
-                            color="primary"
-                            startIcon={<AddCommentIcon />}
-                            onClick={() => handleContinuousClaim(item)}
-                            sx={{ whiteSpace: "nowrap" }}
-                        >
-                            แจ้งเคลมต่อเนื่อง
-                        </Button>
-                    );
-                },
-            },
-        },
-    ];
 
     return (
         <>
@@ -132,26 +63,7 @@ const ClaimHistoryPH: React.FC = () => {
                 </Grid>
             </CustomPaper>
             <CustomPaper>
-                <HeadingWithColor text="ประวัติการเคลม" color="blue" />
-                <LinearLoading isLoading={isLoading}>
-                    <StandardDataTable
-                        name="ClaimHistoryPHTable"
-                        title=""
-                        data={claimHistory || []}
-                        isLoading={isLoading}
-                        columns={columns}
-                        color="primary"
-                        columnHeaderAlign="center"
-                        setPaginated={setPaginated}
-                        paginated={paginated}
-                        displayToolbar={false}
-                        options={{
-                            ...defaultOptionStandardDataTable,
-                            textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
-                        }}
-                        sx={smallSizeFooter}
-                    />
-                </LinearLoading>
+                <ClaimHistoryTable tableId="ClaimHistoryPHTable" onContinuousClaim={handleContinuousClaim} />
                 <Box display="flex" justifyContent="flex-end" mt={2}>
                     <Button
                         variant="contained"

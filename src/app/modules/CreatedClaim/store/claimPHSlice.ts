@@ -1,5 +1,6 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
+import dayjs, { Dayjs } from "dayjs";
 
 export type ClaimType = "OPD" | "IPD" | "DayCaseSurgery" | "DeathClaim" | "LossOrDisability";
 export type OpdSubType = "โรคทั่วไป" | "อุบัติเหตุ";
@@ -39,7 +40,7 @@ export interface ClaimFormValues {
     normalNights: number;
     icuRoom: boolean;
     icuNights: number;
-    incidentDate: string;
+    incidentDate: Dayjs;
     claimAmount: string;
     symptomType: SymptomType;
     chiefComplain: string;
@@ -54,6 +55,7 @@ export interface BankAccount {
     accountNo: string;
     accountName: string;
     isDefault: boolean;
+    isFromMock?: boolean;
 }
 
 export interface ContactInfo {
@@ -62,6 +64,7 @@ export interface ContactInfo {
     phone: string;
     name: string;
     isDefault: boolean;
+    isFromMock?: boolean;
 }
 
 export interface InsuredInfoPH {
@@ -83,7 +86,7 @@ interface ClaimPHState {
 }
 
 const defaultForm: ClaimFormValues = {
-    documentReceiver: "ผู้ให้บริการ",
+    documentReceiver: "",
     serviceProvider: "",
     carOwner: "",
     claimType: "",
@@ -92,7 +95,7 @@ const defaultForm: ClaimFormValues = {
     normalNights: 0,
     icuRoom: false,
     icuNights: 0,
-    incidentDate: new Date().toISOString().split("T")[0],
+    incidentDate: dayjs(),
     claimAmount: "",
     symptomType: "ระบุอาการ",
     chiefComplain: "",
@@ -141,6 +144,27 @@ const claimPHSlice = createSlice({
             state.contacts = state.contacts.map((c) => ({ ...c, isDefault: false }));
             state.contacts.push({ ...action.payload, isDefault: true });
         },
+        // 2. เพิ่ม reducers ใน claimPHSlice (ใน reducers: { ... })
+        removeBankAccount(state, action: PayloadAction<string>) {
+            const idx = state.bankAccounts.findIndex((b) => b.id === action.payload);
+            if (idx === -1) return;
+            if (state.bankAccounts[idx].isFromMock) return; // mock ลบไม่ได้
+            const wasDefault = state.bankAccounts[idx].isDefault;
+            state.bankAccounts.splice(idx, 1);
+            if (wasDefault && state.bankAccounts.length > 0) {
+                state.bankAccounts[state.bankAccounts.length - 1].isDefault = true;
+            }
+        },
+        removeContact(state, action: PayloadAction<string>) {
+            const idx = state.contacts.findIndex((c) => c.id === action.payload);
+            if (idx === -1) return;
+            if (state.contacts[idx].isFromMock) return; // mock ลบไม่ได้
+            const wasDefault = state.contacts[idx].isDefault;
+            state.contacts.splice(idx, 1);
+            if (wasDefault && state.contacts.length > 0) {
+                state.contacts[state.contacts.length - 1].isDefault = true;
+            }
+        },
         setInsured(state, action: PayloadAction<InsuredInfoPH | null>) {
             state.insured = action.payload;
         },
@@ -157,6 +181,8 @@ export const {
     addBankAccount,
     setContacts,
     addContact,
+    removeBankAccount,
+    removeContact,
     setInsured,
 } = claimPHSlice.actions;
 

@@ -1,9 +1,22 @@
 import React from "react";
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, Grid, TextField, Typography } from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Grid,
+    IconButton,
+    Typography,
+} from "@mui/material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../../redux";
 import { addBankAccount } from "../../../store/claimPHSlice";
+import { FormikDropdown, FormikTextField } from "../../../../_common";
 
 interface Props {
     open: boolean;
@@ -21,7 +34,13 @@ const BANK_OPTIONS = [
     { id: 12, name: "ซีไอเอ็มบีไทย" },
 ];
 
-const RELATIONSHIP_OPTIONS = ["ผู้เอาประกัน", "ผู้ปกครอง", "สถานศึกษา", "ครูผู้ประสานงาน", "ผู้อำนวยการสถานศึกษา"];
+const RELATIONSHIP_OPTIONS = [
+    { name: "ผู้เอาประกัน" },
+    { name: "ผู้ปกครอง" },
+    { name: "สถานศึกษา" },
+    { name: "ครูผู้ประสานงาน" },
+    { name: "ผู้อำนวยการสถานศึกษา" },
+];
 
 const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
     const dispatch = useAppDispatch();
@@ -47,6 +66,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                     accountNo: values.accountNo,
                     accountName: values.accountName,
                     isDefault: false,
+                    isFromMock: false,
                 })
             );
             resetForm();
@@ -55,104 +75,125 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
     });
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} maxWidth="sm" fullWidth>
             <DialogTitle>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <AccountBalanceIcon color="primary" />
-                    <Typography fontWeight={700}>เพิ่มบัญชีรับสินไหม</Typography>
-                </Box>
+                <Grid container alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar sx={{ width: 40, height: 40, bgcolor: "#DCEFFC" }}>
+                            <AccountBalanceIcon sx={{ fontSize: 24, color: "primary.main" }} />
+                        </Avatar>
+                        <Typography fontWeight={700}>เพิ่มบัญชีรับสินไหม</Typography>
+                    </Box>
+                    <IconButton
+                        onClick={onClose}
+                        aria-label="close"
+                        size="small"
+                        sx={{
+                            bgcolor: "error.main",
+                            color: "common.white",
+                            width: 25,
+                            height: 25,
+                            "&:hover": { bgcolor: "error.dark" },
+                        }}
+                    >
+                        <CloseIcon sx={{ fontSize: 23 }} />
+                    </IconButton>
+                </Grid>
+                <Divider sx={{ mt: 1.5 }} />
             </DialogTitle>
             <DialogContent>
-                <Box component="form" onSubmit={formik.handleSubmit} pt={1}>
-                    <Grid container spacing={2}>
-                        <Grid item xs={12}>
-                            <TextField
-                                select
-                                fullWidth
-                                size="small"
-                                label="ความสัมพันธ์ *"
-                                name="relationship"
-                                value={formik.values.relationship}
-                                onChange={formik.handleChange}
-                                error={formik.touched.relationship && !!formik.errors.relationship}
-                                helperText={formik.touched.relationship && formik.errors.relationship}
-                                SelectProps={{ native: true }}
-                                InputLabelProps={{ shrink: true }}
-                            >
-                                <option value="">-- เลือก --</option>
-                                {RELATIONSHIP_OPTIONS.map((o) => (
-                                    <option key={o} value={o}>
-                                        {o}
-                                    </option>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                select
-                                fullWidth
-                                size="small"
-                                label="ธนาคาร *"
-                                name="bankId"
-                                value={formik.values.bankId}
-                                onChange={formik.handleChange}
-                                error={formik.touched.bankId && !!formik.errors.bankId}
-                                helperText={formik.touched.bankId && formik.errors.bankId}
-                                SelectProps={{ native: true }}
-                                InputLabelProps={{ shrink: true }}
-                            >
-                                <option value="">-- เลือก --</option>
-                                {BANK_OPTIONS.map((b) => (
-                                    <option key={b.id} value={b.id}>
-                                        {b.name}
-                                    </option>
-                                ))}
-                            </TextField>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="เลขที่บัญชี *"
-                                name="accountNo"
-                                value={formik.values.accountNo}
-                                onChange={(e) => {
-                                    if (/^\d*$/.test(e.target.value)) formik.handleChange(e);
-                                }}
-                                error={formik.touched.accountNo && !!formik.errors.accountNo}
-                                helperText={formik.touched.accountNo && formik.errors.accountNo}
-                                inputProps={{ maxLength: 15 }}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <TextField
-                                fullWidth
-                                size="small"
-                                label="ชื่อบัญชี *"
-                                name="accountName"
-                                value={formik.values.accountName}
-                                onChange={(e) => {
-                                    if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value)) formik.handleChange(e);
-                                }}
-                                error={formik.touched.accountName && !!formik.errors.accountName}
-                                helperText={formik.touched.accountName && formik.errors.accountName}
-                            />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Divider />
-                            <Typography variant="caption" color="text.secondary" mt={1} display="block">
-                                | กรุณาตรวจสอบข้อมูลบัญชีก่อนโอนเงิน
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Box display="flex" justifyContent="flex-end">
-                                <Button type="submit" variant="contained">
-                                    บันทึก
-                                </Button>
-                            </Box>
-                        </Grid>
+                <Grid container spacing={2}>
+                    {/* ความสัมพันธ์ */}
+                    <Grid item xs={12}>
+                        <FormikDropdown
+                            name="relationship"
+                            label="ความสัมพันธ์ *"
+                            formik={formik}
+                            data={RELATIONSHIP_OPTIONS}
+                            firstItemText="-- เลือก --"
+                            displayFieldName="name"
+                            valueFieldName="name"
+                            fullWidth
+                            size="small"
+                        />
                     </Grid>
-                </Box>
+
+                    {/* ธนาคาร */}
+                    <Grid item xs={12}>
+                        <FormikDropdown
+                            name="bankId"
+                            label="ธนาคาร *"
+                            formik={formik}
+                            data={BANK_OPTIONS}
+                            firstItemText="-- เลือก --"
+                            displayFieldName="name"
+                            valueFieldName="id"
+                            fullWidth
+                            size="small"
+                        />
+                    </Grid>
+
+                    {/* เลขที่บัญชี */}
+                    <Grid item xs={12}>
+                        <FormikTextField
+                            name="accountNo"
+                            label="เลขที่บัญชี *"
+                            formik={formik}
+                            size="small"
+                            inputProps={{ maxLength: 15 }}
+                            onChange={(e) => {
+                                if (/^\d*$/.test(e.target.value)) formik.setFieldValue("accountNo", e.target.value);
+                            }}
+                        />
+                    </Grid>
+
+                    {/* ชื่อบัญชี */}
+                    <Grid item xs={12}>
+                        <FormikTextField
+                            name="accountName"
+                            label="ชื่อบัญชี *"
+                            formik={formik}
+                            size="small"
+                            onChange={(e) => {
+                                if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value))
+                                    formik.setFieldValue("accountName", e.target.value);
+                            }}
+                        />
+                    </Grid>
+
+                    {/* Warning box */}
+                    <Grid item xs={12}>
+                        <Box
+                            sx={{
+                                bgcolor: "#fdf6e3",
+                                borderLeft: "4px solid #c8a415",
+                                px: 2,
+                                py: 1,
+                                mb: 2,
+                                mt: 2,
+                                borderRadius: "0 4px 4px 0",
+                                justifyContent: "center",
+                                display: "flex",
+                            }}
+                        >
+                            <Typography fontSize={15} fontWeight={700}>
+                                กรุณาตรวจสอบข้อมูลบัญชี
+                                <a href="#" style={{ color: "#f44336", textDecoration: "underline" }}>
+                                    ก่อนโอนเงิน
+                                </a>
+                            </Typography>
+                        </Box>
+                    </Grid>
+                </Grid>
+
+                {/* Submit button */}
+                <Grid container mt={1} display="flex" justifyContent="center">
+                    <Grid item xs={12} sm={6} md={3}>
+                        <Button variant="contained" onClick={() => formik.handleSubmit()} color="success" fullWidth>
+                            บันทึก
+                        </Button>
+                    </Grid>
+                </Grid>
             </DialogContent>
         </Dialog>
     );

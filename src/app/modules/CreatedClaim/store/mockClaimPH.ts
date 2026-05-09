@@ -51,6 +51,7 @@ export const mockBankAccounts: BankAccount[] = [
         accountNo: "5281337123",
         accountName: "นางสาวรัชขน สุวรรณโชค",
         isDefault: true,
+        isFromMock: true,
     },
 ];
 
@@ -61,5 +62,6 @@ export const mockContacts: ContactInfo[] = [
         phone: "081-2345678",
         name: "นางสาวรัชขน สุวรรณโชค",
         isDefault: true,
+        isFromMock: true,
     },
 ];

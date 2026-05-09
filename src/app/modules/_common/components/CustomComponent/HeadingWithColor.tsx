@@ -7,6 +7,7 @@ type HeadingWithColorProps = {
     text?: string;
     color?: ColorKey;
     button?: ReactNode | undefined;
+    sx?: Record<string, any>;
 };
 
 const backgroundColor: Record<ColorKey, string> = {
@@ -27,7 +28,7 @@ export const colorLine: Record<ColorKey, string> = {
     orange: "#FF8904",
 };
 
-export const HeadingWithColor = ({ text, color = "blue", button, ...sx }: HeadingWithColorProps) => {
+export const HeadingWithColor = ({ text, color = "blue", button, sx }: HeadingWithColorProps) => {
     return (
         <Box
             sx={{

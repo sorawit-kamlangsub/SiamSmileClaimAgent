@@ -1,7 +1,20 @@
 import React from "react";
-import { Box, Button, Dialog, DialogContent, DialogTitle, Divider, Typography } from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    Grid,
+    IconButton,
+    Typography,
+} from "@mui/material";
 import CommentIcon from "@mui/icons-material/Comment";
+import CloseIcon from "@mui/icons-material/Close";
 import { useAppSelector } from "../../../../../../redux";
+import { setBankLogo } from "../../../../../functionHelpers";
 
 interface Props {
     open: boolean;
@@ -10,52 +23,176 @@ interface Props {
 }
 
 const ConfirmTransferModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
-    const { form, bankAccounts, contacts } = useAppSelector((state) => state.claimph);
+    const { form, bankAccounts, contacts, insured } = useAppSelector((state) => state.claimph);
     const defaultBank = bankAccounts.find((b) => b.isDefault);
     const defaultContact = contacts.find((c) => c.isDefault);
-
-    const Row = ({ label, value }: { label: string; value: string }) => (
-        <Box display="flex" gap={1} py={0.3}>
-            <Typography variant="body2" color="text.secondary" minWidth={150}>
-                {label} :
-            </Typography>
-            <Typography variant="body2" fontWeight={700}>
-                {value || "-"}
-            </Typography>
-        </Box>
-    );
+    const logoSrc = setBankLogo(defaultBank?.bankId);
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
+        <Dialog open={open} maxWidth="sm" fullWidth>
             <DialogTitle>
-                <Box display="flex" alignItems="center" gap={1}>
-                    <CommentIcon color="primary" />
-                    <Typography fontWeight={700}>ยืนยันแจ้งโอนเงิน</Typography>
-                </Box>
+                <Grid container alignItems="center" justifyContent="space-between">
+                    <Box display="flex" alignItems="center" gap={1}>
+                        <Avatar sx={{ width: 40, height: 40, bgcolor: "#DCEFFC" }}>
+                            <CommentIcon sx={{ fontSize: 24, color: "primary.main" }} />
+                        </Avatar>
+                        <Typography fontWeight="bold" fontSize={18}>
+                            ยืนยันแจ้งโอนเงิน
+                        </Typography>
+                    </Box>
+                    <IconButton
+                        onClick={onClose}
+                        size="small"
+                        sx={{
+                            bgcolor: "error.main",
+                            color: "common.white",
+                            width: 25,
+                            height: 25,
+                            "&:hover": { bgcolor: "error.dark" },
+                        }}
+                    >
+                        <CloseIcon sx={{ fontSize: 23 }} />
+                    </IconButton>
+                </Grid>
+                <Divider sx={{ mt: 1.5 }} />
             </DialogTitle>
+
             <DialogContent>
-                <Box pt={1}>
-                    <Row label="เบอร์โทรติดต่อ" value={defaultContact?.phone ?? "-"} />
-                    <Row label="ธนาคาร" value={defaultBank?.bankName ?? "-"} />
-                    <Row label="เลขที่บัญชี" value={defaultBank?.accountNo ?? "-"} />
-                    <Row label="ชื่อบัญชี" value={defaultBank?.accountName ?? "-"} />
-                    <Row
-                        label="จำนวนเงินโอน"
-                        value={`${Number(form.claimAmount).toLocaleString("th-TH", { minimumFractionDigits: 2 })} บาท`}
-                    />
-                    <Divider sx={{ my: 1 }} />
-                    <Typography variant="caption" color="text.secondary">
-                        | กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการทำรายการ
-                    </Typography>
-                    <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
-                        <Button variant="outlined" onClick={onClose}>
-                            ยกเลิก
-                        </Button>
-                        <Button variant="contained" color="primary" onClick={onConfirm}>
+                <Grid container spacing={1.5}>
+                    {/* ชื่อลูกค้า */}
+                    <Grid item xs={12}>
+                        <Box display="flex" gap={1} alignItems="center">
+                            <Typography fontSize={15} color="text.secondary">
+                                ชื่อลูกค้า :
+                            </Typography>
+                            <Typography fontSize={15} fontWeight={700} color="primary">
+                                {insured?.customerName ?? "-"}
+                            </Typography>
+                        </Box>
+                    </Grid>
+
+                    {/* เบอร์โทรติดต่อ */}
+                    <Grid item xs={12}>
+                        <Box display="flex" gap={1} alignItems="center">
+                            <Typography fontSize={15} color="text.secondary">
+                                เบอร์โทรติดต่อ :
+                            </Typography>
+                            <Typography fontSize={15} fontWeight={700} color="primary">
+                                {defaultContact?.phone ?? "-"}
+                            </Typography>
+                        </Box>
+                    </Grid>
+
+                    {/* รายละเอียดบัญชีรับสินไหม */}
+                    <Grid item xs={12}>
+                        <Typography fontSize={15} color="text.secondary" mb={2}>
+                            รายละเอียดบัญชีรับสินไหม :
+                        </Typography>
+                        <Box
+                            sx={{
+                                bgcolor: "#f5f5f5",
+                                borderRadius: 2,
+                                p: 2,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 2,
+                            }}
+                        >
+                            <Avatar
+                                src={logoSrc ?? undefined}
+                                variant="circular"
+                                sx={{
+                                    width: 80,
+                                    height: 80,
+                                    bgcolor: logoSrc ? "transparent" : "#e3f2fd",
+                                    flexShrink: 0,
+                                }}
+                            >
+                                {!logoSrc && (
+                                    <Typography variant="caption" color="primary" fontWeight="bold">
+                                        {defaultBank?.bankName?.slice(0, 2) ?? ""}
+                                    </Typography>
+                                )}
+                            </Avatar>
+                            <Box>
+                                <Box display="flex" gap={1}>
+                                    <Typography fontSize={16} color="text.secondary" minWidth={90}>
+                                        ธนาคาร :
+                                    </Typography>
+                                    <Typography fontSize={16} fontWeight="bold">
+                                        {defaultBank?.bankName ?? "-"}
+                                    </Typography>
+                                </Box>
+                                <Box display="flex" gap={1}>
+                                    <Typography fontSize={16} color="text.secondary" minWidth={90}>
+                                        เลขที่บัญชี :
+                                    </Typography>
+                                    <Typography fontSize={16} fontWeight="bold">
+                                        {defaultBank?.accountNo ?? "-"}
+                                    </Typography>
+                                </Box>
+                                <Box display="flex" gap={1}>
+                                    <Typography fontSize={16} color="text.secondary" minWidth={90}>
+                                        ชื่อบัญชี :
+                                    </Typography>
+                                    <Typography fontSize={16} fontWeight="bold">
+                                        {defaultBank?.accountName ?? "-"}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Box>
+                    </Grid>
+
+                    {/* จำนวนเงินโอน */}
+                    <Grid item xs={12}>
+                        <Box textAlign="center" py={1}>
+                            <Typography fontSize={16} color="text.secondary" mb={0.5}>
+                                จำนวนเงินโอน
+                            </Typography>
+                            <Typography variant="h5" fontWeight="bold" color="primary">
+                                THB{" "}
+                                {Number(form.claimAmount).toLocaleString("th-TH", {
+                                    minimumFractionDigits: 2,
+                                })}
+                            </Typography>
+                        </Box>
+                    </Grid>
+
+                    {/* Warning box */}
+                    <Grid item xs={12}>
+                        <Box
+                            sx={{
+                                bgcolor: "#fdf6e3",
+                                borderLeft: "4px solid #c8a415",
+                                px: 2,
+                                py: 1,
+                                borderRadius: "0 4px 4px 0",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Typography fontSize={15} color="#c8a415">
+                                กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการทำรายการ
+                            </Typography>
+                        </Box>
+                    </Grid>
+                </Grid>
+                <Grid container justifyContent="center" alignItems="center" mt={2}>
+                    {/* ปุ่มยืนยัน */}
+                    <Grid item xs={12} sm={6} md={4}>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            fullWidth
+                            size="medium"
+                            onClick={onConfirm}
+                            sx={{ mt: 1 }}
+                        >
                             ยืนยันแจ้งโอนเงิน
                         </Button>
-                    </Box>
-                </Box>
+                    </Grid>
+                </Grid>
             </DialogContent>
         </Dialog>
     );
