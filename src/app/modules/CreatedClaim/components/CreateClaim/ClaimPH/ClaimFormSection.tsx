@@ -1,8 +1,10 @@
 import React from "react";
 import {
+    Backdrop,
     Box,
     Button,
     Checkbox,
+    CircularProgress,
     FormControlLabel,
     FormHelperText,
     FormLabel,
@@ -24,9 +26,19 @@ interface Props {
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const { formik, isIncidentDateDisabled } = useClaimPHForm({ onNext });
     const { values, errors, touched, setFieldValue } = formik;
-
+    const handleSubmit = async () => {
+        const errs = await formik.validateForm();
+        if (Object.keys(errs).length > 0) {
+            formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            return;
+        }
+        formik.submitForm();
+    };
     return (
         <>
+            <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
+                <CircularProgress color="inherit" />
+            </Backdrop>
             <CustomPaper>
                 <HeadingWithColor text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" onSubmit={formik.handleSubmit} p={2}>
@@ -265,7 +277,13 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
 
             <Grid item xs={12}>
                 <Box display="flex" justifyContent="flex-end" mb={5}>
-                    <Button variant="contained" color="primary" size="medium" onClick={() => formik.handleSubmit()}>
+                    <Button
+                        variant="contained"
+                        color="primary"
+                        size="medium"
+                        disabled={formik.isSubmitting}
+                        onClick={handleSubmit}
+                    >
                         ถัดไป
                     </Button>
                 </Box>

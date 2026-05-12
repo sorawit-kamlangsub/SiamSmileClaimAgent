@@ -1,4 +1,9 @@
 import { OldClaimInfo, BankAccount, ContactInfo, InsuredInfoPH } from "../store/claimPHSlice";
+import { InsuredInfoPA, SchoolInfo, ClaimInsuredItem } from "../store/claimPASlice";
+
+// ─────────────────────────────────────────────
+// PH Mock Data
+// ─────────────────────────────────────────────
 
 export const mockInsuredPH: InsuredInfoPH = {
     appId: "0003067",
@@ -63,5 +68,82 @@ export const mockContacts: ContactInfo[] = [
         name: "นางสาวรัชขน สุวรรณโชค",
         isDefault: true,
         isFromMock: true,
+    },
+];
+
+// ─────────────────────────────────────────────
+// PA Mock Data
+// ─────────────────────────────────────────────
+
+export const mockInsuredPA: InsuredInfoPA = {
+    appId: "69360005",
+    prefix: "ด.ช.",
+    firstName: "ธุรยากาล",
+    lastName: "พรทากุล",
+    customerName: "ด.ช.ธุรยากาล พรทากุล",
+    nationalId: "2620481791269",
+    passport: "",
+    plan: "เลือกที่",
+    startCoverDate: "2026-01-01",
+    effectiveDate: "2026-01-01",
+    endCoverDate: "2026-01-12",
+    insuredType: "นักเรียน",
+    schoolName: "ศูนย์เด็กเล็กวัดลาดใหญ่เมือง กรมขนามัย",
+};
+
+export const mockSchoolPA: SchoolInfo = {
+    appId: "69360005",
+    schoolName: "ศูนย์เด็กเล็กวัดลาดใหญ่เมือง กรมขนามัย",
+    teacherName: "นายปกรินทร์ พงศ์โกษาล",
+    teacherPhone: "091-2233444",
+    teacherBank: "กรุงไทย",
+    teacherAccountNo: "1821000111",
+    teacherAccountName: "นายปกรินทร์ พงศ์โกษาล",
+};
+
+export const mockBankAccountsPA: BankAccount[] = [
+    {
+        id: "pa-bank-1",
+        relationship: "ครูผู้ประสานงาน",
+        bankId: 3,
+        bankName: "กรุงไทย",
+        accountNo: "1821000111",
+        accountName: "นายปกรินทร์ พงศ์โกษาล",
+        isDefault: true,
+        isFromMock: true,
+    },
+];
+
+export const mockContactsPA: ContactInfo[] = [
+    {
+        id: "pa-contact-1",
+        relationship: "ครูผู้ประสานงาน",
+        phone: "091-2233444",
+        name: "นายปกรินทร์ พงศ์โกษาล",
+        isDefault: true,
+        isFromMock: true,
+    },
+];
+
+export const mockClaimItemsPA: ClaimInsuredItem[] = [
+    {
+        id: "pa-item-1",
+        appId: "69360005",
+        seq: 1,
+        customerName: "ด.ช.ธุรยากาล พรทากุล",
+        insuredType: "นักเรียน",
+        claimType: "OPD",
+        opdSubType: "ค่ารักษา", // ← ตรงกับ type แล้ว
+        claimAmount: 1250,
+    },
+    {
+        id: "pa-item-2",
+        appId: "69360005",
+        seq: 2,
+        customerName: "ด.ญ.วิจิตรัน อุตมกัตถ์",
+        insuredType: "นักเรียน",
+        claimType: "OPD",
+        opdSubType: "ค่าชดเชย", // ← ตรงกับ type แล้ว
+        claimAmount: 300,
     },
 ];

@@ -34,7 +34,7 @@ export const useMonitorClaimHistory = () => {
 
     const handleNewClaim = (productTypeId: number) => {
         if (productTypeId === 1) {
-            console.log("แจ้งเคลมใหม่สำหรับ PA");
+            window.open(`claim/pa`, "_blank");
         } else if (productTypeId === 2) {
             window.open(`claim/ph`, "_blank");
         }

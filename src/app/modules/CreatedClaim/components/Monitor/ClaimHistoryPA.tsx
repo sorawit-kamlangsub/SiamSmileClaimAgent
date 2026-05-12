@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import { Box, Button, Grid, Link } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { formatDateString } from "../../../../functionHelpers";
@@ -8,6 +8,11 @@ import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomC
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import ClaimHistoryTable from "./ClaimHistoryTable";
 
+const Field = ({ label, value }: { label: string; value: ReactNode | undefined }) => (
+    <Grid item xs={12} sm={6} md={4}>
+        <CustomTypographyWithOutGrid label={label} value={value} />
+    </Grid>
+);
 const ClaimHistoryPA: React.FC = () => {
     const { selectedPolicy, handleNewClaim, handleContinuousClaim } = useMonitorClaimHistory();
 
@@ -18,64 +23,47 @@ const ClaimHistoryPA: React.FC = () => {
             <CustomPaper>
                 <HeadingWithColor text="ข้อมูลกรมธรรม์" color="blue" />
                 <Grid container spacing={2} mb={2} ml={1.5}>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid
-                            label="ApplicationID"
-                            value={
-                                <Link
-                                    href={`/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(
-                                        selectedPolicy.appId
-                                    )}`}
-                                    target="_blank"
-                                    fontWeight={700}
-                                    fontSize={16}
-                                >
-                                    {selectedPolicy.appId}
-                                </Link>
-                            }
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid label="ชื่อผู้เอาประกัน" value={selectedPolicy.customerName} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid label="เลขบัตรประชาชน" value={selectedPolicy.nationalId} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid label="สถานศึกษา" value={selectedPolicy.schoolName} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid label="ประเภทผู้เอาประกัน" value={selectedPolicy.insuredType} />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid
-                            label="วันที่เริ่มคุ้มครอง"
-                            value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB") as string}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid
-                            label="วันที่มีผลคุ้มครอง"
-                            value={
-                                selectedPolicy.effectiveCoverDate
-                                    ? (formatDateString(selectedPolicy.effectiveCoverDate, "DD/MM/BBBB") as string)
-                                    : undefined
-                            }
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6} md={4}>
-                        <CustomTypographyWithOutGrid
-                            label="วันที่สิ้นสุดความคุ้มครอง"
-                            value={
-                                selectedPolicy.endCoverDate
-                                    ? (formatDateString(selectedPolicy.endCoverDate, "DD/MM/BBBB") as string)
-                                    : undefined
-                            }
-                        />
-                    </Grid>
+                    <Field
+                        label="ApplicationID"
+                        value={
+                            <Link
+                                href={`/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(
+                                    selectedPolicy.appId
+                                )}`}
+                                target="_blank"
+                                fontWeight={700}
+                                fontSize={16}
+                            >
+                                {selectedPolicy.appId}
+                            </Link>
+                        }
+                    />
+
+                    <Field label="ชื่อผู้เอาประกัน" value={selectedPolicy.customerName} />
+                    <Field label="เลขบัตรประชาชน" value={selectedPolicy.nationalId} />
+                    <Field label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
+                    <Field label="สถานศึกษา" value={selectedPolicy.schoolName} />
+                    <Field label="ประเภทผู้เอาประกัน" value={selectedPolicy.insuredType} />
+                    <Field
+                        label="วันที่เริ่มคุ้มครอง"
+                        value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB") as string}
+                    />
+                    <Field
+                        label="วันที่มีผลคุ้มครอง"
+                        value={
+                            selectedPolicy.effectiveCoverDate
+                                ? (formatDateString(selectedPolicy.effectiveCoverDate, "DD/MM/BBBB") as string)
+                                : undefined
+                        }
+                    />
+                    <Field
+                        label="วันที่สิ้นสุดความคุ้มครอง"
+                        value={
+                            selectedPolicy.endCoverDate
+                                ? (formatDateString(selectedPolicy.endCoverDate, "DD/MM/BBBB") as string)
+                                : undefined
+                        }
+                    />
                 </Grid>
             </CustomPaper>
             <CustomPaper>

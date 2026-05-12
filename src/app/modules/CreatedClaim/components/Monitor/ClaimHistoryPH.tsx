@@ -1,4 +1,4 @@
-import React from "react";
+import React, { ReactNode } from "react";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { formatDateString } from "../../../../functionHelpers";
 import { useMonitorClaimHistory } from "../../hooks/Monitor/useMonitorClaimHistory";
@@ -7,6 +7,12 @@ import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
 import ClaimHistoryTable from "./ClaimHistoryTable";
 import { Box, Button, Grid, Link } from "@mui/material";
+
+const Field = ({ label, value }: { label: string; value: ReactNode | undefined }) => (
+    <Grid item xs={12} sm={6} md={4}>
+        <CustomTypographyWithOutGrid label={label} value={value} />
+    </Grid>
+);
 
 const ClaimHistoryPH: React.FC = () => {
     const { selectedPolicy, handleContinuousClaim, handleNewClaim } = useMonitorClaimHistory();
@@ -18,48 +24,36 @@ const ClaimHistoryPH: React.FC = () => {
             <CustomPaper>
                 <HeadingWithColor text="ข้อมูลกรมธรรม์" color="blue" />
                 <Grid container spacing={2} alignItems="center" ml={1.5}>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <CustomTypographyWithOutGrid
-                            label="ApplicationID"
-                            value={
-                                <Link
-                                    href={`/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(
-                                        selectedPolicy.appId
-                                    )}`}
-                                    target="_blank"
-                                    fontWeight={700}
-                                    fontSize={16}
-                                >
-                                    {selectedPolicy.appId}
-                                </Link>
-                            }
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <CustomTypographyWithOutGrid label="ชื่อผู้เอาประกัน" value={selectedPolicy.customerName} />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <CustomTypographyWithOutGrid label="เลขบัตรประชาชน" value={selectedPolicy.nationalId} />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <CustomTypographyWithOutGrid label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <CustomTypographyWithOutGrid
-                            label="วันที่เริ่มคุ้มครอง"
-                            value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB")}
-                        />
-                    </Grid>
-                    <Grid item xs={12} md={6} lg={4}>
-                        <CustomTypographyWithOutGrid
-                            label="วันที่สิ้นสุดความคุ้มครอง"
-                            value={
-                                selectedPolicy.endCoverDate
-                                    ? formatDateString(selectedPolicy.endCoverDate, "DD/MM/BBBB")
-                                    : undefined
-                            }
-                        />
-                    </Grid>
+                    <Field
+                        label="ApplicationID"
+                        value={
+                            <Link
+                                href={`/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(
+                                    selectedPolicy.appId
+                                )}`}
+                                target="_blank"
+                                fontWeight={700}
+                                fontSize={16}
+                            >
+                                {selectedPolicy.appId}
+                            </Link>
+                        }
+                    />
+                    <Field label="ชื่อผู้เอาประกัน" value={selectedPolicy.customerName} />
+                    <Field label="เลขบัตรประชาชน" value={selectedPolicy.nationalId} />
+                    <Field label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
+                    <Field
+                        label="วันที่เริ่มคุ้มครอง"
+                        value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB")}
+                    />
+                    <Field
+                        label="วันที่สิ้นสุดความคุ้มครอง"
+                        value={
+                            selectedPolicy.endCoverDate
+                                ? formatDateString(selectedPolicy.endCoverDate, "DD/MM/BBBB")
+                                : undefined
+                        }
+                    />
                 </Grid>
             </CustomPaper>
             <CustomPaper>

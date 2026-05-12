@@ -17,10 +17,10 @@ import CustomPaper from "../../../../_common/components/CustomComponent/CustomPa
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import AddBankAccountModal from "../../../components/CreateClaim/ClaimPH/AddBankAccountModal";
 import AddContactModal from "../../../components/CreateClaim/ClaimPH/AddContactModal";
-import ConfirmTransferModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferModal";
 import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import CloseIcon from "@mui/icons-material/Close";
+import ConfirmTransferPHModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferPHModal";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
@@ -45,7 +45,7 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                 p: 1,
                 ml: { sm: 2 },
                 maxWidth: { lg: 450 },
-                width: "100%", 
+                width: "100%",
                 position: "relative",
             }}
         >
@@ -129,6 +129,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
             borderWidth: selected ? 2 : 1,
             transition: "border-color 0.2s",
             maxWidth: { lg: 450 },
+            minHeight: 139,
             width: "100%",
             p: 1,
             position: "relative",
@@ -325,7 +326,11 @@ const ClaimPHSummaryPage: React.FC = () => {
             {/* ── Modals ── */}
             <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} />
             <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
-            <ConfirmTransferModal open={openConfirm} onClose={() => setOpenConfirm(false)} onConfirm={handleConfirm} />
+            <ConfirmTransferPHModal
+                open={openConfirm}
+                onClose={() => setOpenConfirm(false)}
+                onConfirm={handleConfirm}
+            />
         </Grid>
     );
 };

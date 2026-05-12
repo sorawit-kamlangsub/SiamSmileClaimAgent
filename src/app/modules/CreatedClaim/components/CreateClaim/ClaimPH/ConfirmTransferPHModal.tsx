@@ -22,7 +22,7 @@ interface Props {
     onConfirm: () => void;
 }
 
-const ConfirmTransferModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
+const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
     const { form, bankAccounts, contacts, insured } = useAppSelector((state) => state.claimph);
     const defaultBank = bankAccounts.find((b) => b.isDefault);
     const defaultContact = contacts.find((c) => c.isDefault);
@@ -172,7 +172,7 @@ const ConfirmTransferModal: React.FC<Props> = ({ open, onClose, onConfirm }) => 
                                 justifyContent: "center",
                             }}
                         >
-                            <Typography fontSize={15} color="#c8a415">
+                            <Typography fontSize={15} fontWeight="bold" color="#c8a415">
                                 กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการทำรายการ
                             </Typography>
                         </Box>
@@ -180,7 +180,7 @@ const ConfirmTransferModal: React.FC<Props> = ({ open, onClose, onConfirm }) => 
                 </Grid>
                 <Grid container justifyContent="center" alignItems="center" mt={2}>
                     {/* ปุ่มยืนยัน */}
-                    <Grid item xs={12} sm={6} md={4}>
+                    <Grid item xs={12} sm={6} md={4} lg={3}>
                         <Button
                             variant="contained"
                             color="success"
@@ -198,4 +198,4 @@ const ConfirmTransferModal: React.FC<Props> = ({ open, onClose, onConfirm }) => 
     );
 };
 
-export default ConfirmTransferModal;
+export default ConfirmTransferPHModal;
