@@ -21,6 +21,7 @@ import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSu
 import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmTransferPHModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferPHModal";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
@@ -306,11 +307,12 @@ const ClaimPHSummaryPage: React.FC = () => {
                 <Box display="flex" justifyContent="space-between">
                     <Button
                         variant="outlined"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={() => navigate(-1)}
                         sx={{ bgcolor: "#fff" }}
                         size="medium"
-                        onClick={() => navigate("/claim/ph")}
                     >
-                        กลับ
+                        ย้อนกลับ
                     </Button>
                     <Button
                         variant="contained"

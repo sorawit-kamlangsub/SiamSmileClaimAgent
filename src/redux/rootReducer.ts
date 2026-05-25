@@ -5,6 +5,7 @@ import checkeligibleSlice from "../app/modules/CheckEligible/store/checkeligible
 import monitorSlice from "../app/modules/CreatedClaim/store/monitorSlice";
 import claimPHSlice from "../app/modules/CreatedClaim/store/claimPHSlice";
 import claimPASlice from "../app/modules/CreatedClaim/store/claimPASlice";
+import claimLineSlice from "../app/modules/CreatedClaim/store/claimLineSlice";
 
 export const rootReducer = combineReducers({
     layout: persistReducer(persistConfig, layoutSlice),
@@ -12,5 +13,5 @@ export const rootReducer = combineReducers({
     monitorcreatedclaim: monitorSlice, // store ของโมดูลติดตามเคลม (ใช้ state ร่วมกับ checkeligible)
     claimph: claimPHSlice, // store ของโมดูลสร้างเคลม
     claimpa: claimPASlice, // store ของโมดูลสร้างเคลม (ใช้ state ร่วมกับ claimph)
+    claimline: claimLineSlice,
 });
-

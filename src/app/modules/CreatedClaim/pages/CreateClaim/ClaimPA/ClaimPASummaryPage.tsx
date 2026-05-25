@@ -13,7 +13,7 @@ import {
     setContacts,
     removeClaimItem,
     setEditingItemId,
-    setClaimItems, // ← เพิ่ม reducer นี้ใน slice
+    setClaimItems,
     ClaimInsuredItem,
 } from "../../../store/claimPASlice";
 import { setBankLogo } from "../../../../../functionHelpers";
@@ -26,6 +26,7 @@ import ClaimSummaryPATable from "../../../components/CreateClaim/ClaimPA/ClaimSu
 import SchoolInfoSection from "../../../components/CreateClaim/ClaimPA/SchoolInfoSection";
 import { mockClaimItemsPA } from "../../../store/mockClaimPH";
 import AddInsuredModal from "../../../components/CreateClaim/ClaimPA/AddInsuredModal";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const ClaimPASummaryPage: React.FC<{}> = ({}) => {
     const navigate = useNavigate();
@@ -137,7 +138,7 @@ const ClaimPASummaryPage: React.FC<{}> = ({}) => {
                                                     <CloseIcon sx={{ fontSize: 12 }} />
                                                 </IconButton>
                                             )}
-                                            <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: 5, }}>
+                                            <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: 5 }}>
                                                 <Box display="flex" alignItems="center" justifyContent="space-between">
                                                     <Box display="flex" alignItems="center" gap={1}>
                                                         <Radio
@@ -295,8 +296,14 @@ const ClaimPASummaryPage: React.FC<{}> = ({}) => {
             {/* ── ปุ่ม ── */}
             <Grid item xs={12}>
                 <Box display="flex" justifyContent="space-between" mb={5}>
-                    <Button variant="outlined" sx={{ bgcolor: "#fff" }} onClick={() => navigate(-1)}>
-                        กลับ
+                    <Button
+                        variant="outlined"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={() => navigate(-1)}
+                        sx={{ bgcolor: "#fff" }}
+                        size="medium"
+                    >
+                        ย้อนกลับ
                     </Button>
                     <Button
                         variant="contained"
