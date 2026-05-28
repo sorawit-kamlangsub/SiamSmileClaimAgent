@@ -106,6 +106,8 @@ const ClaimLinePage: React.FC = () => {
                             items={items}
                             reasonOptions={REASON_OPTIONS}
                             onlineClaimAmount={summary.onlineClaimAmount}
+                            formatTypeId={3}
+                            patientTypeId={header.patientType}
                         />
                     </Box>
 

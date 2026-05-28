@@ -3,6 +3,19 @@ import { RootState } from "../../../../redux";
 
 export type ClaimLineColor = "#FFD6D6" | "#FFFACC" | "#EDD6FF" | "#D6FFE0" | "#E0E0E0" | "#D6F5FF";
 
+export interface ClaimLineFilledItem {
+    id: number;
+    code?: string | undefined;
+    description?: string | undefined;
+    claimAmount?: number;
+    discount?: number;
+    notCovered?: number;
+    reason?: number;
+    remark?: string | undefined;
+    color?: string | undefined;
+    disabled?: boolean | undefined;
+}
+
 export interface ClaimLineInsured {
     appId: string;
     prefix: string;
@@ -42,9 +55,8 @@ export interface ClaimLineItem {
     notCovered?: number; // ยอดไม่คุ้มครอง
     reason?: number; // สาเหตุ
     remark?: string | undefined; // หมายเหตุ
-    // color?: ClaimLineColor; // สีแถว
-    color?: string | undefined;
-    disabled?: boolean | undefined; // disabled (แถวสีเทา)
+    color?: string | undefined; // สีแถว
+    disabled?: boolean | undefined; // disabled
 }
 
 export interface ClaimLineSummary {
@@ -58,6 +70,7 @@ export interface ClaimLineSummary {
 
 interface ClaimLineState {
     items: ClaimLineItem[];
+    filledItems: ClaimLineFilledItem[];
     summary: ClaimLineSummary;
     isCalculating: boolean;
     searchResults: ClaimLineInsured[];
@@ -85,6 +98,7 @@ const defaultClaimLineHeader: ClaimLineHeader = {
 
 const initialState: ClaimLineState = {
     items: [],
+    filledItems: [],
     summary: {
         onlineClaimAmount: 0,
         totalClaim: 0,
@@ -112,6 +126,54 @@ const claimLineSlice = createSlice({
             if (idx !== -1) {
                 (state.items[idx] as any)[action.payload.field] = action.payload.value;
             }
+
+            const item = state.items[idx];
+            const hasFilled =
+                item.claimAmount !== undefined ||
+                item.discount !== undefined ||
+                item.notCovered !== undefined ||
+                item.reason !== undefined ||
+                (item.remark !== undefined && item.remark !== "");
+
+            const filledIdx = state.filledItems.findIndex((f) => f.id === action.payload.id);
+
+            if (hasFilled) {
+                if (filledIdx !== -1) {
+                    // update
+                    state.filledItems[filledIdx] = { ...item };
+                } else {
+                    // insert
+                    state.filledItems.push({ ...item });
+                }
+            } else {
+                // ถ้าล้างข้อมูลหมดแล้วให้เอาออก
+                if (filledIdx !== -1) {
+                    state.filledItems.splice(filledIdx, 1);
+                }
+            }
+        },
+        // reset เฉพาะ filledItems
+        resetFilledItems(state) {
+            state.filledItems = [];
+        },
+        resetItems(state) {
+            state.items = state.items.map((item) => ({
+                ...item,
+                claimAmount: undefined,
+                discount: undefined,
+                notCovered: undefined,
+                reason: undefined,
+                remark: undefined,
+            }));
+            state.filledItems = [];
+            state.summary = {
+                ...state.summary,
+                totalClaim: 0,
+                totalDiscount: 0,
+                netClaim: 0,
+                coveredAmount: 0,
+                notCoveredAmount: 0,
+            };
         },
         setSummary(state, action: PayloadAction<Partial<ClaimLineSummary>>) {
             state.summary = { ...state.summary, ...action.payload };
@@ -151,24 +213,6 @@ const claimLineSlice = createSlice({
         setHeader(state, action: PayloadAction<Partial<ClaimLineHeader>>) {
             state.header = { ...state.header, ...action.payload };
         },
-        resetItems(state) {
-            state.items = state.items.map((item) => ({
-                ...item,
-                claimAmount: undefined,
-                discount: undefined,
-                notCovered: undefined,
-                reason: undefined,
-                remark: undefined,
-            }));
-            state.summary = {
-                ...state.summary,
-                totalClaim: 0,
-                totalDiscount: 0,
-                netClaim: 0,
-                coveredAmount: 0,
-                notCoveredAmount: 0,
-            };
-        },
     },
 });
 
@@ -183,6 +227,7 @@ export const {
     setDaysCalculate,
     resetDaysCalculate,
     resetItems,
+    resetFilledItems,
     setHeader,
 } = claimLineSlice.actions;
 export const claimLineSelector = (state: RootState) => state.claimline;
