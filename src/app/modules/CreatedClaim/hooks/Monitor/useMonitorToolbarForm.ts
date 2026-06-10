@@ -26,7 +26,7 @@ export const useMonitorToolbarForm = () => {
         searchDetail: "",
         dateHappen: undefined,
         schoolId: undefined,
-        provinceId: undefined,
+        provinceId: 0,
         isAdvancedSearch: false,
     };
 

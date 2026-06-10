@@ -34,7 +34,6 @@ export interface ClaimHistoryItem {
 export interface SelectedPolicyInfo {
     appId: string;
     customerName: string;
-    nationalId: string;
     productName: string; // "PH" | "PA"
     startCoverDate: string;
     endCoverDate: string | null;
@@ -56,7 +55,7 @@ const initialState: MonitorState = {
         searchDetail: "",
         dateHappen: undefined,
         schoolId: undefined,
-        provinceId: undefined,
+        provinceId: 0,
         isAdvancedSearch: false,
     },
     selectedPolicy: null,

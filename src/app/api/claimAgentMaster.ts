@@ -11,6 +11,7 @@ const getDocumentRecipientTypeQueryKey = ["getDocumentRecipientType"];
 const getChiefComplaintQueryKey = ["getChiefComplaint"];
 const getCaseTypeQueryKey = ["getCaseType"];
 const getICD10QueryKey = ["getICD10"];
+const getProvinceQueryKey = ["getProvince"];
 
 export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTypeId?: number | undefined) => {
     return useQuery(
@@ -81,4 +82,10 @@ export const useGetICD10 = (
             refetchOnWindowFocus: false,
         }
     );
+};
+
+export const useGetProvince = (provinceId?: number | undefined) => {
+    return useQuery([getProvinceQueryKey, provinceId], () => claimAgentMasterClient.getProvince(provinceId), {
+        refetchOnWindowFocus: true,
+    });
 };

@@ -158,7 +158,6 @@ export const useMonitorTable = () => {
         const policy: SelectedPolicyInfo = {
             appId: row.policyCode,
             customerName: row.customerName,
-            nationalId: row.nationalId,
             productName: row.productName,
             startCoverDate: row.coverageFrom,
             endCoverDate: row.coverageTo ?? null,
