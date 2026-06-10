@@ -33,7 +33,7 @@ const MonitorTable: React.FC = () => {
             },
         },
         {
-            name: "appId",
+            name: "policyCode",
             label: "AppID",
             options: {
                 filter: false,
@@ -56,17 +56,17 @@ const MonitorTable: React.FC = () => {
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "productName",
+            name: "productTypeName",
             label: "ผลิตภัณฑ์",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "productCategoryName",
+            name: "productName",
             label: "แผน",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "startCoverDate",
+            name: "coverageFrom",
             label: "วันที่เริ่มคุ้มครอง",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
@@ -74,7 +74,7 @@ const MonitorTable: React.FC = () => {
             },
         },
         {
-            name: "endCoverDate",
+            name: "coverageTo",
             label: "วันที่สิ้นสุดความคุ้มครอง",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
@@ -97,7 +97,7 @@ const MonitorTable: React.FC = () => {
             <StandardDataTable
                 name="MonitorTable"
                 title=""
-                data={data || []}
+                data={data?.data || []}
                 isLoading={isLoading}
                 columns={columns}
                 color="primary"

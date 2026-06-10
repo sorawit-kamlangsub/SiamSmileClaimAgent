@@ -9,41 +9,42 @@ import {
 } from "../../store/monitorSlice";
 import { PaginationSortableDto } from "../../../_common";
 import React from "react";
+import { useGetCustomerSearch } from "../../../../api/claimAgentApi";
 
-export const mockMonitorList: MonitorListItem[] = [
-    {
-        appId: "0003067",
-        customerName: "นายกรภัทร วรวงศ์คุณากร",
-        productName: "PH",
-        productCategoryName: "662",
-        startCoverDate: "2016-01-01",
-        endCoverDate: null,
-    },
-    {
-        appId: "0003067-P30-01",
-        customerName: "นายกรภัทร วรวงศ์คุณากร",
-        productName: "PH",
-        productCategoryName: "P30",
-        startCoverDate: "2016-01-01",
-        endCoverDate: null,
-    },
-    {
-        appId: "PL60000106",
-        customerName: "นายกรภัทร วรวงศ์คุณากร",
-        productName: "PL",
-        productCategoryName: "Life-810",
-        startCoverDate: "2016-01-01",
-        endCoverDate: null,
-    },
-    {
-        appId: "PA69240003",
-        customerName: "ด.ช.ภิตดิชัย ศิริเดน",
-        productName: "PA",
-        productCategoryName: "เลือกสิทธิ์",
-        startCoverDate: "2026-05-01",
-        endCoverDate: "2027-04-30",
-    },
-];
+// export const mockMonitorList: MonitorListItem[] = [
+//     {
+//         appId: "0003067",
+//         customerName: "นายกรภัทร วรวงศ์คุณากร",
+//         productName: "PH",
+//         productCategoryName: "662",
+//         startCoverDate: "2016-01-01",
+//         endCoverDate: null,
+//     },
+//     {
+//         appId: "0003067-P30-01",
+//         customerName: "นายกรภัทร วรวงศ์คุณากร",
+//         productName: "PH",
+//         productCategoryName: "P30",
+//         startCoverDate: "2016-01-01",
+//         endCoverDate: null,
+//     },
+//     {
+//         appId: "PL60000106",
+//         customerName: "นายกรภัทร วรวงศ์คุณากร",
+//         productName: "PL",
+//         productCategoryName: "Life-810",
+//         startCoverDate: "2016-01-01",
+//         endCoverDate: null,
+//     },
+//     {
+//         appId: "PA69240003",
+//         customerName: "ด.ช.ภิตดิชัย ศิริเดน",
+//         productName: "PA",
+//         productCategoryName: "เลือกสิทธิ์",
+//         startCoverDate: "2026-05-01",
+//         endCoverDate: "2027-04-30",
+//     },
+// ];
 
 export const mockClaimHistoryPH: ClaimHistoryItem[] = [
     {
@@ -91,58 +92,83 @@ export const mockClaimHistoryPA: ClaimHistoryItem[] = [
     },
 ];
 
-export const mockSelectedPolicyPH: SelectedPolicyInfo = {
-    appId: "0003067",
-    customerName: "นายกรภัทร วรวงศ์คุณากร",
-    nationalId: "2494029825403",
-    productName: "PH",
-    startCoverDate: "2016-01-01",
-    endCoverDate: null,
-};
+// export const mockSelectedPolicyPH: SelectedPolicyInfo = {
+//     appId: "0003067",
+//     customerName: "นายกรภัทร วรวงศ์คุณากร",
+//     nationalId: "2494029825403",
+//     productName: "PH",
+//     startCoverDate: "2016-01-01",
+//     endCoverDate: null,
+// };
 
-export const mockSelectedPolicyPA: SelectedPolicyInfo = {
-    appId: "PA69240003",
-    customerName: "ด.ช.ภิตดิชัย ศิริเดน",
-    nationalId: "9217505830122",
-    productName: "PA",
-    startCoverDate: "2026-05-01",
-    endCoverDate: "2027-04-30",
-    schoolName: "โรงเรียนแม่พิทยาภูมิ",
-    insuredType: "นักเรียน",
-    effectiveCoverDate: "2026-05-01",
-};
+// export const mockSelectedPolicyPA: SelectedPolicyInfo = {
+//     appId: "PA69240003",
+//     customerName: "ด.ช.ภิตดิชัย ศิริเดน",
+//     nationalId: "9217505830122",
+//     productName: "PA",
+//     startCoverDate: "2026-05-01",
+//     endCoverDate: "2027-04-30",
+//     schoolName: "โรงเรียนแม่พิทยาภูมิ",
+//     insuredType: "นักเรียน",
+//     effectiveCoverDate: "2026-05-01",
+// };
 
 export const useMonitorTable = () => {
     const dispatch = useAppDispatch();
     const { search } = useAppSelector(monitorSelector);
-    const [data, setData] = useState<MonitorListItem[]>([]);
-    const [isLoading, setIsLoading] = useState(false);
     const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
     });
+    const { data, isLoading } = useGetCustomerSearch(
+        search.searchTypeId,
+        false,
+        search.dateHappen,
+        search.schoolId,
+        search.provinceId,
+        search.searchDetail,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
+    //const [isLoading, setIsLoading] = useState(false);
     const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (!search.searchDetail) return;
 
-        setIsLoading(true);
+        //setIsLoading(true);
         setSelectedRowIndex(null);
         dispatch(setSelectedPolicy(null));
 
         // Mock: simulate API delay
-        setTimeout(() => {
-            setData(mockMonitorList);
-            setIsLoading(false);
-        }, 600);
+        // setTimeout(() => {
+        //     setData(mockMonitorList);
+        //     setIsLoading(false);
+        // }, 600);
     }, [search]);
 
     const handleSelect = (rowIndex: number) => {
+        if (!data || !Array.isArray(data)) return;
         const row = data[rowIndex];
         if (!row) return;
         setSelectedRowIndex(rowIndex);
 
-        const policy: SelectedPolicyInfo = row.productName === "PA" ? mockSelectedPolicyPA : mockSelectedPolicyPH;
+        const policy: SelectedPolicyInfo = {
+            appId: row.policyCode,
+            customerName: row.customerName,
+            nationalId: row.nationalId,
+            productName: row.productName,
+            startCoverDate: row.coverageFrom,
+            endCoverDate: row.coverageTo ?? null,
+            // fields เฉพาะ PA
+            ...(row.productName === "PA" && {
+                schoolName: row.schoolName,
+                insuredType: row.insuredType,
+                effectiveCoverDate: row.effectiveCoverDate,
+            }),
+        };
 
         dispatch(setSelectedPolicy({ ...policy, appId: row.appId, productName: row.productName }));
     };
