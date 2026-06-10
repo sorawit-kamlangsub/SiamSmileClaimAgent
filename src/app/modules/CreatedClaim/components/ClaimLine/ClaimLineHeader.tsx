@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../redux";
 import { setHeader } from "../../store/claimLineSlice";
@@ -13,8 +13,9 @@ const PATIENT_TYPE_OPTIONS = [
     { patientTypeId: 5, patientTypeName: "ผู้ป่วยที่บ้าน (Home Health Care Nursing Service)" },
 ];
 
-const ClaimLineHeader: React.FC<{}> = () => {
+const ClaimLineHeader: React.FC = () => {
     const dispatch = useAppDispatch();
+
     const formik = useFormik({
         initialValues: { patientType: 1 },
         validate: (v) => {
@@ -32,28 +33,25 @@ const ClaimLineHeader: React.FC<{}> = () => {
     }, []);
 
     return (
-        <Box component="form" onSubmit={formik.handleSubmit}>
-            {/* ── Search Bar ── */}
-            <Grid container spacing={2} alignItems="flex-start" mb={1}>
-                <Grid item xs={12} sm={4} md={3}>
-                    <FormikDropdown
-                        name="patientType"
-                        label="ประเภทผู้ป่วย"
-                        formik={formik}
-                        data={PATIENT_TYPE_OPTIONS}
-                        selectedCallback={() => {
-                            formik.submitForm();
-                        }}
-                        firstItemText="-- เลือก --"
-                        displayFieldName="patientTypeName"
-                        valueFieldName="patientTypeId"
-                        fullWidth
-                        size="small"
-                        required
-                    />
-                </Grid>
+        <Grid container spacing={2} alignItems="flex-start" mb={1}>
+            <Grid item xs={12} sm={4}>
+                <FormikDropdown
+                    name="patientType"
+                    label="ประเภทผู้ป่วย"
+                    formik={formik}
+                    data={PATIENT_TYPE_OPTIONS}
+                    selectedCallback={(value) => {
+                        dispatch(setHeader({ patientType: value as number }));
+                    }}
+                    firstItemText="-- เลือก --"
+                    displayFieldName="patientTypeName"
+                    valueFieldName="patientTypeId"
+                    fullWidth
+                    size="small"
+                    required
+                />
             </Grid>
-        </Box>
+        </Grid>
     );
 };
 

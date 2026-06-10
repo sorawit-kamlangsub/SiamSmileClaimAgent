@@ -11,6 +11,7 @@ import {
     MenuItem,
     Paper,
     Select,
+    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -90,6 +91,30 @@ interface TreeNode {
     children: TreeNode[];
 }
 
+// ─── Category skeleton while loading ─────────────────────────────────────────
+const CategorySkeleton = () => (
+    <Box>
+        {Array.from({ length: 8 }).map((_, i) => (
+            <Box
+                key={i}
+                sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    px: 1.5,
+                    py: 1,
+                    borderBottom: "1px solid",
+                    borderColor: "divider",
+                    gap: 1,
+                }}
+            >
+                <Skeleton variant="circular" width={16} height={16} sx={{ flexShrink: 0 }} />
+                <Skeleton variant="text" width={`${55 + (i % 4) * 10}%`} height={20} />
+                <Skeleton variant="circular" width={14} height={14} sx={{ ml: "auto", flexShrink: 0 }} />
+            </Box>
+        ))}
+    </Box>
+);
+
 // ─── Recursive tree ───────────────────────────────────────────────────────────
 const TreeNodeRow = ({
     node,
@@ -133,7 +158,6 @@ const TreeNodeRow = ({
                 }}
             >
                 {hasChildren ? (
-                    // ── parent node: expand/collapse ──
                     <Box sx={{ mr: 0.75, display: "flex", alignItems: "center", color: "primary.main" }}>
                         {isExpanded ? (
                             <ExpandLessIcon sx={{ fontSize: 16 }} />
@@ -142,7 +166,7 @@ const TreeNodeRow = ({
                         )}
                     </Box>
                 ) : (
-                    // ── leaf node: วงกลม radio style ──
+                    // ── วงกลม radio style ──
                     <Box
                         sx={{
                             mr: 0.75,
@@ -187,7 +211,7 @@ const TreeNodeRow = ({
 };
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-const ClaimLineCalculatePage = () => {
+const ClaimLineCalculate = () => {
     const navigate = useNavigate();
     const {
         filledItems,
@@ -228,6 +252,7 @@ const ClaimLineCalculatePage = () => {
 
     const fmt = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
+    // ── table styles ──────────────────────────────────────────────────────────
     const headCell = {
         fontWeight: 700,
         fontSize: 13,
@@ -253,21 +278,46 @@ const ClaimLineCalculatePage = () => {
         <Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
             <Grid container spacing={2.5}>
                 {/* ══ LEFT col ══════════════════════════════════════════════ */}
-                <Grid item xs={12} md={8}>
-                    {/* ── รายการค่ารักษาที่ใช้บ่อย ── */}
+                <Grid item xs={12} md={8.5}>
+                    {/* ── ข้อมูลผู้เอาประกัน ── */}
                     <CustomBox sx={{ mb: 2.5 }}>
                         <HeadingWithColor text="รายการค่าใช้จ่าย" color="blue" />
                         <ClaimLineHeader />
                     </CustomBox>
+
+                    {/* ── รายการค่ารักษาที่ใช้บ่อย ── */}
                     <CustomBox sx={{ mb: 2.5 }}>
                         <Box sx={{ mb: 1.5 }}>
                             <Typography variant="subtitle1" fontWeight={700} color="primary.main">
                                 รายการค่ารักษาที่ใช้บ่อย
                             </Typography>
                         </Box>
-                        <Box sx={{ overflowX: "auto" }}>
+
+                        {/* ตาราง + เส้นขอบรอบตาราง */}
+                        <Box
+                            sx={{
+                                overflowX: "auto",
+                                border: "1px solid",
+                                borderColor: "divider",
+                                borderRadius: 2,
+                                overflow: "hidden",
+                            }}
+                        >
                             <TableContainer>
-                                <Table size="small" sx={{ minWidth: 620 }}>
+                                <Table
+                                    size="small"
+                                    sx={{
+                                        minWidth: 620,
+                                        // เส้นขอบล่างแต่ละแถว
+                                        "& tbody tr": {
+                                            borderBottom: "1px solid",
+                                            borderColor: "divider",
+                                        },
+                                        "& tbody tr:last-child": {
+                                            borderBottom: "none",
+                                        },
+                                    }}
+                                >
                                     <TableHead>
                                         <TableRow>
                                             <TableCell sx={{ ...headCell, width: "34%" }}>รายการค่ารักษา</TableCell>
@@ -293,7 +343,13 @@ const ClaimLineCalculatePage = () => {
                                         {filledItems.map((item, idx) => (
                                             <TableRow
                                                 key={item.id}
-                                                sx={{ bgcolor: idx % 2 === 0 ? "white" : "grey.50" }}
+                                                sx={{
+                                                    bgcolor: idx % 2 === 0 ? "white" : "grey.50",
+                                                    "&:hover": {
+                                                        bgcolor: "primary.50",
+                                                        transition: "background 0.15s",
+                                                    },
+                                                }}
                                             >
                                                 <TableCell sx={bodyCell}>
                                                     <Typography variant="body2" fontWeight={500}>
@@ -399,7 +455,7 @@ const ClaimLineCalculatePage = () => {
                                                                 "&:hover": { bgcolor: "error.100" },
                                                             }}
                                                         >
-                                                            <FontAwesomeIcon icon="trash-can" fontSize={14} />
+                                                            <FontAwesomeIcon icon="trash-can" fontSize={18} />
                                                         </IconButton>
                                                     </Tooltip>
                                                 </TableCell>
@@ -452,7 +508,7 @@ const ClaimLineCalculatePage = () => {
                                 size="small"
                                 startIcon={showAddPanel ? <RemoveCircleIcon /> : <AddCircleOutlineIcon />}
                                 onClick={() => setShowAddPanel(!showAddPanel)}
-                                sx={{ borderRadius: 2, fontWeight: 600, whiteSpace: "nowrap" }}
+                                sx={{ borderRadius: 1, fontWeight: 600, whiteSpace: "nowrap" }}
                             >
                                 {showAddPanel ? "ซ่อน" : "เพิ่มรายการค่ารักษา"}
                             </Button>
@@ -479,7 +535,13 @@ const ClaimLineCalculatePage = () => {
                                             InputProps={{
                                                 endAdornment: (
                                                     <InputAdornment position="end">
-                                                        <SearchIcon sx={{ fontSize: 18, color: "text.secondary" }} />
+                                                        {isCategoryLoading ? (
+                                                            <CircularProgress size={16} color="inherit" />
+                                                        ) : (
+                                                            <SearchIcon
+                                                                sx={{ fontSize: 18, color: "text.secondary" }}
+                                                            />
+                                                        )}
                                                     </InputAdornment>
                                                 ),
                                             }}
@@ -487,23 +549,26 @@ const ClaimLineCalculatePage = () => {
                                         />
                                     </Box>
 
-                                    {/* Loading */}
+                                    {/* Category list */}
                                     {isCategoryLoading ? (
-                                        <Box display="flex" justifyContent="center" alignItems="center" py={6}>
-                                            <CircularProgress size={28} />
-                                        </Box>
+                                        <CategorySkeleton />
                                     ) : filteredCategories.length === 0 ? (
-                                        <Box display="flex" justifyContent="center" alignItems="center" py={5}>
+                                        <Box
+                                            display="flex"
+                                            flexDirection="column"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            py={6}
+                                            gap={1}
+                                        >
+                                            <SearchIcon sx={{ fontSize: 32, color: "text.disabled" }} />
                                             <Typography variant="body2" color="text.disabled">
                                                 ไม่พบรายการที่ค้นหา
                                             </Typography>
                                         </Box>
                                     ) : (
-                                        /* หัวหมวดทุกอันอยู่นอก scroll
-                                           children ที่ expand อยู่ใน scroll ใต้หัวนั้นๆ */
                                         filteredCategories.map((cat) => (
                                             <Box key={cat.id}>
-                                                {/* ── หัวหมวด: sticky ── */}
                                                 <Box
                                                     onClick={() => handleToggleExpand(cat.id)}
                                                     sx={{
@@ -558,7 +623,7 @@ const ClaimLineCalculatePage = () => {
                                                     </Box>
                                                 </Box>
 
-                                                {/* ── children: scroll ได้เฉพาะส่วนนี้ ── */}
+                                                {/* children scroll */}
                                                 <Collapse in={expandedIds.includes(cat.id)}>
                                                     <Box
                                                         sx={{
@@ -619,7 +684,7 @@ const ClaimLineCalculatePage = () => {
                                             <Box
                                                 sx={{
                                                     mb: 2,
-                                                    p: 1.5,
+                                                    p: 1,
                                                     borderRadius: 1,
                                                     border: "1px dashed",
                                                     borderColor: "divider",
@@ -711,8 +776,7 @@ const ClaimLineCalculatePage = () => {
                     </Paper>
                 </Grid>
 
-                {/* ══ RIGHT col: สรุปยอดเงิน ════════════════════════════════ */}
-                <Grid item xs={12} md={4}>
+                <Grid item xs={12} md={3.5}>
                     <CustomBox sx={{ position: { md: "sticky" }, top: { md: 16 } }}>
                         <HeadingWithColor
                             text="สรุปยอดเงิน"
@@ -743,7 +807,6 @@ const ClaimLineCalculatePage = () => {
 
                             <Divider sx={{ my: 1.5 }} />
 
-                            {/* ยอดสุทธิ */}
                             <Paper
                                 elevation={0}
                                 sx={{
@@ -799,4 +862,4 @@ const ClaimLineCalculatePage = () => {
     );
 };
 
-export default ClaimLineCalculatePage;
+export default ClaimLineCalculate;

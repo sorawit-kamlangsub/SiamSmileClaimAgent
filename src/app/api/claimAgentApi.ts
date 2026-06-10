@@ -4,16 +4,15 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     ClaimAgentClient,
-    ClaimAgentMasterClient,
 } from "./claimAgentApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
 
 const claimAgentClient = new ClaimAgentClient(API_URL, axios);
-const claimAgentMasterClient = new ClaimAgentMasterClient(API_URL, axios);
 
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
-const getSimBCategoryQueryKey = ["getSimBCategory"];
+const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
+const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"];
 
 export const useGetCustomerSearch = (
     searchIndex?: number | undefined,
@@ -50,7 +49,7 @@ export const useGetCustomerSearch = (
 };
 
 export const useGetCustomerDetailById = (id: number) => {
-    return useQuery([getCustomerSearchQueryKey, id], () => claimAgentClient.getCustomerDetailById(id), {
+    return useQuery([getCustomerDetailByIdQueryKey, id], () => claimAgentClient.getCustomerDetailById(id), {
         enabled: !!id,
         refetchOnWindowFocus: false,
     });
@@ -63,7 +62,7 @@ export const useGetCustomerBenefitDetailSearch = (
     isContinue?: boolean | undefined
 ) => {
     return useQuery(
-        [getCustomerSearchQueryKey, policyCode, caseTypeId, dateHappen, isContinue],
+        [getCustomerBenefitDetailSearchQueryKey, policyCode, caseTypeId, dateHappen, isContinue],
         () => claimAgentClient.getCustomerBenefitDetailSearch(policyCode, caseTypeId, dateHappen, isContinue),
         {
             enabled: !!policyCode,
@@ -86,15 +85,4 @@ export const useCalculateCaseClaim = (
             onErrorCallback?.(error.message);
         },
     });
-};
-
-export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTypeId?: number | undefined) => {
-    return useQuery(
-        [getSimBCategoryQueryKey, formatTypeId, patientTypeId],
-        () => claimAgentMasterClient.getSimBCategory(formatTypeId, patientTypeId),
-        {
-            enabled: !!formatTypeId && !!patientTypeId,
-            refetchOnWindowFocus: false,
-        }
-    );
 };

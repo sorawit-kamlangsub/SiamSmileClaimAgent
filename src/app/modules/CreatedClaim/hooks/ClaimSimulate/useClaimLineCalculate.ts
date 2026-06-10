@@ -4,7 +4,7 @@ import { RootState } from "../../../../../redux";
 import { ClaimLineItem, removeFilledItem, setFilledItems, updateFilledItem } from "../../store/claimSimulateSlice";
 import { MOCK_FREQUENT_ITEMS, NOT_COVERED_REASON_OPTIONS } from "../../store/mockClaimLine";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/claimAgentApi.client";
-import { useGetSimBCategory } from "../../../../api/claimAgentApi";
+import { useGetSimBCategory } from "../../../../api/claimAgentMaster";
 
 // ─── แปลง API response → TreeNode ────────────────────────────────────────────
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
@@ -26,6 +26,9 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     const dispatch = useDispatch();
     const { filledItems } = useSelector((s: RootState) => s.claimsimulate);
 
+    // ── อ่าน patientType จาก claimline.header ─────────────────────────────────
+    const patientType = useSelector((s: RootState) => s.claimline.header.patientType);
+
     const [showAddPanel, setShowAddPanel] = useState(false);
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
@@ -37,12 +40,15 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     const [pendingNotCovered, setPendingNotCovered] = useState("");
     const [pendingReason, setPendingReason] = useState("");
 
-    // ── Fetch API ─────────────────────────────────────────────────────────────
-    const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(3, 2);
+    // ── Fetch API — re-fetch อัตโนมัติเมื่อ patientType เปลี่ยน ──────────────
+    // formatTypeId=3 คงที่, patientTypeId มาจาก Redux
+    const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(3, patientType);
 
-    // ── แปลง response → tree ──────────────────────────────────────────────────
     const categories = useMemo(() => {
         const raw = categoryData?.data ?? [];
+        setExpandedIds([]);
+        setSelectedItem(null);
+        setSelectedLeafId(null);
         return mapCategoriesToTree(raw);
     }, [categoryData]);
 
@@ -127,6 +133,7 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
 
     return {
         filledItems,
+        patientType,
         showAddPanel,
         setShowAddPanel,
         searchText,
