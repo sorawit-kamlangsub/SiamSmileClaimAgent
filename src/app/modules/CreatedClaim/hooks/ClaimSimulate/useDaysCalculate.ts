@@ -3,8 +3,10 @@ import { useFormik } from "formik";
 import dayjs, { Dayjs } from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux";
-import { setDaysCalculate } from "../../store/claimSimulateSlice";
-
+import { setDaysCalculate, setCalculateResult } from "../../store/claimSimulateSlice";
+import { swalError } from "../../../_common";
+import { useCalculateCaseClaim } from "../../../../api/coreClaimApi";
+import { CalculateCaseClaimDtoRequest } from "../../../../api/coreClaimApi.client";
 
 export interface DaysCalculateFormValues {
     treatmentType: string;
@@ -17,7 +19,6 @@ export interface DaysCalculateFormValues {
     continuousFromClaimNo: string;
 }
 
-
 const toDayjsOrNull = (dateStr: string): Dayjs | null => (dateStr ? dayjs(dateStr) : null);
 
 const toDateString = (date: Dayjs | null): string => (date ? dayjs(date).format("YYYY-MM-DD") : "");
@@ -28,7 +29,6 @@ const calcIpdDays = (admit: Dayjs | null, discharge: Dayjs | null): number => {
     return diff > 0 ? diff : 0;
 };
 
-
 const validate = (values: DaysCalculateFormValues) => {
     const errors: Partial<Record<keyof DaysCalculateFormValues, string>> = {};
     if (!values.treatmentType) errors.treatmentType = "โปรดระบุ";
@@ -38,11 +38,19 @@ const validate = (values: DaysCalculateFormValues) => {
     return errors;
 };
 
-
 export const useDaysCalculate = () => {
     const dispatch = useDispatch();
-    const { daysCalculate } = useSelector((s: RootState) => s.claimsimulate);
+    const { daysCalculate, filledItems } = useSelector((s: RootState) => s.claimsimulate);
+
     const [openConfirm, setOpenConfirm] = useState(false);
+    const [isCalculating, setIsCalculating] = useState(false);
+
+    const onSuccessCallback = () => {};
+    const onErrorCallback = (error: string) => {
+        swalError("Error", error);
+    };
+
+    const calculateCaseClaim = useCalculateCaseClaim(onSuccessCallback, onErrorCallback);
 
     const formik = useFormik<DaysCalculateFormValues>({
         initialValues: {
@@ -99,18 +107,55 @@ export const useDaysCalculate = () => {
         syncToRedux({ dischargeDate: date });
     };
 
-    const handleCalculate = () => {
+    const handleCalculate = async () => {
+        // validate form ก่อน
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) {
+            formik.setTouched(Object.keys(errors).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            return;
+        }
+
         const days = calcIpdDays(formik.values.admitDate, formik.values.dischargeDate);
         formik.setFieldValue("ipdDays", days);
         formik.setFieldValue("bedDays", days);
         syncToRedux({ ipdDays: days, bedDays: days });
-        setOpenConfirm(true);
+
+        const payload: CalculateCaseClaimDtoRequest = {
+            caseId: "814922be-7531-4f72-9399-8fefefe3e877",
+            isSimulateCase: true,
+            jsonDetail: filledItems.map((item) => ({
+                id: item.id,
+                code: item.code,
+                description: item.description,
+                claimAmount: item.claimAmount,
+                discount: item.discount,
+                notCovered: item.notCovered,
+                reason: item.reason,
+                remark: item.remark,
+            })),
+        };
+
+        try {
+            setIsCalculating(true);
+            const res = await calculateCaseClaim.mutateAsync(payload);
+            if (res?.isSuccess && res.data) {
+                dispatch(setCalculateResult(res.data));
+                setOpenConfirm(true); // เปิด modal หลัง API สำเร็จ
+            }
+        } catch {
+            // error handled ใน onErrorCallback แล้ว
+        } finally {
+            setIsCalculating(false);
+        }
     };
 
     const handleContinuousChange = (checked: boolean) => {
         formik.setFieldValue("isContinuous", checked);
         if (!checked) formik.setFieldValue("continuousFromClaimNo", "");
-        syncToRedux({ isContinuous: checked, ...(!checked && { continuousFromClaimNo: "" }) });
+        syncToRedux({
+            isContinuous: checked,
+            ...(!checked && { continuousFromClaimNo: "" }),
+        });
     };
 
     const handleConfirm = () => {
@@ -122,6 +167,7 @@ export const useDaysCalculate = () => {
         formik,
         daysCalculate,
         openConfirm,
+        isCalculating,
         handleAdmitDateChange,
         handleDischargeDateChange,
         handleCalculate,
@@ -130,4 +176,3 @@ export const useDaysCalculate = () => {
         handleCloseConfirm: () => setOpenConfirm(false),
     };
 };
-

@@ -35,13 +35,6 @@ interface Props {
     onConfirm: () => void;
 }
 
-interface SummaryGroup {
-    groupName: string;
-    claimAmount: number;
-    rightAmount: number;
-    netAmount: number;
-}
-
 interface CompensationItem {
     description: string;
     days: number;
@@ -54,33 +47,33 @@ const MOCK_COMPENSATION: CompensationItem[] = [
 ];
 
 const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
-    const { daysCalculate } = useAppSelector((s) => s.claimsimulate);
+    const { daysCalculate, calculateResult } = useAppSelector((s) => s.claimsimulate);
     const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
     const [mergeOption, setMergeOption] = useState<"single" | "all" | null>(null);
 
-    const groupRows: SummaryGroup[] = [
-        { groupName: "ค่าห้องค่าอาหาร และการพยาบาลผู้ป่วยปกติ", claimAmount: 0, rightAmount: 0, netAmount: 0 },
-        { groupName: "ค่าห้องค่าอาหาร และการพยาบาลผู้ป่วยหนัก ICU", claimAmount: 0, rightAmount: 0, netAmount: 0 },
-        { groupName: "ค่ารักษาพยาบาล และค่าบริการทั่วไป", claimAmount: 0, rightAmount: 0, netAmount: 0 },
-        { groupName: "การรักษาโดยการผ่าตัด", claimAmount: 0, rightAmount: 0, netAmount: 0 },
-        { groupName: "การดูแลโดยแพทย์ (ค่าแพทย์เยี่ยมไข้ ผู้ป่วยใน)", claimAmount: 0, rightAmount: 0, netAmount: 0 },
+    // ── map medicalExpense จาก API → ตารางรายการค่ารักษา ─────────────────────
+    const medicalExpenseRows = calculateResult?.medicalExpense ?? [];
+
+    const treatmentTableData = [
+        ...medicalExpenseRows.map((item) => ({
+            groupName: item.expenseCategoryName ?? "-",
+            benefitName: item.benefitName ?? "-",
+            coveredAmount: item.coveredAmount ?? 0,
+            nonCoveredAmount: item.nonCoveredAmount ?? 0,
+            totalAmount: item.totalAmount ?? 0,
+        })),
+        // แถว totals
         {
-            groupName: "ค่าบริการอื่นๆ / ค่าใช้จ่ายอื่นที่ไม่ใช่การรักษาพยาบาล",
-            claimAmount: 0,
-            rightAmount: 0,
-            netAmount: 0,
+            groupName: "รวมทั้งหมด",
+            benefitName: "",
+            coveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.coveredAmount ?? 0), 0),
+            nonCoveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.nonCoveredAmount ?? 0), 0),
+            totalAmount: medicalExpenseRows.reduce((s, r) => s + (r.totalAmount ?? 0), 0),
         },
     ];
 
-    const totalClaim = groupRows.reduce((s, r) => s + r.claimAmount, 0);
-    const totalRight = groupRows.reduce((s, r) => s + r.rightAmount, 0);
-    const totalNet = groupRows.reduce((s, r) => s + r.netAmount, 0);
-    const treatmentTableData = [
-        ...groupRows,
-        { groupName: "รวมทั้งหมด", claimAmount: totalClaim, rightAmount: totalRight, netAmount: totalNet },
-    ];
-
+    // ── ค่าชดเชย (ยังใช้ mock ไปก่อน รอ API) ─────────────────────────────────
     const compensationTotal = MOCK_COMPENSATION.reduce((s, i) => s + i.amount, 0);
     const compensationInCoverage = 0;
     const compensationRemaining = compensationTotal - compensationInCoverage;
@@ -94,28 +87,51 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
         },
     ];
 
-    const totalExpense = 0;
-    const coverageRight = 0;
+    // ── สรุปค่าใช้จ่ายจาก calculateResult ────────────────────────────────────
+    const totalExpense = calculateResult?.summaryMedicalPay ?? 0;
+    const totalNotCovered = calculateResult?.summaryMedicalUnPay ?? 0;
+    const medicalNet = calculateResult?.medicalNet ?? 0;
+    const medicalPay = calculateResult?.medicalPay ?? 0;
+    // const coverageRight = medicalPay;
     const compensation = compensationInCoverage;
-    const totalCoverage = coverageRight + compensation;
-    const customerPay = Math.max(totalExpense - totalCoverage, 0);
+    // const totalCoverage = coverageRight + compensation;
+    // const customerPay = Math.max(totalExpense - totalCoverage, 0);
 
+    // ── columns: รายการค่ารักษา (ปรับตาม MedicalExpenseList) ─────────────────
     const treatmentColumns: MUIDataTableColumn[] = [
-        { name: "groupName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
-            name: "claimAmount",
-            label: "รายการเบิก",
-            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
+            name: "groupName",
+            label: "หมวดค่าใช้จ่าย",
+            options: { ...cellAlignOptions({ align: "left" }) },
         },
         {
-            name: "rightAmount",
+            name: "benefitName",
+            label: "รายการ",
+            options: { ...cellAlignOptions({ align: "left" }) },
+        },
+        {
+            name: "coveredAmount",
             label: "สิทธิ์เบิก",
-            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
+            options: {
+                ...cellAlignOptions({ align: "right" }),
+                customBodyRender: (v) => fmt(v),
+            },
         },
         {
-            name: "netAmount",
+            name: "nonCoveredAmount",
             label: "ส่วนเกินสิทธิ์",
-            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
+            options: {
+                ...cellAlignOptions({ align: "right" }),
+                customBodyRender: (v) => fmt(v),
+            },
+        },
+        {
+            name: "totalAmount",
+            label: "ยอดรวม",
+            options: {
+                ...cellAlignOptions({ align: "right" }),
+                customBodyRender: (v) => fmt(v),
+            },
         },
     ];
 
@@ -164,7 +180,6 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
         viewColumns: false,
     };
 
-    // ── SummaryLine ───────────────────────────────────────────────────────────
     const SummaryLine = ({
         label,
         value,
@@ -267,13 +282,40 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                             </Typography>
                         </Box>
                     ))}
+
+                    {/* ── summary chips จาก API ── */}
+                    {/* {[
+                        { label: "ยอดเบิกรวม", value: fmt(totalExpense), color: "#1a5da8", bg: "#e8f0fb" },
+                        { label: "สิทธิ์โรงพยาบาล", value: fmt(medicalPay), color: "#15803d", bg: "#F7FEE7" },
+                        { label: "ส่วนเกิน", value: fmt(totalNotCovered), color: "#FF6467", bg: "#FEF2F2" },
+                    ].map((chip) => (
+                        <Box
+                            key={chip.label}
+                            sx={{
+                                px: 1.5,
+                                py: 0.4,
+                                borderRadius: 2,
+                                bgcolor: chip.bg,
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 0.75,
+                            }}
+                        >
+                            <Typography sx={{ fontSize: 14 }} color={chip.color} fontWeight={500}>
+                                {chip.label} :
+                            </Typography>
+                            <Typography sx={{ fontSize: 14 }} color={chip.color} fontWeight="bold">
+                                {chip.value}
+                            </Typography>
+                        </Box>
+                    ))} */}
                 </Stack>
                 <Divider sx={{ mt: 1 }} />
             </DialogTitle>
 
             <DialogContent sx={{ pt: 2, px: 3 }}>
                 <Grid container spacing={2.5}>
-                    {/* ── ตารางรายการค่ารักษา ── */}
+                    {/* ── ตารางรายการค่ารักษา (จาก medicalExpense) ── */}
                     <Grid item xs={12}>
                         <HeadingWithColor
                             text="รายการค่ารักษา"
@@ -407,7 +449,6 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                 </Typography>
                             </Box>
                         </Paper>
-                        S
                     </Grid>
 
                     <Grid item xs={12} md={6}>
@@ -418,8 +459,8 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                             sx={{ mb: 1 }}
                         />
                         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                            <SummaryLine label="ค่าใช้จ่ายทั้งสิ้น" value={fmt(totalExpense)} />
-                            <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(coverageRight)} />
+                            <SummaryLine label="ยอดเบิกรวม" value={fmt(medicalNet)} />
+                            <SummaryLine label="สิทธิ์ความคุ้มครอง (medicalPay)" value={fmt(medicalPay)} />
                             <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(compensation)} />
                             <Box
                                 display="flex"
@@ -439,7 +480,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                     minWidth={110}
                                     textAlign="right"
                                 >
-                                    {fmt(totalCoverage)}
+                                    {fmt(totalExpense)}
                                 </Typography>
                             </Box>
                             <Divider />
@@ -461,7 +502,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                     minWidth={110}
                                     textAlign="right"
                                 >
-                                    {fmt(customerPay)}
+                                    {fmt(totalNotCovered)}
                                 </Typography>
                             </Box>
                         </Paper>
@@ -506,4 +547,3 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
 };
 
 export default ConfirmCalaulateModal;
-

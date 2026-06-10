@@ -98,7 +98,7 @@ const CellInput = memo(
                         if (field === "remark") return;
                         const num = parseFloat(e.target.value);
                         if (!isNaN(num)) {
-                            dispatch(updateItem({ id, field, value: num.toFixed(2) }))
+                            dispatch(updateItem({ id, field, value: num.toFixed(2) }));
                         }
                     },
                 }}
@@ -267,23 +267,13 @@ const ClaimLineTable: React.FC<Props> = ({ reasonOptions, onlineClaimAmount }) =
                 <TableCell sx={{ fontSize: 13, py: 0.5, px: 1, fontWeight: 600 }}>{item.code}</TableCell>
                 <TableCell sx={{ fontSize: 13, py: 0.5, px: 1 }}>{item.description}</TableCell>
                 <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                    <CellInput
-                        id={item.id}
-                        field="claimAmount"
-                        value={item.claimAmount}
-                        disabled={item.disabled}
-                    />
+                    <CellInput id={item.id} field="claimAmount" value={item.claimAmount} disabled={item.disabled} />
                 </TableCell>
                 <TableCell sx={{ py: 0.5, px: 0.5 }}>
                     <CellInput id={item.id} field="discount" value={item.discount} disabled={item.disabled} />
                 </TableCell>
                 <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                    <CellInput
-                        id={item.id}
-                        field="notCovered"
-                        value={item.notCovered}
-                        disabled={item.disabled}
-                    />
+                    <CellInput id={item.id} field="notCovered" value={item.notCovered} disabled={item.disabled} />
                 </TableCell>
                 <TableCell sx={{ py: 0.5, px: 0.5 }}>
                     <CellSelect id={item.id} value={item.reason} disabled={item.disabled} options={reasonOptions} />

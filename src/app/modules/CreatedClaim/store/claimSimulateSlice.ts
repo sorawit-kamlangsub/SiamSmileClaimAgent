@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { CalculateCaseClaimDtoResponse } from "../../../api/coreClaimApi.client";
 
 export interface DaysCalculateState {
     appId: string;
@@ -14,21 +15,21 @@ export interface DaysCalculateState {
 }
 
 export interface ClaimLineItem {
-    id: number;
-    code: string;
-    description: string;
-    claimAmount: string;
-    discount: string;
-    notCovered: string;
-    reason: string;
-    remark: string;
-    color: string;
+    id?: number;
+    code?: string | undefined;
+    description?: string | undefined;
+    claimAmount?: number;
+    notCovered?: number;
+    reason?: string | undefined;
+    remark?: string | undefined;
+    discount?: number | undefined;
     disabled: boolean;
 }
 
 interface ClaimSimulateState {
     daysCalculate: DaysCalculateState;
     filledItems: ClaimLineItem[];
+    calculateResult: CalculateCaseClaimDtoResponse | null;
 }
 
 const initialState: ClaimSimulateState = {
@@ -45,6 +46,7 @@ const initialState: ClaimSimulateState = {
         continuousFromClaimNo: "",
     },
     filledItems: [],
+    calculateResult: null, // เพิ่ม
 };
 
 const claimSimulateSlice = createSlice({
@@ -64,8 +66,12 @@ const claimSimulateSlice = createSlice({
         removeFilledItem(state, action: PayloadAction<number>) {
             state.filledItems = state.filledItems.filter((i) => i.id !== action.payload);
         },
+        setCalculateResult(state, action: PayloadAction<CalculateCaseClaimDtoResponse | null>) {
+            state.calculateResult = action.payload;
+        },
     },
 });
 
-export const { setDaysCalculate, setFilledItems, updateFilledItem, removeFilledItem } = claimSimulateSlice.actions;
+export const { setDaysCalculate, setFilledItems, updateFilledItem, removeFilledItem, setCalculateResult } =
+    claimSimulateSlice.actions;
 export default claimSimulateSlice.reducer;

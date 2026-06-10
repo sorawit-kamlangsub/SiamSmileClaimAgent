@@ -8,8 +8,8 @@ import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
 import ClaimPAPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPAPage";
 import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPASummaryPage";
-import ClaimLinePage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLinePage";
-import ClaimLineSummaryPage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLineSummaryPage";
+// import ClaimLinePage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLinePage";
+// import ClaimLineSummaryPage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLineSummaryPage";
 import DaysCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/DaysCalculatePage.tsx";
 import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
 
@@ -104,27 +104,27 @@ const Routes: RouteMapType[] = [
             },
         ],
     },
-    {
-        path: "/claim-line",
-        title: "Claim Line",
-        element: <Outlet />,
-        permissions: [],
-        condition: "AND",
-        children: [
-            {
-                index: true,
-                title: "Claim Line",
-                element: <ClaimLinePage />,
-            },
-            {
-                path: "summary",
-                title: "สรุปรายการเคลม",
-                element: <ClaimLineSummaryPage />,
-                permissions: [],
-                condition: "AND",
-            },
-        ],
-    },
+    // {
+    //     path: "/claim-line",
+    //     title: "Claim Line",
+    //     element: <Outlet />,
+    //     permissions: [],
+    //     condition: "AND",
+    //     children: [
+    //         {
+    //             index: true,
+    //             title: "Claim Line",
+    //             element: <ClaimLinePage />,
+    //         },
+    //         {
+    //             path: "summary",
+    //             title: "สรุปรายการเคลม",
+    //             element: <ClaimLineSummaryPage />,
+    //             permissions: [],
+    //             condition: "AND",
+    //         },
+    //     ],
+    // },
     {
         path: "/claim-simulation",
         title: "Claim Simulation",

@@ -1,11 +1,7 @@
 import axios from "axios";
 import { API_URL } from "../../Const";
-import {
-    CalculateCaseClaimDtoRequest,
-    CalculateCaseClaimDtoResponseServiceResponse,
-    ClaimAgentClient,
-} from "./claimAgentApi.client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { ClaimAgentClient } from "./claimAgentApi.client";
+import { useQuery } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
 
 const claimAgentClient = new ClaimAgentClient(API_URL, axios);
@@ -69,20 +65,4 @@ export const useGetCustomerBenefitDetailSearch = (
             refetchOnWindowFocus: false,
         }
     );
-};
-
-export const useCalculateCaseClaim = (
-    onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
-    onErrorCallback?: (error: string) => void
-) => {
-    return useMutation((body?: CalculateCaseClaimDtoRequest | undefined) => claimAgentClient.calculateCaseClaim(body), {
-        onSuccess: (response) => {
-            if (!response.isSuccess)
-                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
-            else onSuccessCallback?.(response);
-        },
-        onError: (error: Error) => {
-            onErrorCallback?.(error.message);
-        },
-    });
 };

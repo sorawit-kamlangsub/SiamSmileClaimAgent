@@ -25,94 +25,25 @@ export class CoreClaimClient {
     }
 
     /**
-     * API สำหรับ Get ข้อมูล Single
+     * API สำหรับ Calculate ข้อมูล Case Claim
+     * @param body (optional)
      * @return Success
      */
-    detail(id: number, cancelToken?: CancelToken | undefined): Promise<GetDataSingleDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/single/{id}/detail";
-        if (id === undefined || id === null) throw new Error("The parameter 'id' must be defined.");
-        url_ = url_.replace("{id}", encodeURIComponent("" + id));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processDetail(_response);
-            });
-    }
-
-    protected processDetail(response: AxiosResponse): Promise<GetDataSingleDtoResponseServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<GetDataSingleDtoResponseServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<GetDataSingleDtoResponseServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Get ข้อมูล List
-     * @param id (optional)
-     * @param page (optional)
-     * @param recordsPerPage (optional)
-     * @return Success
-     */
-    getDataList(
-        id?: number | undefined,
-        page?: number | undefined,
-        recordsPerPage?: number | undefined,
+    calculateCaseClaim(
+        body?: CalculateCaseClaimDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<GetDataListDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/list/filter?";
-        if (id === null) throw new Error("The parameter 'id' cannot be null.");
-        else if (id !== undefined) url_ += "id=" + encodeURIComponent("" + id) + "&";
-        if (page === null) throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
-        else if (recordsPerPage !== undefined)
-            url_ += "RecordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+    ): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
+        let url_ = this.baseUrl + "/calculate/caseclaim";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(body, customFormatter);
+
         let options_: AxiosRequestConfig = {
-            method: "GET",
+            data: content_,
+            method: "POST",
             url: url_,
             headers: {
+                "Content-Type": "application/json-patch+json",
                 Accept: "text/plain",
             },
             cancelToken,
@@ -128,79 +59,13 @@ export class CoreClaimClient {
                 }
             })
             .then((_response: AxiosResponse) => {
-                return this.processGetDataList(_response);
+                return this.processCalculateCaseClaim(_response);
             });
     }
 
-    protected processGetDataList(response: AxiosResponse): Promise<GetDataListDtoResponseListServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<GetDataListDtoResponseListServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<GetDataListDtoResponseListServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Get ข้อมูล List add Index
-     * @param id (optional)
-     * @return Success
-     */
-    getDataListIndex(
-        id?: number | undefined,
-        cancelToken?: CancelToken | undefined
-    ): Promise<GetDataListIndexDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/list/index/detail?";
-        if (id === null) throw new Error("The parameter 'id' cannot be null.");
-        else if (id !== undefined) url_ += "id=" + encodeURIComponent("" + id) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processGetDataListIndex(_response);
-            });
-    }
-
-    protected processGetDataListIndex(
+    protected processCalculateCaseClaim(
         response: AxiosResponse
-    ): Promise<GetDataListIndexDtoResponseListServiceResponse> {
+    ): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -215,40 +80,140 @@ export class CoreClaimClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<GetDataListIndexDtoResponseListServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
+            return Promise.resolve<CalculateCaseClaimDtoResponseServiceResponse>(result200);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetDataListIndexDtoResponseListServiceResponse>(null as any);
+        return Promise.resolve<CalculateCaseClaimDtoResponseServiceResponse>(null as any);
+    }
+}
+
+export class IClaimClient {
+    private instance: AxiosInstance;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, instance?: AxiosInstance) {
+        this.instance = instance ? instance : axios.create();
+
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
     }
 
     /**
-     * API สำหรับ Insert ข้อมูล Store
-     * @param body (optional)
+     * API สำหรับ Get ข้อมูล เช็คสิทธิ์ความคุ้มครอง
+     * @param hospitalCode (optional)
+     * @param claimType (optional)
+     * @param episodeType (optional)
+     * @param incurredDate (optional)
+     * @param incurredTime (optional)
+     * @param incidentDate (optional)
+     * @param incidentTime (optional)
+     * @param claimFromMotorcycle (optional)
+     * @param searchOptionId (optional)
+     * @param userName (optional)
+     * @param cIDPassport (optional)
+     * @param iD (optional)
+     * @param insurerCode (optional)
+     * @param policyNumber (optional)
+     * @param causeOfAccident (optional)
+     * @param applicationCode (optional)
+     * @param name (optional)
+     * @param surName (optional)
+     * @param birthDate (optional)
      * @return Success
      */
-    insertDataByStore(
-        body?: InsertDataByStoreDtoRequest | undefined,
+    checkEligible(
+        iClaimToken: string,
+        hospitalCode?: string | undefined,
+        claimType?: string | undefined,
+        episodeType?: string | undefined,
+        incurredDate?: dayjs.Dayjs | undefined,
+        incurredTime?: dayjs.Dayjs | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        incidentTime?: dayjs.Dayjs | undefined,
+        claimFromMotorcycle?: boolean | undefined,
+        searchOptionId?: number | undefined,
+        userName?: string | undefined,
+        cIDPassport?: string | undefined,
+        iD?: string | undefined,
+        insurerCode?: string | undefined,
+        policyNumber?: string | undefined,
+        causeOfAccident?: string | undefined,
+        applicationCode?: string | undefined,
+        name?: string | undefined,
+        surName?: string | undefined,
+        birthDate?: dayjs.Dayjs | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<InsertDataByStoreDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/insert/store";
+    ): Promise<CheckEligibleDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/IClaim/check-eligible?";
+        if (hospitalCode === null) throw new Error("The parameter 'hospitalCode' cannot be null.");
+        else if (hospitalCode !== undefined) url_ += "HospitalCode=" + encodeURIComponent("" + hospitalCode) + "&";
+        if (claimType === null) throw new Error("The parameter 'claimType' cannot be null.");
+        else if (claimType !== undefined) url_ += "ClaimType=" + encodeURIComponent("" + claimType) + "&";
+        if (episodeType === null) throw new Error("The parameter 'episodeType' cannot be null.");
+        else if (episodeType !== undefined) url_ += "EpisodeType=" + encodeURIComponent("" + episodeType) + "&";
+        if (incurredDate === null) throw new Error("The parameter 'incurredDate' cannot be null.");
+        else if (incurredDate !== undefined)
+            url_ +=
+                "IncurredDate=" +
+                encodeURIComponent(incurredDate ? "" + incurredDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (incurredTime === null) throw new Error("The parameter 'incurredTime' cannot be null.");
+        else if (incurredTime !== undefined)
+            url_ +=
+                "IncurredTime=" +
+                encodeURIComponent(incurredTime ? "" + incurredTime.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
+        else if (incidentDate !== undefined)
+            url_ +=
+                "IncidentDate=" +
+                encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (incidentTime === null) throw new Error("The parameter 'incidentTime' cannot be null.");
+        else if (incidentTime !== undefined)
+            url_ +=
+                "IncidentTime=" +
+                encodeURIComponent(incidentTime ? "" + incidentTime.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (claimFromMotorcycle === null) throw new Error("The parameter 'claimFromMotorcycle' cannot be null.");
+        else if (claimFromMotorcycle !== undefined)
+            url_ += "ClaimFromMotorcycle=" + encodeURIComponent("" + claimFromMotorcycle) + "&";
+        if (searchOptionId === null) throw new Error("The parameter 'searchOptionId' cannot be null.");
+        else if (searchOptionId !== undefined)
+            url_ += "SearchOptionId=" + encodeURIComponent("" + searchOptionId) + "&";
+        if (userName === null) throw new Error("The parameter 'userName' cannot be null.");
+        else if (userName !== undefined) url_ += "UserName=" + encodeURIComponent("" + userName) + "&";
+        if (cIDPassport === null) throw new Error("The parameter 'cIDPassport' cannot be null.");
+        else if (cIDPassport !== undefined) url_ += "CIDPassport=" + encodeURIComponent("" + cIDPassport) + "&";
+        if (iD === null) throw new Error("The parameter 'iD' cannot be null.");
+        else if (iD !== undefined) url_ += "ID=" + encodeURIComponent("" + iD) + "&";
+        if (insurerCode === null) throw new Error("The parameter 'insurerCode' cannot be null.");
+        else if (insurerCode !== undefined) url_ += "InsurerCode=" + encodeURIComponent("" + insurerCode) + "&";
+        if (policyNumber === null) throw new Error("The parameter 'policyNumber' cannot be null.");
+        else if (policyNumber !== undefined) url_ += "PolicyNumber=" + encodeURIComponent("" + policyNumber) + "&";
+        if (causeOfAccident === null) throw new Error("The parameter 'causeOfAccident' cannot be null.");
+        else if (causeOfAccident !== undefined)
+            url_ += "CauseOfAccident=" + encodeURIComponent("" + causeOfAccident) + "&";
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
+        else if (applicationCode !== undefined)
+            url_ += "ApplicationCode=" + encodeURIComponent("" + applicationCode) + "&";
+        if (name === null) throw new Error("The parameter 'name' cannot be null.");
+        else if (name !== undefined) url_ += "Name=" + encodeURIComponent("" + name) + "&";
+        if (surName === null) throw new Error("The parameter 'surName' cannot be null.");
+        else if (surName !== undefined) url_ += "SurName=" + encodeURIComponent("" + surName) + "&";
+        if (birthDate === null) throw new Error("The parameter 'birthDate' cannot be null.");
+        else if (birthDate !== undefined)
+            url_ +=
+                "BirthDate=" + encodeURIComponent(birthDate ? "" + birthDate.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
         url_ = url_.replace(/[?&]$/, "");
 
-        const content_ = JSON.stringify(body, customFormatter);
-
         let options_: AxiosRequestConfig = {
-            data: content_,
-            method: "POST",
+            method: "GET",
             url: url_,
             headers: {
-                "Content-Type": "application/json-patch+json",
+                IClaimToken: iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
                 Accept: "text/plain",
             },
             cancelToken,
@@ -264,11 +229,11 @@ export class CoreClaimClient {
                 }
             })
             .then((_response: AxiosResponse) => {
-                return this.processInsertDataByStore(_response);
+                return this.processCheckEligible(_response);
             });
     }
 
-    protected processInsertDataByStore(response: AxiosResponse): Promise<InsertDataByStoreDtoResponseServiceResponse> {
+    protected processCheckEligible(response: AxiosResponse): Promise<CheckEligibleDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -283,222 +248,12 @@ export class CoreClaimClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<InsertDataByStoreDtoResponseServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
+            return Promise.resolve<CheckEligibleDtoResponseListServiceResponse>(result200);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<InsertDataByStoreDtoResponseServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Insert ข้อมูล LinQ
-     * @param body (optional)
-     * @return Success
-     */
-    insertData(
-        body?: InsertDataDtoRequest | undefined,
-        cancelToken?: CancelToken | undefined
-    ): Promise<InsertDataDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/insert";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body, customFormatter);
-
-        let options_: AxiosRequestConfig = {
-            data: content_,
-            method: "POST",
-            url: url_,
-            headers: {
-                "Content-Type": "application/json-patch+json",
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processInsertData(_response);
-            });
-    }
-
-    protected processInsertData(response: AxiosResponse): Promise<InsertDataDtoResponseServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<InsertDataDtoResponseServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<InsertDataDtoResponseServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Update ข้อมูล Store
-     * @param body (optional)
-     * @return Success
-     */
-    updateDataByStore(
-        body?: UpdateDataByStoreDtoRequest | undefined,
-        cancelToken?: CancelToken | undefined
-    ): Promise<UpdateDataByStoreDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/update/store";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body, customFormatter);
-
-        let options_: AxiosRequestConfig = {
-            data: content_,
-            method: "POST",
-            url: url_,
-            headers: {
-                "Content-Type": "application/json-patch+json",
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processUpdateDataByStore(_response);
-            });
-    }
-
-    protected processUpdateDataByStore(response: AxiosResponse): Promise<UpdateDataByStoreDtoResponseServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<UpdateDataByStoreDtoResponseServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<UpdateDataByStoreDtoResponseServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Insert ข้อมูล LinQ
-     * @param body (optional)
-     * @return Success
-     */
-    updateData(
-        body?: UpdateDataDtoRequest | undefined,
-        cancelToken?: CancelToken | undefined
-    ): Promise<UpdateDataDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/update";
-        url_ = url_.replace(/[?&]$/, "");
-
-        const content_ = JSON.stringify(body, customFormatter);
-
-        let options_: AxiosRequestConfig = {
-            data: content_,
-            method: "POST",
-            url: url_,
-            headers: {
-                "Content-Type": "application/json-patch+json",
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processUpdateData(_response);
-            });
-    }
-
-    protected processUpdateData(response: AxiosResponse): Promise<UpdateDataDtoResponseServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<UpdateDataDtoResponseServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<UpdateDataDtoResponseServiceResponse>(null as any);
+        return Promise.resolve<CheckEligibleDtoResponseListServiceResponse>(null as any);
     }
 }
 
@@ -521,7 +276,7 @@ export class MastersClient {
     users(
         userId?: number | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<GetAllUserDtoResponseListServiceResponse> {
+    ): Promise<AllUserDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/users?";
         if (userId === null) throw new Error("The parameter 'userId' cannot be null.");
         else if (userId !== undefined) url_ += "userId=" + encodeURIComponent("" + userId) + "&";
@@ -550,7 +305,7 @@ export class MastersClient {
             });
     }
 
-    protected processUsers(response: AxiosResponse): Promise<GetAllUserDtoResponseListServiceResponse> {
+    protected processUsers(response: AxiosResponse): Promise<AllUserDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -565,80 +320,16 @@ export class MastersClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<GetAllUserDtoResponseListServiceResponse>(result200);
+            return Promise.resolve<AllUserDtoResponseListServiceResponse>(result200);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<GetAllUserDtoResponseListServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Get ข้อมูล New SIMB
-     * @return Success
-     */
-    simb(
-        formatTypeId: number,
-        patientTypeId: number,
-        cancelToken?: CancelToken | undefined
-    ): Promise<GetInputToStandardMappingDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/Masters/simb?";
-        if (formatTypeId === undefined || formatTypeId === null)
-            throw new Error("The parameter 'formatTypeId' must be defined and cannot be null.");
-        else url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
-        if (patientTypeId === undefined || patientTypeId === null)
-            throw new Error("The parameter 'patientTypeId' must be defined and cannot be null.");
-        else url_ += "patientTypeId=" + encodeURIComponent("" + patientTypeId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processSimb(_response);
-            });
-    }
-
-    protected processSimb(response: AxiosResponse): Promise<GetInputToStandardMappingDtoResponseListServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<GetInputToStandardMappingDtoResponseListServiceResponse>(result200);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<GetInputToStandardMappingDtoResponseListServiceResponse>(null as any);
+        return Promise.resolve<AllUserDtoResponseListServiceResponse>(null as any);
     }
 }
 
-export interface GetAllUserDtoResponse {
+export interface AllUserDtoResponse {
     userId?: number | undefined;
     employeeId?: number;
     personId?: number | undefined;
@@ -661,8 +352,8 @@ export interface GetAllUserDtoResponse {
     phoneNo?: string | undefined;
 }
 
-export interface GetAllUserDtoResponseListServiceResponse {
-    data?: GetAllUserDtoResponse[] | undefined;
+export interface AllUserDtoResponseListServiceResponse {
+    data?: AllUserDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -675,12 +366,23 @@ export interface GetAllUserDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface GetDataListDtoResponse {
-    totalCount?: number | undefined;
+export interface CalculateCaseClaimDtoRequest {
+    caseId?: string;
+    isSimulateCase?: boolean;
+    jsonDetail?: CalculateCaseClaimItem[] | undefined;
 }
 
-export interface GetDataListDtoResponseListServiceResponse {
-    data?: GetDataListDtoResponse[] | undefined;
+export interface CalculateCaseClaimDtoResponse {
+    medicalExpense?: MedicalExpenseList[] | undefined;
+    compensateExpense?: string | undefined;
+    medicalNet?: number;
+    medicalPay?: number;
+    summaryMedicalPay?: number;
+    summaryMedicalUnPay?: number;
+}
+
+export interface CalculateCaseClaimDtoResponseServiceResponse {
+    data?: CalculateCaseClaimDtoResponse;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -693,10 +395,74 @@ export interface GetDataListDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface GetDataListIndexDtoResponse {}
+export interface CalculateCaseClaimItem {
+    id?: number;
+    code?: string | undefined;
+    description?: string | undefined;
+    claimAmount?: number;
+    discount?: number;
+    notCovered?: number;
+    reason?: string | undefined;
+    remark?: string | undefined;
+}
 
-export interface GetDataListIndexDtoResponseListServiceResponse {
-    data?: GetDataListIndexDtoResponse[] | undefined;
+export interface CheckEligibleDtoResponse {
+    checkeligibleId?: string | undefined;
+    applicationCode?: string | undefined;
+    customerDetail_id?: string | undefined;
+    refID?: string | undefined;
+    transactionNo?: string | undefined;
+    hospitalCode?: string | undefined;
+    insurerCode?: string | undefined;
+    identityId?: string | undefined;
+    passportCardID?: string | undefined;
+    dob?: dayjs.Dayjs | undefined;
+    policyNumber?: string | undefined;
+    titleName?: string | undefined;
+    firstName?: string | undefined;
+    midName?: string | undefined;
+    lastName?: string | undefined;
+    planCode?: string | undefined;
+    planName?: string | undefined;
+    insuranceIDType?: string | undefined;
+    insuranceType?: string | undefined;
+    episodeType?: string | undefined;
+    serviceType?: string | undefined;
+    effectiveDate?: dayjs.Dayjs | undefined;
+    effectiveTime?: string | undefined;
+    expireDate?: dayjs.Dayjs | undefined;
+    expireTime?: string | undefined;
+    coverageStatusCode?: string | undefined;
+    coverageStatus?: string | undefined;
+    coverageClaimStatusCode?: string | undefined;
+    coverageClaimStatus?: string | undefined;
+    coverageClaimRemark?: string | undefined;
+    benefitName?: string | undefined;
+    benefitAmount?: number | undefined;
+    benefitTimes?: string | undefined;
+    benefitDays?: string | undefined;
+    benefitEmergencyHours?: string | undefined;
+    benefitCoPaymentPercentage?: string | undefined;
+    benefitTimesPerDay?: string | undefined;
+    consumeBenefitAmount?: string | undefined;
+    consumeBenefitTimes?: string | undefined;
+    consumeBenefitDays?: string | undefined;
+    consumeBenefitTimesPerDay?: string | undefined;
+    exclusionProduct?: string | undefined;
+    exclusionPolicy?: string | undefined;
+    exclusionPersonal?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    updatedDate?: dayjs.Dayjs | undefined;
+    benefitCode?: string | undefined;
+    claimExpenseCode?: string | undefined;
+    claimExpenseDetail?: string | undefined;
+    simbCode?: string | undefined;
+    simbDescriptionTH?: string | undefined;
+    simbDescriptionEN?: string | undefined;
+}
+
+export interface CheckEligibleDtoResponseListServiceResponse {
+    data?: CheckEligibleDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -709,142 +475,12 @@ export interface GetDataListIndexDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface GetDataSingleDtoResponse {}
-
-export interface GetDataSingleDtoResponseServiceResponse {
-    data?: GetDataSingleDtoResponse;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
-export interface GetInputToStandardMappingDtoResponse {
-    inputToStandardMappingId?: number;
-    formatTypeId?: number;
-    inputItemCode?: string | undefined;
-    standardMedicalExpenseId?: number;
-    patientTypeId?: number;
-    descriptionEN?: string | undefined;
-    descriptionTH?: string | undefined;
-    standardMedicalExpenseCategoryId?: number;
-    backgroundColorCode?: string | undefined;
-}
-
-export interface GetInputToStandardMappingDtoResponseListServiceResponse {
-    data?: GetInputToStandardMappingDtoResponse[] | undefined;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
-export interface InsertDataByStoreDtoRequest {
-    userId?: number;
-}
-
-export interface InsertDataByStoreDtoResponse {
-    isResult?: boolean;
-    result?: string | undefined;
-    msg?: string | undefined;
-}
-
-export interface InsertDataByStoreDtoResponseServiceResponse {
-    data?: InsertDataByStoreDtoResponse;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
-export interface InsertDataDtoRequest {
-    userId?: number;
-}
-
-export interface InsertDataDtoResponse {
-    isResult?: boolean;
-    result?: string | undefined;
-    msg?: string | undefined;
-}
-
-export interface InsertDataDtoResponseServiceResponse {
-    data?: InsertDataDtoResponse;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
-export interface UpdateDataByStoreDtoRequest {
-    userId?: number;
-}
-
-export interface UpdateDataByStoreDtoResponse {
-    isResult?: boolean;
-    result?: string | undefined;
-    msg?: string | undefined;
-}
-
-export interface UpdateDataByStoreDtoResponseServiceResponse {
-    data?: UpdateDataByStoreDtoResponse;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
-export interface UpdateDataDtoRequest {
-    userId?: number;
-}
-
-export interface UpdateDataDtoResponse {
-    isResult?: boolean;
-    result?: string | undefined;
-    msg?: string | undefined;
-}
-
-export interface UpdateDataDtoResponseServiceResponse {
-    data?: UpdateDataDtoResponse;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
+export interface MedicalExpenseList {
+    expenseCategoryName?: string | undefined;
+    benefitName?: string | undefined;
+    coveredAmount?: number;
+    nonCoveredAmount?: number;
+    totalAmount?: number;
 }
 
 export class ApiException extends Error {

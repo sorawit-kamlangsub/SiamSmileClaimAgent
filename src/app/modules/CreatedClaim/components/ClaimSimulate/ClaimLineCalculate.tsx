@@ -47,6 +47,7 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
 import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/MiscellaneousServicesOutlined";
+import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
@@ -244,11 +245,14 @@ const ClaimLineCalculate = () => {
         isCategoryLoading,
         initItems,
         handleNext,
+        isFrequentLoading,
     } = useClaimLineCalculate(() => navigate("summary"));
 
     useEffect(() => {
-        initItems();
-    }, []);
+        if (!isFrequentLoading) {
+            initItems();
+        }
+    }, [isFrequentLoading]);
 
     const fmt = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
@@ -340,128 +344,32 @@ const ClaimLineCalculate = () => {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {filledItems.map((item, idx) => (
-                                            <TableRow
-                                                key={item.id}
-                                                sx={{
-                                                    bgcolor: idx % 2 === 0 ? "white" : "grey.50",
-                                                    "&:hover": {
-                                                        bgcolor: "primary.50",
-                                                        transition: "background 0.15s",
-                                                    },
-                                                }}
-                                            >
-                                                <TableCell sx={bodyCell}>
-                                                    <Typography variant="body2" fontWeight={500}>
-                                                        {item.code} {item.description}
-                                                    </Typography>
-                                                </TableCell>
-                                                <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                    <TextField
-                                                        size="small"
-                                                        value={item.claimAmount}
-                                                        onChange={(e) =>
-                                                            handleUpdateItem({ ...item, claimAmount: e.target.value })
-                                                        }
-                                                        type="number"
-                                                        inputProps={{
-                                                            min: 0,
-                                                            style: { textAlign: "right", fontSize: 13 },
-                                                        }}
-                                                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                    <TextField
-                                                        size="small"
-                                                        value={item.discount}
-                                                        onChange={(e) =>
-                                                            handleUpdateItem({ ...item, discount: e.target.value })
-                                                        }
-                                                        type="number"
-                                                        inputProps={{
-                                                            min: 0,
-                                                            style: { textAlign: "right", fontSize: 13 },
-                                                        }}
-                                                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                    <TextField
-                                                        size="small"
-                                                        value={item.notCovered}
-                                                        onChange={(e) =>
-                                                            handleUpdateItem({ ...item, notCovered: e.target.value })
-                                                        }
-                                                        type="number"
-                                                        inputProps={{
-                                                            min: 0,
-                                                            style: { textAlign: "right", fontSize: 13 },
-                                                        }}
-                                                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                    <Select
-                                                        size="small"
-                                                        value={item.reason}
-                                                        onChange={(e) =>
-                                                            handleUpdateItem({ ...item, reason: e.target.value })
-                                                        }
-                                                        displayEmpty
-                                                        fullWidth
-                                                        sx={{ fontSize: 13 }}
-                                                    >
-                                                        <MenuItem value="">
-                                                            <em>-</em>
-                                                        </MenuItem>
-                                                        {notCoveredReasonOptions.map((o) => (
-                                                            <MenuItem
-                                                                key={o.value}
-                                                                value={o.value}
-                                                                sx={{ fontSize: 13 }}
-                                                            >
-                                                                {o.label}
-                                                            </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </TableCell>
-                                                <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                    <TextField
-                                                        size="small"
-                                                        value={item.remark}
-                                                        onChange={(e) =>
-                                                            handleUpdateItem({ ...item, remark: e.target.value })
-                                                        }
-                                                        inputProps={{ style: { fontSize: 13 } }}
-                                                        sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
-                                                    />
-                                                </TableCell>
-                                                <TableCell sx={{ ...bodyCell, textAlign: "center", p: 0.5 }}>
-                                                    <Tooltip
-                                                        title="ลบ"
-                                                        arrow
-                                                        placement="top"
-                                                        TransitionComponent={Zoom}
-                                                        enterDelay={100}
-                                                        leaveDelay={50}
-                                                    >
-                                                        <IconButton
-                                                            size="small"
-                                                            color="error"
-                                                            onClick={() => handleRemoveItem(item.id)}
-                                                            sx={{
-                                                                bgcolor: "error.50",
-                                                                "&:hover": { bgcolor: "error.100" },
-                                                            }}
-                                                        >
-                                                            <FontAwesomeIcon icon="trash-can" fontSize={18} />
-                                                        </IconButton>
-                                                    </Tooltip>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        {filledItems.length === 0 && (
+                                        {isFrequentLoading ? (
+                                            // ── Skeleton rows ระหว่าง loading ──
+                                            Array.from({ length: 3 }).map((_, i) => (
+                                                <TableRow key={i} sx={{ bgcolor: i % 2 === 0 ? "white" : "grey.50" }}>
+                                                    <TableCell sx={bodyCell}>
+                                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                            <Skeleton variant="rounded" width={36} height={16} />
+                                                            <Skeleton variant="text" width="60%" />
+                                                        </Box>
+                                                    </TableCell>
+                                                    {[...Array(5)].map((_, j) => (
+                                                        <TableCell key={j} sx={{ ...bodyCell, p: 0.5 }}>
+                                                            <Skeleton variant="rounded" height={32} />
+                                                        </TableCell>
+                                                    ))}
+                                                    <TableCell sx={{ ...bodyCell, textAlign: "center", p: 0.5 }}>
+                                                        <Skeleton
+                                                            variant="circular"
+                                                            width={28}
+                                                            height={28}
+                                                            sx={{ mx: "auto" }}
+                                                        />
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        ) : filledItems.length === 0 ? (
                                             <TableRow>
                                                 <TableCell
                                                     colSpan={7}
@@ -470,7 +378,145 @@ const ClaimLineCalculate = () => {
                                                     ยังไม่มีรายการ
                                                 </TableCell>
                                             </TableRow>
+                                        ) : (
+                                            filledItems.map((item, idx) => (
+                                                <TableRow
+                                                    key={item.id}
+                                                    sx={{
+                                                        bgcolor: idx % 2 === 0 ? "white" : "grey.50",
+                                                        "&:hover": {
+                                                            bgcolor: "primary.50",
+                                                            transition: "background 0.15s",
+                                                        },
+                                                    }}
+                                                >
+                                                    <TableCell sx={bodyCell}>
+                                                        <Typography variant="body2" fontWeight={500}>
+                                                            {item.code} {item.description}
+                                                        </Typography>
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                                        <TextField
+                                                            size="small"
+                                                            value={item.claimAmount}
+                                                            onChange={(e) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    claimAmount: e.target.value,
+                                                                })
+                                                            }
+                                                            type="number"
+                                                            inputProps={{
+                                                                min: 0,
+                                                                style: { textAlign: "right", fontSize: 13 },
+                                                            }}
+                                                            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                                        <TextField
+                                                            size="small"
+                                                            value={item.discount}
+                                                            onChange={(e) =>
+                                                                handleUpdateItem({ ...item, discount: e.target.value })
+                                                            }
+                                                            type="number"
+                                                            inputProps={{
+                                                                min: 0,
+                                                                style: { textAlign: "right", fontSize: 13 },
+                                                            }}
+                                                            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                                        <TextField
+                                                            size="small"
+                                                            value={item.notCovered}
+                                                            onChange={(e) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    notCovered: e.target.value,
+                                                                })
+                                                            }
+                                                            type="number"
+                                                            inputProps={{
+                                                                min: 0,
+                                                                style: { textAlign: "right", fontSize: 13 },
+                                                            }}
+                                                            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                                        <Select
+                                                            size="small"
+                                                            value={item.reason}
+                                                            onChange={(e) =>
+                                                                handleUpdateItem({ ...item, reason: e.target.value })
+                                                            }
+                                                            displayEmpty
+                                                            fullWidth
+                                                            sx={{ fontSize: 13 }}
+                                                        >
+                                                            <MenuItem value="">
+                                                                <em>-</em>
+                                                            </MenuItem>
+                                                            {notCoveredReasonOptions.map((o) => (
+                                                                <MenuItem
+                                                                    key={o.value}
+                                                                    value={o.value}
+                                                                    sx={{ fontSize: 13 }}
+                                                                >
+                                                                    {o.label}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Select>
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                                        <TextField
+                                                            size="small"
+                                                            value={item.remark}
+                                                            onChange={(e) =>
+                                                                handleUpdateItem({ ...item, remark: e.target.value })
+                                                            }
+                                                            inputProps={{ style: { fontSize: 13 } }}
+                                                            sx={{ "& .MuiOutlinedInput-root": { borderRadius: 1 } }}
+                                                        />
+                                                    </TableCell>
+                                                    <TableCell sx={{ ...bodyCell, textAlign: "center", p: 0.5 }}>
+                                                        <Tooltip
+                                                            title="ลบ"
+                                                            arrow
+                                                            placement="top"
+                                                            TransitionComponent={Zoom}
+                                                            enterDelay={100}
+                                                            leaveDelay={50}
+                                                        >
+                                                            <IconButton
+                                                                size="small"
+                                                                color="error"
+                                                                onClick={() => handleRemoveItem(item.id)}
+                                                                sx={{
+                                                                    bgcolor: "error.50",
+                                                                    "&:hover": { bgcolor: "error.100" },
+                                                                }}
+                                                            >
+                                                                <FontAwesomeIcon icon="trash-can" fontSize={18} />
+                                                            </IconButton>
+                                                        </Tooltip>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
                                         )}
+                                        {/* {filledItems.length === 0 && (
+                                            <TableRow>
+                                                <TableCell
+                                                    colSpan={7}
+                                                    sx={{ textAlign: "center", py: 4, color: "text.disabled" }}
+                                                >
+                                                    ยังไม่มีรายการ
+                                                </TableCell>
+                                            </TableRow>
+                                        )} */}
                                     </TableBody>
                                 </Table>
                             </TableContainer>
@@ -781,7 +827,7 @@ const ClaimLineCalculate = () => {
                         <HeadingWithColor
                             text="สรุปยอดเงิน"
                             color="green"
-                            icon={<AttachMoneyIcon sx={{ fontSize: 18 }} />}
+                            icon={<RequestQuoteIcon sx={{ fontSize: 20 }} />}
                             sx={{ mx: 0, borderRadius: 0, mb: 0 }}
                         />
                         <Box sx={{ p: 2 }}>
@@ -796,7 +842,13 @@ const ClaimLineCalculate = () => {
                                             <Typography variant="body2" color="text.secondary">
                                                 {row.label} :
                                             </Typography>
-                                            <Typography variant="body2" fontWeight={600}>
+                                            <Typography
+                                                variant="body2"
+                                                fontWeight={600}
+                                                color={
+                                                    row.label === "ยอดไม่คุ้มครองรวม" ? "error.main" : "text.primary"
+                                                }
+                                            >
                                                 {row.value}
                                             </Typography>
                                         </Box>
@@ -821,7 +873,7 @@ const ClaimLineCalculate = () => {
                                 }}
                             >
                                 <Box display="flex" alignItems="center" gap={1}>
-                                    <AttachMoneyIcon sx={{ color: "text.secondary", fontSize: 20 }} />
+                                    <AttachMoneyIcon sx={{ color: "success.main", fontSize: 24 }} />
                                     <Typography variant="body2" fontWeight={700} color="text.secondary">
                                         ยอดเงินสุทธิ
                                     </Typography>

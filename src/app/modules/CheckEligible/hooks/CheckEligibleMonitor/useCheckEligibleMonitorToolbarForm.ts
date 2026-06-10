@@ -11,7 +11,7 @@ const useCheckEligibleMonitorToolbarForm = () => {
     const dispatch = useAppDispatch();
 
     const defaultValues: checkeligibleMonitorSearchValuesType = {
-        searchTypeId: 1,
+        searchTypeId: 2,
         searchDetail: "",
     };
 

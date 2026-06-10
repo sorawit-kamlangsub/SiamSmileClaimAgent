@@ -1,5 +1,16 @@
 import React from "react";
-import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, Paper, Stack, Typography } from "@mui/material";
+import {
+    Box,
+    Button,
+    Checkbox,
+    CircularProgress,
+    Divider,
+    FormControlLabel,
+    Grid,
+    Paper,
+    Stack,
+    Typography,
+} from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
@@ -12,7 +23,11 @@ import { CONTINUOUS_CLAIM_OPTIONS, TREATMENT_TYPE_OPTIONS } from "../../store/mo
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
+interface Props {
+    onBack?: () => void;
+}
 const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
     <Stack direction="row" alignItems="center" gap={1} mb={2}>
         <Box
@@ -36,20 +51,6 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ ico
         <Divider sx={{ flex: 1 }} />
     </Stack>
 );
-
-// const InfoChip: React.FC<{ label: string; value: string }> = ({ label, value }) => (
-//     <Stack direction="row" alignItems="center" gap={1}>
-//         <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
-//             {label}
-//         </Typography>
-//         <Chip
-//             label={value || "-"}
-//             size="small"
-//             variant="outlined"
-//             sx={{ fontWeight: 600, borderRadius: "6px", fontSize: "0.8rem" }}
-//         />
-//     </Stack>
-// );
 
 const DaySummaryCard: React.FC<{
     label: string;
@@ -79,17 +80,16 @@ const DaySummaryCard: React.FC<{
     </Paper>
 );
 
-const DaysCalculate: React.FC = () => {
+const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
     const {
         formik,
         daysCalculate,
         openConfirm,
-        // handleAdmitDateChange,
-        // handleDischargeDateChange,
         handleCalculate,
         handleContinuousChange,
         handleConfirm,
         handleCloseConfirm,
+        isCalculating,
     } = useDaysCalculate();
 
     return (
@@ -173,13 +173,18 @@ const DaysCalculate: React.FC = () => {
                     {/* Card Summary */}
                     <Grid container spacing={2} mb={3}>
                         <Grid item xs={4}>
-                            <DaySummaryCard label="วัน IPD" value={formik.values.ipdDays} color="primary" />
+                            <DaySummaryCard label="วัน IPD" value={formik.values.ipdDays || 0} color="primary" />
                         </Grid>
                         <Grid item xs={4}>
-                            <DaySummaryCard label="วัน ICU" value={formik.values.icuDays} color="error" />
+                            <DaySummaryCard label="วัน ICU" value={formik.values.icuDays || 0} color="error" />
                         </Grid>
                         <Grid item xs={4}>
-                            <DaySummaryCard label="วันที่นอน" value={formik.values.bedDays} color="success" disabled />
+                            <DaySummaryCard
+                                label="วันที่นอน"
+                                value={formik.values.bedDays || 0}
+                                color="success"
+                                disabled
+                            />
                         </Grid>
                     </Grid>
 
@@ -267,14 +272,36 @@ const DaysCalculate: React.FC = () => {
                         {/* Spacer */}
                         <Grid item xs={12} sm />
 
+                        {/* ปุ่มย้อนกลับ */}
+                        <Grid item xs={12} sm="auto">
+                            <Button
+                                variant="outlined"
+                                color="inherit"
+                                size="large"
+                                startIcon={<ArrowBackIcon />}
+                                onClick={onBack}
+                                fullWidth
+                                sx={{ borderRadius: 2, fontWeight: 600, px: 3 }}
+                            >
+                                ย้อนกลับ
+                            </Button>
+                        </Grid>
+
                         {/* Button */}
                         <Grid item xs={12} sm="auto">
                             <Button
                                 variant="contained"
                                 color="primary"
                                 size="large"
-                                startIcon={<CalculateOutlinedIcon />}
+                                startIcon={
+                                    isCalculating ? (
+                                        <CircularProgress size={18} color="inherit" />
+                                    ) : (
+                                        <CalculateOutlinedIcon />
+                                    )
+                                }
                                 onClick={handleCalculate}
+                                disabled={isCalculating}
                                 fullWidth
                                 sx={{
                                     px: 4,
@@ -284,7 +311,7 @@ const DaysCalculate: React.FC = () => {
                                     "&:hover": { boxShadow: 4 },
                                 }}
                             >
-                                คำนวณ
+                                {isCalculating ? "กำลังคำนวณ..." : "คำนวณ"}
                             </Button>
                         </Grid>
                     </Grid>
@@ -296,5 +323,4 @@ const DaysCalculate: React.FC = () => {
     );
 };
 
-export default DaysCalculate;
-
+export default TreatmentCalculate;

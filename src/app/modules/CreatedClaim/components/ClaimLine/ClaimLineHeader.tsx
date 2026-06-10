@@ -17,7 +17,7 @@ const ClaimLineHeader: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const formik = useFormik({
-        initialValues: { patientType: 1 },
+        initialValues: { patientType: 2 },
         validate: (v) => {
             const e: any = {};
             if (!v.patientType) e.patientType = "โปรดระบุ";
