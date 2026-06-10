@@ -11,6 +11,7 @@ const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
 const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"];
 
 export const useGetCustomerSearch = (
+    isSearch?: boolean,
     searchIndex?: number | undefined,
     isSeachDetail?: boolean | undefined,
     dateHappen?: Dayjs | undefined,
@@ -38,7 +39,7 @@ export const useGetCustomerSearch = (
                 recordsPerPage
             ),
         {
-            enabled: !!searchIndex,
+            enabled: isSearch && !!searchIndex && !!searchDetail,
             refetchOnWindowFocus: false,
         }
     );

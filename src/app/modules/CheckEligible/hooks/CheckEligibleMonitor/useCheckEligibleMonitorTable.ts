@@ -4,7 +4,7 @@ import { useAppSelector } from "../../../../../redux";
 import { useGetCustomerSearch } from "../../../../api/claimAgentApi";
 
 const useCheckEligibleMonitorTable = () => {
-    const { searchTypeId, searchDetail} = useAppSelector((s) => s.checkeligible.checkeligibleMonitorSearch);
+    const { checkeligibleMonitorSearch, isSearchcheckeligibleMonitor } = useAppSelector((s) => s.checkeligible);
 
     const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
         page: 1,
@@ -12,12 +12,13 @@ const useCheckEligibleMonitorTable = () => {
     });
 
     const { data: apiData, isLoading } = useGetCustomerSearch(
-        searchTypeId, // searchIndex
-        !!searchDetail, // isSeachDetail
+        isSearchcheckeligibleMonitor,
+        checkeligibleMonitorSearch?.searchTypeId, // searchIndex
+        false, // isSeachDetail
         undefined, // dateHappen
         undefined, // schoolId
         undefined, // provinceId
-        searchDetail, // searchDetail
+        checkeligibleMonitorSearch?.searchDetail, // searchDetail
         undefined, // orderingField
         undefined, // ascendingOrder
         paginated.page, // page

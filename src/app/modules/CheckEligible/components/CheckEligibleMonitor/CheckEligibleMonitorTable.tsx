@@ -23,40 +23,46 @@ const CheckEligibleMonitorTable = () => {
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const {  } = data?.[tableMeta.rowIndex] ?? {};
+                    const { policyCode: appId, productTypeId, cardDetail } = data?.[tableMeta.rowIndex] ?? {};
                     return (
-                        <Grid container direction="row" alignItems="center">
-                            <Grid item xs={12}>
-                                <Tooltip
-                                    title="ดูรายละเอียด"
-                                    arrow
-                                    placement="top"
-                                    TransitionComponent={Zoom}
-                                    enterDelay={100}
-                                    leaveDelay={50}
-                                >
-                                    <IconButton
-                                        aria-label="delete"
-                                        size="small"
-                                        sx={{ backgroundColor: "#E2F2FF" }}
-                                        onClick={() => {
-                                            // window.open(
-                                            //     `/checkeligible/detail/${btoa(appId)}/${btoa(appId)}`,
-                                            //     "_blank"
-                                            // );
-                                        }}
-                                    >
-                                        <ContentPasteSearchIcon color="primary" />
-                                    </IconButton>
-                                </Tooltip>
-                            </Grid>
-                        </Grid>
+                        <>
+                            {productTypeId === 6 || productTypeId === 26 ? (
+                                <Grid container direction="row" alignItems="center">
+                                    <Grid item xs={12}>
+                                        <Tooltip
+                                            title="ดูรายละเอียด"
+                                            arrow
+                                            placement="top"
+                                            TransitionComponent={Zoom}
+                                            enterDelay={100}
+                                            leaveDelay={50}
+                                        >
+                                            <IconButton
+                                                aria-label="delete"
+                                                size="small"
+                                                sx={{ backgroundColor: "#E2F2FF" }}
+                                                onClick={() => {
+                                                    window.open(
+                                                        `checkeligible/detail/${btoa(appId as string)}/${btoa(
+                                                            cardDetail as string
+                                                        )}`,
+                                                        "_blank"
+                                                    );
+                                                }}
+                                            >
+                                                <ContentPasteSearchIcon color="primary" />
+                                            </IconButton>
+                                        </Tooltip>
+                                    </Grid>
+                                </Grid>
+                            ) : null}
+                        </>
                     );
                 },
             },
         },
         {
-            name: "appId",
+            name: "policyCode",
             label: "AppID",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
@@ -66,17 +72,17 @@ const CheckEligibleMonitorTable = () => {
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "productName",
+            name: "productTypeName",
             label: "ผลิตภัณฑ์",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "productCategoryName",
+            name: "productName",
             label: "แผน",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "startCoverDate",
+            name: "coverageFrom",
             label: "วันที่เริ่มคุ้มครอง",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
@@ -86,7 +92,7 @@ const CheckEligibleMonitorTable = () => {
             },
         },
         {
-            name: "endCoverDate",
+            name: "coverageTo",
             label: "วันที่สิ้นสุดความคุ้มครอง",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
