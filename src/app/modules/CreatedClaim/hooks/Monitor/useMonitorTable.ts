@@ -115,12 +115,13 @@ export const mockClaimHistoryPA: ClaimHistoryItem[] = [
 
 export const useMonitorTable = () => {
     const dispatch = useAppDispatch();
-    const { search } = useAppSelector(monitorSelector);
+    const { search, isSrearchMonitor } = useAppSelector(monitorSelector);
     const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
     });
     const { data, isLoading } = useGetCustomerSearch(
+        isSrearchMonitor,
         search.searchTypeId,
         false,
         search.dateHappen,
@@ -172,5 +173,5 @@ export const useMonitorTable = () => {
         dispatch(setSelectedPolicy({ ...policy, appId: row.appId, productName: row.productName }));
     };
 
-    return { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect };
+    return { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search };
 };

@@ -47,6 +47,7 @@ interface MonitorState {
     search: checkeligibleMonitorSearchValuesType;
     selectedPolicy: SelectedPolicyInfo | null;
     claimHistory: ClaimHistoryItem[];
+    isSrearchMonitor?: boolean;
 }
 
 const initialState: MonitorState = {
@@ -60,6 +61,7 @@ const initialState: MonitorState = {
     },
     selectedPolicy: null,
     claimHistory: [],
+    isSrearchMonitor: false,
 };
 
 const monitorSlice = createSlice({
@@ -68,6 +70,7 @@ const monitorSlice = createSlice({
     reducers: {
         setSearchcheckeligibleMonitor(state, action: PayloadAction<checkeligibleMonitorSearchValuesType>) {
             state.search = action.payload;
+            state.isSrearchMonitor = true;
         },
         setSelectedPolicy(state, action: PayloadAction<SelectedPolicyInfo | null>) {
             state.selectedPolicy = action.payload;

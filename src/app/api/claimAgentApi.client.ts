@@ -323,40 +323,43 @@ export class ClaimAgentMasterClient {
         this.instance = instance ? instance : axios.create();
 
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-
     }
 
     /**
      * API สำหรับ Get ข้อมูล Province List (จังหวัด)
-     * @param provinceId (optional) 
+     * @param provinceId (optional)
      * @return Success
      */
-    getProvince(provinceId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetProvinceDtoResponseListServiceResponse> {
+    getProvince(
+        provinceId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetProvinceDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/master/province?";
-        if (provinceId === null)
-            throw new Error("The parameter 'provinceId' cannot be null.");
-        else if (provinceId !== undefined)
-            url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
+        if (provinceId === null) throw new Error("The parameter 'provinceId' cannot be null.");
+        else if (provinceId !== undefined) url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetProvince(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetProvince(_response);
+            });
     }
 
     protected processGetProvince(response: AxiosResponse): Promise<GetProvinceDtoResponseListServiceResponse> {
@@ -372,10 +375,9 @@ export class ClaimAgentMasterClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetProvinceDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -385,10 +387,13 @@ export class ClaimAgentMasterClient {
 
     /**
      * API สำหรับ Get ข้อมูล DocumentRecipientType (ประเภทผู้รับเอกสาร)
-     * @param documentRecipientTypeId (optional) 
+     * @param documentRecipientTypeId (optional)
      * @return Success
      */
-    getDocumentRecipientType(documentRecipientTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
+    getDocumentRecipientType(
+        documentRecipientTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/master/document/recipient-type?";
         if (documentRecipientTypeId === null)
             throw new Error("The parameter 'documentRecipientTypeId' cannot be null.");
@@ -400,23 +405,28 @@ export class ClaimAgentMasterClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDocumentRecipientType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDocumentRecipientType(_response);
+            });
     }
 
-    protected processGetDocumentRecipientType(response: AxiosResponse): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
+    protected processGetDocumentRecipientType(
+        response: AxiosResponse
+    ): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -429,7 +439,7 @@ export class ClaimAgentMasterClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDocumentRecipientTypeDtoResponseListServiceResponse>(result200);
 
@@ -752,11 +762,15 @@ export class ClaimAgentMasterClient {
 
     /**
      * API สำหรับ Get ข้อมูล BankAccountRelationType (ประเภทความสัมพันธ์ของบัญชีธนาคาร) BankAccountRelationGroupId : 1 = PH , PA , ClaimMisc : 2 = Motor
-     * @param bankAccountRelationTypeId (optional) 
-     * @param bankAccountRelationGroupId (optional) 
+     * @param bankAccountRelationTypeId (optional)
+     * @param bankAccountRelationGroupId (optional)
      * @return Success
      */
-    getBankAccountRelationType(bankAccountRelationTypeId?: number | undefined, bankAccountRelationGroupId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
+    getBankAccountRelationType(
+        bankAccountRelationTypeId?: number | undefined,
+        bankAccountRelationGroupId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/master/bankaccount/relation/type?";
         if (bankAccountRelationTypeId === null)
             throw new Error("The parameter 'bankAccountRelationTypeId' cannot be null.");
@@ -772,23 +786,28 @@ export class ClaimAgentMasterClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetBankAccountRelationType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBankAccountRelationType(_response);
+            });
     }
 
-    protected processGetBankAccountRelationType(response: AxiosResponse): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
+    protected processGetBankAccountRelationType(
+        response: AxiosResponse
+    ): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -801,10 +820,9 @@ export class ClaimAgentMasterClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetBankAccountRelationTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -814,18 +832,20 @@ export class ClaimAgentMasterClient {
 
     /**
      * API สำหรับ Get ข้อมูล ContactPersonType (ประเภทผู้ติดต่อ) ContactPersonGroupId : 1 = PH , DeathClaim : 2 = PA, 3 = Motor
-     * @param contactPersonTypeId (optional) 
-     * @param contactPersonGroupId (optional) 
+     * @param contactPersonTypeId (optional)
+     * @param contactPersonGroupId (optional)
      * @return Success
      */
-    getContactPersonType(contactPersonTypeId?: number | undefined, contactPersonGroupId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
+    getContactPersonType(
+        contactPersonTypeId?: number | undefined,
+        contactPersonGroupId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/master/contactperson/type?";
-        if (contactPersonTypeId === null)
-            throw new Error("The parameter 'contactPersonTypeId' cannot be null.");
+        if (contactPersonTypeId === null) throw new Error("The parameter 'contactPersonTypeId' cannot be null.");
         else if (contactPersonTypeId !== undefined)
             url_ += "contactPersonTypeId=" + encodeURIComponent("" + contactPersonTypeId) + "&";
-        if (contactPersonGroupId === null)
-            throw new Error("The parameter 'contactPersonGroupId' cannot be null.");
+        if (contactPersonGroupId === null) throw new Error("The parameter 'contactPersonGroupId' cannot be null.");
         else if (contactPersonGroupId !== undefined)
             url_ += "contactPersonGroupId=" + encodeURIComponent("" + contactPersonGroupId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -834,23 +854,28 @@ export class ClaimAgentMasterClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetContactPersonType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetContactPersonType(_response);
+            });
     }
 
-    protected processGetContactPersonType(response: AxiosResponse): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
+    protected processGetContactPersonType(
+        response: AxiosResponse
+    ): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -863,10 +888,9 @@ export class ClaimAgentMasterClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetContactPersonTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);

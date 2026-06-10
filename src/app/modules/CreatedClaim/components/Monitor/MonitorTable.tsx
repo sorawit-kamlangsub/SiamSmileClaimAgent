@@ -12,7 +12,7 @@ import LinearLoading from "../../../_common/components/CustomComponent/LinearLoa
 import { useMonitorTable } from "../../hooks/Monitor/useMonitorTable";
 
 const MonitorTable: React.FC = () => {
-    const { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect } = useMonitorTable();
+    const { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search } = useMonitorTable();
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -93,7 +93,7 @@ const MonitorTable: React.FC = () => {
     };
 
     return (
-        <LinearLoading isLoading={isLoading}>
+        <LinearLoading isLoading={isLoading && !!search.searchDetail}>
             <StandardDataTable
                 name="MonitorTable"
                 title=""
