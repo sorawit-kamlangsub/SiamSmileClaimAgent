@@ -4,6 +4,7 @@ import React from "react";
 import { PaginationSortableDto } from "../../../_common";
 import { ClaimHistoryItem, monitorSelector, setClaimHistory } from "../../store/monitorSlice";
 import { mockClaimHistoryPA, mockClaimHistoryPH } from "./useMonitorTable";
+import { setIsContinuous } from "../../store/claimPHSlice";
 
 export const useMonitorClaimHistory = () => {
     const dispatch = useAppDispatch();
@@ -25,11 +26,19 @@ export const useMonitorClaimHistory = () => {
             const history = selectedPolicy.productName === "PA" ? mockClaimHistoryPA : mockClaimHistoryPH;
             dispatch(setClaimHistory(history));
             setIsLoading(false);
-        }, 400);
+        }, 300);
     }, [selectedPolicy?.appId]);
 
     const handleContinuousClaim = (item: ClaimHistoryItem) => {
         console.log("แจ้งเคลมต่อเนื่อง", item);
+        const continuous = true;
+        dispatch(setIsContinuous(continuous));
+
+        if (item.productId === 1) {
+            window.open(`claim/pa`, "_blank");
+        } else if (item.productId === 2) {
+            window.open(`claim/ph`, "_blank");
+        }
     };
 
     const handleNewClaim = (productTypeId: number) => {

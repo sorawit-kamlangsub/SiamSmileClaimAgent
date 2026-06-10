@@ -4,19 +4,15 @@ import { setItems, ClaimLineItem } from "../../store/claimLineSlice";
 import { useGetClaimExpenseDetail } from "../../../../api/mastersApi";
 
 interface UseClaimLineItemsProps {
-    formatTypeId?: number;
-    patientTypeId?: number;
+    formatTypeId: number;
+    patientTypeId: number;
     enabled: boolean;
 }
 
 export const useClaimLineItems = ({ formatTypeId, patientTypeId, enabled }: UseClaimLineItemsProps) => {
     const dispatch = useAppDispatch();
 
-    const { data, isLoading, isError, refetch } = useGetClaimExpenseDetail(
-        enabled,
-        !!formatTypeId ? formatTypeId : undefined,
-        !!patientTypeId ? patientTypeId : undefined
-    );
+    const { data, isLoading, isError, refetch } = useGetClaimExpenseDetail(enabled, formatTypeId, patientTypeId);
 
     useEffect(() => {
         if (!data?.data) return;

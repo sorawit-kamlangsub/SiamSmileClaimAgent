@@ -1,6 +1,5 @@
-// components/CheckEligible/CoverageSummaryPanel.tsx
 import React from "react";
-import { Box, Typography, Grid, Divider, Paper } from "@mui/material";
+import { Box, Typography, Divider } from "@mui/material";
 import ShieldIcon from "@mui/icons-material/Shield";
 import ContinuousClaimTable from "./ContinuousClaimTable";
 import useCheckEligibleCoverage from "../../hooks/CheckEligibleDetail/useCheckEligibleCoverage";
@@ -286,6 +285,8 @@ const CoverageSummaryPanel: React.FC<Props> = ({
     const isOPD = CheckeLigibleDetails?.claimType?.toLowerCase() === "opd";
 
     const BenefitCard = isOPD ? BenefitCardOPD : BenefitCardIPD;
+
+    console.log("🚀 ~ AmountBlock:", AmountBlock);
 
     return (
         <Box>

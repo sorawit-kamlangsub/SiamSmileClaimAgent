@@ -29,7 +29,7 @@ export class CoreClaimClient {
      * @return Success
      */
     detail(id: number, cancelToken?: CancelToken | undefined): Promise<GetDataSingleDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/single/{id}/detail";
+        let url_ = this.baseUrl + "/single/{id}/detail";
         if (id === undefined || id === null) throw new Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
         url_ = url_.replace(/[?&]$/, "");
@@ -99,7 +99,7 @@ export class CoreClaimClient {
         recordsPerPage?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetDataListDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/list/filter?";
+        let url_ = this.baseUrl + "/list/filter?";
         if (id === null) throw new Error("The parameter 'id' cannot be null.");
         else if (id !== undefined) url_ += "id=" + encodeURIComponent("" + id) + "&";
         if (page === null) throw new Error("The parameter 'page' cannot be null.");
@@ -170,7 +170,7 @@ export class CoreClaimClient {
         id?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetDataListIndexDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/list/index/detail?";
+        let url_ = this.baseUrl + "/list/index/detail?";
         if (id === null) throw new Error("The parameter 'id' cannot be null.");
         else if (id !== undefined) url_ += "id=" + encodeURIComponent("" + id) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -238,7 +238,7 @@ export class CoreClaimClient {
         body?: InsertDataByStoreDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<InsertDataByStoreDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/insert/store";
+        let url_ = this.baseUrl + "/insert/store";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body, customFormatter);
@@ -306,7 +306,7 @@ export class CoreClaimClient {
         body?: InsertDataDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<InsertDataDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/insert";
+        let url_ = this.baseUrl + "/insert";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body, customFormatter);
@@ -374,7 +374,7 @@ export class CoreClaimClient {
         body?: UpdateDataByStoreDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<UpdateDataByStoreDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/update/store";
+        let url_ = this.baseUrl + "/update/store";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body, customFormatter);
@@ -442,7 +442,7 @@ export class CoreClaimClient {
         body?: UpdateDataDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<UpdateDataDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/coreclaim/update";
+        let url_ = this.baseUrl + "/update";
         url_ = url_.replace(/[?&]$/, "");
 
         const content_ = JSON.stringify(body, customFormatter);
@@ -575,20 +575,20 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล New SIMB
-     * @param formatTypeId (optional)
-     * @param patientTypeId (optional)
      * @return Success
      */
     simb(
-        formatTypeId?: number | undefined,
-        patientTypeId?: number | undefined,
+        formatTypeId: number,
+        patientTypeId: number,
         cancelToken?: CancelToken | undefined
     ): Promise<GetInputToStandardMappingDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/simb?";
-        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
-        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
-        if (patientTypeId === null) throw new Error("The parameter 'patientTypeId' cannot be null.");
-        else if (patientTypeId !== undefined) url_ += "patientTypeId=" + encodeURIComponent("" + patientTypeId) + "&";
+        if (formatTypeId === undefined || formatTypeId === null)
+            throw new Error("The parameter 'formatTypeId' must be defined and cannot be null.");
+        else url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (patientTypeId === undefined || patientTypeId === null)
+            throw new Error("The parameter 'patientTypeId' must be defined and cannot be null.");
+        else url_ += "patientTypeId=" + encodeURIComponent("" + patientTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {

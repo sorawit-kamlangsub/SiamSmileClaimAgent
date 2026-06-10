@@ -7,7 +7,6 @@ import {
     setBankAccounts,
     setContacts,
     setInsured,
-    setIsContinuous,
     setOldClaim,
     toggleOldClaimHidden,
 } from "../../../store/claimPHSlice";
@@ -15,19 +14,16 @@ import { mockBankAccounts, mockContacts, mockInsuredPH, mockOldClaim } from "../
 import InsuredInfoCardPH from "../../../components/CreateClaim/ClaimPH/InsuredInfoCardPH";
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
 import ClaimFormSection from "../../../components/CreateClaim/ClaimPH/ClaimFormSection";
-import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import ClaimHistoryTable from "../../../components/Monitor/ClaimHistoryTable";
-import { useMonitorClaimHistory } from "../../../hooks/Monitor/useMonitorClaimHistory";
+import ClaimHistoryCardPH from "../../../components/CreateClaim/ClaimPH/ClaimHistoryCardPH";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { isContinuous, oldClaim, insured } = useAppSelector(claimPHSelector);
-    const { handleContinuousClaim } = useMonitorClaimHistory();
 
     useEffect(() => {
         const continuous = true;
-        dispatch(setIsContinuous(continuous));
+        // dispatch(setIsContinuous(continuous));
         dispatch(setOldClaim(continuous ? mockOldClaim : null));
         dispatch(setInsured(mockInsuredPH));
         dispatch(setBankAccounts(mockBankAccounts));
@@ -43,9 +39,7 @@ const ClaimPHPage: React.FC = () => {
                 <InsuredInfoCardPH data={insured} onEdit={() => navigate("/monitor")} />
             </Grid>
             <Grid item xs={12} md={8}>
-                <CustomBox sx={{ minHeight: 284 }}>
-                    <ClaimHistoryTable tableId="ClaimHistoryPHTable" onContinuousClaim={handleContinuousClaim} />
-                </CustomBox>
+                <ClaimHistoryCardPH />
             </Grid>
 
             {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}

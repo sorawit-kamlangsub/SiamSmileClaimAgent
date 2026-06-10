@@ -10,9 +10,14 @@ import {
     Grid,
     IconButton,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CloseIcon from "@mui/icons-material/Close";
+import GroupIcon from "@mui/icons-material/Group";
+import CreditCardIcon from "@mui/icons-material/CreditCard";
+import PersonIcon from "@mui/icons-material/Person";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../../redux";
 import { addBankAccount } from "../../../store/claimPHSlice";
@@ -42,8 +47,27 @@ const RELATIONSHIP_OPTIONS = [
     { name: "ผู้อำนวยการสถานศึกษา" },
 ];
 
+const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <Avatar
+        sx={{
+            width: 40,
+            height: 40,
+            bgcolor: "#f3fafe",
+            border: "1px solid #e3f0f6",
+            mt: 1,
+            flexShrink: 0,
+            borderRadius: 2,
+        }}
+        variant="square"
+    >
+        <Box sx={{ color: "primary.main", display: "flex" }}>{children}</Box>
+    </Avatar>
+);
+
 const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
     const dispatch = useAppDispatch();
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const formik = useFormik({
         initialValues: { relationship: "", bankId: "", accountNo: "", accountName: "" },
@@ -51,7 +75,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
             const e: any = {};
             if (!v.relationship) e.relationship = "โปรดระบุ";
             if (!v.bankId) e.bankId = "โปรดระบุ";
-            if (!/^\d{10,15}$/.test(v.accountNo)) e.accountNo = "กรอกตัวเลข 10-15 หลัก";
+            if (!/^\d{10,12}$/.test(v.accountNo)) e.accountNo = "กรอกตัวเลข 10-12 หลัก"; // ★ แก้จาก 15 → 12
             if (!v.accountName.trim()) e.accountName = "โปรดระบุ";
             return e;
         },
@@ -75,7 +99,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
     });
 
     return (
-        <Dialog open={open} maxWidth="sm" fullWidth>
+        <Dialog open={open} maxWidth="sm" fullScreen={fullScreen} fullWidth>
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={1}>
@@ -86,7 +110,6 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                     </Box>
                     <IconButton
                         onClick={onClose}
-                        aria-label="close"
                         size="small"
                         sx={{
                             bgcolor: "error.main",
@@ -101,64 +124,103 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                 </Grid>
                 <Divider sx={{ mt: 1.5 }} />
             </DialogTitle>
+
             <DialogContent>
                 <Grid container spacing={2}>
                     {/* ความสัมพันธ์ */}
                     <Grid item xs={12}>
-                        <FormikDropdown
-                            name="relationship"
-                            label="ความสัมพันธ์ *"
-                            formik={formik}
-                            data={RELATIONSHIP_OPTIONS}
-                            firstItemText="-- เลือก --"
-                            displayFieldName="name"
-                            valueFieldName="name"
-                            fullWidth
-                            size="small"
-                        />
+                        <Box display="flex" alignItems="flex-start" gap={1.5}>
+                            <FieldIcon>
+                                <GroupIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikDropdown
+                                    name="relationship"
+                                    label="ความสัมพันธ์ของบัญชีผู้รับสินไหม"
+                                    formik={formik}
+                                    data={RELATIONSHIP_OPTIONS}
+                                    firstItemText="-- โปรดระบุ --"
+                                    displayFieldName="name"
+                                    valueFieldName="name"
+                                    fullWidth
+                                    size="small"
+                                    required
+                                />
+                            </Box>
+                        </Box>
                     </Grid>
 
                     {/* ธนาคาร */}
                     <Grid item xs={12}>
-                        <FormikDropdown
-                            name="bankId"
-                            label="ธนาคาร *"
-                            formik={formik}
-                            data={BANK_OPTIONS}
-                            firstItemText="-- เลือก --"
-                            displayFieldName="name"
-                            valueFieldName="id"
-                            fullWidth
-                            size="small"
-                        />
+                        <Box display="flex" alignItems="flex-start" gap={1.5}>
+                            <FieldIcon>
+                                <AccountBalanceIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikDropdown
+                                    name="bankId"
+                                    label="ธนาคาร"
+                                    formik={formik}
+                                    data={BANK_OPTIONS}
+                                    firstItemText="-- โปรดระบุ --"
+                                    displayFieldName="name"
+                                    valueFieldName="id"
+                                    fullWidth
+                                    size="small"
+                                    required
+                                />
+                            </Box>
+                        </Box>
                     </Grid>
 
                     {/* เลขที่บัญชี */}
                     <Grid item xs={12}>
-                        <FormikTextField
-                            name="accountNo"
-                            label="เลขที่บัญชี *"
-                            formik={formik}
-                            size="small"
-                            inputProps={{ maxLength: 15 }}
-                            onChange={(e) => {
-                                if (/^\d*$/.test(e.target.value)) formik.setFieldValue("accountNo", e.target.value);
-                            }}
-                        />
+                        <Box display="flex" alignItems="flex-start" gap={1.5}>
+                            <FieldIcon>
+                                <CreditCardIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikTextField
+                                    name="accountNo"
+                                    label="เลขที่บัญชี"
+                                    formik={formik}
+                                    size="small"
+                                    fullWidth
+                                    inputProps={{ maxLength: 12 }}
+                                    onChange={(e) => {
+                                        if (/^\d*$/.test(e.target.value))
+                                            formik.setFieldValue("accountNo", e.target.value);
+                                    }}
+                                    required
+                                />
+                            </Box>
+                        </Box>
                     </Grid>
 
                     {/* ชื่อบัญชี */}
                     <Grid item xs={12}>
-                        <FormikTextField
-                            name="accountName"
-                            label="ชื่อบัญชี *"
-                            formik={formik}
-                            size="small"
-                            onChange={(e) => {
-                                if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value))
-                                    formik.setFieldValue("accountName", e.target.value);
-                            }}
-                        />
+                        <Box display="flex" alignItems="flex-start" gap={1.5}>
+                            <FieldIcon>
+                                <PersonIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikTextField
+                                    name="accountName"
+                                    label="ชื่อบัญชี"
+                                    formik={formik}
+                                    size="small"
+                                    fullWidth
+                                    onChange={(e) => {
+                                        if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value))
+                                            formik.setFieldValue("accountName", e.target.value);
+                                    }}
+                                    required
+                                />
+                                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
+                                    กรอกชื่อบัญชีตามหน้าสมุดบัญชี
+                                </Typography>
+                            </Box>
+                        </Box>
                     </Grid>
 
                     {/* Warning box */}
@@ -169,27 +231,28 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                                 borderLeft: "4px solid #c8a415",
                                 px: 2,
                                 py: 1,
-                                mb: 2,
-                                mt: 2,
                                 borderRadius: "0 4px 4px 0",
-                                justifyContent: "center",
                                 display: "flex",
+                                justifyContent: "center",
                             }}
                         >
                             <Typography fontSize={15} fontWeight={700}>
                                 กรุณาตรวจสอบข้อมูลบัญชี
-                                <a href="#" style={{ color: "#f44336", textDecoration: "underline" }}>
+                                <Box
+                                    component="span"
+                                    sx={{ color: "error.main", textDecoration: "underline", ml: 0.5 }}
+                                >
                                     ก่อนโอนเงิน
-                                </a>
+                                </Box>
                             </Typography>
                         </Box>
                     </Grid>
                 </Grid>
 
-                {/* Submit button */}
-                <Grid container mt={1} display="flex" justifyContent="center">
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Button variant="contained" onClick={() => formik.handleSubmit()} color="success" fullWidth>
+                {/* Submit */}
+                <Grid container mt={2} justifyContent="center">
+                    <Grid item xs={12} sm={6} md={4}>
+                        <Button variant="contained" color="success" fullWidth onClick={() => formik.handleSubmit()}>
                             บันทึก
                         </Button>
                     </Grid>

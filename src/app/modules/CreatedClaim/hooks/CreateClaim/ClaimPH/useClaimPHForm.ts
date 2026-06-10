@@ -13,26 +13,30 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const { form, isContinuous, oldClaim } = useAppSelector(claimPHSelector);
 
     const formik = useFormik<ClaimFormValues>({
-        initialValues: {
-            ...form,
-        },
+        initialValues: { ...form },
         enableReinitialize: true,
         validate: (values) => {
             const errors: FormikErrors<ClaimFormValues> = {};
+
             if (!values.documentReceiver) errors.documentReceiver = "โปรดระบุ";
             if (!values.serviceProvider) errors.serviceProvider = "โปรดระบุ";
             if (!values.carOwner) errors.carOwner = "โปรดระบุ";
             if (!values.claimType) errors.claimType = "โปรดระบุ";
             if (!values.incidentDate) errors.incidentDate = "โปรดระบุ";
+            if (!values.dateIn) errors.dateIn = "โปรดระบุ";
             if (!values.symptomType) errors.symptomType = "โปรดระบุ";
+
             if (values.symptomType === "ระบุอาการ" && !values.chiefComplain) errors.chiefComplain = "โปรดระบุ";
             if (values.symptomType === "อื่นๆ" && !values.remark) errors.remark = "โปรดระบุ";
-            // IPD validation
-            if (values.claimType === "IPD") {
-                if (!values.normalRoom && !values.icuRoom) errors.normalRoom = "โปรดเลือกอย่างน้อย 1 ห้อง";
-            }
-            // OPD validation
             if (values.claimType === "OPD" && !values.opdSubType) errors.opdSubType = "โปรดระบุ";
+
+            if (values.claimType === "IPD") {
+                if (!values.ipdSubType) errors.ipdSubType = "โปรดระบุ";
+                if (!values.dateOut) errors.dateOut = "โปรดระบุ";
+            }
+
+            if (!values.claimAmount || values.claimAmount <= 0) errors.claimAmount = "โปรดระบุ";
+
             return errors;
         },
         onSubmit: (values) => {
@@ -42,7 +46,15 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     });
 
     useEffect(() => {
+        if (!formik.values.claimType) return;
         formik.setFieldValue("opdSubType", "");
+        formik.setFieldValue("ipdSubType", "");
+        formik.setFieldValue("admitDate", null);
+
+        setTimeout(() => {
+            formik.setFieldTouched("opdSubType", false, false);
+            formik.setFieldTouched("ipdSubType", false, false);
+        }, 0);
     }, [formik.values.claimType]);
 
     useEffect(() => {

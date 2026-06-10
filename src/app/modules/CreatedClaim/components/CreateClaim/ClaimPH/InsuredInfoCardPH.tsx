@@ -2,6 +2,7 @@ import React from "react";
 import { Box, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import PersonIcon from "@mui/icons-material/Person";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { formatDateString } from "../../../../../functionHelpers";
@@ -26,26 +27,44 @@ const Row = ({
     icon?: React.ReactNode;
     labelWidth?: number;
 }) => (
-    <Box display="flex" alignItems="center" gap={1} py={0.3}>
-        {icon && (
-            <Box color="primary.main" display="flex">
-                {icon}
-            </Box>
-        )}
-        <Typography variant="body2" color="text.secondary" minWidth={labelWidth}>
-            {label} :
-        </Typography>
-        <Typography variant="body2" fontWeight={600} color="primary.main">
+    <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row", md: "column", lg: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center", md: "flex-start", lg: "center" }}
+        gap={{ xs: 0, sm: 1, md: 0, lg: 1 }}
+        py={0.3}
+    >
+        <Box display="flex" alignItems="center" gap={1}>
+            {icon && (
+                <Box color="primary.main" display="flex">
+                    {icon}
+                </Box>
+            )}
+            <Typography
+                variant="body2"
+                color="text.secondary"
+                sx={{ minWidth: { xs: "auto", sm: labelWidth, md: "auto", lg: labelWidth }, whiteSpace: "nowrap" }}
+            >
+                {label} :
+            </Typography>
+        </Box>
+        <Typography
+            variant="body2"
+            fontWeight={600}
+            color="primary.main"
+            sx={{ wordBreak: "break-word", pl: { xs: icon ? 3.5 : 0, sm: 0, md: icon ? 3.5 : 0, lg: 0 } }}
+        >
             {value || "-"}
         </Typography>
     </Box>
 );
 
 const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
-    <CustomBox>
+    <CustomBox sx={{ minHeight: "98%" }}>
         <HeadingWithColor
             text="ข้อมูลผู้เอาประกัน"
             color="blue"
+            icon={<AccountCircleIcon sx={{ fontSize: 27 }} />}
             button={
                 <Tooltip
                     title="แก้ไขผู้เอาประกัน"

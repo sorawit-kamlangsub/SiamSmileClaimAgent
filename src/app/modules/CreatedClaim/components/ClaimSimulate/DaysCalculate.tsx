@@ -1,22 +1,17 @@
 import React from "react";
-import { Box, Button, Checkbox, Divider, Grid, Paper, Stack, Typography, FormControlLabel } from "@mui/material";
+import { Box, Button, Checkbox, Divider, FormControlLabel, Grid, Paper, Stack, Typography } from "@mui/material";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import CalculateOutlinedIcon from "@mui/icons-material/CalculateOutlined";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ConfirmSaveClaimLineModal from "./ConfirmSaveClaimLineModal";
 import { useDaysCalculate } from "../../hooks/ClaimSimulate/useDaysCalculate";
 import { FormikDropdown, FormikTextField } from "../../../_common";
 import { CONTINUOUS_CLAIM_OPTIONS, TREATMENT_TYPE_OPTIONS } from "../../store/mockClaimLine";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
-
-interface Props {
-    onBack?: () => void;
-}
+import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
 
 const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
     <Stack direction="row" alignItems="center" gap={1} mb={2}>
@@ -41,6 +36,20 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ ico
         <Divider sx={{ flex: 1 }} />
     </Stack>
 );
+
+// const InfoChip: React.FC<{ label: string; value: string }> = ({ label, value }) => (
+//     <Stack direction="row" alignItems="center" gap={1}>
+//         <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+//             {label}
+//         </Typography>
+//         <Chip
+//             label={value || "-"}
+//             size="small"
+//             variant="outlined"
+//             sx={{ fontWeight: 600, borderRadius: "6px", fontSize: "0.8rem" }}
+//         />
+//     </Stack>
+// );
 
 const DaySummaryCard: React.FC<{
     label: string;
@@ -70,11 +79,13 @@ const DaySummaryCard: React.FC<{
     </Paper>
 );
 
-const DaysCalculate: React.FC<Props> = ({ onBack }) => {
+const DaysCalculate: React.FC = () => {
     const {
         formik,
         daysCalculate,
         openConfirm,
+        // handleAdmitDateChange,
+        // handleDischargeDateChange,
         handleCalculate,
         handleContinuousChange,
         handleConfirm,
@@ -88,6 +99,7 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                 onSubmit={formik.handleSubmit}
                 sx={{ maxWidth: 900, mx: "auto", p: { xs: 2, sm: 3 } }}
             >
+                {/* ── Section 1: ข้อมูลผู้เอาประกัน ── */}
                 <Paper
                     elevation={0}
                     sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
@@ -102,6 +114,7 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                     </Stack>
                 </Paper>
 
+                {/* ── Section 2: ข้อมูลการรักษา ── */}
                 <Paper
                     elevation={0}
                     sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
@@ -133,6 +146,7 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                                 fullWidth
                                 required
                                 size="small"
+                                // onChange={handleAdmitDateChange}
                             />
                         </Grid>
                         <Grid item xs={12} sm={6} md={4}>
@@ -143,6 +157,7 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                                 fullWidth
                                 required
                                 size="small"
+                                // onChange={handleDischargeDateChange}
                             />
                         </Grid>
                     </Grid>
@@ -154,6 +169,8 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                     sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
                 >
                     <SectionHeader icon={<CalendarMonthOutlinedIcon sx={{ fontSize: 18 }} />} title="สรุปจำนวนวัน" />
+
+                    {/* Card Summary */}
                     <Grid container spacing={2} mb={3}>
                         <Grid item xs={4}>
                             <DaySummaryCard label="วัน IPD" value={formik.values.ipdDays} color="primary" />
@@ -165,6 +182,8 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                             <DaySummaryCard label="วันที่นอน" value={formik.values.bedDays} color="success" disabled />
                         </Grid>
                     </Grid>
+
+                    {/* Number Inputs */}
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={4}>
                             <FormikTextField
@@ -204,12 +223,13 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                     </Grid>
                 </Paper>
 
-                {/* ── Section 4: เคลมต่อเนื่อง + Actions ── */}
+                {/* ── Section 4: เคลมต่อเนื่อง + Action ── */}
                 <Paper
                     elevation={0}
                     sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
                 >
                     <Grid container spacing={2} alignItems="center">
+                        {/* Checkbox */}
                         <Grid item xs={12} sm="auto">
                             <FormControlLabel
                                 control={
@@ -227,6 +247,8 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                                 }
                             />
                         </Grid>
+
+                        {/* Dropdown ClaimNo */}
                         <Grid item xs={12} sm={5} md={4}>
                             <FormikDropdown
                                 name="continuousFromClaimNo"
@@ -245,22 +267,7 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                         {/* Spacer */}
                         <Grid item xs={12} sm />
 
-                        {/* ปุ่มย้อนกลับ */}
-                        <Grid item xs={12} sm="auto">
-                            <Button
-                                variant="outlined"
-                                color="inherit"
-                                size="large"
-                                startIcon={<ArrowBackIcon />}
-                                onClick={onBack}
-                                fullWidth
-                                sx={{ borderRadius: 2, fontWeight: 600, px: 3 }}
-                            >
-                                ย้อนกลับ
-                            </Button>
-                        </Grid>
-
-                        {/* ปุ่มคำนวณ */}
+                        {/* Button */}
                         <Grid item xs={12} sm="auto">
                             <Button
                                 variant="contained"
@@ -284,9 +291,10 @@ const DaysCalculate: React.FC<Props> = ({ onBack }) => {
                 </Paper>
             </Box>
 
-            <ConfirmSaveClaimLineModal open={openConfirm} onClose={handleCloseConfirm} onConfirm={handleConfirm} />
+            <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} onConfirm={handleConfirm} />
         </LocalizationProvider>
     );
 };
 
 export default DaysCalculate;
+

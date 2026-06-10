@@ -18,10 +18,12 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 import AddBankAccountModal from "../../../components/CreateClaim/ClaimPH/AddBankAccountModal";
 import AddContactModal from "../../../components/CreateClaim/ClaimPH/AddContactModal";
 import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
-import LocalPhoneIcon from "@mui/icons-material/LocalPhone";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmTransferPHModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferPHModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import PermPhoneMsgIcon from "@mui/icons-material/PermPhoneMsg";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
@@ -70,7 +72,7 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                     <CloseIcon sx={{ fontSize: 20, fontWeight: "bold" }} />
                 </IconButton>
             )}
-            <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: 5 }}>
+            <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: { xs: 1, sm: 5 } }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={1}>
                         <Radio
@@ -97,7 +99,7 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                     <Avatar
                         src={logoSrc ?? undefined}
                         variant="circular"
-                        sx={{ width: 70, height: 70, bgcolor: logoSrc ? "transparent" : "#e3f2fd" }}
+                        sx={{ width: 70, height: 70, bgcolor: logoSrc ? "transparent" : "#e3f2fd", flexShrink: 0 }}
                     >
                         {!logoSrc && (
                             <Typography variant="caption" color="primary" fontWeight={700}>
@@ -157,7 +159,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
                 <CloseIcon sx={{ fontSize: 20, fontWeight: "bold" }} />
             </IconButton>
         )}
-        <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: 5 }}>
+        <CardContent sx={{ py: 1, px: 1, "&:last-child": { pb: 0.5 }, pr: { xs: 1, sm: 5 } }}>
             <Box display="flex" alignItems="center" justifyContent="space-between">
                 <Box display="flex" alignItems="center" gap={1}>
                     <Radio size="small" checked={selected} onChange={onSelect} onClick={(e) => e.stopPropagation()} />
@@ -173,8 +175,8 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
                         </Typography>
                     </Box>
                 </Box>
-                <Avatar sx={{ width: 70, height: 70, bgcolor: "#e8f5e9" }} variant="circular">
-                    <LocalPhoneIcon sx={{ width: 35, height: 35, color: "success.main" }} />
+                <Avatar sx={{ width: 70, height: 70, bgcolor: "success.main", flexShrink: 0 }} variant="circular">
+                    <PermPhoneMsgIcon sx={{ width: 42, height: 42 }} />
                 </Avatar>
             </Box>
         </CardContent>
@@ -215,7 +217,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                             {
                                 appId: insured?.appId ?? "",
                                 customerName: insured?.customerName ?? "",
-                                claimType: form.claimType,
+                                claimType: form.claimType ?? "",
                                 claimAmount: Number(form.claimAmount),
                             },
                         ]}
@@ -224,11 +226,15 @@ const ClaimPHSummaryPage: React.FC = () => {
                 </CustomPaper>
             </Grid>
             {/* ── บัญชีรับสินไหม | เบอร์โทรติดต่อ ── */}{" "}
-            <Grid item xs={12}>
+            <Grid item xs={12} sm={6}>
                 <CustomPaper>
-                    <HeadingWithColor text="รายละเอียดบัญชี" color="blue" />
+                    <HeadingWithColor
+                        text="รายละเอียดบัญชี"
+                        color="blue"
+                        icon={<AccountBalanceIcon sx={{ fontSize: 27 }} />}
+                    />
                     <Grid container spacing={2} p="0 26px 0 26px">
-                        <Grid item xs={12} md={6}>
+                        <Grid item xs={12}>
                             {/* <CustomPaper sx={{ height: "100%" }}> */}
                             <Typography variant="subtitle1" fontWeight={700} mb={2}>
                                 บัญชีรับสินไหม :
@@ -263,8 +269,18 @@ const ClaimPHSummaryPage: React.FC = () => {
                             </Box>
                             {/* </CustomPaper> */}
                         </Grid>
-
-                        <Grid item xs={12} md={6}>
+                    </Grid>
+                </CustomPaper>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+                <CustomPaper>
+                    <HeadingWithColor
+                        text="รายละเอียดการติดต่อ"
+                        color="blue"
+                        icon={<FontAwesomeIcon icon="address-book" fontSize={26} />}
+                    />
+                    <Grid container spacing={2} p="0 26px 0 26px">
+                        <Grid item xs={12}>
                             {/* <CustomPaper sx={{ height: "100%" }}> */}
                             <Typography variant="subtitle1" fontWeight={700} mb={2}>
                                 เบอร์โทรติดต่อ :

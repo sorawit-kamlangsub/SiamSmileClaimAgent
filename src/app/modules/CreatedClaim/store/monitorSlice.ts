@@ -23,6 +23,7 @@ export interface ClaimHistoryItem {
     incidentDate: string;
     totalClaim: number;
     totalPaid: number;
+    productId: number;
 }
 
 export interface SelectedPolicyInfo {

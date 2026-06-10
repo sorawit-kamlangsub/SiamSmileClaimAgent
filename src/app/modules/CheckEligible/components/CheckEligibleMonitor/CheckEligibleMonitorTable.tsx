@@ -10,9 +10,11 @@ import LinearLoading from "../../../_common/components/CustomComponent/LinearLoa
 import { useCheckEligibleMonitorTable } from "../../hooks";
 import { Grid, IconButton, Tooltip, Zoom } from "@mui/material";
 import ContentPasteSearchIcon from "@mui/icons-material/ContentPasteSearch";
+import { useAppSelector } from "../../../../../redux";
 
 const CheckEligibleMonitorTable = () => {
     const { data, isLoading, paginated, setPaginated } = useCheckEligibleMonitorTable();
+    const { searchDetail } = useAppSelector((s) => s.checkeligible.checkeligibleMonitorSearch);
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -21,7 +23,7 @@ const CheckEligibleMonitorTable = () => {
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const { appId } = data?.[tableMeta.rowIndex] ?? {};
+                    const {  } = data?.[tableMeta.rowIndex] ?? {};
                     return (
                         <Grid container direction="row" alignItems="center">
                             <Grid item xs={12}>
@@ -38,10 +40,10 @@ const CheckEligibleMonitorTable = () => {
                                         size="small"
                                         sx={{ backgroundColor: "#E2F2FF" }}
                                         onClick={() => {
-                                            window.open(
-                                                `/checkeligible/detail/${btoa(appId)}/${btoa(appId)}`,
-                                                "_blank"
-                                            );
+                                            // window.open(
+                                            //     `/checkeligible/detail/${btoa(appId)}/${btoa(appId)}`,
+                                            //     "_blank"
+                                            // );
                                         }}
                                     >
                                         <ContentPasteSearchIcon color="primary" />
@@ -96,7 +98,7 @@ const CheckEligibleMonitorTable = () => {
     ];
 
     return (
-        <LinearLoading isLoading={isLoading}>
+        <LinearLoading isLoading={isLoading && !!searchDetail}>
             <StandardDataTable
                 name="BeneficiaryAccountTable"
                 title=""

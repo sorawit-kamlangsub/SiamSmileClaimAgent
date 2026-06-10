@@ -147,3 +147,77 @@ export const mockClaimItemsPA: ClaimInsuredItem[] = [
         claimAmount: 300,
     },
 ];
+
+export const DOCUMENT_RECEIVER_OPTIONS = [{ value: "ผู้ให้บริการ" }, { value: "FCNT (สกลนคร)" }, { value: "Pivot" }];
+
+export const SERVICE_PROVIDER_OPTIONS = [
+    { value: "06590 - นางสาวมัญฑิตา โลวักษา" },
+    { value: "06591 - นายสมชาย มีสุข" },
+    { value: "06592 - นางสาวสุดา ใจดี" },
+];
+
+export const CAR_OWNER_OPTIONS = [
+    { value: "006 - 00000 - คุณสำนักงาน - (-)" },
+    { value: "007 - 00001 - คุณพนักงาน - (กทม)" },
+];
+
+export const CHIEF_COMPLAIN_OPTIONS = [
+    { value: "ปวดท้องเฉียบพลัน" },
+    { value: "ไข้หวัดใหญ่" },
+    { value: "โดนแมวข่วน" },
+    { value: "ลำไส้อักเสบจากเชื้อโรตาไวรัส" },
+    { value: "โดนมาร์จรั่น" },
+    { value: "ประสงค์เบิกยาแก้ปวดหัว" },
+];
+
+export interface CoverageItem {
+    benefitId: number;
+    label: string;
+    limit: string;
+    limitMax?: string;
+}
+
+export const OPD_COVERAGE_ITEMS: CoverageItem[] = [
+    {
+        benefitId: 6,
+        label: "OPD อุบัติเหตุ",
+        limit: "ครั้งละไม่เกิน 5,000 บาท",
+    },
+    {
+        benefitId: 7,
+        label: "OPD โรคทั่วไป",
+        limit: "700 บาท/ครั้ง",
+        limitMax: "คงเหลือ 7 ครั้ง",
+    },
+];
+
+export const IPD_COVERAGE_ITEMS: CoverageItem[] = [
+    {
+        benefitId: 2,
+        label: "ค่าดูแลโดยแพทย์",
+        limit: "700 บาท",
+    },
+    {
+        benefitId: 3,
+        label: "ค่ารักษาพยาบาล",
+        limit: "15,000 บาท",
+    },
+    {
+        benefitId: 5,
+        label: "ค่าห้องปกติ",
+        limit: "1,500 บาท/คืน/สูงสุด 45 คืน",
+        limitMax: "วงเงินสูงสุด 67,500 บาท",
+    },
+    {
+        benefitId: 4,
+        label: "ค่าห้อง ICU",
+        limit: "5,000 บาท/คืน/สูงสุด 30 คืน",
+        limitMax: "วงเงินสูงสุด 150,000 บาท",
+    },
+    {
+        benefitId: 8,
+        label: "ค่าชดเชยการนอน",
+        limit: "400 บาท/คืน",
+        limitMax: "วงเงินสูงสุด 40,000 บาท",
+    },
+];

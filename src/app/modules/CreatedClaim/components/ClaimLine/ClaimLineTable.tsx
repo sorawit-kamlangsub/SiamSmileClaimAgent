@@ -1,4 +1,4 @@
-import React, { memo, useCallback } from "react";
+import React, { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import {
     Box,
     ListItemText,
@@ -98,7 +98,7 @@ const CellInput = memo(
                         if (field === "remark") return;
                         const num = parseFloat(e.target.value);
                         if (!isNaN(num)) {
-                            dispatch(updateItem({ id, field, value: num.toFixed(2) }));
+                            dispatch(updateItem({ id, field, value: num.toFixed(2) }))
                         }
                     },
                 }}
@@ -207,12 +207,22 @@ const SearchAutocomplete: React.FC<{
 
 // ── ClaimLineTable ────────────────────────────────────────────────────────────
 const ClaimLineTable: React.FC<Props> = ({ reasonOptions, onlineClaimAmount }) => {
+    const renderStartRef = useRef(0);
+
+    renderStartRef.current = performance.now();
+
     const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
     const allItems = useAppSelector((s) => s.claimline.items);
 
     const { pagedItems, totalAllItems, page, setPage, totalPages, PAGE_SIZE, handleSearch, isPending } =
         useClaimLineFilter();
+
+    useEffect(() => {
+        const duration = performance.now() - renderStartRef.current;
+
+        console.log(`[ClaimLineTable] render + commit: ${duration.toFixed(2)}ms | rows=${pagedItems.length}`);
+    });
 
     const handleSelect = (option: ClaimLineSearchOption | null) => {
         if (!option) {
@@ -237,6 +247,57 @@ const ClaimLineTable: React.FC<Props> = ({ reasonOptions, onlineClaimAmount }) =
         whiteSpace: "nowrap" as const,
         borderRight: "1px solid #ffffff44",
     };
+
+    const rows = useMemo(() => {
+        console.time("[ClaimLineTable] build rows");
+
+        const mappedRows = pagedItems.map((item) => (
+            <TableRow
+                key={item.id}
+                sx={{
+                    bgcolor: item.color ?? "#fff",
+                    "& td": {
+                        borderBottom: `1px solid ${ROW_BORDER_COLORS[item.color ?? ""] ?? "#ccc"}50`,
+                    },
+                    "& td:first-of-type": {
+                        borderLeft: `4px solid ${ROW_BORDER_COLORS[item.color ?? ""] ?? "#ccc"}`,
+                    },
+                }}
+            >
+                <TableCell sx={{ fontSize: 13, py: 0.5, px: 1, fontWeight: 600 }}>{item.code}</TableCell>
+                <TableCell sx={{ fontSize: 13, py: 0.5, px: 1 }}>{item.description}</TableCell>
+                <TableCell sx={{ py: 0.5, px: 0.5 }}>
+                    <CellInput
+                        id={item.id}
+                        field="claimAmount"
+                        value={item.claimAmount}
+                        disabled={item.disabled}
+                    />
+                </TableCell>
+                <TableCell sx={{ py: 0.5, px: 0.5 }}>
+                    <CellInput id={item.id} field="discount" value={item.discount} disabled={item.disabled} />
+                </TableCell>
+                <TableCell sx={{ py: 0.5, px: 0.5 }}>
+                    <CellInput
+                        id={item.id}
+                        field="notCovered"
+                        value={item.notCovered}
+                        disabled={item.disabled}
+                    />
+                </TableCell>
+                <TableCell sx={{ py: 0.5, px: 0.5 }}>
+                    <CellSelect id={item.id} value={item.reason} disabled={item.disabled} options={reasonOptions} />
+                </TableCell>
+                <TableCell sx={{ py: 0.5, px: 0.5 }}>
+                    <CellInput id={item.id} field="remark" value={item.remark} disabled={item.disabled} />
+                </TableCell>
+            </TableRow>
+        ));
+
+        console.timeEnd("[ClaimLineTable] build rows");
+
+        return mappedRows;
+    }, [pagedItems, reasonOptions]);
 
     return (
         <Paper variant="outlined">
@@ -285,69 +346,7 @@ const ClaimLineTable: React.FC<Props> = ({ reasonOptions, onlineClaimAmount }) =
                                     </TableCell>
                                 </TableRow>
                             ) : (
-                                pagedItems.map((item) => (
-                                    <TableRow
-                                        key={item.id}
-                                        sx={{
-                                            bgcolor: item.color ?? "#fff",
-                                            "& td": {
-                                                borderBottom: `1px solid ${
-                                                    ROW_BORDER_COLORS[item.color ?? ""] ?? "#ccc"
-                                                }50`,
-                                            },
-                                            "& td:first-of-type": {
-                                                borderLeft: `4px solid ${
-                                                    ROW_BORDER_COLORS[item.color ?? ""] ?? "#ccc"
-                                                }`,
-                                            },
-                                        }}
-                                    >
-                                        <TableCell sx={{ fontSize: 13, py: 0.5, px: 1, fontWeight: 600 }}>
-                                            {item.code}
-                                        </TableCell>
-                                        <TableCell sx={{ fontSize: 13, py: 0.5, px: 1 }}>{item.description}</TableCell>
-                                        <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                                            <CellInput
-                                                id={item.id}
-                                                field="claimAmount"
-                                                value={item.claimAmount}
-                                                disabled={item.disabled}
-                                            />
-                                        </TableCell>
-                                        <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                                            <CellInput
-                                                id={item.id}
-                                                field="discount"
-                                                value={item.discount}
-                                                disabled={item.disabled}
-                                            />
-                                        </TableCell>
-                                        <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                                            <CellInput
-                                                id={item.id}
-                                                field="notCovered"
-                                                value={item.notCovered}
-                                                disabled={item.disabled}
-                                            />
-                                        </TableCell>
-                                        <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                                            <CellSelect
-                                                id={item.id}
-                                                value={item.reason}
-                                                disabled={item.disabled}
-                                                options={reasonOptions}
-                                            />
-                                        </TableCell>
-                                        <TableCell sx={{ py: 0.5, px: 0.5 }}>
-                                            <CellInput
-                                                id={item.id}
-                                                field="remark"
-                                                value={item.remark}
-                                                disabled={item.disabled}
-                                            />
-                                        </TableCell>
-                                    </TableRow>
-                                ))
+                                rows
                             )}
                         </TableBody>
 

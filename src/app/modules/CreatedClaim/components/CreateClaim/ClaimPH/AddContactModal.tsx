@@ -10,13 +10,18 @@ import {
     Grid,
     IconButton,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import ContactPhoneIcon from "@mui/icons-material/ContactPhone";
+import GroupIcon from "@mui/icons-material/Group";
+import PersonIcon from "@mui/icons-material/Person";
+import PhoneIcon from "@mui/icons-material/Phone";
+import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../../redux";
 import { addContact } from "../../../store/claimPHSlice";
 import { FormikDropdown, FormikTextField, FormikTextMaskPhone } from "../../../../_common";
-import CloseIcon from "@mui/icons-material/Close";
 
 interface Props {
     open: boolean;
@@ -30,8 +35,27 @@ const RELATIONSHIP_OPTIONS = [
     { name: "อื่นๆ" },
 ];
 
+const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+    <Avatar
+        sx={{
+            width: 40,
+            height: 40,
+            bgcolor: "#f3fafe",
+            border: "1px solid #e3f0f6",
+            mt: 1,
+            flexShrink: 0,
+            borderRadius: 2,
+        }}
+        variant="square"
+    >
+        <Box sx={{ color: "primary.main", display: "flex" }}>{children}</Box>
+    </Avatar>
+);
+
 const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
     const dispatch = useAppDispatch();
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     const formik = useFormik({
         initialValues: { relationship: "", phone: "", name: "", otherNote: "" },
@@ -60,7 +84,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
     });
 
     return (
-        <Dialog open={open} maxWidth="sm" fullWidth>
+        <Dialog open={open} maxWidth="sm" fullScreen={fullScreen} fullWidth>
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={1}>
@@ -71,7 +95,6 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                     </Box>
                     <IconButton
                         onClick={onClose}
-                        aria-label="close"
                         size="small"
                         sx={{
                             bgcolor: "error.main",
@@ -86,88 +109,119 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                 </Grid>
                 <Divider sx={{ mt: 1.5 }} />
             </DialogTitle>
+
             <DialogContent>
                 <Grid container spacing={2}>
-                    {/* ความสัมพันธ์ */}
+                    {/* ประเภทผู้ติดต่อ */}
                     <Grid item xs={12}>
-                        <FormikDropdown
-                            name="relationship"
-                            label="ความสัมพันธ์"
-                            formik={formik}
-                            data={RELATIONSHIP_OPTIONS}
-                            firstItemText="-- เลือก --"
-                            displayFieldName="name"
-                            valueFieldName="name"
-                            fullWidth
-                            size="small"
-                            required
-                        />
+                        <Box display="flex" alignItems="center" gap={1.5}>
+                            <FieldIcon>
+                                <GroupIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikDropdown
+                                    name="relationship"
+                                    label="ประเภทผู้ติดต่อ"
+                                    formik={formik}
+                                    data={RELATIONSHIP_OPTIONS}
+                                    firstItemText="--- โปรดระบุ ---"
+                                    displayFieldName="name"
+                                    valueFieldName="name"
+                                    fullWidth
+                                    size="small"
+                                    required
+                                />
+                            </Box>
+                        </Box>
                     </Grid>
 
-                    {/* โปรดระบุ (เฉพาะอื่นๆ) */}
+                    {/* โปรดระบุ เฉพาะ อื่นๆ */}
                     {formik.values.relationship === "อื่นๆ" && (
                         <Grid item xs={12}>
-                            <FormikTextField
-                                name="otherNote"
-                                label="โปรดระบุ"
-                                formik={formik}
-                                size="small"
-                                required
-                                fullWidth
-                            />
+                            <Box display="flex" alignItems="center" gap={1.5}>
+                                <FieldIcon>
+                                    <GroupIcon sx={{ fontSize: 25 }} />
+                                </FieldIcon>
+                                <Box flex={1}>
+                                    <FormikTextField
+                                        name="otherNote"
+                                        label="โปรดระบุ"
+                                        formik={formik}
+                                        size="small"
+                                        fullWidth
+                                        required
+                                    />
+                                </Box>
+                            </Box>
                         </Grid>
                     )}
 
-                    {/* เบอร์โทรผู้ติดต่อ */}
-                    <Grid item xs={12}>
-                        <FormikTextMaskPhone
-                            name="phone"
-                            label="เบอร์โทรผู้ติดต่อ"
-                            formik={formik}
-                            size="small"
-                            required
-                            fullWidth
-                        />
-                    </Grid>
-
                     {/* ชื่อผู้ติดต่อ */}
                     <Grid item xs={12}>
-                        <FormikTextField
-                            name="name"
-                            label="ชื่อผู้ติดต่อ"
-                            formik={formik}
-                            size="small"
-                            onChange={(e) => {
-                                if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value))
-                                    formik.setFieldValue("name", e.target.value);
-                            }}
-                            required
-                            fullWidth
-                        />
+                        <Box display="flex" alignItems="center" gap={1.5}>
+                            <FieldIcon>
+                                <PersonIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikTextField
+                                    name="name"
+                                    label="ชื่อผู้ติดต่อ"
+                                    formik={formik}
+                                    size="small"
+                                    fullWidth
+                                    onChange={(e) => {
+                                        if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value))
+                                            formik.setFieldValue("name", e.target.value);
+                                    }}
+                                    required
+                                />
+                            </Box>
+                        </Box>
                     </Grid>
+
+                    {/* เบอร์โทรผู้ติดต่อ */}
+                    <Grid item xs={12}>
+                        <Box display="flex" alignItems="center" gap={1.5}>
+                            <FieldIcon>
+                                <PhoneIcon sx={{ fontSize: 25 }} />
+                            </FieldIcon>
+                            <Box flex={1}>
+                                <FormikTextMaskPhone
+                                    name="phone"
+                                    label="เบอร์โทรศัพท์ผู้ติดต่อ"
+                                    formik={formik}
+                                    size="small"
+                                    fullWidth
+                                    required
+                                />
+                            </Box>
+                        </Box>
+                    </Grid>
+
+                    {/* Warning */}
                     <Grid item xs={12}>
                         <Box
                             sx={{
                                 bgcolor: "#fdf6e3",
-                                borderLeft: "4px solid " + "#c8a415",
+                                borderLeft: "4px solid #c8a415",
                                 px: 2,
                                 py: 1,
-                                mb: 2,
-                                mt: 2,
                                 borderRadius: "0 4px 4px 0",
-                                justifyContent: "center",
                                 display: "flex",
+                                justifyContent: "center",
                             }}
                         >
                             <Typography fontSize={15} fontWeight={700}>
-                               กรณาตรวจสอบข้อมูลเบอร์ติดต่อ เนื่องจากใช้ในการส่ง SMS
+                                กรุณาตรวจสอบข้อมูลเบอร์ติดต่อ เนื่องจากใช้ในการส่ง SMS
                             </Typography>
                         </Box>
                     </Grid>
                 </Grid>
-                <Grid container mt={1} display="flex" justifyContent="center">
-                    <Grid item xs={12} sm={6} md={3}>
-                        <Button variant="contained" onClick={() => formik.handleSubmit()} color="success" fullWidth>
+
+                {/* Submit */}
+                <Grid container mt={2} justifyContent="center">
+                    <Grid item xs={12} sm={6} md={4}>
+                        <Button variant="contained" color="success" fullWidth onClick={() => formik.handleSubmit()}>
                             บันทึก
                         </Button>
                     </Grid>

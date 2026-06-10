@@ -3,7 +3,6 @@ import {
     Backdrop,
     Box,
     Button,
-    Checkbox,
     CircularProgress,
     FormControlLabel,
     FormHelperText,
@@ -12,19 +11,25 @@ import {
     InputAdornment,
     Radio,
     RadioGroup,
+    Typography,
 } from "@mui/material";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { useClaimPHForm } from "../../../hooks/CreateClaim/ClaimPH/useClaimPHForm";
 import { FormikDropdown, FormikTextField, FormikTextNumber, FormikAutocomplete } from "../../../../_common";
 import FormikDatePicker from "../../../../_common/components/CustomFormik/FormikDatePicker";
+import ArticleIcon from "@mui/icons-material/Article";
+import CoverageBox from "./CoverageBox";
+import { IPD_COVERAGE_ITEMS, OPD_COVERAGE_ITEMS } from "../../../store/mockClaimPH";
+import { IpdSubType } from "../../../store/claimPHSlice";
+import CalculateIcon from "@mui/icons-material/Calculate";
 
 interface Props {
     onNext: () => void;
 }
 
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
-    const { formik, isIncidentDateDisabled } = useClaimPHForm({ onNext });
+    const { formik } = useClaimPHForm({ onNext });
     const { values, errors, touched, setFieldValue } = formik;
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
@@ -40,7 +45,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                 <CircularProgress color="inherit" />
             </Backdrop>
             <CustomPaper>
-                <HeadingWithColor text="บันทึกข้อมูลเคลม" color="blue" />
+                <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" onSubmit={formik.handleSubmit} p={2}>
                     <Grid container spacing={2}>
                         <Grid item xs={12}>
@@ -98,6 +103,11 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 onChange={(e) => {
                                     setFieldValue("claimType", e.target.value);
                                     setFieldValue("opdSubType", "");
+                                    setFieldValue("ipdSubType", "");
+                                    setFieldValue("admitDate", null);
+                                    formik.setFieldTouched("claimType", true, false);
+                                    formik.setFieldTouched("opdSubType", false, false);
+                                    formik.setFieldTouched("ipdSubType", false, false);
                                 }}
                             >
                                 <FormControlLabel value="OPD" control={<Radio size="small" />} label="OPD" />
@@ -106,7 +116,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                         <RadioGroup
                                             row
                                             value={values.opdSubType}
-                                            onChange={(e) => setFieldValue("opdSubType", e.target.value)}
+                                            onChange={(e) => {
+                                                setFieldValue("opdSubType", e.target.value);
+                                                formik.setFieldTouched("opdSubType", true, false); // ★
+                                            }}
                                         >
                                             <FormControlLabel
                                                 value="โรคทั่วไป"
@@ -119,56 +132,37 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                                 label="อุบัติเหตุ"
                                             />
                                         </RadioGroup>
+                                        {errors.opdSubType && (
+                                            <FormHelperText error>{errors.opdSubType}</FormHelperText>
+                                        )}
                                     </Box>
                                 )}
 
                                 <FormControlLabel value="IPD" control={<Radio size="small" />} label="IPD" />
                                 {values.claimType === "IPD" && (
-                                    <Box pl={4} display="flex" flexDirection="column" gap={1}>
-                                        <Box display="flex" alignItems="center" gap={2}>
+                                    <Box pl={4}>
+                                        <RadioGroup
+                                            row
+                                            value={values.ipdSubType}
+                                            onChange={(e) => {
+                                                setFieldValue("ipdSubType", e.target.value as IpdSubType);
+                                                formik.setFieldTouched("ipdSubType", true, false); // ★
+                                            }}
+                                        >
                                             <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        size="small"
-                                                        checked={values.normalRoom}
-                                                        onChange={(e) => setFieldValue("normalRoom", e.target.checked)}
-                                                    />
-                                                }
-                                                label="ห้องปกติ"
+                                                value="ค่ารักษาพยาบาล"
+                                                control={<Radio size="small" />}
+                                                label="ค่ารักษาพยาบาล"
                                             />
-                                            <FormikTextField
-                                                name="normalNights"
-                                                label="จำนวนคืน"
-                                                formik={formik}
-                                                size="small"
-                                                type="number"
-                                                disabled={!values.normalRoom}
-                                                inputProps={{ min: 0, step: 1 }}
-                                                sx={{ width: 120 }}
-                                            />
-                                        </Box>
-                                        <Box display="flex" alignItems="center" gap={2}>
                                             <FormControlLabel
-                                                control={
-                                                    <Checkbox
-                                                        size="small"
-                                                        checked={values.icuRoom}
-                                                        onChange={(e) => setFieldValue("icuRoom", e.target.checked)}
-                                                    />
-                                                }
-                                                label="ห้อง ICU"
+                                                value="ค่าชดเชย"
+                                                control={<Radio size="small" />}
+                                                label="ค่าชดเชย (เบิกจากที่อื่น)"
                                             />
-                                            <FormikTextField
-                                                name="icuNights"
-                                                label="จำนวน ICU"
-                                                formik={formik}
-                                                size="small"
-                                                type="number"
-                                                disabled={!values.icuRoom}
-                                                inputProps={{ min: 0, step: 1 }}
-                                                sx={{ width: 120 }}
-                                            />
-                                        </Box>
+                                        </RadioGroup>
+                                        {touched.ipdSubType && errors.ipdSubType && (
+                                            <FormHelperText error>{errors.ipdSubType}</FormHelperText>
+                                        )}
                                     </Box>
                                 )}
 
@@ -185,9 +179,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 <FormControlLabel
                                     value="LossOrDisability"
                                     control={<Radio size="small" />}
-                                    label="สูญเสียอวัยวะ/ทุพพลภาพ"
+                                    label="สูญเสียอวัยวะ / ทุพพลภาพ"
                                 />
                             </RadioGroup>
+
                             {touched.claimType && errors.claimType && (
                                 <FormHelperText error>{errors.claimType}</FormHelperText>
                             )}
@@ -199,25 +194,97 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 name="incidentDate"
                                 label="วันที่เกิดเหตุ"
                                 formik={formik}
-                                disabled={isIncidentDateDisabled}
                                 slotProps={{ textField: { size: "small" } }}
                                 required
                             />
                         </Grid>
+                        {/* วันที่เข้ารพ. */}
+                        {(values.claimType === "IPD" || values.claimType === "OPD") && (
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                                <FormikDatePicker
+                                    name="dateIn"
+                                    label="วันที่เข้ารพ."
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    required
+                                />
+                            </Grid>
+                        )}
+
+                        {/* วันที่ออกรพ— เฉพาะ IPD */}
+                        {values.claimType === "IPD" && (
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                                <FormikDatePicker
+                                    name="dateOut"
+                                    label="วันที่ออกรพ."
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    required
+                                />
+                            </Grid>
+                        )}
+                        {(values.claimType === "IPD" || values.claimType === "OPD") && (
+                            <Grid item xs={12}>
+                                {/* ★ Coverage box */}
+                                {values.claimType === "OPD" && (
+                                    <Grid item xs={12} md={6} lg={4}>
+                                        <CoverageBox items={OPD_COVERAGE_ITEMS} planCode="662" />
+                                    </Grid>
+                                )}
+                                {values.claimType === "IPD" && (
+                                    <Grid item xs={12} md={6} lg={4}>
+                                        <CoverageBox items={IPD_COVERAGE_ITEMS} planCode="662" />
+                                    </Grid>
+                                )}
+                            </Grid>
+                        )}
+                        {values.claimType === "IPD" && (
+                            <Grid item xs={12} md={6} lg={4}>
+                                <Grid container justifyContent="center">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        size="small"
+                                        onClick={() => {}}
+                                        startIcon={<CalculateIcon />}
+                                        sx={{ width: { md: "50%", xs: "100%", sm: "30%" }, mb: 1 }}
+                                    >
+                                        เปิดโปรแกรมคำนวณวงเงิน
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        )}
 
                         {/* จำนวนเงิน */}
-                        <Grid item xs={12} sm={6} md={4} lg={3}>
-                            <FormikTextNumber
-                                name="claimAmount"
-                                label="จำนวนเงิน"
-                                formik={formik}
-                                decimalScale={2}
-                                fixedDecimalScale
-                                InputProps={{
-                                    endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
-                                }}
-                                required
-                            />
+                        <Grid item xs={12}>
+                            <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+                                <Grid item xs={12} sm={5.9} md={2.9}>
+                                    <FormikTextNumber
+                                        name="claimAmount"
+                                        label="จำนวนเงิน"
+                                        formik={formik}
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                        InputProps={{
+                                            endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
+                                        }}
+                                        required
+                                    />
+                                </Grid>
+                                <Typography
+                                    variant="body2"
+                                    sx={{
+                                        color: "#c8a415",
+                                        bgcolor: "#fdf6e3",
+                                        px: 0.3,
+                                        py: 0.3,
+                                        fontWeight: "bold",
+                                        whiteSpace: { xs: "normal", sm: "nowrap" },
+                                    }}
+                                >
+                                    *กรุณากรอกยอดเคลมที่ต้องการโอนทั้งหมด
+                                </Typography>
+                            </Box>
                         </Grid>
 
                         {/* ระบุอาการ / อื่นๆ */}

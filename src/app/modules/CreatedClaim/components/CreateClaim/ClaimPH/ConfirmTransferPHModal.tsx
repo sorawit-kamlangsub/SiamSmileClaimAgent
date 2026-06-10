@@ -10,6 +10,8 @@ import {
     Grid,
     IconButton,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import CommentIcon from "@mui/icons-material/Comment";
 import CloseIcon from "@mui/icons-material/Close";
@@ -27,9 +29,11 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
     const defaultBank = bankAccounts.find((b) => b.isDefault);
     const defaultContact = contacts.find((c) => c.isDefault);
     const logoSrc = setBankLogo(defaultBank?.bankId);
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     return (
-        <Dialog open={open} maxWidth="sm" fullWidth>
+        <Dialog open={open} maxWidth="sm" fullScreen={fullScreen} fullWidth>
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={1}>

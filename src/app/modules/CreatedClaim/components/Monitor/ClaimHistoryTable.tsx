@@ -69,7 +69,9 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
                             size="small"
                             color="primary"
                             startIcon={<AddCommentIcon />}
-                            onClick={() => onContinuousClaim(item)}
+                            onClick={() => {
+                                onContinuousClaim(item);
+                            }}
                             sx={{ whiteSpace: "nowrap" }}
                         >
                             แจ้งเคลมต่อเนื่อง

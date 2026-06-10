@@ -15,6 +15,14 @@ import ConfirmSaveClaimLineModal from "../../components/ClaimLine/ConfirmSaveCla
 import ClaimLineHeader from "../../components/ClaimLine/ClaimLineHeader";
 import { useClaimLineItems } from "../../hooks/ClaimLine/useClaimLineItems";
 import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
+import { useCalculateCaseClaim } from "../../../../api/claimAgentApi";
+import { swalError, swalSuccess } from "../../../_common";
+import Swal from "sweetalert2";
+import {
+    CalculateCaseClaimDtoRequest,
+    CalculateCaseClaimDtoResponseServiceResponse,
+} from "../../../../api/claimAgentApi.client";
+// import ClaimLineSearch from "../../components/ClaimLine/ClaimLineSearch";
 
 // type PageStep = "search" | "header_and_table";
 
@@ -56,7 +64,18 @@ const ClaimLinePage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
-    const { items, summary, header } = useAppSelector((s) => s.claimline);
+    const { items, summary, header, filledItems } = useAppSelector((s) => s.claimline);
+
+    // console.log(JSON.stringify(filledItems, null, 2));
+
+    const onSuccessCallback = (response: CalculateCaseClaimDtoResponseServiceResponse) => {
+        swalSuccess("Success", response.data?.result ?? "คำนวณสำเร็จ");
+    };
+    const onErrorCallback = (error: string) => {
+        swalError("Error", error);
+    };
+
+    const calculateCaseClaim = useCalculateCaseClaim(onSuccessCallback, onErrorCallback);
 
     const [openConfirm, setOpenConfirm] = useState(false);
 
@@ -66,19 +85,59 @@ const ClaimLinePage: React.FC = () => {
 
     const { isLoading: isLoadingClaimExpense } = useClaimLineItems({
         formatTypeId: 3,
-        patientTypeId: header.patientType,
+        patientTypeId: header.patientType as number,
         enabled: !!header.patientType,
     });
 
     const handleNext = () => {
         dispatch(calculateSummary());
-        setOpenConfirm(true);
+        Swal.fire({
+            icon: "question",
+            iconHtml: "?",
+            showCancelButton: true,
+            confirmButtonText: "ตกลง",
+            cancelButtonText: "ยกเลิก",
+            reverseButtons: true,
+            allowOutsideClick: false,
+            backdrop: "rgba(0,0,0,0.4)",
+            title: "ยืนยันการทำรายการ?",
+            text: "ต้องการคำนวณหรือไม่",
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const payload: CalculateCaseClaimDtoRequest | undefined = {
+                        caseId: "814922be-7531-4f72-9399-8fefefe3e877",
+                        isSimulateCase: true,
+                        jsonDetail: filledItems.map((item) => ({
+                            id: item.id,
+                            code: item.code,
+                            claimAmount: item.claimAmount,
+                            description: item.description,
+                            notCovered: item.notCovered,
+                            reason: item.reason?.toString(),
+                            remark: item.remark,
+                        })),
+                    };
+                    const res = await calculateCaseClaim.mutateAsync(payload);
+                    return res.data;
+                } catch (error) {
+                    Swal.showValidationMessage(`
+                  Request failed: ${error}
+                `);
+                }
+            },
+        });
     };
 
     const handleConfirm = () => {
         setOpenConfirm(false);
         alert("บันทึกสำเร็จ");
     };
+
+    // const handleSelected = () => {
+    //     // setOpenConfirm(false);
+    //     // alert("บันทึกสำเร็จ");
+    // };
 
     const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 

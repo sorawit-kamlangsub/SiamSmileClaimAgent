@@ -141,4 +141,9 @@ export interface ImportMetaEnv {
      * เวลาในการ Refetch ข้อมูลจาก Queue (วินาที)
      */
     readonly VITE_QUEUE_REFETCH_INTERVAL: number;
+
+    /**
+     * URL ของ CoreClaim API
+     */
+    readonly VITE_CORECLAIM_API_URL: string;
 }

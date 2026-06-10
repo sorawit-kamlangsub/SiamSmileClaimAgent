@@ -30,18 +30,19 @@ export interface OldClaimInfo {
     isHidden: boolean;
 }
 
+export type IpdSubType = "ค่ารักษาพยาบาล" | "ค่าชดเชย";
+
 export interface ClaimFormValues {
     documentReceiver: DocumentReceiver | "";
     serviceProvider: string;
     carOwner: string;
-    claimType: ClaimType | "";
-    opdSubType: OpdSubType | "";
-    normalRoom: boolean;
-    normalNights: number;
-    icuRoom: boolean;
-    icuNights: number;
-    incidentDate: Dayjs;
-    claimAmount: string;
+    claimType: ClaimType | undefined;
+    opdSubType: OpdSubType | undefined;
+    ipdSubType: IpdSubType | undefined;
+    incidentDate: Dayjs | undefined;
+    dateIn: Dayjs | undefined;
+    dateOut: Dayjs | undefined;
+    claimAmount: number | undefined;
     symptomType: SymptomType;
     chiefComplain: string;
     remark: string;
@@ -89,14 +90,13 @@ const defaultForm: ClaimFormValues = {
     documentReceiver: "",
     serviceProvider: "",
     carOwner: "",
-    claimType: "",
-    opdSubType: "",
-    normalRoom: false,
-    normalNights: 0,
-    icuRoom: false,
-    icuNights: 0,
+    claimType: undefined,
+    opdSubType: undefined,
+    ipdSubType: undefined,
     incidentDate: dayjs(),
-    claimAmount: "",
+    dateIn: dayjs(),
+    dateOut: dayjs(),
+    claimAmount: 0,
     symptomType: "ระบุอาการ",
     chiefComplain: "",
     remark: "",

@@ -52,6 +52,7 @@ export const mockClaimHistoryPH: ClaimHistoryItem[] = [
         incidentDate: "2026-03-25",
         totalClaim: 500,
         totalPaid: 500,
+        productId: 2,
     },
     {
         claimNo: "CL6904000221",
@@ -59,6 +60,7 @@ export const mockClaimHistoryPH: ClaimHistoryItem[] = [
         incidentDate: "2026-03-16",
         totalClaim: 1800,
         totalPaid: 1800,
+        productId: 2,
     },
     {
         claimNo: "CL6904000315",
@@ -66,6 +68,7 @@ export const mockClaimHistoryPH: ClaimHistoryItem[] = [
         incidentDate: "2026-02-10",
         totalClaim: 2500,
         totalPaid: 2000,
+        productId: 2,
     },
 ];
 
@@ -76,6 +79,7 @@ export const mockClaimHistoryPA: ClaimHistoryItem[] = [
         incidentDate: "2026-04-12",
         totalClaim: 1200,
         totalPaid: 1200,
+        productId: 1,
     },
     {
         claimNo: "CL6905000102",
@@ -83,6 +87,7 @@ export const mockClaimHistoryPA: ClaimHistoryItem[] = [
         incidentDate: "2026-03-28",
         totalClaim: 3000,
         totalPaid: 2500,
+        productId: 1,
     },
 ];
 

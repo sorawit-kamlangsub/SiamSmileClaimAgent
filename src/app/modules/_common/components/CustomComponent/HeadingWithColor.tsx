@@ -3,16 +3,9 @@ import { ReactNode } from "react";
 
 type ColorKey = "blue" | "green" | "red" | "yellow" | "pink" | "orange";
 
-type HeadingWithColorProps = {
-    text?: string;
-    color?: ColorKey;
-    button?: ReactNode | undefined;
-    sx?: Record<string, any>;
-};
-
 const backgroundColor: Record<ColorKey, string> = {
     blue: "#e8f0fb",
-    green: "#F7FEE7",
+    green: "#F5FFF8",
     red: "#FEF2F2",
     yellow: "#fdf6e3",
     pink: "#FCE7F3",
@@ -21,14 +14,22 @@ const backgroundColor: Record<ColorKey, string> = {
 
 export const colorLine: Record<ColorKey, string> = {
     blue: "#1a5da8",
-    green: "#05DF72",
+    green: "#178236",
     red: "#FF6467",
     yellow: "#c8a415",
     pink: "#FB64B6",
     orange: "#FF8904",
 };
 
-export const HeadingWithColor = ({ text, color = "blue", button, sx }: HeadingWithColorProps) => {
+type HeadingWithColorProps = {
+    text?: string;
+    color?: ColorKey;
+    button?: ReactNode | undefined;
+    icon?: ReactNode;
+    sx?: Record<string, any>;
+};
+
+export const HeadingWithColor = ({ text, color = "blue", button, icon, sx }: HeadingWithColorProps) => {
     return (
         <Box
             sx={{
@@ -44,9 +45,17 @@ export const HeadingWithColor = ({ text, color = "blue", button, sx }: HeadingWi
                 ...sx,
             }}
         >
-            <Typography variant="subtitle1" fontWeight={700} color={colorLine[color]}>
-                {text}
-            </Typography>
+            <Box display="flex" alignItems="center" gap={1}>
+                {icon && (
+                    <Box display="flex" alignItems="center" sx={{ color: colorLine[color] }}>
+                        {icon}
+                    </Box>
+                )}
+                <Typography variant="subtitle1" fontWeight={700} color={colorLine[color]}>
+                    {text}
+                </Typography>
+            </Box>
+
             {button && <Box>{button}</Box>}
         </Box>
     );
