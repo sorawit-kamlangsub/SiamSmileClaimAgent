@@ -27,7 +27,7 @@ export const useGetCustomerSearch = (
     recordsPerPage?: number | undefined
 ) => {
     return useQuery(
-        [getCustomerSearchQueryKey, searchIndex, isSeachDetail],
+        [getCustomerSearchQueryKey, searchIndex, searchDetail],
         () =>
             claimAgentClient.getCustomerSearch(
                 searchIndex,

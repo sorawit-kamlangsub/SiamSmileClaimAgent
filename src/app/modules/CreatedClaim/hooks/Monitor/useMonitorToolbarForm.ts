@@ -22,8 +22,12 @@ export const useMonitorToolbarForm = () => {
     const dispatch = useAppDispatch();
 
     const defaultValues: checkeligibleMonitorSearchValuesType = {
-        searchTypeId: 1,
+        searchTypeId: 2,
         searchDetail: "",
+        dateHappen: undefined,
+        schoolId: undefined,
+        provinceId: undefined,
+        isAdvancedSearch: false,
     };
 
     const formik = useFormik({
@@ -46,6 +50,10 @@ export const useMonitorToolbarForm = () => {
                 setSearchcheckeligibleMonitor({
                     searchTypeId: values.searchTypeId,
                     searchDetail: values.searchDetail.trim(),
+                    dateHappen: values.dateHappen,
+                    schoolId: values.schoolId,
+                    provinceId: values.provinceId,
+                    isAdvancedSearch: values.isAdvancedSearch,
                 })
             );
         },

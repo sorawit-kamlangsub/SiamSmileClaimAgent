@@ -1,22 +1,23 @@
 import React from "react";
-import { Button, Grid } from "@mui/material";
+import { Button, Collapse, Grid } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
-import { FormikTextField } from "../../../_common";
+import { FormikCheckbox, FormikTextField } from "../../../_common";
 import SearchTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/SearchTypeDropDown";
 import { useMonitorToolbarForm } from "../../hooks/Monitor/useMonitorToolbarForm";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
+import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 
 const MonitorToolbar: React.FC = () => {
     const { formik, handleClear } = useMonitorToolbarForm();
-
+    const isAdvanced = formik.values.isAdvancedSearch;
     return (
         <CustomPaper>
             <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={5} md={4} lg={3}>
                     <SearchTypeDropDown formik={formik} name="searchTypeId" />
                 </Grid>
-                <Grid item xs={12} sm={5} md={4} lg={5}>
+                <Grid item xs={12} sm={5} md={4} lg={4}>
                     <FormikTextField formik={formik} name="searchDetail" label="คำค้นหา" fullWidth />
                 </Grid>
                 <Grid item xs={12} sm={2} md={2} lg={1.5}>
@@ -44,6 +45,36 @@ const MonitorToolbar: React.FC = () => {
                         ล้างค่า
                     </Button>
                 </Grid>
+                <Grid item xs={12} sm={2} md={2} lg={2}>
+                    <FormikCheckbox name="isAdvancedSearch" label="ค้นหาแบบละเอียด" formik={formik} />
+                </Grid>
+                {isAdvanced && (
+                    <Grid item xs={12}>
+                        <Collapse in={isAdvanced} unmountOnExit>
+                            <Grid container spacing={2} alignItems="center">
+                                <Grid item xs={12} sm={5} md={4} lg={3}>
+                                    <FormikDatePicker
+                                        name="dateHappen"
+                                        label="วันที่เกิดเหตุ"
+                                        formik={formik}
+                                        fullWidth
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={5} md={4} lg={3}>
+                                    <FormikTextField
+                                        formik={formik}
+                                        name="province"
+                                        label="จังหวัดสถานศึกษา"
+                                        fullWidth
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sm={6} md={4} lg={4}>
+                                    <FormikTextField formik={formik} name="school" label="โรงเรียน" fullWidth />
+                                </Grid>
+                            </Grid>
+                        </Collapse>
+                    </Grid>
+                )}
             </Grid>
         </CustomPaper>
     );

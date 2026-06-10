@@ -1,11 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
+import { Dayjs } from "dayjs";
 
 export type SearchTypeId = 1 | 2 | 3 | 4 | 5;
 
 export interface checkeligibleMonitorSearchValuesType {
     searchTypeId: SearchTypeId;
     searchDetail: string;
+    dateHappen: Dayjs | undefined;
+    schoolId: number | undefined;
+    provinceId: number | undefined;
+    isAdvancedSearch: boolean;
 }
 
 export interface MonitorListItem {
@@ -46,7 +51,14 @@ interface MonitorState {
 }
 
 const initialState: MonitorState = {
-    search: { searchTypeId: 1, searchDetail: "" },
+    search: {
+        searchTypeId: 2,
+        searchDetail: "",
+        dateHappen: undefined,
+        schoolId: undefined,
+        provinceId: undefined,
+        isAdvancedSearch: false,
+    },
     selectedPolicy: null,
     claimHistory: [],
 };
