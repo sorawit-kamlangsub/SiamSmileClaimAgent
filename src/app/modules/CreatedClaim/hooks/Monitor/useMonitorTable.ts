@@ -9,7 +9,7 @@ import {
 } from "../../store/monitorSlice";
 import { PaginationSortableDto } from "../../../_common";
 import React from "react";
-import { useGetCustomerSearch } from "../../../../api/claimAgentApi";
+import { useGetCustomerDetailById, useGetCustomerSearch } from "../../../../api/claimAgentApi";
 
 // export const mockMonitorList: MonitorListItem[] = [
 //     {
@@ -115,15 +115,15 @@ export const mockClaimHistoryPA: ClaimHistoryItem[] = [
 
 export const useMonitorTable = () => {
     const dispatch = useAppDispatch();
-    const { search, isSrearchMonitor } = useAppSelector(monitorSelector);
+    const { search, isSearchMonitor } = useAppSelector(monitorSelector);
     const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
     });
     const { data, isLoading } = useGetCustomerSearch(
-        isSrearchMonitor,
+        isSearchMonitor,
         search.searchTypeId,
-        false,
+        search.isAdvancedSearch,
         search.dateHappen,
         search.schoolId,
         search.provinceId,
@@ -135,7 +135,9 @@ export const useMonitorTable = () => {
     );
     //const [isLoading, setIsLoading] = useState(false);
     const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-
+    const selectedId =
+        selectedRowIndex !== null && data?.data?.[selectedRowIndex]?.id != null ? data.data[selectedRowIndex].id : 0;
+    const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(selectedId);
     useEffect(() => {
         if (!search.searchDetail) return;
 
@@ -150,28 +152,49 @@ export const useMonitorTable = () => {
         // }, 600);
     }, [search]);
 
-    const handleSelect = (rowIndex: number) => {
-        if (!data || !Array.isArray(data)) return;
-        const row = data[rowIndex];
+    useEffect(() => {
+        if (!claimInfo) return;
+
+        const row = data?.data?.[selectedRowIndex!];
         if (!row) return;
-        setSelectedRowIndex(rowIndex);
 
         const policy: SelectedPolicyInfo = {
-            appId: row.policyCode,
-            customerName: row.customerName,
-            productName: row.productName,
-            startCoverDate: row.coverageFrom,
-            endCoverDate: row.coverageTo ?? null,
-            // fields เฉพาะ PA
-            ...(row.productName === "PA" && {
-                schoolName: row.schoolName,
-                insuredType: row.insuredType,
-                effectiveCoverDate: row.effectiveCoverDate,
-            }),
+            appId: claimInfo.data?.policyCode || "",
+            customerName: claimInfo.data?.customerName || "",
+            cardNo: claimInfo.data?.cardDetail || "",
+            productName: claimInfo.data?.productTypeName || "",
+            startCoverDate: claimInfo.data?.coverageFrom?.toString() || "",
+            endCoverDate: claimInfo.data?.coverageTo?.toString() ?? null,
+            schoolName: claimInfo.data?.schoolName || "",
+            provinceName: claimInfo.data?.provinceName || "",
+            address: claimInfo.data?.address || "",
         };
 
-        dispatch(setSelectedPolicy({ ...policy, appId: row.appId, productName: row.productName }));
+        dispatch(setSelectedPolicy(policy));
+    }, [claimInfo]);
+    const handleSelect = (rowIndex: number) => {
+        // if (!data || !Array.isArray(data)) return;
+        // const row = data[rowIndex];
+        // if (!row) return;
+        setSelectedRowIndex(rowIndex);
+
+        // const policy: SelectedPolicyInfo = {
+        //     appId: row.policyCode,
+        //     customerName: row.customerName,
+        //     cardNo: row.cardDetail,
+        //     productName: row.productTypeName,
+        //     startCoverDate: row.coverageFrom,
+        //     endCoverDate: row.coverageTo ?? null,
+        //     // fields เฉพาะ PA
+        //     ...(row.productTypeId === 26 && {
+        //         schoolName: row.schoolName,
+        //         insuredType: row.insuredType,
+        //         effectiveCoverDate: row.effectiveCoverDate,
+        //     }),
+        // };
+
+        // dispatch(setSelectedPolicy({ ...policy, appId: row.appId, productName: row.productName }));
     };
 
-    return { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search };
+    return { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search, claimInfoLoading };
 };

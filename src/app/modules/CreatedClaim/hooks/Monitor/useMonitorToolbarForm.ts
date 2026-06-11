@@ -28,6 +28,7 @@ export const useMonitorToolbarForm = () => {
         schoolId: undefined,
         provinceId: 0,
         isAdvancedSearch: false,
+        isSearchMonitor: false,
     };
 
     const formik = useFormik({
@@ -54,6 +55,7 @@ export const useMonitorToolbarForm = () => {
                     schoolId: values.schoolId,
                     provinceId: values.provinceId,
                     isAdvancedSearch: values.isAdvancedSearch,
+                    isSearchMonitor: true,
                 })
             );
         },

@@ -21,7 +21,7 @@ const ClaimHistoryPA: React.FC = () => {
     return (
         <>
             <CustomPaper>
-                <HeadingWithColor text="ข้อมูลกรมธรรม์" color="blue" />
+                <HeadingWithColor text="รายละเอียดผู้เอาประกัน" color="blue" />
                 <Grid container spacing={2} mb={2} ml={1.5}>
                     <Field
                         label="ApplicationID"
@@ -40,21 +40,11 @@ const ClaimHistoryPA: React.FC = () => {
                     />
 
                     <Field label="ชื่อผู้เอาประกัน" value={selectedPolicy.customerName} />
-                    <Field label="เลขบัตรประชาชน" value={selectedPolicy.nationalId} />
+                    <Field label="เลขบัตรประชาชน" value={selectedPolicy.cardNo} />
                     <Field label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
-                    <Field label="สถานศึกษา" value={selectedPolicy.schoolName} />
-                    <Field label="ประเภทผู้เอาประกัน" value={selectedPolicy.insuredType} />
                     <Field
                         label="วันที่เริ่มคุ้มครอง"
                         value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB") as string}
-                    />
-                    <Field
-                        label="วันที่มีผลคุ้มครอง"
-                        value={
-                            selectedPolicy.effectiveCoverDate
-                                ? (formatDateString(selectedPolicy.effectiveCoverDate, "DD/MM/BBBB") as string)
-                                : undefined
-                        }
                     />
                     <Field
                         label="วันที่สิ้นสุดความคุ้มครอง"
@@ -64,6 +54,9 @@ const ClaimHistoryPA: React.FC = () => {
                                 : undefined
                         }
                     />
+                    <Field label="สถานศึกษา" value={selectedPolicy.schoolName} />
+                    <Field label="จังหวัด" value={selectedPolicy.provinceName} />
+                    <Field label="ที่อยู่" value={selectedPolicy.address} />
                 </Grid>
             </CustomPaper>
             <CustomPaper>

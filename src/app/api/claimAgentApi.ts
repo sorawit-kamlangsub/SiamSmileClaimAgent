@@ -39,7 +39,7 @@ export const useGetCustomerSearch = (
                 recordsPerPage
             ),
         {
-            enabled: isSearch && !!searchIndex && !!searchDetail,
+            enabled: isSearch ? true : false,
             refetchOnWindowFocus: false,
         }
     );

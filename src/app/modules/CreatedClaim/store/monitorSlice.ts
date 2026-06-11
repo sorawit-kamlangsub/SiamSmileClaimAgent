@@ -11,6 +11,7 @@ export interface checkeligibleMonitorSearchValuesType {
     schoolId: number | undefined;
     provinceId: number | undefined;
     isAdvancedSearch: boolean;
+    isSearchMonitor: boolean;
 }
 
 export interface MonitorListItem {
@@ -34,20 +35,20 @@ export interface ClaimHistoryItem {
 export interface SelectedPolicyInfo {
     appId: string;
     customerName: string;
+    cardNo: string;
     productName: string; // "PH" | "PA"
     startCoverDate: string;
     endCoverDate: string | null;
-    // PA only
     schoolName?: string;
-    insuredType?: string;
-    effectiveCoverDate?: string;
+    provinceName?: string;
+    address?: string;
 }
 
 interface MonitorState {
     search: checkeligibleMonitorSearchValuesType;
     selectedPolicy: SelectedPolicyInfo | null;
     claimHistory: ClaimHistoryItem[];
-    isSrearchMonitor?: boolean;
+    isSearchMonitor?: boolean;
 }
 
 const initialState: MonitorState = {
@@ -58,10 +59,10 @@ const initialState: MonitorState = {
         schoolId: undefined,
         provinceId: 0,
         isAdvancedSearch: false,
+        isSearchMonitor: false,
     },
     selectedPolicy: null,
     claimHistory: [],
-    isSrearchMonitor: false,
 };
 
 const monitorSlice = createSlice({
@@ -70,7 +71,7 @@ const monitorSlice = createSlice({
     reducers: {
         setSearchcheckeligibleMonitor(state, action: PayloadAction<checkeligibleMonitorSearchValuesType>) {
             state.search = action.payload;
-            state.isSrearchMonitor = true;
+            state.isSearchMonitor = true;
         },
         setSelectedPolicy(state, action: PayloadAction<SelectedPolicyInfo | null>) {
             state.selectedPolicy = action.payload;

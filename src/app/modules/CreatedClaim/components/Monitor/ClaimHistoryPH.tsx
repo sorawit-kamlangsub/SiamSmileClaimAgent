@@ -40,7 +40,7 @@ const ClaimHistoryPH: React.FC = () => {
                         }
                     />
                     <Field label="ชื่อผู้เอาประกัน" value={selectedPolicy.customerName} />
-                    <Field label="เลขบัตรประชาชน" value={selectedPolicy.nationalId} />
+                    <Field label="เลขบัตรประชาชน" value={selectedPolicy.cardNo} />
                     <Field label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
                     <Field
                         label="วันที่เริ่มคุ้มครอง"
@@ -54,6 +54,9 @@ const ClaimHistoryPH: React.FC = () => {
                                 : undefined
                         }
                     />
+                    <Field label="สถานศึกษา" value={selectedPolicy.schoolName} />
+                    <Field label="จังหวัด" value={selectedPolicy.provinceName} />
+                    <Field label="ที่อยู่" value={selectedPolicy.address} />
                 </Grid>
             </CustomPaper>
             <CustomPaper>
