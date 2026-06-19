@@ -1,18 +1,18 @@
 import dayjs, { Dayjs } from "dayjs";
 import { useDispatch } from "react-redux";
-import { ClaimType, setSearchCheckeLigibleDetails } from "../../store/checkeligibleSlice";
+import { setSearchCheckeLigibleDetails } from "../../store/checkeligibleSlice";
 import { FormikErrors, useFormik } from "formik";
 export type ToolbarFormValues = {
-    claimType: ClaimType;
-    incidentDate: Dayjs | undefined | null;
-    isContinuous: boolean;
+    claimType: number | undefined;
+    incidentDate: Dayjs | undefined;
+    isContinuous: boolean | undefined;
 };
 
 const useCheckEligibleToolbar = () => {
     const dispatch = useDispatch();
 
     const defaultValues: ToolbarFormValues = {
-        claimType: "",
+        claimType: undefined,
         incidentDate: dayjs(),
         isContinuous: false,
     };

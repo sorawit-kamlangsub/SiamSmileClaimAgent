@@ -42,9 +42,9 @@ interface CompensationItem {
     amount: number;
 }
 
-const MOCK_COMPENSATION: CompensationItem[] = [
-    { description: "ค่าชดเชยการนอนรักษาพยาบาลเป็นผู้ป่วยใน", days: 0, ratePerDay: 0, amount: 0 },
-];
+// const MOCK_COMPENSATION: CompensationItem[] = [
+//     { description: "ค่าชดเชยการนอนรักษาพยาบาลเป็นผู้ป่วยใน", days: 0, ratePerDay: 0, amount: 0 },
+// ];
 
 const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
     const { daysCalculate, calculateResult } = useAppSelector((s) => s.claimsimulate);
@@ -54,38 +54,42 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
 
     // ── map medicalExpense จาก API → ตารางรายการค่ารักษา ─────────────────────
     const medicalExpenseRows = calculateResult?.medicalExpense ?? [];
+    const MOCK_COMPENSATION = calculateResult?.compensateExpense ?? [];
 
     const treatmentTableData = [
         ...medicalExpenseRows.map((item) => ({
-            groupName: item.expenseCategoryName ?? "-",
-            benefitName: item.benefitName ?? "-",
-            coveredAmount: item.coveredAmount ?? 0,
-            nonCoveredAmount: item.nonCoveredAmount ?? 0,
-            totalAmount: item.totalAmount ?? 0,
+            groupName: item.benefit_id ?? "-",
+            benefitName: item.benefit_Detail ?? "-",
+            coveredAmount: item.cover ?? 0,
+            nonCoveredAmount: item.unCover ?? 0,
+            totalAmount: item.pay ?? 0,
         })),
         // แถว totals
         {
             groupName: "รวมทั้งหมด",
             benefitName: "",
-            coveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.coveredAmount ?? 0), 0),
-            nonCoveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.nonCoveredAmount ?? 0), 0),
-            totalAmount: medicalExpenseRows.reduce((s, r) => s + (r.totalAmount ?? 0), 0),
+            coveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.cover ?? 0), 0),
+            nonCoveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.unCover ?? 0), 0),
+            totalAmount: medicalExpenseRows.reduce((s, r) => s + (r.pay ?? 0), 0),
         },
     ];
 
     // ── ค่าชดเชย (ยังใช้ mock ไปก่อน รอ API) ─────────────────────────────────
-    const compensationTotal = MOCK_COMPENSATION.reduce((s, i) => s + i.amount, 0);
+    // const compensationTotal = MOCK_COMPENSATION.reduce((s, r) => s + (r.pay ?? 0), 0);
+    const compensationTotal = 0;
+
+    // const compensationInCoverage = MOCK_COMPENSATION.reduce((s, r) => s + (r.cover ?? 0), 0);
     const compensationInCoverage = 0;
-    const compensationRemaining = compensationTotal - compensationInCoverage;
+    const compensationRemaining = 0;
     const compensationTableData = [
-        ...MOCK_COMPENSATION,
-        {
-            description: "รวมทั้งหมด",
-            days: MOCK_COMPENSATION.reduce((s, i) => s + i.days, 0),
-            ratePerDay: 0,
-            amount: compensationTotal,
-        },
+        ...MOCK_COMPENSATION.map((item) => ({
+            description: item.benefit_Detail ?? "-",
+            days: item.countDay ?? 0,
+            ratePerDay: item.dayOfUnit ?? 0,
+            amount: item.cover ?? 0,
+        })),
     ];
+    // const compensationTableData = [...MOCK_COMPENSATION];
 
     // ── สรุปค่าใช้จ่ายจาก calculateResult ────────────────────────────────────
     const totalExpense = calculateResult?.summaryMedicalPay ?? 0;
@@ -460,7 +464,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                         />
                         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
                             <SummaryLine label="ยอดเบิกรวม" value={fmt(medicalNet)} />
-                            <SummaryLine label="สิทธิ์ความคุ้มครอง (medicalPay)" value={fmt(medicalPay)} />
+                            <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(medicalPay)} />
                             <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(compensation)} />
                             <Box
                                 display="flex"

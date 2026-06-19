@@ -66,7 +66,7 @@ const ClaimHistoryPH: React.FC = () => {
                         variant="contained"
                         color="success"
                         startIcon={<AddCircleIcon />}
-                        onClick={() => handleNewClaim(2)}
+                        onClick={() => handleNewClaim(selectedPolicy.productTypeId || 6, selectedPolicy.customerId)}
                         sx={{ height: "33px" }}
                     >
                         แจ้งเคลมใหม่

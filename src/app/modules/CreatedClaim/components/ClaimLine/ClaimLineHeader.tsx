@@ -3,21 +3,13 @@ import { Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../redux";
 import { setHeader } from "../../store/claimLineSlice";
-import { FormikDropdown } from "../../../_common";
-
-const PATIENT_TYPE_OPTIONS = [
-    { patientTypeId: 1, patientTypeName: "ผู้ป่วยนอก (Outpatient Clinic Nursing Service)" },
-    { patientTypeId: 2, patientTypeName: "ผู้ป่วยในทั่วไป (Standard Care Inpatient Nursing Service)" },
-    { patientTypeId: 3, patientTypeName: "ผู้ป่วยห้องสังเกตอาการ (Observe Room Nursing Service)" },
-    { patientTypeId: 4, patientTypeName: "ผู้ป่วยผ่าตัดไม่ค้างคืน (Ambulatory Surgery Care Unit)" },
-    { patientTypeId: 5, patientTypeName: "ผู้ป่วยที่บ้าน (Home Health Care Nursing Service)" },
-];
+import PatienttypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/PatienttypeDropDown";
 
 const ClaimLineHeader: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const formik = useFormik({
-        initialValues: { patientType: 2 },
+        initialValues: { patientType: 1 },
         validate: (v) => {
             const e: any = {};
             if (!v.patientType) e.patientType = "โปรดระบุ";
@@ -35,17 +27,13 @@ const ClaimLineHeader: React.FC = () => {
     return (
         <Grid container spacing={2} alignItems="flex-start" mb={1}>
             <Grid item xs={12} sm={4}>
-                <FormikDropdown
+                <PatienttypeDropDown
                     name="patientType"
-                    label="ประเภทผู้ป่วย"
                     formik={formik}
-                    data={PATIENT_TYPE_OPTIONS}
                     selectedCallback={(value) => {
                         dispatch(setHeader({ patientType: value as number }));
                     }}
-                    firstItemText="-- เลือก --"
-                    displayFieldName="patientTypeName"
-                    valueFieldName="patientTypeId"
+                    firstItemText="---- เลือก ----"
                     fullWidth
                     size="small"
                     required

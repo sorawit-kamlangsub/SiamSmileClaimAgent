@@ -1,7 +1,13 @@
 import { useState, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux";
-import { ClaimLineItem, removeFilledItem, setFilledItems, updateFilledItem } from "../../store/claimSimulateSlice";
+import {
+    ClaimLineItem,
+    removeFilledItem,
+    setFilledItems,
+    setPatianTypeId,
+    updateFilledItem,
+} from "../../store/claimSimulateSlice";
 import { NOT_COVERED_REASON_OPTIONS } from "../../store/mockClaimLine";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/claimAgentApi.client";
 import { useGetSimBCategory } from "../../../../api/claimAgentMaster";
@@ -144,6 +150,7 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     // ── ถัดไป ─────────────────────────────────────────────────────────────────
     const handleNext = () => {
         dispatch(setFilledItems([...filledItems]));
+        dispatch(setPatianTypeId(patientType));
         onNext?.();
     };
 

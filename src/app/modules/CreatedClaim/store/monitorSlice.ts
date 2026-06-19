@@ -36,12 +36,14 @@ export interface SelectedPolicyInfo {
     appId: string;
     customerName: string;
     cardNo: string;
-    productName: string; // "PH" | "PA"
+    productName: string;
     startCoverDate: string;
     endCoverDate: string | null;
     schoolName?: string;
     provinceName?: string;
     address?: string;
+    productTypeId?: number;
+    customerId?: number;
 }
 
 interface MonitorState {

@@ -4,19 +4,11 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import PolicyIcon from "@mui/icons-material/Policy";
 import AddCommentIcon from "@mui/icons-material/AddComment";
-import { ClaimType } from "../../store/checkeligibleSlice";
 import useCheckEligibleToolbar from "../../hooks/CheckEligibleDetail/useCheckEligibleToolbar";
-import { FormikCheckbox, FormikDropdown } from "../../../_common";
+import { FormikCheckbox } from "../../../_common";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
-
-const CLAIM_TYPE_OPTIONS: { value: ClaimType; label: string }[] = [
-    { value: "OPD", label: "OPD" },
-    { value: "IPD", label: "IPD" },
-    { value: "DayCaseSurgery", label: "Day Case Surgery" },
-    { value: "DeathClaim", label: "DeathClaim" },
-    { value: "Dismemberment", label: "สูญเสียอวัยวะ/ทุพพลภาพ" },
-];
+import CaseTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/CaseTypeDropDown";
 
 const SearchToolbar: React.FC = () => {
     const { formik } = useCheckEligibleToolbar();
@@ -26,16 +18,7 @@ const SearchToolbar: React.FC = () => {
             <CustomPaper>
                 <Grid container spacing={1} alignItems="center">
                     <Grid item xs={12} sm={4} lg={3}>
-                        <FormikDropdown
-                            formik={formik}
-                            name="claimType"
-                            label="ลักษณะการเคลม "
-                            data={CLAIM_TYPE_OPTIONS}
-                            valueFieldName="value"
-                            displayFieldName="label"
-                            fullWidth
-                            required
-                        />
+                        <CaseTypeDropDown formik={formik} name="claimType" fullWidth required />
                     </Grid>
 
                     <Grid item xs={12} sm={3}>

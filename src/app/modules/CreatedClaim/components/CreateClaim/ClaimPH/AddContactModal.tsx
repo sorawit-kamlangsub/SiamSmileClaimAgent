@@ -21,19 +21,24 @@ import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../../redux";
 import { addContact } from "../../../store/claimPHSlice";
-import { FormikDropdown, FormikTextField, FormikTextMaskPhone } from "../../../../_common";
+import { FormikTextField, FormikTextMaskPhone } from "../../../../_common";
+import ContactPersonTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ContactPersonTypeDropDown";
 
 interface Props {
     open: boolean;
     onClose: () => void;
 }
 
-const RELATIONSHIP_OPTIONS = [
-    { name: "ผู้ชำระเบี้ย" },
-    { name: "ผู้เอาประกัน" },
-    { name: "ผู้รับผลประโยชน์" },
-    { name: "อื่นๆ" },
-];
+// ─── id ของ "อื่นๆ" ตาม API ──────────────────────────────────────────────────
+const OTHER_CONTACT_TYPE_ID = 12;
+
+interface AddContactFormValues {
+    relationship: number | undefined;
+    relationship_selectedText: string; // set โดย FormikDropdown อัตโนมัติ
+    name: string;
+    phone: string;
+    otherNote: string;
+}
 
 const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Avatar
@@ -57,21 +62,32 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-    const formik = useFormik({
-        initialValues: { relationship: "", phone: "", name: "", otherNote: "" },
+    const formik = useFormik<AddContactFormValues>({
+        initialValues: {
+            relationship: undefined,
+            relationship_selectedText: "",
+            name: "",
+            phone: "",
+            otherNote: "",
+        },
         validate: (v) => {
-            const e: any = {};
+            const e: Partial<Record<keyof AddContactFormValues, string>> = {};
             if (!v.relationship) e.relationship = "โปรดระบุ";
             if (!v.phone) e.phone = "โปรดระบุ";
             if (!v.name.trim()) e.name = "โปรดระบุ";
-            if (v.relationship === "อื่นๆ" && !v.otherNote.trim()) e.otherNote = "โปรดระบุ";
+            // ถ้าเลือก "อื่นๆ" (id=12) ต้องกรอก otherNote
+            if (v.relationship === OTHER_CONTACT_TYPE_ID && !v.otherNote.trim()) e.otherNote = "โปรดระบุ";
             return e;
         },
         onSubmit: (values, { resetForm }) => {
             dispatch(
                 addContact({
                     id: Date.now().toString(),
-                    relationship: values.relationship === "อื่นๆ" ? values.otherNote : values.relationship,
+                    // ถ้าเลือก "อื่นๆ" ใช้ข้อความที่กรอก ไม่งั้นใช้ชื่อจาก API
+                    relationship:
+                        values.relationship === OTHER_CONTACT_TYPE_ID
+                            ? values.otherNote
+                            : values.relationship_selectedText,
                     phone: values.phone,
                     name: values.name,
                     isDefault: false,
@@ -82,6 +98,8 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
             onClose();
         },
     });
+
+    const isOther = formik.values.relationship === OTHER_CONTACT_TYPE_ID;
 
     return (
         <Dialog open={open} maxWidth="sm" fullScreen={fullScreen} fullWidth>
@@ -112,31 +130,29 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
 
             <DialogContent>
                 <Grid container spacing={2}>
-                    {/* ประเภทผู้ติดต่อ */}
+                    {/* ── ประเภทผู้ติดต่อ ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="center" gap={1.5}>
                             <FieldIcon>
                                 <GroupIcon sx={{ fontSize: 25 }} />
                             </FieldIcon>
                             <Box flex={1}>
-                                <FormikDropdown
+                                <ContactPersonTypeDropDown
                                     name="relationship"
-                                    label="ประเภทผู้ติดต่อ"
                                     formik={formik}
-                                    data={RELATIONSHIP_OPTIONS}
                                     firstItemText="--- โปรดระบุ ---"
-                                    displayFieldName="name"
-                                    valueFieldName="name"
                                     fullWidth
                                     size="small"
                                     required
+                                    contactPersonGroupId={1}
+                                    // FormikDropdown set relationship_selectedText อัตโนมัติ
                                 />
                             </Box>
                         </Box>
                     </Grid>
 
-                    {/* โปรดระบุ เฉพาะ อื่นๆ */}
-                    {formik.values.relationship === "อื่นๆ" && (
+                    {/* ── ระบุเพิ่มเติม เฉพาะ "อื่นๆ" (id=12) ── */}
+                    {isOther && (
                         <Grid item xs={12}>
                             <Box display="flex" alignItems="center" gap={1.5}>
                                 <FieldIcon>
@@ -156,7 +172,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                         </Grid>
                     )}
 
-                    {/* ชื่อผู้ติดต่อ */}
+                    {/* ── ชื่อผู้ติดต่อ ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="center" gap={1.5}>
                             <FieldIcon>
@@ -179,7 +195,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
                     </Grid>
 
-                    {/* เบอร์โทรผู้ติดต่อ */}
+                    {/* ── เบอร์โทรผู้ติดต่อ ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="center" gap={1.5}>
                             <FieldIcon>
@@ -198,7 +214,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
                     </Grid>
 
-                    {/* Warning */}
+                    {/* ── Warning ── */}
                     <Grid item xs={12}>
                         <Box
                             sx={{
@@ -218,7 +234,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                     </Grid>
                 </Grid>
 
-                {/* Submit */}
+                {/* ── Submit ── */}
                 <Grid container mt={2} justifyContent="center">
                     <Grid item xs={12} sm={6} md={4}>
                         <Button variant="contained" color="success" fullWidth onClick={() => formik.handleSubmit()}>

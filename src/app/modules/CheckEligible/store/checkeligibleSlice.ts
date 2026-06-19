@@ -47,7 +47,7 @@ const initialState: checkeligibleState = {
     isSearchcheckeligibleMonitor: false,
 
     CheckeLigibleDetails: {
-        claimType: "",
+        claimType: undefined,
         incidentDate: undefined,
         isContinuous: false,
     },
@@ -77,7 +77,7 @@ const checkeligibleSlice = createSlice({
 
         resetSearchCheckeLigibleDetails: (state) => {
             state.CheckeLigibleDetails = {
-                claimType: "",
+                claimType: undefined,
                 incidentDate: undefined,
                 isContinuous: false,
             };

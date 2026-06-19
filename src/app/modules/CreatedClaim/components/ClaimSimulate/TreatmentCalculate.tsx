@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     Box,
     Button,
@@ -15,19 +15,24 @@ import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import MedicalServicesOutlinedIcon from "@mui/icons-material/MedicalServicesOutlined";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import CalculateOutlinedIcon from "@mui/icons-material/CalculateOutlined";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useDaysCalculate } from "../../hooks/ClaimSimulate/useDaysCalculate";
 import { FormikDropdown, FormikTextField } from "../../../_common";
-import { CONTINUOUS_CLAIM_OPTIONS, TREATMENT_TYPE_OPTIONS } from "../../store/mockClaimLine";
+import { CONTINUOUS_CLAIM_OPTIONS } from "../../store/mockClaimLine";
+import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
+import CaseTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/CaseTypeDropDown";
+import FormikDateTimePicker from "../../../_common/components/CustomFormik/FormikDateTimePicker";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
-import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import dayjs from "dayjs";
 
 interface Props {
     onBack?: () => void;
 }
+
+// ─── Section header ───────────────────────────────────────────────────────────
 const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ icon, title }) => (
     <Stack direction="row" alignItems="center" gap={1} mb={2}>
         <Box
@@ -52,6 +57,7 @@ const SectionHeader: React.FC<{ icon: React.ReactNode; title: string }> = ({ ico
     </Stack>
 );
 
+// ─── Day summary card ─────────────────────────────────────────────────────────
 const DaySummaryCard: React.FC<{
     label: string;
     value: number;
@@ -77,20 +83,31 @@ const DaySummaryCard: React.FC<{
         <Typography variant="caption" color="text.secondary">
             {label}
         </Typography>
-    </Paper>
+    </Paper> 
 );
 
+// ─── Main ─────────────────────────────────────────────────────────────────────
 const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
     const {
         formik,
-        daysCalculate,
         openConfirm,
+        isCalculating,
+        daysCalculate,
+        handleDateHappenChange,
+        handleAdmitDateChange,
+        handleDischargeDateChange,
         handleCalculate,
         handleContinuousChange,
         handleConfirm,
         handleCloseConfirm,
-        isCalculating,
     } = useDaysCalculate();
+
+    useEffect(() => {
+        if (!formik.values.dateHappen || !formik.values.admitDate || !formik.values.dischargeDate) return;
+        handleDateHappenChange(formik.values.dateHappen);
+        handleAdmitDateChange(formik.values.admitDate);
+        handleDischargeDateChange(formik.values.dischargeDate);
+    }, [formik.values.admitDate, formik.values.dischargeDate, formik.values.dateHappen]);
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -113,8 +130,7 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                         <CustomTypographyWithOutGrid label="ชื่อผู้เอาประกัน" value={daysCalculate.customerName} />
                     </Stack>
                 </Paper>
-
-                {/* ── Section 2: ข้อมูลการรักษา ── */}
+                {/* ── Section 1: ข้อมูลการรักษา ── */}
                 <Paper
                     elevation={0}
                     sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
@@ -124,53 +140,69 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                         title="ข้อมูลการรักษา"
                     />
                     <Grid container spacing={2.5} alignItems="flex-start">
+                        {/* ประเภทการรักษา */}
                         <Grid item xs={12} sm={6} md={4}>
-                            <FormikDropdown
+                            <CaseTypeDropDown
                                 name="treatmentType"
-                                label="ประเภทการรักษา"
                                 formik={formik}
-                                data={TREATMENT_TYPE_OPTIONS}
                                 firstItemText="-- เลือก --"
-                                displayFieldName="CaseTypeName"
-                                valueFieldName="CaseTypeId"
                                 fullWidth
                                 size="small"
                                 required
+                                filterIds={[2, 4]}
                             />
                         </Grid>
+
+                        {/* วันที่เกิดเหตุ */}
                         <Grid item xs={12} sm={6} md={4}>
                             <FormikDatePicker
+                                name="dateHappen"
+                                label="วันที่เกิดเหตุ"
+                                formik={formik}
+                                fullWidth
+                                required
+                                size="small"
+                                maxDate={dayjs()}
+                            />
+                        </Grid>
+
+                        {/* วันที่เข้า */}
+                        <Grid item xs={12} sm={6} md={4}>
+                            <FormikDateTimePicker
                                 name="admitDate"
                                 label="วันที่เข้า"
                                 formik={formik}
                                 fullWidth
                                 required
                                 size="small"
-                                // onChange={handleAdmitDateChange}
+                                maxDate={dayjs()}
                             />
                         </Grid>
+
+                        {/* วันที่ออก */}
                         <Grid item xs={12} sm={6} md={4}>
-                            <FormikDatePicker
+                            <FormikDateTimePicker
                                 name="dischargeDate"
                                 label="วันที่ออก"
                                 formik={formik}
                                 fullWidth
                                 required
                                 size="small"
-                                // onChange={handleDischargeDateChange}
+                                maxDate={dayjs()}
+                                minDate={formik.values.admitDate}
                             />
                         </Grid>
                     </Grid>
                 </Paper>
 
-                {/* ── Section 3: สรุปจำนวนวัน ── */}
+                {/* ── Section 2: สรุปจำนวนวัน ── */}
                 <Paper
                     elevation={0}
                     sx={{ p: { xs: 2, sm: 3 }, mb: 3, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
                 >
                     <SectionHeader icon={<CalendarMonthOutlinedIcon sx={{ fontSize: 18 }} />} title="สรุปจำนวนวัน" />
 
-                    {/* Card Summary */}
+                    {/* Card summary */}
                     <Grid container spacing={2} mb={3}>
                         <Grid item xs={4}>
                             <DaySummaryCard label="วัน IPD" value={formik.values.ipdDays || 0} color="primary" />
@@ -188,7 +220,7 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                         </Grid>
                     </Grid>
 
-                    {/* Number Inputs */}
+                    {/* Number inputs */}
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={4}>
                             <FormikTextField
@@ -228,13 +260,13 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                     </Grid>
                 </Paper>
 
-                {/* ── Section 4: เคลมต่อเนื่อง + Action ── */}
+                {/* ── Section 3: เคลมต่อเนื่อง + Actions ── */}
                 <Paper
                     elevation={0}
                     sx={{ p: { xs: 2, sm: 3 }, borderRadius: 3, border: "1px solid", borderColor: "divider" }}
                 >
                     <Grid container spacing={2} alignItems="center">
-                        {/* Checkbox */}
+                        {/* Checkbox เคลมต่อเนื่อง */}
                         <Grid item xs={12} sm="auto">
                             <FormControlLabel
                                 control={
@@ -287,7 +319,7 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                             </Button>
                         </Grid>
 
-                        {/* Button */}
+                        {/* ปุ่มคำนวณ */}
                         <Grid item xs={12} sm="auto">
                             <Button
                                 variant="contained"

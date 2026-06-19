@@ -1,96 +1,20 @@
 import React, { useEffect } from "react";
 import { Grid } from "@mui/material";
+import { useParams } from "react-router-dom";
 import PersonalExclusionCard from "../components/CheckEligibleDetail/PersonalExclusionCard";
 import PolicyConditionCard from "../components/CheckEligibleDetail/PolicyConditionCard";
-import { InsuredInfo, PAInsuredInfo, PersonalExclusionNote } from "../hooks/CheckEligibleDetail/useCheckEligibleDetail";
+import { PAInsuredInfo, PersonalExclusionNote } from "../hooks/CheckEligibleDetail/useCheckEligibleDetail";
 import {
     checkeligibleSelector,
-    PolicyPlan,
     resetSearchCheckeLigibleDetails,
     toggleContinuousClaimSelection,
 } from "../store/checkeligibleSlice";
-import LocalHospitalIcon from "@mui/icons-material/LocalHospital";
 import { useDispatch, useSelector } from "react-redux";
 import SearchToolbar from "../components/CheckEligibleDetail/SearchToolbar";
 import CoverageSummaryPanel from "../components/CheckEligibleDetail/CoverageSummaryPanel";
 import InsuredInfoCardPA from "../components/CheckEligibleDetail/InsuredInfoCardPA";
-import InsuredInfoCardPH from "../components/CheckEligibleDetail/InsuredInfoCardPH";
-
-const mockInsured: InsuredInfo = {
-    applicationId: "0003067",
-    policyStartDate: "2015-03-08",
-    titleName: "นาย",
-    firstName: "กรภัทร",
-    lastName: "วรวงศ์คุณากร",
-    idCardNo: "8220465383177",
-    passport: undefined,
-    birthDate: "1998-08-21",
-    mobilePhone: "091-2345678",
-    province: "กรุงเทพมหานคร",
-    occupation: "พนักงานบริษัท",
-};
-
-const mockPlan: PolicyPlan = {
-    planCode: "662",
-    effectiveDate: "2015-03-08",
-    benefits: [
-        {
-            id: 2,
-            icon: <LocalHospitalIcon sx={{ color: "#1a5da8" }} />,
-            title: "ค่าดูแลโดยแพทย์",
-            ratePerUnit: "700/วัน",
-            maxAmount: 31500,
-            usedAmount: 0,
-            maxDays: 45,
-            usedDays: 0,
-            dayUnit: "วัน",
-        },
-        {
-            id: 3,
-            icon: <LocalHospitalIcon sx={{ color: "#1a5da8" }} />,
-            title: "ค่าดูแลโดยแพทย์",
-            ratePerUnit: "700/วัน",
-            maxAmount: 31500,
-            usedAmount: 0,
-            maxDays: 45,
-            usedDays: 0,
-            dayUnit: "วัน",
-        },
-        {
-            id: 4,
-            icon: <LocalHospitalIcon sx={{ color: "#1a5da8" }} />,
-            title: "ค่าดูแลโดยแพทย์",
-            ratePerUnit: "700/วัน",
-            maxAmount: 31500,
-            usedAmount: 0,
-            maxDays: 45,
-            usedDays: 0,
-            dayUnit: "วัน",
-        },
-        {
-            id: 5,
-            icon: <LocalHospitalIcon sx={{ color: "#1a5da8" }} />,
-            title: "ค่าดูแลโดยแพทย์",
-            ratePerUnit: "700/วัน",
-            maxAmount: 31500,
-            usedAmount: 0,
-            maxDays: 45,
-            usedDays: 0,
-            dayUnit: "วัน",
-        },
-        {
-            id: 6,
-            icon: <LocalHospitalIcon sx={{ color: "#1a5da8" }} />,
-            title: "ค่าดูแลโดยแพทย์",
-            ratePerUnit: "700/วัน",
-            maxAmount: 31500,
-            usedAmount: 0,
-            maxDays: 45,
-            usedDays: 0,
-            dayUnit: "วัน",
-        },
-    ],
-};
+// import InsuredInfoCardPH from "../components/CheckEligibleDetail/InsuredInfoCardPH";
+import { useGetCustomerBenefitDetailSearch } from "../../../api/claimAgentApi";
 
 export const mockPAInsuredInfo: PAInsuredInfo = {
     applicationId: "69240003",
@@ -118,41 +42,53 @@ export const mockPAInsuredInfo: PAInsuredInfo = {
 const mockNotes: PersonalExclusionNote[] = [{ id: 1, message: "ติดเงื่อนไข โรคกระเพาะอาหาร" }];
 
 const CheckEligibleDetailPage: React.FC = () => {
-    const { CheckeLigibleDetails, selectedContinuousClaims } = useSelector(checkeligibleSelector);
+    const { appId } = useParams<{ appId: string; refId: string }>();
     const dispatch = useDispatch();
+
+    const decodedAppId = appId ? atob(appId) : undefined;
+
+    const { CheckeLigibleDetails, selectedContinuousClaims } = useSelector(checkeligibleSelector);
+
+    const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailSearch(
+        decodedAppId,
+        CheckeLigibleDetails.claimType,
+        CheckeLigibleDetails.incidentDate ?? undefined,
+        CheckeLigibleDetails.isContinuous
+    );
 
     useEffect(() => {
         return () => {
-            resetSearchCheckeLigibleDetails();
+            dispatch(resetSearchCheckeLigibleDetails());
         };
-    }, []);
+    }, [dispatch]);
 
     const handleOpenExclusion = () => {
-        // TODO: เปิด dialog หรือ navigate ไปหน้าโรคยกเว้น
         console.log("Open exclusion page");
     };
+
     return (
-        // <Box sx={{ bgcolor: "#f5f6fa", minHeight: "100vh" }}>
         <Grid container spacing={2}>
-            <Grid item xs={12} lg={4}>
+            <Grid item xs={12} md={5} lg={4}>
                 {/* <InsuredInfoCardPH insured={mockInsured} /> */}
                 <InsuredInfoCardPA data={mockPAInsuredInfo} />
                 <PersonalExclusionCard notes={mockNotes} />
                 <PolicyConditionCard onOpenExclusion={handleOpenExclusion} />
             </Grid>
 
-            <Grid item xs={12} lg={8}>
+            <Grid item xs={12} md={7} lg={8}>
                 <SearchToolbar />
-                <CoverageSummaryPanel
-                    plan={mockPlan}
-                    continuousRows={[]}
-                    isContinuous={CheckeLigibleDetails.isContinuous}
-                    selectedClaims={selectedContinuousClaims}
-                    onToggleClaim={(code) => dispatch(toggleContinuousClaimSelection(code))}
-                />
+                {!CheckeLigibleDetails.claimType ? null : (
+                    <CoverageSummaryPanel
+                        benefitData={benefitData?.data}
+                        isLoading={isBenefitLoading}
+                        continuousRows={[]}
+                        isContinuous={CheckeLigibleDetails.isContinuous as boolean}
+                        selectedClaims={selectedContinuousClaims}
+                        onToggleClaim={(code) => dispatch(toggleContinuousClaimSelection(code))}
+                    />
+                )}
             </Grid>
         </Grid>
-        // </Box>
     );
 };
 

@@ -215,17 +215,17 @@ const ClaimPHSummaryPage: React.FC = () => {
                     <ClaimSummaryPHTable
                         data={[
                             {
-                                appId: insured?.appId ?? "",
+                                appId: insured?.policyCode ?? "",
                                 customerName: insured?.customerName ?? "",
-                                claimType: form.claimType ?? "",
+                                claimType: form.claimTypeLabel ?? "",
                                 claimAmount: Number(form.claimAmount),
                             },
                         ]}
-                        onEdit={() => navigate("/claim/ph")}
+                        onEdit={() => navigate(-1)}
                     />
                 </CustomPaper>
             </Grid>
-            {/* ── บัญชีรับสินไหม | เบอร์โทรติดต่อ ── */}{" "}
+            {/* ── บัญชีรับสินไหม | เบอร์โทรติดต่อ ── */}
             <Grid item xs={12} sm={6}>
                 <CustomPaper>
                     <HeadingWithColor

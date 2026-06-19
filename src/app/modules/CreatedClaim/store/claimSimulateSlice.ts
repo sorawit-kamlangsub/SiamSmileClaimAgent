@@ -1,17 +1,19 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { CalculateCaseClaimDtoResponse } from "../../../api/coreClaimApi.client";
+import dayjs, { Dayjs } from "dayjs";
 
 export interface DaysCalculateState {
-    appId: string;
-    customerName: string;
-    treatmentType: string;
-    admitDate: string;
-    dischargeDate: string;
-    ipdDays: number;
-    icuDays: number;
-    bedDays: number;
+    appId: string | undefined;
+    customerName: string | undefined;
+    treatmentType: number | undefined;
+    dateHappen: Dayjs | undefined;
+    admitDate: Dayjs | undefined;
+    dischargeDate: Dayjs | undefined;
+    ipdDays: number | undefined;
+    icuDays: number | undefined;
+    bedDays: number | undefined;
     isContinuous: boolean;
-    continuousFromClaimNo: string;
+    continuousFromClaimNo: string | undefined;
 }
 
 export interface ClaimLineItem {
@@ -29,16 +31,18 @@ export interface ClaimLineItem {
 interface ClaimSimulateState {
     daysCalculate: DaysCalculateState;
     filledItems: ClaimLineItem[];
+    patianTypeId: number | undefined;
     calculateResult: CalculateCaseClaimDtoResponse | null;
 }
 
 const initialState: ClaimSimulateState = {
     daysCalculate: {
-        appId: "APP-2025-001234",
-        customerName: "สมชาย ใจดี",
-        treatmentType: "",
-        admitDate: "",
-        dischargeDate: "",
+        appId: "9199293",
+        customerName: "เด็กชาย ชลชาติ รุกขชาติ",
+        treatmentType: undefined,
+        dateHappen: dayjs(),
+        admitDate: dayjs(),
+        dischargeDate: dayjs(),
         ipdDays: 0,
         icuDays: 0,
         bedDays: 0,
@@ -46,7 +50,8 @@ const initialState: ClaimSimulateState = {
         continuousFromClaimNo: "",
     },
     filledItems: [],
-    calculateResult: null, // เพิ่ม
+    patianTypeId: undefined,
+    calculateResult: null,
 };
 
 const claimSimulateSlice = createSlice({
@@ -69,9 +74,18 @@ const claimSimulateSlice = createSlice({
         setCalculateResult(state, action: PayloadAction<CalculateCaseClaimDtoResponse | null>) {
             state.calculateResult = action.payload;
         },
+        setPatianTypeId(state, action: PayloadAction<number | undefined>) {
+            state.patianTypeId = action.payload;
+        },
     },
 });
 
-export const { setDaysCalculate, setFilledItems, updateFilledItem, removeFilledItem, setCalculateResult } =
-    claimSimulateSlice.actions;
+export const {
+    setDaysCalculate,
+    setFilledItems,
+    updateFilledItem,
+    removeFilledItem,
+    setCalculateResult,
+    setPatianTypeId,
+} = claimSimulateSlice.actions;
 export default claimSimulateSlice.reducer;

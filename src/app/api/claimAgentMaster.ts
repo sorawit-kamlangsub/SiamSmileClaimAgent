@@ -12,6 +12,9 @@ const getChiefComplaintQueryKey = ["getChiefComplaint"];
 const getCaseTypeQueryKey = ["getCaseType"];
 const getICD10QueryKey = ["getICD10"];
 const getProvinceQueryKey = ["getProvince"];
+const getBankAccountRelationTypeQueryKey = ["getBankAccountRelationType"];
+const getContactPersonTypeQueryKey = ["getContactPersonType"];
+const getBankQueryKey = ["getBank"];
 
 export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTypeId?: number | undefined) => {
     return useQuery(
@@ -39,13 +42,11 @@ export const useGetSimB = (
     );
 };
 
-//ประเภทผู้รับเอกสาร (Document Recipient Type)
 export const useGetDocumentRecipientType = (documentRecipientTypeId?: number | undefined) => {
     return useQuery(
         [getDocumentRecipientTypeQueryKey, documentRecipientTypeId],
         () => claimAgentMasterClient.getDocumentRecipientType(documentRecipientTypeId),
         {
-            enabled: !!documentRecipientTypeId,
             refetchOnWindowFocus: false,
         }
     );
@@ -56,7 +57,6 @@ export const useGetChiefComplaint = (chiefComplaintId?: number | undefined) => {
         [getChiefComplaintQueryKey, chiefComplaintId],
         () => claimAgentMasterClient.getChiefComplaint(chiefComplaintId),
         {
-            enabled: !!chiefComplaintId,
             refetchOnWindowFocus: false,
         }
     );
@@ -64,7 +64,6 @@ export const useGetChiefComplaint = (chiefComplaintId?: number | undefined) => {
 
 export const useGetCaseType = (caseTypeId?: number | undefined) => {
     return useQuery([getCaseTypeQueryKey, caseTypeId], () => claimAgentMasterClient.getCaseType(caseTypeId), {
-        enabled: !!caseTypeId,
         refetchOnWindowFocus: false,
     });
 };
@@ -86,6 +85,40 @@ export const useGetICD10 = (
 
 export const useGetProvince = (provinceId?: number | undefined) => {
     return useQuery([getProvinceQueryKey, provinceId], () => claimAgentMasterClient.getProvince(provinceId), {
+        refetchOnWindowFocus: true,
+    });
+};
+
+//bankAccountRelationGroupId : 1 = ph, pa, claimmisc | 2 = motor
+export const useGetBankAccountRelationType = (
+    bankAccountRelationTypeId?: number | undefined,
+    bankAccountRelationGroupId?: number | undefined
+) => {
+    return useQuery(
+        [getBankAccountRelationTypeQueryKey, bankAccountRelationTypeId, bankAccountRelationGroupId],
+        () => claimAgentMasterClient.getBankAccountRelationType(bankAccountRelationTypeId, bankAccountRelationGroupId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+//contactPersonGroupId : 1 = ph, deadclaim | 2 = pa | 3 = motor
+export const useGetContactPersonType = (
+    contactPersonTypeId?: number | undefined,
+    contactPersonGroupId?: number | undefined
+) => {
+    return useQuery(
+        [getContactPersonTypeQueryKey, contactPersonTypeId, contactPersonGroupId],
+        () => claimAgentMasterClient.getContactPersonType(contactPersonTypeId, contactPersonGroupId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetBank = (organizeId?: number | undefined) => {
+    return useQuery([getBankQueryKey, organizeId], () => claimAgentMasterClient.getAllBank(organizeId), {
         refetchOnWindowFocus: true,
     });
 };

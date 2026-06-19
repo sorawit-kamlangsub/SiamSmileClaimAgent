@@ -1,18 +1,18 @@
-import { OldClaimInfo, BankAccount, ContactInfo, InsuredInfoPH } from "../store/claimPHSlice";
+import { OldClaimInfo, BankAccount, ContactInfo } from "../store/claimPHSlice";
 import { InsuredInfoPA, SchoolInfo, ClaimInsuredItem } from "../store/claimPASlice";
 
 // ─────────────────────────────────────────────
 // PH Mock Data
 // ─────────────────────────────────────────────
 
-export const mockInsuredPH: InsuredInfoPH = {
-    appId: "0003067",
-    customerName: "นางสาวรัชขน สุวรรณโชค",
-    nationalId: "2494029825403",
-    plan: "631",
-    startCoverDate: "2010-09-01",
-    cancelDate: null,
-};
+// export const mockInsuredPH: InsuredInfoPH = {
+//     appId: "0003067",
+//     customerName: "นางสาวรัชขน สุวรรณโชค",
+//     nationalId: "2494029825403",
+//     plan: "631",
+//     startCoverDate: "2010-09-01",
+//     cancelDate: null,
+// };
 
 export const mockOldClaim: OldClaimInfo = {
     claimNo: "CL01",

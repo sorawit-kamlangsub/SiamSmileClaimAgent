@@ -21,31 +21,24 @@ import PersonIcon from "@mui/icons-material/Person";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../../redux";
 import { addBankAccount } from "../../../store/claimPHSlice";
-import { FormikDropdown, FormikTextField } from "../../../../_common";
+import { FormikTextField } from "../../../../_common";
+import BankAccountRelationTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/BankAccountRelationTypeDropDown";
+import BankAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/BankAutocomplete";
 
 interface Props {
     open: boolean;
     onClose: () => void;
 }
 
-const BANK_OPTIONS = [
-    { id: 3, name: "กรุงไทย" },
-    { id: 4, name: "ไทยพาณิชย์" },
-    { id: 7, name: "กรุงเทพ" },
-    { id: 8, name: "กสิกรไทย" },
-    { id: 9, name: "กรุงศรีอยุธยา" },
-    { id: 6, name: "ออมสิน" },
-    { id: 5, name: "ทหารไทยธนชาต" },
-    { id: 12, name: "ซีไอเอ็มบีไทย" },
-];
-
-const RELATIONSHIP_OPTIONS = [
-    { name: "ผู้เอาประกัน" },
-    { name: "ผู้ปกครอง" },
-    { name: "สถานศึกษา" },
-    { name: "ครูผู้ประสานงาน" },
-    { name: "ผู้อำนวยการสถานศึกษา" },
-];
+// ─── Interface ตรงกับ FormikAutocomplete / FormikDropdown ที่ set ให้ ─────────
+interface AddBankFormValues {
+    relationship: number | undefined;
+    relationship_selectedText: string; // set โดย FormikDropdown
+    bankId: number | undefined;
+    bankId_selectedText: string; // set โดย FormikAutocomplete
+    accountNo: string;
+    accountName: string;
+}
 
 const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     <Avatar
@@ -69,24 +62,30 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-    const formik = useFormik({
-        initialValues: { relationship: "", bankId: "", accountNo: "", accountName: "" },
+    const formik = useFormik<AddBankFormValues>({
+        initialValues: {
+            relationship: undefined,
+            relationship_selectedText: "",
+            bankId: undefined,
+            bankId_selectedText: "",
+            accountNo: "",
+            accountName: "",
+        },
         validate: (v) => {
-            const e: any = {};
+            const e: Partial<Record<keyof AddBankFormValues, string>> = {};
             if (!v.relationship) e.relationship = "โปรดระบุ";
             if (!v.bankId) e.bankId = "โปรดระบุ";
-            if (!/^\d{10,12}$/.test(v.accountNo)) e.accountNo = "กรอกตัวเลข 10-12 หลัก"; // ★ แก้จาก 15 → 12
-            if (!v.accountName.trim()) e.accountName = "โปรดระบุ";
+            if (!/^\d{10,12}$/.test(v.accountNo)) e.accountNo = "กรอกตัวเลข 10-12 หลัก";
+            if (!v.accountName?.trim()) e.accountName = "โปรดระบุ";
             return e;
         },
         onSubmit: (values, { resetForm }) => {
-            const bank = BANK_OPTIONS.find((b) => b.id === Number(values.bankId));
             dispatch(
                 addBankAccount({
                     id: Date.now().toString(),
-                    relationship: values.relationship,
+                    relationship: values.relationship_selectedText,
                     bankId: Number(values.bankId),
-                    bankName: bank?.name ?? "",
+                    bankName: values.bankId_selectedText, // ชื่อธนาคารจาก autocomplete
                     accountNo: values.accountNo,
                     accountName: values.accountName,
                     isDefault: false,
@@ -127,21 +126,18 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
 
             <DialogContent>
                 <Grid container spacing={2}>
-                    {/* ความสัมพันธ์ */}
+                    {/* ── ความสัมพันธ์ ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="flex-start" gap={1.5}>
                             <FieldIcon>
                                 <GroupIcon sx={{ fontSize: 25 }} />
                             </FieldIcon>
                             <Box flex={1}>
-                                <FormikDropdown
+                                <BankAccountRelationTypeDropDown
                                     name="relationship"
-                                    label="ความสัมพันธ์ของบัญชีผู้รับสินไหม"
+                                    bankAccountRelationGroupId={1}
                                     formik={formik}
-                                    data={RELATIONSHIP_OPTIONS}
                                     firstItemText="-- โปรดระบุ --"
-                                    displayFieldName="name"
-                                    valueFieldName="name"
                                     fullWidth
                                     size="small"
                                     required
@@ -150,21 +146,17 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
                     </Grid>
 
-                    {/* ธนาคาร */}
+                    {/* ── ธนาคาร ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="flex-start" gap={1.5}>
                             <FieldIcon>
                                 <AccountBalanceIcon sx={{ fontSize: 25 }} />
                             </FieldIcon>
                             <Box flex={1}>
-                                <FormikDropdown
+                                <BankAutocomplete
                                     name="bankId"
-                                    label="ธนาคาร"
                                     formik={formik}
-                                    data={BANK_OPTIONS}
                                     firstItemText="-- โปรดระบุ --"
-                                    displayFieldName="name"
-                                    valueFieldName="id"
                                     fullWidth
                                     size="small"
                                     required
@@ -173,7 +165,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
                     </Grid>
 
-                    {/* เลขที่บัญชี */}
+                    {/* ── เลขที่บัญชี ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="flex-start" gap={1.5}>
                             <FieldIcon>
@@ -188,6 +180,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                                     fullWidth
                                     inputProps={{ maxLength: 12 }}
                                     onChange={(e) => {
+                                        // รับเฉพาะตัวเลข
                                         if (/^\d*$/.test(e.target.value))
                                             formik.setFieldValue("accountNo", e.target.value);
                                     }}
@@ -197,7 +190,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
                     </Grid>
 
-                    {/* ชื่อบัญชี */}
+                    {/* ── ชื่อบัญชี ── */}
                     <Grid item xs={12}>
                         <Box display="flex" alignItems="flex-start" gap={1.5}>
                             <FieldIcon>
@@ -211,6 +204,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                                     size="small"
                                     fullWidth
                                     onChange={(e) => {
+                                        // รับเฉพาะ ก-ๆ และ a-z A-Z space
                                         if (/^[ก-๙a-zA-Z\s]*$/.test(e.target.value))
                                             formik.setFieldValue("accountName", e.target.value);
                                     }}
@@ -223,7 +217,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
                     </Grid>
 
-                    {/* Warning box */}
+                    {/* ── Warning ── */}
                     <Grid item xs={12}>
                         <Box
                             sx={{
@@ -249,7 +243,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
                     </Grid>
                 </Grid>
 
-                {/* Submit */}
+                {/* ── Submit ── */}
                 <Grid container mt={2} justifyContent="center">
                     <Grid item xs={12} sm={6} md={4}>
                         <Button variant="contained" color="success" fullWidth onClick={() => formik.handleSubmit()}>

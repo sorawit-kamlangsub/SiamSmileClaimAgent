@@ -5,7 +5,7 @@ type ColorKey = "blue" | "green" | "red" | "yellow" | "pink" | "orange";
 
 const backgroundColor: Record<ColorKey, string> = {
     blue: "#e8f0fb",
-    green: "#F5FFF8",
+    green: "#F0FDF4",
     red: "#FEF2F2",
     yellow: "#fdf6e3",
     pink: "#FCE7F3",

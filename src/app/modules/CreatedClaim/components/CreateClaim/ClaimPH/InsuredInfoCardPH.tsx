@@ -6,11 +6,11 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { formatDateString } from "../../../../../functionHelpers";
-import { InsuredInfoPH } from "../../../store/claimPHSlice";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/claimAgentApi.client";
 
 interface Props {
-    data: InsuredInfoPH;
+    data?: GetCustomerDetailByIdDtoResponse;
     onEdit: () => void;
 }
 
@@ -85,25 +85,28 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
                 label="Application ID"
                 value={
                     <Link href={PH_DETAIL_URL} target="_blank" underline="hover" fontWeight={700}>
-                        {data.appId}
+                        {data?.policyCode || "-"}
                     </Link>
                 }
             />
             <Row
                 label="ชื่อผู้เอาประกัน"
                 icon={<PersonIcon fontSize="small" />}
-                value={data.customerName}
+                value={data?.customerName}
                 labelWidth={155}
             />
             <Row
                 label="เลขบัตรประชาชน"
                 icon={<CreditCardIcon fontSize="small" />}
-                value={data.nationalId}
+                value={data?.customerCode || "-"}
                 labelWidth={155}
             />
-            <Row label="แผนประกัน" value={data.plan} />
-            <Row label="วันที่เริ่มคุ้มครอง" value={formatDateString(data.startCoverDate, "DD/MM/BBBB")} />
-            <Row label="วันที่ยกเลิก" value={data.cancelDate ? formatDateString(data.cancelDate, "DD/MM/BBBB") : "-"} />
+            <Row label="แผนประกัน" value={data?.productName} />
+            <Row label="วันที่เริ่มคุ้มครอง" value={formatDateString(data?.coverageFrom?.toString(), "DD/MM/BBBB")} />
+            <Row
+                label="วันที่ยกเลิก"
+                value={data?.coverageTo ? formatDateString(data?.coverageTo?.toString(), "DD/MM/BBBB") : "-"}
+            />
         </Box>
     </CustomBox>
 );

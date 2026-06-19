@@ -1,5 +1,5 @@
 import axios, { AxiosResponse } from "axios";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import th from "dayjs/locale/th";
 import buddhistEra from "dayjs/plugin/buddhistEra";
 import timezone from "dayjs/plugin/timezone";
@@ -13,6 +13,11 @@ dayjs.locale(th);
 dayjs.extend(buddhistEra);
 dayjs.extend(timezone);
 dayjs.tz.setDefault("Asia/Bangkok");
+
+export const toDayjsOrNull = (dateStr: string): Dayjs | undefined => (dateStr ? dayjs(dateStr) : undefined);
+
+export const toDateString = (date: Dayjs | undefined): string =>
+    date ? dayjs(date).format("YYYY-MM-DD HH:mm:ss") : "";
 
 export const numberWithCommas = (x: number | string, decimalPlaces: number = 2): string => {
     const numberValue = typeof x === "number" ? x.toFixed(decimalPlaces) : parseFloat(x).toFixed(decimalPlaces);

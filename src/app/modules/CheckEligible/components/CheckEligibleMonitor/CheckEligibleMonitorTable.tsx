@@ -23,7 +23,7 @@ const CheckEligibleMonitorTable = () => {
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const { policyCode: appId, productTypeId, cardDetail } = data?.[tableMeta.rowIndex] ?? {};
+                    const { policyCode: appId, productTypeId, id } = data?.[tableMeta.rowIndex] ?? {};
                     return (
                         <>
                             {productTypeId === 6 || productTypeId === 26 ? (
@@ -43,8 +43,8 @@ const CheckEligibleMonitorTable = () => {
                                                 sx={{ backgroundColor: "#E2F2FF" }}
                                                 onClick={() => {
                                                     window.open(
-                                                        `checkeligible/detail/${btoa(appId as string)}/${btoa(
-                                                            cardDetail as string
+                                                        `/checkeligible/detail/${btoa(appId as string)}/${btoa(
+                                                            id?.toString() as string
                                                         )}`,
                                                         "_blank"
                                                     );

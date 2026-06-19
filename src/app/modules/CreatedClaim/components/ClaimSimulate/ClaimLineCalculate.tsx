@@ -285,7 +285,11 @@ const ClaimLineCalculate = () => {
                 <Grid item xs={12} md={8.5}>
                     {/* ── ข้อมูลผู้เอาประกัน ── */}
                     <CustomBox sx={{ mb: 2.5 }}>
-                        <HeadingWithColor text="รายการค่าใช้จ่าย" color="blue" />
+                        <HeadingWithColor
+                            text="รายการค่าใช้จ่าย"
+                            color="blue"
+                            icon={<FontAwesomeIcon icon={"file-circle-plus"} fontSize={22} />}
+                        />
                         <ClaimLineHeader />
                     </CustomBox>
 
@@ -297,7 +301,6 @@ const ClaimLineCalculate = () => {
                             </Typography>
                         </Box>
 
-                        {/* ตาราง + เส้นขอบรอบตาราง */}
                         <Box
                             sx={{
                                 overflowX: "auto",
@@ -312,7 +315,6 @@ const ClaimLineCalculate = () => {
                                     size="small"
                                     sx={{
                                         minWidth: 620,
-                                        // เส้นขอบล่างแต่ละแถว
                                         "& tbody tr": {
                                             borderBottom: "1px solid",
                                             borderColor: "divider",
@@ -373,9 +375,9 @@ const ClaimLineCalculate = () => {
                                             <TableRow>
                                                 <TableCell
                                                     colSpan={7}
-                                                    sx={{ textAlign: "center", py: 4, color: "text.disabled" }}
+                                                    sx={{ textAlign: "center", py: 2, color: "text.disabled" }}
                                                 >
-                                                    ยังไม่มีรายการ
+                                                    ไม่พบรายการ
                                                 </TableCell>
                                             </TableRow>
                                         ) : (
@@ -402,7 +404,7 @@ const ClaimLineCalculate = () => {
                                                             onChange={(e) =>
                                                                 handleUpdateItem({
                                                                     ...item,
-                                                                    claimAmount: e.target.value,
+                                                                    claimAmount: Number(e.target.value || 0),
                                                                 })
                                                             }
                                                             type="number"
@@ -418,7 +420,10 @@ const ClaimLineCalculate = () => {
                                                             size="small"
                                                             value={item.discount}
                                                             onChange={(e) =>
-                                                                handleUpdateItem({ ...item, discount: e.target.value })
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    discount: Number(e.target.value || 0),
+                                                                })
                                                             }
                                                             type="number"
                                                             inputProps={{
@@ -435,7 +440,7 @@ const ClaimLineCalculate = () => {
                                                             onChange={(e) =>
                                                                 handleUpdateItem({
                                                                     ...item,
-                                                                    notCovered: e.target.value,
+                                                                    notCovered: Number(e.target.value || 0),
                                                                 })
                                                             }
                                                             type="number"
@@ -494,7 +499,7 @@ const ClaimLineCalculate = () => {
                                                             <IconButton
                                                                 size="small"
                                                                 color="error"
-                                                                onClick={() => handleRemoveItem(item.id)}
+                                                                onClick={() => handleRemoveItem(item.id as number)}
                                                                 sx={{
                                                                     bgcolor: "error.50",
                                                                     "&:hover": { bgcolor: "error.100" },
@@ -582,10 +587,10 @@ const ClaimLineCalculate = () => {
                                                 endAdornment: (
                                                     <InputAdornment position="end">
                                                         {isCategoryLoading ? (
-                                                            <CircularProgress size={16} color="inherit" />
+                                                            <CircularProgress size={20} color="inherit" />
                                                         ) : (
                                                             <SearchIcon
-                                                                sx={{ fontSize: 18, color: "text.secondary" }}
+                                                                sx={{ fontSize: 20, color: "text.secondary" }}
                                                             />
                                                         )}
                                                     </InputAdornment>
@@ -794,7 +799,7 @@ const ClaimLineCalculate = () => {
                                                         <em>สาเหตุไม่คุ้มครอง</em>
                                                     </MenuItem>
                                                     {notCoveredReasonOptions.map((o) => (
-                                                        <MenuItem key={o.value} value={o.value} sx={{ fontSize: 13 }}>
+                                                        <MenuItem key={o.value} value={o.value} sx={{ fontSize: 15 }}>
                                                             {o.label}
                                                         </MenuItem>
                                                     ))}
@@ -809,7 +814,7 @@ const ClaimLineCalculate = () => {
                                                     startIcon={<AddBoxOutlinedIcon />}
                                                     onClick={handleAddToTable}
                                                     disabled={!selectedItem || !pendingAmount}
-                                                    sx={{ borderRadius: 2, fontWeight: 600 }}
+                                                    sx={{ borderRadius: 2, fontWeight: 600, mt: 1 }}
                                                 >
                                                     เพิ่มลงในตาราง
                                                 </Button>
@@ -827,7 +832,7 @@ const ClaimLineCalculate = () => {
                         <HeadingWithColor
                             text="สรุปยอดเงิน"
                             color="green"
-                            icon={<RequestQuoteIcon sx={{ fontSize: 20 }} />}
+                            icon={<RequestQuoteIcon sx={{ fontSize: 27 }} />}
                             sx={{ mx: 0, borderRadius: 0, mb: 0 }}
                         />
                         <Box sx={{ p: 2 }}>

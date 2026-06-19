@@ -1,4 +1,3 @@
-// ─── InsuredInfoCardPA.tsx ────────────────────────────────────────────────────
 import React from "react";
 import ContactPhoneIcon from "@mui/icons-material/ContactPhone";
 import PhoneIphoneIcon from "@mui/icons-material/PhoneIphone";
@@ -10,11 +9,9 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import { PAInsuredInfo, usePAInsuredInfo } from "../../hooks/CheckEligibleDetail/useCheckEligibleDetail";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
-import { Box, Link, Typography } from "@mui/material";
+import { Box, Link, Typography, useMediaQuery, useTheme } from "@mui/material";
 
 const APPLICATION_DETAIL_URL = "https://ssspa.siamsmile.co.th/Modules/PA/frmApplicationDetail";
-
-const ICON_WIDTH = 24; // ตรงกับขนาด MUI SvgIcon default
 
 // ── InfoRow ───────────────────────────────────────────────────────────────────
 
@@ -25,28 +22,63 @@ interface InfoRowProps {
     children: React.ReactNode;
 }
 
-const ROW_GRID = "24px 160px 1fr";
+const InfoRow: React.FC<InfoRowProps> = ({ label, icon: Icon, borderBottom = false, children }) => {
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
-const InfoRow: React.FC<InfoRowProps> = ({ label, icon: Icon, borderBottom = false, children }) => (
-    <Box
-        display="grid"
-        gridTemplateColumns={ROW_GRID}
-        alignItems="center"
-        gap="6px"
-        py="4px"
-        borderBottom={borderBottom ? "1px solid #f0f4f8" : "none"}
-    >
-        <Box display="flex" alignItems="center">
-            {Icon && <Icon style={{ fontSize: 17, color: "#546e7a" }} />}
+    if (isMobile) {
+        return (
+            <Box py="4px" borderBottom={borderBottom ? "1px solid #f0f4f8" : "none"}>
+                {/* บรรทัดที่ 1: icon + label */}
+                <Box display="flex" alignItems="center" gap="6px">
+                    <Box display="flex" alignItems="center" width={20} flexShrink={0}>
+                        {Icon && <Icon style={{ fontSize: 15, color: "#546e7a" }} />}
+                    </Box>
+                    <Typography variant="caption" color="text.secondary">
+                        {label} :
+                    </Typography>
+                </Box>
+                {/* บรรทัดที่ 2: value indent ตาม icon — wrap ได้ */}
+                <Box pl="26px" sx={{ minWidth: 0 }}>
+                    <Typography
+                        variant="body2"
+                        color="primary"
+                        fontWeight={700}
+                        sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                    >
+                        {children}
+                    </Typography>
+                </Box>
+            </Box>
+        );
+    }
+
+    return (
+        <Box
+            display="grid"
+            gridTemplateColumns="24px 160px 1fr"
+            alignItems="center"
+            gap="6px"
+            py="4px"
+            borderBottom={borderBottom ? "1px solid #f0f4f8" : "none"}
+        >
+            <Box display="flex" alignItems="center">
+                {Icon && <Icon style={{ fontSize: 17, color: "#546e7a" }} />}
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+                {label} :
+            </Typography>
+            <Typography
+                variant="body2"
+                color="primary"
+                fontWeight={700}
+                sx={{ minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}
+            >
+                {children}
+            </Typography>
         </Box>
-        <Typography variant="body2" color="text.secondary">
-            {label} :
-        </Typography>
-        <Typography variant="body2" color="primary" fontWeight={700}>
-            {children}
-        </Typography>
-    </Box>
-);
+    );
+};
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
 
@@ -68,10 +100,6 @@ const StatusBadge: React.FC<{ status: string; isActive: boolean }> = ({ status, 
     </span>
 );
 
-// ── Divider ───────────────────────────────────────────────────────────────────
-
-// const Divider = () => <Box borderTop="1px solid #f0f4f8" my="4px" />;
-
 // ── Main Component ────────────────────────────────────────────────────────────
 
 interface InsuredInfoCardProps {
@@ -80,17 +108,47 @@ interface InsuredInfoCardProps {
 
 const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
     const vm = usePAInsuredInfo(data);
+    const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+    const CustomRow: React.FC<{
+        label: string;
+        borderBottom?: boolean;
+        children: React.ReactNode;
+    }> = ({ label, borderBottom = false, children }) =>
+        isMobile ? (
+            <Box py="4px" borderBottom={borderBottom ? "1px solid #f0f4f8" : "none"}>
+                <Box pl="26px">
+                    <Typography variant="caption" color="text.secondary">
+                        {label} :
+                    </Typography>
+                </Box>
+                <Box pl="26px" sx={{ minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>
+                    {children}
+                </Box>
+            </Box>
+        ) : (
+            <Box
+                display="grid"
+                gridTemplateColumns="24px 160px 1fr"
+                alignItems="center"
+                gap="6px"
+                py="4px"
+                borderBottom={borderBottom ? "1px solid #f0f4f8" : "none"}
+            >
+                <Box width={24} flexShrink={0} />
+                <Typography variant="body2" color="text.secondary" flexShrink={0}>
+                    {label} :
+                </Typography>
+                <Box sx={{ minWidth: 0, wordBreak: "break-word", overflowWrap: "anywhere" }}>{children}</Box>
+            </Box>
+        );
 
     return (
         <CustomBox>
             <HeadingWithColor text="ข้อมูลผู้เอาประกัน" color="blue" />
 
-            {/* Application ID — ไม่มี icon slot จึง indent ด้วย ICON_WIDTH + gap */}
-            <Box display="grid" gridTemplateColumns={ROW_GRID} alignItems="center" gap="6px" py="4px">
-                <Box width={ICON_WIDTH} flexShrink={0} />
-                <Typography variant="body2" color="text.secondary" minWidth={155} flexShrink={0}>
-                    Application ID :
-                </Typography>
+            <CustomRow label="Application ID">
                 <Link
                     href={APPLICATION_DETAIL_URL}
                     target="_blank"
@@ -98,10 +156,11 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
                     underline="hover"
                     variant="body2"
                     fontWeight={700}
+                    sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
                 >
                     {vm.applicationId}
                 </Link>
-            </Box>
+            </CustomRow>
 
             <InfoRow label="ปีการศึกษา">{vm.academicYear}</InfoRow>
             <InfoRow label="โรงเรียน">{vm.schoolName}</InfoRow>
@@ -109,11 +168,7 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
             <InfoRow label="อำเภอ">{vm.district}</InfoRow>
             <InfoRow label="จังหวัด">{vm.province}</InfoRow>
 
-            <Box display="grid" gridTemplateColumns={ROW_GRID} alignItems="center" gap="6px" py="4px">
-                <Box width={ICON_WIDTH} flexShrink={0} />
-                <Typography variant="body2" color="text.secondary" minWidth={155} flexShrink={0}>
-                    สถานะ
-                </Typography>
+            <CustomRow label="สถานะ">
                 {vm.status !== "-" ? (
                     <StatusBadge status={vm.status} isActive={vm.isActiveStatus} />
                 ) : (
@@ -121,9 +176,8 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
                         -
                     </Typography>
                 )}
-            </Box>
+            </CustomRow>
 
-            {/* เส้นใต้ สาขา */}
             <InfoRow label="สาขา" borderBottom>
                 {vm.branch}
             </InfoRow>
@@ -131,7 +185,6 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
             <InfoRow icon={ContactPhoneIcon} label="ผู้ติดต่อประสาน">
                 {vm.contactFullName}
             </InfoRow>
-
             <InfoRow icon={PhoneIphoneIcon} label="เบอร์โทรผู้ติดต่อประสาน" borderBottom>
                 {vm.contactPhone}
             </InfoRow>
@@ -152,15 +205,16 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
                 {vm.educationLevel}
             </InfoRow>
 
-            <Box display="grid" gridTemplateColumns={ROW_GRID} alignItems="center" gap="6px" py="4px">
-                <Box width={ICON_WIDTH} flexShrink={0} />
-                <Typography variant="body2" color="text.secondary" minWidth={155} flexShrink={0}>
-                    ประเภทผู้เอาประกัน :
-                </Typography>
-                <Typography variant="body2" color="primary" fontWeight={700}>
+            <CustomRow label="ประเภทผู้เอาประกัน">
+                <Typography
+                    variant="body2"
+                    color="primary"
+                    fontWeight={700}
+                    sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+                >
                     {vm.insuredType ?? "-"}
                 </Typography>
-            </Box>
+            </CustomRow>
         </CustomBox>
     );
 };

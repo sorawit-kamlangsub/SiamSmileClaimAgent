@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
     claimPHSelector,
@@ -10,27 +10,38 @@ import {
     setOldClaim,
     toggleOldClaimHidden,
 } from "../../../store/claimPHSlice";
-import { mockBankAccounts, mockContacts, mockInsuredPH, mockOldClaim } from "../../../store/mockClaimPH";
+import { mockBankAccounts, mockContacts, mockOldClaim } from "../../../store/mockClaimPH";
 import InsuredInfoCardPH from "../../../components/CreateClaim/ClaimPH/InsuredInfoCardPH";
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
 import ClaimFormSection from "../../../components/CreateClaim/ClaimPH/ClaimFormSection";
 import ClaimHistoryCardPH from "../../../components/CreateClaim/ClaimPH/ClaimHistoryCardPH";
+import { useGetCustomerDetailById } from "../../../../../api/claimAgentApi";
+import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
+    const { refId } = useParams();
+
+    const customerId = refId ? parseInt(atob(refId)) : undefined;
+
     const { isContinuous, oldClaim, insured } = useAppSelector(claimPHSelector);
 
+    const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(customerId as number);
+
     useEffect(() => {
+        if (!claimInfo?.data || claimInfoLoading) return;
+
         const continuous = true;
-        // dispatch(setIsContinuous(continuous));
-        dispatch(setOldClaim(continuous ? mockOldClaim : null));
-        dispatch(setInsured(mockInsuredPH));
+
+        dispatch(setInsured(claimInfo.data));
+
+        dispatch(setOldClaim(continuous ? mockOldClaim : undefined));
         dispatch(setBankAccounts(mockBankAccounts));
         dispatch(setContacts(mockContacts));
-    }, []);
+    }, [claimInfo?.data, claimInfoLoading]);
 
-    if (!insured) return null;
+    if (claimInfoLoading) return <LinearLoading isLoading={claimInfoLoading} />;
 
     return (
         <Grid container spacing={2}>
@@ -49,7 +60,7 @@ const ClaimPHPage: React.FC = () => {
                 </Grid>
             )}
             <Grid item xs={12}>
-                <ClaimFormSection onNext={() => navigate("/claim/ph/summary")} />
+                <ClaimFormSection onNext={() => navigate(`/claim/ph/${refId}/summary`)} />
             </Grid>
         </Grid>
     );

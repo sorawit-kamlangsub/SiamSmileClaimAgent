@@ -21,7 +21,6 @@ export const useMonitorClaimHistory = () => {
 
         setIsLoading(true);
 
-        // Mock: simulate API delay แล้วเลือก mock ตาม productName
         setTimeout(() => {
             const history = selectedPolicy.productName === "PA" ? mockClaimHistoryPA : mockClaimHistoryPH;
             dispatch(setClaimHistory(history));
@@ -33,19 +32,13 @@ export const useMonitorClaimHistory = () => {
         console.log("แจ้งเคลมต่อเนื่อง", item);
         const continuous = true;
         dispatch(setIsContinuous(continuous));
-
-        if (item.productId === 1) {
-            window.open(`claim/pa`, "_blank");
-        } else if (item.productId === 2) {
-            window.open(`claim/ph`, "_blank");
-        }
     };
 
-    const handleNewClaim = (productTypeId: number) => {
-        if (productTypeId === 1) {
-            window.open(`claim/pa`, "_blank");
-        } else if (productTypeId === 2) {
-            window.open(`claim/ph`, "_blank");
+    const handleNewClaim = (productTypeId: number, customerId?: number) => {
+        if (productTypeId === 26) {
+            window.open(`claim/pa/${btoa(customerId?.toString() || "")}`, "_blank");
+        } else if (productTypeId === 6) {
+            window.open(`claim/ph/${btoa(customerId?.toString() || "")}`, "_blank");
         }
     };
 

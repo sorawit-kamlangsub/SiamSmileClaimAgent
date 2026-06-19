@@ -1,9 +1,11 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
+import { GetCustomerDetailByIdDtoResponse } from "../../../api/claimAgentApi.client";
 
-export type ClaimType = "OPD" | "IPD" | "DayCaseSurgery" | "DeathClaim" | "LossOrDisability";
-export type OpdSubType = "โรคทั่วไป" | "อุบัติเหตุ";
+export type ClaimType = 2 | 3 | 4 | 5 | 6;
+export type OpdSubType = 2 | 3; // 2=Illness, 3=Accident
+export type IpdSubType = "ค่ารักษาพยาบาล" | "ค่าชดเชย";
 export type SymptomType = "ระบุอาการ" | "อื่นๆ";
 export type DocumentReceiver = "ผู้ให้บริการ" | "FCNT (สกลนคร)" | "Pivot";
 
@@ -30,22 +32,24 @@ export interface OldClaimInfo {
     isHidden: boolean;
 }
 
-export type IpdSubType = "ค่ารักษาพยาบาล" | "ค่าชดเชย";
-
 export interface ClaimFormValues {
-    documentReceiver: DocumentReceiver | "";
-    serviceProvider: string;
-    carOwner: string;
+    documentReceiver: number | undefined;
+    documentReceiverLabel: string | undefined; // เพิ่ม
+    serviceProvider: string | undefined;
+    serviceProviderLabel: string | undefined; // เพิ่ม
+    carOwner: string | undefined;
     claimType: ClaimType | undefined;
+    claimTypeLabel: string | undefined; // เพิ่ม
     opdSubType: OpdSubType | undefined;
+    opdSubTypeLabel: string | undefined; // เพิ่ม
     ipdSubType: IpdSubType | undefined;
     incidentDate: Dayjs | undefined;
     dateIn: Dayjs | undefined;
     dateOut: Dayjs | undefined;
     claimAmount: number | undefined;
-    symptomType: SymptomType;
-    chiefComplain: string;
-    remark: string;
+    symptomType: SymptomType | undefined;
+    chiefComplain: string | undefined;
+    remark: string | undefined;
 }
 
 export interface BankAccount {
@@ -68,47 +72,51 @@ export interface ContactInfo {
     isFromMock?: boolean;
 }
 
-export interface InsuredInfoPH {
-    appId: string;
-    customerName: string;
-    nationalId: string;
-    plan: string;
-    startCoverDate: string;
-    cancelDate: string | null;
-}
+// export interface InsuredInfoPH {
+//     appId: string;
+//     customerName: string;
+//     nationalId: string;
+//     plan: string;
+//     startCoverDate: string;
+//     cancelDate: string | undefined;
+// }
 
 interface ClaimPHState {
     isContinuous: boolean;
-    oldClaim: OldClaimInfo | null;
+    oldClaim: OldClaimInfo | undefined;
     form: ClaimFormValues;
     bankAccounts: BankAccount[];
     contacts: ContactInfo[];
-    insured: InsuredInfoPH | null;
+    insured: GetCustomerDetailByIdDtoResponse | undefined;
 }
 
 const defaultForm: ClaimFormValues = {
-    documentReceiver: "",
-    serviceProvider: "",
-    carOwner: "",
+    documentReceiver: undefined,
+    documentReceiverLabel: undefined,
+    serviceProvider: undefined,
+    serviceProviderLabel: undefined,
+    carOwner: undefined,
     claimType: undefined,
+    claimTypeLabel: undefined,
     opdSubType: undefined,
+    opdSubTypeLabel: undefined,
     ipdSubType: undefined,
     incidentDate: dayjs(),
     dateIn: dayjs(),
     dateOut: dayjs(),
     claimAmount: 0,
     symptomType: "ระบุอาการ",
-    chiefComplain: "",
-    remark: "",
+    chiefComplain: undefined,
+    remark: undefined,
 };
 
 const initialState: ClaimPHState = {
     isContinuous: false,
-    oldClaim: null,
+    oldClaim: undefined,
     form: defaultForm,
     bankAccounts: [],
     contacts: [],
-    insured: null,
+    insured: undefined,
 };
 
 const claimPHSlice = createSlice({
@@ -118,7 +126,7 @@ const claimPHSlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<OldClaimInfo | null>) {
+        setOldClaim(state, action: PayloadAction<OldClaimInfo | undefined>) {
             state.oldClaim = action.payload;
         },
         toggleOldClaimHidden(state) {
@@ -165,7 +173,7 @@ const claimPHSlice = createSlice({
                 state.contacts[state.contacts.length - 1].isDefault = true;
             }
         },
-        setInsured(state, action: PayloadAction<InsuredInfoPH | null>) {
+        setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
     },

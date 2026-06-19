@@ -1,173 +1,178 @@
 import React from "react";
-import { Box, Typography, Divider } from "@mui/material";
+import { Box, Typography, Divider, Skeleton } from "@mui/material";
 import ShieldIcon from "@mui/icons-material/Shield";
 import ContinuousClaimTable from "./ContinuousClaimTable";
-import useCheckEligibleCoverage from "../../hooks/CheckEligibleDetail/useCheckEligibleCoverage";
-import { formatDateString } from "../../../../functionHelpers";
-import { ContinuousClaimRow, PolicyPlan } from "../../store/checkeligibleSlice";
+import { ContinuousClaimRow } from "../../store/checkeligibleSlice";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import { checkeligibleSelector } from "../../store/checkeligibleSlice";
-import { setBenefitIcons } from "../../../../functionHelpers"; // ปรับ path ตามจริง
+import { setBenefitIcons } from "../../../../functionHelpers";
 import { useAppSelector } from "../../../../../redux";
+import { formatDateString } from "../../../../functionHelpers";
+import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../../api/claimAgentApi.client";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type BenefitDisplay = {
+    id: number;
+    title: string;
+    ratePerUnit?: string;
+    maxAmount: number;
+    remainingAmount: number;
+    maxDays?: number;
+    remainingDays?: number;
+    dayUnit?: string;
+    productName?: string;
+    coverageFrom?: string;
+    coverageTo?: string;
+};
 
 type Props = {
-    plan: PolicyPlan;
+    benefitData?: GetCustomerBenefitDetailSearchDtoResponse[];
+    isLoading?: boolean;
     continuousRows: ContinuousClaimRow[];
     isContinuous: boolean;
     selectedClaims: string[];
     onToggleClaim: (code: string) => void;
 };
 
-const AmountBlock: React.FC<{
-    label: string;
-    value: number | string;
-    colored?: boolean;
-    unit?: string;
-}> = ({ label, value, colored, unit }) => (
-    <Box textAlign="center">
-        <Typography variant="caption" color="text.secondary" display="block">
-            {label}
-        </Typography>
-        <Typography
-            variant="body2"
-            fontWeight={700}
-            color={colored ? (typeof value === "number" && value > 0 ? "#2e7d32" : "#1a5da8") : "text.primary"}
-            sx={{ textDecoration: colored ? "underline" : "none" }}
-        >
-            {typeof value === "number" ? value.toLocaleString("th-TH", { minimumFractionDigits: 2 }) : value}
-            {unit && (
-                <Typography component="span" variant="caption" fontWeight={700} ml={0.5}>
-                    {unit}
-                </Typography>
-            )}
-        </Typography>
-    </Box>
-);
+// ─── Mapper ───────────────────────────────────────────────────────────────────
+
+const mapBenefitData = (data: GetCustomerBenefitDetailSearchDtoResponse[]): BenefitDisplay[] => {
+    return data.map((item, index) => ({
+        id: index + 1,
+        title: item.benefitName ?? "-",
+        ratePerUnit:
+            item.pricePerUnit && item.pricePerUnit > 0
+                ? `${item.pricePerUnit.toLocaleString("th-TH")}/${item.unitName ?? ""}`
+                : undefined,
+        maxAmount: item.maxPrice ?? 0,
+        remainingAmount: item.maxPrice ?? 0,
+        maxDays: item.maxQuantity ?? undefined,
+        remainingDays: item.maxQuantity ?? undefined,
+        dayUnit: (item.quantityUnitName ?? item.unitName ?? "").replace(/ /g, "\u00A0"),
+        productName: item.productName ?? undefined,
+        coverageFrom: item.coverageFrom?.toString(),
+        coverageTo: item.coverageTo?.toString(),
+    }));
+};
+
+// ─── BenefitIcon ──────────────────────────────────────────────────────────────
 
 const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
     const src = setBenefitIcons(benefitId);
-    return (
-        // <Box
-        //     sx={{
-        //         bgcolor: "#dbeafe",
-        //         borderRadius: 2,
-        //         p: 0,
-        //         display: "flex",
-        //         alignItems: "center",
-        //         justifyContent: "center",
-        //         minWidth: 52,
-        //         minHeight: 52,
-        //     }}
-        // >
-        <>
-            {src ? (
-                <Box
-                    component="img"
-                    src={src}
-                    alt=""
-                    sx={{ width: 60, height: 60, objectFit: "fill", borderRadius: 1 }}
-                />
-            ) : (
-                <Box
-                    sx={{
-                        bgcolor: "#dbeafe",
-                        borderRadius: 2,
-                        p: 0,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        minWidth: 52,
-                        minHeight: 52,
-                    }}
-                >
-                    <ShieldIcon sx={{ fontSize: 30, color: "#1a5da8" }} />
-                </Box>
-            )}
-            {/* </Box> */}
-        </>
+    return src ? (
+        <Box
+            component="img"
+            src={src}
+            alt=""
+            sx={{ width: 60, height: 60, objectFit: "fill", borderRadius: 1, flexShrink: 0 }}
+        />
+    ) : (
+        <Box
+            sx={{
+                bgcolor: "#dbeafe",
+                borderRadius: 2,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                minWidth: 52,
+                minHeight: 52,
+                flexShrink: 0,
+            }}
+        >
+            <ShieldIcon sx={{ fontSize: 30, color: "#1a5da8" }} />
+        </Box>
     );
 };
 
-const BenefitCardIPD: React.FC<{
-    benefit: ReturnType<typeof useCheckEligibleCoverage>["benefitsWithBalance"][0];
-}> = ({ benefit }) => (
+// ─── BenefitCard ──────────────────────────────────────────────────────────────
+
+const BenefitCard: React.FC<{ benefit: BenefitDisplay }> = ({ benefit }) => (
     <Box
         sx={{
             display: "flex",
-            alignItems: "center",
+            flexDirection: { xs: "column", sm: "row" },
+            alignItems: { xs: "flex-start", sm: "center" },
             border: "1px dashed #c0d4f0",
-            // borderRadius: "4px 4px 0 0",
             p: 1.5,
             mb: 0,
             bgcolor: "#fff",
             gap: 2,
         }}
     >
-        <BenefitIcon benefitId={benefit.id} />
+        {/* Icon + Title + วงเงิน */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2, width: "100%" }}>
+            <BenefitIcon benefitId={benefit.id} />
 
-        {/* Title + rate + วงเงินสูงสุด + คงเหลือ */}
-        <Box flex={1} minWidth={0}>
-            <Box display="flex" alignItems="baseline" gap={1} flexWrap="wrap">
+            <Box flex={1} minWidth={0}>
                 <Typography variant="body2" fontWeight={700} color="#1a5da8">
-                    {benefit.title}
+                    {benefit.title}{" "}
+                    {benefit.ratePerUnit && (
+                        <Typography
+                            component="span"
+                            variant="body2"
+                            fontWeight={700}
+                            color="#1a5da8"
+                            sx={{ whiteSpace: "nowrap" }}
+                        >
+                            {benefit.ratePerUnit}
+                        </Typography>
+                    )}
                 </Typography>
-                {benefit.ratePerUnit && (
-                    <Typography variant="body2" fontWeight={700} color="#1a5da8">
-                        {benefit.ratePerUnit}
-                    </Typography>
-                )}
+
+                <Box display="flex" alignItems="center" gap={3} flexWrap="wrap" mt={0.5}>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                            วงเงินความคุ้มครองสูงสุด
+                        </Typography>
+                        <Typography variant="body2" fontWeight={700} color="#1a5da8">
+                            {benefit.maxAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                        </Typography>
+                    </Box>
+                    <Box>
+                        <Typography variant="caption" color="text.secondary" display="block">
+                            จำนวนเงินคงเหลือ
+                        </Typography>
+                        <Typography
+                            variant="body2"
+                            fontWeight={700}
+                            color={benefit.remainingAmount > 0 ? "#2e7d32" : "#c62828"}
+                            sx={{ textDecoration: "underline" }}
+                        >
+                            {benefit.remainingAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                        </Typography>
+                    </Box>
+                </Box>
+
+                <Box sx={{ background: "#1a5da8", py: 0.3, mt: 1, borderRadius: "4px" }} />
             </Box>
-            {/* วงเงินความคุ้มครองสูงสุด */}
-            <Typography variant="caption" color="text.secondary" display="block">
-                วงเงินความคุ้มครองสูงสุด
-            </Typography>
-            <Typography variant="body2" fontWeight={700} color="#1a5da8">
-                {benefit.maxAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
-            </Typography>
+        </Box>
+
+        {/* จำนวนสูงสุด / คงเหลือ */}
+        {benefit.maxDays !== undefined && (
             <Box
                 sx={{
-                    background: "#1a5da8",
                     display: "flex",
+                    flexDirection: "row",
                     alignItems: "center",
-                    justifyContent: "center",
-                    py: 0.3,
-                    borderRadius: "4px",
+                    width: { xs: "100%", sm: "auto" },
+                    borderTop: { xs: "1px dashed #c0d4f0", sm: "none" },
+                    pt: { xs: 1, sm: 0 },
                 }}
-            ></Box>
-        </Box>
-
-        {/* <Divider orientation="vertical" flexItem sx={{ mx: 1 }} /> */}
-
-        {/* จำนวนเงินคงเหลือ */}
-        <Box sx={{ minWidth: { lg: 140 } }} textAlign="center">
-            <Typography variant="caption" color="text.secondary" display="block">
-                จำนวนเงินคงเหลือ
-            </Typography>
-            <Typography
-                variant="body2"
-                fontWeight={700}
-                color={(benefit.remainingAmount ?? 0) > 0 ? "#2e7d32" : "#c62828"}
-                sx={{ textDecoration: "underline" }}
             >
-                {benefit.remainingAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
-            </Typography>
-        </Box>
-
-        {/* จำนวนสูงสุด / คงเหลือ (วัน/คืน) */}
-        {benefit.maxDays !== undefined && (
-            <>
-                <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-                <Box textAlign="center" sx={{ minWidth: { lg: 90 } }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
+                <Divider orientation="vertical" flexItem sx={{ mx: 1, display: { xs: "none", sm: "block" } }} />
+                <Box textAlign="center" sx={{ flex: 1, width: { sm: 130 } }}>
+                    <Typography variant="caption" color="text.secondary" display="block" noWrap>
                         จำนวนสูงสุด
                     </Typography>
-                    <Typography variant="body2" fontWeight={700} color="#1a5da8">
+                    <Typography variant="body2" fontWeight={700} color="#1a5da8" noWrap>
                         {benefit.maxDays} {benefit.dayUnit}
                     </Typography>
                 </Box>
-                <Box textAlign="center" sx={{ minWidth: { lg: 90 } }}>
-                    <Typography variant="caption" color="text.secondary" display="block">
+                <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
+                <Box textAlign="center" sx={{ flex: 1, width: { sm: 130 } }}>
+                    <Typography variant="caption" color="text.secondary" display="block" noWrap>
                         จำนวนคงเหลือ
                     </Typography>
                     <Typography
@@ -175,129 +180,58 @@ const BenefitCardIPD: React.FC<{
                         fontWeight={700}
                         color={(benefit.remainingDays ?? 0) > 0 ? "#2e7d32" : "#c62828"}
                         sx={{ textDecoration: "underline" }}
+                        noWrap
                     >
                         {benefit.remainingDays} {benefit.dayUnit}
                     </Typography>
                 </Box>
-            </>
-        )}
-    </Box>
-);
-
-const BenefitCardOPD: React.FC<{
-    benefit: ReturnType<typeof useCheckEligibleCoverage>["benefitsWithBalance"][0];
-}> = ({ benefit }) => (
-    <Box
-        sx={{
-            display: "flex",
-            alignItems: "center",
-            border: "1px dashed #c0d4f0",
-            // borderRadius: 2,
-            p: 1.5,
-            mb: 0,
-            bgcolor: "#fff",
-            gap: 2,
-        }}
-    >
-        <BenefitIcon benefitId={benefit.id} />
-
-        {/* Title + rate + วงเงิน */}
-        <Box flex={1} minWidth={0}>
-            <Box display="flex" alignItems="baseline" gap={1} flexWrap="wrap">
-                <Typography variant="body2" fontWeight={700}>
-                    {benefit.title}
-                </Typography>
-                {benefit.ratePerUnit && (
-                    <Typography variant="body2" fontWeight={700} color="text.primary">
-                        {benefit.ratePerUnit}
-                    </Typography>
-                )}
             </Box>
-            <Typography variant="caption" color="text.secondary" display="block">
-                วงเงินความคุ้มครองสูงสุด
-            </Typography>
-            <Typography variant="body2" fontWeight={700} color="#1a5da8">
-                {benefit.maxAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
-            </Typography>
-        </Box>
-
-        <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-
-        {/* จำนวนเงินคงเหลือ */}
-        <Box minWidth={100} textAlign="center">
-            <Typography variant="caption" color="text.secondary" display="block">
-                จำนวนเงินคงเหลือ
-            </Typography>
-            <Typography
-                variant="body2"
-                fontWeight={700}
-                color={(benefit.remainingAmount ?? 0) > 0 ? "#2e7d32" : "#c62828"}
-                sx={{ textDecoration: "underline" }}
-            >
-                {benefit.remainingAmount.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
-            </Typography>
-        </Box>
-
-        {/* จำนวนครั้งสูงสุด / คงเหลือ */}
-        {benefit.maxDays !== undefined && (
-            <>
-                <Divider orientation="vertical" flexItem sx={{ mx: 1 }} />
-                <Box textAlign="center" minWidth={80}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                        จำนวนสูงสุด
-                    </Typography>
-                    <Typography variant="body2" fontWeight={700}>
-                        {benefit.maxDays} ครั้ง
-                    </Typography>
-                </Box>
-                <Box textAlign="center" minWidth={80}>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                        จำนวนคงเหลือ
-                    </Typography>
-                    <Typography
-                        variant="body2"
-                        fontWeight={700}
-                        // เขียวถ้าคงเหลือ > 0, แดงถ้า = 0
-                        color={(benefit.remainingDays ?? 0) > 0 ? "#2e7d32" : "#c62828"}
-                        sx={{ textDecoration: "underline" }}
-                    >
-                        {benefit.remainingDays ?? 0} ครั้ง
-                    </Typography>
-                </Box>
-            </>
         )}
     </Box>
 );
 
-// ── CoverageSummaryPanel ──────────────────────────────────────────────────────
+// ─── BenefitSkeleton ──────────────────────────────────────────────────────────
+
+const BenefitSkeleton: React.FC = () => (
+    <Box sx={{ display: "flex", gap: 2, p: 1.5, border: "1px dashed #c0d4f0", mb: 0 }}>
+        <Skeleton variant="rectangular" width={60} height={60} sx={{ borderRadius: 1, flexShrink: 0 }} />
+        <Box flex={1}>
+            <Skeleton width="40%" height={20} />
+            <Skeleton width="60%" height={16} />
+            <Skeleton width="30%" height={20} />
+        </Box>
+        <Skeleton width={100} height={40} />
+    </Box>
+);
+
+// ─── Main Component ───────────────────────────────────────────────────────────
 
 const CoverageSummaryPanel: React.FC<Props> = ({
-    plan,
+    benefitData,
+    isLoading,
     continuousRows,
     isContinuous,
     selectedClaims,
     onToggleClaim,
 }) => {
-    const { benefitsWithBalance } = useCheckEligibleCoverage(plan.benefits, continuousRows, isContinuous);
-
-    // ดึง claimType จาก store
     const { CheckeLigibleDetails } = useAppSelector(checkeligibleSelector);
-    const isOPD = CheckeLigibleDetails?.claimType?.toLowerCase() === "opd";
 
-    const BenefitCard = isOPD ? BenefitCardOPD : BenefitCardIPD;
+    const benefits: BenefitDisplay[] = benefitData ? mapBenefitData(benefitData) : [];
 
-    console.log("🚀 ~ AmountBlock:", AmountBlock);
+    const firstItem = benefitData?.[0];
+    const planLabel = firstItem?.productName ?? "-";
+    const effectiveDate = firstItem?.coverageFrom
+        ? formatDateString(firstItem.coverageFrom.toString(), "DD/MM/BBBB")
+        : "-";
 
     return (
         <Box>
-            {/* ตารางเคลมต่อเนื่อง */}
             {isContinuous && (
                 <CustomPaper>
                     <ContinuousClaimTable rows={continuousRows} selected={selectedClaims} onToggle={onToggleClaim} />
                 </CustomPaper>
             )}
 
-            {/* ความคุ้มครอง */}
             <CustomPaper>
                 <HeadingWithColor text="ความคุ้มครอง" />
 
@@ -315,22 +249,10 @@ const CoverageSummaryPanel: React.FC<Props> = ({
                         borderRadius: "4px 4px 0 0",
                     }}
                 >
-                    {/* <Box
-                        sx={{
-                            width: 44,
-                            height: 44,
-                            borderRadius: "50%",
-                            background: "rgba(255,255,255,0.25)",
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                        }}
-                    > */}
-                    <ShieldIcon sx={{ fontSize: 40, color: "#fff" }} />
-                    {/* </Box> */}
+                    <ShieldIcon sx={{ fontSize: 40, color: "#fff", flexShrink: 0 }} />
                     <Box sx={{ display: "flex", flexDirection: "column" }}>
                         <Typography variant="body1" fontWeight={700} lineHeight={1.4}>
-                            แผนประกัน : {plan.planCode}
+                            แผนประกัน : {planLabel}
                         </Typography>
                         <Typography
                             variant="caption"
@@ -344,36 +266,34 @@ const CoverageSummaryPanel: React.FC<Props> = ({
                                 mt: 0.25,
                             }}
                         >
-                            วันที่เริ่มต้นสัญญา : {formatDateString(plan.effectiveDate, "DD/MM/BBBB")}
+                            วันที่เริ่มต้นสัญญา : {effectiveDate}
                         </Typography>
                     </Box>
                 </Box>
 
                 {/* Benefits */}
-                <Box
-                    sx={{
-                        border: "1px solid #e0e0e0",
-                        // borderRadius: 2,
-                        p: 2,
-                        bgcolor: "#fff",
-                    }}
-                >
-                    {benefitsWithBalance.map((b) => (
-                        <BenefitCard key={b.id} benefit={b} />
-                    ))}
+                <Box sx={{ border: "1px solid #e0e0e0", p: { xs: 1, sm: 2 }, bgcolor: "#fff" }}>
+                    {isLoading ? (
+                        [1, 2, 3].map((i) => <BenefitSkeleton key={i} />)
+                    ) : benefits.length === 0 ? (
+                        <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
+                            {CheckeLigibleDetails.claimType
+                                ? "ไม่พบข้อมูลความคุ้มครอง"
+                                : "กรุณาเลือกประเภทเคลมและกดค้นหา"}
+                        </Typography>
+                    ) : (
+                        benefits.map((b) => <BenefitCard key={b.id} benefit={b} />)
+                    )}
                 </Box>
+
                 <Box
                     sx={{
                         background: "#1a5da8",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        gap: 1.5,
                         py: 0.7,
                         px: 1,
                         borderRadius: "0 0 4px 4px",
                     }}
-                ></Box>
+                />
             </CustomPaper>
         </Box>
     );
