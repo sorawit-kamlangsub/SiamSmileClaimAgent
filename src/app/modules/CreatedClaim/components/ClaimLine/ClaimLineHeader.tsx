@@ -3,35 +3,35 @@ import { Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../redux";
 import { setHeader } from "../../store/claimLineSlice";
-import PatienttypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/PatienttypeDropDown";
+import MedicalTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/MedicalTypeDropDown";
 
 const ClaimLineHeader: React.FC = () => {
     const dispatch = useAppDispatch();
 
     const formik = useFormik({
-        initialValues: { patientType: 1 },
+        initialValues: { medicalType: 1 },
         validate: (v) => {
             const e: any = {};
-            if (!v.patientType) e.patientType = "โปรดระบุ";
+            if (!v.medicalType) e.medicalType = "โปรดระบุ";
             return e;
         },
         onSubmit: (values) => {
-            dispatch(setHeader({ patientType: values.patientType }));
+            dispatch(setHeader({ medicalType: values.medicalType }));
         },
     });
 
     useEffect(() => {
-        dispatch(setHeader({ patientType: formik.values.patientType }));
+        dispatch(setHeader({ medicalType: formik.values.medicalType }));
     }, []);
 
     return (
         <Grid container spacing={2} alignItems="flex-start" mb={1}>
             <Grid item xs={12} sm={4}>
-                <PatienttypeDropDown
-                    name="patientType"
+                <MedicalTypeDropDown
+                    name="medicalType"
                     formik={formik}
                     selectedCallback={(value) => {
-                        dispatch(setHeader({ patientType: value as number }));
+                        dispatch(setHeader({ medicalType: value as number }));
                     }}
                     firstItemText="---- เลือก ----"
                     fullWidth

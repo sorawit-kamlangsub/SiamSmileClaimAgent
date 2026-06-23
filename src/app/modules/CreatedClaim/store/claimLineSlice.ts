@@ -43,7 +43,7 @@ export interface DaysCalculate {
 }
 
 export interface ClaimLineHeader {
-    patientType?: number | undefined;
+    medicalType?: number | undefined;
 }
 
 export interface ClaimLineItem {
@@ -93,7 +93,7 @@ const defaultDaysCalculate: DaysCalculate = {
 };
 
 const defaultClaimLineHeader: ClaimLineHeader = {
-    patientType: undefined,
+    medicalType: undefined,
 };
 
 const initialState: ClaimLineState = {

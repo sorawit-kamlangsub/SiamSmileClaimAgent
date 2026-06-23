@@ -1,11 +1,13 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux";
 import {
     ClaimLineItem,
     removeFilledItem,
+    resetSimulateItems,
+    setCalculateResult,
     setFilledItems,
-    setPatianTypeId,
+    setMedicalTypeId,
     updateFilledItem,
 } from "../../store/claimSimulateSlice";
 import { NOT_COVERED_REASON_OPTIONS } from "../../store/mockClaimLine";
@@ -32,7 +34,7 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
 export const useClaimLineCalculate = (onNext?: () => void) => {
     const dispatch = useDispatch();
     const { filledItems } = useSelector((s: RootState) => s.claimsimulate);
-    const patientType = useSelector((s: RootState) => s.claimline.header.patientType);
+    const medicalType = useSelector((s: RootState) => s.claimline.header.medicalType);
 
     const [showAddPanel, setShowAddPanel] = useState(false);
     const [searchText, setSearchText] = useState("");
@@ -44,12 +46,14 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     const [pendingDiscount, setPendingDiscount] = useState("");
     const [pendingNotCovered, setPendingNotCovered] = useState("");
     const [pendingReason, setPendingReason] = useState("");
+    const [discountError, setDiscountError] = useState("");
+    const [notCoveredError, setNotCoveredError] = useState("");
 
     // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
-    const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(3, patientType, true);
+    const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(3, medicalType, true);
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
-    const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(3, patientType);
+    const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(3, medicalType);
 
     // ── แปลง frequentData → filledItems format ────────────────────────────────
     const frequentItems = useMemo((): ClaimLineItem[] => {
@@ -101,12 +105,6 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     const totalNotCovered = filledItems.reduce((s, i) => s + (i.notCovered || 0), 0);
     const netAmount = totalClaim - totalDiscount - totalNotCovered;
 
-    const initItems = () => {
-        if (filledItems.length === 0 && frequentItems.length > 0) {
-            dispatch(setFilledItems(frequentItems));
-        }
-    };
-
     // ── CRUD ──────────────────────────────────────────────────────────────────
     const handleUpdateItem = (item: ClaimLineItem) => dispatch(updateFilledItem(item));
     const handleRemoveItem = (id: number) => dispatch(removeFilledItem(id));
@@ -125,8 +123,34 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     };
 
     // ── เพิ่มลงตาราง ─────────────────────────────────────────────────────────
+    const hasAnyAmount = filledItems.some((item) => Number(item.claimAmount ?? 0) > 0);
+    const hasDiscountError = filledItems.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
+    const hasNotCoveredError = filledItems.some(
+        (item) =>
+            Number(item.discount ?? 0) <= Number(item.claimAmount ?? 0) &&
+            Number(item.notCovered ?? 0) > Number(item.claimAmount ?? 0) - Number(item.discount ?? 0)
+    );
+
     const handleAddToTable = () => {
         if (!selectedItem) return;
+        const amount = parseFloat(pendingAmount || "0");
+        const discount = parseFloat(pendingDiscount || "0");
+        const notCovered = parseFloat(pendingNotCovered || "0");
+
+        let hasError = false;
+        if (discount > amount) {
+            setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
+            hasError = true;
+        } else {
+            setDiscountError("");
+        }
+        if (notCovered > amount - discount) {
+            setNotCoveredError("ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิกหลังหักส่วนลด");
+            hasError = true;
+        } else {
+            setNotCoveredError("");
+        }
+        if (hasError) return;
         const newItem: ClaimLineItem = {
             id: Date.now(),
             code: selectedItem.code,
@@ -146,17 +170,33 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
         setPendingNotCovered("");
         setPendingReason("");
     };
+    useEffect(() => {
+        if (!medicalType) return;
+        dispatch(resetSimulateItems());
+        setSelectedItem(null);
+        setSelectedLeafId(null);
+        setPendingAmount("");
+        setPendingDiscount("");
+        setPendingNotCovered("");
+        setPendingReason("");
+    }, [medicalType]);
 
+    useEffect(() => {
+        if (!medicalType) return;
+        if (isFrequentLoading) return;
+        if (frequentItems.length === 0) return;
+
+        dispatch(setFilledItems(frequentItems));
+    }, [medicalType, frequentItems, isFrequentLoading]);
     // ── ถัดไป ─────────────────────────────────────────────────────────────────
     const handleNext = () => {
         dispatch(setFilledItems([...filledItems]));
-        dispatch(setPatianTypeId(patientType));
+        dispatch(setMedicalTypeId(medicalType));
         onNext?.();
     };
-
     return {
         filledItems,
-        patientType,
+        medicalType,
         isFrequentLoading,
         showAddPanel,
         setShowAddPanel,
@@ -185,7 +225,13 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
         notCoveredReasonOptions: NOT_COVERED_REASON_OPTIONS,
         filteredCategories,
         isCategoryLoading,
-        initItems,
         handleNext,
+        discountError,
+        notCoveredError,
+        setDiscountError,
+        setNotCoveredError,
+        hasDiscountError,
+        hasNotCoveredError,
+        hasAnyAmount,
     };
 };

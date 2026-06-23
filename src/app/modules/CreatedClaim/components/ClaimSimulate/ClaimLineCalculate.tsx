@@ -49,7 +49,6 @@ import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined
 import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/MiscellaneousServicesOutlined";
 import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useClaimLineCalculate } from "../../hooks/ClaimSimulate/useClaimLineCalculate";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
@@ -243,16 +242,16 @@ const ClaimLineCalculate = () => {
         notCoveredReasonOptions,
         filteredCategories,
         isCategoryLoading,
-        initItems,
         handleNext,
         isFrequentLoading,
+        discountError,
+        notCoveredError,
+        setDiscountError,
+        setNotCoveredError,
+        hasDiscountError,
+        hasNotCoveredError,
+        hasAnyAmount,
     } = useClaimLineCalculate(() => navigate("summary"));
-
-    useEffect(() => {
-        if (!isFrequentLoading) {
-            initItems();
-        }
-    }, [isFrequentLoading]);
 
     const fmt = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
@@ -400,7 +399,7 @@ const ClaimLineCalculate = () => {
                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
                                                         <TextField
                                                             size="small"
-                                                            value={item.claimAmount}
+                                                            value={item.claimAmount ?? ""}
                                                             onChange={(e) =>
                                                                 handleUpdateItem({
                                                                     ...item,
@@ -418,7 +417,7 @@ const ClaimLineCalculate = () => {
                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
                                                         <TextField
                                                             size="small"
-                                                            value={item.discount}
+                                                            value={item.discount ?? ""}
                                                             onChange={(e) =>
                                                                 handleUpdateItem({
                                                                     ...item,
@@ -426,6 +425,16 @@ const ClaimLineCalculate = () => {
                                                                 })
                                                             }
                                                             type="number"
+                                                            error={
+                                                                Number(item.discount ?? 0) >
+                                                                Number(item.claimAmount ?? 0)
+                                                            }
+                                                            helperText={
+                                                                Number(item.discount ?? 0) >
+                                                                Number(item.claimAmount ?? 0)
+                                                                    ? "ส่วนลดต้องไม่มากกว่ายอดเบิก"
+                                                                    : ""
+                                                            }
                                                             inputProps={{
                                                                 min: 0,
                                                                 style: { textAlign: "right", fontSize: 13 },
@@ -436,7 +445,7 @@ const ClaimLineCalculate = () => {
                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
                                                         <TextField
                                                             size="small"
-                                                            value={item.notCovered}
+                                                            value={item.notCovered ?? ""}
                                                             onChange={(e) =>
                                                                 handleUpdateItem({
                                                                     ...item,
@@ -444,6 +453,22 @@ const ClaimLineCalculate = () => {
                                                                 })
                                                             }
                                                             type="number"
+                                                            error={
+                                                                Number(item.discount ?? 0) <=
+                                                                    Number(item.claimAmount ?? 0) &&
+                                                                Number(item.notCovered ?? 0) >
+                                                                    Number(item.claimAmount ?? 0) -
+                                                                        Number(item.discount ?? 0)
+                                                            }
+                                                            helperText={
+                                                                Number(item.discount ?? 0) <=
+                                                                    Number(item.claimAmount ?? 0) &&
+                                                                Number(item.notCovered ?? 0) >
+                                                                    Number(item.claimAmount ?? 0) -
+                                                                        Number(item.discount ?? 0)
+                                                                    ? "ไม่คุ้มครองต้องไม่มากกว่ายอดเบิกหลังหักส่วนลด"
+                                                                    : ""
+                                                            }
                                                             inputProps={{
                                                                 min: 0,
                                                                 style: { textAlign: "right", fontSize: 13 },
@@ -756,7 +781,16 @@ const ClaimLineCalculate = () => {
                                                     fullWidth
                                                     type="number"
                                                     value={pendingAmount}
-                                                    onChange={(e) => setPendingAmount(e.target.value)}
+                                                    onChange={(e) => {
+                                                        setPendingAmount(e.target.value);
+                                                        if (Number(pendingDiscount) <= Number(e.target.value))
+                                                            setDiscountError("");
+                                                        if (
+                                                            Number(pendingNotCovered) <=
+                                                            Number(e.target.value) - Number(pendingDiscount)
+                                                        )
+                                                            setNotCoveredError("");
+                                                    }}
                                                     disabled={!selectedItem}
                                                     inputProps={{ min: 0, style: { textAlign: "right" } }}
                                                 />
@@ -767,9 +801,18 @@ const ClaimLineCalculate = () => {
                                                     label="ส่วนลด"
                                                     fullWidth
                                                     type="number"
-                                                    value={pendingDiscount}
-                                                    onChange={(e) => setPendingDiscount(e.target.value)}
+                                                    value={pendingDiscount ?? ""}
+                                                    onChange={(e) => {
+                                                        setPendingDiscount(e.target.value);
+                                                        if (Number(e.target.value) > Number(pendingAmount)) {
+                                                            setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
+                                                        } else {
+                                                            setDiscountError("");
+                                                        }
+                                                    }}
                                                     disabled={!selectedItem}
+                                                    error={!!discountError}
+                                                    helperText={discountError}
                                                     inputProps={{ min: 0, style: { textAlign: "right" } }}
                                                 />
                                             </Grid>
@@ -779,13 +822,27 @@ const ClaimLineCalculate = () => {
                                                     label="ยอดไม่คุ้มครอง"
                                                     fullWidth
                                                     type="number"
-                                                    value={pendingNotCovered}
-                                                    onChange={(e) => setPendingNotCovered(e.target.value)}
+                                                    value={pendingNotCovered ?? ""}
+                                                    onChange={(e) => {
+                                                        setPendingNotCovered(e.target.value);
+                                                        if (
+                                                            Number(e.target.value) >
+                                                            Number(pendingAmount) - Number(pendingDiscount)
+                                                        ) {
+                                                            setNotCoveredError(
+                                                                "ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิกหลังหักส่วนลด"
+                                                            );
+                                                        } else {
+                                                            setNotCoveredError("");
+                                                        }
+                                                    }}
                                                     disabled={!selectedItem}
+                                                    error={!!notCoveredError}
+                                                    helperText={notCoveredError}
                                                     inputProps={{ min: 0, style: { textAlign: "right" } }}
                                                 />
                                             </Grid>
-                                            <Grid item xs={12}>
+                                            <Grid item xs={12} sx={{ mt: discountError || notCoveredError ? 4 : 0 }}>
                                                 <Select
                                                     size="small"
                                                     fullWidth
@@ -813,7 +870,12 @@ const ClaimLineCalculate = () => {
                                                     size="medium"
                                                     startIcon={<AddBoxOutlinedIcon />}
                                                     onClick={handleAddToTable}
-                                                    disabled={!selectedItem || !pendingAmount}
+                                                    disabled={
+                                                        !selectedItem ||
+                                                        !pendingAmount ||
+                                                        !!discountError ||
+                                                        !!notCoveredError
+                                                    }
                                                     sx={{ borderRadius: 2, fontWeight: 600, mt: 1 }}
                                                 >
                                                     เพิ่มลงในตาราง
@@ -901,6 +963,7 @@ const ClaimLineCalculate = () => {
                                 endIcon={<ArrowForwardIcon />}
                                 onClick={handleNext}
                                 fullWidth
+                                disabled={!hasAnyAmount || hasDiscountError || hasNotCoveredError}
                                 sx={{
                                     mt: 2,
                                     borderRadius: 2,

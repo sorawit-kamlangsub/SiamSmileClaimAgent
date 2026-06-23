@@ -7,7 +7,7 @@ import { useMemo } from "react";
 const coreClaimMastersClient = new MastersClient(CORECLAIM_API_URL, axios);
 
 const getUserQuerykey = ["getUser"];
-const getPatienttypeQueryKey = ["getPatienttype"];
+const getMedicaltypeQueryKey = ["getMedicaltype"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -41,8 +41,12 @@ export const getUserFilter = (searchValue: string, defaultId?: any): UseQueryRes
     }, [key, defaultId, data, isLoading]);
 };
 
-export const useGetPatienttype = (patientTypeId?: number | undefined) => {
-    return useQuery([getPatienttypeQueryKey, patientTypeId], () => coreClaimMastersClient.patienttype(patientTypeId), {
-        refetchOnWindowFocus: true,
-    });
+export const useGetMedicaltype = (claimSourceId?: number | undefined) => {
+    return useQuery(
+        [getMedicaltypeQueryKey, claimSourceId],
+        () => coreClaimMastersClient.getMedicalType(claimSourceId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
 };

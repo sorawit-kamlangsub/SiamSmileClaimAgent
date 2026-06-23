@@ -63,7 +63,7 @@ const validate = (values: DaysCalculateFormValues) => {
 
 export const useDaysCalculate = () => {
     const dispatch = useDispatch();
-    const { daysCalculate, filledItems, patianTypeId } = useSelector((s: RootState) => s.claimsimulate);
+    const { daysCalculate, filledItems, medicalTypeId } = useSelector((s: RootState) => s.claimsimulate);
 
     const [openConfirm, setOpenConfirm] = useState(false);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -154,7 +154,7 @@ export const useDaysCalculate = () => {
 
         const calculateDetail: CalculateCaseClaim = {
             productId: 44,
-            patianTypeId: patianTypeId,
+            patianTypeId: medicalTypeId,
             caseTypeId: formik.values.treatmentType,
             dateHappen: formik.values.dateHappen,
             dateIn: formik.values.admitDate,

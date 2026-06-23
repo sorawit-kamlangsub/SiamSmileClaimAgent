@@ -31,7 +31,7 @@ export interface ClaimLineItem {
 interface ClaimSimulateState {
     daysCalculate: DaysCalculateState;
     filledItems: ClaimLineItem[];
-    patianTypeId: number | undefined;
+    medicalTypeId: number | undefined;
     calculateResult: CalculateCaseClaimDtoResponse | null;
 }
 
@@ -50,7 +50,7 @@ const initialState: ClaimSimulateState = {
         continuousFromClaimNo: "",
     },
     filledItems: [],
-    patianTypeId: undefined,
+    medicalTypeId: undefined,
     calculateResult: null,
 };
 
@@ -74,8 +74,12 @@ const claimSimulateSlice = createSlice({
         setCalculateResult(state, action: PayloadAction<CalculateCaseClaimDtoResponse | null>) {
             state.calculateResult = action.payload;
         },
-        setPatianTypeId(state, action: PayloadAction<number | undefined>) {
-            state.patianTypeId = action.payload;
+        setMedicalTypeId(state, action: PayloadAction<number | undefined>) {
+            state.medicalTypeId = action.payload;
+        },
+        resetSimulateItems(state) {
+            state.filledItems = [];
+            state.calculateResult = null;
         },
     },
 });
@@ -86,6 +90,7 @@ export const {
     updateFilledItem,
     removeFilledItem,
     setCalculateResult,
-    setPatianTypeId,
+    setMedicalTypeId,
+    resetSimulateItems,
 } = claimSimulateSlice.actions;
 export default claimSimulateSlice.reducer;
