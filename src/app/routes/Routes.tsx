@@ -1,5 +1,6 @@
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
 import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
+import TransferSlipPage from "../modules/TransferSlips/pages/TransferSlipPage";
 import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
 
@@ -60,7 +61,15 @@ const Routes: RouteMapType[] = [
         permissions: [],
         condition: "AND",
     },
+
+    // Slip โอนเงิน
+    {
+        path: "/slip/:id",
+        title: "Transfer Slip",
+        element: <TransferSlipPage />,
+        hideAppBar: true,
+        hideAsideMenu: true,
+    },
 ];
 
 export default Routes;
-

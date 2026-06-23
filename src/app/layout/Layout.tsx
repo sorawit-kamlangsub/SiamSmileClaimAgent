@@ -68,17 +68,21 @@ const Layout = () => {
         }
     }
 
+    const hideAppBar = matchHandle.hideAppBar ?? false;
+    const hideAsideMenu = matchHandle.hideAsideMenu ?? false;
+
     return (
         <ThemeProvider theme={selectedTheme}>
             <LayoutContainer>
                 <CssBaseline />
                 <ResKeyUpdator />
                 <VersionChecker />
-                <TitleAppBar />
-                <ASideMenuList />
+                {!hideAppBar && <TitleAppBar />}
+                {!hideAsideMenu && <ASideMenuList />}
                 <LayoutContentContainer
                     style={{
-                        marginLeft: drawerOpen ? selectedTheme.drawerWidth : 0,
+                        marginLeft: !hideAsideMenu && drawerOpen ? selectedTheme.drawerWidth : 0,
+                        paddingTop: hideAppBar ? selectedTheme.spacing(3) : undefined,
                     }}
                 >
                     <a id="back-to-top-anchor" />
