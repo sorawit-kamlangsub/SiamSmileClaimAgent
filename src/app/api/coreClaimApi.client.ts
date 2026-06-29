@@ -551,7 +551,7 @@ export class MastersClient {
     }
 
     /**
-     * API สำหรับ Get ข้อมูล MedicalType
+     * API สำหรับ Get ข้อมูล MedicalType (ประเภทการรักษา)
      * @param claimSourceId (optional) 
      * @return Success
      */
@@ -606,6 +606,430 @@ export class MastersClient {
         }
         return Promise.resolve<MedicalTypeDtoResponseListServiceResponse>(null as any);
     }
+
+    /**
+     * API สำหรับ Get ข้อมูล IncidentType (เหตุของการเคลม)
+     * @param incidentTypeId (optional) 
+     * @return Success
+     */
+    getIncidentType(incidentTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<IncidentTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/incidenttype?";
+        if (incidentTypeId === null)
+            throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetIncidentType(_response);
+        });
+    }
+
+    protected processGetIncidentType(response: AxiosResponse): Promise<IncidentTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<IncidentTypeDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<IncidentTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล CoverageType (ประเภทความคุ้มครอง)
+     * @param coverageTypeId (optional) 
+     * @return Success
+     */
+    getCoverageType(coverageTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<CoverageTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/coveragetype?";
+        if (coverageTypeId === null)
+            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        else if (coverageTypeId !== undefined)
+            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetCoverageType(_response);
+        });
+    }
+
+    protected processGetCoverageType(response: AxiosResponse): Promise<CoverageTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CoverageTypeDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CoverageTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล CauseOfIncident (ประเภทการรักษา) เฉพาะ เสียชีวิต, สูญเสียอวัยวะ, ทุพพลภาพ
+     * @param causeOfIncidentId (optional) 
+     * @return Success
+     */
+    getCauserOfIncident(causeOfIncidentId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<CauseOfIncidentDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/causeofincident?";
+        if (causeOfIncidentId === null)
+            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        else if (causeOfIncidentId !== undefined)
+            url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetCauserOfIncident(_response);
+        });
+    }
+
+    protected processGetCauserOfIncident(response: AxiosResponse): Promise<CauseOfIncidentDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CauseOfIncidentDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CauseOfIncidentDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล SIMB
+     * @param formatTypeId (optional) 
+     * @param patientTypeId (optional) 
+     * @param isUseOften (optional) 
+     * @return Success
+     */
+    getSimB(formatTypeId?: number | undefined, patientTypeId?: number | undefined, isUseOften?: boolean | undefined, cancelToken?: CancelToken | undefined): Promise<InputToStandardMappingDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/simb?";
+        if (formatTypeId === null)
+            throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined)
+            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (patientTypeId === null)
+            throw new Error("The parameter 'patientTypeId' cannot be null.");
+        else if (patientTypeId !== undefined)
+            url_ += "patientTypeId=" + encodeURIComponent("" + patientTypeId) + "&";
+        if (isUseOften === null)
+            throw new Error("The parameter 'isUseOften' cannot be null.");
+        else if (isUseOften !== undefined)
+            url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetSimB(_response);
+        });
+    }
+
+    protected processGetSimB(response: AxiosResponse): Promise<InputToStandardMappingDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<InputToStandardMappingDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<InputToStandardMappingDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล SIMB Category
+     * @param formatTypeId (optional) 
+     * @param patientTypeId (optional) 
+     * @return Success
+     */
+    getSimBCategory(formatTypeId?: number | undefined, patientTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/simb/category?";
+        if (formatTypeId === null)
+            throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined)
+            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (patientTypeId === null)
+            throw new Error("The parameter 'patientTypeId' cannot be null.");
+        else if (patientTypeId !== undefined)
+            url_ += "patientTypeId=" + encodeURIComponent("" + patientTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetSimBCategory(_response);
+        });
+    }
+
+    protected processGetSimBCategory(response: AxiosResponse): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<StandardMedicalExpenseCategoryDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<StandardMedicalExpenseCategoryDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล ChiefComplaint (อาการสำคัญที่ผู้เคลมแจ้ง)
+     * @param chiefComplaintId (optional) 
+     * @return Success
+     */
+    getChiefComplaint(chiefComplaintId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetChiefComplaintDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/chiefcomplaint?";
+        if (chiefComplaintId === null)
+            throw new Error("The parameter 'chiefComplaintId' cannot be null.");
+        else if (chiefComplaintId !== undefined)
+            url_ += "chiefComplaintId=" + encodeURIComponent("" + chiefComplaintId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetChiefComplaint(_response);
+        });
+    }
+
+    protected processGetChiefComplaint(response: AxiosResponse): Promise<GetChiefComplaintDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetChiefComplaintDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetChiefComplaintDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล ICD10 (รหัสวินิจฉัยโรค)
+     * @param iCD10Id (optional) 
+     * @param iCD10Code (optional) 
+     * @param isTPA (optional) 
+     * @return Success
+     */
+    getICD10(iCD10Id?: number | undefined, iCD10Code?: string | undefined, isTPA?: boolean | undefined, cancelToken?: CancelToken | undefined): Promise<GetICD10DtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/icd10?";
+        if (iCD10Id === null)
+            throw new Error("The parameter 'iCD10Id' cannot be null.");
+        else if (iCD10Id !== undefined)
+            url_ += "ICD10Id=" + encodeURIComponent("" + iCD10Id) + "&";
+        if (iCD10Code === null)
+            throw new Error("The parameter 'iCD10Code' cannot be null.");
+        else if (iCD10Code !== undefined)
+            url_ += "ICD10Code=" + encodeURIComponent("" + iCD10Code) + "&";
+        if (isTPA === null)
+            throw new Error("The parameter 'isTPA' cannot be null.");
+        else if (isTPA !== undefined)
+            url_ += "isTPA=" + encodeURIComponent("" + isTPA) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetICD10(_response);
+        });
+    }
+
+    protected processGetICD10(response: AxiosResponse): Promise<GetICD10DtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetICD10DtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetICD10DtoResponseListServiceResponse>(null as any);
+    }
 }
 
 export interface AllUserDtoResponse {
@@ -648,28 +1072,35 @@ export interface AllUserDtoResponseListServiceResponse {
 
 export interface CalculateCaseClaim {
     productId?: number;
-    patianTypeId?: number;
-    caseTypeId?: number;
-    icuCount?: number | undefined;
-    dateHappen?: dayjs.Dayjs | undefined;
-    dateIn?: dayjs.Dayjs | undefined;
-    dateOut?: dayjs.Dayjs | undefined;
+    coverageTypeId?: number;
+    medicalTypeId?: number;
+    incidentTypeId?: number;
+    occurrenceDate?: dayjs.Dayjs;
+    ipdCount?: number;
+    icuCount?: number;
+    continueClaimNoe?: string | undefined;
     expenseList?: CalculateCaseClaimItem[] | undefined;
 }
 
 export interface CalculateCaseClaimDtoRequest {
     caseId?: string;
     isSimulateCase?: boolean;
+    isCheckIncludeCompensate?: boolean;
+    isCheckIncludeCompensateAll?: boolean;
     jsonDetail?: CalculateCaseClaim;
 }
 
 export interface CalculateCaseClaimDtoResponse {
     medicalExpense?: MedicalExpenseList[] | undefined;
     compensateExpense?: CompensateExpenseList[] | undefined;
+    compensateNet?: number;
+    compensateInclude?: number;
+    compensateRemain?: number;
     medicalNet?: number;
+    medicalCoverPay?: number;
     medicalPay?: number;
-    summaryMedicalPay?: number;
-    summaryMedicalUnPay?: number;
+    medicalCompensateInclude?: number;
+    medicalUnpay?: number;
 }
 
 export interface CalculateCaseClaimDtoResponseServiceResponse {
@@ -689,11 +1120,31 @@ export interface CalculateCaseClaimDtoResponseServiceResponse {
 export interface CalculateCaseClaimItem {
     code?: string | undefined;
     description?: string | undefined;
-    claimAmount?: number;
-    discount?: number;
-    notCovered?: number;
+    originalAmount?: number;
+    discountAmount?: number;
+    nonCoverAmount?: number;
     reason?: string | undefined;
     remark?: string | undefined;
+}
+
+export interface CauseOfIncidentDtoResponse {
+    indexId?: number;
+    causeOfIncidentId?: number;
+    causeOfIncidentName?: string | undefined;
+}
+
+export interface CauseOfIncidentDtoResponseListServiceResponse {
+    data?: CauseOfIncidentDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
 }
 
 export interface CheckEligibleDtoResponse {
@@ -714,8 +1165,8 @@ export interface CheckEligibleDtoResponseListServiceResponse {
 }
 
 export interface CompensateExpenseList {
-    benefit_id?: string | undefined;
-    benefit_Detail?: string | undefined;
+    benefitId?: string | undefined;
+    benefitName?: string | undefined;
     net?: number;
     cover?: number;
     unCover?: number;
@@ -723,6 +1174,46 @@ export interface CompensateExpenseList {
     unPay?: number;
     countDay?: number;
     dayOfUnit?: number;
+}
+
+export interface CoverageTypeDtoResponse {
+    indexId?: number;
+    coverageTypeId?: number;
+    coverageTypeNameTH?: string | undefined;
+}
+
+export interface CoverageTypeDtoResponseListServiceResponse {
+    data?: CoverageTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetChiefComplaintDtoResponse {
+    chiefComplaintId?: number;
+    chiefComplaintCode?: string | undefined;
+    detail?: string | undefined;
+}
+
+export interface GetChiefComplaintDtoResponseListServiceResponse {
+    data?: GetChiefComplaintDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
 }
 
 export interface GetCustomerBenefitDetailSearchDtoResponse {
@@ -823,9 +1314,81 @@ export interface GetCustomerSearchDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetICD10DtoResponse {
+    icD10Id?: number;
+    icD10Code?: string | undefined;
+    icD10Detail?: string | undefined;
+}
+
+export interface GetICD10DtoResponseListServiceResponse {
+    data?: GetICD10DtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface IncidentTypeDtoResponse {
+    indexId?: number;
+    incidentTypeId?: number;
+    incidentTypeNameTH?: string | undefined;
+}
+
+export interface IncidentTypeDtoResponseListServiceResponse {
+    data?: IncidentTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface InputToStandardMappingDtoResponse {
+    inputToStandardMappingId?: number;
+    formatTypeId?: number | undefined;
+    inputItemCode?: string | undefined;
+    standardMedicalExpenseId?: number | undefined;
+    descriptionEN?: string | undefined;
+    descriptionTH?: string | undefined;
+    standardMedicalExpenseCategoryId?: number | undefined;
+    backgroundColorCode?: string | undefined;
+    inputToStandardSubCategoryId?: number | undefined;
+}
+
+export interface InputToStandardMappingDtoResponseListServiceResponse {
+    data?: InputToStandardMappingDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface InputToStandardSubCategoryList {
+    inputToStandardSubCategoryId?: number;
+    inputToStandardSubCategoryName?: string | undefined;
+    inputToStandardMappingList?: InputToStandardMappingDtoResponse[] | undefined;
+}
+
 export interface MedicalExpenseList {
-    benefit_id?: string | undefined;
-    benefit_Detail?: string | undefined;
+    benefitId?: string | undefined;
+    benefitName?: string | undefined;
     net?: number;
     cover?: number;
     unCover?: number;
@@ -835,11 +1398,32 @@ export interface MedicalExpenseList {
 
 export interface MedicalTypeDtoResponse {
     medicalTypeId?: number;
+    medicalTypeCode?: string | undefined;
     medicalTypeName?: string | undefined;
 }
 
 export interface MedicalTypeDtoResponseListServiceResponse {
     data?: MedicalTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface StandardMedicalExpenseCategoryDtoResponse {
+    inputToStandardCategoryId?: number;
+    inputToStandardCategoryName?: string | undefined;
+    inputToStandardSubCategoryList?: InputToStandardSubCategoryList[] | undefined;
+}
+
+export interface StandardMedicalExpenseCategoryDtoResponseListServiceResponse {
+    data?: StandardMedicalExpenseCategoryDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

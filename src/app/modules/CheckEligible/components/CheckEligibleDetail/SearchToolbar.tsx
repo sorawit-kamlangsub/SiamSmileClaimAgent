@@ -8,7 +8,7 @@ import useCheckEligibleToolbar from "../../hooks/CheckEligibleDetail/useCheckEli
 import { FormikCheckbox } from "../../../_common";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
-import CaseTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/CaseTypeDropDown";
+//import CaseTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/CaseTypeDropDown";
 
 const SearchToolbar: React.FC = () => {
     const { formik } = useCheckEligibleToolbar();
@@ -17,9 +17,9 @@ const SearchToolbar: React.FC = () => {
         <LocalizationProvider dateAdapter={AdapterDayjs}>
             <CustomPaper>
                 <Grid container spacing={1} alignItems="center">
-                    <Grid item xs={12} sm={4} lg={3}>
+                    {/* <Grid item xs={12} sm={4} lg={3}>
                         <CaseTypeDropDown formik={formik} name="claimType" fullWidth required />
-                    </Grid>
+                    </Grid> */}
 
                     <Grid item xs={12} sm={3}>
                         <FormikDatePicker formik={formik} name="incidentDate" label="วันที่เกิดเหตุ" fullWidth />

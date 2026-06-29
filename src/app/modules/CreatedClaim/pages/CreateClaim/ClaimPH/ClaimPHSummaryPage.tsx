@@ -73,15 +73,26 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                 </IconButton>
             )}
             <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: { xs: 1, sm: 5 } }}>
-                <Box display="flex" alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center" gap={1}>
+                <Box display="flex" alignItems="center">
+                    <Box display="flex" alignItems="center" gap={2}>
                         <Radio
                             size="small"
                             checked={selected}
                             onChange={onSelect}
                             onClick={(e) => e.stopPropagation()}
                         />
-                        <Box>
+                        <Avatar
+                            src={logoSrc ?? undefined}
+                            variant="circular"
+                            sx={{ width: 70, height: 70, bgcolor: logoSrc ? "transparent" : "#e3f2fd", flexShrink: 0 }}
+                        >
+                            {!logoSrc && (
+                                <Typography variant="caption" color="primary" fontWeight={700}>
+                                    {bank.bankName.slice(0, 2)}
+                                </Typography>
+                            )}
+                        </Avatar>
+                        <Box ml={1}>
                             <Typography variant="body2" fontWeight={700}>
                                 {bank.bankName}
                             </Typography>
@@ -96,17 +107,6 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                             </Typography>
                         </Box>
                     </Box>
-                    <Avatar
-                        src={logoSrc ?? undefined}
-                        variant="circular"
-                        sx={{ width: 70, height: 70, bgcolor: logoSrc ? "transparent" : "#e3f2fd", flexShrink: 0 }}
-                    >
-                        {!logoSrc && (
-                            <Typography variant="caption" color="primary" fontWeight={700}>
-                                {bank.bankName.slice(0, 2)}
-                            </Typography>
-                        )}
-                    </Avatar>
                 </Box>
             </CardContent>
         </Card>
@@ -160,10 +160,13 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
             </IconButton>
         )}
         <CardContent sx={{ py: 1, px: 1, "&:last-child": { pb: 0.5 }, pr: { xs: 1, sm: 5 } }}>
-            <Box display="flex" alignItems="center" justifyContent="space-between">
-                <Box display="flex" alignItems="center" gap={1}>
+            <Box display="flex" alignItems="center">
+                <Box display="flex" alignItems="center" gap={2}>
                     <Radio size="small" checked={selected} onChange={onSelect} onClick={(e) => e.stopPropagation()} />
-                    <Box>
+                    <Avatar sx={{ width: 70, height: 70, bgcolor: "success.main", flexShrink: 0 }} variant="circular">
+                        <PermPhoneMsgIcon sx={{ width: 42, height: 42 }} />
+                    </Avatar>
+                    <Box ml={1}>
                         <Typography variant="body2" fontWeight={700}>
                             {contact.phone}
                         </Typography>
@@ -175,9 +178,6 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
                         </Typography>
                     </Box>
                 </Box>
-                <Avatar sx={{ width: 70, height: 70, bgcolor: "success.main", flexShrink: 0 }} variant="circular">
-                    <PermPhoneMsgIcon sx={{ width: 42, height: 42 }} />
-                </Avatar>
             </Box>
         </CardContent>
     </Card>
@@ -217,7 +217,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                             {
                                 appId: insured?.policyCode ?? "",
                                 customerName: insured?.customerName ?? "",
-                                claimType: form.claimTypeLabel ?? "",
+                                claimType: `${form.incidentTypeName ?? ""} / ${form.coverageTypeName ?? ""}`,
                                 claimAmount: Number(form.claimAmount),
                             },
                         ]}

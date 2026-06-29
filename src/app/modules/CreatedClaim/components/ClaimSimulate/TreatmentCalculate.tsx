@@ -21,7 +21,7 @@ import { useDaysCalculate } from "../../hooks/ClaimSimulate/useDaysCalculate";
 import { FormikDropdown, FormikTextField } from "../../../_common";
 import { CONTINUOUS_CLAIM_OPTIONS } from "../../store/mockClaimLine";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
-import CaseTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/CaseTypeDropDown";
+// import CaseTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/CaseTypeDropDown";
 import FormikDateTimePicker from "../../../_common/components/CustomFormik/FormikDateTimePicker";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
@@ -141,7 +141,7 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                     />
                     <Grid container spacing={2.5} alignItems="flex-start">
                         {/* ประเภทการรักษา */}
-                        <Grid item xs={12} sm={6} md={4}>
+                        {/* <Grid item xs={12} sm={6} md={4}>
                             <CaseTypeDropDown
                                 name="treatmentType"
                                 formik={formik}
@@ -151,7 +151,7 @@ const TreatmentCalculate: React.FC<Props> = ({ onBack }) => {
                                 required
                                 filterIds={[2, 4]}
                             />
-                        </Grid>
+                        </Grid> */}
 
                         {/* วันที่เกิดเหตุ */}
                         <Grid item xs={12} sm={6} md={4}>

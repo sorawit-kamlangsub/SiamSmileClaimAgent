@@ -8,6 +8,13 @@ const coreClaimMastersClient = new MastersClient(CORECLAIM_API_URL, axios);
 
 const getUserQuerykey = ["getUser"];
 const getMedicaltypeQueryKey = ["getMedicaltype"];
+const getIncidentTypeQueryKey = ["getIncidentType"];
+const getCoverageTypeQueryKey = ["getCoverageType"];
+const getCauseOfAccidentQueryKey = ["getCauseOfAccident"];
+const getSimBCategoryQueryKey = ["getSimBCategory"];
+const getSimBQueryKey = ["getSimB"];
+const getChiefComplaintQueryKey = ["getChiefComplaint"];
+const getICD10QueryKey = ["getICD10"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -47,6 +54,86 @@ export const useGetMedicaltype = (claimSourceId?: number | undefined) => {
         () => coreClaimMastersClient.getMedicalType(claimSourceId),
         {
             refetchOnWindowFocus: true,
+        }
+    );
+};
+export const useGetIncidentType = (incidentTypeId?: number | undefined) => {
+    return useQuery(
+        [getIncidentTypeQueryKey, incidentTypeId],
+        () => coreClaimMastersClient.getIncidentType(incidentTypeId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetCoverageType = (coverageTypeId?: number | undefined) => {
+    return useQuery(
+        [getCoverageTypeQueryKey, coverageTypeId],
+        () => coreClaimMastersClient.getCoverageType(coverageTypeId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetCauseOfAccident = (causeOfIncidentId?: number | undefined) => {
+    return useQuery(
+        [getCauseOfAccidentQueryKey, causeOfIncidentId],
+        () => coreClaimMastersClient.getCauserOfIncident(causeOfIncidentId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTypeId?: number | undefined) => {
+    return useQuery(
+        [getSimBCategoryQueryKey, formatTypeId, patientTypeId],
+        () => coreClaimMastersClient.getSimBCategory(formatTypeId, patientTypeId),
+        {
+            enabled: !!formatTypeId && !!patientTypeId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetSimB = (
+    formatTypeId?: number | undefined,
+    patientTypeId?: number | undefined,
+    isUseOften?: boolean | undefined
+) => {
+    return useQuery(
+        [getSimBQueryKey, formatTypeId, patientTypeId, isUseOften],
+        () => coreClaimMastersClient.getSimB(formatTypeId, patientTypeId, isUseOften),
+        {
+            enabled: !!formatTypeId && !!patientTypeId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetChiefComplaint = (chiefComplaintId?: number | undefined) => {
+    return useQuery(
+        [getChiefComplaintQueryKey, chiefComplaintId],
+        () => coreClaimMastersClient.getChiefComplaint(chiefComplaintId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetICD10 = (
+    iCD10Id?: number | undefined,
+    iCD10Code?: string | undefined,
+    isTPA?: boolean | undefined
+) => {
+    return useQuery(
+        [getICD10QueryKey, iCD10Id, iCD10Code, isTPA],
+        () => coreClaimMastersClient.getICD10(iCD10Id, iCD10Code, isTPA),
+        {
+            enabled: !!iCD10Id || !!iCD10Code,
+            refetchOnWindowFocus: false,
         }
     );
 };

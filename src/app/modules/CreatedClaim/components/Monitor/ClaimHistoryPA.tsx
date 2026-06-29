@@ -7,6 +7,8 @@ import { HeadingWithColor } from "../../../_common/components/CustomComponent/He
 import { CustomTypographyWithOutGrid } from "../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import ClaimHistoryTable from "./ClaimHistoryTable";
+import PolicyIcon from "@mui/icons-material/Policy";
+import { useNavigate } from "react-router-dom";
 
 const Field = ({ label, value }: { label: string; value: ReactNode | undefined }) => (
     <Grid item xs={12} sm={6} md={4}>
@@ -14,6 +16,7 @@ const Field = ({ label, value }: { label: string; value: ReactNode | undefined }
     </Grid>
 );
 const ClaimHistoryPA: React.FC = () => {
+    const navigate = useNavigate();
     const { selectedPolicy, handleNewClaim, handleContinuousClaim } = useMonitorClaimHistory();
 
     if (!selectedPolicy) return null;
@@ -61,7 +64,20 @@ const ClaimHistoryPA: React.FC = () => {
             </CustomPaper>
             <CustomPaper>
                 <ClaimHistoryTable tableId="ClaimHistoryPATable" onContinuousClaim={handleContinuousClaim} />
-                <Box display="flex" justifyContent="flex-end" mt={2}>
+                <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
+                    <Button
+                        variant="outlined"
+                        color="primary"
+                        startIcon={<PolicyIcon />}
+                        onClick={() =>
+                            navigate(
+                                `/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(selectedPolicy.appId)}`
+                            )
+                        }
+                        sx={{ height: "33px" }}
+                    >
+                        ตรวจสอบสิทธิ์
+                    </Button>
                     <Button
                         variant="contained"
                         color="success"

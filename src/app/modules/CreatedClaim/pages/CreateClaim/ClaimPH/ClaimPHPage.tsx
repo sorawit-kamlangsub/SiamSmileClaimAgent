@@ -15,8 +15,8 @@ import InsuredInfoCardPH from "../../../components/CreateClaim/ClaimPH/InsuredIn
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
 import ClaimFormSection from "../../../components/CreateClaim/ClaimPH/ClaimFormSection";
 import ClaimHistoryCardPH from "../../../components/CreateClaim/ClaimPH/ClaimHistoryCardPH";
-import { useGetCustomerDetailById } from "../../../../../api/claimAgentApi";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import { useGetCustomerDetailById } from "../../../../../api/coreClaimApi";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();

@@ -13,8 +13,8 @@ import { useDispatch, useSelector } from "react-redux";
 import SearchToolbar from "../components/CheckEligibleDetail/SearchToolbar";
 import CoverageSummaryPanel from "../components/CheckEligibleDetail/CoverageSummaryPanel";
 import InsuredInfoCardPA from "../components/CheckEligibleDetail/InsuredInfoCardPA";
+import { useGetCustomerBenefitDetailSearch } from "../../../api/coreClaimApi";
 // import InsuredInfoCardPH from "../components/CheckEligibleDetail/InsuredInfoCardPH";
-import { useGetCustomerBenefitDetailSearch } from "../../../api/claimAgentApi";
 
 export const mockPAInsuredInfo: PAInsuredInfo = {
     applicationId: "69240003",
