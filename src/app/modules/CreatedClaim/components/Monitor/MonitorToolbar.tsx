@@ -49,6 +49,7 @@ const MonitorToolbar: React.FC = () => {
                 <Grid item xs={12} sm={2} md={2} lg={2}>
                     <FormikCheckbox name="isAdvancedSearch" label="ค้นหาแบบละเอียด" formik={formik} />
                 </Grid>
+
                 {isAdvanced && (
                     <Grid item xs={12}>
                         <Collapse in={isAdvanced} unmountOnExit>

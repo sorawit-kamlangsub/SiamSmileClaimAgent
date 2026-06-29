@@ -12,7 +12,7 @@ const DocumentRecipientTypeDropDown = ({ formik, ...props }: DocumentRecipientTy
     return (
         <FormikDropdown
             data={data?.data ?? []}
-            label="ประเภทผู้รับเอกสาร"
+            label="ผู้รับเอกสาร"
             fullWidth
             {...props}
             formik={formik}

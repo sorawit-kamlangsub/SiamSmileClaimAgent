@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
-import { GetCustomerDetailByIdDtoResponse } from "../../../api/claimAgentApi.client";
+import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 
 export type ClaimType = 2 | 3 | 4 | 5 | 6;
 export type OpdSubType = 2 | 3; // 2=Illness, 3=Accident
@@ -35,17 +35,21 @@ export interface OldClaimInfo {
 export interface ClaimFormValues {
     documentReceiver: number | undefined;
     documentReceiverLabel: string | undefined; // เพิ่ม
-    serviceProvider: string | undefined;
+    serviceProvider: number | undefined;
     serviceProviderLabel: string | undefined; // เพิ่ม
     carOwner: string | undefined;
-    claimType: ClaimType | undefined;
-    claimTypeLabel: string | undefined; // เพิ่ม
-    opdSubType: OpdSubType | undefined;
-    opdSubTypeLabel: string | undefined; // เพิ่ม
-    ipdSubType: IpdSubType | undefined;
+    incidentTypeId: number | undefined;
+    incidentTypeName: string | undefined;
+    coverageTypeId: number | undefined;
+    coverageTypeName: string | undefined;
+    medicalTypeId: number | undefined;
+    medicalTypeName: string | undefined;
+    causeOfIncidentId: number | undefined;
+    causeOfIncidentName: string | undefined;
     incidentDate: Dayjs | undefined;
-    dateIn: Dayjs | undefined;
-    dateOut: Dayjs | undefined;
+    admissionDate: Dayjs | undefined;
+    receiveDocDate: Dayjs | undefined;
+    deathDate: Dayjs | undefined;
     claimAmount: number | undefined;
     symptomType: SymptomType | undefined;
     chiefComplain: string | undefined;
@@ -91,19 +95,23 @@ interface ClaimPHState {
 }
 
 const defaultForm: ClaimFormValues = {
-    documentReceiver: undefined,
+    documentReceiver: 2,
     documentReceiverLabel: undefined,
     serviceProvider: undefined,
     serviceProviderLabel: undefined,
     carOwner: undefined,
-    claimType: undefined,
-    claimTypeLabel: undefined,
-    opdSubType: undefined,
-    opdSubTypeLabel: undefined,
-    ipdSubType: undefined,
+    incidentTypeId: undefined,
+    incidentTypeName: undefined,
+    coverageTypeId: undefined,
+    coverageTypeName: undefined,
+    medicalTypeId: undefined,
+    medicalTypeName: undefined,
+    causeOfIncidentId: undefined,
+    causeOfIncidentName: undefined,
     incidentDate: dayjs(),
-    dateIn: dayjs(),
-    dateOut: dayjs(),
+    admissionDate: dayjs(),
+    deathDate: dayjs(),
+    receiveDocDate: dayjs(),
     claimAmount: 0,
     symptomType: "ระบุอาการ",
     chiefComplain: undefined,

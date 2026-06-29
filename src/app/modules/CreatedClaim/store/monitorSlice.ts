@@ -82,10 +82,11 @@ const monitorSlice = createSlice({
         setClaimHistory(state, action: PayloadAction<ClaimHistoryItem[]>) {
             state.claimHistory = action.payload;
         },
+        resetMonitor: () => initialState,
     },
 });
 
-export const { setSearchcheckeligibleMonitor, setSelectedPolicy, setClaimHistory } = monitorSlice.actions;
+export const { setSearchcheckeligibleMonitor, setSelectedPolicy, setClaimHistory, resetMonitor } = monitorSlice.actions;
 
 export const monitorSelector = (state: RootState) => state.monitorcreatedclaim;
 

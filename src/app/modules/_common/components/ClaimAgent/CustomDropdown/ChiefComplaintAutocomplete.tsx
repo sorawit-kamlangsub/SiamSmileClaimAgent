@@ -1,4 +1,4 @@
-import { useGetChiefComplaint } from "../../../../../api/claimAgentMaster";
+import { useGetChiefComplaint } from "../../../../../api/coreClaimMastersApi";
 import { FormikAutocomplete } from "../../CustomFormik";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
 

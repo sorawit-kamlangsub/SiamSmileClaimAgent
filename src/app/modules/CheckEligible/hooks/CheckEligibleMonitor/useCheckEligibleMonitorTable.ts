@@ -1,8 +1,7 @@
 import React from "react";
 import { PaginationSortableDto } from "../../../_common";
 import { useAppSelector } from "../../../../../redux";
-import { useGetCustomerSearch } from "../../../../api/claimAgentApi";
-
+import { useGetCustomerSearch } from "../../../../api/coreClaimApi";
 const useCheckEligibleMonitorTable = () => {
     const { checkeligibleMonitorSearch, isSearchcheckeligibleMonitor } = useAppSelector((s) => s.checkeligible);
 
@@ -18,6 +17,7 @@ const useCheckEligibleMonitorTable = () => {
         undefined, // dateHappen
         undefined, // schoolId
         undefined, // provinceId
+        undefined, // incidentTypeId
         checkeligibleMonitorSearch?.searchDetail, // searchDetail
         undefined, // orderingField
         undefined, // ascendingOrder

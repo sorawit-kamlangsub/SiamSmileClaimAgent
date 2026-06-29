@@ -75,9 +75,9 @@ const ClaimSummaryPHTable: React.FC<Props> = ({ data, onEdit }) => {
                         />
                     </Grid>
 
-                    {/* ลักษณะการเคลม */}
+                    {/* ข้อมูลเคลม */}
                     <Grid item xs={12} sm={3} md={3}>
-                        <CustomTypographyWithOutGrid label="ลักษณะการเคลม" value={row.claimType} />
+                        <CustomTypographyWithOutGrid label="ข้อมูลเคลม" value={row.claimType} />
                     </Grid>
 
                     {/* ยอดเบิก */}

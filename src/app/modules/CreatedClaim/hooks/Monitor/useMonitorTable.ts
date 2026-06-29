@@ -3,7 +3,7 @@ import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { ClaimHistoryItem, monitorSelector, SelectedPolicyInfo, setSelectedPolicy } from "../../store/monitorSlice";
 import { PaginationSortableDto } from "../../../_common";
 import React from "react";
-import { useGetCustomerDetailById, useGetCustomerSearch } from "../../../../api/claimAgentApi";
+import { useGetCustomerDetailById, useGetCustomerSearch } from "../../../../api/coreClaimApi";
 
 export const mockClaimHistoryPH: ClaimHistoryItem[] = [
     {
@@ -65,6 +65,7 @@ export const useMonitorTable = () => {
         search.dateHappen,
         search.schoolId,
         search.provinceId,
+        undefined,
         search.searchDetail,
         undefined,
         undefined,

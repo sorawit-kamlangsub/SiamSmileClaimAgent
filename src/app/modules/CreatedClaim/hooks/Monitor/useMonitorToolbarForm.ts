@@ -3,18 +3,18 @@ import { useAppDispatch } from "../../../../../redux";
 import { checkeligibleMonitorSearchValuesType, setSearchcheckeligibleMonitor } from "../../store/monitorSlice";
 
 const SEARCH_TYPE_RULES: Record<number, (val: string) => boolean> = {
-    1: (v) => /^\d{13}$/.test(v), // บัตรประชาชน
-    2: (v) => /^\d{13}$/.test(v), // Passport
-    3: () => true, // ชื่อ-นามสกุล freetext
-    4: (v) => /^[a-zA-Z0-9]+$/.test(v), // ApplicationID
+    1: (v) => /^[a-zA-Z0-9]+$/.test(v), // ApplicationID
+    2: (v) => /^\d{13}$/.test(v), // บัตรประชาชน
+    3: (v) => /^\d{13}$/.test(v), // Passport
+    4: () => true, // ชื่อ-นามสกุล freetext
     5: (v) => /^[a-zA-Z0-9]+$/.test(v), // เลขที่อ้างอิง
 };
 
 const SEARCH_TYPE_MESSAGES: Record<number, string> = {
-    1: "กรอกได้เฉพาะตัวเลข 13 หลัก",
+    1: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
     2: "กรอกได้เฉพาะตัวเลข 13 หลัก",
-    3: "",
-    4: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
+    3: "กรอกได้เฉพาะตัวเลข 13 หลัก",
+    4: "",
     5: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
 };
 

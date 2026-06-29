@@ -10,9 +10,8 @@ import {
     updateFilledItem,
 } from "../../store/claimSimulateSlice";
 import { NOT_COVERED_REASON_OPTIONS } from "../../store/mockClaimLine";
-import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/claimAgentApi.client";
-import { useGetSimBCategory } from "../../../../api/claimAgentMaster";
-import { useGetSimB } from "../../../../api/claimAgentMaster"; // ปรับ path ตามโปรเจกต์
+import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/coreClaimApi.client";
+import { useGetSimB, useGetSimBCategory } from "../../../../api/coreClaimMastersApi";
 
 // ─── แปลง API response → TreeNode ────────────────────────────────────────────
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
