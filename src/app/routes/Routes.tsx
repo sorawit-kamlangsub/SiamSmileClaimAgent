@@ -10,8 +10,10 @@ import ClaimPAPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/Claim
 import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPASummaryPage";
 // import ClaimLinePage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLinePage";
 // import ClaimLineSummaryPage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLineSummaryPage";
-import DaysCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/DaysCalculatePage.tsx";
-import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
+// import DaysCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/DaysCalculatePage.tsx";
+// import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
+import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
+import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -125,22 +127,43 @@ const Routes: RouteMapType[] = [
     //         },
     //     ],
     // },
+    // {
+    //     path: "/claim-simulation",
+    //     title: "Claim Simulation",
+    //     element: <Outlet />,
+    //     permissions: [],
+    //     condition: "AND",
+    //     children: [
+    //         {
+    //             index: true,
+    //             title: "รายการค่าใช้จ่าย",
+    //             element: <ClaimLineCalculatePage />,
+    //         },
+    //         {
+    //             path: "summary",
+    //             title: "คำนวณ",
+    //             element: <DaysCalculatePage />,
+    //             permissions: [],
+    //             condition: "AND",
+    //         },
+    //     ],
+    // },
     {
         path: "/claim-simulation",
-        title: "Claim Simulation",
+        title: "คำนวณวงเงินเคลม",
         element: <Outlet />,
         permissions: [],
         condition: "AND",
         children: [
             {
                 index: true,
-                title: "รายการค่าใช้จ่าย",
-                element: <ClaimLineCalculatePage />,
+                title: "คำนวณวงเงินเคลม",
+                element: <ClaimSimulatePage />,
             },
             {
                 path: "summary",
-                title: "คำนวณ",
-                element: <DaysCalculatePage />,
+                title: "สรุปรายการเคลม",
+                element: <ClaimSimulateSummaryPage />,
                 permissions: [],
                 condition: "AND",
             },

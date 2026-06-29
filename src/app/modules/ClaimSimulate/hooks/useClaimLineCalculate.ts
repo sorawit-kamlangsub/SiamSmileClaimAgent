@@ -1,18 +1,11 @@
 import { useState, useMemo, useEffect } from "react";
+import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
-import { RootState } from "../../../../../redux";
-import {
-    ClaimLineItem,
-    removeFilledItem,
-    resetSimulateItems,
-    setFilledItems,
-    setMedicalTypeId,
-    updateFilledItem,
-} from "../../store/claimSimulateSlice";
-import { NOT_COVERED_REASON_OPTIONS } from "../../store/mockClaimLine";
-import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/claimAgentApi.client";
-import { useGetSimBCategory } from "../../../../api/claimAgentMaster";
-import { useGetSimB } from "../../../../api/claimAgentMaster"; // ปรับ path ตามโปรเจกต์
+import { RootState } from "../../../../redux";
+import { ClaimLineItem, resetSimulateItems, setFilledItems, setMedicalTypeId } from "../store/claimSimulateSlice";
+import { NOT_COVERED_REASON_OPTIONS } from "../store/claimSimulateOptions";
+import { StandardMedicalExpenseCategoryDtoResponse } from "../../../api/claimAgentApi.client";
+import { useGetSimBCategory, useGetSimB } from "../../../api/claimAgentMaster"; // ปรับ path ตามโปรเจกต์
 
 // ─── แปลง API response → TreeNode ────────────────────────────────────────────
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
@@ -30,10 +23,14 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
         })),
     }));
 
+interface ClaimLineFormValues {
+    items: ClaimLineItem[];
+}
+
 export const useClaimLineCalculate = (onNext?: () => void) => {
     const dispatch = useDispatch();
-    const { filledItems } = useSelector((s: RootState) => s.claimsimulate);
-    const medicalType = useSelector((s: RootState) => s.claimline.header.medicalType);
+    const { filledItems, header } = useSelector((s: RootState) => s.claimsimulate);
+    const medicalType = header.medicalType;
 
     const [showAddPanel, setShowAddPanel] = useState(false);
     const [searchText, setSearchText] = useState("");
@@ -47,6 +44,16 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     const [pendingReason, setPendingReason] = useState("");
     const [discountError, setDiscountError] = useState("");
     const [notCoveredError, setNotCoveredError] = useState("");
+
+    // ── Formik เป็น single source of truth สำหรับตารางรายการค่าใช้จ่าย ──────
+    // (ไม่ใช้ enableReinitialize เพื่อเลี่ยง infinite loop กับ useEffect ด้านล่าง
+    //  ค่าเริ่มต้นมาจาก redux ครั้งแรกเท่านั้น ส่วนการ sync กลับ redux ทำใน event handler)
+    const formik = useFormik<ClaimLineFormValues>({
+        initialValues: { items: filledItems },
+        onSubmit: () => {},
+    });
+
+    const items = formik.values.items;
 
     // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
     const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(3, medicalType, true);
@@ -99,14 +106,26 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     }, [categories, searchText]);
 
     // ── ยอดรวม ────────────────────────────────────────────────────────────────
-    const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
-    const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
-    const totalNotCovered = filledItems.reduce((s, i) => s + (i.notCovered || 0), 0);
+    const totalClaim = items.reduce((s, i) => s + (i.claimAmount || 0), 0);
+    const totalDiscount = items.reduce((s, i) => s + (i.discount || 0), 0);
+    const totalNotCovered = items.reduce((s, i) => s + (i.notCovered || 0), 0);
     const netAmount = totalClaim - totalDiscount - totalNotCovered;
 
-    // ── CRUD ──────────────────────────────────────────────────────────────────
-    const handleUpdateItem = (item: ClaimLineItem) => dispatch(updateFilledItem(item));
-    const handleRemoveItem = (id: number) => dispatch(removeFilledItem(id));
+    // ── sync formik → redux (เรียกจาก event handler เท่านั้น ไม่ผูกกับ useEffect) ──
+    const syncItemsToRedux = (next: ClaimLineItem[]) => dispatch(setFilledItems(next));
+
+    // ── CRUD (อ่าน/เขียนผ่าน formik แล้ว sync ออก redux) ───────────────────────
+    const handleUpdateItem = (item: ClaimLineItem) => {
+        const next = items.map((i) => (i.id === item.id ? item : i));
+        formik.setFieldValue("items", next);
+        syncItemsToRedux(next);
+    };
+
+    const handleRemoveItem = (id: number) => {
+        const next = items.filter((i) => i.id !== id);
+        formik.setFieldValue("items", next);
+        syncItemsToRedux(next);
+    };
 
     // ── Tree ──────────────────────────────────────────────────────────────────
     const handleToggleExpand = (id: number) =>
@@ -122,9 +141,9 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     };
 
     // ── เพิ่มลงตาราง ─────────────────────────────────────────────────────────
-    const hasAnyAmount = filledItems.some((item) => Number(item.claimAmount ?? 0) > 0);
-    const hasDiscountError = filledItems.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
-    const hasNotCoveredError = filledItems.some(
+    const hasAnyAmount = items.some((item) => Number(item.claimAmount ?? 0) > 0);
+    const hasDiscountError = items.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
+    const hasNotCoveredError = items.some(
         (item) =>
             Number(item.discount ?? 0) <= Number(item.claimAmount ?? 0) &&
             Number(item.notCovered ?? 0) > Number(item.claimAmount ?? 0) - Number(item.discount ?? 0)
@@ -150,18 +169,23 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
             setNotCoveredError("");
         }
         if (hasError) return;
+
         const newItem: ClaimLineItem = {
             id: Date.now(),
             code: selectedItem.code,
             description: selectedItem.description,
-            claimAmount: parseFloat(pendingAmount.toString()) || 0,
-            discount: parseFloat(pendingDiscount.toString()) || 0,
-            notCovered: parseFloat(pendingNotCovered.toString()) || 0,
+            claimAmount: amount || 0,
+            discount: discount || 0,
+            notCovered: notCovered || 0,
             reason: pendingReason,
             remark: "",
             disabled: false,
         };
-        dispatch(setFilledItems([...filledItems, newItem]));
+
+        const next = [...items, newItem];
+        formik.setFieldValue("items", next);
+        syncItemsToRedux(next);
+
         setSelectedItem(null);
         setSelectedLeafId(null);
         setPendingAmount("");
@@ -169,8 +193,11 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
         setPendingNotCovered("");
         setPendingReason("");
     };
+
+    // ── เปลี่ยนประเภทการรักษา → reset รายการ (ทั้ง formik และ redux) ──────────
     useEffect(() => {
         if (!medicalType) return;
+        formik.setFieldValue("items", []);
         dispatch(resetSimulateItems());
         setSelectedItem(null);
         setSelectedLeafId(null);
@@ -178,23 +205,30 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
         setPendingDiscount("");
         setPendingNotCovered("");
         setPendingReason("");
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [medicalType]);
 
+    // ── โหลดรายการที่ใช้บ่อยเข้า formik + redux ─────────────────────────────
     useEffect(() => {
         if (!medicalType) return;
         if (isFrequentLoading) return;
         if (frequentItems.length === 0) return;
 
+        formik.setFieldValue("items", frequentItems);
         dispatch(setFilledItems(frequentItems));
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [medicalType, frequentItems, isFrequentLoading]);
+
     // ── ถัดไป ─────────────────────────────────────────────────────────────────
     const handleNext = () => {
-        dispatch(setFilledItems([...filledItems]));
+        syncItemsToRedux(items);
         dispatch(setMedicalTypeId(medicalType));
         onNext?.();
     };
+
     return {
-        filledItems,
+        claimLineFormik: formik,
+        filledItems: items,
         medicalType,
         isFrequentLoading,
         showAddPanel,

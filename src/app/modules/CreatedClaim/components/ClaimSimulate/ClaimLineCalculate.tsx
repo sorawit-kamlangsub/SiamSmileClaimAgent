@@ -54,7 +54,7 @@ import { useClaimLineCalculate } from "../../hooks/ClaimSimulate/useClaimLineCal
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import ClaimLineHeader from "../ClaimLine/ClaimLineHeader";
+import ClaimLineHeader from "./ClaimLineHeader";
 
 // ─── Category icon map ────────────────────────────────────────────────────────
 const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
