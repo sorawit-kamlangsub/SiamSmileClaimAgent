@@ -18,6 +18,7 @@ export const {
     VITE_QUEUE_API_URL,
     VITE_QUEUE_REFETCH_INTERVAL,
     VITE_CORECLAIM_API_URL,
+    VITE_ORC_API_URL,
     MODE,
 } = window.__CONST__ENV__;
 
@@ -48,6 +49,7 @@ export const API_URL = VITE_API_URL;
 export const APIGW_URL = VITE_APIGW_BASEURL;
 export const CORECLAIM_API_URL = VITE_CORECLAIM_API_URL;
 export const AUTH_LOGOUT_REDIRECT = VITE_SSO_ISSUER + "/Account/Logout";
+export const ORC_API_URL = VITE_ORC_API_URL + "/ai/ocr";
 
 /*
  * สำหรับใช้ในการเรียกใช้งาน API ให้ใช้งานในรูปแบบ

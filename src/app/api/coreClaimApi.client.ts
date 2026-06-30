@@ -551,6 +551,68 @@ export class MastersClient {
     }
 
     /**
+     * API สำหรับ Get ข้อมูล ZebraCarOwner (เจ้าของรถม้าลาย)
+     * @param zebraId (optional) 
+     * @param employeeId (optional) 
+     * @return Success
+     */
+    getZebraCarOwner(zebraId?: number | undefined, employeeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetZebraCarOwnerDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/zebracar/owner?";
+        if (zebraId === null)
+            throw new Error("The parameter 'zebraId' cannot be null.");
+        else if (zebraId !== undefined)
+            url_ += "zebraId=" + encodeURIComponent("" + zebraId) + "&";
+        if (employeeId === null)
+            throw new Error("The parameter 'employeeId' cannot be null.");
+        else if (employeeId !== undefined)
+            url_ += "employeeId=" + encodeURIComponent("" + employeeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetZebraCarOwner(_response);
+        });
+    }
+
+    protected processGetZebraCarOwner(response: AxiosResponse): Promise<GetZebraCarOwnerDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetZebraCarOwnerDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetZebraCarOwnerDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล MedicalType (ประเภทการรักษา)
      * @param claimSourceId (optional) 
      * @return Success
@@ -1030,6 +1092,358 @@ export class MastersClient {
         }
         return Promise.resolve<GetICD10DtoResponseListServiceResponse>(null as any);
     }
+
+    /**
+     * API สำหรับ Get ข้อมูล Province List (จังหวัด)
+     * @param provinceId (optional) 
+     * @return Success
+     */
+    getProvince(provinceId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetProvinceDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/province?";
+        if (provinceId === null)
+            throw new Error("The parameter 'provinceId' cannot be null.");
+        else if (provinceId !== undefined)
+            url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetProvince(_response);
+        });
+    }
+
+    protected processGetProvince(response: AxiosResponse): Promise<GetProvinceDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetProvinceDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetProvinceDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล Organize (ธนาคาร)
+     * @param organizeId (optional) 
+     * @return Success
+     */
+    getAllBank(organizeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetOrganizeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/bank?";
+        if (organizeId === null)
+            throw new Error("The parameter 'organizeId' cannot be null.");
+        else if (organizeId !== undefined)
+            url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetAllBank(_response);
+        });
+    }
+
+    protected processGetAllBank(response: AxiosResponse): Promise<GetOrganizeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetOrganizeDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetOrganizeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล DocumentRecipientType (ประเภทผู้รับเอกสาร)
+     * @param documentRecipientTypeId (optional) 
+     * @return Success
+     */
+    getDocumentRecipientType(documentRecipientTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/document/recipient-type?";
+        if (documentRecipientTypeId === null)
+            throw new Error("The parameter 'documentRecipientTypeId' cannot be null.");
+        else if (documentRecipientTypeId !== undefined)
+            url_ += "documentRecipientTypeId=" + encodeURIComponent("" + documentRecipientTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetDocumentRecipientType(_response);
+        });
+    }
+
+    protected processGetDocumentRecipientType(response: AxiosResponse): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDocumentRecipientTypeDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDocumentRecipientTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล BankAccountRelationType (ประเภทความสัมพันธ์ของบัญชีธนาคาร) BankAccountRelationGroupId : 1 = PH , PA , ClaimMisc : 2 = Motor
+     * @param bankAccountRelationTypeId (optional) 
+     * @param bankAccountRelationGroupId (optional) 
+     * @return Success
+     */
+    getBankAccountRelationType(bankAccountRelationTypeId?: number | undefined, bankAccountRelationGroupId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/bankaccount/relation/type?";
+        if (bankAccountRelationTypeId === null)
+            throw new Error("The parameter 'bankAccountRelationTypeId' cannot be null.");
+        else if (bankAccountRelationTypeId !== undefined)
+            url_ += "bankAccountRelationTypeId=" + encodeURIComponent("" + bankAccountRelationTypeId) + "&";
+        if (bankAccountRelationGroupId === null)
+            throw new Error("The parameter 'bankAccountRelationGroupId' cannot be null.");
+        else if (bankAccountRelationGroupId !== undefined)
+            url_ += "bankAccountRelationGroupId=" + encodeURIComponent("" + bankAccountRelationGroupId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetBankAccountRelationType(_response);
+        });
+    }
+
+    protected processGetBankAccountRelationType(response: AxiosResponse): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetBankAccountRelationTypeDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetBankAccountRelationTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล ContactPersonType (ประเภทผู้ติดต่อ) ContactPersonGroupId : 1 = PH , DeathClaim : 2 = PA, 3 = Motor
+     * @param contactPersonTypeId (optional) 
+     * @param contactPersonGroupId (optional) 
+     * @return Success
+     */
+    getContactPersonType(contactPersonTypeId?: number | undefined, contactPersonGroupId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/contactperson/type?";
+        if (contactPersonTypeId === null)
+            throw new Error("The parameter 'contactPersonTypeId' cannot be null.");
+        else if (contactPersonTypeId !== undefined)
+            url_ += "contactPersonTypeId=" + encodeURIComponent("" + contactPersonTypeId) + "&";
+        if (contactPersonGroupId === null)
+            throw new Error("The parameter 'contactPersonGroupId' cannot be null.");
+        else if (contactPersonGroupId !== undefined)
+            url_ += "contactPersonGroupId=" + encodeURIComponent("" + contactPersonGroupId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetContactPersonType(_response);
+        });
+    }
+
+    protected processGetContactPersonType(response: AxiosResponse): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetContactPersonTypeDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetContactPersonTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล NonCoveredReason (สาเหตุที่ไม่คุ้มครอง)
+     * @param nonCoveredReasonId (optional) 
+     * @return Success
+     */
+    getNonCoveredReason(nonCoveredReasonId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetNonCoveredReasonDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/noncoveredreason?";
+        if (nonCoveredReasonId === null)
+            throw new Error("The parameter 'nonCoveredReasonId' cannot be null.");
+        else if (nonCoveredReasonId !== undefined)
+            url_ += "nonCoveredReasonId=" + encodeURIComponent("" + nonCoveredReasonId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetNonCoveredReason(_response);
+        });
+    }
+
+    protected processGetNonCoveredReason(response: AxiosResponse): Promise<GetNonCoveredReasonDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetNonCoveredReasonDtoResponseListServiceResponse>(result200);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetNonCoveredReasonDtoResponseListServiceResponse>(null as any);
+    }
 }
 
 export interface AllUserDtoResponse {
@@ -1083,7 +1497,7 @@ export interface CalculateCaseClaim {
 }
 
 export interface CalculateCaseClaimDtoRequest {
-    caseId?: string;
+    caseAdjudicationId?: string;
     isSimulateCase?: boolean;
     isCheckIncludeCompensate?: boolean;
     isCheckIncludeCompensateAll?: boolean;
@@ -1091,6 +1505,7 @@ export interface CalculateCaseClaimDtoRequest {
 }
 
 export interface CalculateCaseClaimDtoResponse {
+    caseAdjudicationId?: string | undefined;
     medicalExpense?: MedicalExpenseList[] | undefined;
     compensateExpense?: CompensateExpenseList[] | undefined;
     compensateNet?: number;
@@ -1196,6 +1611,25 @@ export interface CoverageTypeDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetBankAccountRelationTypeDtoResponse {
+    bankAccountRelationTypeId?: number;
+    bankAccountRelationTypeName?: string | undefined;
+}
+
+export interface GetBankAccountRelationTypeDtoResponseListServiceResponse {
+    data?: GetBankAccountRelationTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetChiefComplaintDtoResponse {
     chiefComplaintId?: number;
     chiefComplaintCode?: string | undefined;
@@ -1204,6 +1638,25 @@ export interface GetChiefComplaintDtoResponse {
 
 export interface GetChiefComplaintDtoResponseListServiceResponse {
     data?: GetChiefComplaintDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetContactPersonTypeDtoResponse {
+    contactPersonTypeId?: number;
+    contactPersonTypeName?: string | undefined;
+}
+
+export interface GetContactPersonTypeDtoResponseListServiceResponse {
+    data?: GetContactPersonTypeDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -1314,6 +1767,25 @@ export interface GetCustomerSearchDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetDocumentRecipientTypeDtoResponse {
+    documentRecipientTypeId?: number;
+    documentRecipientTypeName?: string | undefined;
+}
+
+export interface GetDocumentRecipientTypeDtoResponseListServiceResponse {
+    data?: GetDocumentRecipientTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetICD10DtoResponse {
     icD10Id?: number;
     icD10Code?: string | undefined;
@@ -1322,6 +1794,88 @@ export interface GetICD10DtoResponse {
 
 export interface GetICD10DtoResponseListServiceResponse {
     data?: GetICD10DtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetNonCoveredReasonDtoResponse {
+    nonCoveredReasonId?: number;
+    nonCoveredReasonName?: string | undefined;
+}
+
+export interface GetNonCoveredReasonDtoResponseListServiceResponse {
+    data?: GetNonCoveredReasonDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetOrganizeDtoResponse {
+    organizeId?: number;
+    organizeName?: string | undefined;
+}
+
+export interface GetOrganizeDtoResponseListServiceResponse {
+    data?: GetOrganizeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetProvinceDtoResponse {
+    provinceId?: number;
+    provinceName?: string | undefined;
+}
+
+export interface GetProvinceDtoResponseListServiceResponse {
+    data?: GetProvinceDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetZebraCarOwnerDtoResponse {
+    zebraId?: number;
+    zebraCode?: string | undefined;
+    zebraNo?: string | undefined;
+    employeeId?: number;
+    employeeCode?: string | undefined;
+    employeeName?: string | undefined;
+    employeeNickName?: string | undefined;
+    employeeFullName?: string | undefined;
+}
+
+export interface GetZebraCarOwnerDtoResponseListServiceResponse {
+    data?: GetZebraCarOwnerDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

@@ -1,4 +1,4 @@
-import { useGetContactPersonType } from "../../../../../api/claimAgentMaster";
+import { useGetContactPersonType } from "../../../../../api/coreClaimMastersApi";
 import FormikDropdown, { FormikDropdownProps } from "../../CustomFormik/FormikDropdown";
 
 type ContactPersonTypeDropDownProps = Omit<

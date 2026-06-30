@@ -10,7 +10,6 @@ import {
     Paper,
     Radio,
     RadioGroup,
-    Stack,
     Typography,
 } from "@mui/material";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
@@ -28,6 +27,8 @@ import ChiefComplaintAutocomplete from "../../../../_common/components/ClaimAgen
 import dayjs from "dayjs";
 import ClaimTypeSelector from "../ClaimTypeSelector";
 import ChipSelector from "../ChipSelector";
+import OcrDocumentScanSection from "./OcrDocumentScanSection";
+import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
 
 // // ─── Claim type constants ─────────────────────────────────────────────────────
 // const CLAIM_TYPE = {
@@ -101,54 +102,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
                 <CircularProgress color="inherit" />
             </Backdrop>
-
             <CustomPaper>
                 <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-                    {/* ── ผู้รับเอกสาร / ผู้ให้บริการ / เจ้าของรถ ── */}
                     <CustomPaper>
-                        <Typography fontWeight={600} fontSize={15} mb={0.5} color="primary.main">
-                            ข้อมูลผู้ให้บริการ
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mb={2}>
-                            ระบุผู้รับเอกสาร ผู้ให้บริการ และเจ้าของรถ
-                        </Typography>
-                        <Stack spacing={2}>
-                            <Box sx={{ width: { xs: "100%", md: "33.33%" } }}>
-                                <DocumentRecipientTypeDropDown
-                                    firstItemText="-- เลือก --"
-                                    formik={formik}
-                                    name="documentReceiver"
-                                    fullWidth
-                                    required
-                                />
-                            </Box>
-                            <Box sx={{ width: { xs: "100%", md: "33.33%" } }}>
-                                <UserAutocompleteApi formik={formik} name="serviceProvider" fullWidth required />
-                            </Box>
-                            <Box sx={{ width: { xs: "100%", md: "33.33%" } }}>
-                                <FormikDropdown
-                                    label="เจ้าของรถ"
-                                    data={zebraCarOwner?.data ?? []}
-                                    firstItemText="-- เลือก --"
-                                    valueFieldName="zebraId"
-                                    displayFieldName="employeeFullName"
-                                    formik={formik}
-                                    name="carOwner"
-                                    isLoading={zebraCarOwnerLoading}
-                                    fullWidth
-                                    required
-                                />
-                            </Box>
-                        </Stack>
-                    </CustomPaper>
-                    <CustomPaper>
-                        <Typography fontWeight={600} fontSize={15} mb={0.5} color="primary.main">
-                            รายละเอียดเคลม
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mb={2}>
-                            ระบุรายละเอียดเคลม
-                        </Typography>
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
                                 <Box display="flex" alignItems="center" gap={1} mb={2}>
@@ -194,11 +151,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                             textAlign: "center",
                                             borderStyle: "dashed",
                                             color: "text.secondary",
+                                            fontSize: 14,
                                         }}
                                     >
-                                        ยังไม่ได้เลือกเหตุของการเคลม
-                                        <br />
-                                        เลือกเหตุของการเคลมด้านบนเพื่อระบุประเภทความคุ้มครอง
+                                        กรุณาเลือกเหตุของการเคลมก่อน ระบบจะแสดงประเภทความคุ้มครองตามผลิตภัณฑ์ PH
                                     </Paper>
                                 )}
                             </Grid>
@@ -206,8 +162,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 <Box display="flex" alignItems="center" gap={1} mb={2}>
                                     <Typography fontWeight={600} fontSize={16}>
                                         {values.coverageTypeId === 4 || values.coverageTypeId === 5
-                                            ? "สาเหตุการเกิดเหตุ"
-                                            : "ประเภทการรักษา"}
+                                            ? "สาเหตุการเสียชีวิต/สูญเสียอวัยวะ"
+                                            : values.coverageTypeId === 2 || values.coverageTypeId === 3
+                                            ? "ประเภทการรักษา"
+                                            : "ตัวเลือกเพิ่มเติม"}
                                         <Typography component="span" color="error">
                                             {" "}
                                             *
@@ -240,13 +198,39 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                             textAlign: "center",
                                             borderStyle: "dashed",
                                             color: "text.secondary",
+                                            fontSize: 14,
                                         }}
                                     >
-                                        ยังไม่ได้เลือกประเภทความคุ้มครอง
-                                        <br />
-                                        เลือกประเภทความคุ้มครองด้านบนเพื่อระบุประเภทการรักษา
+                                        กรุณาเลือกประเภทความคุ้มครองก่อน
                                     </Paper>
                                 )}
+                            </Grid>
+                            {/* ── ผู้รับเอกสาร / ผู้ให้บริการ / เจ้าของรถ ── */}
+                            <Grid item xs={12} md={4}>
+                                <DocumentRecipientTypeDropDown
+                                    firstItemText="-- เลือก --"
+                                    formik={formik}
+                                    name="documentReceiver"
+                                    fullWidth
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} md={4} mt={-1}>
+                                <UserAutocompleteApi formik={formik} name="serviceProvider" fullWidth required />
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <FormikDropdown
+                                    label="เจ้าของรถ"
+                                    data={zebraCarOwner?.data ?? []}
+                                    firstItemText="-- เลือก --"
+                                    valueFieldName="zebraId"
+                                    displayFieldName="employeeFullName"
+                                    formik={formik}
+                                    name="carOwner"
+                                    isLoading={zebraCarOwnerLoading}
+                                    fullWidth
+                                    required
+                                />
                             </Grid>
                             {/* ── วันที่เกิดเหตุ ── */}
                             <Grid item xs={12} sm={6} md={4}>
@@ -265,6 +249,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     <FormikDatePicker
                                         name="admissionDate"
                                         label="วันที่เข้า รพ."
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
+                                </Grid>
+                            )}
+                            {(values.medicalTypeId === 2 || values.medicalTypeId === 6) && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <FormikDatePicker
+                                        name="dischargeDate"
+                                        label="วันที่ออก รพ."
                                         formik={formik}
                                         slotProps={{ textField: { size: "small" } }}
                                         maxDate={dayjs()}
@@ -301,12 +297,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             {(values.medicalTypeId === 1 || values.medicalTypeId === 2) && (
                                 <Grid item xs={12}>
                                     {values.medicalTypeId === 1 && (
-                                        <Grid item xs={12} md={6} lg={4}>
+                                        <Grid item xs={12}>
                                             <CoverageBox items={OPD_COVERAGE_ITEMS} planCode="662" />
                                         </Grid>
                                     )}
                                     {values.medicalTypeId === 2 && (
-                                        <Grid item xs={12} md={6} lg={4}>
+                                        <Grid item xs={12}>
                                             <CoverageBox items={IPD_COVERAGE_ITEMS} planCode="662" />
                                         </Grid>
                                     )}
@@ -410,6 +406,16 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                     </CustomPaper>
                 </Box>
             </CustomPaper>
+            {values.incidentTypeId && (values.medicalTypeId === 1 || values.medicalTypeId === 2) && (
+                <CustomPaper>
+                    <HeadingWithColor
+                        icon={<UploadFileSharpIcon sx={{ fontSize: 27 }} />}
+                        text="แนบเอกสาร"
+                        color="blue"
+                    />
+                    <OcrDocumentScanSection />
+                </CustomPaper>
+            )}
 
             <Grid item xs={12}>
                 <Box display="flex" justifyContent="flex-end" mb={5}>

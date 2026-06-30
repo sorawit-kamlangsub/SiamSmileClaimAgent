@@ -5,7 +5,6 @@ import { FormikProps } from "formik";
 export type ClaimTypeOption = {
     id: number;
     name: string;
-    description: string | undefined;
     icon: React.ReactElement;
 };
 
@@ -62,13 +61,13 @@ const ClaimTypeSelector: React.FC<Props> = ({ formik, options, idFieldName, name
                                         width: "100%",
                                     }}
                                 >
-                                    <CardActionArea onClick={() => handleSelect(item)} sx={{ p: 2, height: "100%" }}>
-                                        <Box display="flex" alignItems="flex-start" gap={2}>
+                                    <CardActionArea onClick={() => handleSelect(item)} sx={{ p: 1.5, height: "100%" }}>
+                                        <Box display="flex" alignItems="center" gap={1.5}>
                                             <Box
                                                 sx={{
-                                                    width: 48,
-                                                    height: 48,
-                                                    borderRadius: 2,
+                                                    width: 36,
+                                                    height: 36,
+                                                    borderRadius: 1.5,
                                                     backgroundColor: "#E3F0FB",
                                                     display: "flex",
                                                     alignItems: "center",
@@ -78,18 +77,9 @@ const ClaimTypeSelector: React.FC<Props> = ({ formik, options, idFieldName, name
                                             >
                                                 {item.icon}
                                             </Box>
-                                            <Box>
-                                                <Typography
-                                                    fontWeight={700}
-                                                    fontSize={16}
-                                                    sx={{ minHeight: 48, display: "flex", alignItems: "center" }}
-                                                >
-                                                    {item.name}
-                                                </Typography>
-                                                <Typography variant="body2" color="text.secondary">
-                                                    {item.description}
-                                                </Typography>
-                                            </Box>
+                                            <Typography fontWeight={600} fontSize={14}>
+                                                {item.name}
+                                            </Typography>
                                         </Box>
                                     </CardActionArea>
                                 </Card>

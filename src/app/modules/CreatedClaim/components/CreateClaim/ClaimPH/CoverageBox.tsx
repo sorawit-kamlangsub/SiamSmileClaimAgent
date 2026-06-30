@@ -32,7 +32,7 @@ const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
 };
 
 const CoverageBox: React.FC<Props> = ({ items, planCode }) => (
-    <Box sx={{ background: "#F5F9FF", border: "0.5px solid #B5D4F4", borderRadius: 2, p: 1.5 }}>
+    <Box sx={{ border: "0.5px solid #B5D4F4", borderRadius: 2, p: 1.5 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
             <Box display="flex" alignItems="center" gap={0.5}>
@@ -56,7 +56,7 @@ const CoverageBox: React.FC<Props> = ({ items, planCode }) => (
                 alignItems="center"
                 gap={1.5}
                 sx={{
-                    bgcolor: "#fff",
+                    bgcolor: "#F5F9FF",
                     border: "0.5px solid",
                     borderColor: "divider",
                     borderRadius: 1.5,

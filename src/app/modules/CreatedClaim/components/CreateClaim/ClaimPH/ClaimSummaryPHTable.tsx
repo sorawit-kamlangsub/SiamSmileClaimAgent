@@ -26,7 +26,7 @@ const ClaimSummaryPHTable: React.FC<Props> = ({ data, onEdit }) => {
         <>
             <HeadingWithColor text="ข้อมูลเคลม" color="blue" icon={<DescriptionIcon sx={{ fontSize: 27 }} />} />
             {data.map((row, idx) => (
-                <Grid key={idx} container spacing={2} px={2} pb={2} alignItems="center">
+                <Grid key={idx} container spacing={2} px={2} pb={2}>
                     {/* Application ID */}
                     <Grid item xs={12} sm={3} md={3}>
                         <CustomTypographyWithOutGrid

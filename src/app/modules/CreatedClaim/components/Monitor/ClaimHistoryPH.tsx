@@ -24,7 +24,7 @@ const ClaimHistoryPH: React.FC = () => {
     return (
         <>
             <CustomPaper>
-                <HeadingWithColor text="ข้อมูลกรมธรรม์" color="blue" />
+                <HeadingWithColor text="รายละเอียดผู้เอาประกัน" color="blue" />
                 <Grid container spacing={2} alignItems="center" ml={1.5}>
                     <Field
                         label="ApplicationID"

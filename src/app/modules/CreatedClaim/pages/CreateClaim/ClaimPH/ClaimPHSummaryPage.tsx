@@ -17,13 +17,12 @@ import CustomPaper from "../../../../_common/components/CustomComponent/CustomPa
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import AddBankAccountModal from "../../../components/CreateClaim/ClaimPH/AddBankAccountModal";
 import AddContactModal from "../../../components/CreateClaim/ClaimPH/AddContactModal";
-import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
 import CloseIcon from "@mui/icons-material/Close";
 import ConfirmTransferPHModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferPHModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PermPhoneMsgIcon from "@mui/icons-material/PermPhoneMsg";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
@@ -48,6 +47,7 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                 p: 1,
                 ml: { sm: 2 },
                 maxWidth: { lg: 450 },
+                minHeight: 110,
                 width: "100%",
                 position: "relative",
             }}
@@ -94,6 +94,9 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                         </Avatar>
                         <Box ml={1}>
                             <Typography variant="body2" fontWeight={700}>
+                                {bank.relationship}
+                            </Typography>
+                            <Typography variant="body2" color="text.secondary">
                                 {bank.bankName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
@@ -101,9 +104,6 @@ const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, on
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {bank.accountName}
-                            </Typography>
-                            <Typography variant="caption" color="primary">
-                                {bank.relationship}
                             </Typography>
                         </Box>
                     </Box>
@@ -132,7 +132,7 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
             borderWidth: selected ? 2 : 1,
             transition: "border-color 0.2s",
             maxWidth: { lg: 450 },
-            minHeight: 139,
+            minHeight: 110,
             width: "100%",
             p: 1,
             position: "relative",
@@ -168,13 +168,13 @@ const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, 
                     </Avatar>
                     <Box ml={1}>
                         <Typography variant="body2" fontWeight={700}>
+                            {contact.relationship}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
                             {contact.phone}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
                             {contact.name}
-                        </Typography>
-                        <Typography variant="caption" color="primary">
-                            {contact.relationship}
                         </Typography>
                     </Box>
                 </Box>
@@ -208,148 +208,134 @@ const ClaimPHSummaryPage: React.FC = () => {
     };
 
     return (
-        <Grid container spacing={1}>
-            {/* ── ข้อมูลเคลม ── */}
-            <Grid item xs={12}>
-                <CustomPaper>
-                    <ClaimSummaryPHTable
-                        data={[
-                            {
-                                appId: insured?.policyCode ?? "",
-                                customerName: insured?.customerName ?? "",
-                                claimType: `${form.incidentTypeName ?? ""} / ${form.coverageTypeName ?? ""}`,
-                                claimAmount: Number(form.claimAmount),
-                            },
-                        ]}
-                        onEdit={() => navigate(-1)}
-                    />
-                </CustomPaper>
-            </Grid>
-            {/* ── บัญชีรับสินไหม | เบอร์โทรติดต่อ ── */}
-            <Grid item xs={12} sm={6}>
-                <CustomPaper>
-                    <HeadingWithColor
-                        text="รายละเอียดบัญชี"
-                        color="blue"
-                        icon={<AccountBalanceIcon sx={{ fontSize: 27 }} />}
-                    />
-                    <Grid container spacing={2} p="0 26px 0 26px">
-                        <Grid item xs={12}>
-                            {/* <CustomPaper sx={{ height: "100%" }}> */}
-                            <Typography variant="subtitle1" fontWeight={700} mb={2}>
-                                บัญชีรับสินไหม :
-                            </Typography>
-                            <RadioGroup value={bankAccounts.findIndex((b) => b.isDefault).toString()}>
-                                {bankAccounts.map((bank, i) => (
-                                    <BankAccountCard
-                                        key={bank.id}
-                                        bank={bank}
-                                        selected={bank.isDefault}
-                                        onSelect={() => handleSelectBank(i)}
-                                        onDelete={() => dispatch(removeBankAccount(bank.id))}
-                                    />
-                                ))}
-                            </RadioGroup>
-                            <Box
-                                display="flex"
-                                justifyContent="end"
-                                alignItems="center"
-                                mb={1}
-                                ml={2}
-                                maxWidth={{ lg: 450 }}
-                            >
-                                <Button
-                                    size="small"
-                                    variant="contained"
-                                    startIcon={<AddCircleIcon />}
-                                    onClick={() => setOpenBank(true)}
-                                >
-                                    เพิ่มบัญชีรับสินไหม
-                                </Button>
-                            </Box>
-                            {/* </CustomPaper> */}
-                        </Grid>
+        <>
+            <CustomPaper>
+                <HeadingWithColor
+                    text="รายละเอียดบัญชีและเบอร์ติดต่อ"
+                    color="blue"
+                    icon={<AccountBalanceIcon sx={{ fontSize: 27 }} />}
+                />
+                <Grid container spacing={1}>
+                    {/* ── ข้อมูลเคลม ── */}
+                    <Grid item xs={12}>
+                        <CustomPaper>
+                            <ClaimSummaryPHTable
+                                data={[
+                                    {
+                                        appId: insured?.policyCode ?? "",
+                                        customerName: insured?.customerName ?? "",
+                                        claimType: `${form.incidentTypeName ?? ""} / ${form.coverageTypeName ?? ""} / ${
+                                            !form.medicalTypeId ? form.causeOfIncidentName : form.medicalTypeName
+                                        }`,
+                                        claimAmount: Number(form.claimAmount),
+                                    },
+                                ]}
+                                onEdit={() => navigate(-1)}
+                            />
+                        </CustomPaper>
                     </Grid>
-                </CustomPaper>
-            </Grid>
-            <Grid item xs={12} sm={6}>
-                <CustomPaper>
-                    <HeadingWithColor
-                        text="รายละเอียดการติดต่อ"
-                        color="blue"
-                        icon={<FontAwesomeIcon icon="address-book" fontSize={26} />}
-                    />
-                    <Grid container spacing={2} p="0 26px 0 26px">
-                        <Grid item xs={12}>
-                            {/* <CustomPaper sx={{ height: "100%" }}> */}
-                            <Typography variant="subtitle1" fontWeight={700} mb={2}>
-                                เบอร์โทรติดต่อ :
-                            </Typography>
-                            <RadioGroup value={contacts.findIndex((c) => c.isDefault).toString()}>
-                                {contacts.map((contact, i) => (
-                                    <ContactCard
-                                        key={contact.id}
-                                        contact={contact}
-                                        selected={contact.isDefault}
-                                        onSelect={() => handleSelectContact(i)}
-                                        onDelete={() => dispatch(removeContact(contact.id))}
-                                    />
-                                ))}
-                            </RadioGroup>
-                            <Box
-                                display="flex"
-                                justifyContent="end"
-                                alignItems="center"
-                                mb={1}
-                                ml={2}
-                                maxWidth={{ lg: 450 }}
-                            >
-                                <Button
-                                    size="small"
-                                    variant="contained"
-                                    startIcon={<AddCircleIcon />}
-                                    onClick={() => setOpenContact(true)}
-                                >
-                                    เพิ่มเบอร์โทรใหม่
-                                </Button>
-                            </Box>
-                            {/* </CustomPaper> */}
-                        </Grid>
+                    {/* ── บัญชีรับสินไหม | เบอร์โทรติดต่อ ── */}
+                    <Grid item xs={12} sm={6}>
+                        <CustomPaper>
+                            <Grid container spacing={2} p="0 26px 0 26px">
+                                <Grid item xs={12}>
+                                    {/* <CustomPaper sx={{ height: "100%" }}> */}
+                                    <Typography variant="subtitle1" fontWeight={700} mb={2}>
+                                        บัญชีรับสินไหม :
+                                    </Typography>
+                                    <RadioGroup value={bankAccounts.findIndex((b) => b.isDefault).toString()}>
+                                        {bankAccounts.map((bank, i) => (
+                                            <BankAccountCard
+                                                key={bank.id}
+                                                bank={bank}
+                                                selected={bank.isDefault}
+                                                onSelect={() => handleSelectBank(i)}
+                                                onDelete={() => dispatch(removeBankAccount(bank.id))}
+                                            />
+                                        ))}
+                                    </RadioGroup>
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        startIcon={<AddCircleIcon />}
+                                        onClick={() => setOpenBank(true)}
+                                    >
+                                        เพิ่มบัญชีรับสินไหม
+                                    </Button>
+                                    {/* </CustomPaper> */}
+                                </Grid>
+                            </Grid>
+                        </CustomPaper>
                     </Grid>
-                </CustomPaper>
+                    <Grid item xs={12} sm={6}>
+                        <CustomPaper>
+                            <Grid container spacing={2} p="0 26px 0 26px">
+                                <Grid item xs={12}>
+                                    {/* <CustomPaper sx={{ height: "100%" }}> */}
+                                    <Typography variant="subtitle1" fontWeight={700} mb={2}>
+                                        เบอร์โทรติดต่อ :
+                                    </Typography>
+                                    <RadioGroup value={contacts.findIndex((c) => c.isDefault).toString()}>
+                                        {contacts.map((contact, i) => (
+                                            <ContactCard
+                                                key={contact.id}
+                                                contact={contact}
+                                                selected={contact.isDefault}
+                                                onSelect={() => handleSelectContact(i)}
+                                                onDelete={() => dispatch(removeContact(contact.id))}
+                                            />
+                                        ))}
+                                    </RadioGroup>
+
+                                    <Button
+                                        size="small"
+                                        variant="outlined"
+                                        startIcon={<AddCircleIcon />}
+                                        onClick={() => setOpenContact(true)}
+                                    >
+                                        เพิ่มเบอร์โทรใหม่
+                                    </Button>
+                                    {/* </CustomPaper> */}
+                                </Grid>
+                            </Grid>
+                        </CustomPaper>
+                    </Grid>
+                </Grid>
+            </CustomPaper>
+            <Grid container spacing={1}>
+                {/* ── ปุ่ม ── */}
+                <Grid item xs={12}>
+                    <Box display="flex" justifyContent="space-between">
+                        <Button
+                            variant="outlined"
+                            startIcon={<ArrowBackIcon />}
+                            onClick={() => navigate(-1)}
+                            sx={{ bgcolor: "#fff" }}
+                            size="medium"
+                        >
+                            ย้อนกลับ
+                        </Button>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            startIcon={<CommentIcon />}
+                            size="medium"
+                            onClick={() => setOpenConfirm(true)}
+                        >
+                            แจ้งโอนเงิน
+                        </Button>
+                    </Box>
+                </Grid>
+                {/* ── Modals ── */}
+                <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} />
+                <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
+                <ConfirmTransferPHModal
+                    open={openConfirm}
+                    onClose={() => setOpenConfirm(false)}
+                    onConfirm={handleConfirm}
+                />
             </Grid>
-            {/* ── ปุ่ม ── */}
-            <Grid item xs={12}>
-                <Box display="flex" justifyContent="space-between">
-                    <Button
-                        variant="outlined"
-                        startIcon={<ArrowBackIcon />}
-                        onClick={() => navigate(-1)}
-                        sx={{ bgcolor: "#fff" }}
-                        size="medium"
-                    >
-                        ย้อนกลับ
-                    </Button>
-                    <Button
-                        variant="contained"
-                        color="success"
-                        startIcon={<CommentIcon />}
-                        size="medium"
-                        onClick={() => setOpenConfirm(true)}
-                    >
-                        แจ้งโอนเงิน
-                    </Button>
-                </Box>
-            </Grid>
-            {/* ── Modals ── */}
-            <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} />
-            <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
-            <ConfirmTransferPHModal
-                open={openConfirm}
-                onClose={() => setOpenConfirm(false)}
-                onConfirm={handleConfirm}
-            />
-        </Grid>
+        </>
     );
 };
 

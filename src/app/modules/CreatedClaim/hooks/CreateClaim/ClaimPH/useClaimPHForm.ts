@@ -10,14 +10,10 @@ import {
     useGetCoverageType,
     useGetIncidentType,
     useGetMedicaltype,
+    useGetZebraCarOwner,
 } from "../../../../../api/coreClaimMastersApi";
-import {
-    COVERAGE_ICON_MAP,
-    INCIDENT_DESCRIPTION_MAP,
-    INCIDENT_ICON_MAP,
-} from "../../../components/CreateClaim/ClaimTypeOptions";
+import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
-import { useGetZebraCarOwner } from "../../../../../api/claimAgentMaster";
 
 interface Options {
     onNext: () => void;
@@ -38,7 +34,20 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         2: [2, 3, 5], // เจ็บป่วย → ค่ารักษา, ค่าชดเชย, เสียชีวิต
         3: [2, 3, 4, 5], // อุบัติเหตุ → ทุกอัน
     };
-    const MEDICAL_OPTIONS_BY_COVERAGE: Record<number, Record<number, number[]>> = {
+    const MEDICAL_TYPE_BY_COVERAGE: Record<number, Record<number, number[]>> = {
+        2: {
+            // เจ็บป่วย > ค่ารักษา/ค่าชดเชย
+            2: [1, 2, 6],
+            3: [2],
+        },
+        3: {
+            // อุบัติเหตุ > ค่ารักษา/ค่าชดเชย
+            2: [1, 2],
+            3: [2],
+        },
+    };
+
+    const CAUSE_OF_ACCIDENT_BY_COVERAGE: Record<number, Record<number, number[]>> = {
         2: {
             // เจ็บป่วย > เสียชีวิต > โรคทัวไป
             5: [2],
@@ -111,28 +120,53 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         enableReinitialize: true,
         validate: (values) => {
             const errors: FormikErrors<ClaimFormValues> = {};
-            const errorText = "โปรดระบุ";
-            if (!values.documentReceiver) errors.documentReceiver = errorText;
-            if (!values.serviceProvider) errors.serviceProvider = errorText;
-            if (!values.carOwner) errors.carOwner = errorText;
-            if (!values.incidentTypeId) errors.incidentTypeId = errorText;
-            if (!values.coverageTypeId) errors.coverageTypeId = errorText;
-            if ((values.coverageTypeId === 2 || values.coverageTypeId === 3) && !values.medicalTypeId) {
-                errors.medicalTypeId = errorText;
-            }
-            if ((values.coverageTypeId === 4 || values.coverageTypeId === 5) && !values.causeOfIncidentId) {
-                errors.causeOfIncidentId = errorText;
-            }
-            if (!values.incidentDate) errors.incidentDate = errorText;
-            if ((values.coverageTypeId === 1 || values.coverageTypeId === 2) && !values.admissionDate) {
-                errors.admissionDate = errorText;
-            }
-            if (!values.symptomType) errors.symptomType = errorText;
+            const req = "โปรดระบุ";
 
-            if (values.symptomType === "ระบุอาการ" && !values.chiefComplain) errors.chiefComplain = errorText;
-            if (values.symptomType === "อื่นๆ" && !values.remark) errors.remark = errorText;
+            // ── ข้อมูลผู้ให้บริการ ──
+            if (!values.documentReceiver) errors.documentReceiver = req;
+            if (!values.serviceProvider) errors.serviceProvider = req;
+            if (!values.carOwner) errors.carOwner = req;
 
-            if (!values.claimAmount || values.claimAmount <= 0) errors.claimAmount = errorText;
+            // ── ประเภทการเคลม ──
+            if (!values.incidentTypeId) errors.incidentTypeId = req;
+            if (!values.coverageTypeId) errors.coverageTypeId = req;
+
+            const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
+            const isCause = values.coverageTypeId === 4 || values.coverageTypeId === 5;
+            const isIPD = values.medicalTypeId === 2 || values.medicalTypeId === 6;
+
+            if (isMedical && !values.medicalTypeId) errors.medicalTypeId = req;
+            if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = req;
+
+            // ── วันที่ ──
+            if (!values.incidentDate) errors.incidentDate = req;
+
+            if (isMedical) {
+                if (!values.admissionDate) {
+                    errors.admissionDate = req;
+                } else if (values.admissionDate.isBefore(values.incidentDate, "day")) {
+                    errors.admissionDate = "ไม่สามารถเลือกวันที่เข้า รพ. ก่อนวันที่เกิดเหตุได้";
+                }
+
+                if (isIPD) {
+                    if (!values.dischargeDate) {
+                        errors.dischargeDate = req;
+                    } else if (
+                        values.dischargeDate.isBefore(values.admissionDate, "day") ||
+                        values.dischargeDate.isBefore(values.incidentDate, "day")
+                    ) {
+                        errors.dischargeDate = "รบกวนตรวจสอบวันที่ออก รพ.";
+                    }
+                }
+            }
+
+            // ── อาการ ──
+            if (!values.symptomType) errors.symptomType = req;
+            if (values.symptomType === "ระบุอาการ" && !values.chiefComplain) errors.chiefComplain = req;
+            if (values.symptomType === "อื่นๆ" && !values.remark) errors.remark = req;
+
+            // ── จำนวนเงิน ──
+            if (!values.claimAmount || values.claimAmount <= 0) errors.claimAmount = req;
 
             return errors;
         },
@@ -147,7 +181,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             .map((item) => ({
                 id: item.incidentTypeId ?? 0,
                 name: item.incidentTypeNameTH ?? "",
-                description: INCIDENT_DESCRIPTION_MAP[item.incidentTypeId ?? 0] ?? "",
                 icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
             })) ?? [];
 
@@ -160,21 +193,27 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             .map((item) => ({
                 id: item.coverageTypeId ?? 0,
                 name: item.coverageTypeNameTH ?? "",
-                description: "",
                 icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
             })) ?? [];
 
     const medicalType: ChipOption[] =
-        medicalTypeRaw?.data?.map((item) => ({
-            id: item.medicalTypeId ?? 0,
-            name: item.medicalTypeCode ?? "",
-        })) ?? [];
+        medicalTypeRaw?.data
+            ?.filter(
+                (item) =>
+                    MEDICAL_TYPE_BY_COVERAGE[formik.values.incidentTypeId ?? 0]?.[
+                        formik.values.coverageTypeId ?? 0
+                    ]?.includes(item.medicalTypeId ?? 0)
+            )
+            .map((item) => ({
+                id: item.medicalTypeId ?? 0,
+                name: item.medicalTypeCode ?? "",
+            })) ?? [];
 
     const causeOfAccident: ChipOption[] =
         causeOfAccidentRaw?.data
             ?.filter(
                 (item) =>
-                    MEDICAL_OPTIONS_BY_COVERAGE[formik.values.incidentTypeId ?? 0]?.[
+                    CAUSE_OF_ACCIDENT_BY_COVERAGE[formik.values.incidentTypeId ?? 0]?.[
                         formik.values.coverageTypeId ?? 0
                     ]?.includes(item.causeOfIncidentId ?? 0)
             )

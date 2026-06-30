@@ -4,8 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux";
 import { ClaimLineItem, resetSimulateItems, setFilledItems, setMedicalTypeId } from "../store/claimSimulateSlice";
 import { NOT_COVERED_REASON_OPTIONS } from "../store/claimSimulateOptions";
-import { StandardMedicalExpenseCategoryDtoResponse } from "../../../api/claimAgentApi.client";
-import { useGetSimBCategory, useGetSimB } from "../../../api/claimAgentMaster"; // ปรับ path ตามโปรเจกต์
+import { StandardMedicalExpenseCategoryDtoResponse } from "../../../api/coreClaimApi.client";
+import { useGetSimB, useGetSimBCategory } from "../../../api/coreClaimMastersApi";
 
 // ─── แปลง API response → TreeNode ────────────────────────────────────────────
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
@@ -205,7 +205,6 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
         setPendingDiscount("");
         setPendingNotCovered("");
         setPendingReason("");
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [medicalType]);
 
     // ── โหลดรายการที่ใช้บ่อยเข้า formik + redux ─────────────────────────────
@@ -216,7 +215,6 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
 
         formik.setFieldValue("items", frequentItems);
         dispatch(setFilledItems(frequentItems));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [medicalType, frequentItems, isFrequentLoading]);
 
     // ── ถัดไป ─────────────────────────────────────────────────────────────────

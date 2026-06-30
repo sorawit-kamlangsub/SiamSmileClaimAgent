@@ -1,4 +1,4 @@
-import { useGetBankAccountRelationType } from "../../../../../api/claimAgentMaster";
+import { useGetBankAccountRelationType } from "../../../../../api/coreClaimMastersApi";
 import FormikDropdown, { FormikDropdownProps } from "../../CustomFormik/FormikDropdown";
 
 type BankAccountRelationTypeDropDownProps = Omit<

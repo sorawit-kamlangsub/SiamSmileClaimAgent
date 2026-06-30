@@ -146,4 +146,9 @@ export interface ImportMetaEnv {
      * URL ของ CoreClaim API
      */
     readonly VITE_CORECLAIM_API_URL: string;
+
+    /**
+     * URL ของ ORC API
+     */
+    readonly VITE_ORC_API_URL: string;
 }

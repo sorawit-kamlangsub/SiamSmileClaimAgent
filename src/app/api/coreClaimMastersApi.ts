@@ -16,6 +16,13 @@ const getSimBQueryKey = ["getSimB"];
 const getChiefComplaintQueryKey = ["getChiefComplaint"];
 const getICD10QueryKey = ["getICD10"];
 
+const getDocumentRecipientTypeQueryKey = ["getDocumentRecipientType"];
+const getProvinceQueryKey = ["getProvince"];
+const getBankAccountRelationTypeQueryKey = ["getBankAccountRelationType"];
+const getContactPersonTypeQueryKey = ["getContactPersonType"];
+const getBankQueryKey = ["getBank"];
+const getZebraCarOwnerQueryKey = ["getZebraCarOwner"];
+
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
         cacheTime: 1000 * 60 * 60 * 24,
@@ -134,6 +141,66 @@ export const useGetICD10 = (
         {
             enabled: !!iCD10Id || !!iCD10Code,
             refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDocumentRecipientType = (documentRecipientTypeId?: number | undefined) => {
+    return useQuery(
+        [getDocumentRecipientTypeQueryKey, documentRecipientTypeId],
+        () => coreClaimMastersClient.getDocumentRecipientType(documentRecipientTypeId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetProvince = (provinceId?: number | undefined) => {
+    return useQuery([getProvinceQueryKey, provinceId], () => coreClaimMastersClient.getProvince(provinceId), {
+        refetchOnWindowFocus: true,
+    });
+};
+
+//bankAccountRelationGroupId : 1 = ph, pa, claimmisc | 2 = motor
+export const useGetBankAccountRelationType = (
+    bankAccountRelationTypeId?: number | undefined,
+    bankAccountRelationGroupId?: number | undefined
+) => {
+    return useQuery(
+        [getBankAccountRelationTypeQueryKey, bankAccountRelationTypeId, bankAccountRelationGroupId],
+        () => coreClaimMastersClient.getBankAccountRelationType(bankAccountRelationTypeId, bankAccountRelationGroupId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+//contactPersonGroupId : 1 = ph, deadclaim | 2 = pa | 3 = motor
+export const useGetContactPersonType = (
+    contactPersonTypeId?: number | undefined,
+    contactPersonGroupId?: number | undefined
+) => {
+    return useQuery(
+        [getContactPersonTypeQueryKey, contactPersonTypeId, contactPersonGroupId],
+        () => coreClaimMastersClient.getContactPersonType(contactPersonTypeId, contactPersonGroupId),
+        {
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetBank = (organizeId?: number | undefined) => {
+    return useQuery([getBankQueryKey, organizeId], () => coreClaimMastersClient.getAllBank(organizeId), {
+        refetchOnWindowFocus: true,
+    });
+};
+
+export const useGetZebraCarOwner = (zebraId?: number | undefined, employeeId?: number | undefined) => {
+    return useQuery(
+        [getZebraCarOwnerQueryKey, zebraId, employeeId],
+        () => coreClaimMastersClient.getZebraCarOwner(zebraId, employeeId),
+        {
+            refetchOnWindowFocus: true,
         }
     );
 };

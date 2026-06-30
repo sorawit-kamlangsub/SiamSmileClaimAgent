@@ -48,6 +48,7 @@ export interface ClaimFormValues {
     causeOfIncidentName: string | undefined;
     incidentDate: Dayjs | undefined;
     admissionDate: Dayjs | undefined;
+    dischargeDate: Dayjs | undefined;
     receiveDocDate: Dayjs | undefined;
     deathDate: Dayjs | undefined;
     claimAmount: number | undefined;
@@ -110,6 +111,7 @@ const defaultForm: ClaimFormValues = {
     causeOfIncidentName: undefined,
     incidentDate: dayjs(),
     admissionDate: dayjs(),
+    dischargeDate: dayjs(),
     deathDate: dayjs(),
     receiveDocDate: dayjs(),
     claimAmount: 0,
