@@ -31,20 +31,20 @@ export const useCalculateCaseClaim = (
 
 export const useGetCustomerSearch = (
     isSearch?: boolean,
-    searchIndex?: number | undefined,
-    isSeachDetail?: boolean | undefined,
-    dateHappen?: Dayjs | undefined,
-    schoolId?: number | undefined,
-    provinceId?: number | undefined,
-    incidentTypeId?: number | undefined,
-    searchDetail?: string | undefined,
-    orderingField?: string | undefined,
-    ascendingOrder?: boolean | undefined,
-    page?: number | undefined,
-    recordsPerPage?: number | undefined
+    searchIndex?: number,
+    isSeachDetail?: boolean,
+    dateHappen?: Dayjs,
+    schoolId?: number,
+    provinceId?: number,
+    incidentTypeId?: number,
+    searchDetail?: string,
+    orderingField?: string,
+    ascendingOrder?: boolean,
+    page?: number,
+    recordsPerPage?: number
 ) => {
     return useQuery(
-        [getCustomerSearchQueryKey, searchIndex, searchDetail],
+        [getCustomerSearchQueryKey, searchIndex, searchDetail, page, recordsPerPage, orderingField, ascendingOrder],
         () =>
             coreClaimClient.getCustomerSearch(
                 searchIndex,
@@ -60,7 +60,7 @@ export const useGetCustomerSearch = (
                 recordsPerPage
             ),
         {
-            enabled: isSearch ? true : false,
+            enabled: !!isSearch && !!searchDetail,
             refetchOnWindowFocus: false,
         }
     );

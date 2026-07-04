@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useFormik } from "formik";
+import { useEffect, useRef, useState } from "react";
+import { FormikErrors, useFormik } from "formik";
 import dayjs, { Dayjs } from "dayjs";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../redux";
@@ -9,7 +9,9 @@ import { useCalculateCaseClaim } from "../../../api/coreClaimApi";
 import { CalculateCaseClaim, CalculateCaseClaimDtoRequest } from "../../../api/coreClaimApi.client";
 
 export interface DaysCalculateFormValues {
-    treatmentType: number | undefined;
+    claimCause: number | undefined;
+    coverageType: number | undefined;
+    medicalType: number | undefined;
     dateHappen: Dayjs | undefined;
     admitDate: Dayjs | undefined;
     dischargeDate: Dayjs | undefined;
@@ -45,18 +47,62 @@ const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): nu
 };
 
 const validate = (values: DaysCalculateFormValues) => {
-    const errors: Partial<Record<keyof DaysCalculateFormValues, string>> = {};
-    if (!values.treatmentType) errors.treatmentType = "โปรดระบุ";
-    if (!values.dateHappen) errors.dateHappen = "โปรดระบุ";
-    if (!values.admitDate) errors.admitDate = "โปรดระบุ";
-    if (!values.dischargeDate) errors.dischargeDate = "โปรดระบุ";
-    if (values.isContinuous && !values.continuousFromClaimNo) errors.continuousFromClaimNo = "โปรดระบุ";
+    const errors: FormikErrors<DaysCalculateFormValues> = {};
+
+    if (!values.claimCause) {
+        errors.claimCause = "โปรดระบุ";
+    }
+
+    if (!values.coverageType) {
+        errors.coverageType = "โปรดระบุ";
+    }
+
+    if (!values.medicalType) {
+        errors.medicalType = "โปรดระบุ";
+    }
+
+    if (!values.dateHappen) {
+        errors.dateHappen = "โปรดระบุ";
+    }
+
+    if (!values.admitDate) {
+        errors.admitDate = "โปรดระบุ";
+    }
+
+    if (!values.dischargeDate) {
+        errors.dischargeDate = "โปรดระบุ";
+    }
+
+    if (values.isContinuous && !values.continuousFromClaimNo) {
+        errors.continuousFromClaimNo = "โปรดระบุ";
+    }
+
+    const bedDays = calcIpdDays(values.admitDate, values.dischargeDate);
+
+    if ((values.ipdDays ?? 0) > bedDays) {
+        errors.ipdDays = "จำนวนวัน IPD ต้องไม่เกินจำนวนวันนอน";
+    }
+
+    if ((values.icuDays ?? 0) > bedDays) {
+        errors.icuDays = "จำนวนวัน ICU ต้องไม่เกินจำนวนวันนอน";
+    }
+
+    const totalDays = (values.ipdDays ?? 0) + (values.icuDays ?? 0);
+
+    if (totalDays > bedDays) {
+        errors.ipdDays = "จำนวนวัน IPD รวมกับ ICU ต้องเท่ากับจำนวนวันนอน";
+        errors.icuDays = "จำนวนวัน IPD รวมกับ ICU ต้องเท่ากับจำนวนวันนอน";
+    } else if (totalDays < bedDays) {
+        errors.ipdDays = "จำนวนวัน IPD รวมกับ ICU ต้องเท่ากับจำนวนวันนอน";
+        errors.icuDays = "จำนวนวัน IPD รวมกับ ICU ต้องเท่ากับจำนวนวันนอน";
+    }
+
     return errors;
 };
 
 export const useDaysCalculate = () => {
     const dispatch = useDispatch();
-    const { daysCalculate, filledItems, medicalTypeId, selectedInsured } = useSelector(
+    const { daysCalculate, filledItems, medicalTypeId, header, selectedInsured } = useSelector(
         (s: RootState) => s.claimsimulate
     );
 
@@ -69,7 +115,9 @@ export const useDaysCalculate = () => {
 
     const formik = useFormik<DaysCalculateFormValues>({
         initialValues: {
-            treatmentType: daysCalculate.treatmentType,
+            claimCause: daysCalculate.claimCause,
+            coverageType: daysCalculate.coverageType,
+            medicalType: daysCalculate.medicalType,
             dateHappen: daysCalculate.dateHappen,
             admitDate: daysCalculate.admitDate,
             dischargeDate: daysCalculate.dischargeDate,
@@ -83,7 +131,9 @@ export const useDaysCalculate = () => {
         onSubmit: (values) => {
             dispatch(
                 setDaysCalculate({
-                    treatmentType: values.treatmentType,
+                    claimCause: values.claimCause,
+                    coverageType: values.coverageType,
+                    medicalType: values.medicalType,
                     dateHappen: values.dateHappen,
                     admitDate: values.admitDate,
                     dischargeDate: values.dischargeDate,
@@ -100,7 +150,9 @@ export const useDaysCalculate = () => {
     const syncToRedux = (patch: Partial<DaysCalculateFormValues>) => {
         dispatch(
             setDaysCalculate({
-                treatmentType: patch.treatmentType ?? formik.values.treatmentType,
+                claimCause: patch.claimCause ?? formik.values.claimCause,
+                coverageType: patch.coverageType ?? formik.values.coverageType,
+                medicalType: patch.medicalType ?? formik.values.medicalType,
                 dateHappen: patch.dateHappen !== undefined ? patch.dateHappen : formik.values.dateHappen,
                 admitDate: patch.admitDate !== undefined ? patch.admitDate : formik.values.admitDate,
                 dischargeDate: patch.dischargeDate !== undefined ? patch.dischargeDate : formik.values.dischargeDate,
@@ -113,67 +165,85 @@ export const useDaysCalculate = () => {
         );
     };
 
-    const recalcAndSync = (admit: Dayjs | undefined, discharge: Dayjs | undefined) => {
-        const days = calcIpdDays(admit, discharge);
-        formik.setFieldValue("ipdDays", days);
-        formik.setFieldValue("bedDays", days);
-        syncToRedux({ admitDate: admit, dischargeDate: discharge, ipdDays: days, bedDays: days });
+    const prevBedDaysRef = useRef(calcIpdDays(daysCalculate.admitDate, daysCalculate.dischargeDate));
+
+    useEffect(() => {
+        const days = calcIpdDays(formik.values.admitDate, formik.values.dischargeDate);
+
+        if (days !== prevBedDaysRef.current) {
+            formik.setFieldValue("ipdDays", days);
+            formik.setFieldValue("bedDays", days);
+            syncToRedux({
+                dateHappen: formik.values.dateHappen,
+                admitDate: formik.values.admitDate,
+                dischargeDate: formik.values.dischargeDate,
+                ipdDays: days,
+                bedDays: days,
+            });
+        } else {
+            syncToRedux({
+                dateHappen: formik.values.dateHappen,
+                admitDate: formik.values.admitDate,
+                dischargeDate: formik.values.dischargeDate,
+                bedDays: days,
+            });
+        }
+
+        prevBedDaysRef.current = days;
+    }, [formik.values.dateHappen, formik.values.admitDate, formik.values.dischargeDate]);
+
+    const handleIpdDaysChange = (value: number) => {
+        formik.setFieldValue("ipdDays", value, true);
+        formik.setFieldTouched("ipdDays", true, false);
+        syncToRedux({ ipdDays: value });
     };
 
-    const handleAdmitDateChange = (date: Dayjs | undefined) => {
-        formik.setFieldValue("admitDate", date);
-        recalcAndSync(date, formik.values.dischargeDate);
+    const handleIcuDaysChange = (value: number) => {
+        formik.setFieldValue("icuDays", value, true);
+        formik.setFieldTouched("icuDays", true, false);
+        syncToRedux({ icuDays: value });
     };
 
-    const handleDischargeDateChange = (date: Dayjs | undefined) => {
-        formik.setFieldValue("dischargeDate", date);
-        recalcAndSync(formik.values.admitDate, date);
-    };
-
-    const handleDateHappenChange = (date: Dayjs | undefined) => {
-        formik.setFieldValue("dateHappen", date);
-        syncToRedux({ dateHappen: date });
+    const validateDaysCalculate = async () => {
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) {
+            formik.setTouched(
+                Object.keys(errors).reduce((acc, key) => ({ ...acc, [key]: true }), {} as Record<string, boolean>)
+            );
+            return false;
+        }
+        return true;
     };
 
     const handleCalculate = async () => {
-        const errors = await formik.validateForm();
-        if (Object.keys(errors).length > 0) {
-            formik.setTouched(Object.keys(errors).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
-            return;
-        }
-
-        const days = calcIpdDays(formik.values.admitDate, formik.values.dischargeDate);
-        formik.setFieldValue("ipdDays", days);
-        formik.setFieldValue("bedDays", days);
-        syncToRedux({ ipdDays: days, bedDays: days });
+        const isValid = await validateDaysCalculate();
+        if (!isValid) return;
 
         const calculateDetail: CalculateCaseClaim = {
-            productId: 44,
+            productId: selectedInsured?.productId,
+            coverageTypeId: header.coverageType,
             medicalTypeId: medicalTypeId,
-            coverageTypeId: formik.values.treatmentType,
-            incidentTypeId: 2,
+            incidentTypeId: header.claimCause,
             occurrenceDate: formik.values.dateHappen,
             ipdCount: formik.values.ipdDays,
             icuCount: formik.values.icuDays,
             continueClaimNoe: formik.values.isContinuous ? formik.values.continuousFromClaimNo : undefined,
-            // occurrenceDate: formik.values.dateHappen,
-            // dateIn: formik.values.admitDate,
-            // dateOut: formik.values.dischargeDate,
-            // icuCount: formik.values.icuDays,
             expenseList: filledItems.map((item) => ({
-                code: item.code,
+                standardMedicalExpenseId: item.standardMedicalExpenseId,
                 description: item.description,
-                claimAmount: item.claimAmount,
-                discount: item.discount,
-                notCovered: item.notCovered,
+                originalAmount: item.claimAmount,
+                discountAmount: item.discount,
+                nonCoverAmount: item.notCovered,
                 reason: item.reason,
                 remark: item.remark,
             })),
         };
 
         const payload: CalculateCaseClaimDtoRequest = {
-            caseId: undefined,
+            caseAdjudicationId: undefined,
             isSimulateCase: true,
+            isCheckIncludeCompensate: false,
+            isCheckIncludeCompensateAll: false,
             jsonDetail: calculateDetail,
         };
 
@@ -211,13 +281,12 @@ export const useDaysCalculate = () => {
         selectedInsured,
         openConfirm,
         isCalculating,
-        handleDateHappenChange,
-        handleAdmitDateChange,
-        handleDischargeDateChange,
+        handleIpdDaysChange,
+        handleIcuDaysChange,
         handleCalculate,
+        validateDaysCalculate,
         handleContinuousChange,
         handleConfirm,
         handleCloseConfirm: () => setOpenConfirm(false),
     };
 };
-

@@ -13,18 +13,18 @@ export const REASON_OPTIONS = [
     { value: "4", label: "รอเอกสารเพิ่มเติม" },
 ];
 
-export interface TreatmentTypeOption {
-    CaseTypeId: number;
-    CaseTypeName: string;
-}
+// export interface TreatmentTypeOption {
+//     CaseTypeId: number;
+//     CaseTypeName: string;
+// }
 
-export const TREATMENT_TYPE_OPTIONS: TreatmentTypeOption[] = [
-    { CaseTypeId: 2, CaseTypeName: "IPD" },
-    { CaseTypeId: 3, CaseTypeName: "OPD" },
-    { CaseTypeId: 4, CaseTypeName: "DAY_Surgery" },
-    { CaseTypeId: 5, CaseTypeName: "DeathCase" },
-    { CaseTypeId: 6, CaseTypeName: "Disability" },
-];
+// export const TREATMENT_TYPE_OPTIONS: TreatmentTypeOption[] = [
+//     { CaseTypeId: 2, CaseTypeName: "IPD" },
+//     { CaseTypeId: 3, CaseTypeName: "OPD" },
+//     { CaseTypeId: 4, CaseTypeName: "DAY_Surgery" },
+//     { CaseTypeId: 5, CaseTypeName: "DeathCase" },
+//     { CaseTypeId: 6, CaseTypeName: "Disability" },
+// ];
 
 export const CONTINUOUS_CLAIM_OPTIONS = [
     { value: "CL2024001", label: "CL2024001 - 01/03/2567" },
@@ -32,17 +32,10 @@ export const CONTINUOUS_CLAIM_OPTIONS = [
 ];
 
 export const NOT_COVERED_REASON_OPTIONS = [
-    { value: "1", label: "เกินสิทธิ์" },
-    { value: "2", label: "ไม่อยู่ในความคุ้มครอง" },
-    { value: "3", label: "โรคเดิม" },
-    { value: "4", label: "อื่นๆ" },
-];
-
-// ── ตัวเลือกค้นหาผู้เอาประกัน ──
-export const INSURED_SEARCH_TYPE_OPTIONS = [
-    { value: "nationalId", label: "เลขบัตรประชาชน" },
-    { value: "appId", label: "Application ID" },
-    { value: "name", label: "ชื่อ-นามสกุล" },
+    { nonCoveredReasonId: "1", nonCoveredReasonName: "เกินสิทธิ์" },
+    { nonCoveredReasonId: "2", nonCoveredReasonName: "ไม่อยู่ในความคุ้มครอง" },
+    { nonCoveredReasonId: "3", nonCoveredReasonName: "โรคเดิม" },
+    { nonCoveredReasonId: "4", nonCoveredReasonName: "อื่นๆ" },
 ];
 
 // ── เหตุของการเคลม ──
@@ -69,8 +62,7 @@ export const COVERAGE_TYPE_OPTIONS = [
     { value: 5, label: "เสียชีวิต (DeathCase)", icon: WarningAmberOutlinedIcon },
 ] as const;
 
-// ── ประเภทการรักษา (MedicalTypeId จริงจาก DB) ───────────────────────────────
-// อ้างอิงไว้เผื่อใช้แทน/เทียบกับ MedicalTypeDropDown ที่ดึงจาก master API อยู่แล้ว
+// ── ประเภทการรักษา  ───────────────────────────────
 export const MEDICAL_TYPE_OPTIONS = [
     { value: 1, label: "OPD" },
     { value: 2, label: "IPD" },
@@ -78,4 +70,14 @@ export const MEDICAL_TYPE_OPTIONS = [
     { value: 4, label: "Amb" },
     { value: 5, label: "HM" },
     { value: 6, label: "Day Case Surgery" },
+] as const;
+
+// ── สาเหตุของการเกิดเหตุ  ──────────────────────
+export const CAUSE_OF_INCIDENT_OPTIONS = [
+    { value: 2, label: "โรคทั่วไป" },
+    { value: 3, label: "อุบัติเหตุทั่วไป" },
+    { value: 4, label: "ขับขี่/โดยสารจักรยานยนต์" },
+    { value: 5, label: "ฆาตกรรม" },
+    { value: 7, label: "ภัยสาธารณะ" },
+    { value: 8, label: "รับผิดสถานศึกษา" },
 ] as const;

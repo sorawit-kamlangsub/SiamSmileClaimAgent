@@ -56,15 +56,15 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
     // ── แปลง frequentData → filledItems format ────────────────────────────────
     const frequentItems = useMemo((): ClaimLineItem[] => {
         const raw = frequentData?.data ?? [];
-        return raw.map((item, idx) => ({
-            id: item.inputToStandardMappingId ?? idx,
-            code: item.inputItemCode ?? "",
-            description: item.descriptionTH ?? "",
+        return raw.map((item) => ({
+            id: item.standardMedicalExpenseId,
+            code: item.inputItemCode,
+            description: item.descriptionTH,
             claimAmount: undefined,
             discount: undefined,
             notCovered: undefined,
-            reason: "",
-            remark: "",
+            reason: undefined,
+            remark: undefined,
             color: item.backgroundColorCode ?? "#FFD6D6",
             disabled: false,
         }));
@@ -151,6 +151,7 @@ export const useClaimLineCalculate = (onNext?: () => void) => {
         if (hasError) return;
         const newItem: ClaimLineItem = {
             id: Date.now(),
+            
             code: selectedItem.code,
             description: selectedItem.description,
             claimAmount: parseFloat(pendingAmount.toString()) || 0,

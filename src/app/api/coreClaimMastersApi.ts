@@ -15,6 +15,7 @@ const getSimBCategoryQueryKey = ["getSimBCategory"];
 const getSimBQueryKey = ["getSimB"];
 const getChiefComplaintQueryKey = ["getChiefComplaint"];
 const getICD10QueryKey = ["getICD10"];
+const getNonCoveredReasonQueryKey = ["getNonCoveredReason"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -92,7 +93,7 @@ export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTyp
         [getSimBCategoryQueryKey, formatTypeId, patientTypeId],
         () => coreClaimMastersClient.getSimBCategory(formatTypeId, patientTypeId),
         {
-            enabled: !!formatTypeId && !!patientTypeId,
+            enabled: !!formatTypeId,
             refetchOnWindowFocus: false,
         }
     );
@@ -133,6 +134,16 @@ export const useGetICD10 = (
         () => coreClaimMastersClient.getICD10(iCD10Id, iCD10Code, isTPA),
         {
             enabled: !!iCD10Id || !!iCD10Code,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetNonCoveredReason = (nonCoveredReasonId?: number | undefined) => {
+    return useQuery(
+        [getNonCoveredReasonQueryKey, nonCoveredReasonId],
+        () => coreClaimMastersClient.getNonCoveredReason(nonCoveredReasonId),
+        {
             refetchOnWindowFocus: false,
         }
     );

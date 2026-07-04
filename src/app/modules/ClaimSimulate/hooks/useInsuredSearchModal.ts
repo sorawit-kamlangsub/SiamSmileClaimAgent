@@ -1,37 +1,45 @@
 import { useState } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../redux";
-import { setInsuredSearchOpen, setSelectedInsured, SelectedInsuredInfo } from "../store/claimSimulateSlice";
-import { INSURED_SEARCH_TYPE_OPTIONS } from "../store/claimSimulateOptions";
+import { setInsuredSearchOpen, setSelectedInsured } from "../store/claimSimulateSlice";
 
 import { PaginationSortableDto } from "../../_common";
 import { FormikErrors, useFormik } from "formik";
 import { useGetCustomerSearch } from "../../../api/coreClaimApi";
+import { GetCustomerSearchDtoResponse } from "../../../api/coreClaimApi.client";
 
 export interface InsuredSearchFormValues {
     searchTypeId: number;
     searchDetail: string;
 }
 
-// ── เกณฑ์ตรวจคำค้นหาตามประเภทที่เลือก (ปรับให้ตรงกับ SearchTypeDropDown ของจริง) ──
 const SEARCH_TYPE_RULES: Record<number, (val: string) => boolean> = {
-    1: (v) => /^\d{13}$/.test(v), // เลขบัตรประชาชน
-    2: () => true, // ชื่อ-นามสกุล freetext
-    3: (v) => /^[a-zA-Z0-9]+$/.test(v), // Application ID
+    1: (v) => /^[a-zA-Z0-9]+$/.test(v), // Application ID
+    2: (v) => /^\d{13}$/.test(v), // เลขบัตรประชาชน
+    3: (v) => /^[a-zA-Z0-9]$/.test(v), // Passport
+    4: () => true, // ชื่อ-นามสกุล freetext
+    5: () => true, // เลขที่อ้างอิง(นักเรียน) freetext
 };
 
 const SEARCH_TYPE_MESSAGES: Record<number, string> = {
-    1: "กรอกได้เฉพาะตัวเลข 13 หลัก",
-    2: "",
+    1: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
+    2: "กรอกได้เฉพาะตัวเลข 13 หลัก",
     3: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
+    4: "",
+    5: "",
 };
 export const useInsuredSearchModal = () => {
     const dispatch = useAppDispatch();
     const isOpen = useAppSelector((s) => s.claimsimulate.isInsuredSearchOpen);
 
     const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-    const [pendingSelection, setPendingSelection] = useState<SelectedInsuredInfo | null>(null);
+    const [pendingSelection, setPendingSelection] = useState<GetCustomerSearchDtoResponse | null>(null);
     const [paginated, setPaginated] = useState<PaginationSortableDto>({ page: 1, recordsPerPage: 10 });
     const [isSearchTriggered, setIsSearchTriggered] = useState(false);
+
+    const [searchParams, setSearchParams] = useState<{
+        searchTypeId: number;
+        searchDetail: string;
+    } | null>(null);
 
     const defaultValues: InsuredSearchFormValues = {
         searchTypeId: 1,
@@ -42,46 +50,74 @@ export const useInsuredSearchModal = () => {
         initialValues: defaultValues,
         validate: (values) => {
             const errors: FormikErrors<InsuredSearchFormValues> = {};
-            if (!values.searchTypeId) errors.searchTypeId = "โปรดระบุ";
+
+            if (!values.searchTypeId) {
+                errors.searchTypeId = "โปรดระบุ";
+            }
+
             if (!values.searchDetail?.trim()) {
                 errors.searchDetail = "โปรดระบุ";
             } else {
                 const rule = SEARCH_TYPE_RULES[values.searchTypeId];
+
                 if (rule && !rule(values.searchDetail)) {
                     errors.searchDetail = SEARCH_TYPE_MESSAGES[values.searchTypeId];
                 }
             }
             return errors;
         },
-        onSubmit: () => {
+
+        onSubmit: (values) => {
             setSelectedRowIndex(null);
             setPendingSelection(null);
-            setPaginated({ page: 1, recordsPerPage: 10 });
+
+            setPaginated({
+                page: 1,
+                recordsPerPage: 10,
+            });
+
+            setSearchParams({
+                searchTypeId: values.searchTypeId,
+                searchDetail: values.searchDetail.trim(),
+            });
+
             setIsSearchTriggered(true);
         },
     });
 
     const { data, isLoading } = useGetCustomerSearch(
         isSearchTriggered,
-        formik.values.searchTypeId,
+        searchParams?.searchTypeId,
         false,
         undefined,
         undefined,
         undefined,
         undefined,
-        formik.values.searchDetail,
+        searchParams?.searchDetail,
         undefined,
         undefined,
         paginated.page,
         paginated.recordsPerPage
     );
 
-    const handleClose = () => dispatch(setInsuredSearchOpen(false));
+    const handleClose = () => {
+        dispatch(setInsuredSearchOpen(false));
+        formik.resetForm();
+
+        setSelectedRowIndex(null);
+        setPendingSelection(null);
+
+        setSearchParams(null);
+        setIsSearchTriggered(false);
+    };
 
     const handleClear = () => {
         formik.resetForm();
+
         setSelectedRowIndex(null);
         setPendingSelection(null);
+
+        setSearchParams(null);
         setIsSearchTriggered(false);
     };
 
@@ -90,12 +126,7 @@ export const useInsuredSearchModal = () => {
         if (!row) return;
         setSelectedRowIndex(rowIndex);
         setPendingSelection({
-            appId: row.policyCode as string,
-            customerName: row.customerName as string,
-            plan: row.productName,
-            startCoverDate: row.coverageFrom?.toString(),
-            cancelDate: row.coverageTo?.toString(),
-            company: row.productTypeName,
+            ...row,
         });
     };
 
@@ -119,7 +150,5 @@ export const useInsuredSearchModal = () => {
         handleSelectRow,
         handleConfirmSelection,
         setPaginated,
-        searchTypeOptions: INSURED_SEARCH_TYPE_OPTIONS,
     };
 };
-

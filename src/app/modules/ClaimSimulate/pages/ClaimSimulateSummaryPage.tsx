@@ -1,11 +1,10 @@
-import React from 'react'
+import React from "react";
+import { useNavigate } from "react-router-dom";
+import ClaimSimulateSummary from "../components/ClaimSimulateSummary";
 
-type Props = {}
+const ClaimSimulateSummaryPage: React.FC = () => {
+    const navigate = useNavigate();
+    return <ClaimSimulateSummary onBack={() => navigate("..")} />;
+};
 
-const ClaimSimulateSummaryPage = (props: Props) => {
-  return (
-    <div>ClaimSimulateSummaryPage</div>
-  )
-}
-
-export default ClaimSimulateSummaryPage
+export default ClaimSimulateSummaryPage;

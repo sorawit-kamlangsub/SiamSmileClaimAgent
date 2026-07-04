@@ -1,35 +1,26 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs, { Dayjs } from "dayjs";
-import { CalculateCaseClaimDtoResponse } from "../../../api/coreClaimApi.client";
+import { CalculateCaseClaimDtoResponse, GetCustomerSearchDtoResponse } from "../../../api/coreClaimApi.client";
 import { RootState } from "../../../../redux";
 
-// ─── ข้อมูลผู้เอาประกันที่เลือก (จาก modal ค้นหา) ───────────────────────────
-export interface SelectedInsuredInfo {
-    appId: string;
-    customerName: string;
-    nationalId?: string;
-    plan?: string;
-    status?: string;
-    startCoverDate?: string;
-    cancelDate?: string;
-    company?: string;
-}
 
-// ─── เหตุของการเคลม / ความคุ้มครอง (ใช้ id จริงจาก DB) ──────────────────────
 // IncidentTypeId: 2 = Illness, 3 = Accident
-export type ClaimCauseType = number;
+// CauseOfIncidentId: 2 = โรคทั่วไป, 3 = อุบัติเหตุทั่วไป, 4 = ขับขี่/โดยสารจักรยานยนต์, 5 = ฆาตกรรม, 7 = ภัยสาธารณะ, 8 = รับผิดสถานศึกษา
 // CoverageTypeId: 2 = Medical, 3 = Compensate, 4 = Disability, 5 = DeathCase
+
+export type ClaimCauseType = number;
 export type CoverageType = number;
 
 export interface ClaimLineHeaderState {
     medicalType: number | undefined;
     claimCause: ClaimCauseType | undefined;
-    coverageType: CoverageType | undefined;
+    coverageType: CoverageType | undefined; 
+    causeOfIncident: number | undefined;
 }
-
-// ─── สรุปจำนวนวัน ────────────────────────────────────────────────────────────
 export interface DaysCalculateState {
-    treatmentType: number | undefined;
+    claimCause: number | undefined;
+    coverageType: number | undefined;
+    medicalType: number | undefined;
     dateHappen: Dayjs | undefined;
     admitDate: Dayjs | undefined;
     dischargeDate: Dayjs | undefined;
@@ -40,9 +31,9 @@ export interface DaysCalculateState {
     continuousFromClaimNo: string | undefined;
 }
 
-// ─── รายการค่ารักษา ──────────────────────────────────────────────────────────
 export interface ClaimLineItem {
     id?: number;
+    standardMedicalExpenseId?: number | undefined;
     code?: string | undefined;
     description?: string | undefined;
     claimAmount?: number;
@@ -56,7 +47,7 @@ export interface ClaimLineItem {
 
 interface ClaimSimulateState {
     // ── ผู้เอาประกัน ──
-    selectedInsured: SelectedInsuredInfo | null;
+    selectedInsured: GetCustomerSearchDtoResponse | null;
     isInsuredSearchOpen: boolean;
 
     // ── header / รายละเอียดเคลม ──
@@ -78,13 +69,16 @@ const initialState: ClaimSimulateState = {
     isInsuredSearchOpen: false,
 
     header: {
-        medicalType: undefined,
+        medicalType: 1, // OPD (default)
         claimCause: 2, // เจ็บป่วย
         coverageType: 2, // ค่ารักษา (Medical)
+        causeOfIncident: undefined,
     },
 
     daysCalculate: {
-        treatmentType: undefined,
+        claimCause: 2,
+        coverageType: 2,
+        medicalType: 1,
         dateHappen: dayjs(),
         admitDate: dayjs(),
         dischargeDate: dayjs(),
@@ -108,7 +102,7 @@ const claimSimulateSlice = createSlice({
         setInsuredSearchOpen(state, action: PayloadAction<boolean>) {
             state.isInsuredSearchOpen = action.payload;
         },
-        setSelectedInsured(state, action: PayloadAction<SelectedInsuredInfo | null>) {
+        setSelectedInsured(state, action: PayloadAction<GetCustomerSearchDtoResponse | null>) {
             state.selectedInsured = action.payload;
         },
 

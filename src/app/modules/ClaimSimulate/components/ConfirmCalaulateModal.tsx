@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Avatar,
     Box,
@@ -12,11 +12,15 @@ import {
     Grid,
     IconButton,
     Paper,
+    Snackbar,
     Stack,
+    Tooltip,
     Typography,
+    Zoom,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
@@ -28,6 +32,9 @@ import { useAppSelector } from "../../../../redux";
 import { StandardDataTable } from "../../_common";
 import { cellAlignOptions } from "../../../functionHelpers";
 import { HeadingWithColor } from "../../_common/components/CustomComponent/HeadingWithColor";
+import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import KingBedOutlinedIcon from "@mui/icons-material/KingBedOutlined";
+import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 
 interface Props {
     open: boolean;
@@ -35,11 +42,93 @@ interface Props {
     onConfirm: () => void;
 }
 
+interface SummaryData {
+    compensateNet: number;
+    compensateInclude: number;
+    compensateRemain: number;
+
+    medicalNet: number;
+    medicalCoverPay: number;
+    medicalCompensateInclude: number;
+    medicalPay: number;
+    medicalUnpay: number;
+}
+
+type MergeOption = "single" | "all" | null;
+
+export const calculateSummary = (data: SummaryData, mergeOption: MergeOption): SummaryData => {
+    const result: SummaryData = { ...data };
+
+    result.compensateInclude = 0;
+    result.medicalCompensateInclude = 0;
+    result.compensateRemain = result.compensateNet;
+
+    // โอนค่าชดเชยรวมกับค่ารักษา
+    if (mergeOption === "single") {
+        if (result.medicalUnpay > 0) {
+            if (result.medicalUnpay >= result.compensateNet) {
+                result.medicalCompensateInclude = result.compensateNet;
+                result.compensateRemain = 0;
+            } else {
+                result.medicalCompensateInclude = result.medicalUnpay;
+                result.compensateRemain = result.compensateNet - result.medicalCompensateInclude;
+            }
+
+            result.compensateInclude = result.medicalCompensateInclude;
+            result.medicalPay += result.medicalCompensateInclude;
+            result.medicalUnpay -= result.medicalCompensateInclude;
+        }
+    }
+
+    // โอนค่าชดเชยรวมกับค่ารักษาทั้งหมด
+    if (mergeOption === "all") {
+        result.medicalCompensateInclude = result.compensateNet;
+        result.compensateInclude = result.compensateNet;
+        result.compensateRemain = 0;
+
+        result.medicalPay += result.medicalCompensateInclude;
+        result.medicalUnpay -= result.medicalCompensateInclude;
+
+        if (result.medicalUnpay < 0) {
+            result.medicalUnpay = 0;
+        }
+    }
+
+    return result;
+};
+
 const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
     const { daysCalculate, calculateResult, selectedInsured } = useAppSelector((s) => s.claimsimulate);
     const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
-    const [mergeOption, setMergeOption] = useState<"single" | "all" | null>(null);
+    const [mergeOption, setMergeOption] = useState<"single" | "all" | null>("single");
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyMedicalPay = async (value: number) => {
+        try {
+            await navigator.clipboard.writeText(String(value));
+            setCopied(true);
+        } catch {
+            // ignore clipboard errors
+        }
+    };
+
+    const summary = useMemo(() => {
+        return calculateSummary(
+            {
+                compensateNet: calculateResult?.compensateNet ?? 0,
+                compensateInclude: calculateResult?.compensateInclude ?? 0,
+                compensateRemain: calculateResult?.compensateRemain ?? 0,
+
+                medicalNet: calculateResult?.medicalNet ?? 0,
+                medicalCoverPay: calculateResult?.medicalCoverPay ?? 0,
+                medicalCompensateInclude: calculateResult?.medicalCompensateInclude ?? 0,
+                medicalPay: calculateResult?.medicalPay ?? 0,
+                medicalUnpay: calculateResult?.medicalUnpay ?? 0,
+            },
+            mergeOption
+        );
+    }, [calculateResult, mergeOption]);
 
     // ── map medicalExpense จาก API → ตารางรายการค่ารักษา ─────────────────────
     const medicalExpenseRows = calculateResult?.medicalExpense ?? [];
@@ -47,91 +136,123 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
 
     const treatmentTableData = [
         ...medicalExpenseRows.map((item) => ({
-            groupName: item.benefit_id ?? "-",
-            benefitName: item.benefit_Detail ?? "-",
+            benefitName: item.benefitName ?? "-",
+            amountNet: item.net ?? 0,
             coveredAmount: item.cover ?? 0,
             nonCoveredAmount: item.unCover ?? 0,
-            totalAmount: item.pay ?? 0,
+            unPayAmount: item.unPay ?? 0,
+            payAmount: item.pay ?? 0,
         })),
         {
             groupName: "รวมทั้งหมด",
             benefitName: "",
+            amountNet: medicalExpenseRows.reduce((s, r) => s + (r.net ?? 0), 0),
             coveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.cover ?? 0), 0),
             nonCoveredAmount: medicalExpenseRows.reduce((s, r) => s + (r.unCover ?? 0), 0),
-            totalAmount: medicalExpenseRows.reduce((s, r) => s + (r.pay ?? 0), 0),
+            unPayAmount: medicalExpenseRows.reduce((s, r) => s + (r.unPay ?? 0), 0),
+            payAmount: medicalExpenseRows.reduce((s, r) => s + (r.pay ?? 0), 0),
         },
     ];
 
-    const compensationTotal = 0;
-    const compensationInCoverage = 0;
-    const compensationRemaining = 0;
+    // ── Summary Compensate ──────────────────────────────────────────────────
+    // const compensationTotal = calculateResult?.compensateNet ?? 0; // ค่าชดเชยรวม
+    // const compensationInCoverage = calculateResult?.compensateInclude ?? 0; // ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)
+    // const compensationRemaining = calculateResult?.compensateRemain ?? 0; // ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)
+
     const compensationTableData = [
         ...MOCK_COMPENSATION.map((item) => ({
-            description: item.benefit_Detail ?? "-",
-            days: item.countDay ?? 0,
-            ratePerDay: item.dayOfUnit ?? 0,
-            amount: item.cover ?? 0,
+            description: item.benefitName ?? "-",
+            amount: item.pay ?? 0,
         })),
+        {
+            description: "รวมทั้งหมด",
+            amount: MOCK_COMPENSATION.reduce((sum, item) => sum + (item.pay ?? 0), 0),
+        },
     ];
 
-    const totalExpense = calculateResult?.summaryMedicalPay ?? 0;
-    const totalNotCovered = calculateResult?.summaryMedicalUnPay ?? 0;
-    const medicalNet = calculateResult?.medicalNet ?? 0;
-    const medicalPay = calculateResult?.medicalPay ?? 0;
-    const compensation = compensationInCoverage;
+    // ── Summary Medic ────────────────────────────────────────────────────────
+    // const medicalNet = calculateResult?.medicalNet ?? 0; // ยอดเบิกรวม
+    // const medicalPay = calculateResult?.medicalCoverPay ?? 0; // สิทธิ์ความคุ้มครอง
+    // const compensation = calculateResult?.medicalCompensateInclude ?? 0; // ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)
+    // const totalExpense = calculateResult?.medicalPay ?? 0; // สิทธิ์โรงพยาบาล
+    // const totalNotCovered = calculateResult?.medicalUnpay ?? 0; // ส่วนเกิน (ลูกค้าจ่าย)
 
     const treatmentColumns: MUIDataTableColumn[] = [
-        { name: "groupName", label: "หมวดค่าใช้จ่าย", options: { ...cellAlignOptions({ align: "left" }) } },
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
-            name: "coveredAmount",
+            name: "amountNet",
+            label: "รายการเบิก",
+            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
+        },
+        {
+            name: "payAmount",
             label: "สิทธิ์เบิก",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
         },
         {
-            name: "nonCoveredAmount",
+            name: "unPayAmount",
             label: "ส่วนเกินสิทธิ์",
-            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
-        },
-        {
-            name: "totalAmount",
-            label: "ยอดรวม",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
         },
     ];
 
     const compensationColumns: MUIDataTableColumn[] = [
         { name: "description", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
-        { name: "days", label: "จำนวนวัน", options: { ...cellAlignOptions({ align: "center" }) } },
-        {
-            name: "ratePerDay",
-            label: "อัตราต่อวัน",
-            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
-        },
+        // { name: "days", label: "จำนวนวัน", options: { ...cellAlignOptions({ align: "center" }) } },
+        // {
+        //     name: "ratePerDay",
+        //     label: "อัตราต่อวัน",
+        //     options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
+        // },
         {
             name: "amount",
-            label: "จำนวนเงิน",
+            label: "สิทธิ์เบิก",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
         },
     ];
 
     const tableSx = {
-        "& td, & th": { fontSize: "14px !important", py: "5px !important", px: "9px !important" },
+        "& td, & th": {
+            fontSize: "15px !important",
+            py: "5px !important",
+            px: "9px !important",
+        },
+
         "& td": {
             borderRight: "1px solid #e0e0e0",
             borderBottom: "1px solid #e0e0e0",
-            "&:last-child": { borderRight: "none" },
+            "&:last-child": {
+                borderRight: "none",
+            },
         },
-        "& th": { borderRight: "1px solid #ffffff44" },
-        "& tbody tr:last-child td": {
+
+        "& th": {
+            borderRight: "1px solid #ffffff44",
+        },
+
+        "& .MuiTableBody-root .MuiTableRow-root:only-child td": {
+            bgcolor: "#fff !important",
+            color: "text.secondary",
+            fontWeight: 400,
+            textAlign: "center",
+            borderRight: "none",
+        },
+
+        "& tbody tr:last-child:not(:only-child) td": {
             bgcolor: "#3d3d3d !important",
             color: "#fff !important",
             fontWeight: "700 !important",
             borderRight: "1px solid #555 !important",
             borderBottom: "none !important",
-            "&:last-child": { borderRight: "none !important" },
+
+            "&:last-child": {
+                borderRight: "none !important",
+            },
         },
-        "& table": { borderCollapse: "collapse" },
+
+        "& table": {
+            borderCollapse: "collapse",
+        },
     };
 
     const tableOptions = {
@@ -199,7 +320,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                 สรุปรายการค่าใช้จ่าย
                             </Typography>
                             <Typography variant="caption" color="text.secondary">
-                                {selectedInsured?.customerName ?? "-"} · {selectedInsured?.appId ?? "-"}
+                                {selectedInsured?.customerName ?? "-"} · {selectedInsured?.policyCode ?? "-"}
                             </Typography>
                         </Box>
                     </Box>
@@ -218,38 +339,115 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                         <CloseIcon sx={{ fontSize: 18 }} />
                     </IconButton>
                 </Box>
-
-                <Stack direction="row" spacing={1.5} mt={1.5} mb={0.5} flexWrap="wrap">
-                    {[
-                        { label: "วัน IPD", value: daysCalculate.ipdDays, color: "#1a5da8", bg: "#e8f0fb" },
-                        { label: "วัน ICU", value: daysCalculate.icuDays, color: "#FF6467", bg: "#FEF2F2" },
-                        { label: "วันที่นอน", value: daysCalculate.bedDays, color: "#5EA529", bg: "#F7FEE7" },
-                    ].map((chip) => (
-                        <Box
-                            key={chip.label}
-                            sx={{
-                                px: 1.5,
-                                py: 0.4,
-                                borderRadius: 2,
-                                bgcolor: chip.bg,
-                                display: "flex",
-                                alignItems: "center",
-                                gap: 0.75,
-                            }}
-                        >
-                            <Typography sx={{ fontSize: 14 }} color={chip.color} fontWeight="bold">
-                                {chip.label}
-                            </Typography>
-                            <Typography sx={{ fontSize: 14 }} color={chip.color} fontWeight="bold">
-                                {chip.value} วัน
-                            </Typography>
-                        </Box>
-                    ))}
-                </Stack>
-                <Divider sx={{ mt: 1 }} />
             </DialogTitle>
 
             <DialogContent sx={{ pt: 2, px: 3 }}>
+                <Grid container spacing={1.5} mt={1.5} mb={1}>
+                    <Grid item xs={12} md={5}>
+                        <Paper
+                            variant="outlined"
+                            sx={{
+                                p: 2,
+                                borderRadius: 2,
+                                height: "100%",
+                                borderColor: "#d7e5f7",
+                                bgcolor: "#f8fbff",
+                            }}
+                        >
+                            <Stack direction="row" spacing={1.5} alignItems="center">
+                                <Avatar
+                                    sx={{
+                                        bgcolor: "#e8f0fb",
+                                        color: "#1976d2",
+                                        width: 42,
+                                        height: 42,
+                                    }}
+                                >
+                                    <PersonOutlineOutlinedIcon />
+                                </Avatar>
+
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary">
+                                        ผู้เอาประกัน :
+                                    </Typography>
+
+                                    <Typography fontWeight={700} color="primary.main" sx={{ lineHeight: 1.3 }}>
+                                        {selectedInsured?.customerName ?? "-"}
+                                    </Typography>
+
+                                    <Typography variant="body2" color="text.secondary" mt={0.3}>
+                                        ApplicationID :
+                                        <Typography component="span" fontWeight={700} color="primary.main">
+                                            {" "}
+                                            {selectedInsured?.policyCode ?? "-"}
+                                        </Typography>
+                                    </Typography>
+                                </Box>
+                            </Stack>
+                        </Paper>
+                    </Grid>
+
+                    {[
+                        {
+                            label: "IPD",
+                            value: daysCalculate.ipdDays,
+                            color: "#1A5DA8",
+                            bg: "#E8F0FB",
+                            icon: <HotelOutlinedIcon />,
+                        },
+                        {
+                            label: "ICU",
+                            value: daysCalculate.icuDays,
+                            color: "#FF6467",
+                            bg: "#FEF2F2",
+                            icon: <LocalHospitalOutlinedIcon />,
+                        },
+                        {
+                            label: "วันที่นอน",
+                            value: daysCalculate.bedDays,
+                            color: "#5EA529",
+                            bg: "#F7FEE7",
+                            icon: <KingBedOutlinedIcon />,
+                        },
+                    ].map((item) => (
+                        <Grid item xs={12} sm={4} md={2.33} key={item.label}>
+                            <Paper
+                                variant="outlined"
+                                sx={{
+                                    p: 2,
+                                    borderRadius: 2,
+                                    height: "100%",
+                                    borderColor: item.bg,
+                                    bgcolor: item.bg,
+                                    display: "flex",
+                                    alignItems: "center",
+                                }}
+                            >
+                                <Avatar
+                                    sx={{
+                                        width: 40,
+                                        height: 40,
+                                        bgcolor: item.bg,
+                                        color: item.color,
+                                        mr: 1.5,
+                                    }}
+                                >
+                                    {item.icon}
+                                </Avatar>
+
+                                <Box>
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                        {item.label}
+                                    </Typography>
+
+                                    <Typography fontWeight={700} fontSize={22} color={item.color} lineHeight={1.1}>
+                                        {item.value} วัน
+                                    </Typography>
+                                </Box>
+                            </Paper>
+                        </Grid>
+                    ))}
+                </Grid>
                 <Grid container spacing={2.5}>
                     <Grid item xs={12}>
                         <HeadingWithColor
@@ -333,7 +531,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                         <Checkbox
                                             size="small"
                                             checked={mergeOption === "single"}
-                                            onChange={() => setMergeOption(mergeOption === "single" ? null : "single")}
+                                            onChange={() => setMergeOption("single")}
                                             color="primary"
                                         />
                                     }
@@ -346,7 +544,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                         <Checkbox
                                             size="small"
                                             checked={mergeOption === "all"}
-                                            onChange={() => setMergeOption(mergeOption === "all" ? null : "all")}
+                                            onChange={() => setMergeOption("all")}
                                             color="primary"
                                         />
                                     }
@@ -355,10 +553,10 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                 />
                             </Box>
                             <Divider />
-                            <SummaryLine label="ค่าชดเชยรวม" value={fmt(compensationTotal)} />
+                            <SummaryLine label="ค่าชดเชยรวม" value={fmt(summary.compensateNet)} />
                             <SummaryLine
                                 label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
-                                value={fmt(compensationInCoverage)}
+                                value={fmt(summary.compensateInclude)}
                             />
                             <Box
                                 display="flex"
@@ -378,7 +576,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                     textAlign="right"
                                     sx={{ color: "#15803d" }}
                                 >
-                                    {fmt(compensationRemaining)}
+                                    {fmt(summary.compensateRemain)}
                                 </Typography>
                             </Box>
                         </Paper>
@@ -392,9 +590,12 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                             sx={{ mb: 1 }}
                         />
                         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                            <SummaryLine label="ยอดเบิกรวม" value={fmt(medicalNet)} />
-                            <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(medicalPay)} />
-                            <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(compensation)} />
+                            <SummaryLine label="ยอดเบิกรวม" value={fmt(summary.medicalNet)} />
+                            <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
+                            <SummaryLine
+                                label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
+                                value={fmt(summary.compensateInclude)}
+                            />
                             <Box
                                 display="flex"
                                 justifyContent="space-between"
@@ -404,17 +605,35 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                 sx={{ bgcolor: "#e8f0fb" }}
                             >
                                 <Typography variant="body2" fontWeight={700} color="#1a5da8">
-                                    สิทธิ์โรงพยาบาล
+                                    สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท
                                 </Typography>
-                                <Typography
-                                    variant="body2"
-                                    fontWeight={700}
-                                    color="#1a5da8"
-                                    minWidth={110}
-                                    textAlign="right"
-                                >
-                                    {fmt(totalExpense)}
-                                </Typography>
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    <Typography
+                                        variant="body2"
+                                        fontWeight={700}
+                                        color="#1a5da8"
+                                        minWidth={110}
+                                        textAlign="right"
+                                    >
+                                        {fmt(summary.medicalPay)}
+                                    </Typography>
+                                    <Tooltip
+                                        title="คัดลอกยอดเงิน"
+                                        arrow
+                                        placement="top"
+                                        TransitionComponent={Zoom}
+                                        enterDelay={100}
+                                        leaveDelay={50}
+                                    >
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleCopyMedicalPay(summary.medicalPay)}
+                                            sx={{ color: "#1a5da8" }}
+                                        >
+                                            <ContentCopyIcon sx={{ fontSize: 17 }} />
+                                        </IconButton>
+                                    </Tooltip>
+                                </Box>
                             </Box>
                             <Divider />
                             <Box
@@ -435,7 +654,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                     minWidth={110}
                                     textAlign="right"
                                 >
-                                    {fmt(totalNotCovered)}
+                                    {fmt(summary.medicalUnpay)}
                                 </Typography>
                             </Box>
                         </Paper>
@@ -473,6 +692,13 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                     </Grid>
                 </Grid>
             </DialogContent>
+            <Snackbar
+                open={copied}
+                autoHideDuration={2000}
+                onClose={() => setCopied(false)}
+                message="คัดลอกยอดเงินแล้ว"
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            />
         </Dialog>
     );
 };

@@ -1,29 +1,41 @@
 import { useClaimLineHeader } from "./useClaimLineHeader";
 import { useDaysCalculate } from "./useDaysCalculate";
 import { useClaimLineCalculate } from "./useClaimLineCalculate";
+import { swalError } from "../../_common";
 
 /**
- * รวม logic ของ 3 ส่วนเข้าด้วยกันสำหรับหน้าเดียว (ตาม reference HTML):
- * 1) ข้อมูลผู้เอาประกัน + เหตุของการเคลม/ประเภทความคุ้มครอง/ประเภทการรักษา (useClaimLineHeader)
- * 2) วันที่รักษา/จำนวนวัน/เคลมต่อเนื่อง (useDaysCalculate)
- * 3) รายการค่าใช้จ่าย (useClaimLineCalculate)
- *
- * ทั้ง 3 hook อ่าน/เขียน redux slice เดียวกัน (claimsimulate) อยู่แล้ว จึงรวมกันได้โดยไม่ชนกัน
+ * @param onNavigateToSummary  เรียกตอนกด "ถัดไป" ในหน้า ClaimSimulate เพื่อไปหน้าสรุป
+ *                             (validate ทั้งข้อมูลเหตุ/ประเภท/สาเหตุ, ฟอร์มวันนอน และรายการค่ารักษาแล้ว แต่ยังไม่เรียก API คำนวณ)
  */
-export const useClaimSimulatePage = () => {
+
+export const useClaimSimulatePage = (onNavigateToSummary?: () => void) => {
     const header = useClaimLineHeader();
     const days = useDaysCalculate();
     const calculate = useClaimLineCalculate();
 
-    // ── "ถัดไป" ของรายการค่าใช้จ่าย = กดคำนวณ แล้วเปิด modal สรุปผล ──────────
-    const handleNext = async () => {
-        await days.handleCalculate();
+    const handleGoToSummary = async () => {
+        const headerError = header.validateHeader();
+        if (headerError) {
+            swalError("ไม่สามารถดำเนินการต่อได้", headerError);
+            return;
+        }
+
+        const isItemsValid = calculate.handleNext();
+        if (!isItemsValid) return;
+
+        const isDaysValid = await days.validateDaysCalculate();
+        if (!isDaysValid) return;
+
+        onNavigateToSummary?.();
     };
+
+    const handleConfirmCalculate = () => days.handleCalculate();
 
     return {
         ...header,
         ...days,
         ...calculate,
-        handleNext,
+        handleNext: handleGoToSummary,
+        handleConfirmCalculate,
     };
 };

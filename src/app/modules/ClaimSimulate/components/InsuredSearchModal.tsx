@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 
 import {
     Avatar,
@@ -40,6 +40,13 @@ const InsuredSearchModal: React.FC = () => {
         handleConfirmSelection,
         setPaginated,
     } = useInsuredSearchModal();
+
+    useEffect(() => {
+        return () => {
+            handleClear();
+        };
+    }, []);
+
     const columns: MUIDataTableColumn[] = [
         {
             name: "",
@@ -112,7 +119,7 @@ const InsuredSearchModal: React.FC = () => {
     const tableOptions = {
         ...defaultOptionStandardDataTable,
         setRowProps: (_row: any, dataIndex: number) => ({
-            style: { backgroundColor: dataIndex === selectedRowIndex ? "#EEF9FF" : undefined },
+            style: { backgroundColor: dataIndex === selectedRowIndex ? "#d7f1ff" : undefined },
         }),
     };
 
@@ -149,8 +156,6 @@ const InsuredSearchModal: React.FC = () => {
             <DialogContent>
                 {/* ── ฟอร์มค้นหา (formik) ── */}
                 <Box
-                    component="form"
-                    onSubmit={formik.handleSubmit}
                     mb={2}
                     sx={{
                         borderRadius: 2,
@@ -169,10 +174,11 @@ const InsuredSearchModal: React.FC = () => {
                         </Grid>
                         <Grid item xs={6} sm={1.5} md={2} mt={{ lg: 0.6 }}>
                             <Button
-                                type="submit"
+                                // type="submit"
                                 variant="contained"
                                 color="primary"
                                 startIcon={<SearchIcon />}
+                                onClick={() => formik.submitForm()}
                                 fullWidth
                                 sx={{ height: 39, fontWeight: 700 }}
                             >
@@ -245,4 +251,3 @@ const InsuredSearchModal: React.FC = () => {
 };
 
 export default InsuredSearchModal;
-
