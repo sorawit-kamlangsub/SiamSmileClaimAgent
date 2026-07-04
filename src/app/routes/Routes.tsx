@@ -1,5 +1,6 @@
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
 import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
+import SurveyPage from "../modules/Survey/pages/SurveyPage";
 import TransferSlipPage from "../modules/TransferSlips/pages/TransferSlipPage";
 import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
@@ -60,6 +61,16 @@ const Routes: RouteMapType[] = [
         element: <BlankPage body="พิจารณาเคลม" />,
         permissions: [],
         condition: "AND",
+    },
+
+    // Survey
+
+    {
+        path: "/survey/:id",
+        title: "Survey",
+        element: <SurveyPage />,
+        hideAppBar: true,
+        hideAsideMenu: true,
     },
 
     // Slip โอนเงิน

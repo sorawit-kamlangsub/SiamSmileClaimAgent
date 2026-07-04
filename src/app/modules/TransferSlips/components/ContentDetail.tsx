@@ -39,8 +39,7 @@ const ContentDetail = () => {
                                         mb: breakpoint ? 2 : 0,
                                     }}
                                 >
-                                    <Avatar sx={{ background: "#0458AD",
-                                        boxShadow: 5, color: "#FFFFFF" }}>
+                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
                                         <AccountBalanceWalletIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>Account No :</Typography>
@@ -59,8 +58,7 @@ const ContentDetail = () => {
                                         mb: breakpoint ? 2 : 0,
                                     }}
                                 >
-                                    <Avatar sx={{ background: "#0458AD",
-                                        boxShadow: 5, color: "#FFFFFF" }}>
+                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
                                         <PortraitIcon sx={{ fontSize: "32px" }} />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
@@ -81,8 +79,7 @@ const ContentDetail = () => {
                                         mb: breakpoint ? 2 : 0,
                                     }}
                                 >
-                                    <Avatar sx={{ background: "#0458AD",
-                                        boxShadow: 5, color: "#FFFFFF" }}>
+                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
                                         <AccountBalanceIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>Bank :</Typography>
@@ -101,8 +98,7 @@ const ContentDetail = () => {
                                         mb: breakpoint ? 2 : 0,
                                     }}
                                 >
-                                    <Avatar sx={{ background: "#0458AD",
-                                        boxShadow: 5, color: "#FFFFFF" }}>
+                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
                                         <PaymentsIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
@@ -123,8 +119,7 @@ const ContentDetail = () => {
                                         mb: breakpoint ? 2 : 0,
                                     }}
                                 >
-                                    <Avatar sx={{ background: "#0458AD",
-                                        boxShadow: 5, color: "#FFFFFF" }}>
+                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
                                         <FindInPageIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
@@ -145,8 +140,7 @@ const ContentDetail = () => {
                                         mb: breakpoint ? 2 : 0,
                                     }}
                                 >
-                                    <Avatar sx={{ background: "#0458AD",
-                                        boxShadow: 5, color: "#FFFFFF" }}>
+                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
                                         <NumbersIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
