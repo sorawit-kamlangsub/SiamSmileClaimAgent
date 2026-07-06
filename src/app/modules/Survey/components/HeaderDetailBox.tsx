@@ -3,8 +3,23 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ListIcon from "@mui/icons-material/List";
 import dayjs from "dayjs";
+import { useGetSurvey } from "../surveyAPI";
+import { swalError } from "../../_common";
+import { useEffect } from "react";
 
 const HeaderDetailBox = () => {
+    const handleSuccess = () => {};
+
+    const handleError = (err: string) => {
+        swalError("เกิดข้อผิดพลาด", err);
+    };
+
+    const { mutate } = useGetSurvey(handleSuccess, handleError);
+
+    useEffect(() => {
+        mutate(14);
+    }, []);
+
     return (
         <Box>
             <Grid container spacing={2}>
@@ -14,7 +29,10 @@ const HeaderDetailBox = () => {
                     </Typography>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <Paper elevation={2} sx={{ background: "#F5F9FF", display: "flex", p: 2 }}>
+                    <Paper
+                        elevation={2}
+                        sx={{ background: "#F5F9FF", display: "flex", p: 2, borderRadius: 3, boxShadow: 7 }}
+                    >
                         <Grid item xs={12} sm={12} md={12} lg={12}>
                             <Box>
                                 <Grid container spacing={1}>

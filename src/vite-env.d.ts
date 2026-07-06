@@ -141,4 +141,10 @@ export interface ImportMetaEnv {
      * เวลาในการ Refetch ข้อมูลจาก Queue (วินาที)
      */
     readonly VITE_QUEUE_REFETCH_INTERVAL: number;
+
+    /**
+     * URL ของ Survey API
+     */
+
+    readonly VITE_SURVEY_API_URL: string;
 }
