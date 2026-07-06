@@ -6,7 +6,7 @@ import { API_SURVEY_URL } from "../../../Const";
 const API_URL = API_SURVEY_URL;
 const PATH = "/api/external/surveys";
 const CLIENT_ID = "core-claim";
-const HMAC_SECRET = "1GM2fD61/ZpEA44VSMoMZ3oKbWBGfSSqesBm8MkMOPk="; // ⚠️ see note below
+const HMAC_SECRET = "1GM2fD61/ZpEA44VSMoMZ3oKbWBGfSSqesBm8MkMOPk="; // keep to env
 
 const getSurveyKey = "getSurvey";
 
@@ -27,8 +27,7 @@ export const useGetSurvey = (onSuccessCallback: (response: any) => void, onError
 };
 
 const generateNonce = (): string => {
-    // C# uses Guid.ToString("N") -> 32 hex chars, no dashes
-    return CryptoJS.lib.WordArray.random(16).toString(CryptoJS.enc.Hex);
+    return crypto.randomUUID();
 };
 
 const generateHmacSignature = (nonce: string, body: string): string => {
@@ -39,19 +38,24 @@ const generateHmacSignature = (nonce: string, body: string): string => {
 
 const getSurveyData = (formId: number) => {
     const url = `${API_URL}`;
-    const payload: string = JSON.stringify(formId);
+    const payload: string = JSON.stringify({ FormId: formId });
     const nonce: string = generateNonce();
     const signature: string = generateHmacSignature(nonce, payload);
+    console.log("🚀 ~ getSurveyData ~ signature:", signature);
 
     return axios
-        .post(url, formId, {
-            headers: {
-                "Content-Type": "application/json",
-                "X-Client-Id": CLIENT_ID,
-                "X-Nonce": nonce,
-                "X-Signature": signature,
-            },
-        })
+        .post(
+            url,
+            { FormId: formId },
+            {
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Client-Id": CLIENT_ID,
+                    "X-Nonce": nonce,
+                    "X-Signature": signature,
+                },
+            }
+        )
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;
