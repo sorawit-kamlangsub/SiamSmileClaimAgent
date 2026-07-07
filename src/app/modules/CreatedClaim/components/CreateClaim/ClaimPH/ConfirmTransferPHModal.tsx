@@ -22,9 +22,10 @@ interface Props {
     open: boolean;
     onClose: () => void;
     onConfirm: () => void;
+    isLoading?: boolean | undefined;
 }
 
-const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
+const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm, isLoading }) => {
     const { form, bankAccounts, contacts, insured } = useAppSelector((state) => state.claimph);
     const defaultBank = bankAccounts.find((b) => b.isDefault);
     const defaultContact = contacts.find((c) => c.isDefault);
@@ -155,7 +156,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             </Typography>
                             <Typography variant="h5" fontWeight="bold" color="primary">
                                 THB{" "}
-                                {Number(form.claimAmount).toLocaleString("th-TH", {
+                                {Number(form.transferAmount).toLocaleString("th-TH", {
                                     minimumFractionDigits: 2,
                                 })}
                             </Typography>
@@ -191,6 +192,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             fullWidth
                             size="medium"
                             onClick={onConfirm}
+                            disabled={isLoading}
                             sx={{ mt: 1 }}
                         >
                             ยืนยันแจ้งโอนเงิน

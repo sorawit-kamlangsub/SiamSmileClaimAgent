@@ -4,8 +4,10 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
+    CreateCoreClaimDtoRequest,
+    CreateCoreClaimDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
 
 const coreClaimClient = new CoreClaimClient(CORECLAIM_API_URL, axios);
@@ -87,4 +89,21 @@ export const useGetCustomerBenefitDetailSearch = (
             refetchOnWindowFocus: false,
         }
     );
+};
+
+//type = 1 => Error from api, type = 2 => Error from network(no response)
+export const useCreateCoreClaim = (
+    onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string, type: number) => void
+) => {
+    return useMutation((body: CreateCoreClaimDtoRequest) => coreClaimClient.createCoreClaim(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess)
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error", 1);
+            else onSuccessCallback?.(response);
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message, 2);
+        },
+    });
 };

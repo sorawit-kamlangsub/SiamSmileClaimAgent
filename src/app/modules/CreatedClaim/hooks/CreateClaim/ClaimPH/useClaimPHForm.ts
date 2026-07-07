@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import dayjs from "dayjs";
 import { useFormik, FormikErrors } from "formik";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { ClaimFormValues, claimPHSelector, setClaimForm } from "../../../store/claimPHSlice";
+import { ClaimFormValues, claimPHSelector, setClaimForm, SymptomType } from "../../../store/claimPHSlice";
 import { useAuth } from "../../../../_auth";
 import { ChipOption } from "../../../components/CreateClaim/ChipSelector";
 import {
@@ -10,10 +10,10 @@ import {
     useGetCoverageType,
     useGetIncidentType,
     useGetMedicaltype,
-    useGetZebraCarOwner,
 } from "../../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
+import { useOcrDocumentScan } from "../useOcrDocumentScan";
 
 interface Options {
     onNext: () => void;
@@ -22,13 +22,12 @@ interface Options {
 export const useClaimPHForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
-    const { form, isContinuous, oldClaim } = useAppSelector(claimPHSelector);
+    const { form, isContinuous, oldClaim, insured } = useAppSelector(claimPHSelector);
+    const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const { data: coverageTypeRaw, isLoading: coverageTypeLoading } = useGetCoverageType();
     const { data: medicalTypeRaw, isLoading: medicalTypeLoading } = useGetMedicaltype(2);
     const { data: causeOfAccidentRaw, isLoading: causeOfAccidentLoading } = useGetCauseOfAccident();
-    const { data: zebraCarOwner, isLoading: zebraCarOwnerLoading } = useGetZebraCarOwner();
-
     const ALLOWED_INCIDENT_IDS = [2, 3];
     const ALLOWED_COVERAGE_BY_INCIDENT: Record<number, number[]> = {
         2: [2, 3, 5], // เจ็บป่วย → ค่ารักษา, ค่าชดเชย, เสียชีวิต
@@ -54,78 +53,22 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         },
         3: {
             // อุบัติเหตุ > เสียชีวิต/ทุพพลภาพ > อุบัติเหตุ/ขับขี่รถ/ฆาตกรรม
-            4: [3, 4],
+            4: [3, 4, 5],
             5: [3, 4, 5],
         },
     };
 
-    //     incidentTypeId: number | undefined,
-    //     coverageTypeId: number | undefined
-    // ): MedicalOption[] => {
-    //     if (!incidentTypeId || !coverageTypeId) return [];
-
-    //     // ค่ารักษา (2) หรือ ค่าชดเชย (3) → ใช้ medicalType
-    //     if (coverageTypeId === 2 || coverageTypeId === 3) {
-    //         return (
-    //             medicalType?.data?.map((item) => ({
-    //                 medicalTypeId: item.medicalTypeId ?? 0,
-    //                 medicalTypeName: item.medicalTypeCode ?? "",
-    //             })) ?? []
-    //         );
-    //     }
-
-    //     // ทุพพลภาพ (4) หรือ เสียชีวิต (5) → ใช้ causeOfAccident
-    //     if (coverageTypeId === 4 || coverageTypeId === 5) {
-    //         // เจ็บป่วย + เสียชีวิต → disabled
-    //         if (incidentTypeId === 2 && coverageTypeId === 5) {
-    //             return (
-    //                 causeOfAccidentRaw?.data
-    //                     ?.filter((item) => item.causeOfIncidentId === 2) //โรคทั่วไป
-    //                     .map((item) => ({
-    //                         medicalTypeId: item.causeOfIncidentId ?? 0,
-    //                         medicalTypeName: item.causeOfIncidentName ?? "",
-    //                         disabled: true,
-    //                     })) ?? []
-    //             );
-    //         }
-    //         if (incidentTypeId === 3 && coverageTypeId === 4) {
-    //             return (
-    //                 causeOfAccident?.data
-    //                     ?.filter(
-    //                         (item) =>
-    //                             ALLOWED_CAUSEOFACCIDENT_IDS.includes(item.causeOfIncidentId ?? 0) &&
-    //                             item.causeOfIncidentId !== 5
-    //                     )
-    //                     .map((item) => ({
-    //                         medicalTypeId: item.causeOfIncidentId ?? 0,
-    //                         medicalTypeName: item.causeOfIncidentName ?? "",
-    //                         disabled: true,
-    //                     })) ?? []
-    //             );
-    //         }
-    //         return (
-    //             causeOfAccident?.data
-    //                 ?.filter((item) => ALLOWED_CAUSEOFACCIDENT_IDS.includes(item.causeOfIncidentId ?? 0))
-    //                 .map((item) => ({
-    //                     medicalTypeId: item.causeOfIncidentId ?? 0,
-    //                     medicalTypeName: item.causeOfIncidentName ?? "",
-    //                 })) ?? []
-    //         );
-    //     }
-
-    //     return [];
-    // };
     const formik = useFormik<ClaimFormValues>({
-        initialValues: { ...form, serviceProvider: userProfile?.userId },
+        initialValues: { ...form, serviceProviderId: userProfile?.userId },
         enableReinitialize: true,
         validate: (values) => {
             const errors: FormikErrors<ClaimFormValues> = {};
             const req = "โปรดระบุ";
 
             // ── ข้อมูลผู้ให้บริการ ──
-            if (!values.documentReceiver) errors.documentReceiver = req;
-            if (!values.serviceProvider) errors.serviceProvider = req;
-            if (!values.carOwner) errors.carOwner = req;
+            if (!values.documentRecipientTypeId) errors.documentRecipientTypeId = req;
+            if (!values.serviceProviderId) errors.serviceProviderId = req;
+            if (!values.zebraId) errors.zebraId = req;
 
             // ── ประเภทการเคลม ──
             if (!values.incidentTypeId) errors.incidentTypeId = req;
@@ -162,11 +105,13 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── อาการ ──
             if (!values.symptomType) errors.symptomType = req;
-            if (values.symptomType === "ระบุอาการ" && !values.chiefComplain) errors.chiefComplain = req;
-            if (values.symptomType === "อื่นๆ" && !values.remark) errors.remark = req;
+            if (values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
+                errors.chiefComplaintId = req;
+            if (values.symptomType === SymptomType.Other && !values.chiefComplaintOther)
+                errors.chiefComplaintOther = req;
 
             // ── จำนวนเงิน ──
-            if (!values.claimAmount || values.claimAmount <= 0) errors.claimAmount = req;
+            if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
 
             return errors;
         },
@@ -220,7 +165,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             .map((item) => ({
                 id: item.causeOfIncidentId ?? 0,
                 name: item.causeOfIncidentName ?? "",
-                disabled: item.causeOfIncidentId === 2,
             })) ?? [];
     const isFirstRenderIncident = useRef(true);
     const isFirstRenderCoverage = useRef(true);
@@ -238,7 +182,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         formik.setFieldValue("causeOfIncidentId", undefined, false);
         formik.setFieldValue("causeOfIncidentName", undefined, false);
         formik.setFieldValue("admissionDate", dayjs(), false);
-        formik.setFieldValue("receiveDocDate", dayjs(), false);
+        formik.setFieldValue("notificationDate", dayjs(), false);
         formik.setFieldValue("deathDate", dayjs(), false);
     }, [formik.values.incidentTypeId]);
 
@@ -253,8 +197,13 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         formik.setFieldValue("causeOfIncidentId", undefined, false);
         formik.setFieldValue("causeOfIncidentName", undefined, false);
         formik.setFieldValue("admissionDate", dayjs(), false);
-        formik.setFieldValue("receiveDocDate", dayjs(), false);
+        formik.setFieldValue("notificationDate", dayjs(), false);
         formik.setFieldValue("deathDate", dayjs(), false);
+
+        // ถ้า coverageType นี้ไม่ต้องบังคับเอกสารเลย ให้ valid ทันที
+        if (!ocr.shouldShowOcrDocumentScan(formik.values.coverageTypeId)) {
+            ocr.setIsOcrDocsValid(true);
+        }
     }, [formik.values.coverageTypeId]);
 
     useEffect(() => {
@@ -262,14 +211,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));
         }
     }, [isContinuous, oldClaim?.incidentDate]);
-    useEffect(() => {
-        if (causeOfAccident.length === 1) {
-            formik.setFieldValue("causeOfIncidentId", causeOfAccident[0].id, false);
-            formik.setFieldValue("causeOfIncidentName", causeOfAccident[0].name, false);
-        }
-    }, [formik.values.incidentTypeId, formik.values.coverageTypeId]);
     const isIncidentDateDisabled = isContinuous;
-
     return {
         formik,
         isContinuous,
@@ -278,11 +220,11 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         coverageType,
         medicalType,
         causeOfAccident,
-        zebraCarOwner,
+        insured,
         incidentTypeLoading,
         coverageTypeLoading,
         medicalTypeLoading,
         causeOfAccidentLoading,
-        zebraCarOwnerLoading,
+        ...ocr,
     };
 };

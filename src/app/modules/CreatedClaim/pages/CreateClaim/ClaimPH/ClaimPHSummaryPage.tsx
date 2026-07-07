@@ -8,6 +8,7 @@ import {
     ContactInfo,
     removeBankAccount,
     removeContact,
+    resetState,
     setBankAccounts,
     setContacts,
 } from "../../../store/claimPHSlice";
@@ -23,6 +24,9 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import PermPhoneMsgIcon from "@mui/icons-material/PermPhoneMsg";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
+import { useCreateClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateClaimPH";
+import Swal from "sweetalert2";
+import { swalError } from "../../../../_common";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
@@ -32,7 +36,7 @@ interface BankCardProps {
     onDelete?: () => void;
 }
 
-const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, onDelete }) => {
+export const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, onDelete }) => {
     const logoSrc = setBankLogo(bank.bankId);
     return (
         <Card
@@ -121,7 +125,7 @@ interface ContactCardProps {
     onDelete?: () => void;
 }
 
-const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, onDelete }) => (
+export const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, onDelete }) => (
     <Card
         variant="outlined"
         onClick={onSelect}
@@ -187,7 +191,7 @@ const ClaimPHSummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { form, bankAccounts, contacts, insured } = useAppSelector((state) => state.claimph);
-
+    const { createClaimPH, isLoading } = useCreateClaimPH();
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
@@ -200,11 +204,170 @@ const ClaimPHSummaryPage: React.FC = () => {
         dispatch(setContacts(contacts.map((c, i) => ({ ...c, isDefault: i === index }))));
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
+        if (isLoading) return;
         setOpenConfirm(false);
-        // TODO: Create ClaimNo → ClaimCase → ClaimPayGroup → SendSMS → UpdateStatus
-        alert("บันทึกเคลมสำเร็จ");
-        navigate("/monitor");
+        Swal.fire({
+            icon: "question",
+            iconHtml: "?",
+            showCancelButton: true,
+            confirmButtonText: "ตกลง",
+            cancelButtonText: "ยกเลิก",
+            reverseButtons: true,
+            allowOutsideClick: false,
+            backdrop: "rgba(0,0,0,0.4)",
+            title: "ยืนยันการทำรายการ",
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const res = await createClaimPH();
+                    return res.data;
+                } catch (error) {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                }
+            },
+        }).then((result: any) => {
+            if (result.isConfirmed && result.value.isResult) {
+                Swal.fire({
+                    icon: "success",
+                    title: "ทำรายการสำเร็จ",
+                    html: `
+                        <div
+                            style="
+                                color:#666;
+                                font-size:14px;
+                                margin-top:-8px;
+                                margin-bottom:24px;
+                                text-align:center;
+                                letter-spacing:normal;
+                                word-spacing:normal;
+                                font-family:inherit;
+                                line-height:3;
+                            "
+                        >
+                            ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
+                        </div>
+
+                        <div
+                            style="
+                                background:#fff;
+                                border:1px solid #E5E5E5;
+                                border-radius:12px;
+                                padding:16px;
+                                width:300px;
+                                margin:0 auto;
+                                box-shadow:0 2px 8px rgba(0,0,0,.12);
+                                text-align:left;
+                            "
+                        >
+                            <div style="display:flex;align-items:center;margin-bottom:12px;">
+                                <div
+                                    style="
+                                        width:24px;
+                                        height:24px;
+                                        border-radius:50%;
+                                        background:#27AE60;
+                                        color:#fff;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        font-size:12px;
+                                        font-weight:bold;
+                                        margin-right:10px;
+                                    "
+                                >
+                                    ✓
+                                </div>
+
+                                <div>
+                                    <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
+                                    <div
+                                        style="
+                                            display:flex;
+                                            align-items:center;
+                                            gap:6px;
+                                        "
+                                    >
+                                        <span style="font-size:18px;font-weight:700;color:#27AE60;">
+                                            ${result.value.claimNo}
+                                        </span>
+
+                                        <span
+                                            class="material-icons copy-btn"
+                                            data-copy="${result.value.claimNo}"
+                                            style="
+                                                cursor:pointer;
+                                                color:#2196F3;
+                                                font-size:18px;
+                                                margin-left:6px;
+                                                user-select:none;
+                                            "
+                                        >
+                                            content_copy
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;align-items:center;">
+                                <div
+                                    style="
+                                        width:24px;
+                                        height:24px;
+                                        border-radius:50%;
+                                        background:#2F80ED;
+                                        color:#fff;
+                                        display:flex;
+                                        align-items:center;
+                                        justify-content:center;
+                                        font-size:12px;
+                                        font-weight:bold;
+                                        margin-right:10px;
+                                    "
+                                >
+                                    $
+                                </div>
+
+                                <div>
+                                    <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
+                                    <div style="font-size:18px;font-weight:700;color:#2F80ED;">
+                                        ${result.value.caseNo}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `,
+                    confirmButtonText: "ตกลง",
+                    allowOutsideClick: false,
+                    backdrop: "rgba(0,0,0,0.4)",
+                    customClass: {
+                        confirmButton: "swal2-styled swal2-ok",
+                    },
+                    didOpen: () => {
+                        document.querySelectorAll(".copy-btn").forEach((btn) => {
+                            btn.addEventListener("click", async () => {
+                                const el = btn as HTMLElement;
+                                const text = el.dataset.copy ?? "";
+
+                                await navigator.clipboard.writeText(text);
+
+                                el.textContent = "check";
+                                el.style.color = "#4CAF50";
+                                el.style.cursor = "default";
+
+                                // กันการกดซ้ำ
+                                el.classList.remove("copy-btn");
+                            });
+                        });
+                    },
+                });
+                dispatch(resetState());
+
+                navigate(`/monitor-claim`);
+            } else {
+                swalError("บันทึกไม่สำเร็จ !", "กรุณาลองใหม่อีกครั้ง");
+            }
+        });
     };
 
     return (
@@ -227,7 +390,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                                         claimType: `${form.incidentTypeName ?? ""} / ${form.coverageTypeName ?? ""} / ${
                                             !form.medicalTypeId ? form.causeOfIncidentName : form.medicalTypeName
                                         }`,
-                                        claimAmount: Number(form.claimAmount),
+                                        claimAmount: Number(form.transferAmount),
                                     },
                                 ]}
                                 onEdit={() => navigate(-1)}
@@ -333,6 +496,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                     open={openConfirm}
                     onClose={() => setOpenConfirm(false)}
                     onConfirm={handleConfirm}
+                    isLoading={isLoading}
                 />
             </Grid>
         </>

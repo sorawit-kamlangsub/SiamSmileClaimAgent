@@ -1,52 +1,52 @@
 import React, { useEffect } from "react";
-import { Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { Grid, LinearProgress } from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { setInsured, setSchool, setBankAccounts, setContacts } from "../../../store/claimPASlice";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
-import { mockBankAccountsPA, mockContactsPA, mockInsuredPA, mockSchoolPA } from "../../../store/mockClaimPH";
+import { mockBankAccountsPA, mockContactsPA, mockSchoolPA } from "../../../store/mockClaimPH";
 import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAFormSection";
-import ClaimHistoryTable from "../../../components/Monitor/ClaimHistoryTable";
-import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
+import { useGetCustomerDetailById } from "../../../../../api/coreClaimApi";
+import ClaimHistoryPASection from "../../../components/CreateClaim/ClaimPA/ClaimHistoryPASection";
 
-interface Props {
-    // onNext: () => void;
-}
-
-const ClaimPAPage: React.FC<Props> = ({}) => {
+const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { insured } = useAppSelector((s) => s.claimpa);
-    const onNext: () => void = () => {
-        navigate("/claim/pa/summary");
-    };
-
+    const { refId } = useParams();
+    const customerId = refId ? parseInt(atob(refId)) : undefined;
+    const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(customerId as number);
     // ── Load mock data ตอน mount ──────────────────────────────
     useEffect(() => {
-        dispatch(setInsured(mockInsuredPA));
+        if (!claimInfo?.data || claimInfoLoading) return;
+
+        dispatch(setInsured(claimInfo.data));
         dispatch(setSchool(mockSchoolPA));
         dispatch(setBankAccounts(mockBankAccountsPA));
         dispatch(setContacts(mockContactsPA));
-    }, [dispatch]);
+    }, [dispatch, claimInfo?.data]);
     // ─────────────────────────────────────────────────────────
 
     return (
         <Grid container spacing={1}>
             {/* ── ข้อมูลผู้เอาประกัน | ประวัติการเคลม ── */}
-            <Grid item xs={12} md={5}>
-                {insured && <InsuredInfoSection data={insured} onEdit={() => navigate("/monitor")} />}
-            </Grid>
+            {claimInfoLoading ? (
+                <LinearProgress />
+            ) : (
+                <>
+                    <Grid item xs={12} md={5}>
+                        {<InsuredInfoSection data={claimInfo?.data} onEdit={() => navigate("/monitor-claim")} />}
+                    </Grid>
 
-            <Grid item xs={12} md={7}>
-                <CustomBox sx={{ minHeight: { lg: 360 }, overflowY: "auto" }}>
-                    <ClaimHistoryTable tableId="ClaimHistoryPATable" onContinuousClaim={() => {}} />
-                </CustomBox>
-            </Grid>
+                    <Grid item xs={12} md={7}>
+                        <ClaimHistoryPASection />
+                    </Grid>
 
-            {/* ── บันทึกข้อมูลเคลม ── */}
-            <Grid item xs={12}>
-                <ClaimPAFormSection onNext={onNext} />
-            </Grid>
+                    {/* ── บันทึกข้อมูลเคลม ── */}
+                    <Grid item xs={12}>
+                        <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${refId}/summary`)} />
+                    </Grid>
+                </>
+            )}
         </Grid>
     );
 };

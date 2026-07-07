@@ -84,6 +84,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                 addContact({
                     id: Date.now().toString(),
                     // ถ้าเลือก "อื่นๆ" ใช้ข้อความที่กรอก ไม่งั้นใช้ชื่อจาก API
+                    relationshipId: values.relationship ?? 0,
                     relationship:
                         values.relationship === OTHER_CONTACT_TYPE_ID
                             ? values.otherNote

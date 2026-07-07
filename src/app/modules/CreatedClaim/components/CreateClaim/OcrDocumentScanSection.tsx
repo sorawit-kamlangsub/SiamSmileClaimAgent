@@ -19,18 +19,24 @@ import { FormikProps } from "formik";
 import Webcam from "react-webcam";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { ClaimFormValues } from "../../../store/claimPHSlice";
-import { swalError } from "../../../../_common";
+import { ClaimFormValues } from "../../store/claimPHSlice";
+import { swalError } from "../../../_common";
 import {
     compareOcrAmount,
     compareOcrDate,
     compareOcrIdCardNo,
     compareOcrName,
     focusToFirstError,
-} from "../../../../../ocrCompareHelpers";
-import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
-import { documentCreatedRequest, useCreateDocumentToDocStorage } from "../../../../../api/docstorageApi";
-import { uploadAlienCard, uploadIDCard, uploadMedicalCertificate, uploadPassport, uploadReceipt } from "../../../../../api/ocrApi";
+} from "../../../../ocrCompareHelpers";
+import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
+import { documentCreatedRequest, useCreateDocumentToDocStorage } from "../../../../api/docstorageApi";
+import {
+    uploadAlienCard,
+    uploadIDCard,
+    uploadMedicalCertificate,
+    uploadPassport,
+    uploadReceipt,
+} from "../../../../api/ocrApi";
 
 export type OcrStatus = "pending" | "matched" | "mismatched" | "amountMatched" | "amountMismatched";
 
@@ -110,8 +116,11 @@ export const OCR_DOCUMENT_TYPE_ID = {
 export type OcrDocKey = keyof typeof OCR_DOCUMENT_TYPE_ID;
 
 export type DocStorageDocumentIds = Partial<Record<number, string | undefined>>;
-
-export type OcrDocumentScanSectionProps = {
+type OcrRequiredFields = {
+    transferAmount?: number;
+    admissionDate?: Dayjs | null;
+};
+export type OcrDocumentScanSectionProps<T extends OcrRequiredFields> = {
     onOcrChange?: (result: OcrDocumentScanResult) => void;
     requiredDocs: RequiredDocsConfig;
     onFilesValidChange?: (isValid: boolean) => void;
@@ -119,7 +128,7 @@ export type OcrDocumentScanSectionProps = {
     systemIdCardNo?: string;
     systemAmount?: number;
     systemDateIn?: Dayjs | null;
-    formik: FormikProps<ClaimFormValues>;
+    formik: FormikProps<T>;
     applicationCode?: string;
     onDocumentIdsChange?: (documentIds: DocStorageDocumentIds) => void;
     onOcrLoadingChange?: (isLoading: boolean) => void;
@@ -276,7 +285,6 @@ const CheckRow: React.FC<{
 
 type DocumentBlockProps = {
     title: string;
-    icon: React.ElementType;
     dropzoneCaption: string;
     accept?: string;
     file: File | null;
@@ -291,7 +299,6 @@ type DocumentBlockProps = {
 
 const DocumentBlock: React.FC<DocumentBlockProps> = ({
     title,
-    icon: TitleIcon,
     dropzoneCaption,
     accept,
     file,
@@ -341,7 +348,6 @@ const DocumentBlock: React.FC<DocumentBlockProps> = ({
         <Box>
             {!hideTitle && (
                 <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-                    <TitleIcon sx={{ fontSize: 22, color: "#1a5da8" }} />
                     <Typography variant="subtitle1" fontWeight={700} color="#1a5da8">
                         {title}
                     </Typography>
@@ -567,7 +573,7 @@ const IDENTITY_DOC_OPTIONS: { value: IdentityDocType; label: string; icon: React
     { value: "alienCard", label: "บัตรต่างด้าว", icon: Public },
 ];
 
-const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
+const OcrDocumentScanSection = <T extends OcrRequiredFields>({
     onOcrChange,
     requiredDocs,
     onFilesValidChange,
@@ -579,7 +585,7 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
     applicationCode,
     onDocumentIdsChange,
     onOcrLoadingChange,
-}) => {
+}: OcrDocumentScanSectionProps<T>) => {
     const [identityDocType, setIdentityDocType] = useState<IdentityDocType>("idCard");
 
     // ── state ไฟล์ของแต่ละเอกสาร ──
@@ -920,8 +926,8 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
     // ─────────────────────────────────────────────────────────────────────────
     const handleReceiptFileChosen = (file: File) => {
         if (!formik.values.transferAmount) {
-            formik.setFieldTouched("claimAmount", true);
-            formik.setFieldError("claimAmount", "กรุณากรอกข้อมูลให้ครบถ้วน");
+            formik.setFieldTouched("transferAmount", true);
+            formik.setFieldError("transferAmount", "กรุณากรอกข้อมูลให้ครบถ้วน");
             swalError("ไม่สามารถอัปโหลดได้", "กรุณากรอกจำนวนเงิน");
             focusToFirstError(formik.errors);
             return;
@@ -1017,7 +1023,6 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
             {/* 1. เอกสารยืนยันตัวตน — เลือกประเภทผ่าน radio (ทำหน้าที่เหมือน tab) */}
             <CustomPaper sx={{ mb: 2 }}>
                 <Box display="flex" alignItems="center" gap={1} mb={1}>
-                    <BadgeIcon sx={{ fontSize: 22, color: "#1a5da8" }} />
                     <Typography variant="subtitle1" fontWeight={700} color="#1a5da8">
                         1.เอกสารยืนยันตัวตน
                     </Typography>
@@ -1076,7 +1081,7 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
                 {identityDocType === "idCard" && (
                     <DocumentBlock
                         title="บัตรประชาชน"
-                        icon={CreditCardIcon}
+                        //icon={CreditCardIcon}
                         dropzoneCaption="ตรวจชื่อ / เลขบัตรประชาชน"
                         accept={ACCEPT_IMAGE_PDF}
                         file={idCardFile}
@@ -1102,7 +1107,7 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
                 {identityDocType === "passport" && (
                     <DocumentBlock
                         title="Passport"
-                        icon={FlightTakeoffIcon}
+                        //icon={FlightTakeoffIcon}
                         dropzoneCaption="ตรวจชื่อ / หมายเลขหนังสือเดินทาง"
                         accept={ACCEPT_IMAGE_PDF}
                         file={passportFile}
@@ -1128,7 +1133,7 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
                 {identityDocType === "alienCard" && (
                     <DocumentBlock
                         title="บัตรต่างด้าว"
-                        icon={Public}
+                        //icon={Public}
                         dropzoneCaption="ตรวจชื่อ / เลขบัตรประชาชน"
                         accept={ACCEPT_IMAGE_PDF}
                         file={alienCardFile}
@@ -1156,7 +1161,6 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
             <CustomPaper sx={{ mb: 2 }}>
                 <DocumentBlock
                     title="2.ใบเสร็จ"
-                    icon={ReceiptLongIcon}
                     dropzoneCaption="ตรวจสอบยอดเงิน"
                     accept={ACCEPT_IMAGE_PDF}
                     file={receiptFile}
@@ -1191,7 +1195,7 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
             <CustomPaper sx={{ mb: 2 }}>
                 <DocumentBlock
                     title="3.ใบรับรองแพทย์"
-                    icon={DescriptionIcon}
+                    //icon={DescriptionIcon}
                     dropzoneCaption="ตรวจชื่อ / ข้อมูลการรักษา"
                     accept={ACCEPT_IMAGE_PDF}
                     file={medCertFile}
@@ -1224,4 +1228,4 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
     );
 };
 
-export default testOCR;
+export default OcrDocumentScanSection;

@@ -59,7 +59,7 @@ const initialState: MonitorState = {
         searchDetail: "",
         dateHappen: undefined,
         schoolId: undefined,
-        provinceId: 0,
+        provinceId: undefined,
         isAdvancedSearch: false,
         isSearchMonitor: false,
     },

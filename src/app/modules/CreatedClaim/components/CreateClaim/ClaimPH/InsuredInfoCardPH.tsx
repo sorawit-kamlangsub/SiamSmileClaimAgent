@@ -7,7 +7,7 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { formatDateString } from "../../../../../functionHelpers";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/claimAgentApi.client";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 
 interface Props {
     data?: GetCustomerDetailByIdDtoResponse;
@@ -60,7 +60,7 @@ const Row = ({
 );
 
 const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
-    <CustomBox sx={{ minHeight: "98%" }}>
+    <CustomBox sx={{ minHeight: "98.5%" }}>
         <HeadingWithColor
             text="ข้อมูลผู้เอาประกัน"
             color="blue"
@@ -98,7 +98,7 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
             <Row
                 label="เลขบัตรประชาชน"
                 icon={<CreditCardIcon fontSize="small" />}
-                value={data?.customerCode || "-"}
+                value={data?.cardDetail}
                 labelWidth={155}
             />
             <Row label="แผนประกัน" value={data?.productName} />

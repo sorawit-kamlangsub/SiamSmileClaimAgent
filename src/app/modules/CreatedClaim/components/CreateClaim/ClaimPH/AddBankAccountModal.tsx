@@ -83,6 +83,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
             dispatch(
                 addBankAccount({
                     id: Date.now().toString(),
+                    relationshipId: values.relationship ?? 0,
                     relationship: values.relationship_selectedText,
                     bankId: Number(values.bankId),
                     bankName: values.bankId_selectedText, // ชื่อธนาคารจาก autocomplete

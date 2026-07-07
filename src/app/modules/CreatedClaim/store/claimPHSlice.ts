@@ -3,11 +3,10 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 
-export type ClaimType = 2 | 3 | 4 | 5 | 6;
-export type OpdSubType = 2 | 3; // 2=Illness, 3=Accident
-export type IpdSubType = "ค่ารักษาพยาบาล" | "ค่าชดเชย";
-export type SymptomType = "ระบุอาการ" | "อื่นๆ";
-export type DocumentReceiver = "ผู้ให้บริการ" | "FCNT (สกลนคร)" | "Pivot";
+export enum SymptomType {
+    ChiefComplaint = 1,
+    Other = 2,
+}
 
 export interface ClaimCaseItem {
     seq: number;
@@ -33,32 +32,47 @@ export interface OldClaimInfo {
 }
 
 export interface ClaimFormValues {
-    documentReceiver: number | undefined;
-    documentReceiverLabel: string | undefined; // เพิ่ม
-    serviceProvider: number | undefined;
-    serviceProviderLabel: string | undefined; // เพิ่ม
-    carOwner: string | undefined;
+    // ผู้รับเอกสาร
+    documentRecipientTypeId: number | undefined;
+    documentRecipientTypeName: string | undefined;
+    // ผู้ให้บริการ
+    serviceProviderId: number | undefined;
+    serviceProviderCode: string | undefined;
+    serviceProviderName: string | undefined;
+    // เจ้าของรถ
+    zebraId: number | undefined;
+    zebraCode: string | undefined;
+    zebraNo: string | undefined;
+    employeeCode: string | undefined;
+    employeeName: string | undefined;
+    //เหตุของการเคลม
     incidentTypeId: number | undefined;
     incidentTypeName: string | undefined;
+    //ประเภทความคุ้มครอง
     coverageTypeId: number | undefined;
     coverageTypeName: string | undefined;
+    //ประเภทการรักษา
     medicalTypeId: number | undefined;
     medicalTypeName: string | undefined;
+    //สาเหตุการเสียชีวิต/สูญเสียอวัยวะ
     causeOfIncidentId: number | undefined;
     causeOfIncidentName: string | undefined;
-    incidentDate: Dayjs | undefined;
-    admissionDate: Dayjs | undefined;
-    dischargeDate: Dayjs | undefined;
-    receiveDocDate: Dayjs | undefined;
-    deathDate: Dayjs | undefined;
-    claimAmount: number | undefined;
+    incidentDate: Dayjs | undefined; //วันที่เกิดเหตุ
+    admissionDate: Dayjs | undefined; //วันที่เข้า รพ
+    dischargeDate: Dayjs | undefined; //วันที่ออก รพ
+    documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
+    notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
+    deathDate: Dayjs | undefined; //วันที่เสียชีวิต
+    transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
-    chiefComplain: string | undefined;
-    remark: string | undefined;
+    chiefComplaintId: number | undefined;
+    chiefComplaintId_selectedText: string | undefined;
+    chiefComplaintOther: string | undefined;
 }
 
 export interface BankAccount {
     id: string;
+    relationshipId: number;
     relationship: string;
     bankId: number;
     bankName: string;
@@ -70,6 +84,7 @@ export interface BankAccount {
 
 export interface ContactInfo {
     id: string;
+    relationshipId: number;
     relationship: string;
     phone: string;
     name: string;
@@ -96,11 +111,16 @@ interface ClaimPHState {
 }
 
 const defaultForm: ClaimFormValues = {
-    documentReceiver: 2,
-    documentReceiverLabel: undefined,
-    serviceProvider: undefined,
-    serviceProviderLabel: undefined,
-    carOwner: undefined,
+    documentRecipientTypeId: 2,
+    documentRecipientTypeName: undefined,
+    serviceProviderId: undefined,
+    serviceProviderCode: undefined,
+    serviceProviderName: undefined,
+    zebraId: undefined,
+    zebraCode: undefined,
+    zebraNo: undefined,
+    employeeCode: undefined,
+    employeeName: undefined,
     incidentTypeId: undefined,
     incidentTypeName: undefined,
     coverageTypeId: undefined,
@@ -113,11 +133,13 @@ const defaultForm: ClaimFormValues = {
     admissionDate: dayjs(),
     dischargeDate: dayjs(),
     deathDate: dayjs(),
-    receiveDocDate: dayjs(),
-    claimAmount: 0,
-    symptomType: "ระบุอาการ",
-    chiefComplain: undefined,
-    remark: undefined,
+    documentCompleteDate: dayjs(),
+    notificationDate: dayjs(),
+    transferAmount: 0,
+    symptomType: 1,
+    chiefComplaintId: undefined,
+    chiefComplaintId_selectedText: undefined,
+    chiefComplaintOther: undefined,
 };
 
 const initialState: ClaimPHState = {
@@ -186,6 +208,7 @@ const claimPHSlice = createSlice({
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
+        resetState: () => initialState,
     },
 });
 
@@ -202,6 +225,7 @@ export const {
     removeBankAccount,
     removeContact,
     setInsured,
+    resetState,
 } = claimPHSlice.actions;
 
 export const claimPHSelector = (state: RootState) => state.claimph;

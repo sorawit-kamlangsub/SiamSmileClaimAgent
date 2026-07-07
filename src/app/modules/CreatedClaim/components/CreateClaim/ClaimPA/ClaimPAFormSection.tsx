@@ -5,36 +5,91 @@ import {
     Button,
     CircularProgress,
     FormControlLabel,
-    FormHelperText,
-    FormLabel,
     Grid,
     InputAdornment,
+    Paper,
     Radio,
     RadioGroup,
+    Typography,
 } from "@mui/material";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import { useClaimPAForm } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
-import { FormikDropdown, FormikTextField, FormikTextNumber, FormikAutocomplete } from "../../../../_common";
+import { FormikTextField, FormikTextNumber, swalWarningNotOutsideClick } from "../../../../_common";
 import FormikDatePicker from "../../../../_common/components/CustomFormik/FormikDatePicker";
+import ArticleIcon from "@mui/icons-material/Article";
+import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
+import CalculateIcon from "@mui/icons-material/Calculate";
+import { IPD_COVERAGE_ITEMS, OPD_COVERAGE_ITEMS } from "../../../store/mockClaimPH";
+import DocumentRecipientTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/DocumentRecipientTypeDropDown";
+import UserAutocompleteApi from "../../../../_common/components/ClaimAgent/CustomDropdown/UserAutocompleteApi";
+import ChiefComplaintAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/ChiefComplaintAutocomplete";
+import ClaimTypeSelector from "../ClaimTypeSelector";
+import ChipSelector from "../ChipSelector";
+import dayjs from "dayjs";
+import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
+import { useClaimPAForm } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
+import OcrDocumentScanSection from "../OcrDocumentScanSection";
+import CoverageBox from "../ClaimPH/CoverageBox";
+import { SymptomType } from "../../../store/claimPHSlice";
+
+const EMPTY_STATE_SX = {
+    p: 2,
+    textAlign: "center",
+    borderStyle: "dashed",
+    color: "text.secondary",
+    fontSize: 14,
+} as const;
 
 interface Props {
     onNext: () => void;
 }
 
-// field ที่แสดงตาม claimType
-const showAdmitDate = (t: string) => ["OPD", "IPD", "DayCaseSurgery"].includes(t);
-const showDischargeDate = (t: string) => ["IPD", "DayCaseSurgery"].includes(t);
-const showAmountAndSymptom = (t: string) => ["OPD", "IPD", "DayCaseSurgery"].includes(t);
-
 const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
-    const { formik } = useClaimPAForm({ onNext });
-    const { values, errors, touched, setFieldValue } = formik;
+    const {
+        formik,
+        incidentType,
+        coverageType,
+        medicalType,
+        causeOfAccident,
+        incidentTypeLoading,
+        coverageTypeLoading,
+        medicalTypeLoading,
+        causeOfAccidentLoading,
+        insured,
+        shouldShowOcrDocumentScan,
+        isOcrDocsValid,
+        setIsOcrDocsValid,
+        isOcrLoading,
+        setIsOcrLoading,
+        setOcrResult,
+        setOcrDocumentIds,
+        getRequiredDocsByCoverageType,
+    } = useClaimPAForm({ onNext });
+
+    const { values, setFieldValue } = formik;
+    const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
+    const isDisability = values.coverageTypeId === 4;
+    const isDeath = values.coverageTypeId === 5;
+    const isIPD = values.medicalTypeId === 2 || values.medicalTypeId === 6;
+    const isOPD = values.medicalTypeId === 1;
+    const showOcr = !!values.incidentTypeId && isMedical;
+
+    const medicalTypeLabel = isDeath
+        ? "สาเหตุการเสียชีวิต"
+        : isMedical
+        ? "ประเภทการรักษา"
+        : isDisability
+        ? "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ"
+        : "ตัวเลือกเพิ่มเติม";
 
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
-            formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            await formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            return;
+        }
+        if (!isDeath && !isDisability && shouldShowOcrDocumentScan(formik.values.coverageTypeId) && !isOcrDocsValid) {
+            swalWarningNotOutsideClick("แจ้งเตือน", "กรุณาแนบเอกสารให้ครบถ้วนตามที่กำหนด");
             return;
         }
         formik.submitForm();
@@ -47,266 +102,339 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
             </Backdrop>
 
             <CustomPaper>
-                <HeadingWithColor text="บันทึกข้อมูลเคลม" color="blue" />
+                <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" onSubmit={formik.handleSubmit} p={2}>
-                    <Grid container spacing={2}>
-                        {/* ── ผู้รับเอกสาร ── */}
-                        <Grid item xs={12}>
-                            <Grid container>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDropdown
-                                        label="ผู้รับเอกสาร"
-                                        name="documentReceiver"
-                                        formik={formik}
-                                        data={[
-                                            { value: "ผู้ให้บริการ" },
-                                            { value: "FCNT (สกลนคร)" },
-                                            { value: "Pivot" },
-                                        ]}
-                                        firstItemText="-- เลือก --"
-                                        displayFieldName="value"
-                                        valueFieldName="value"
-                                        fullWidth
-                                        required
-                                    />
-                                </Grid>
+                    <CustomPaper>
+                        <Grid container spacing={2}>
+                            {/* เหตุของการเคลม */}
+                            <Grid item xs={12}>
+                                <Typography fontWeight={600} fontSize={16} mb={2}>
+                                    เหตุของการเคลม{" "}
+                                    <Typography component="span" color="error">
+                                        *
+                                    </Typography>
+                                </Typography>
+                                <ClaimTypeSelector
+                                    formik={formik}
+                                    options={incidentType}
+                                    idFieldName="incidentTypeId"
+                                    nameFieldName="incidentTypeName"
+                                    isLoading={incidentTypeLoading}
+                                />
                             </Grid>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Grid container>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDropdown
-                                        label="ผู้ให้บริการ"
-                                        name="serviceProvider"
-                                        formik={formik}
-                                        data={[{ value: "06590 - นางสาวมัญฑิตา โลวักษา" }]}
-                                        firstItemText="-- เลือก --"
-                                        displayFieldName="value"
-                                        valueFieldName="value"
-                                        fullWidth
-                                        required
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Grid container>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDropdown
-                                        label="เจ้าของรถ"
-                                        name="carOwner"
-                                        formik={formik}
-                                        data={[{ value: "006 - 00000 - คุณสำนักงาน - (-)" }]}
-                                        firstItemText="-- เลือก --"
-                                        displayFieldName="value"
-                                        valueFieldName="value"
-                                        fullWidth
-                                        required
-                                    />
-                                </Grid>
-                            </Grid>
-                        </Grid>
 
-                        {/* ── ลักษณะการเคลม ── */}
-                        <Grid item xs={12}>
-                            <FormLabel error={touched.claimType && !!errors.claimType}>ลักษณะการเคลม *</FormLabel>
-                            <RadioGroup
-                                value={values.claimType}
-                                onChange={(e) => {
-                                    setFieldValue("claimType", e.target.value);
-                                    setFieldValue("opdSubType", "");
-                                    setFieldValue("admitDate", null);
-                                    setFieldValue("dischargeDate", null);
-                                }}
-                            >
-                                {/* OPD */}
-                                <FormControlLabel value="OPD" control={<Radio size="small" />} label="OPD" />
-                                {values.claimType === "OPD" && (
-                                    <Box pl={4}>
-                                        <RadioGroup
-                                            row
-                                            value={values.opdSubType}
-                                            onChange={(e) => setFieldValue("opdSubType", e.target.value)}
-                                        >
-                                            <FormControlLabel
-                                                value="ค่ารักษา"
-                                                control={<Radio size="small" />}
-                                                label="ค่ารักษา"
-                                            />
-                                            <FormControlLabel
-                                                value="ค่าชดเชย"
-                                                control={<Radio size="small" />}
-                                                label="ค่าชดเชย"
-                                            />
-                                        </RadioGroup>
-                                    </Box>
+                            {/* ประเภทความคุ้มครอง */}
+                            <Grid item xs={12}>
+                                <Typography fontWeight={600} fontSize={16} mb={2}>
+                                    ประเภทความคุ้มครอง{" "}
+                                    <Typography component="span" color="error">
+                                        *
+                                    </Typography>
+                                </Typography>
+                                {values.incidentTypeId ? (
+                                    <ClaimTypeSelector
+                                        formik={formik}
+                                        options={coverageType}
+                                        idFieldName="coverageTypeId"
+                                        nameFieldName="coverageTypeName"
+                                        isLoading={coverageTypeLoading}
+                                    />
+                                ) : (
+                                    <Paper variant="outlined" sx={EMPTY_STATE_SX}>
+                                        กรุณาเลือกเหตุของการเคลมก่อน ระบบจะแสดงประเภทความคุ้มครองตามผลิตภัณฑ์ PA
+                                    </Paper>
                                 )}
+                            </Grid>
 
-                                {/* IPD */}
-                                <FormControlLabel value="IPD" control={<Radio size="small" />} label="IPD" />
-                                {values.claimType === "IPD" && (
-                                    <Box pl={4}>
-                                        <RadioGroup
-                                            row
-                                            value={values.opdSubType}
-                                            onChange={(e) => setFieldValue("opdSubType", e.target.value)}
-                                        >
-                                            <FormControlLabel
-                                                value="ค่ารักษา"
-                                                control={<Radio size="small" />}
-                                                label="ค่ารักษา"
-                                            />
-                                            <FormControlLabel
-                                                value="ค่าชดเชย"
-                                                control={<Radio size="small" />}
-                                                label="ค่าชดเชย"
-                                            />
-                                        </RadioGroup>
-                                    </Box>
+                            {/* ประเภทการรักษา / สาเหตุ */}
+                            <Grid item xs={12}>
+                                <Typography fontWeight={600} fontSize={16} mb={2}>
+                                    {medicalTypeLabel}{" "}
+                                    <Typography component="span" color="error">
+                                        *
+                                    </Typography>
+                                </Typography>
+                                {isMedical ? (
+                                    <ChipSelector
+                                        formik={formik}
+                                        idFieldName="medicalTypeId"
+                                        nameFieldName="medicalTypeName"
+                                        options={medicalType}
+                                        isLoading={medicalTypeLoading}
+                                    />
+                                ) : isDisability || isDeath ? (
+                                    <ChipSelector
+                                        formik={formik}
+                                        idFieldName="causeOfIncidentId"
+                                        nameFieldName="causeOfIncidentName"
+                                        options={causeOfAccident}
+                                        isLoading={causeOfAccidentLoading}
+                                    />
+                                ) : (
+                                    <Paper variant="outlined" sx={EMPTY_STATE_SX}>
+                                        กรุณาเลือกประเภทความคุ้มครองก่อน
+                                    </Paper>
                                 )}
+                            </Grid>
 
-                                <FormControlLabel
-                                    value="DayCaseSurgery"
-                                    control={<Radio size="small" />}
-                                    label="Day Case Surgery"
+                            {/* ผู้รับเอกสาร / ผู้ให้บริการ / เจ้าของรถ */}
+                            <Grid item xs={12} md={4}>
+                                <DocumentRecipientTypeDropDown
+                                    firstItemText="-- เลือก --"
+                                    formik={formik}
+                                    name="documentRecipientTypeId"
+                                    fullWidth
+                                    required
+                                    selectedCallback={(item) => {
+                                        formik.setFieldValue(
+                                            "documentRecipientTypeName",
+                                            item?.documentRecipientTypeName
+                                        );
+                                    }}
                                 />
-                                <FormControlLabel
-                                    value="DeathClaim"
-                                    control={<Radio size="small" />}
-                                    label="DeathClaim"
+                            </Grid>
+                            <Grid item xs={12} md={4} mt={-1}>
+                                <UserAutocompleteApi
+                                    formik={formik}
+                                    name="serviceProviderId"
+                                    fullWidth
+                                    required
+                                    selectedCallback={(item) => {
+                                        formik.setFieldValue("serviceProviderName", item?.personName);
+                                        formik.setFieldValue("serviceProviderCode", item?.employeeCode);
+                                    }}
                                 />
-                                <FormControlLabel
-                                    value="LossOrDisability"
-                                    control={<Radio size="small" />}
-                                    label="สูญเสียอวัยวะ/ทุพพลภาพ"
+                            </Grid>
+                            <Grid item xs={12} md={4}>
+                                <ZebraCarOwnerDropDown
+                                    firstItemText="-- เลือก --"
+                                    formik={formik}
+                                    name="zebraId"
+                                    fullWidth
+                                    required
+                                    selectedCallback={(item) => {
+                                        formik.setFieldValue("zebraCode", item?.zebraCode);
+                                        formik.setFieldValue("zebraNo", item?.zebraNo);
+                                        formik.setFieldValue("employeeCode", item?.employeeCode);
+                                        formik.setFieldValue("employeeName", item?.employeeName);
+                                    }}
                                 />
-                            </RadioGroup>
-                            {touched.claimType && errors.claimType && (
-                                <FormHelperText error>{errors.claimType}</FormHelperText>
-                            )}
-                        </Grid>
+                            </Grid>
 
-                        {/* ── วันที่เกิดเหตุ (แสดงทุก claimType) ── */}
-                        {values.claimType && (
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                            {/* วันที่ต่างๆ */}
+                            <Grid item xs={12} sm={6} md={4}>
                                 <FormikDatePicker
                                     name="incidentDate"
                                     label="วันที่เกิดเหตุ"
                                     formik={formik}
                                     slotProps={{ textField: { size: "small" } }}
+                                    maxDate={dayjs()}
                                     required
                                 />
                             </Grid>
-                        )}
-
-                        {/* ── วันที่เข้า รพ. (OPD, IPD, DayCaseSurgery) ── */}
-                        {showAdmitDate(values.claimType) && (
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
-                                <FormikDatePicker
-                                    name="admitDate"
-                                    label="วันที่เข้า รพ."
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    required
-                                />
-                            </Grid>
-                        )}
-
-                        {/* ── วันที่ออก รพ. (IPD, DayCaseSurgery) ── */}
-                        {showDischargeDate(values.claimType) && (
-                            <Grid item xs={12} sm={6} md={4} lg={3}>
-                                <FormikDatePicker
-                                    name="dischargeDate"
-                                    label="วันที่ออก รพ."
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    required
-                                />
-                            </Grid>
-                        )}
-
-                        {/* ── จำนวนเงิน + ระบุอาการ (OPD, IPD, DayCaseSurgery) ── */}
-                        {showAmountAndSymptom(values.claimType) && (
-                            <>
-                                <Grid item xs={12} sm={6} md={4} lg={3}>
-                                    <FormikTextNumber
-                                        name="claimAmount"
-                                        label="จำนวนเงิน"
+                            {isMedical && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <FormikDatePicker
+                                        name="admissionDate"
+                                        label="วันที่เข้า รพ."
                                         formik={formik}
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                        InputProps={{
-                                            endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
-                                        }}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
                                         required
                                     />
                                 </Grid>
-
-                                <Grid item xs={12}>
-                                    <RadioGroup
-                                        row
-                                        value={values.symptomType}
-                                        onChange={(e) => setFieldValue("symptomType", e.target.value)}
-                                    >
-                                        <FormControlLabel
-                                            value="ระบุอาการ"
-                                            control={<Radio size="small" />}
-                                            label="ระบุอาการ"
-                                        />
-                                        <FormControlLabel
-                                            value="อื่นๆ"
-                                            control={<Radio size="small" />}
-                                            label="อื่นๆ"
-                                        />
-                                    </RadioGroup>
+                            )}
+                            {isIPD && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <FormikDatePicker
+                                        name="dischargeDate"
+                                        label="วันที่ออก รพ."
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
                                 </Grid>
+                            )}
 
-                                {values.symptomType === "ระบุอาการ" && (
-                                    <Grid item xs={12} lg={9}>
-                                        <FormikAutocomplete
-                                            name="chiefComplain"
-                                            label="อาการสำคัญ"
+                            {isDeath && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <FormikDatePicker
+                                        name="deathDate"
+                                        label="วันที่เสียชีวิต"
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
+                                </Grid>
+                            )}
+                            {(isDeath || isDisability) && (
+                                <>
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <FormikDatePicker
+                                            name="notificationDate"
+                                            label="วันที่รับแจ้ง"
                                             formik={formik}
-                                            data={[{ value: "ไข้หวัดใหญ่" }, { value: "อุบัติเหตุ" }]}
-                                            valueFieldName="value"
-                                            displayFieldName="value"
-                                            size="small"
+                                            slotProps={{ textField: { size: "small" } }}
+                                            maxDate={dayjs()}
                                             required
                                         />
                                     </Grid>
-                                )}
-
-                                {values.symptomType === "อื่นๆ" && (
-                                    <Grid item xs={12} lg={9}>
-                                        <FormikTextField
-                                            name="remark"
-                                            label="หมายเหตุ"
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <FormikDatePicker
+                                            name="documentCompleteDate"
+                                            label="วันที่เอกสารครบ"
                                             formik={formik}
-                                            size="small"
-                                            multiline
-                                            rows={2}
-                                            fullWidth
+                                            slotProps={{ textField: { size: "small" } }}
+                                            maxDate={dayjs()}
                                             required
                                         />
                                     </Grid>
-                                )}
-                            </>
-                        )}
-                    </Grid>
+                                </>
+                            )}
+                            {/* Coverage box */}
+                            {(isOPD || isIPD) && (
+                                <Grid item xs={12}>
+                                    <CoverageBox
+                                        items={isOPD ? OPD_COVERAGE_ITEMS : IPD_COVERAGE_ITEMS}
+                                        planCode="662"
+                                    />
+                                </Grid>
+                            )}
+
+                            {/* ปุ่มคำนวณวงเงิน */}
+                            {isIPD && (
+                                <Grid item xs={12} md={6} lg={4}>
+                                    <Grid container justifyContent="center">
+                                        <Button
+                                            variant="outlined"
+                                            color="primary"
+                                            size="small"
+                                            startIcon={<CalculateIcon />}
+                                            sx={{ width: { xs: "100%", sm: "30%", md: "50%" }, mb: 1 }}
+                                        >
+                                            เปิดโปรแกรมคำนวณวงเงิน
+                                        </Button>
+                                    </Grid>
+                                </Grid>
+                            )}
+
+                            {/* จำนวนเงิน */}
+                            <Grid item xs={12}>
+                                <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
+                                    <Grid item xs={12} sm={5.9} md={2.9}>
+                                        <FormikTextNumber
+                                            name="transferAmount"
+                                            label="จำนวนเงิน"
+                                            formik={formik}
+                                            decimalScale={2}
+                                            fixedDecimalScale
+                                            InputProps={{
+                                                endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
+                                            }}
+                                            required
+                                        />
+                                    </Grid>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            color: "#c8a415",
+                                            bgcolor: "#fdf6e3",
+                                            px: 0.3,
+                                            py: 0.3,
+                                            fontWeight: "bold",
+                                            whiteSpace: { xs: "normal", sm: "nowrap" },
+                                        }}
+                                    >
+                                        *กรุณากรอกยอดเคลมที่ต้องการโอนทั้งหมด
+                                    </Typography>
+                                </Box>
+                            </Grid>
+
+                            {/* ระบุอาการ */}
+                            <Grid item xs={12}>
+                                <RadioGroup
+                                    row
+                                    value={values.symptomType}
+                                    onChange={(e) => setFieldValue("symptomType", Number(e.target.value))}
+                                >
+                                    <FormControlLabel
+                                        value={SymptomType.ChiefComplaint}
+                                        control={<Radio size="small" />}
+                                        label="ระบุอาการ"
+                                    />
+                                    <FormControlLabel
+                                        value={SymptomType.Other}
+                                        control={<Radio size="small" />}
+                                        label="อื่นๆ"
+                                    />
+                                </RadioGroup>
+                            </Grid>
+                            {values.symptomType === SymptomType.ChiefComplaint && (
+                                <Grid item xs={12} lg={9}>
+                                    <ChiefComplaintAutocomplete
+                                        name="chiefComplaintId"
+                                        formik={formik}
+                                        size="small"
+                                        required
+                                    />
+                                </Grid>
+                            )}
+                            {values.symptomType === SymptomType.Other && (
+                                <Grid item xs={12} lg={9}>
+                                    <FormikTextField
+                                        name="chiefComplaintOther"
+                                        label="หมายเหตุ"
+                                        formik={formik}
+                                        size="small"
+                                        multiline
+                                        rows={2}
+                                        fullWidth
+                                        required
+                                    />
+                                </Grid>
+                            )}
+                        </Grid>
+                    </CustomPaper>
                 </Box>
             </CustomPaper>
 
-            <Grid display="flex" justifyContent="flex-end" mt={1} mb={5}>
+            {/* แนบเอกสาร */}
+            {showOcr && (
+                <CustomPaper>
+                    <HeadingWithColor
+                        icon={<UploadFileSharpIcon sx={{ fontSize: 27 }} />}
+                        text="สแกนเอกสาร OCR (PA)"
+                        color="blue"
+                    />
+                    <OcrDocumentScanSection
+                        requiredDocs={getRequiredDocsByCoverageType(formik.values.coverageTypeId ?? 0)}
+                        onFilesValidChange={setIsOcrDocsValid}
+                        systemFullName={insured?.customerName}
+                        systemIdCardNo={insured?.cardDetail}
+                        systemAmount={formik.values.transferAmount}
+                        systemDateIn={formik.values.admissionDate}
+                        onOcrChange={(result) => setOcrResult(result)}
+                        formik={formik}
+                        applicationCode={insured?.policyCode as string}
+                        onOcrLoadingChange={setIsOcrLoading}
+                        onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
+                    />
+                </CustomPaper>
+            )}
+
+            <Box display="flex" justifyContent="flex-end" mb={5}>
                 <Button
                     variant="contained"
-                    size="medium"
                     color="primary"
-                    disabled={formik.isSubmitting}
+                    size="medium"
+                    disabled={formik.isSubmitting || (isMedical && (!isOcrDocsValid || isOcrLoading))}
                     onClick={handleSubmit}
                 >
                     ถัดไป
                 </Button>
-            </Grid>
+            </Box>
         </>
     );
 };

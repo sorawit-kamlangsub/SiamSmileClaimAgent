@@ -1,25 +1,18 @@
 import React from "react";
-import { Box, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/material";
-import PersonIcon from "@mui/icons-material/Person";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
+import { Box, Divider, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import { InsuredInfoPA } from "../../../store/claimPASlice";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
 import { formatDateString } from "../../../../../functionHelpers";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 
 interface Props {
-    data: InsuredInfoPA;
+    data: GetCustomerDetailByIdDtoResponse | undefined;
     onEdit: () => void;
 }
 
-const Row = ({ label, value, icon }: { label: string; value: React.ReactNode; icon?: React.ReactNode }) => (
+const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
     <Box display="flex" alignItems="center" gap={1} py={0.3}>
-        {icon && (
-            <Box color="primary.main" display="flex">
-                {icon}
-            </Box>
-        )}
         <Typography variant="body2" color="text.secondary" minWidth={180}>
             {label} :
         </Typography>
@@ -28,9 +21,8 @@ const Row = ({ label, value, icon }: { label: string; value: React.ReactNode; ic
         </Typography>
     </Box>
 );
-
 const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
-    <CustomBox>
+    <CustomBox sx={{ minHeight: "98.5%" }}>
         <HeadingWithColor
             text="ข้อมูลผู้เอาประกัน"
             color="blue"
@@ -52,23 +44,24 @@ const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
                         rel="noreferrer"
                         fontWeight={700}
                     >
-                        {data.appId}
+                        {data?.policyCode}
                     </Link>
                 }
             />
+            <Row label="ชื่อผู้เอาประกัน" value={`${data?.customerName}`} />
+            <Row label="เลขบัตรประชาชน" value={data?.cardDetail} />
+            <Row label="Passport" value={data?.cardDetail} />
+            <Divider sx={{ mt: 1, mb: 1 }} />
+            <Row label="แผนประกัน" value={data?.productName} />
+            <Row label="วันที่เริ่มคุ้มครอง" value={formatDateString(data?.coverageFrom?.toString(), "DD/MM/BBBB")} />
+            <Row label="วันที่มีผล" value={formatDateString(data?.coverageFrom?.toString(), "DD/MM/BBBB")} />
             <Row
-                label="ชื่อผู้เอาประกัน"
-                icon={<PersonIcon fontSize="small" />}
-                value={`${data.prefix}${data.firstName} ${data.lastName}`}
+                label="วันที่สิ้นสุดความคุ้มครอง"
+                value={formatDateString(data?.coverageTo?.toString(), "DD/MM/BBBB")}
             />
-            <Row label="เลขบัตรประชาชน" icon={<CreditCardIcon fontSize="small" />} value={data.nationalId} />
-            <Row label="Passport" icon={<CreditCardIcon fontSize="small" />} value={data.passport} />
-            <Row label="แผนประกัน" value={data.plan} />
-            <Row label="วันที่เริ่มคุ้มครอง" value={formatDateString(data.startCoverDate, "DD/MM/BBBB")} />
-            <Row label="วันที่มีผล" value={formatDateString(data.effectiveDate, "DD/MM/BBBB")} />
-            <Row label="วันที่สิ้นสุดความคุ้มครอง" value={formatDateString(data.endCoverDate, "DD/MM/BBBB")} />
-            <Row label="ประเภทผู้เอาประกัน" value={data.insuredType} />
-            <Row label="สถานศึกษา" value={data.schoolName} />
+            <Divider sx={{ mt: 1, mb: 1 }} />
+            <Row label="ประเภทผู้เอาประกัน" value="นักเรียน" />
+            <Row label="สถานศึกษา" value={data?.schoolName} />
         </Box>
     </CustomBox>
 );

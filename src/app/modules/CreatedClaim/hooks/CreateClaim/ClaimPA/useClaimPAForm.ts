@@ -1,65 +1,212 @@
-import { useFormik } from "formik";
+import { useEffect, useRef } from "react";
+import dayjs from "dayjs";
+import { useFormik, FormikErrors } from "formik";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
+import { useAuth } from "../../../../_auth";
+import { ChipOption } from "../../../components/CreateClaim/ChipSelector";
 import {
-    addClaimItem,
-    updateClaimItem,
-    ClaimInsuredItem,
-    setEditingItemId,
-    setClaimForm,
-} from "../../../store/claimPASlice";
+    useGetCauseOfAccident,
+    useGetCoverageType,
+    useGetIncidentType,
+    useGetMedicaltype,
+} from "../../../../../api/coreClaimMastersApi";
+import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/CreateClaim/ClaimTypeOptions";
+import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
+import { ClaimPAFormValues, claimPASelector, setClaimForm } from "../../../store/claimPASlice";
+import { SymptomType } from "../../../store/claimPHSlice";
+import { useOcrDocumentScan } from "../useOcrDocumentScan";
 
-interface Props {
+interface Options {
     onNext: () => void;
 }
 
-export const useClaimPAForm = ({ onNext }: Props) => {
+export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
-    const { form, insured, claimItems, editingItemId } = useAppSelector((s) => s.claimpa);
+    const { userProfile } = useAuth();
+    const { form, isContinuous, insured } = useAppSelector(claimPASelector);
+    const ocr = useOcrDocumentScan();
+    const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
+    const { data: coverageTypeRaw, isLoading: coverageTypeLoading } = useGetCoverageType();
+    const { data: medicalTypeRaw, isLoading: medicalTypeLoading } = useGetMedicaltype(2);
+    const { data: causeOfAccidentRaw, isLoading: causeOfAccidentLoading } = useGetCauseOfAccident();
 
-    const formik = useFormik({
-        initialValues: form,
-        enableReinitialize: true,
-        validate: (v) => {
-            const e: any = {};
-            if (!v.documentReceiver) e.documentReceiver = "โปรดระบุ";
-            if (!v.serviceProvider) e.serviceProvider = "โปรดระบุ";
-            if (!v.carOwner) e.carOwner = "โปรดระบุ";
-            if (!v.claimType) e.claimType = "โปรดระบุ";
-            if (!v.incidentDate) e.incidentDate = "โปรดระบุ";
-            if (!v.claimAmount) e.claimAmount = "โปรดระบุ";
-            if (v.symptomType === "ระบุอาการ" && !v.chiefComplain) e.chiefComplain = "โปรดระบุ";
-            if (v.symptomType === "อื่นๆ" && !v.remark.trim()) e.remark = "โปรดระบุ";
-            return e;
+    const MEDICAL_TYPE_BY_COVERAGE_PA: Record<number, Record<number, number[]>> = {
+        3: {
+            // อุบัติเหตุ > ค่ารักษา/ค่าชดเชย
+            2: [1, 2],
+            3: [1, 2],
         },
-        onSubmit: (values, { resetForm }) => {
-            if (!insured) return;
+    };
 
-            const item: ClaimInsuredItem = {
-                id: editingItemId ?? Date.now().toString(),
-                appId: insured.appId,
-                seq: editingItemId
-                    ? claimItems.find((i) => i.id === editingItemId)?.seq ?? claimItems.length + 1
-                    : claimItems.length + 1,
-                customerName: `${insured.prefix}${insured.firstName} ${insured.lastName}`,
-                insuredType: insured.insuredType,
-                claimType: values.claimType as any,
-                opdSubType: values.opdSubType as any,
-                claimAmount: Number(values.claimAmount),
-            };
+    const CAUSE_OF_ACCIDENT_BY_COVERAGE_PA: Record<number, Record<number, number[]>> = {
+        3: {
+            // อุบัติเหตุ > เสียชีวิต/ทุพพลภาพ > อุบัติเหตุ/ขับขี่รถ/ฆาตกรรม
+            4: [3, 4, 5],
+            5: [2, 3, 5],
+        },
+    };
+    const formik = useFormik<ClaimPAFormValues>({
+        initialValues: { ...form, serviceProviderId: userProfile?.userId },
+        enableReinitialize: true,
+        validate: (values) => {
+            const errors: FormikErrors<ClaimPAFormValues> = {};
+            const req = "โปรดระบุ";
 
-            dispatch(setClaimForm(values));
+            // ── ข้อมูลผู้ให้บริการ ──
+            if (!values.documentRecipientTypeId) errors.documentRecipientTypeId = req;
+            if (!values.serviceProviderId) errors.serviceProviderId = req;
+            if (!values.zebraId) errors.zebraId = req;
 
-            if (editingItemId) {
-                dispatch(updateClaimItem(item));
-                dispatch(setEditingItemId(null));
-            } else {
-                dispatch(addClaimItem(item));
+            // ── ประเภทการเคลม ──
+            if (!values.incidentTypeId) errors.incidentTypeId = req;
+            if (!values.coverageTypeId) errors.coverageTypeId = req;
+
+            const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
+            const isCause = values.coverageTypeId === 4 || values.coverageTypeId === 5;
+            const isIPD = values.medicalTypeId === 2 || values.medicalTypeId === 6;
+
+            if (isMedical && !values.medicalTypeId) errors.medicalTypeId = req;
+            if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = req;
+
+            // ── วันที่ ──
+            if (!values.incidentDate) errors.incidentDate = req;
+
+            if (isMedical) {
+                if (!values.admissionDate) {
+                    errors.admissionDate = req;
+                } else if (values.admissionDate.isBefore(values.incidentDate, "day")) {
+                    errors.admissionDate = "ไม่สามารถเลือกวันที่เข้า รพ. ก่อนวันที่เกิดเหตุได้";
+                }
+
+                if (isIPD) {
+                    if (!values.dischargeDate) {
+                        errors.dischargeDate = req;
+                    } else if (
+                        values.dischargeDate.isBefore(values.admissionDate, "day") ||
+                        values.dischargeDate.isBefore(values.incidentDate, "day")
+                    ) {
+                        errors.dischargeDate = "รบกวนตรวจสอบวันที่ออก รพ.";
+                    }
+                }
             }
 
-            resetForm();
+            // ── อาการ ──
+            if (!values.symptomType) errors.symptomType = req;
+            if (values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
+                errors.chiefComplaintId = req;
+            if (values.symptomType === SymptomType.Other && !values.chiefComplaintOther)
+                errors.chiefComplaintOther = req;
+
+            // ── จำนวนเงิน ──
+            if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
+            return errors;
+        },
+
+        onSubmit: (values) => {
+            dispatch(setClaimForm(values));
             onNext();
         },
     });
+    const incidentType: ClaimTypeOption[] =
+        incidentTypeRaw?.data
+            ?.filter((item) => item.incidentTypeId === 3)
+            .map((item) => ({
+                id: item.incidentTypeId ?? 0,
+                name: item.incidentTypeNameTH ?? "",
+                icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
+            })) ?? [];
 
-    return { formik };
+    const coverageType: ClaimTypeOption[] =
+        coverageTypeRaw?.data?.map((item) => ({
+            id: item.coverageTypeId ?? 0,
+            name: item.coverageTypeNameTH ?? "",
+            icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
+        })) ?? [];
+
+    const medicalType: ChipOption[] =
+        medicalTypeRaw?.data
+            ?.filter(
+                (item) =>
+                    MEDICAL_TYPE_BY_COVERAGE_PA[formik.values.incidentTypeId ?? 0]?.[
+                        formik.values.coverageTypeId ?? 0
+                    ]?.includes(item.medicalTypeId ?? 0)
+            )
+            .map((item) => ({
+                id: item.medicalTypeId ?? 0,
+                name: item.medicalTypeCode ?? "",
+            })) ?? [];
+
+    const causeOfAccident: ChipOption[] =
+        causeOfAccidentRaw?.data
+            ?.filter(
+                (item) =>
+                    CAUSE_OF_ACCIDENT_BY_COVERAGE_PA[formik.values.incidentTypeId ?? 0]?.[
+                        formik.values.coverageTypeId ?? 0
+                    ]?.includes(item.causeOfIncidentId ?? 0)
+            )
+            .map((item) => ({
+                id: item.causeOfIncidentId ?? 0,
+                name: item.causeOfIncidentName ?? "",
+            })) ?? [];
+    const isFirstRenderIncident = useRef(true);
+    const isFirstRenderCoverage = useRef(true);
+
+    useEffect(() => {
+        if (isFirstRenderIncident.current) {
+            isFirstRenderIncident.current = false;
+            return;
+        }
+        if (!formik.values.incidentTypeId) return;
+        formik.setFieldValue("coverageTypeId", undefined, false);
+        formik.setFieldValue("coverageTypeName", undefined, false);
+        formik.setFieldValue("medicalTypeId", undefined, false);
+        formik.setFieldValue("medicalTypeName", undefined, false);
+        formik.setFieldValue("causeOfIncidentId", undefined, false);
+        formik.setFieldValue("causeOfIncidentName", undefined, false);
+        formik.setFieldValue("admissionDate", dayjs(), false);
+        formik.setFieldValue("notificationDate", dayjs(), false);
+        formik.setFieldValue("deathDate", dayjs(), false);
+    }, [formik.values.incidentTypeId]);
+
+    useEffect(() => {
+        if (isFirstRenderCoverage.current) {
+            isFirstRenderCoverage.current = false;
+            return;
+        }
+        if (!formik.values.coverageTypeId) return;
+        formik.setFieldValue("medicalTypeId", undefined, false);
+        formik.setFieldValue("medicalTypeName", undefined, false);
+        formik.setFieldValue("causeOfIncidentId", undefined, false);
+        formik.setFieldValue("causeOfIncidentName", undefined, false);
+        formik.setFieldValue("admissionDate", dayjs(), false);
+        formik.setFieldValue("notificationDate", dayjs(), false);
+        formik.setFieldValue("deathDate", dayjs(), false);
+
+        // ถ้า coverageType นี้ไม่ต้องบังคับเอกสารเลย ให้ valid ทันที
+        if (!ocr.shouldShowOcrDocumentScan(formik.values.coverageTypeId)) {
+            ocr.setIsOcrDocsValid(true);
+        }
+    }, [formik.values.coverageTypeId]);
+
+    // useEffect(() => {
+    //     if (isContinuous && oldClaim?.incidentDate) {
+    //         formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));
+    //     }
+    // }, [isContinuous, oldClaim?.incidentDate]);
+    // const isIncidentDateDisabled = isContinuous;
+    return {
+        formik,
+        isContinuous,
+        //isIncidentDateDisabled,
+        incidentType,
+        coverageType,
+        medicalType,
+        causeOfAccident,
+        incidentTypeLoading,
+        coverageTypeLoading,
+        medicalTypeLoading,
+        causeOfAccidentLoading,
+        insured,
+        ...ocr,
+    };
 };

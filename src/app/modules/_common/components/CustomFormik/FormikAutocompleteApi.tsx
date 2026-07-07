@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { UseQueryResult } from "@tanstack/react-query";
 import { FormikProps } from "formik";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { FormikFocusError } from "../FormikFocusError";
 
 type FormikAutocompleteApiProp = {
@@ -19,7 +19,7 @@ type FormikAutocompleteApiProp = {
     useQueryGet: (filter: any, defaultId: any) => UseQueryResult<{ [key: string]: any }[], unknown>;
     valueFieldName: string;
     displayFieldName: string;
-    selectedCallback?: (value: any) => void;
+    selectedCallback?: (item: any) => void;
     filterSelectedOptions?: boolean;
     useFocusError?: boolean;
 } & FormControlProps;
@@ -50,19 +50,23 @@ const FormikAutocompleteApi = ({
         if (!newValue) {
             setFieldValue(name, null, true);
             setFieldValue(`${name}_selectedText`, null, true);
-            selectedCallback && selectedCallback(null);
+            selectedCallback?.(null);
             return;
         }
 
         setFieldValue(name, newValue[valueFieldName], true);
         setFieldValue(`${name}_selectedText`, newValue[displayFieldName] ?? undefined, true);
-        selectedCallback && selectedCallback(newValue[valueFieldName]);
+        selectedCallback?.(newValue);
     };
 
     const valueState = useMemo(() => {
         return options?.find((item) => item[valueFieldName] == value) ?? null;
     }, [options, value]);
-
+    useEffect(() => {
+        if (valueState) {
+            selectedCallback?.(valueState);
+        }
+    }, [valueState]);
     return (
         <FormikFocusError formik={formik} useFocusError={useFocusError}>
             <FormControl

@@ -151,4 +151,9 @@ export interface ImportMetaEnv {
      * URL ของ ORC API
      */
     readonly VITE_ORC_API_URL: string;
+
+    /**
+     * URL ของ DocStorage API
+     */
+    readonly VITE_DOCSTORAGE_API_URL: string;
 }

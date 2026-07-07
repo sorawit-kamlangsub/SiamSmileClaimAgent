@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Grid } from "@mui/material";
+import { Grid, LinearProgress } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
@@ -46,22 +46,29 @@ const ClaimPHPage: React.FC = () => {
     return (
         <Grid container spacing={2}>
             {/* ข้อมูลผู้เอาประกัน | ประวัติการเคลม */}
-            <Grid item xs={12} md={4}>
-                <InsuredInfoCardPH data={insured} onEdit={() => navigate("/monitor")} />
-            </Grid>
-            <Grid item xs={12} md={8}>
-                <ClaimHistoryCardPH />
-            </Grid>
 
-            {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
-            {isContinuous && oldClaim && (
-                <Grid item xs={12}>
-                    <OldClaimSection data={oldClaim} onToggleHidden={() => dispatch(toggleOldClaimHidden())} />
-                </Grid>
+            {claimInfoLoading ? (
+                <LinearProgress />
+            ) : (
+                <>
+                    <Grid item xs={12} md={4}>
+                        <InsuredInfoCardPH data={claimInfo?.data} onEdit={() => navigate("/monitor")} />
+                    </Grid>
+                    <Grid item xs={12} md={8}>
+                        <ClaimHistoryCardPH />
+                    </Grid>
+
+                    {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
+                    {isContinuous && oldClaim && (
+                        <Grid item xs={12}>
+                            <OldClaimSection data={oldClaim} onToggleHidden={() => dispatch(toggleOldClaimHidden())} />
+                        </Grid>
+                    )}
+                    <Grid item xs={12}>
+                        <ClaimFormSection onNext={() => navigate(`/claim/ph/${refId}/summary`)} />
+                    </Grid>
+                </>
             )}
-            <Grid item xs={12}>
-                <ClaimFormSection onNext={() => navigate(`/claim/ph/${refId}/summary`)} />
-            </Grid>
         </Grid>
     );
 };
