@@ -5,10 +5,14 @@ import ListIcon from "@mui/icons-material/List";
 import dayjs from "dayjs";
 import { useGetSurvey } from "../surveyAPI";
 import { swalError } from "../../_common";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const HeaderDetailBox = () => {
-    const handleSuccess = () => {};
+    const [surveyCreated, setSurveyCreated] = useState<any | undefined>(undefined);
+
+    const handleSuccess = (res: any) => {
+        setSurveyCreated(res);
+    };
 
     const handleError = (err: string) => {
         swalError("เกิดข้อผิดพลาด", err);
@@ -17,8 +21,17 @@ const HeaderDetailBox = () => {
     const { mutate } = useGetSurvey(handleSuccess, handleError);
 
     useEffect(() => {
-        mutate(14);
+        if (surveyCreated?.data?.isSubmitted) {
+            mutate(14);
+        }
     }, []);
+
+    console.log(surveyCreated);
+
+    const getAnswer: any = surveyCreated?.data?.survey?.questions?.map((item: any) => {
+        return item;
+    });
+    console.log("🚀 ~ HeaderDetailBox ~ getAnswer:", getAnswer);
 
     return (
         <Box>
@@ -127,6 +140,9 @@ const HeaderDetailBox = () => {
                                                 <Typography>{dayjs().format("DD/MM/YYYY")}</Typography>
                                             </Grid>
                                         </Grid>
+                                    </Grid>
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        {/* {getAnswer?.[0]?.map((item) => item?.answers)} */}
                                     </Grid>
                                 </Grid>
                             </Box>
