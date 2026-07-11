@@ -45,7 +45,7 @@ const useSurveyHook = () => {
     const handleSentSurveySuccess = () => {
         swalSuccess("ทำรายการสำเร็จ", "").then((res) => {
             if (res.isConfirmed) {
-                // navigate(`/survey/summary/${id}`);
+                navigate(`/survey/summary/${id}`);
             }
         });
     };
@@ -148,19 +148,19 @@ const useSurveyHook = () => {
                     {
                         surveyQuestionId: surveySuggestionsQuestionId,
                         surveyAnswerIds: values?.surveySuggestions,
-                        answerMore: hasSelectedMoreOption ? values.remarks : "",
+                        answerMore: hasSelectedMoreOption ? values.remarks : "-",
                     },
                     {
                         surveyQuestionId: remarksQuestionId,
                         surveyAnswerIds: [],
-                        answerMore: hasSelectedMoreOption ? "" : values.remarks,
+                        answerMore: hasSelectedMoreOption ? "-" : values.remarks,
                     },
                 ],
             };
 
             const payload = {
                 surveyId: surveyCreated?.surveyId,
-                answersRequest: JSON.stringify(payloadJson),
+                answersRequest: payloadJson,
             };
             saveSurveyMutate(payload);
         },
