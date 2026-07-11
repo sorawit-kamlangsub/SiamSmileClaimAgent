@@ -1,4 +1,4 @@
-import { Box, Grid, Theme, Typography } from "@mui/material";
+import { Box, Grid,  Typography } from "@mui/material";
 
 const HeaderSurvey = () => {
     return (

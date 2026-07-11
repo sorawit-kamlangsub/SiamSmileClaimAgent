@@ -1,6 +1,7 @@
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
 import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
 import SurveyPage from "../modules/Survey/pages/SurveyPage";
+import SurveySummaryPage from "../modules/Survey/pages/SurveySummaryPage";
 import TransferSlipPage from "../modules/TransferSlips/pages/TransferSlipPage";
 import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
@@ -64,11 +65,26 @@ const Routes: RouteMapType[] = [
     },
 
     // Survey
-
     {
-        path: "/survey/:id",
+        path: "/survey",
         title: "Survey",
-        element: <SurveyPage />,
+        children: [
+            { index: true, title: "Survey", element: <SurveyPage />, hideAppBar: true, hideAsideMenu: true },
+            {
+                path: ":id",
+                title: "Survey",
+                element: <SurveyPage />,
+                hideAppBar: true,
+                hideAsideMenu: true,
+            },
+            {
+                path: "summary/:id",
+                title: "Survey Summary",
+                element: <SurveySummaryPage />,
+                hideAppBar: true,
+                hideAsideMenu: true,
+            },
+        ],
         hideAppBar: true,
         hideAsideMenu: true,
     },

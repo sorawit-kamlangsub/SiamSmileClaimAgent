@@ -1,61 +1,24 @@
 import axios from "axios";
-import CryptoJS from "crypto-js";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_SURVEY_URL } from "../../../Const";
+import { useQuery, useMutation, useQueryClient, QueryClient } from "@tanstack/react-query";
+import { API_CLAIM_FUND_URL, API_SURVEY_URL } from "../../../Const";
+import { encodeURLWithParams } from "../_common";
 
-const API_URL = API_SURVEY_URL;
-const PATH = "/api/external/surveys";
-const CLIENT_ID = "core-claim";
-const HMAC_SECRET = "1GM2fD61/ZpEA44VSMoMZ3oKbWBGfSSqesBm8MkMOPk="; // keep to env
+const surveyAPI_URL = API_SURVEY_URL;
+const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 
+const getPayTransferTransactionIdKey = "getPayTransferTransactionId";
+// const getSurveyIdKey = "getSurveyId";
 const getSurveyKey = "getSurvey";
 
-export const useGetSurvey = (onSuccessCallback: (response: any) => void, onErrorCallback: (error: string) => void) => {
-    const queryClient = useQueryClient();
-    console.log("HMAC_SECRET:", HMAC_SECRET);
-
-    return useMutation((formId: number) => getSurveyData(formId), {
-        onSuccess: (data) => {
-            onSuccessCallback(data);
-            queryClient.invalidateQueries([getSurveyKey]);
-        },
-        onError: (err: Error) => {
-            onErrorCallback && onErrorCallback(err.message);
-            queryClient.invalidateQueries([getSurveyKey]);
-        },
-    });
+export const useGetPayTransferTransactionId = (payload: object) => {
+    return useQuery([getPayTransferTransactionIdKey], () => getPayTransferTransactionData(payload));
 };
 
-const generateNonce = (): string => {
-    return crypto.randomUUID();
-};
-
-const generateHmacSignature = (nonce: string, body: string): string => {
-    const raw = ["POST", PATH, nonce, body].join("\n");
-    const hash = CryptoJS.HmacSHA256(raw, HMAC_SECRET);
-    return CryptoJS.enc.Base64.stringify(hash);
-};
-
-const getSurveyData = (formId: number) => {
-    const url = `${API_URL}`;
-    const payload: string = JSON.stringify({ FormId: formId });
-    const nonce: string = generateNonce();
-    const signature: string = generateHmacSignature(nonce, payload);
-    console.log("🚀 ~ getSurveyData ~ signature:", signature);
+const getPayTransferTransactionData = (payload: any) => {
+    const url = encodeURLWithParams(`${claimFundAPI_URL}/Notification/GetTransactionById`, payload);
 
     return axios
-        .post(
-            url,
-            { FormId: formId },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "X-Client-Id": CLIENT_ID,
-                    "X-Nonce": nonce,
-                    "X-Signature": signature,
-                },
-            }
-        )
+        .get(url)
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;
@@ -63,7 +26,149 @@ const getSurveyData = (formId: number) => {
                 throw res.data.message;
             }
         })
-        .catch((err) => {
-            throw err;
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+type ResponseSurveyId = {
+    data: {
+        surveyId: number;
+    };
+    isSuccess: boolean;
+};
+
+export const useGetSurveyId = (
+    onSuccessCallBack: (response: ResponseSurveyId) => void,
+    onErrorCallback: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(() => getSurveyId(), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+
+            queryClient.invalidateQueries([getPayTransferTransactionIdKey]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback && onErrorCallback(error.message);
+            queryClient.invalidateQueries([getPayTransferTransactionIdKey]);
+        },
+    });
+};
+
+const getSurveyId = () => {
+    const url = `${claimFundAPI_URL}/Notification/GetSurveyId`;
+
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+export const useGetSurveyQuestion = (surveyToken: string) => {
+    return useQuery([getSurveyKey], () => getSurveyQuestion(surveyToken), { enabled: !!surveyToken });
+};
+
+const getSurveyQuestion = (surveyToken: string) => {
+    const url = `${surveyAPI_URL}/${surveyToken}`;
+
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+export const useSaveSurvey = (onSuccessCallBack: (response: any) => void, onErrorCallback: (error: string) => void) => {
+    const queryClient = useQueryClient();
+    return useMutation((payload: any) => saveSurvey(payload), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+
+            // queryClient.invalidateQueries([getPayTransferTransactionIdKey]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback && onErrorCallback(error.message);
+            queryClient.invalidateQueries([getPayTransferTransactionIdKey]);
+        },
+    });
+};
+
+const saveSurvey = (payload: any) => {
+    const url = `${claimFundAPI_URL}/Notification/SaveSurveyFeedback`;
+    return axios
+        .post(url, payload)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+type UpdateSurveyType = {
+    smStransactionId: string;
+    surveyId: number;
+};
+
+export const useUpdateSurveyId = (onSuccessCallBack: (res: any) => void, onErrorCallback: (error: string) => void) => {
+    const queryClient = useQueryClient();
+    return useMutation((payload: UpdateSurveyType) => updateSurveyId(payload), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+
+            queryClient.invalidateQueries([getPayTransferTransactionIdKey]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback && onErrorCallback(error.message);
+            queryClient.invalidateQueries([getPayTransferTransactionIdKey]);
+        },
+    });
+};
+
+const updateSurveyId = (payload: UpdateSurveyType) => {
+    const url = `${claimFundAPI_URL}/Notification/UpdateSMSTransactionSurvey`;
+    return axios
+        .post(url, payload)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
         });
 };

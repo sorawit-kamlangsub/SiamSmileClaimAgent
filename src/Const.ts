@@ -18,6 +18,7 @@ export const {
     VITE_QUEUE_API_URL,
     VITE_QUEUE_REFETCH_INTERVAL,
     VITE_SURVEY_API_URL,
+    VITE_CLAIM_FUND_API_URL,
     MODE,
 } = window.__CONST__ENV__;
 
@@ -48,6 +49,7 @@ export const API_URL = VITE_API_URL;
 export const APIGW_URL = VITE_APIGW_BASEURL;
 export const AUTH_LOGOUT_REDIRECT = VITE_SSO_ISSUER + "/Account/Logout";
 export const API_SURVEY_URL = VITE_SURVEY_API_URL;
+export const API_CLAIM_FUND_URL = VITE_CLAIM_FUND_API_URL;
 
 /*
  * สำหรับใช้ในการเรียกใช้งาน API ให้ใช้งานในรูปแบบ

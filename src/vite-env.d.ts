@@ -147,4 +147,9 @@ export interface ImportMetaEnv {
      */
 
     readonly VITE_SURVEY_API_URL: string;
+
+    /**
+     * URL ของ Claim Fund API
+     */
+    readonly VITE_CLAIM_FUND_API_URL: string;
 }

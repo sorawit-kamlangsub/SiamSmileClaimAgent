@@ -2,7 +2,7 @@ import { Box, Grid } from "@mui/material";
 import BackgroundM from "../../../../../public/BackgroundM.png";
 import { useEffect } from "react";
 import HeaderSurvey from "../components/HeaderSurvey";
-import HeaderDetailBox from "../components/HeaderDetailBox";
+import HeaderDetailSurveyBox from "../components/HeaderDetailSurveyBox";
 
 const SurveyPage = () => {
     useEffect(() => {
@@ -40,11 +40,11 @@ const SurveyPage = () => {
         >
             <Grid container>
                 <Box>
-                    <Grid item xs={12} sm={12} md={12} lg={12} sx={{mx:2,pb:7}}>
+                    <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mx: 2, pb: 7 }}>
                         <HeaderSurvey />
                     </Grid>
                     <Grid item xs={12} sm={12} md={12} lg={12}>
-                        <HeaderDetailBox />
+                        <HeaderDetailSurveyBox />
                     </Grid>
                 </Box>
             </Grid>
