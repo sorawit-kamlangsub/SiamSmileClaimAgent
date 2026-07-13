@@ -4,13 +4,13 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
 import {
-    BankAccount,
+    ClaimBankAccount,
     ContactInfo,
     removeBankAccount,
     removeContact,
     resetState,
-    setBankAccounts,
-    setContacts,
+    selectBankAccount,
+    selectContact,
 } from "../../../store/claimPHSlice";
 import { setBankLogo } from "../../../../../functionHelpers";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
@@ -30,7 +30,7 @@ import { swalError } from "../../../../_common";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
-    bank: BankAccount;
+    bank: ClaimBankAccount;
     selected: boolean;
     onSelect: () => void;
     onDelete?: () => void;
@@ -56,7 +56,7 @@ export const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSel
                 position: "relative",
             }}
         >
-            {!bank.isFromMock && onDelete && (
+            {onDelete && (
                 <IconButton
                     size="small"
                     onClick={(e) => {
@@ -92,22 +92,22 @@ export const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSel
                         >
                             {!logoSrc && (
                                 <Typography variant="caption" color="primary" fontWeight={700}>
-                                    {bank.bankName.slice(0, 2)}
+                                    {bank.bankName?.slice(0, 2)}
                                 </Typography>
                             )}
                         </Avatar>
                         <Box ml={1}>
                             <Typography variant="body2" fontWeight={700}>
-                                {bank.relationship}
+                                {bank.bankAccountRelationTypeName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
                                 {bank.bankName}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {bank.accountNo}
+                                {bank.bankAccountNo}
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                {bank.accountName}
+                                {bank.bankAccountName}
                             </Typography>
                         </Box>
                     </Box>
@@ -143,7 +143,7 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onS
             ml: { sm: 2 },
         }}
     >
-        {!contact.isFromMock && onDelete && (
+        {onDelete && (
             <IconButton
                 size="small"
                 onClick={(e) => {
@@ -172,13 +172,13 @@ export const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onS
                     </Avatar>
                     <Box ml={1}>
                         <Typography variant="body2" fontWeight={700}>
-                            {contact.relationship}
+                            {contact.contactPersonTypeName}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            {contact.phone}
+                            {contact.contactPhoneNo}
                         </Typography>
                         <Typography variant="body2" color="text.secondary">
-                            {contact.name}
+                            {contact.contactName}
                         </Typography>
                     </Box>
                 </Box>
@@ -196,12 +196,12 @@ const ClaimPHSummaryPage: React.FC = () => {
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
 
-    const handleSelectBank = (index: number) => {
-        dispatch(setBankAccounts(bankAccounts.map((b, i) => ({ ...b, isDefault: i === index }))));
+    const handleSelectBank = (id: string) => {
+        dispatch(selectBankAccount(id));
     };
 
-    const handleSelectContact = (index: number) => {
-        dispatch(setContacts(contacts.map((c, i) => ({ ...c, isDefault: i === index }))));
+    const handleSelectContact = (id: string) => {
+        dispatch(selectContact(id));
     };
 
     const handleConfirm = async () => {
@@ -407,12 +407,12 @@ const ClaimPHSummaryPage: React.FC = () => {
                                         บัญชีรับสินไหม :
                                     </Typography>
                                     <RadioGroup value={bankAccounts.findIndex((b) => b.isDefault).toString()}>
-                                        {bankAccounts.map((bank, i) => (
+                                        {bankAccounts.map((bank) => (
                                             <BankAccountCard
                                                 key={bank.id}
                                                 bank={bank}
                                                 selected={bank.isDefault}
-                                                onSelect={() => handleSelectBank(i)}
+                                                onSelect={() => handleSelectBank(bank.id)}
                                                 onDelete={() => dispatch(removeBankAccount(bank.id))}
                                             />
                                         ))}
@@ -439,12 +439,12 @@ const ClaimPHSummaryPage: React.FC = () => {
                                         เบอร์โทรติดต่อ :
                                     </Typography>
                                     <RadioGroup value={contacts.findIndex((c) => c.isDefault).toString()}>
-                                        {contacts.map((contact, i) => (
+                                        {contacts.map((contact) => (
                                             <ContactCard
                                                 key={contact.id}
                                                 contact={contact}
                                                 selected={contact.isDefault}
-                                                onSelect={() => handleSelectContact(i)}
+                                                onSelect={() => handleSelectContact(contact.id)}
                                                 onDelete={() => dispatch(removeContact(contact.id))}
                                             />
                                         ))}
@@ -490,7 +490,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                     </Box>
                 </Grid>
                 {/* ── Modals ── */}
-                <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} />
+                <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} productTypeId={6} />
                 <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
                 <ConfirmTransferPHModal
                     open={openConfirm}

@@ -49,10 +49,10 @@ const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
                 }
             />
             <Row label="ชื่อผู้เอาประกัน" value={`${data?.customerName}`} />
-            <Row label="เลขบัตรประชาชน" value={data?.cardDetail} />
-            <Row label="Passport" value={data?.cardDetail} />
+            <Row label="เลขบัตรประชาชน" value={data?.cardTypeId === 2 ? `${data?.cardDetail}` : "-"} />
+            <Row label="Passport" value={data?.cardTypeId !== 2 ? `${data?.cardDetail}` : "-"} />
             <Divider sx={{ mt: 1, mb: 1 }} />
-            <Row label="แผนประกัน" value={data?.productName} />
+            <Row label="แผนประกัน" value={data?.productCategoryName} />
             <Row label="วันที่เริ่มคุ้มครอง" value={formatDateString(data?.coverageFrom?.toString(), "DD/MM/BBBB")} />
             <Row label="วันที่มีผล" value={formatDateString(data?.coverageFrom?.toString(), "DD/MM/BBBB")} />
             <Row
@@ -60,7 +60,7 @@ const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
                 value={formatDateString(data?.coverageTo?.toString(), "DD/MM/BBBB")}
             />
             <Divider sx={{ mt: 1, mb: 1 }} />
-            <Row label="ประเภทผู้เอาประกัน" value="นักเรียน" />
+            <Row label="ประเภทผู้เอาประกัน" value={data?.customerTypeName} />
             <Row label="สถานศึกษา" value={data?.schoolName} />
         </Box>
     </CustomBox>

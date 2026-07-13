@@ -83,7 +83,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm, isL
                                 เบอร์โทรติดต่อ :
                             </Typography>
                             <Typography fontSize={15} fontWeight={700} color="primary">
-                                {defaultContact?.phone ?? "-"}
+                                {defaultContact?.contactPhoneNo ?? "-"}
                             </Typography>
                         </Box>
                     </Grid>
@@ -133,7 +133,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm, isL
                                         เลขที่บัญชี :
                                     </Typography>
                                     <Typography fontSize={16} fontWeight="bold">
-                                        {defaultBank?.accountNo ?? "-"}
+                                        {defaultBank?.bankAccountNo ?? "-"}
                                     </Typography>
                                 </Box>
                                 <Box display="flex" gap={1}>
@@ -141,7 +141,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm, isL
                                         ชื่อบัญชี :
                                     </Typography>
                                     <Typography fontSize={16} fontWeight="bold">
-                                        {defaultBank?.accountName ?? "-"}
+                                        {defaultBank?.bankAccountName ?? "-"}
                                     </Typography>
                                 </Box>
                             </Box>

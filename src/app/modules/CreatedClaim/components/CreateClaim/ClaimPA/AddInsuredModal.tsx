@@ -128,7 +128,6 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
         if (!selectedInsured) return;
         const item: ClaimInsuredItem = {
             id: Date.now().toString(),
-            appId: selectedInsured.appId,
             seq: currentItemCount + 1,
             customerName: selectedInsured.customerName,
             insuredType: selectedInsured.insuredType,

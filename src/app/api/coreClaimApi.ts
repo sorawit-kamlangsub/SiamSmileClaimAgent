@@ -6,8 +6,10 @@ import {
     CoreClaimClient,
     CreateCoreClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
+    GetClaimHistoryDtoResponseListServiceResponse,
+    GetDocumentSubTypeDtoRequest,
 } from "./coreClaimApi.client";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
 
 const coreClaimClient = new CoreClaimClient(CORECLAIM_API_URL, axios);
@@ -15,6 +17,10 @@ const coreClaimClient = new CoreClaimClient(CORECLAIM_API_URL, axios);
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
 const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
 const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"];
+const getDocumentSubTypeQueryKey = ["getDocumentSubType"];
+const getClaimHistoryQueryKey = ["getClaimHistory"];
+const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
+const getContactPersonQueryKey = ["getContactPerson"];
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
@@ -79,11 +85,32 @@ export const useGetCustomerBenefitDetailSearch = (
     policyCode?: string | undefined,
     caseTypeId?: number | undefined,
     dateHappen?: Dayjs | undefined,
-    isContinue?: boolean | undefined
+    isContinue?: boolean | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    medicalTypeId?: number | undefined
 ) => {
     return useQuery(
-        [getCustomerBenefitDetailSearchQueryKey, policyCode, caseTypeId, dateHappen, isContinue],
-        () => coreClaimClient.getCustomerBenefitDetailSearch(policyCode, caseTypeId, dateHappen, isContinue),
+        [
+            getCustomerBenefitDetailSearchQueryKey,
+            policyCode,
+            caseTypeId,
+            dateHappen,
+            isContinue,
+            incidentTypeId,
+            coverageTypeId,
+            medicalTypeId,
+        ],
+        () =>
+            coreClaimClient.getCustomerBenefitDetailSearch(
+                policyCode,
+                caseTypeId,
+                dateHappen,
+                isContinue,
+                incidentTypeId,
+                coverageTypeId,
+                medicalTypeId
+            ),
         {
             enabled: !!policyCode,
             refetchOnWindowFocus: false,
@@ -106,4 +133,69 @@ export const useCreateCoreClaim = (
             onErrorCallback?.(error.message, 2);
         },
     });
+};
+
+export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean) => {
+    return useQuery(
+        [getDocumentSubTypeQueryKey, request],
+        async () => {
+            const response = await coreClaimClient.getDocumentSubType(request);
+            return response;
+        },
+        {
+            cacheTime: Infinity,
+            staleTime: Infinity,
+            enabled: !!(isEnabled && request.documentTypeId),
+            refetchOnWindowFocus: false,
+            refetchOnMount: false,
+        }
+    );
+};
+
+export const useGetClaimHistory = (
+    applicationId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery<GetClaimHistoryDtoResponseListServiceResponse, Error>(
+        [getClaimHistoryQueryKey, applicationId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimClient.getClaimHistory(
+                applicationId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!applicationId,
+            refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetCustomerBankAccount = (applicationId?: string | undefined) => {
+    return useQuery(
+        [getCustomerBankAccountQueryKey, applicationId],
+        () => coreClaimClient.getCustomerBankAccount(applicationId || ""),
+        {
+            enabled: !!applicationId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetContactPerson = (applicationId: string, productTypeId?: number | undefined) => {
+    return useQuery(
+        [getContactPersonQueryKey, applicationId, productTypeId],
+        () => coreClaimClient.getContactPerson(applicationId, productTypeId),
+        {
+            enabled: !!applicationId && !!productTypeId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };

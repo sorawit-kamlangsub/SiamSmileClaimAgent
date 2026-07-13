@@ -1,11 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
-import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
+import { GetContactPersonDtoResponse, GetCustomerBankAccountDtoResponse, GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
+import { DocumentByIdResponseDto } from "../../../api/docstorageApi.client";
 
 export enum SymptomType {
     ChiefComplaint = 1,
     Other = 2,
+}
+
+export enum SpecifyHospital {
+    Unspecified = 1,
+    Specify = 2,
+}
+export interface DiagnosisModel {
+    icd10Id?: number;
+    icd10Detail?: string;
 }
 
 export interface ClaimCaseItem {
@@ -65,32 +75,24 @@ export interface ClaimFormValues {
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
+    specifyHospital: SpecifyHospital | undefined;
+    hospitalId: number | undefined;
+    hospitalName: string | undefined;
+    diagnoses: DiagnosisModel[];
+    accidentPlace: string | undefined;
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
-    chiefComplaintOther: string | undefined;
+    remark: string | undefined;
 }
 
-export interface BankAccount {
+export type ClaimBankAccount = GetCustomerBankAccountDtoResponse & {
     id: string;
-    relationshipId: number;
-    relationship: string;
-    bankId: number;
-    bankName: string;
-    accountNo: string;
-    accountName: string;
     isDefault: boolean;
-    isFromMock?: boolean;
-}
-
-export interface ContactInfo {
+};
+export type ContactInfo = GetContactPersonDtoResponse & {
     id: string;
-    relationshipId: number;
-    relationship: string;
-    phone: string;
-    name: string;
     isDefault: boolean;
-    isFromMock?: boolean;
-}
+};
 
 // export interface InsuredInfoPH {
 //     appId: string;
@@ -105,11 +107,12 @@ interface ClaimPHState {
     isContinuous: boolean;
     oldClaim: OldClaimInfo | undefined;
     form: ClaimFormValues;
-    bankAccounts: BankAccount[];
+    bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
     insured: GetCustomerDetailByIdDtoResponse | undefined;
+    documentDetailById: { [key: string]: DocumentDetailDto };
+    isEnabled: boolean;
 }
-
 const defaultForm: ClaimFormValues = {
     documentRecipientTypeId: 2,
     documentRecipientTypeName: undefined,
@@ -137,11 +140,26 @@ const defaultForm: ClaimFormValues = {
     notificationDate: dayjs(),
     transferAmount: 0,
     symptomType: 1,
+    specifyHospital: 1,
+    hospitalId: undefined,
+    hospitalName: undefined,
+    diagnoses: [
+        {
+            icd10Id: undefined,
+            icd10Detail: undefined,
+        },
+    ],
+    accidentPlace: undefined,
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
-    chiefComplaintOther: undefined,
+    remark: undefined,
 };
-
+export interface DocumentDetailDto {
+    documentId?: string | undefined;
+    documentCode?: string | undefined;
+    documentTypeId?: number | undefined;
+    docDetail?: DocumentByIdResponseDto;
+}
 const initialState: ClaimPHState = {
     isContinuous: false,
     oldClaim: undefined,
@@ -149,6 +167,8 @@ const initialState: ClaimPHState = {
     bankAccounts: [],
     contacts: [],
     insured: undefined,
+    isEnabled: false,
+    documentDetailById: {},
 };
 
 const claimPHSlice = createSlice({
@@ -170,27 +190,64 @@ const claimPHSlice = createSlice({
         resetClaimForm(state) {
             state.form = defaultForm;
         },
-        setBankAccounts(state, action: PayloadAction<BankAccount[]>) {
-            state.bankAccounts = action.payload;
+        setBankAccounts(state, action: PayloadAction<GetCustomerBankAccountDtoResponse[]>) {
+            state.bankAccounts = action.payload.map((item, index) => ({
+                ...item,
+                id: String(item.indexId ?? index),
+                isDefault: index === 0,
+            }));
         },
-        addBankAccount(state, action: PayloadAction<BankAccount>) {
-            state.bankAccounts = state.bankAccounts.map((b) => ({ ...b, isDefault: false }));
-            state.bankAccounts.push({ ...action.payload, isDefault: true });
+        selectBankAccount(state, action: PayloadAction<string>) {
+            state.bankAccounts = state.bankAccounts.map((b) => ({
+                ...b,
+                isDefault: b.id === action.payload,
+            }));
         },
-        setContacts(state, action: PayloadAction<ContactInfo[]>) {
-            state.contacts = action.payload;
+        addBankAccount(state, action: PayloadAction<ClaimBankAccount>) {
+            state.bankAccounts = state.bankAccounts.map((b) => ({
+                ...b,
+                isDefault: false,
+            }));
+
+            state.bankAccounts.push({
+                ...action.payload,
+                isDefault: true,
+            });
+        },
+        setContacts(state, action: PayloadAction<GetContactPersonDtoResponse[]>) {
+            state.contacts = action.payload.map((item, index) => ({
+                ...item,
+                id: String(item.indexId ?? index),
+                isDefault: index === 0,
+            }));
+        },
+        selectContact(state, action: PayloadAction<string>) {
+            state.contacts = state.contacts.map((b) => ({
+                ...b,
+                isDefault: b.id === action.payload,
+            }));
         },
         addContact(state, action: PayloadAction<ContactInfo>) {
-            state.contacts = state.contacts.map((c) => ({ ...c, isDefault: false }));
-            state.contacts.push({ ...action.payload, isDefault: true });
+            state.contacts = state.contacts.map((b) => ({
+                ...b,
+                isDefault: false,
+            }));
+
+            state.contacts.push({
+                ...action.payload,
+                isDefault: true,
+            });
         },
         // 2. เพิ่ม reducers ใน claimPHSlice (ใน reducers: { ... })
         removeBankAccount(state, action: PayloadAction<string>) {
             const idx = state.bankAccounts.findIndex((b) => b.id === action.payload);
+
             if (idx === -1) return;
-            if (state.bankAccounts[idx].isFromMock) return; // mock ลบไม่ได้
+
             const wasDefault = state.bankAccounts[idx].isDefault;
+
             state.bankAccounts.splice(idx, 1);
+
             if (wasDefault && state.bankAccounts.length > 0) {
                 state.bankAccounts[state.bankAccounts.length - 1].isDefault = true;
             }
@@ -198,7 +255,6 @@ const claimPHSlice = createSlice({
         removeContact(state, action: PayloadAction<string>) {
             const idx = state.contacts.findIndex((c) => c.id === action.payload);
             if (idx === -1) return;
-            if (state.contacts[idx].isFromMock) return; // mock ลบไม่ได้
             const wasDefault = state.contacts[idx].isDefault;
             state.contacts.splice(idx, 1);
             if (wasDefault && state.contacts.length > 0) {
@@ -207,6 +263,12 @@ const claimPHSlice = createSlice({
         },
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
+        },
+        setEnabled: (state, action: PayloadAction<boolean>) => {
+            state.isEnabled = action.payload;
+        },
+        setDocumentDetailById: (state, action: PayloadAction<DocumentDetailDto>) => {
+            state.documentDetailById[action.payload.documentId ?? ""] = action.payload;
         },
         resetState: () => initialState,
     },
@@ -219,12 +281,16 @@ export const {
     setClaimForm,
     resetClaimForm,
     setBankAccounts,
+    selectBankAccount,
     addBankAccount,
     setContacts,
+    selectContact,
     addContact,
     removeBankAccount,
     removeContact,
     setInsured,
+    setEnabled,
+    setDocumentDetailById,
     resetState,
 } = claimPHSlice.actions;
 

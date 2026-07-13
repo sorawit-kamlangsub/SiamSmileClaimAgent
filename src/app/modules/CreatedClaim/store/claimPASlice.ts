@@ -1,8 +1,12 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
-import { BankAccount, ContactInfo, SymptomType } from "./claimPHSlice";
-import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
+import { ClaimBankAccount, ContactInfo, DiagnosisModel, SpecifyHospital, SymptomType } from "./claimPHSlice";
+import {
+    GetContactPersonDtoResponse,
+    GetCustomerBankAccountDtoResponse,
+    GetCustomerDetailByIdDtoResponse,
+} from "../../../api/coreClaimApi.client";
 
 // export interface InsuredInfoPA {
 //     appId: string;
@@ -25,19 +29,14 @@ export interface SchoolInfo {
     schoolName: string;
     teacherName: string;
     teacherPhone: string;
-    teacherBank: string;
-    teacherAccountNo: string;
-    teacherAccountName: string;
 }
 
 export interface ClaimInsuredItem {
     id: string;
-    appId: string;
     seq: number;
     customerName: string;
-    insuredType: string;
-    claimType: "";
-    opdSubType: "";
+    claimStyle: string;
+    incidentDate: Dayjs;
     claimAmount: number;
 }
 
@@ -75,9 +74,14 @@ export interface ClaimPAFormValues {
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
+    specifyHospital: SpecifyHospital | undefined;
+    hospitalId: number | undefined;
+    hospitalName: string | undefined;
+    diagnoses: DiagnosisModel[];
+    accidentPlace: string | undefined;
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
-    chiefComplaintOther: string | undefined;
+    remark: string | undefined;
 }
 
 interface ClaimPAState {
@@ -86,7 +90,7 @@ interface ClaimPAState {
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
     claimItems: ClaimInsuredItem[]; // รายการผู้เอาประกันในตาราง
-    bankAccounts: BankAccount[];
+    bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
     editingItemId: string | null; // id ของ row ที่กำลังแก้ไข
 }
@@ -118,9 +122,19 @@ const defaultForm: ClaimPAFormValues = {
     notificationDate: dayjs(),
     transferAmount: 0,
     symptomType: 1,
+    specifyHospital: 1,
+    hospitalId: undefined,
+    hospitalName: undefined,
+    diagnoses: [
+        {
+            icd10Id: undefined,
+            icd10Detail: undefined,
+        },
+    ],
+    accidentPlace: undefined,
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
-    chiefComplaintOther: undefined,
+    remark: undefined,
 };
 
 const initialState: ClaimPAState = {
@@ -168,32 +182,64 @@ const claimPASlice = createSlice({
             state.editingItemId = action.payload;
         },
         // ── BankAccounts (เหมือน PH) ──
-        setBankAccounts(state, action: PayloadAction<BankAccount[]>) {
-            state.bankAccounts = action.payload;
+        setBankAccounts(state, action: PayloadAction<GetCustomerBankAccountDtoResponse[]>) {
+            state.bankAccounts = action.payload.map((item, index) => ({
+                ...item,
+                id: String(item.indexId ?? index),
+                isDefault: index === 0,
+            }));
         },
-        addBankAccount(state, action: PayloadAction<BankAccount>) {
-            state.bankAccounts = state.bankAccounts.map((b) => ({ ...b, isDefault: false }));
-            state.bankAccounts.push({ ...action.payload, isDefault: true });
+        selectBankAccount(state, action: PayloadAction<string>) {
+            state.bankAccounts = state.bankAccounts.map((b) => ({
+                ...b,
+                isDefault: b.id === action.payload,
+            }));
+        },
+        addBankAccount(state, action: PayloadAction<ClaimBankAccount>) {
+            state.bankAccounts = state.bankAccounts.map((b) => ({
+                ...b,
+                isDefault: false,
+            }));
+
+            state.bankAccounts.push({
+                ...action.payload,
+                isDefault: true,
+            });
+        },
+        setContacts(state, action: PayloadAction<GetContactPersonDtoResponse[]>) {
+            state.contacts = action.payload.map((item, index) => ({
+                ...item,
+                id: String(item.indexId ?? index),
+                isDefault: index === 0,
+            }));
+        },
+        selectContact(state, action: PayloadAction<string>) {
+            state.contacts = state.contacts.map((b) => ({
+                ...b,
+                isDefault: b.id === action.payload,
+            }));
+        },
+        addContact(state, action: PayloadAction<ContactInfo>) {
+            state.contacts = state.contacts.map((b) => ({
+                ...b,
+                isDefault: false,
+            }));
+
+            state.contacts.push({
+                ...action.payload,
+                isDefault: true,
+            });
         },
         removeBankAccount(state, action: PayloadAction<string>) {
             const idx = state.bankAccounts.findIndex((b) => b.id === action.payload);
-            if (idx === -1 || state.bankAccounts[idx].isFromMock) return;
             const wasDefault = state.bankAccounts[idx].isDefault;
             state.bankAccounts.splice(idx, 1);
             if (wasDefault && state.bankAccounts.length > 0)
                 state.bankAccounts[state.bankAccounts.length - 1].isDefault = true;
         },
         // ── Contacts (เหมือน PH) ──
-        setContacts(state, action: PayloadAction<ContactInfo[]>) {
-            state.contacts = action.payload;
-        },
-        addContact(state, action: PayloadAction<ContactInfo>) {
-            state.contacts = state.contacts.map((c) => ({ ...c, isDefault: false }));
-            state.contacts.push({ ...action.payload, isDefault: true });
-        },
         removeContact(state, action: PayloadAction<string>) {
             const idx = state.contacts.findIndex((c) => c.id === action.payload);
-            if (idx === -1 || state.contacts[idx].isFromMock) return;
             const wasDefault = state.contacts[idx].isDefault;
             state.contacts.splice(idx, 1);
             if (wasDefault && state.contacts.length > 0) state.contacts[state.contacts.length - 1].isDefault = true;
@@ -218,9 +264,11 @@ export const {
     setBankAccounts,
     addBankAccount,
     removeBankAccount,
+    selectBankAccount,
     setContacts,
     addContact,
     removeContact,
+    selectContact,
     setClaimItems,
     resetState,
 } = claimPASlice.actions;

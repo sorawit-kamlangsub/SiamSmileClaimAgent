@@ -14,48 +14,55 @@ import { mockBankAccounts, mockContacts, mockOldClaim } from "../../../store/moc
 import InsuredInfoCardPH from "../../../components/CreateClaim/ClaimPH/InsuredInfoCardPH";
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
 import ClaimFormSection from "../../../components/CreateClaim/ClaimPH/ClaimFormSection";
-import ClaimHistoryCardPH from "../../../components/CreateClaim/ClaimPH/ClaimHistoryCardPH";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
-import { useGetCustomerDetailById } from "../../../../../api/coreClaimApi";
+import {
+    useGetContactPerson,
+    useGetCustomerBankAccount,
+    useGetCustomerDetailById,
+} from "../../../../../api/coreClaimApi";
+import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { refId } = useParams();
+    const { appId, refId } = useParams();
 
     const customerId = refId ? parseInt(atob(refId)) : undefined;
+    const applicationId = appId ? atob(appId) : undefined;
 
-    const { isContinuous, oldClaim, insured } = useAppSelector(claimPHSelector);
+    const { isContinuous, oldClaim } = useAppSelector(claimPHSelector);
 
     const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(customerId as number);
-
+    const { data: bankAccount, isLoading: bankAccountLoading } = useGetCustomerBankAccount(applicationId);
+    const { data: contact, isLoading: contactLoading } = useGetContactPerson(applicationId || "", 6);
+    const isLoading = claimInfoLoading || bankAccountLoading || contactLoading;
     useEffect(() => {
-        if (!claimInfo?.data || claimInfoLoading) return;
+        if (!claimInfo?.data || isLoading) return;
 
         const continuous = true;
 
         dispatch(setInsured(claimInfo.data));
 
         dispatch(setOldClaim(continuous ? mockOldClaim : undefined));
-        dispatch(setBankAccounts(mockBankAccounts));
-        dispatch(setContacts(mockContacts));
-    }, [claimInfo?.data, claimInfoLoading]);
+        dispatch(setBankAccounts(bankAccount?.data || []));
+        dispatch(setContacts(contact?.data || []));
+    }, [claimInfo?.data, bankAccount?.data, contact?.data, isLoading, dispatch]);
 
-    if (claimInfoLoading) return <LinearLoading isLoading={claimInfoLoading} />;
+    if (isLoading) return <LinearLoading isLoading={isLoading} />;
 
     return (
         <Grid container spacing={2}>
             {/* ข้อมูลผู้เอาประกัน | ประวัติการเคลม */}
 
-            {claimInfoLoading ? (
+            {isLoading ? (
                 <LinearProgress />
             ) : (
                 <>
                     <Grid item xs={12} md={4}>
-                        <InsuredInfoCardPH data={claimInfo?.data} onEdit={() => navigate("/monitor")} />
+                        <InsuredInfoCardPH data={claimInfo?.data} onEdit={() => navigate("/monitor-claim")} />
                     </Grid>
                     <Grid item xs={12} md={8}>
-                        <ClaimHistoryCardPH />
+                        <ClaimHistoryCard appId={applicationId} />
                     </Grid>
 
                     {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
@@ -65,7 +72,7 @@ const ClaimPHPage: React.FC = () => {
                         </Grid>
                     )}
                     <Grid item xs={12}>
-                        <ClaimFormSection onNext={() => navigate(`/claim/ph/${refId}/summary`)} />
+                        <ClaimFormSection onNext={() => navigate(`/claim/ph/${appId}/${refId}/summary`)} />
                     </Grid>
                 </>
             )}

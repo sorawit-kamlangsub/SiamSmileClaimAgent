@@ -567,7 +567,7 @@ const IDENTITY_DOC_OPTIONS: { value: IdentityDocType; label: string; icon: React
     { value: "alienCard", label: "บัตรต่างด้าว", icon: Public },
 ];
 
-const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
+const MockOCR: React.FC<OcrDocumentScanSectionProps> = ({
     onOcrChange,
     requiredDocs,
     onFilesValidChange,
@@ -1224,4 +1224,4 @@ const testOCR: React.FC<OcrDocumentScanSectionProps> = ({
     );
 };
 
-export default testOCR;
+export default MockOCR;

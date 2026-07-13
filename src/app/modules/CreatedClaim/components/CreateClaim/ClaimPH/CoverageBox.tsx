@@ -1,13 +1,14 @@
 import React from "react";
 import { Box, Typography, Chip } from "@mui/material";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import ShieldIcon from "@mui/icons-material/Shield";
-import { CoverageItem } from "../../../store/mockClaimPH";
-import { setBenefitIcons } from "../../../../../functionHelpers";
+import { numberWithCommas, setBenefitIcons } from "../../../../../functionHelpers";
+import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../../../api/coreClaimApi.client";
+import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 
 interface Props {
-    items: CoverageItem[];
-    planCode: string;
+    items: GetCustomerBenefitDetailSearchDtoResponse[];
+    isLoading: boolean;
+    planCode: string | undefined;
 }
 
 const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
@@ -26,7 +27,7 @@ const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
                 minHeight: 36,
             }}
         >
-            <ShieldIcon sx={{ fontSize: 22, color: "#1a5da8" }} />
+            <MonitorHeartIcon sx={{ fontSize: 22, color: "#1a5da8" }} />
         </Box>
     );
 };
@@ -70,19 +71,20 @@ const CoverageBox: React.FC<Props> = ({ items, planCode }) => (
 
                 <Box flex={1} minWidth={0}>
                     <Typography fontSize={12} fontWeight={500} color="text.primary">
-                        {item.label}
+                        {item.benefitName}
                     </Typography>
                     <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
                         <Typography fontSize={11} color="primary.main">
-                            {item.limit}
+                            {numberWithCommas(item.pricePerUnit?.toString() || "0", 0)} บาท{item.unitName}/สูงสุด{" "}
+                            {numberWithCommas(item.maxQuantity?.toString() || "0", 0)} {item.quantityUnitName}
                         </Typography>
-                        {item.limitMax && (
+                        {item.maxPrice && (
                             <>
                                 <Typography fontSize={11} color="text.disabled">
                                     |
                                 </Typography>
                                 <Typography fontSize={11} color="success.main">
-                                    {item.limitMax}
+                                    วงเงินสูงสุด {numberWithCommas(item.maxPrice?.toString() || "0", 0)} บาท
                                 </Typography>
                             </>
                         )}

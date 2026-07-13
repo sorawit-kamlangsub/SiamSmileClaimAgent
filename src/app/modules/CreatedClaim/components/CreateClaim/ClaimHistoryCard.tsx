@@ -1,23 +1,33 @@
-import React from "react";
-import { Box, Typography, Divider, Button, Chip } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Typography, Button, Chip } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import { useClaimHistory } from "../../../hooks/Monitor/useClaimHistory";
-import { formatDateString } from "../../../../../functionHelpers";
-import { backgroundColor, colorLine } from "../../../../_common/components/CustomComponent/HeadingWithColor";
+import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
+import { useClaimHistory } from "../../hooks/Monitor/useClaimHistory";
+import { formatDateString } from "../../../../functionHelpers";
+import { backgroundColor, colorLine } from "../../../_common/components/CustomComponent/HeadingWithColor";
+import ViewClaimHistoryModal from "./ViewClaimHistoryModal";
+import { GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client";
+import ViewClaimDetailModal from "./ViewClaimDetailModal";
 
-const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-const ClaimHistoryCardPH: React.FC = () => {
-    const { paged, page, setPage, totalPages, total, handleDetailClick } = useClaimHistory();
-
+export const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+type ClaimHistoryCardProps = {
+    appId?: string;
+};
+const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
+    const { claimHistoryData, setPaginated, pagination } = useClaimHistory(appId);
+    const items = claimHistoryData?.data ?? [];
+    const [selectedClaim, setSelectedClaim] = useState<GetClaimHistoryDtoResponse>();
+    const [openDetailCase, setOpenDetailCase] = useState(false);
+    const [openAllHistory, setOpenAllHistory] = useState(false);
+    const handleDetailClick = (item: GetClaimHistoryDtoResponse) => {
+        setSelectedClaim(item);
+        setOpenDetailCase(true);
+    };
     return (
         <CustomBox sx={{ minHeight: 284 }}>
-            {/* Header: ไอคอน+หัวข้อ (ซ้าย) / จำนวนรายการ+ปุ่มดูทั้งหมด (ขวา) */}
             <Box
                 sx={{
                     bgcolor: backgroundColor.blue,
@@ -41,7 +51,7 @@ const ClaimHistoryCardPH: React.FC = () => {
 
                 <Box display="flex" alignItems="center" gap={1}>
                     <Chip
-                        label={`${total} รายการ`}
+                        label={`${items[0]?.totalCount || 0} รายการ`}
                         size="small"
                         sx={{
                             bgcolor: "#d9ecfb",
@@ -61,19 +71,19 @@ const ClaimHistoryCardPH: React.FC = () => {
                             fontWeight: "bold",
                             fontSize: 13,
                         }}
+                        onClick={() => setOpenAllHistory(true)}
                     >
                         ดูรายการทั้งหมด
                     </Button>
                 </Box>
             </Box>
 
-            {/* Cards */}
-            {paged.length === 0 ? (
+            {items.length === 0 ? (
                 <Box textAlign="center" py={4} color="text.secondary">
                     <Typography fontSize={14}>ไม่มีประวัติการเคลม</Typography>
                 </Box>
             ) : (
-                paged.map((item, idx) => (
+                items.slice(0, 2).map((item, idx) => (
                     <Box
                         key={idx}
                         sx={{
@@ -106,7 +116,6 @@ const ClaimHistoryCardPH: React.FC = () => {
                                 </Typography>
                             </Box>
 
-                            {/* TODO: ยังไม่มี field สถานะจริง (เช่น item.claimStatus) จึงใช้ static ไปก่อน */}
                             <Box
                                 display="flex"
                                 alignItems="center"
@@ -188,7 +197,9 @@ const ClaimHistoryCardPH: React.FC = () => {
                                     วันที่เกิดเหตุ
                                 </Typography>
                                 <Typography fontSize={14} fontWeight="600" color="text.primary">
-                                    {formatDateString(item.incidentDate.toString(), "DD/MM/BBBB")}
+                                    {item.incidentDate
+                                        ? formatDateString(item.incidentDate.toString(), "DD/MM/BBBB")
+                                        : "-"}
                                 </Typography>
                             </Box>
 
@@ -197,7 +208,7 @@ const ClaimHistoryCardPH: React.FC = () => {
                                     อาการสำคัญ
                                 </Typography>
                                 <Typography fontSize={14} fontWeight="600" color="text.primary">
-                                    {item.chiefComplain}
+                                    {item.chiefComplaintDetail}
                                 </Typography>
                             </Box>
 
@@ -206,7 +217,7 @@ const ClaimHistoryCardPH: React.FC = () => {
                                     ยอดเบิกรวม
                                 </Typography>
                                 <Typography fontSize={15} fontWeight="bold" color="primary.main">
-                                    {fmt(item.totalClaim)}
+                                    {fmt(item.caseAmount ?? 0)}
                                 </Typography>
                             </Box>
 
@@ -215,12 +226,11 @@ const ClaimHistoryCardPH: React.FC = () => {
                                     ยอดจ่ายรวม
                                 </Typography>
                                 <Typography fontSize={15} fontWeight="bold" color="success.main">
-                                    {fmt(item.totalPaid)}
+                                    {fmt(item.totalPaidAmount ?? 0)}
                                 </Typography>
                             </Box>
                         </Box>
 
-                        {/* 4. กล่องล่างสุด: ลิงก์ดูเคสย่อย + จำนวนเคส (ซ้าย) / ปุ่มดูรายละเอียด (ขวา) */}
                         <Box px={2} pb={2}>
                             <Box
                                 display="flex"
@@ -267,8 +277,21 @@ const ClaimHistoryCardPH: React.FC = () => {
                     </Box>
                 ))
             )}
+            <ViewClaimHistoryModal
+                items={items}
+                handleDetailClick={handleDetailClick}
+                open={openAllHistory}
+                onClose={() => setOpenAllHistory(false)}
+                paginated={pagination}
+                setPaginated={setPaginated}
+            />
+            <ViewClaimDetailModal
+                open={openDetailCase}
+                onClose={() => setOpenDetailCase(false)}
+                claim={selectedClaim}
+            />
         </CustomBox>
     );
 };
 
-export default ClaimHistoryCardPH;
+export default ClaimHistoryCard;

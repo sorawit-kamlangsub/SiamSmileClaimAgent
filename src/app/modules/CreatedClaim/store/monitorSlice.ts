@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import { Dayjs } from "dayjs";
+import { GetClaimHistoryDtoResponse } from "../../../api/coreClaimApi.client";
 
 export type SearchTypeId = 1 | 2 | 3 | 4 | 5;
 
@@ -49,7 +50,7 @@ export interface SelectedPolicyInfo {
 interface MonitorState {
     search: checkeligibleMonitorSearchValuesType;
     selectedPolicy: SelectedPolicyInfo | null;
-    claimHistory: ClaimHistoryItem[];
+    claimHistory: GetClaimHistoryDtoResponse[];
     isSearchMonitor?: boolean;
 }
 
@@ -79,7 +80,7 @@ const monitorSlice = createSlice({
             state.selectedPolicy = action.payload;
             state.claimHistory = [];
         },
-        setClaimHistory(state, action: PayloadAction<ClaimHistoryItem[]>) {
+        setClaimHistory(state, action: PayloadAction<GetClaimHistoryDtoResponse[]>) {
             state.claimHistory = action.payload;
         },
         resetMonitor: () => initialState,

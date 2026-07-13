@@ -1,26 +1,26 @@
-import { useGetICD10Filter } from "../../../../../api/coreClaimMastersApi";
+import { useGetHospitalDetailAllFilter } from "../../../../../api/coreClaimMastersApi";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
 import FormikAutocompleteApi from "../../CustomFormik/FormikAutocompleteApi";
 
-type CD10AutocompleteProps = Omit<
+type HospitalDropdownProps = Omit<
     FormikAutocompleteProps,
     "data" | "isLoading" | "valueFieldName" | "label" | "displayFieldName" | "filterSelectedOptions"
 >;
 
-const CD10Autocomplete = ({ formik, ...props }: CD10AutocompleteProps) => {
+const HospitalDropdown = ({ formik, ...props }: HospitalDropdownProps) => {
     return (
         <>
             <FormikAutocompleteApi
                 fullWidth
                 {...props}
-                valueFieldName="icD10Id"
-                displayFieldName="icD10Detail"
-                useQueryGet={useGetICD10Filter}
-                label="การวินิจฉัย "
+                valueFieldName="organizeId"
+                displayFieldName="organizeName"
+                useQueryGet={useGetHospitalDetailAllFilter}
+                label="สถานพยาบาล "
                 formik={formik}
             />
         </>
     );
 };
 
-export default CD10Autocomplete;
+export default HospitalDropdown;

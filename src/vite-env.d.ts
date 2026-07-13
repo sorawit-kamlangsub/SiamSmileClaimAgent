@@ -148,9 +148,9 @@ export interface ImportMetaEnv {
     readonly VITE_CORECLAIM_API_URL: string;
 
     /**
-     * URL ของ ORC API
+     * URL ของ OCR API
      */
-    readonly VITE_ORC_API_URL: string;
+    readonly VITE_OCR_API_URL: string;
 
     /**
      * URL ของ DocStorage API

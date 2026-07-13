@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Box, Button, Grid, RadioGroup, Typography } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -7,22 +7,19 @@ import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
     removeBankAccount,
     removeContact,
-    setBankAccounts,
-    setContacts,
     removeClaimItem,
     setEditingItemId,
-    setClaimItems,
     ClaimInsuredItem,
     resetState,
+    selectBankAccount,
+    selectContact,
 } from "../../../store/claimPASlice";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import AddBankAccountModal from "../../../components/CreateClaim/ClaimPH/AddBankAccountModal";
 import AddContactModal from "../../../components/CreateClaim/ClaimPH/AddContactModal";
 import ConfirmTransferPAModal from "../../../components/CreateClaim/ClaimPA/ConfirmTransferPAModal";
-import ClaimSummaryPATable from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPATable";
 import SchoolInfoSection from "../../../components/CreateClaim/ClaimPA/SchoolInfoSection";
-import { mockClaimItemsPA } from "../../../store/mockClaimPH";
 import AddInsuredModal from "../../../components/CreateClaim/ClaimPA/AddInsuredModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
@@ -30,6 +27,7 @@ import { BankAccountCard, ContactCard } from "../ClaimPH/ClaimPHSummaryPage";
 import { useCreateClaimPA } from "../../../hooks/CreateClaim/ClaimPA/useCreateClaimPA";
 import Swal from "sweetalert2";
 import { swalError } from "../../../../_common";
+import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPAInfo";
 
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
@@ -41,20 +39,13 @@ const ClaimPASummaryPage: React.FC = () => {
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openAddInsured, setOpenAddInsured] = useState(false);
 
-    // ── Load mock claimItems ถ้ายังไม่มีในตอน dev ─────────────
-    useEffect(() => {
-        if (claimItems.length === 0) {
-            dispatch(setClaimItems(mockClaimItemsPA));
-        }
-    }, []);
-    // ─────────────────────────────────────────────────────────
+    const handleSelectBank = (id: string) => {
+        dispatch(selectBankAccount(id));
+    };
 
-    const handleSelectBank = (i: number) =>
-        dispatch(setBankAccounts(bankAccounts.map((b, idx) => ({ ...b, isDefault: idx === i }))));
-
-    const handleSelectContact = (i: number) =>
-        dispatch(setContacts(contacts.map((c, idx) => ({ ...c, isDefault: idx === i }))));
-
+    const handleSelectContact = (id: string) => {
+        dispatch(selectContact(id));
+    };
     const handleEditItem = (item: ClaimInsuredItem) => {
         dispatch(setEditingItemId(item.id));
         navigate(-1);
@@ -161,7 +152,7 @@ const ClaimPASummaryPage: React.FC = () => {
                     {/* ── ตารางผู้เอาประกัน ── */}
                     <Grid item xs={12}>
                         <CustomPaper>
-                            <ClaimSummaryPATable
+                            <ClaimSummaryPAInfo
                                 data={claimItems}
                                 onEdit={handleEditItem}
                                 onDelete={(id) => dispatch(removeClaimItem(id))}
@@ -180,12 +171,12 @@ const ClaimPASummaryPage: React.FC = () => {
                                         บัญชีรับสินไหม :
                                     </Typography>
                                     <RadioGroup value={bankAccounts.findIndex((b) => b.isDefault).toString()}>
-                                        {bankAccounts.map((bank, i) => (
+                                        {bankAccounts.map((bank) => (
                                             <BankAccountCard
                                                 key={bank.id}
                                                 bank={bank}
                                                 selected={bank.isDefault}
-                                                onSelect={() => handleSelectBank(i)}
+                                                onSelect={() => handleSelectBank(bank.id)}
                                                 onDelete={() => dispatch(removeBankAccount(bank.id))}
                                             />
                                         ))}
@@ -212,12 +203,12 @@ const ClaimPASummaryPage: React.FC = () => {
                                         เบอร์โทรติดต่อ :
                                     </Typography>
                                     <RadioGroup value={contacts.findIndex((c) => c.isDefault).toString()}>
-                                        {contacts.map((contact, i) => (
+                                        {contacts.map((contact) => (
                                             <ContactCard
                                                 key={contact.id}
                                                 contact={contact}
                                                 selected={contact.isDefault}
-                                                onSelect={() => handleSelectContact(i)}
+                                                onSelect={() => handleSelectContact(contact.id)}
                                                 onDelete={() => dispatch(removeContact(contact.id))}
                                             />
                                         ))}
@@ -236,20 +227,6 @@ const ClaimPASummaryPage: React.FC = () => {
                             </Grid>
                         </CustomPaper>
                     </Grid>
-
-                    {/* ── Modals ── */}
-                    <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} />
-                    <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
-                    <ConfirmTransferPAModal
-                        open={openConfirm}
-                        onClose={() => setOpenConfirm(false)}
-                        onConfirm={handleConfirm}
-                    />
-                    <AddInsuredModal
-                        open={openAddInsured}
-                        onClose={() => setOpenAddInsured(false)}
-                        currentItemCount={claimItems.length}
-                    />
                 </Grid>
             </CustomPaper>
 
@@ -279,7 +256,7 @@ const ClaimPASummaryPage: React.FC = () => {
                 </Grid>
 
                 {/* ── Modals ── */}
-                <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} />
+                <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} productTypeId={26} />
                 <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
                 <ConfirmTransferPAModal
                     open={openConfirm}

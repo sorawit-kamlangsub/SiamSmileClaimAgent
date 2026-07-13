@@ -1,8 +1,5 @@
 import React, { useRef, useState, useCallback, useEffect } from "react";
 import { Box, Typography, Button, LinearProgress, Chip, RadioGroup, FormControlLabel, Radio } from "@mui/material";
-import BadgeIcon from "@mui/icons-material/Badge";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import DescriptionIcon from "@mui/icons-material/Description";
 import FlightTakeoffIcon from "@mui/icons-material/FlightTakeoff";
 import Public from "@mui/icons-material/Public";
 import CameraAltIcon from "@mui/icons-material/CameraAlt";
@@ -19,7 +16,6 @@ import { FormikProps } from "formik";
 import Webcam from "react-webcam";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { ClaimFormValues } from "../../store/claimPHSlice";
 import { swalError } from "../../../_common";
 import {
     compareOcrAmount,

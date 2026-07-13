@@ -10,7 +10,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
     const { form, bankAccounts, contacts, insured } = useAppSelector(claimPASelector);
     const ocr = useOcrDocumentScan();
     const isMedical = form.coverageTypeId === 2 || form.coverageTypeId === 3;
-
+    const selectedContact = contacts.find((contact) => contact.isDefault) ?? contacts[0];
     const mutation = useCreateCoreClaim(
         () => onSuccess?.(),
         (message) => onError?.(message)
@@ -57,7 +57,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 vn: undefined,
 
                 chiefComplaintId: form.chiefComplaintId,
-                chiefComplaintCustom: form.chiefComplaintOther,
+                chiefComplaintCustom: form.remark,
 
                 productId: undefined,
                 icd10_1stId: undefined,
@@ -120,14 +120,14 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 rejectReasonId: undefined,
                 rejectDate: dayjs(),
                 isLatest: true,
-                standardRoomStayDays: 0,
-                icuStayDays: 0,
+                approvedIPDDayCount: 0,
+                approvedICUDayCount: 0,
             },
 
             createCaseContact: {
-                contactPersonTypeId: contacts[0]?.relationshipId,
-                contactPersonName: contacts[0]?.name,
-                contactPhoneNo: contacts[0]?.phone,
+                contactPersonTypeId: selectedContact?.contactPersonTypeId,
+                contactPersonName: selectedContact?.contactName,
+                contactPhoneNo: selectedContact?.contactPhoneNo,
             },
 
             createCaseServicePerson: {
