@@ -77,6 +77,15 @@ const useSurveyHook = () => {
     });
 
     useEffect(() => {
+        if (surveyQuestionIsLoading) {
+            return;
+        }
+        if (surveyQuestionData?.data?.isSubmitted) {
+            navigate(`/survey/summary/${id}`);
+        }
+    }, [surveyQuestionData?.data]);
+
+    useEffect(() => {
         if (isLoading) {
             return;
         }

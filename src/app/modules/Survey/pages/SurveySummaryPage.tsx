@@ -2,7 +2,7 @@ import { Box, Button, Grid, Icon } from "@mui/material";
 import BackgroundM from "../../../../../public/BackgroundM.png";
 import HeaderDetailBox from "../components/HeaderDetailBox";
 import HeaderSummary from "../components/Summary/HeaderSummary";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const PdfFileIcon = ({ size = 40 }: { size?: number }) => (
     <svg width={size} height={size * 0.75} viewBox="0 0 160 130" xmlns="http://www.w3.org/2000/svg">
@@ -20,6 +20,7 @@ const PdfFileIcon = ({ size = 40 }: { size?: number }) => (
 );
 
 const SurveySummaryPage = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
 
     return (
@@ -66,7 +67,7 @@ const SurveySummaryPage = () => {
                                     "linear-gradient(to right, #086acc 0%, #157CD9 35%, #2B96EC 70%, #29ABE2 95%)",
                             }}
                             onClick={() => {
-                                navigate("/slip/1");
+                                navigate(`/slip/${id}`);
                             }}
                         >
                             <PdfFileIcon size={30} />
