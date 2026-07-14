@@ -170,7 +170,7 @@ const DocumentScanTable = ({ productId, aplicationCode, documentTypeId }: Docume
                         <LinearProgress sx={{ height: "5px" }} />
                     ) : (
                         <StandardDataTable
-                            name="claimOnlineMonitor"
+                            name="scanDocumentTable"
                             title=""
                             data={enrichedData}
                             isLoading={isLoading}

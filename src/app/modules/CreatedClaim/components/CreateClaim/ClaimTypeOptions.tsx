@@ -7,10 +7,6 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 
 const iconSx = { fontSize: 28, color: "#02579B" };
 
-export const INCIDENT_DESCRIPTION_MAP: Record<number, string> = {
-    2: "กรณีเข้ารักษาจากโรคหรืออาการเจ็บป่วยทั่วไป",
-    3: "กรณีบาดเจ็บจากเหตุการณ์ที่เกิดขึ้นอย่างกะทันหันจากปัจจัยภายนอก",
-};
 export const INCIDENT_ICON_MAP: Record<number, React.ReactElement> = {
     2: <HealingIcon sx={iconSx} />,
     3: <DirectionsRunIcon sx={iconSx} />,

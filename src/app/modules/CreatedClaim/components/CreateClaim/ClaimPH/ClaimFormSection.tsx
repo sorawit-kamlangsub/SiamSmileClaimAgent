@@ -29,13 +29,15 @@ import ClaimTypeSelector from "../ClaimTypeSelector";
 import ChipSelector from "../ChipSelector";
 import dayjs from "dayjs";
 import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
-import { SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
+import { claimPHSelector, setOrganLossItems, SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import DocumentScanTable from "../DocumentScanTable";
 import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
 import MockOCR from "./MockOCR";
+import OrganLossSelector, { StepBadge } from "../OrganLossSelector";
+import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -56,11 +58,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         coverageType,
         medicalType,
         causeOfAccident,
+        incidentTypeMapping,
         customerBenefit,
         incidentTypeLoading,
-        coverageTypeLoading,
-        medicalTypeLoading,
-        causeOfAccidentLoading,
+        incidentTypeMappingLoading,
         customerBenefitLoading,
         insured,
         shouldShowOcrDocumentScan,
@@ -73,6 +74,8 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         getRequiredDocsByCoverageType,
     } = useClaimPHForm({ onNext });
     const { values, setFieldValue } = formik;
+    const dispatch = useAppDispatch();
+    const { organLossItems } = useAppSelector(claimPHSelector);
     const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
     const isDisability = values.coverageTypeId === 4;
     const isDeath = values.coverageTypeId === 5;
@@ -101,7 +104,14 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         }
         formik.submitForm();
     };
-
+    const claimStepBoxSx = {
+        border: "1px solid",
+        borderColor: "#e8f0fb",
+        borderRadius: 2,
+        p: 2,
+        mb: 2,
+        bgcolor: "#fbfdff",
+    };
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
@@ -143,7 +153,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     options={coverageType}
                                     idFieldName="coverageTypeId"
                                     nameFieldName="coverageTypeName"
-                                    isLoading={coverageTypeLoading}
+                                    isLoading={incidentTypeMappingLoading}
                                 />
                             ) : (
                                 <Paper variant="outlined" sx={EMPTY_STATE_SX}>
@@ -166,7 +176,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     idFieldName="medicalTypeId"
                                     nameFieldName="medicalTypeName"
                                     options={medicalType}
-                                    isLoading={medicalTypeLoading}
+                                    isLoading={incidentTypeMappingLoading}
                                 />
                             ) : isDeath || isDisability ? (
                                 <ChipSelector
@@ -174,7 +184,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     idFieldName="causeOfIncidentId"
                                     nameFieldName="causeOfIncidentName"
                                     options={causeOfAccident}
-                                    isLoading={causeOfAccidentLoading}
+                                    isLoading={incidentTypeMappingLoading}
                                 />
                             ) : (
                                 <Paper variant="outlined" sx={EMPTY_STATE_SX}>
@@ -410,6 +420,15 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             </Grid>
                         )}
                     </Grid>
+                    {isDisability && (
+                        <Box sx={claimStepBoxSx} mt={2}>
+                            <Box display="flex" alignItems="center" gap={1} mb={1.5}></Box>
+                            <OrganLossSelector
+                                value={organLossItems}
+                                onChange={(items) => dispatch(setOrganLossItems(items))}
+                            />
+                        </Box>
+                    )}
                     {/* Coverage box */}
                     {(isOPD || isIPD) && (
                         <Grid item xs={12} mt={2}>

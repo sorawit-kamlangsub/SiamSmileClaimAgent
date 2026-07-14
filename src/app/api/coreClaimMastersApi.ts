@@ -7,10 +7,8 @@ import { useMemo } from "react";
 const coreClaimMastersClient = new MastersClient(CORECLAIM_API_URL, axios);
 
 const getUserQuerykey = ["getUser"];
-const getMedicaltypeQueryKey = ["getMedicaltype"];
 const getIncidentTypeQueryKey = ["getIncidentType"];
-const getCoverageTypeQueryKey = ["getCoverageType"];
-const getCauseOfAccidentQueryKey = ["getCauseOfAccident"];
+const getIncidentTypeMappingQueryKey = ["getIncidentTypeMapping"];
 const getSimBCategoryQueryKey = ["getSimBCategory"];
 const getSimBQueryKey = ["getSimB"];
 const getChiefComplaintQueryKey = ["getChiefComplaint"];
@@ -24,7 +22,6 @@ const getBankQueryKey = ["getBank"];
 const getZebraCarOwnerQueryKey = ["getZebraCarOwner"];
 const getSchoolByProvinceIdQueryKey = ["getSchoolByProvinceId"];
 const getAllHospitalQueryKey = ["getAllHospital"];
-const getTitleQueryKey = ["getTitle"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -58,19 +55,6 @@ export const getUserFilter = (searchValue: string, defaultId?: any): UseQueryRes
     }, [key, defaultId, data, isLoading]);
 };
 
-export const useGetMedicaltype = (
-    claimSourceId?: number | undefined,
-    coverageTypeId?: number | undefined,
-    medicalTypeId?: number | undefined
-) => {
-    return useQuery(
-        [getMedicaltypeQueryKey, claimSourceId, coverageTypeId, medicalTypeId],
-        () => coreClaimMastersClient.getMedicalType(claimSourceId, coverageTypeId, medicalTypeId),
-        {
-            refetchOnWindowFocus: true,
-        }
-    );
-};
 export const useGetIncidentType = (incidentTypeId?: number | undefined) => {
     return useQuery(
         [getIncidentTypeQueryKey, incidentTypeId],
@@ -81,22 +65,35 @@ export const useGetIncidentType = (incidentTypeId?: number | undefined) => {
     );
 };
 
-export const useGetCoverageType = (
+export const useGetIncidentTypeMapping = (
+    incidentTypeId?: number | undefined,
     claimSourceId?: number | undefined,
     productTypeId?: number | undefined,
-    incidentTypeId?: number | undefined,
+    productCategoryCode?: string,
     coverageTypeId?: number | undefined,
-    productCategoryCode?: string
+    medicalTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined
 ) => {
     return useQuery(
-        [getCoverageTypeQueryKey, claimSourceId, productTypeId, incidentTypeId, coverageTypeId, productCategoryCode],
+        [
+            getIncidentTypeMappingQueryKey,
+            incidentTypeId,
+            claimSourceId,
+            productTypeId,
+            productCategoryCode,
+            coverageTypeId,
+            medicalTypeId,
+            causeOfIncidentId,
+        ],
         () =>
-            coreClaimMastersClient.getCoverageType(
+            coreClaimMastersClient.getIncidentTypeMapping(
+                incidentTypeId,
                 claimSourceId,
                 productTypeId,
-                incidentTypeId,
+                productCategoryCode,
                 coverageTypeId,
-                productCategoryCode
+                medicalTypeId,
+                causeOfIncidentId
             ),
         {
             refetchOnWindowFocus: true,
@@ -104,15 +101,6 @@ export const useGetCoverageType = (
     );
 };
 
-export const useGetCauseOfAccident = (causeOfIncidentId?: number | undefined) => {
-    return useQuery(
-        [getCauseOfAccidentQueryKey, causeOfIncidentId],
-        () => coreClaimMastersClient.getCauserOfIncident(causeOfIncidentId),
-        {
-            refetchOnWindowFocus: true,
-        }
-    );
-};
 
 export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTypeId?: number | undefined) => {
     return useQuery(
@@ -277,14 +265,4 @@ export const useGetHospitalDetailAllFilter = (
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;
     }, [key, defaultId, data, isLoading]);
-};
-
-export const useGetTitle = (personTypeId: number, titleId?: number | undefined) => {
-    return useQuery(
-        [getSchoolByProvinceIdQueryKey, titleId, personTypeId],
-        () => coreClaimMastersClient.getSchoolByProvinceId(titleId, personTypeId),
-        {
-            refetchOnWindowFocus: true,
-        }
-    );
 };

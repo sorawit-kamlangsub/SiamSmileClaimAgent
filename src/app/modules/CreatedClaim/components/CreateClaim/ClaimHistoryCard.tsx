@@ -17,11 +17,14 @@ type ClaimHistoryCardProps = {
     appId?: string;
 };
 const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
-    const { claimHistoryData, setPaginated, pagination } = useClaimHistory(appId);
-    const items = claimHistoryData?.data ?? [];
     const [selectedClaim, setSelectedClaim] = useState<GetClaimHistoryDtoResponse>();
     const [openDetailCase, setOpenDetailCase] = useState(false);
     const [openAllHistory, setOpenAllHistory] = useState(false);
+    const { claimHistoryData, caseData, setPaginated, pagination, caseDataisLoading } = useClaimHistory(
+        appId,
+        selectedClaim?.claimId
+    );
+    const items = claimHistoryData?.data ?? [];
     const handleDetailClick = (item: GetClaimHistoryDtoResponse) => {
         setSelectedClaim(item);
         setOpenDetailCase(true);
@@ -208,7 +211,7 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                                     อาการสำคัญ
                                 </Typography>
                                 <Typography fontSize={14} fontWeight="600" color="text.primary">
-                                    {item.chiefComplaintDetail}
+                                    {item.lastestChiefComplaint}
                                 </Typography>
                             </Box>
 
@@ -217,7 +220,7 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                                     ยอดเบิกรวม
                                 </Typography>
                                 <Typography fontSize={15} fontWeight="bold" color="primary.main">
-                                    {fmt(item.caseAmount ?? 0)}
+                                    {fmt(item.totalCaseAmount ?? 0)}
                                 </Typography>
                             </Box>
 
@@ -226,7 +229,7 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                                     ยอดจ่ายรวม
                                 </Typography>
                                 <Typography fontSize={15} fontWeight="bold" color="success.main">
-                                    {fmt(item.totalPaidAmount ?? 0)}
+                                    {fmt(item.paidAmount ?? 0)}
                                 </Typography>
                             </Box>
                         </Box>
@@ -259,7 +262,7 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                                     </Box>
                                     {/* TODO: ยังไม่มี field จำนวนเคสจริง (เช่น item.caseCount) จึงใช้ static ไปก่อน */}
                                     <Typography fontSize={12} color="text.secondary" sx={{ mt: 0.5 }}>
-                                        ทั้งหมด 1 เคส
+                                        ทั้งหมด {item.countCase} เคส
                                     </Typography>
                                 </Box>
 
@@ -289,6 +292,8 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                 open={openDetailCase}
                 onClose={() => setOpenDetailCase(false)}
                 claim={selectedClaim}
+                caseData={caseData?.data ?? []}
+                isLoading={caseDataisLoading}
             />
         </CustomBox>
     );
