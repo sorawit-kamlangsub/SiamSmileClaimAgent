@@ -36,13 +36,12 @@ import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import SearchIcon from "@mui/icons-material/Search";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import HealthAndSafetyOutlinedIcon from "@mui/icons-material/HealthAndSafetyOutlined";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
@@ -60,13 +59,13 @@ import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
 import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/MiscellaneousServicesOutlined";
 import PostAddOutlinedIcon from "@mui/icons-material/PostAddOutlined";
+import HealingIcon from "@mui/icons-material/Healing";
 
 import FormikDateTimePicker from "../../_common/components/CustomFormik/FormikDateTimePicker";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import { FormikDropdown } from "../../_common";
 
 import { useClaimSimulatePage } from "../hooks/useClaimSimulatePage";
-import { CONTINUOUS_CLAIM_OPTIONS } from "../store/claimSimulateOptions";
 import {
     sanitizeDecimalInput,
     toAmount,
@@ -78,8 +77,9 @@ import InsuredSearchModal from "./InsuredSearchModal";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { formatDateString } from "../../../functionHelpers";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { useGetDataFromApi } from "../hooks/useGetDataFromApi";
 
-// ─── Reference palette (ตามไฟล์ HTML ต้นแบบ) ─────────────────────────────────
 const REF = {
     primary: "#0b74bd",
     primaryDark: "#075d99",
@@ -107,7 +107,6 @@ const refInputSx = {
     },
 };
 
-// multiline (หมายเหตุ) ต้องขยายตาม minRows ได้ จึงไม่บังคับ height คงที่
 const refTextAreaSx = {
     "& .MuiOutlinedInput-root": {
         borderRadius: "8px",
@@ -119,7 +118,6 @@ const refTextAreaSx = {
     },
 };
 
-// ── Select ในแผงเพิ่มรายการ (สาเหตุไม่คุ้มครอง) ให้สูงเท่า refInputSx ──────────
 const formSelectSx = {
     height: FORM_FIELD_HEIGHT,
     fontSize: 13,
@@ -167,13 +165,14 @@ const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 const causeIconMap: Record<number, React.ReactNode> = {
-    2: <HealthAndSafetyOutlinedIcon sx={{ fontSize: 25, color: "primary.main" }} />,
-    3: <PersonOutlineOutlinedIcon sx={{ fontSize: 25, color: "primary.main" }} />,
+    2: <HealingIcon sx={{ fontSize: 25, color: "primary.main" }} />,
+    3: <WarningAmberIcon sx={{ fontSize: 25, color: "primary.main" }} />,
 };
 
 interface TreeNode {
     id: number;
     label: string;
+    code?: string;
     children: TreeNode[];
 }
 
@@ -209,6 +208,35 @@ const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: 
         </Box>
     </Box>
 );
+
+const StepBadge: React.FC<{ n: number }> = ({ n }) => (
+    <Box
+        sx={{
+            width: 22,
+            height: 22,
+            borderRadius: "50%",
+            bgcolor: REF.primary,
+            color: "#fff",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 12,
+            fontWeight: 700,
+            flexShrink: 0,
+        }}
+    >
+        {n}
+    </Box>
+);
+
+const claimStepBoxSx = {
+    border: "1px solid",
+    borderColor: REF.line,
+    borderRadius: 2,
+    p: 2,
+    mb: 2,
+    bgcolor: "#fbfdff",
+};
 
 const DaySummaryCard: React.FC<{ label: string; value: number; color: string; disabled?: boolean }> = ({
     label,
@@ -261,21 +289,31 @@ const TreeNodeRow = ({
     const isLeaf = !hasChildren;
     const isSelected = isLeaf && selectedLeafId === node.id;
 
+    // ติ๊กเลือกได้เฉพาะ item ที่มี inputItemCode เท่านั้น
+    const isSelectable = isLeaf && !!node.code;
+
     return (
         <>
             <Box
-                onClick={() => (hasChildren ? onToggle(node.id) : onSelectLeaf(code, description, node.id))}
+                onClick={() => {
+                    if (hasChildren) {
+                        onToggle(node.id);
+                        return;
+                    }
+                    if (!isSelectable) return;
+                    onSelectLeaf(code, description, node.id);
+                }}
                 sx={{
                     display: "flex",
                     alignItems: "center",
                     pl: 1.5 + depth * 2,
                     pr: 1.5,
                     py: 0.8,
-                    cursor: "pointer",
+                    cursor: hasChildren || isSelectable ? "pointer" : "not-allowed",
                     mx: 0.5,
                     borderRadius: 1,
                     bgcolor: isSelected ? "primary.50" : "transparent",
-                    "&:hover": { bgcolor: isLeaf ? "primary.50" : "grey.100" },
+                    "&:hover": { bgcolor: hasChildren ? "grey.100" : isSelectable ? "primary.50" : "transparent" },
                 }}
             >
                 {hasChildren ? (
@@ -286,7 +324,7 @@ const TreeNodeRow = ({
                             <ExpandMoreIcon sx={{ fontSize: 16 }} />
                         )}
                     </Box>
-                ) : (
+                ) : isSelectable ? (
                     <Box
                         sx={{
                             mr: 0.75,
@@ -304,8 +342,16 @@ const TreeNodeRow = ({
                     >
                         {isSelected && <Box sx={{ width: 6, height: 6, borderRadius: "50%", bgcolor: "white" }} />}
                     </Box>
+                ) : (
+                    <Box sx={{ mr: 0.75, display: "flex", color: "primary.main" }}>
+                        <ChevronRightIcon sx={{ fontSize: 16 }} />
+                    </Box>
                 )}
-                <Typography variant="body2" fontWeight={isSelected ? 600 : isLeaf ? 400 : 600} color="primary.main">
+                <Typography
+                    variant="body2"
+                    fontWeight={!isLeaf ? 600 : isSelectable && isSelected ? 600 : 400}
+                    color="primary.main"
+                >
                     {node.label}
                 </Typography>
             </Box>
@@ -371,15 +417,21 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
         claimCauseOptions,
         coverageTypeOptions,
         medicalTypeOptions,
+        formatTypeOptions,
         causeOfIncidentOptions,
         isMedicalTypeVisible,
         isCauseOfIncidentVisible,
         isCauseOfIncidentLocked,
+        isFormatTypeLocked,
+        isMedicalTypeLocked,
+        noClaimCauseMessage,
+        noCoverageTypeMessage,
         handleOpenInsuredSearch,
         handleSelectClaimCause,
         handleSelectCoverageType,
         handleSelectMedicalType,
         handleSelectCauseOfIncident,
+        handleSelectFormatType,
         // days
         formik,
         openConfirm,
@@ -428,6 +480,8 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
         hasAnyAmount,
         handleNext,
     } = useClaimSimulatePage(onNext);
+
+    const { claimContinueOptions, claimContinueLoading } = useGetDataFromApi(selectedInsured?.policyCode);
 
     const fmt = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
@@ -580,67 +634,24 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                         </Typography>
                     ) : (
                         <>
-                            {/* เหตุของการเคลม */}
-                            <Typography variant="body2" fontWeight={600} mb={1}>
-                                เหตุของการเคลม{" "}
-                                <Box component="span" color="error.main">
-                                    *
+                            {/* 1) เหตุของการเคลม */}
+                            <Box sx={claimStepBoxSx}>
+                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                    <StepBadge n={1} />
+                                    <Typography variant="body2" fontWeight={700}>
+                                        เหตุของการเคลม{" "}
+                                        <Box component="span" color="error.main">
+                                            *
+                                        </Box>
+                                    </Typography>
                                 </Box>
-                            </Typography>
-                            <Grid container spacing={2} mb={3}>
-                                {claimCauseOptions.map((opt) => {
-                                    const isSelected = header.claimCause === opt.value;
-                                    return (
-                                        <Grid item xs={12} sm={5} key={opt.value}>
-                                            <Paper
-                                                onClick={() => handleSelectClaimCause(opt.value)}
-                                                elevation={0}
-                                                sx={{
-                                                    position: "relative",
-                                                    p: 2,
-                                                    borderRadius: 2,
-                                                    cursor: "pointer",
-                                                    border: "2px solid",
-                                                    borderColor: isSelected ? "primary.main" : "divider",
-                                                    bgcolor: isSelected ? REF.soft : "#fff",
-                                                }}
-                                            >
-                                                {isSelected && (
-                                                    <CheckCircleIcon
-                                                        color="primary"
-                                                        sx={{ position: "absolute", top: 12, right: 12, fontSize: 22 }}
-                                                    />
-                                                )}
-                                                <Box mb={1}>{causeIconMap[opt.value]}</Box>
-                                                <Typography fontWeight={700}>{opt.label}</Typography>
-                                                <Typography variant="caption" color="text.secondary">
-                                                    {opt.description}
-                                                </Typography>
-                                            </Paper>
-                                        </Grid>
-                                    );
-                                })}
-                            </Grid>
-
-                            <Typography variant="body2" fontWeight={600} mb={1}>
-                                ประเภทความคุ้มครอง{" "}
-                                <Box component="span" color="error.main">
-                                    *
-                                </Box>
-                            </Typography>
-                            {!header.claimCause ? (
-                                <Typography variant="body2" color="text.secondary" mb={3}>
-                                    ยังไม่ได้เลือกเหตุของการเคลม เลือกเหตุของการเคลมด้านบนเพื่อระบุประเภทความคุ้มครอง
-                                </Typography>
-                            ) : (
-                                <Box display="flex" gap={1.25} mb={3} flexWrap="wrap">
-                                    {coverageTypeOptions.map((opt) => {
-                                        const OptIcon = opt.icon;
-                                        const isSelected = header.coverageType === opt.value;
+                                <Box display="flex" gap={1.25} flexWrap="wrap">
+                                    {claimCauseOptions.map((opt) => {
+                                        const isSelected = header.claimCause === opt.value;
                                         return (
                                             <Box
                                                 key={opt.value}
-                                                onClick={() => handleSelectCoverageType(opt.value)}
+                                                onClick={() => handleSelectClaimCause(opt.value)}
                                                 role="button"
                                                 tabIndex={0}
                                                 sx={{
@@ -653,11 +664,10 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                     minWidth: 128,
                                                     border: "1px solid",
                                                     borderColor: isSelected ? REF.primary : REF.line,
-                                                    borderRadius: "12px",
+                                                    borderRadius: "10px",
                                                     px: 2.25,
                                                     py: 1.1,
                                                     bgcolor: isSelected ? REF.soft : "#fff",
-                                                    // boxShadow: isSelected ? "0 7px 16px rgba(11,116,189,.12)" : "none",
                                                     transition: "all .15s ease",
                                                     "&:hover": {
                                                         borderColor: REF.primary,
@@ -665,12 +675,17 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                     },
                                                 }}
                                             >
-                                                <OptIcon
+                                                <Box
+                                                    display="flex"
                                                     sx={{
-                                                        fontSize: 18,
-                                                        color: isSelected ? REF.primary : "text.secondary",
+                                                        "& svg": {
+                                                            fontSize: 18,
+                                                            color: isSelected ? REF.primary : "text.secondary",
+                                                        },
                                                     }}
-                                                />
+                                                >
+                                                    {causeIconMap[opt.value]}
+                                                </Box>
                                                 <Typography
                                                     variant="body2"
                                                     fontWeight={isSelected ? 700 : 600}
@@ -682,50 +697,120 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         );
                                     })}
                                 </Box>
-                            )}
+                            </Box>
 
-                            {/* ประเภทการรักษา — segmented buttons (MedicalTypeId) แสดงเมื่อ coverageType = ค่ารักษา/ค่าชดเชย */}
-                            {/* สาเหตุของการเกิดเหตุ — segmented buttons (CauseOfIncidentId) แสดงเมื่อ coverageType = ทุพพลภาพ/เสียชีวิต */}
-                            {!header.coverageType ? (
-                                <Typography variant="body2" color="text.secondary" mb={3}>
-                                    ยังไม่ได้เลือกประเภทความคุ้มครอง
-                                    เลือกประเภทความคุ้มครองด้านบนเพื่อระบุประเภทความคุ้มครอง
-                                </Typography>
-                            ) : isMedicalTypeVisible ? (
-                                <>
-                                    <Typography variant="body2" fontWeight={600} mb={1}>
-                                        ประเภทการรักษา{" "}
+                            {/* 2) ประเภทความคุ้มครอง */}
+                            <Box sx={claimStepBoxSx}>
+                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                    <StepBadge n={2} />
+                                    <Typography variant="body2" fontWeight={700}>
+                                        ประเภทความคุ้มครอง{" "}
                                         <Box component="span" color="error.main">
                                             *
                                         </Box>
                                     </Typography>
-                                    <Box display="flex" gap={1.25} mb={3} flexWrap="wrap">
-                                        {medicalTypeOptions.map((opt) => {
-                                            const isSelected = header.medicalType === opt.value;
+                                </Box>
+                                {!header.claimCause ? (
+                                    <Typography variant="body2" color="text.secondary">
+                                        {noClaimCauseMessage}
+                                    </Typography>
+                                ) : (
+                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                        {coverageTypeOptions.map((opt) => {
+                                            const OptIcon = opt.icon;
+                                            const isSelected = header.coverageType === opt.value;
                                             return (
                                                 <Box
                                                     key={opt.value}
-                                                    onClick={() => handleSelectMedicalType(opt.value)}
+                                                    onClick={() => handleSelectCoverageType(opt.value)}
                                                     role="button"
                                                     tabIndex={0}
                                                     sx={{
                                                         display: "flex",
                                                         alignItems: "center",
                                                         justifyContent: "center",
+                                                        gap: 0.75,
                                                         cursor: "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 110,
+                                                        minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
-                                                        px: 2,
-                                                        py: 1,
+                                                        px: 2.25,
+                                                        py: 1.1,
                                                         bgcolor: isSelected ? REF.soft : "#fff",
                                                         transition: "all .15s ease",
                                                         "&:hover": {
                                                             borderColor: REF.primary,
                                                             bgcolor: REF.soft,
                                                         },
+                                                    }}
+                                                >
+                                                    <OptIcon
+                                                        sx={{
+                                                            fontSize: 18,
+                                                            color: isSelected ? REF.primary : "text.secondary",
+                                                        }}
+                                                    />
+                                                    <Typography
+                                                        variant="body2"
+                                                        fontWeight={isSelected ? 700 : 600}
+                                                        color={isSelected ? REF.primary : "text.secondary"}
+                                                    >
+                                                        {opt.label}
+                                                    </Typography>
+                                                </Box>
+                                            );
+                                        })}
+                                    </Box>
+                                )}
+                            </Box>
+
+                            {/* 3) ประเภทรายการค่าใช้จ่าย */}
+                            {!!header.coverageType && (
+                                <Box sx={claimStepBoxSx}>
+                                    <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                        <StepBadge n={3} />
+                                        <Typography variant="body2" fontWeight={700}>
+                                            ประเภทรายการค่าใช้จ่าย
+                                        </Typography>
+                                        <Box component="span" color="error.main">
+                                            *
+                                        </Box>
+                                    </Box>
+                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                        {formatTypeOptions.map((opt) => {
+                                            const isSelected = header.formatTypeId === opt.value;
+                                            return (
+                                                <Box
+                                                    key={opt.value}
+                                                    onClick={() =>
+                                                        !isFormatTypeLocked && handleSelectFormatType(opt.value)
+                                                    }
+                                                    role="button"
+                                                    tabIndex={isFormatTypeLocked ? -1 : 0}
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        gap: 0.75,
+                                                        cursor: isFormatTypeLocked ? "default" : "pointer",
+                                                        userSelect: "none",
+                                                        minWidth: 128,
+                                                        border: "1px solid",
+                                                        borderColor: isSelected ? REF.primary : REF.line,
+                                                        borderRadius: "10px",
+                                                        px: 2.25,
+                                                        py: 1.1,
+                                                        bgcolor: isSelected ? REF.soft : "#fff",
+                                                        opacity: isFormatTypeLocked ? 0.85 : 1,
+                                                        transition: "all .15s ease",
+                                                        "&:hover": isFormatTypeLocked
+                                                            ? undefined
+                                                            : {
+                                                                  borderColor: REF.primary,
+                                                                  bgcolor: REF.soft,
+                                                              },
                                                     }}
                                                 >
                                                     <Typography
@@ -739,16 +824,72 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             );
                                         })}
                                     </Box>
-                                </>
-                            ) : isCauseOfIncidentVisible ? (
-                                <>
-                                    <Typography variant="body2" fontWeight={600} mb={1}>
-                                        สาเหตุของการเกิดเหตุ{" "}
+                                </Box>
+                            )}
+
+                            {/* 4) ประเภทการรักษา / สาเหตุของการเกิดเหตุ */}
+                            <Box sx={claimStepBoxSx}>
+                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                    <StepBadge n={4} />
+                                    <Typography variant="body2" fontWeight={700}>
+                                        {isCauseOfIncidentVisible ? "สาเหตุของการเกิดเหตุ" : "ประเภทการรักษา"}{" "}
                                         <Box component="span" color="error.main">
                                             *
                                         </Box>
                                     </Typography>
-                                    <Box display="flex" gap={1.25} mb={3} flexWrap="wrap">
+                                </Box>
+                                {!header.coverageType ? (
+                                    <Typography variant="body2" color="text.secondary">
+                                        {noCoverageTypeMessage}
+                                    </Typography>
+                                ) : isMedicalTypeVisible ? (
+                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                        {medicalTypeOptions.map((opt) => {
+                                            const isSelected = header.medicalType === opt.value;
+                                            return (
+                                                <Box
+                                                    key={opt.value}
+                                                    onClick={() =>
+                                                        !isMedicalTypeLocked && handleSelectMedicalType(opt.value)
+                                                    }
+                                                    role="button"
+                                                    tabIndex={isMedicalTypeLocked ? -1 : 0}
+                                                    sx={{
+                                                        display: "flex",
+                                                        alignItems: "center",
+                                                        justifyContent: "center",
+                                                        cursor: isMedicalTypeLocked ? "default" : "pointer",
+                                                        userSelect: "none",
+                                                        minWidth: 128,
+                                                        border: "1px solid",
+                                                        borderColor: isSelected ? REF.primary : REF.line,
+                                                        borderRadius: "10px",
+                                                        px: 2,
+                                                        py: 1,
+                                                        bgcolor: isSelected ? REF.soft : "#fff",
+                                                        opacity: isMedicalTypeLocked ? 0.85 : 1,
+                                                        transition: "all .15s ease",
+                                                        "&:hover": isMedicalTypeLocked
+                                                            ? undefined
+                                                            : {
+                                                                  borderColor: REF.primary,
+                                                                  bgcolor: REF.soft,
+                                                              },
+                                                    }}
+                                                >
+                                                    <Typography
+                                                        variant="body2"
+                                                        fontWeight={isSelected ? 700 : 600}
+                                                        color={isSelected ? REF.primary : "text.secondary"}
+                                                    >
+                                                        {opt.label}
+                                                    </Typography>
+                                                </Box>
+                                            );
+                                        })}
+                                    </Box>
+                                ) : isCauseOfIncidentVisible ? (
+                                    <Box display="flex" gap={1.25} flexWrap="wrap">
                                         {causeOfIncidentOptions.map((opt) => {
                                             const isSelected = header.causeOfIncident === opt.value;
                                             return (
@@ -766,7 +907,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         justifyContent: "center",
                                                         cursor: isCauseOfIncidentLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 110,
+                                                        minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -794,110 +935,128 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             );
                                         })}
                                     </Box>
-                                </>
-                            ) : null}
+                                ) : null}
+                            </Box>
 
-                            {/* วันที่ */}
-                            <Grid container spacing={2} mb={1}>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDatePicker
-                                        name="dateHappen"
-                                        label="วันที่เกิดเหตุ"
-                                        formik={formik}
-                                        fullWidth
-                                        required
-                                        size="small"
-                                        maxDate={dayjs()}
-                                    />
+                            {/* 5) วันที่ */}
+                            <Box sx={claimStepBoxSx}>
+                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                    <StepBadge n={5} />
+                                    <Typography variant="body2" fontWeight={700}>
+                                        วันที่รักษา{" "}
+                                        <Box component="span" color="error.main">
+                                            *
+                                        </Box>
+                                    </Typography>
+                                </Box>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <FormikDatePicker
+                                            name="dateHappen"
+                                            label="วันที่เกิดเหตุ"
+                                            formik={formik}
+                                            fullWidth
+                                            required
+                                            size="small"
+                                            maxDate={dayjs()}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <FormikDateTimePicker
+                                            name="admitDate"
+                                            label="วันที่เข้า"
+                                            formik={formik}
+                                            fullWidth
+                                            required
+                                            size="small"
+                                            maxDate={dayjs()}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={6} md={4}>
+                                        <FormikDateTimePicker
+                                            name="dischargeDate"
+                                            label="วันที่ออก"
+                                            formik={formik}
+                                            fullWidth
+                                            required
+                                            size="small"
+                                            maxDate={dayjs()}
+                                            minDate={formik.values.admitDate}
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDateTimePicker
-                                        name="admitDate"
-                                        label="วันที่เข้า"
-                                        formik={formik}
-                                        fullWidth
-                                        required
-                                        size="small"
-                                        maxDate={dayjs()}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDateTimePicker
-                                        name="dischargeDate"
-                                        label="วันที่ออก"
-                                        formik={formik}
-                                        fullWidth
-                                        required
-                                        size="small"
-                                        maxDate={dayjs()}
-                                        minDate={formik.values.admitDate}
-                                    />
-                                </Grid>
-                            </Grid>
 
-                            {/* สรุปจำนวนวัน */}
-                            <Grid container spacing={2} mt={1} mb={1}>
-                                <Grid item xs={12} sm={4}>
-                                    <DaySummaryCard
-                                        label="วัน IPD"
-                                        value={formik.values.ipdDays || 0}
-                                        color="primary"
-                                    />
+                                {/* สรุปจำนวนวัน */}
+                                <Grid container spacing={2} mt={2} mb={1}>
+                                    <Grid item xs={12} sm={4}>
+                                        <DaySummaryCard
+                                            label="วัน IPD"
+                                            value={formik.values.ipdDays || 0}
+                                            color="primary"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <DaySummaryCard
+                                            label="วัน ICU"
+                                            value={formik.values.icuDays || 0}
+                                            color="error"
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <DaySummaryCard
+                                            label="วันที่นอน"
+                                            value={formik.values.bedDays || 0}
+                                            color="success"
+                                            disabled
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <DaySummaryCard label="วัน ICU" value={formik.values.icuDays || 0} color="error" />
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            label="จำนวนวัน IPD"
+                                            size="small"
+                                            fullWidth
+                                            type="number"
+                                            value={formik.values.ipdDays}
+                                            onChange={(e) => handleIpdDaysChange(toInteger(e.target.value))}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.ipdDays && !!formik.errors.ipdDays}
+                                            helperText={formik.touched.ipdDays ? formik.errors.ipdDays : ""}
+                                            inputProps={{ min: 0 }}
+                                            sx={refInputSx}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            label="จำนวนวัน ICU"
+                                            size="small"
+                                            fullWidth
+                                            type="number"
+                                            value={formik.values.icuDays}
+                                            onChange={(e) => handleIcuDaysChange(toInteger(e.target.value))}
+                                            onBlur={formik.handleBlur}
+                                            error={formik.touched.icuDays && !!formik.errors.icuDays}
+                                            helperText={formik.touched.icuDays ? formik.errors.icuDays : ""}
+                                            inputProps={{ min: 0 }}
+                                            sx={refInputSx}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={4}>
+                                        <TextField
+                                            label="จำนวนวันนอน"
+                                            size="small"
+                                            fullWidth
+                                            type="number"
+                                            value={formik.values.bedDays}
+                                            onChange={(e) => handleIcuDaysChange(toInteger(e.target.value))}
+                                            inputProps={{ min: 0 }}
+                                            disabled
+                                            sx={refInputSx}
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <DaySummaryCard
-                                        label="วันที่นอน"
-                                        value={formik.values.bedDays || 0}
-                                        color="success"
-                                        disabled
-                                    />
-                                </Grid>
-                            </Grid>
-                            <Grid container spacing={2} mb={3}>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="จำนวนวัน IPD"
-                                        size="small"
-                                        fullWidth
-                                        type="number"
-                                        value={formik.values.ipdDays}
-                                        onChange={(e) => handleIpdDaysChange(toInteger(e.target.value))}
-                                        onBlur={formik.handleBlur}
-                                        error={formik.touched.ipdDays && !!formik.errors.ipdDays}
-                                        helperText={formik.touched.ipdDays ? formik.errors.ipdDays : ""}
-                                        inputProps={{ min: 0 }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="จำนวนวัน ICU"
-                                        size="small"
-                                        fullWidth
-                                        type="number"
-                                        value={formik.values.icuDays}
-                                        onChange={(e) => handleIcuDaysChange(toInteger(e.target.value))}
-                                        onBlur={formik.handleBlur}
-                                        error={formik.touched.icuDays && !!formik.errors.icuDays}
-                                        helperText={formik.touched.icuDays ? formik.errors.icuDays : ""}
-                                        inputProps={{ min: 0 }}
-                                    />
-                                </Grid>
-                                <Grid item xs={12} sm={4}>
-                                    <TextField
-                                        label="จำนวนวันนอน"
-                                        size="small"
-                                        fullWidth
-                                        type="number"
-                                        value={formik.values.bedDays}
-                                        onChange={(e) => handleIcuDaysChange(toInteger(e.target.value))}
-                                        inputProps={{ min: 0 }}
-                                        disabled
-                                    />
-                                </Grid>
-                            </Grid>
+                            </Box>
 
                             {/* เคลมต่อเนื่อง */}
                             <Box sx={{ border: "1px solid", borderColor: "divider", borderRadius: 2, p: 2 }}>
@@ -923,15 +1082,16 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             }
                                         />
                                     </Grid>
-                                    <Grid item xs sm={6}>
+                                    <Grid item xs sm={7}>
                                         <FormikDropdown
                                             name="continuousFromClaimNo"
                                             label="เลือก ClaimNo"
                                             formik={formik}
-                                            data={CONTINUOUS_CLAIM_OPTIONS}
+                                            data={claimContinueOptions}
+                                            isLoading={claimContinueLoading}
                                             firstItemText="-- เลือก --"
                                             displayFieldName="label"
-                                            valueFieldName="value"
+                                            valueFieldName="claimId"
                                             fullWidth
                                             size="small"
                                             disabled={!formik.values.isContinuous}
@@ -943,7 +1103,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                     )}
                 </Paper>
 
-                {/* ── 3) รายการค่าใช้จ่าย + สรุปยอดเงิน ── */}
+                {/* ── 3) รายการค่าใช้จ่าย + สรุปยอดเงิน (ซ่อนตอนเลือกอวัยวะที่สูญเสีย) ── */}
                 {!selectedInsured ? (
                     <Paper
                         elevation={0}
@@ -960,7 +1120,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                     </Paper>
                 ) : (
                     <Grid container spacing={2.5}>
-                        <Grid item xs={12} md={8.5}>
+                        <Grid item xs={12} md={9}>
                             <Paper
                                 elevation={0}
                                 sx={{
@@ -980,7 +1140,6 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                 <Divider />
 
                                 <Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
-                                    {/* ── รายการที่เลือกแล้ว ── */}
                                     <Box
                                         sx={{
                                             border: "1px solid",
@@ -1023,14 +1182,14 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         <TableCell sx={{ ...headCell, width: "11%" }}>
                                                             ยอดเบิก
                                                         </TableCell>
-                                                        <TableCell sx={{ ...headCell, width: "10%" }}>ส่วนลด</TableCell>
-                                                        <TableCell sx={{ ...headCell, width: "12%" }}>
+                                                        <TableCell sx={{ ...headCell, width: "11%" }}>ส่วนลด</TableCell>
+                                                        <TableCell sx={{ ...headCell, width: "11%" }}>
                                                             ยอดไม่คุ้มครอง
                                                         </TableCell>
-                                                        <TableCell sx={{ ...headCell, width: "16%" }}>
+                                                        <TableCell sx={{ ...headCell, width: "15%" }}>
                                                             สาเหตุไม่คุ้มครอง
                                                         </TableCell>
-                                                        <TableCell sx={{ ...headCell, width: "14%" }}>
+                                                        <TableCell sx={{ ...headCell, width: "15%" }}>
                                                             หมายเหตุ
                                                         </TableCell>
                                                         <TableCell sx={{ ...headCell, width: 36 }} />
@@ -1187,7 +1346,9 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                                             <MenuItem
                                                                                                 key={o.value}
                                                                                                 value={o.value}
-                                                                                                sx={{ fontSize: 13 }}
+                                                                                                sx={{
+                                                                                                    fontSize: 13,
+                                                                                                }}
                                                                                             >
                                                                                                 {o.label}
                                                                                             </MenuItem>
@@ -1458,7 +1619,9 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                     minHeight: 40,
                                                                     fontSize: 13,
                                                                     "& fieldset": { borderColor: REF.lineStrong },
-                                                                    "&:hover fieldset": { borderColor: REF.primary },
+                                                                    "&:hover fieldset": {
+                                                                        borderColor: REF.primary,
+                                                                    },
                                                                     "&.Mui-focused fieldset": {
                                                                         borderColor: REF.primary,
                                                                         borderWidth: 1.5,
@@ -1582,7 +1745,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                         </Grid>
 
                         {/* ══ RIGHT col: สรุปยอดเงิน ══ */}
-                        <Grid item xs={12} md={3.5}>
+                        <Grid item xs={12} md={3}>
                             <Paper
                                 elevation={0}
                                 sx={{
@@ -1717,7 +1880,6 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                         </Grid>
                     </Grid>
                 )}
-
                 <InsuredSearchModal />
                 <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} onConfirm={handleConfirm} />
             </Box>

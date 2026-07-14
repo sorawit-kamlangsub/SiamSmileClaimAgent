@@ -166,20 +166,32 @@ export const useDaysCalculate = () => {
     };
 
     const prevBedDaysRef = useRef(calcIpdDays(daysCalculate.admitDate, daysCalculate.dischargeDate));
+    const ipdAutoSetRef = useRef(Boolean(daysCalculate.ipdDays));
 
     useEffect(() => {
         const days = calcIpdDays(formik.values.admitDate, formik.values.dischargeDate);
 
         if (days !== prevBedDaysRef.current) {
-            formik.setFieldValue("ipdDays", days);
-            formik.setFieldValue("bedDays", days);
-            syncToRedux({
-                dateHappen: formik.values.dateHappen,
-                admitDate: formik.values.admitDate,
-                dischargeDate: formik.values.dischargeDate,
-                ipdDays: days,
-                bedDays: days,
-            });
+            if (!ipdAutoSetRef.current) {
+                formik.setFieldValue("ipdDays", days);
+                formik.setFieldValue("bedDays", days);
+                ipdAutoSetRef.current = true;
+                syncToRedux({
+                    dateHappen: formik.values.dateHappen,
+                    admitDate: formik.values.admitDate,
+                    dischargeDate: formik.values.dischargeDate,
+                    ipdDays: days,
+                    bedDays: days,
+                });
+            } else {
+                formik.setFieldValue("bedDays", days);
+                syncToRedux({
+                    dateHappen: formik.values.dateHappen,
+                    admitDate: formik.values.admitDate,
+                    dischargeDate: formik.values.dischargeDate,
+                    bedDays: days,
+                });
+            }
         } else {
             syncToRedux({
                 dateHappen: formik.values.dateHappen,
@@ -193,6 +205,7 @@ export const useDaysCalculate = () => {
     }, [formik.values.dateHappen, formik.values.admitDate, formik.values.dischargeDate]);
 
     const handleIpdDaysChange = (value: number) => {
+        ipdAutoSetRef.current = true;
         formik.setFieldValue("ipdDays", value, true);
         formik.setFieldTouched("ipdDays", true, false);
         syncToRedux({ ipdDays: value });

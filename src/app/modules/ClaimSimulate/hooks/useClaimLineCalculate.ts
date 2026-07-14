@@ -35,6 +35,10 @@ export const useClaimLineCalculate = () => {
     const dispatch = useDispatch();
     const { filledItems, header } = useSelector((s: RootState) => s.claimsimulate);
     const medicalType = header.medicalType;
+    const causeOfIncident = header.causeOfIncident;
+    const formatTypeId = header.formatTypeId;
+    const coverageTypeId = header.coverageType;
+    const patientTypeId = medicalType ?? causeOfIncident;
 
     const [showAddPanel, setShowAddPanel] = useState(false);
     const [searchText, setSearchText] = useState("");
@@ -62,10 +66,19 @@ export const useClaimLineCalculate = () => {
     const items = formik.values.items;
 
     // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
-    const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(4, medicalType, true);
+    const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(
+        formatTypeId,
+        coverageTypeId,
+        patientTypeId,
+        true
+    );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
-    const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(2, 0);
+    const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
+        formatTypeId,
+        coverageTypeId,
+        patientTypeId
+    );
 
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
     const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
@@ -157,7 +170,7 @@ export const useClaimLineCalculate = () => {
 
                     const isExact = label === keyword || code.toLowerCase() === keyword || description === keyword;
 
-                    if (isExact) {
+                    if (isExact && !!leaf.code) {
                         matched = {
                             catId: cat.id,
                             subId: sub.id,
@@ -254,12 +267,6 @@ export const useClaimLineCalculate = () => {
             setNotCoveredError("");
             setDiscountError("");
         }
-        if (notCovered > 0 && !pendingReason) {
-            setReasonError("กรุณาเลือกสาเหตุไม่คุ้มครอง");
-            hasError = true;
-        } else {
-            setReasonError("");
-        }
         if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
             setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
             hasError = true;
@@ -296,12 +303,18 @@ export const useClaimLineCalculate = () => {
         setReasonError("");
     };
 
-    const prevMedicalTypeRef = useRef(medicalType);
+    const headerDetailSignature = [
+        header.claimCause,
+        header.coverageType,
+        header.medicalType,
+        header.causeOfIncident,
+        header.formatTypeId,
+    ].join("|");
+    const prevHeaderDetailSignatureRef = useRef(headerDetailSignature);
     useEffect(() => {
-        if (prevMedicalTypeRef.current === medicalType) return;
-        prevMedicalTypeRef.current = medicalType;
+        if (prevHeaderDetailSignatureRef.current === headerDetailSignature) return;
+        prevHeaderDetailSignatureRef.current = headerDetailSignature;
 
-        if (!medicalType) return;
         formik.setFieldValue("items", []);
         dispatch(resetSimulateItems());
         setSelectedItem(null);
@@ -310,17 +323,17 @@ export const useClaimLineCalculate = () => {
         setPendingDiscount("");
         setPendingNotCovered("");
         setPendingReason("");
-    }, [medicalType]);
+    }, [headerDetailSignature]);
 
     useEffect(() => {
-        if (!medicalType) return;
+        if (!patientTypeId) return;
         if (isFrequentLoading) return;
         if (frequentItems.length === 0) return;
         if (items.length > 0) return;
 
         formik.setFieldValue("items", frequentItems);
         dispatch(setFilledItems(frequentItems));
-    }, [medicalType, frequentItems, isFrequentLoading]);
+    }, [patientTypeId, frequentItems, isFrequentLoading]);
 
     const filterFilledItems = (items: ClaimLineItem[]) =>
         items.filter((item) => {

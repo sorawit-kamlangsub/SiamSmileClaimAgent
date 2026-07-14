@@ -13,6 +13,8 @@ const coreClaimClient = new CoreClaimClient(CORECLAIM_API_URL, axios);
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
 const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
 const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"];
+const getClaimContinueQueryKey = ["getClaimContinue"];
+
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
@@ -84,6 +86,32 @@ export const useGetCustomerBenefitDetailSearch = (
         () => coreClaimClient.getCustomerBenefitDetailSearch(policyCode, caseTypeId, dateHappen, isContinue),
         {
             enabled: !!policyCode,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetClaimContinue = (
+    applicationId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getClaimContinueQueryKey, applicationId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimClient.getClaimContinue(
+                applicationId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!applicationId,
             refetchOnWindowFocus: false,
         }
     );

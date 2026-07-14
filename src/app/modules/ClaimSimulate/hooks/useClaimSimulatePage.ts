@@ -5,7 +5,6 @@ import { swalError } from "../../_common";
 
 /**
  * @param onNavigateToSummary  เรียกตอนกด "ถัดไป" ในหน้า ClaimSimulate เพื่อไปหน้าสรุป
- *                             (validate ทั้งข้อมูลเหตุ/ประเภท/สาเหตุ, ฟอร์มวันนอน และรายการค่ารักษาแล้ว แต่ยังไม่เรียก API คำนวณ)
  */
 
 export const useClaimSimulatePage = (onNavigateToSummary?: () => void) => {

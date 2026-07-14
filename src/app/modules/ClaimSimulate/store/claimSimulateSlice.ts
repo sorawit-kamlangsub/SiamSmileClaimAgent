@@ -2,11 +2,12 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs, { Dayjs } from "dayjs";
 import { CalculateCaseClaimDtoResponse, GetCustomerSearchDtoResponse } from "../../../api/coreClaimApi.client";
 import { RootState } from "../../../../redux";
-
+import { OrganLossItem } from "../hooks/organLoss.types";
 
 // IncidentTypeId: 2 = Illness, 3 = Accident
 // CauseOfIncidentId: 2 = โรคทั่วไป, 3 = อุบัติเหตุทั่วไป, 4 = ขับขี่/โดยสารจักรยานยนต์, 5 = ฆาตกรรม, 7 = ภัยสาธารณะ, 8 = รับผิดสถานศึกษา
 // CoverageTypeId: 2 = Medical, 3 = Compensate, 4 = Disability, 5 = DeathCase
+// FormatTypeId: 2 = SSS, 3 = Disability, 4 = Death, 5 = SIM B1, 6 = SIM B2
 
 export type ClaimCauseType = number;
 export type CoverageType = number;
@@ -14,8 +15,9 @@ export type CoverageType = number;
 export interface ClaimLineHeaderState {
     medicalType: number | undefined;
     claimCause: ClaimCauseType | undefined;
-    coverageType: CoverageType | undefined; 
+    coverageType: CoverageType | undefined;
     causeOfIncident: number | undefined;
+    formatTypeId: number | undefined;
 }
 export interface DaysCalculateState {
     claimCause: number | undefined;
@@ -62,6 +64,8 @@ interface ClaimSimulateState {
 
     // ── ผลคำนวณ ──
     calculateResult: CalculateCaseClaimDtoResponse | null;
+
+    organLossItems: OrganLossItem[];
 }
 
 const initialState: ClaimSimulateState = {
@@ -73,6 +77,7 @@ const initialState: ClaimSimulateState = {
         claimCause: 2, // เจ็บป่วย
         coverageType: 2, // ค่ารักษา (Medical)
         causeOfIncident: undefined,
+        formatTypeId: 6,
     },
 
     daysCalculate: {
@@ -92,6 +97,7 @@ const initialState: ClaimSimulateState = {
     filledItems: [],
     medicalTypeId: undefined,
     calculateResult: null,
+    organLossItems: [],
 };
 
 const claimSimulateSlice = createSlice({
@@ -144,6 +150,9 @@ const claimSimulateSlice = createSlice({
         resetClaimSimulate() {
             return initialState;
         },
+        setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
+            state.organLossItems = action.payload;
+        },
     },
 });
 
@@ -159,8 +168,9 @@ export const {
     setCalculateResult,
     resetSimulateItems,
     resetClaimSimulate,
+    setOrganLossItems,
 } = claimSimulateSlice.actions;
 
-export const claimSimulateSelector = (state: RootState) => state.claimline;
+export const claimSimulateSelector = (state: RootState) => state.claimsimulate;
 
 export default claimSimulateSlice.reducer;

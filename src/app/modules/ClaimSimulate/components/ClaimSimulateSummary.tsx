@@ -359,7 +359,7 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                     <SectionHeader
                         icon={<ReceiptLongOutlinedIcon sx={{ fontSize: 25, color: REF.primary }} />}
                         title="รายการค่าใช้จ่าย"
-                        subtitle="ยอดเบิก สิทธิ์เบิก และส่วนเกินสิทธิ์"
+                        subtitle="ยอดเบิก สิทธิ์เบิก และยอดไม่คุ้มครอง"
                     />
                     <Chip
                         label={`${rows.length} รายการ`}
@@ -407,7 +407,7 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                                 >
                                     รายการ
                                 </TableCell>
-                                {["ยอดเบิก", "สิทธิ์เบิก", "ส่วนเกินสิทธิ์", "หมายเหตุ"].map((h) => (
+                                {["ยอดเบิก", "สิทธิ์เบิก", "ยอดไม่คุ้มครอง", "หมายเหตุ"].map((h) => (
                                     <TableCell
                                         key={h}
                                         align={h === "หมายเหตุ" ? "center" : "right"}
@@ -470,37 +470,6 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                                     </TableRow>
                                 ))
                             )}
-                            {/* {rows.length > 0 && (
-                                <TableRow>
-                                    <TableCell sx={{ fontWeight: 700, fontSize: 13.5, bgcolor: REF.soft }}>
-                                        รวมทั้งหมด
-                                    </TableCell>
-                                    <TableCell
-                                        align="right"
-                                        sx={{ fontWeight: 700, fontSize: 13.5, color: REF.text, bgcolor: REF.soft }}
-                                    >
-                                        {fmt(totalClaim)}
-                                    </TableCell>
-                                    <TableCell
-                                        align="right"
-                                        sx={{
-                                            fontWeight: 700,
-                                            fontSize: 13.5,
-                                            color: REF.primaryDark,
-                                            bgcolor: REF.soft,
-                                        }}
-                                    >
-                                        {fmt(totalEligible)}
-                                    </TableCell>
-                                    <TableCell
-                                        align="right"
-                                        sx={{ fontWeight: 700, fontSize: 13.5, color: REF.danger, bgcolor: REF.soft }}
-                                    >
-                                        {fmt(totalNotCovered)}
-                                    </TableCell>
-                                    <TableCell sx={{ bgcolor: REF.soft }}>-</TableCell>
-                                </TableRow>
-                            )} */}
                         </TableBody>
                     </Table>
                 </TableContainer>

@@ -88,10 +88,14 @@ export const useGetCauseOfAccident = (causeOfIncidentId?: number | undefined) =>
     );
 };
 
-export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTypeId?: number | undefined) => {
+export const useGetSimBCategory = (
+    formatTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    medicalTypeId?: number | undefined
+) => {
     return useQuery(
-        [getSimBCategoryQueryKey, formatTypeId, patientTypeId],
-        () => coreClaimMastersClient.getSimBCategory(formatTypeId, patientTypeId),
+        [getSimBCategoryQueryKey, formatTypeId, coverageTypeId, medicalTypeId],
+        () => coreClaimMastersClient.getSimBCategory(formatTypeId, coverageTypeId, medicalTypeId),
         {
             enabled: !!formatTypeId,
             refetchOnWindowFocus: false,
@@ -101,14 +105,15 @@ export const useGetSimBCategory = (formatTypeId?: number | undefined, patientTyp
 
 export const useGetSimB = (
     formatTypeId?: number | undefined,
-    patientTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    medicalTypeId?: number | undefined,
     isUseOften?: boolean | undefined
 ) => {
     return useQuery(
-        [getSimBQueryKey, formatTypeId, patientTypeId, isUseOften],
-        () => coreClaimMastersClient.getSimB(formatTypeId, patientTypeId, isUseOften),
+        [getSimBQueryKey, formatTypeId, coverageTypeId, medicalTypeId, isUseOften],
+        () => coreClaimMastersClient.getSimB(formatTypeId, coverageTypeId, medicalTypeId, isUseOften),
         {
-            enabled: !!formatTypeId && !!patientTypeId,
+            enabled: !!formatTypeId && !!coverageTypeId && !!medicalTypeId,
             refetchOnWindowFocus: false,
         }
     );

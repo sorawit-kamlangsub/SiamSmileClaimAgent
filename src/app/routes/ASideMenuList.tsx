@@ -6,6 +6,7 @@ import { MenuItem, ParentMenu, selectLayout, setDrawerOpen } from "../layout";
 import PolicyIcon from "@mui/icons-material/Policy";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import MonitorIcon from "@mui/icons-material/Monitor";
+import CalculateIcon from "@mui/icons-material/Calculate";
 
 export const ASideMenuList = () => {
     const layoutReducer = useAppSelector(selectLayout);
@@ -51,6 +52,7 @@ export const ASideMenuList = () => {
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
                 </ParentMenu> */}
                 <MenuItem path="/monitor-claim" icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]} />
+                <MenuItem path="/claim-simulation" icon={<CalculateIcon />} text="คำนวณวงเงินเคลม" permissions={[]} />
                 <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
                 </ParentMenu>
@@ -98,4 +100,3 @@ const ASideMenuListDrawer = styled(Drawer)(({ theme }) => ({
         overflowX: "hidden",
     },
 }));
-

@@ -1,9 +1,9 @@
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import AccessibilityNewOutlinedIcon from "@mui/icons-material/AccessibilityNewOutlined";
-import WarningAmberOutlinedIcon from "@mui/icons-material/WarningAmberOutlined";
-import HealthAndSafetyOutlinedIcon from "@mui/icons-material/HealthAndSafetyOutlined";
+import AccessibleIcon from "@mui/icons-material/Accessible";
 import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
+import SentimentVeryDissatisfiedIcon from "@mui/icons-material/SentimentVeryDissatisfied";
+import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
+import PaidOutlinedIcon from "@mui/icons-material/Paid";
+import HealingIcon from "@mui/icons-material/Healing";
 
 export const REASON_OPTIONS = [
     { value: "", label: "----------" },
@@ -13,18 +13,7 @@ export const REASON_OPTIONS = [
     { value: "4", label: "รอเอกสารเพิ่มเติม" },
 ];
 
-// export interface TreatmentTypeOption {
-//     CaseTypeId: number;
-//     CaseTypeName: string;
-// }
 
-// export const TREATMENT_TYPE_OPTIONS: TreatmentTypeOption[] = [
-//     { CaseTypeId: 2, CaseTypeName: "IPD" },
-//     { CaseTypeId: 3, CaseTypeName: "OPD" },
-//     { CaseTypeId: 4, CaseTypeName: "DAY_Surgery" },
-//     { CaseTypeId: 5, CaseTypeName: "DeathCase" },
-//     { CaseTypeId: 6, CaseTypeName: "Disability" },
-// ];
 
 export const CONTINUOUS_CLAIM_OPTIONS = [
     { value: "CL2024001", label: "CL2024001 - 01/03/2567" },
@@ -44,7 +33,7 @@ export const CLAIM_CAUSE_OPTIONS = [
         value: 2,
         label: "เจ็บป่วย",
         description: "กรณีเข้ารักษาจากโรคหรืออาการเจ็บป่วยทั่วไป",
-        icon: HealthAndSafetyOutlinedIcon,
+        icon: HealingIcon,
     },
     {
         value: 3,
@@ -56,10 +45,10 @@ export const CLAIM_CAUSE_OPTIONS = [
 
 // ── ประเภทความคุ้มครอง ──
 export const COVERAGE_TYPE_OPTIONS = [
-    { value: 2, label: "ค่ารักษา (Medical)", icon: DescriptionOutlinedIcon },
-    { value: 3, label: "ค่าชดเชย (Compensate)", icon: AttachMoneyIcon },
-    { value: 4, label: "ทุพพลภาพ (Disability)", icon: AccessibilityNewOutlinedIcon },
-    { value: 5, label: "เสียชีวิต (DeathCase)", icon: WarningAmberOutlinedIcon },
+    { value: 2, label: "ค่ารักษา", icon: MedicalServicesIcon },
+    { value: 3, label: "ค่าชดเชย(ใหญ่)", icon: PaidOutlinedIcon },
+    { value: 4, label: "ทุพพลภาพ/สูญเสียอวัยวะ", icon: AccessibleIcon },
+    { value: 5, label: "เสียชีวิต", icon: SentimentVeryDissatisfiedIcon },
 ] as const;
 
 // ── ประเภทการรักษา  ───────────────────────────────
@@ -80,4 +69,13 @@ export const CAUSE_OF_INCIDENT_OPTIONS = [
     { value: 5, label: "ฆาตกรรม" },
     { value: 7, label: "ภัยสาธารณะ" },
     { value: 8, label: "รับผิดสถานศึกษา" },
+] as const;
+
+// ── ประเภทรายการค่าใช้จ่าย (FormatType) ──────────────────────
+export const FORMAT_TYPE_OPTIONS = [
+    { value: 2, label: "SSS" },
+    { value: 3, label: "Disability" },
+    { value: 4, label: "Death" },
+    { value: 5, label: "SIM B1" },
+    { value: 6, label: "SIM B2" },
 ] as const;

@@ -14,6 +14,7 @@ type FormikDatePickerProps = {
     actions?: PickersActionBarAction[];
     useFocusError?: boolean;
     textHelperIsValid?: string;
+    bgcolor?: string;
 } & FormikMuiXDateTimeProps &
     DatePickerProps<Dayjs | null> &
     Omit<TextFieldProps, OmitDatePickerProps>;
@@ -27,13 +28,14 @@ const FormikDatePicker = ({
     fieldReadOnly = false,
     fieldClearable = false,
     actions = ["cancel", "accept"],
+    bgcolor = "#fff",
     ...other
 }: FormikDatePickerProps) => {
     const formikGetFieldMeta = formik.getFieldMeta<Dayjs | null>(name);
     const { value } = formikGetFieldMeta;
 
     const { setFieldValue, setFieldTouched } = formik;
-    const textFieldProps: Omit<TextFieldProps, OmitDatePickerProps> = other;
+    const { sx: textFieldSx, ...textFieldProps }: Omit<TextFieldProps, OmitDatePickerProps> = other;
 
     const handleDateChange = (date: Dayjs | null) => setFieldValue(name, date);
 
@@ -70,6 +72,10 @@ const FormikDatePicker = ({
                             helperText,
                             label,
                             ...textFieldProps,
+                            sx: [
+                                { "& .MuiOutlinedInput-root": { backgroundColor: bgcolor } },
+                                ...(Array.isArray(textFieldSx) ? textFieldSx : textFieldSx ? [textFieldSx] : []),
+                            ],
                         },
                         field: {
                             readOnly: fieldReadOnly,

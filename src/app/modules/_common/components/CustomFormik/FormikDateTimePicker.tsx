@@ -3,7 +3,9 @@ import { Dayjs } from "dayjs";
 import { FormikMuiXDateTimeProps, MUIDateTimeThProvider } from ".";
 import { DateTimePicker, DateTimePickerProps } from "@mui/x-date-pickers/DateTimePicker";
 
-type FormikDateTimePickerProps = FormikMuiXDateTimeProps &
+type FormikDateTimePickerProps = {
+    bgcolor?: string;
+} & FormikMuiXDateTimeProps &
     DateTimePickerProps<Dayjs | null> &
     Omit<TextFieldProps, "name" | "label" | "value" | "error" | "helperText" | "variant">;
 
@@ -13,12 +15,16 @@ const FormikDateTimePicker = ({
     formik,
     useThaiLanguage = true,
     useBuddhistEra = true,
+    bgcolor = "#fff",
     ...other
 }: FormikDateTimePickerProps) => {
     const { touched, value, error } = formik.getFieldMeta<Dayjs | null>(name);
     const { setFieldValue, setFieldTouched } = formik;
 
-    const textFieldProps: Omit<TextFieldProps, "name" | "label" | "value" | "error" | "helperText" | "variant"> = other;
+    const {
+        sx: textFieldSx,
+        ...textFieldProps
+    }: Omit<TextFieldProps, "name" | "label" | "value" | "error" | "helperText" | "variant"> = other;
 
     const handleDateChange = (date: Dayjs | null) => setFieldValue(name, date);
 
@@ -37,6 +43,10 @@ const FormikDateTimePicker = ({
                         helperText: error,
                         error: touched && !!error,
                         ...textFieldProps,
+                        sx: [
+                            { "& .MuiOutlinedInput-root": { backgroundColor: bgcolor } },
+                            ...(Array.isArray(textFieldSx) ? textFieldSx : textFieldSx ? [textFieldSx] : []),
+                        ],
                     },
                 }}
             />
