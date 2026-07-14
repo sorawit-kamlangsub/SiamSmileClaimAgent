@@ -5,7 +5,7 @@ import {
     OcrDocumentScanResult,
     RequiredDocsConfig,
 } from "../../components/CreateClaim/OcrDocumentScanSection";
-import { CaseDocumentCreateRequest } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentDetailCreateRequest } from "../../../../api/coreClaimApi.client";
 import dayjs from "dayjs";
 
 const COVERAGE_TYPE_DOCS_MAP: Record<number, RequiredDocsConfig> = {
@@ -14,13 +14,12 @@ const COVERAGE_TYPE_DOCS_MAP: Record<number, RequiredDocsConfig> = {
 };
 
 const NO_REQUIRED_DOCS: RequiredDocsConfig = { idCard: false, receipt: false, medCert: false };
-const OCR_DOCUMENT_STORAGE_TYPE_ID = 220;
 
 const ocrDocumentPayload = (
     ocrResult: OcrDocumentScanResult,
     documentIds: DocStorageDocumentIds
-): CaseDocumentCreateRequest[] => {
-    const list: CaseDocumentCreateRequest[] = [];
+): CaseDocumentDetailCreateRequest[] => {
+    const list: CaseDocumentDetailCreateRequest[] = [];
     if (ocrResult.idCard) {
         list.push({
             documentId: documentIds[OCR_DOCUMENT_TYPE_ID.idCard],
@@ -28,7 +27,6 @@ const ocrDocumentPayload = (
             lastName: ocrResult.idCard.lastName,
             fullName: ocrResult.idCard.fullName,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.idCard,
-            claimDocumentTypeId: OCR_DOCUMENT_STORAGE_TYPE_ID,
             ocrResult: JSON.stringify(ocrResult.idCard.result),
         });
     }
@@ -38,7 +36,6 @@ const ocrDocumentPayload = (
             documentId: documentIds[OCR_DOCUMENT_TYPE_ID.passport],
             fullName: ocrResult.passport.fullName,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.passport,
-            claimDocumentTypeId: OCR_DOCUMENT_STORAGE_TYPE_ID,
             ocrResult: JSON.stringify(ocrResult.passport.result),
         });
     }
@@ -48,7 +45,6 @@ const ocrDocumentPayload = (
             documentId: documentIds[OCR_DOCUMENT_TYPE_ID.alienCard],
             fullName: ocrResult.alienCard.fullName,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.alienCard,
-            claimDocumentTypeId: OCR_DOCUMENT_STORAGE_TYPE_ID,
             ocrResult: JSON.stringify(ocrResult.alienCard.result),
         });
     }
@@ -62,7 +58,6 @@ const ocrDocumentPayload = (
             receiptAdmissionDate: ocrResult.receipt.receiptDate ? dayjs(ocrResult.receipt.receiptDate) : undefined, //รอปรับ database ใหม่ ชื่อฟิลด์ยังไม่ถูก
             receiptAmount: ocrResult.receipt.netAmount,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.receipt,
-            claimDocumentTypeId: OCR_DOCUMENT_STORAGE_TYPE_ID,
             ocrResult: JSON.stringify(ocrResult.receipt.result),
         });
     }
@@ -72,9 +67,8 @@ const ocrDocumentPayload = (
             documentId: documentIds[OCR_DOCUMENT_TYPE_ID.medCert],
             fullName: ocrResult.medCert.patientName,
             hospitalName: ocrResult.medCert.hospitalName,
-            receiptAdmissionDate: ocrResult.medCert.admitDate ? dayjs(ocrResult.medCert.admitDate) : undefined,
+            //receiptAdmissionDate: ocrResult.medCert.admitDate ? dayjs(ocrResult.medCert.admitDate) : undefined,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.medCert,
-            claimDocumentTypeId: OCR_DOCUMENT_STORAGE_TYPE_ID,
             ocrResult: JSON.stringify(ocrResult.medCert.result),
         });
     }

@@ -1,8 +1,13 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
-import { GetContactPersonDtoResponse, GetCustomerBankAccountDtoResponse, GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
+import {
+    GetContactPersonDtoResponse,
+    GetCustomerBankAccountDtoResponse,
+    GetCustomerDetailByIdDtoResponse,
+} from "../../../api/coreClaimApi.client";
 import { DocumentByIdResponseDto } from "../../../api/docstorageApi.client";
+import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
 
 export enum SymptomType {
     ChiefComplaint = 1,
@@ -112,6 +117,7 @@ interface ClaimPHState {
     insured: GetCustomerDetailByIdDtoResponse | undefined;
     documentDetailById: { [key: string]: DocumentDetailDto };
     isEnabled: boolean;
+    organLossItems: OrganLossItem[];
 }
 const defaultForm: ClaimFormValues = {
     documentRecipientTypeId: 2,
@@ -169,6 +175,7 @@ const initialState: ClaimPHState = {
     insured: undefined,
     isEnabled: false,
     documentDetailById: {},
+    organLossItems: [],
 };
 
 const claimPHSlice = createSlice({
@@ -270,6 +277,9 @@ const claimPHSlice = createSlice({
         setDocumentDetailById: (state, action: PayloadAction<DocumentDetailDto>) => {
             state.documentDetailById[action.payload.documentId ?? ""] = action.payload;
         },
+        setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
+            state.organLossItems = action.payload;
+        },
         resetState: () => initialState,
     },
 });
@@ -291,6 +301,7 @@ export const {
     setInsured,
     setEnabled,
     setDocumentDetailById,
+    setOrganLossItems,
     resetState,
 } = claimPHSlice.actions;
 

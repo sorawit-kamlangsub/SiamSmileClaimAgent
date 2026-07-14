@@ -15,7 +15,7 @@ interface Props {
 }
 
 const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
-    const { claimHistoryData, isLoading, setPaginated, pagination } = useClaimHistory();
+    const { claimHistoryData, claimHistoryisLoading, setPaginated, pagination } = useClaimHistory();
     const columns: MUIDataTableColumn[] = [
         {
             name: "claimNo",
@@ -36,7 +36,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             },
         },
         {
-            name: "caseAmount",
+            name: "totalCaseAmount",
             label: "ยอดเบิกรวม",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -44,7 +44,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             },
         },
         {
-            name: "totalPaidAmount",
+            name: "paidAmount",
             label: "ยอดจ่ายรวม",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -83,12 +83,12 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
     return (
         <>
             <HeadingWithColor text="ประวัติการเคลม" color="blue" />
-            <LinearLoading isLoading={isLoading}>
+            <LinearLoading isLoading={claimHistoryisLoading}>
                 <StandardDataTable
                     name={tableId}
                     title=""
                     data={claimHistoryData?.data || []}
-                    isLoading={isLoading}
+                    isLoading={claimHistoryisLoading}
                     columns={columns}
                     color="primary"
                     columnHeaderAlign="center"

@@ -1,19 +1,26 @@
 import { useState, useMemo } from "react";
-import { useGetClaimHistory } from "../../../../api/coreClaimApi";
+import { useGetCaseByClaimId, useGetClaimHistory } from "../../../../api/coreClaimApi";
 import { monitorSelector } from "../../store/monitorSlice";
 import { useAppSelector } from "../../../../../redux";
-import { GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 
-export const useClaimHistory = (appIdFromProp?: string) => {
+export const useClaimHistory = (appIdFromProp?: string, claimId?: string) => {
     const { selectedPolicy } = useAppSelector(monitorSelector);
     const appId = selectedPolicy?.appId === undefined ? appIdFromProp : selectedPolicy.appId;
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
-        recordsPerPage: 100,
+        recordsPerPage: 10,
     });
-    const { data: claimHistoryData, isLoading } = useGetClaimHistory(
+    const { data: claimHistoryData, isLoading: claimHistoryisLoading } = useGetClaimHistory(
         appId,
+        undefined,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
+    const { data: caseData, isLoading: caseDataisLoading } = useGetCaseByClaimId(
+        claimId,
         undefined,
         undefined,
         undefined,
@@ -33,8 +40,10 @@ export const useClaimHistory = (appIdFromProp?: string) => {
 
     return {
         claimHistoryData,
+        caseData,
         setPaginated,
         pagination,
-        isLoading,
+        claimHistoryisLoading,
+        caseDataisLoading,
     };
 };

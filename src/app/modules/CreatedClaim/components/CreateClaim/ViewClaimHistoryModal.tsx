@@ -48,7 +48,7 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
                             <HistoryIcon sx={{ fontSize: 24, color: "primary.main" }} />
                         </Avatar>
                         <Typography fontWeight="bold" fontSize={18}>
-                            {`ประวัติการเคลมทั้งหมด ${items.length} รายการ`}
+                            {`ประวัติการเคลมทั้งหมด ${items[0]?.totalCount ?? 0} รายการ`}
                         </Typography>
                     </Box>
                     <IconButton
@@ -159,7 +159,7 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
                                         อาการสำคัญ
                                     </Typography>
                                     <Typography fontSize={14} fontWeight={600}>
-                                        {item.chiefComplaintDetail || "-"}
+                                        {item.lastestChiefComplaint || "-"}
                                     </Typography>
                                 </Box>
 
@@ -168,7 +168,7 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
                                         ยอดเบิกรวม
                                     </Typography>
                                     <Typography fontSize={15} fontWeight={700} color="primary.main">
-                                        {fmt(item.caseAmount ?? 0)}
+                                        {fmt(item.totalCaseAmount ?? 0)}
                                     </Typography>
                                 </Box>
 
@@ -177,7 +177,7 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
                                         ยอดจ่ายรวม
                                     </Typography>
                                     <Typography fontSize={15} fontWeight={700} color="success.main">
-                                        {fmt(item.totalPaidAmount ?? 0)}
+                                        {fmt(item.paidAmount ?? 0)}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -210,7 +210,7 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
                                         </Box>
 
                                         <Typography fontSize={12} color="text.secondary" sx={{ mt: 0.5 }}>
-                                            ทั้งหมด 1 เคส
+                                            ทั้งหมด {item.countCase} เคส
                                         </Typography>
                                     </Box>
 

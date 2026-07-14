@@ -3,15 +3,16 @@ import { useFormik, FormikErrors } from "formik";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useAuth } from "../../../../_auth";
 import { ChipOption } from "../../../components/CreateClaim/ChipSelector";
-import {
-    useGetCauseOfAccident,
-    useGetCoverageType,
-    useGetIncidentType,
-    useGetMedicaltype,
-} from "../../../../../api/coreClaimMastersApi";
+import { useGetIncidentType, useGetIncidentTypeMapping } from "../../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
-import { ClaimInsuredItem, ClaimPAFormValues, claimPASelector, setClaimForm, setClaimItems } from "../../../store/claimPASlice";
+import {
+    ClaimInsuredItem,
+    ClaimPAFormValues,
+    claimPASelector,
+    setClaimForm,
+    setClaimItems,
+} from "../../../store/claimPASlice";
 import { setEnabled, SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import dayjs from "dayjs";
@@ -27,7 +28,6 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const { form, isContinuous, insured } = useAppSelector(claimPASelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
-    const { data: causeOfAccidentRaw, isLoading: causeOfAccidentLoading } = useGetCauseOfAccident();
 
     const MEDICAL_TYPE_BY_COVERAGE_PA: Record<number, Record<number, number[]>> = {
         3: {
@@ -144,29 +144,30 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 name: item.incidentTypeNameTH ?? "",
                 icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
             })) ?? [];
-    const { data: coverageTypeRaw, isLoading: coverageTypeLoading } = useGetCoverageType(
-        2, // ClaimAgent
-        26, // PA
+    const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         formik.values.incidentTypeId,
-        undefined,
-        insured?.productCategoryCode
+        2, // ClaimAgent
+        6, // PH
+        insured?.productCategoryCode,
+        formik.values.coverageTypeId,
+        formik.values.medicalTypeId,
+        formik.values.causeOfIncidentId
     );
     const coverageType: ClaimTypeOption[] =
-        coverageTypeRaw?.data?.map((item) => ({
+        incidentTypeMapping?.data?.map((item) => ({
             id: item.coverageTypeId ?? 0,
             name: item.coverageTypeNameTH ?? "",
             icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
         })) ?? [];
 
-    const { data: medicalTypeRaw, isLoading: medicalTypeLoading } = useGetMedicaltype(2, formik.values.coverageTypeId);
     const medicalType: ChipOption[] =
-        medicalTypeRaw?.data?.map((item) => ({
+        incidentTypeMapping?.data?.map((item) => ({
             id: item.medicalTypeId ?? 0,
             name: item.medicalTypeCode ?? "",
         })) ?? [];
 
     const causeOfAccident: ChipOption[] =
-        causeOfAccidentRaw?.data
+        incidentTypeMapping?.data
             ?.filter(
                 (item) =>
                     CAUSE_OF_ACCIDENT_BY_COVERAGE_PA[formik.values.incidentTypeId ?? 0]?.[
@@ -178,14 +179,14 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 name: item.causeOfIncidentName ?? "",
             })) ?? [];
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
-            insured?.policyCode,
-            0,
-            formik.values.incidentDate,
-            false,
-            formik.values.incidentTypeId,
-            formik.values.coverageTypeId,
-            formik.values.medicalTypeId
-        );
+        insured?.policyCode,
+        0,
+        formik.values.incidentDate,
+        false,
+        formik.values.incidentTypeId,
+        formik.values.coverageTypeId,
+        formik.values.medicalTypeId
+    );
     const isFirstRenderIncident = useRef(true);
     const isFirstRenderCoverage = useRef(true);
 
@@ -291,11 +292,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         coverageType,
         medicalType,
         causeOfAccident,
+        incidentTypeMapping,
         customerBenefit,
         incidentTypeLoading,
-        coverageTypeLoading,
-        medicalTypeLoading,
-        causeOfAccidentLoading,
+        incidentTypeMappingLoading,
         customerBenefitLoading,
         insured,
         ...ocr,

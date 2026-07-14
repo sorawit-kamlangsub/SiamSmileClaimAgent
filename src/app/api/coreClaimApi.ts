@@ -22,6 +22,7 @@ const getDocumentSubTypeQueryKey = ["getDocumentSubType"];
 const getClaimHistoryQueryKey = ["getClaimHistory"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
+const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
@@ -221,6 +222,32 @@ export const useGetContactPerson = (applicationId: string, productTypeId?: numbe
         () => coreClaimClient.getContactPerson(applicationId, productTypeId),
         {
             enabled: !!applicationId && !!productTypeId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCaseByClaimId = (
+    claimId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getCaseByClaimIdQueryKey, claimId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimClient.getCaseByClaimId(
+                claimId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!claimId,
             refetchOnWindowFocus: false,
         }
     );
