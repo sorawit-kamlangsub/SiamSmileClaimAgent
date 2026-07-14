@@ -25,7 +25,7 @@ const getBankQueryKey = ["getBank"];
 const getZebraCarOwnerQueryKey = ["getZebraCarOwner"];
 const getSchoolByProvinceIdQueryKey = ["getSchoolByProvinceId"];
 const getAllHospitalQueryKey = ["getAllHospital"];
-const getTitleQueryKey = ["getTitle"];
+// const getTitleQueryKey = ["getTitle"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
