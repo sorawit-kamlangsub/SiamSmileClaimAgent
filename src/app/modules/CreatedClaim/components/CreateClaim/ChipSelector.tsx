@@ -1,11 +1,10 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Box, Chip, Skeleton, Typography } from "@mui/material";
 import { FormikProps } from "formik";
 
 export type ChipOption = {
     id: number;
     name: string;
-    disabled?: boolean;
 };
 
 type Props = {
@@ -26,12 +25,6 @@ const ChipSelector: React.FC<Props> = ({ formik, idFieldName, nameFieldName, opt
         formik.setFieldValue(nameFieldName, item.name, true);
     };
 
-    useEffect(() => {
-        if (options.length === 1 && options[0].disabled) {
-            formik.setFieldValue(idFieldName, options[0].id, false);
-            formik.setFieldValue(nameFieldName, options[0].name, false);
-        }
-    }, [options]);
     return (
         <Box>
             {/* Chips */}
@@ -49,7 +42,7 @@ const ChipSelector: React.FC<Props> = ({ formik, idFieldName, nameFieldName, opt
                             <Chip
                                 key={item.id}
                                 label={item.name}
-                                onClick={() => !item.disabled && handleSelect(item)}
+                                onClick={() => handleSelect(item)}
                                 variant={isSelected ? "filled" : "outlined"}
                                 sx={{
                                     fontWeight: isSelected ? 700 : 400,

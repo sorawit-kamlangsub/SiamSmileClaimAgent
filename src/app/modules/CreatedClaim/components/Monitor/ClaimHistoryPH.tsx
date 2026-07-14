@@ -24,7 +24,7 @@ const ClaimHistoryPH: React.FC = () => {
     return (
         <>
             <CustomPaper>
-                <HeadingWithColor text="ข้อมูลกรมธรรม์" color="blue" />
+                <HeadingWithColor text="รายละเอียดผู้เอาประกัน" color="blue" />
                 <Grid container spacing={2} alignItems="center" ml={1.5}>
                     <Field
                         label="ApplicationID"
@@ -62,7 +62,10 @@ const ClaimHistoryPH: React.FC = () => {
                 </Grid>
             </CustomPaper>
             <CustomPaper>
-                <ClaimHistoryTable tableId="ClaimHistoryPHTable" onContinuousClaim={handleContinuousClaim} />
+                <ClaimHistoryTable
+                    tableId="ClaimHistoryPHTable"
+                    onContinuousClaim={(item: any) => handleContinuousClaim(item)}
+                />
                 <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
                     <Button
                         variant="outlined"

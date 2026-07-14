@@ -84,14 +84,14 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
                 addContact({
                     id: Date.now().toString(),
                     // ถ้าเลือก "อื่นๆ" ใช้ข้อความที่กรอก ไม่งั้นใช้ชื่อจาก API
-                    relationship:
+                    contactPersonTypeId: values.relationship ?? 0,
+                    contactPersonTypeName:
                         values.relationship === OTHER_CONTACT_TYPE_ID
                             ? values.otherNote
                             : values.relationship_selectedText,
-                    phone: values.phone,
-                    name: values.name,
+                    contactPhoneNo: values.phone,
+                    contactName: values.name,
                     isDefault: false,
-                    isFromMock: false,
                 })
             );
             resetForm();

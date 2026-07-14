@@ -79,7 +79,7 @@ const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                                 เบอร์โทรติดต่อ :
                             </Typography>
                             <Typography fontSize={15} fontWeight={700} color="primary">
-                                {defaultContact?.phone ?? "-"}
+                                {defaultContact?.contactPhoneNo ?? "-"}
                             </Typography>
                         </Box>
                     </Grid>
@@ -130,8 +130,8 @@ const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             <Box>
                                 {[
                                     ["ธนาคาร", defaultBank?.bankName],
-                                    ["เลขที่บัญชี", defaultBank?.accountNo],
-                                    ["ชื่อบัญชี", defaultBank?.accountName],
+                                    ["เลขที่บัญชี", defaultBank?.bankAccountNo],
+                                    ["ชื่อบัญชี", defaultBank?.bankAccountName],
                                 ].map(([label, value]) => (
                                     <Box key={label} display="flex" gap={1}>
                                         <Typography fontSize={16} color="text.secondary" minWidth={90}>

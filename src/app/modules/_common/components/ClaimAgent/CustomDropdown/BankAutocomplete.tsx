@@ -1,4 +1,4 @@
-import { useGetBank } from "../../../../../api/claimAgentMaster";
+import { useGetBank } from "../../../../../api/coreClaimMastersApi";
 import { FormikAutocomplete } from "../../CustomFormik";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
 

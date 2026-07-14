@@ -22,9 +22,10 @@ interface Props {
     open: boolean;
     onClose: () => void;
     onConfirm: () => void;
+    isLoading?: boolean | undefined;
 }
 
-const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
+const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm, isLoading }) => {
     const { form, bankAccounts, contacts, insured } = useAppSelector((state) => state.claimph);
     const defaultBank = bankAccounts.find((b) => b.isDefault);
     const defaultContact = contacts.find((c) => c.isDefault);
@@ -82,7 +83,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                                 เบอร์โทรติดต่อ :
                             </Typography>
                             <Typography fontSize={15} fontWeight={700} color="primary">
-                                {defaultContact?.phone ?? "-"}
+                                {defaultContact?.contactPhoneNo ?? "-"}
                             </Typography>
                         </Box>
                     </Grid>
@@ -132,7 +133,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                                         เลขที่บัญชี :
                                     </Typography>
                                     <Typography fontSize={16} fontWeight="bold">
-                                        {defaultBank?.accountNo ?? "-"}
+                                        {defaultBank?.bankAccountNo ?? "-"}
                                     </Typography>
                                 </Box>
                                 <Box display="flex" gap={1}>
@@ -140,7 +141,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                                         ชื่อบัญชี :
                                     </Typography>
                                     <Typography fontSize={16} fontWeight="bold">
-                                        {defaultBank?.accountName ?? "-"}
+                                        {defaultBank?.bankAccountName ?? "-"}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -155,7 +156,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             </Typography>
                             <Typography variant="h5" fontWeight="bold" color="primary">
                                 THB{" "}
-                                {Number(form.claimAmount).toLocaleString("th-TH", {
+                                {Number(form.transferAmount).toLocaleString("th-TH", {
                                     minimumFractionDigits: 2,
                                 })}
                             </Typography>
@@ -191,6 +192,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             fullWidth
                             size="medium"
                             onClick={onConfirm}
+                            disabled={isLoading}
                             sx={{ mt: 1 }}
                         >
                             ยืนยันแจ้งโอนเงิน

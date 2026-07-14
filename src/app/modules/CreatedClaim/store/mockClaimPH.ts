@@ -50,6 +50,7 @@ export const mockOldClaim: OldClaimInfo = {
 export const mockBankAccounts: BankAccount[] = [
     {
         id: "1",
+        relationshipId: 3,
         relationship: "ผู้เอาประกัน",
         bankId: 3,
         bankName: "กรุงไทย",
@@ -63,6 +64,7 @@ export const mockBankAccounts: BankAccount[] = [
 export const mockContacts: ContactInfo[] = [
     {
         id: "1",
+        relationshipId: 2,
         relationship: "ผู้ชำระเบี้ย",
         phone: "081-2345678",
         name: "นางสาวรัชขน สุวรรณโชค",
@@ -104,6 +106,7 @@ export const mockSchoolPA: SchoolInfo = {
 export const mockBankAccountsPA: BankAccount[] = [
     {
         id: "pa-bank-1",
+        relationshipId: 5,
         relationship: "ครูผู้ประสานงาน",
         bankId: 3,
         bankName: "กรุงไทย",
@@ -117,6 +120,7 @@ export const mockBankAccountsPA: BankAccount[] = [
 export const mockContactsPA: ContactInfo[] = [
     {
         id: "pa-contact-1",
+        relationshipId: 5,
         relationship: "ครูผู้ประสานงาน",
         phone: "091-2233444",
         name: "นายปกรินทร์ พงศ์โกษาล",

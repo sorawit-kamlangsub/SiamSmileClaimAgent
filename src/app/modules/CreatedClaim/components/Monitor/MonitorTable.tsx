@@ -10,10 +10,9 @@ import {
 import { StandardDataTable } from "../../../_common";
 import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
 import { useMonitorTable } from "../../hooks/Monitor/useMonitorTable";
-
 const MonitorTable: React.FC = () => {
     const { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search } = useMonitorTable();
-
+    const isPH = data?.data?.some((item) => item.productTypeId === 6);
     const columns: MUIDataTableColumn[] = [
         {
             name: "",
@@ -63,7 +62,12 @@ const MonitorTable: React.FC = () => {
         {
             name: "productName",
             label: "แผน",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+            options: { display: isPH, filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+        },
+        {
+            name: "productCategoryName",
+            label: "แผน",
+            options: { display: !isPH, filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
             name: "coverageFrom",

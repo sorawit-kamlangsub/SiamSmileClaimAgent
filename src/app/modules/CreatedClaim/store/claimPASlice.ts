@@ -1,94 +1,145 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
-import { BankAccount, ContactInfo } from "./claimPHSlice"; // ← ใช้ร่วม
+import { ClaimBankAccount, ContactInfo, DiagnosisModel, SpecifyHospital, SymptomType } from "./claimPHSlice";
+import {
+    GetContactPersonDtoResponse,
+    GetCustomerBankAccountDtoResponse,
+    GetCustomerDetailByIdDtoResponse,
+} from "../../../api/coreClaimApi.client";
 
-export type PAClaimType = "OPD" | "IPD" | "DayCaseSurgery" | "DeathClaim" | "LossOrDisability";
-export type OpdSubType = "โรคทั่วไป" | "อุบัติเหตุ" | "ค่ารักษา" | "ค่าชดเชย";
-export type SymptomType = "ระบุอาการ" | "อื่นๆ";
-export type DocumentReceiver = "ผู้ให้บริการ" | "FCNT (สกลนคร)" | "Pivot";
-
-export interface InsuredInfoPA {
-    appId: string;
-    customerName: string;
-    prefix: string;
-    firstName: string;
-    lastName: string;
-    nationalId: string;
-    passport: string;
-    plan: string;
-    startCoverDate: string;
-    effectiveDate: string;
-    endCoverDate: string;
-    insuredType: "นักเรียน" | "บุคลากร" | "";
-    schoolName: string;
-}
+// export interface InsuredInfoPA {
+//     appId: string;
+//     customerName: string;
+//     prefix: string;
+//     firstName: string;
+//     lastName: string;
+//     nationalId: string;
+//     passport: string;
+//     plan: string;
+//     startCoverDate: string;
+//     effectiveDate: string;
+//     endCoverDate: string;
+//     insuredType: "นักเรียน" | "บุคลากร" | "";
+//     schoolName: string;
+// }
 
 export interface SchoolInfo {
     appId: string;
     schoolName: string;
     teacherName: string;
     teacherPhone: string;
-    teacherBank: string;
-    teacherAccountNo: string;
-    teacherAccountName: string;
 }
 
 export interface ClaimInsuredItem {
     id: string;
-    appId: string;
     seq: number;
     customerName: string;
-    insuredType: string;
-    claimType: PAClaimType | "";
-    opdSubType: OpdSubType | "";
+    claimStyle: string;
+    incidentDate: Dayjs;
     claimAmount: number;
 }
 
 export interface ClaimPAFormValues {
-    documentReceiver: DocumentReceiver | "";
-    serviceProvider: string;
-    carOwner: string;
-    claimType: PAClaimType | "";
-    opdSubType: OpdSubType | "";
-    incidentDate: Dayjs;
-    admitDate: Dayjs | null; // ← วันที่เข้า รพ.
-    dischargeDate: Dayjs | null; // ← วันที่ออก รพ.
-    claimAmount: string;
-    symptomType: SymptomType;
-    chiefComplain: string;
-    remark: string;
+    // ผู้รับเอกสาร
+    documentRecipientTypeId: number | undefined;
+    documentRecipientTypeName: string | undefined;
+    // ผู้ให้บริการ
+    serviceProviderId: number | undefined;
+    serviceProviderCode: string | undefined;
+    serviceProviderName: string | undefined;
+    // เจ้าของรถ
+    zebraId: number | undefined;
+    zebraCode: string | undefined;
+    zebraNo: string | undefined;
+    employeeCode: string | undefined;
+    employeeName: string | undefined;
+    //เหตุของการเคลม
+    incidentTypeId: number | undefined;
+    incidentTypeName: string | undefined;
+    //ประเภทความคุ้มครอง
+    coverageTypeId: number | undefined;
+    coverageTypeName: string | undefined;
+    //ประเภทการรักษา
+    medicalTypeId: number | undefined;
+    medicalTypeName: string | undefined;
+    //สาเหตุการเสียชีวิต/สูญเสียอวัยวะ
+    causeOfIncidentId: number | undefined;
+    causeOfIncidentName: string | undefined;
+    incidentDate: Dayjs | undefined; //วันที่เกิดเหตุ
+    admissionDate: Dayjs | undefined; //วันที่เข้า รพ
+    dischargeDate: Dayjs | undefined; //วันที่ออก รพ
+    documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
+    notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
+    deathDate: Dayjs | undefined; //วันที่เสียชีวิต
+    transferAmount: number | undefined; //เงินโอน
+    symptomType: SymptomType | undefined;
+    specifyHospital: SpecifyHospital | undefined;
+    hospitalId: number | undefined;
+    hospitalName: string | undefined;
+    diagnoses: DiagnosisModel[];
+    accidentPlace: string | undefined;
+    chiefComplaintId: number | undefined;
+    chiefComplaintId_selectedText: string | undefined;
+    remark: string | undefined;
 }
 
 interface ClaimPAState {
     isContinuous: boolean;
-    insured: InsuredInfoPA | null;
+    insured: GetCustomerDetailByIdDtoResponse | undefined;
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
     claimItems: ClaimInsuredItem[]; // รายการผู้เอาประกันในตาราง
-    bankAccounts: BankAccount[];
+    bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
     editingItemId: string | null; // id ของ row ที่กำลังแก้ไข
 }
 
 const defaultForm: ClaimPAFormValues = {
-    documentReceiver: "",
-    serviceProvider: "",
-    carOwner: "",
-    claimType: "",
-    opdSubType: "",
+    documentRecipientTypeId: 2,
+    documentRecipientTypeName: undefined,
+    serviceProviderId: undefined,
+    serviceProviderCode: undefined,
+    serviceProviderName: undefined,
+    zebraId: undefined,
+    zebraCode: undefined,
+    zebraNo: undefined,
+    employeeCode: undefined,
+    employeeName: undefined,
+    incidentTypeId: undefined,
+    incidentTypeName: undefined,
+    coverageTypeId: undefined,
+    coverageTypeName: undefined,
+    medicalTypeId: undefined,
+    medicalTypeName: undefined,
+    causeOfIncidentId: undefined,
+    causeOfIncidentName: undefined,
     incidentDate: dayjs(),
-    admitDate: null, // ← เพิ่ม
-    dischargeDate: null, // ← เพิ่ม
-    claimAmount: "",
-    symptomType: "ระบุอาการ",
-    chiefComplain: "",
-    remark: "",
+    admissionDate: dayjs(),
+    dischargeDate: dayjs(),
+    deathDate: dayjs(),
+    documentCompleteDate: dayjs(),
+    notificationDate: dayjs(),
+    transferAmount: 0,
+    symptomType: 1,
+    specifyHospital: 1,
+    hospitalId: undefined,
+    hospitalName: undefined,
+    diagnoses: [
+        {
+            icd10Id: undefined,
+            icd10Detail: undefined,
+        },
+    ],
+    accidentPlace: undefined,
+    chiefComplaintId: undefined,
+    chiefComplaintId_selectedText: undefined,
+    remark: undefined,
 };
 
 const initialState: ClaimPAState = {
     isContinuous: false,
-    insured: null,
+    insured: undefined,
     school: null,
     form: defaultForm,
     claimItems: [],
@@ -104,7 +155,7 @@ const claimPASlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setInsured(state, action: PayloadAction<InsuredInfoPA | null>) {
+        setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
         setSchool(state, action: PayloadAction<SchoolInfo | null>) {
@@ -131,32 +182,64 @@ const claimPASlice = createSlice({
             state.editingItemId = action.payload;
         },
         // ── BankAccounts (เหมือน PH) ──
-        setBankAccounts(state, action: PayloadAction<BankAccount[]>) {
-            state.bankAccounts = action.payload;
+        setBankAccounts(state, action: PayloadAction<GetCustomerBankAccountDtoResponse[]>) {
+            state.bankAccounts = action.payload.map((item, index) => ({
+                ...item,
+                id: String(item.indexId ?? index),
+                isDefault: index === 0,
+            }));
         },
-        addBankAccount(state, action: PayloadAction<BankAccount>) {
-            state.bankAccounts = state.bankAccounts.map((b) => ({ ...b, isDefault: false }));
-            state.bankAccounts.push({ ...action.payload, isDefault: true });
+        selectBankAccount(state, action: PayloadAction<string>) {
+            state.bankAccounts = state.bankAccounts.map((b) => ({
+                ...b,
+                isDefault: b.id === action.payload,
+            }));
+        },
+        addBankAccount(state, action: PayloadAction<ClaimBankAccount>) {
+            state.bankAccounts = state.bankAccounts.map((b) => ({
+                ...b,
+                isDefault: false,
+            }));
+
+            state.bankAccounts.push({
+                ...action.payload,
+                isDefault: true,
+            });
+        },
+        setContacts(state, action: PayloadAction<GetContactPersonDtoResponse[]>) {
+            state.contacts = action.payload.map((item, index) => ({
+                ...item,
+                id: String(item.indexId ?? index),
+                isDefault: index === 0,
+            }));
+        },
+        selectContact(state, action: PayloadAction<string>) {
+            state.contacts = state.contacts.map((b) => ({
+                ...b,
+                isDefault: b.id === action.payload,
+            }));
+        },
+        addContact(state, action: PayloadAction<ContactInfo>) {
+            state.contacts = state.contacts.map((b) => ({
+                ...b,
+                isDefault: false,
+            }));
+
+            state.contacts.push({
+                ...action.payload,
+                isDefault: true,
+            });
         },
         removeBankAccount(state, action: PayloadAction<string>) {
             const idx = state.bankAccounts.findIndex((b) => b.id === action.payload);
-            if (idx === -1 || state.bankAccounts[idx].isFromMock) return;
             const wasDefault = state.bankAccounts[idx].isDefault;
             state.bankAccounts.splice(idx, 1);
             if (wasDefault && state.bankAccounts.length > 0)
                 state.bankAccounts[state.bankAccounts.length - 1].isDefault = true;
         },
         // ── Contacts (เหมือน PH) ──
-        setContacts(state, action: PayloadAction<ContactInfo[]>) {
-            state.contacts = action.payload;
-        },
-        addContact(state, action: PayloadAction<ContactInfo>) {
-            state.contacts = state.contacts.map((c) => ({ ...c, isDefault: false }));
-            state.contacts.push({ ...action.payload, isDefault: true });
-        },
         removeContact(state, action: PayloadAction<string>) {
             const idx = state.contacts.findIndex((c) => c.id === action.payload);
-            if (idx === -1 || state.contacts[idx].isFromMock) return;
             const wasDefault = state.contacts[idx].isDefault;
             state.contacts.splice(idx, 1);
             if (wasDefault && state.contacts.length > 0) state.contacts[state.contacts.length - 1].isDefault = true;
@@ -164,6 +247,7 @@ const claimPASlice = createSlice({
         setClaimItems(state, action: PayloadAction<ClaimInsuredItem[]>) {
             state.claimItems = action.payload;
         },
+        resetState: () => initialState,
     },
 });
 
@@ -180,10 +264,13 @@ export const {
     setBankAccounts,
     addBankAccount,
     removeBankAccount,
+    selectBankAccount,
     setContacts,
     addContact,
     removeContact,
+    selectContact,
     setClaimItems,
+    resetState,
 } = claimPASlice.actions;
 
 export const claimPASelector = (state: RootState) => state.claimpa;

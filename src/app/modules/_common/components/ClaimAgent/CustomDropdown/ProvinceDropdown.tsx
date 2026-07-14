@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { useGetProvince } from "../../../../../api/claimAgentMaster";
+
 import { FormikAutocomplete } from "../../CustomFormik";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
+import { useGetProvince } from "../../../../../api/coreClaimMastersApi";
 
 type ProvinceDropdownProps = Omit<
     FormikAutocompleteProps,

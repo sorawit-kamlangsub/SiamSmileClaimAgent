@@ -1,26 +1,25 @@
-import { useGetICD10 } from "../../../../../api/claimAgentMaster";
-import { FormikAutocomplete } from "../../CustomFormik";
+import { useGetICD10Filter } from "../../../../../api/coreClaimMastersApi";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
+import FormikAutocompleteApi from "../../CustomFormik/FormikAutocompleteApi";
 
 type CD10AutocompleteProps = Omit<
     FormikAutocompleteProps,
-    "data" | "isLoading" | "valueFieldName" | "label" | "displayFieldName"
+    "data" | "isLoading" | "valueFieldName" | "label" | "displayFieldName" | "filterSelectedOptions"
 >;
 
 const CD10Autocomplete = ({ formik, ...props }: CD10AutocompleteProps) => {
-    const { data, isLoading } = useGetICD10();
-
     return (
-        <FormikAutocomplete
-            data={data?.data ?? []}
-            label="การวินิจฉัยโรค"
-            fullWidth
-            {...props}
-            formik={formik}
-            valueFieldName="icD10Id"
-            displayFieldName="icD10Detail"
-            isLoading={isLoading}
-        />
+        <>
+            <FormikAutocompleteApi
+                fullWidth
+                {...props}
+                valueFieldName="icD10Id"
+                displayFieldName="icD10Detail"
+                useQueryGet={useGetICD10Filter}
+                label="การวินิจฉัย "
+                formik={formik}
+            />
+        </>
     );
 };
 

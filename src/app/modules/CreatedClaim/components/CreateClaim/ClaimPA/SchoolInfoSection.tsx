@@ -7,8 +7,8 @@ interface Props {
     data: SchoolInfo;
 }
 
-const Field = ({ label, value }: { label: string; value: string }) => (
-    <Grid item xs={12} sm={6} md={4}>
+export const Field = ({ label, value }: { label: string; value: string }) => (
+    <Grid item xs={12} sm={6} md={3}>
         <CustomTypographyWithOutGrid label={label} value={value || "-"} />
     </Grid>
 );
@@ -20,10 +20,6 @@ const SchoolInfoSection: React.FC<Props> = ({ data }) => (
             <Field label="สถานศึกษา" value={data.schoolName} />
             <Field label="ครูผู้ประสานงาน" value={data.teacherName} />
             <Field label="เบอร์ครูผู้ประสานงาน" value={data.teacherPhone} />
-            <Field
-                label="บัญชีครูผู้ประสานงาน"
-                value={`${data.teacherBank} ${data.teacherAccountNo} ${data.teacherAccountName}`}
-            />
         </Grid>
     </Box>
 );

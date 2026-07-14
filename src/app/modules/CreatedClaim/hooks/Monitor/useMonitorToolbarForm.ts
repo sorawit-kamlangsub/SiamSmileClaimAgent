@@ -35,15 +35,28 @@ export const useMonitorToolbarForm = () => {
         initialValues: defaultValues,
         validate: (values) => {
             const errors: FormikErrors<checkeligibleMonitorSearchValuesType> = {};
-            if (!values.searchTypeId) errors.searchTypeId = "โปรดระบุ";
+            const req = "โปรดระบุ";
+            if (!values.searchTypeId) errors.searchTypeId = req;
             if (!values.searchDetail?.trim()) {
-                errors.searchDetail = "โปรดระบุ";
+                errors.searchDetail = req;
             } else {
                 const rule = SEARCH_TYPE_RULES[values.searchTypeId];
                 if (rule && !rule(values.searchDetail)) {
                     errors.searchDetail = SEARCH_TYPE_MESSAGES[values.searchTypeId];
                 }
             }
+            if (values.isAdvancedSearch) {
+                if (!values.dateHappen) {
+                    errors.dateHappen = req;
+                }
+                if (!values.provinceId) {
+                    errors.provinceId = req;
+                }
+                if (!values.schoolId) {
+                    errors.schoolId = req;
+                }
+            }
+
             return errors;
         },
         onSubmit: (values) => {

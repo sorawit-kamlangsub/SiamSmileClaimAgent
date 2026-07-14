@@ -22,7 +22,7 @@ const MonitorPage: React.FC = () => {
         },
     };
     const { selectedPolicy } = useAppSelector(monitorSelector);
-    const productName = selectedPolicy?.productName;
+    const productTypeId = selectedPolicy?.productTypeId;
     const [view, setView] = useState<ViewMode>("table");
     useEffect(() => {
         return () => {
@@ -53,8 +53,8 @@ const MonitorPage: React.FC = () => {
             </Grid>
             {selectedPolicy && (
                 <Grid item xs={12} mt={3}>
-                    {productName === "PH" && <ClaimHistoryPH />}
-                    {productName === "PA" && <ClaimHistoryPA />}
+                    {productTypeId === 6 && <ClaimHistoryPH />}
+                    {productTypeId === 26 && <ClaimHistoryPA />}
                 </Grid>
             )}
         </Grid>

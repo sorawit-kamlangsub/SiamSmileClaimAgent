@@ -49,7 +49,7 @@ const MonitorCard: React.FC = () => {
                                     {/* Row 1: Chip + ปุ่มเลือก */}
                                     <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                                         <Chip
-                                            label={row.productName}
+                                            label={row.productTypeName}
                                             size="small"
                                             sx={{
                                                 backgroundColor: "#E3F0FB",
@@ -94,7 +94,7 @@ const MonitorCard: React.FC = () => {
                                                 แผน
                                             </Typography>
                                             <Typography variant="body2" fontWeight={500}>
-                                                {row.productTypeName}
+                                                {row.productName}
                                             </Typography>
                                         </Box>
                                         <Box display="flex" justifyContent="space-between">

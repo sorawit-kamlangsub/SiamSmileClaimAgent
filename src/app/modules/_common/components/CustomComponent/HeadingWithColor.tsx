@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 
 type ColorKey = "blue" | "green" | "red" | "yellow" | "pink" | "orange";
 
-const backgroundColor: Record<ColorKey, string> = {
+export const backgroundColor: Record<ColorKey, string> = {
     blue: "#e8f0fb",
     green: "#F0FDF4",
     red: "#FEF2F2",

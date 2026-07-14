@@ -20,13 +20,15 @@ import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PersonIcon from "@mui/icons-material/Person";
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../../redux";
-import { addBankAccount } from "../../../store/claimPHSlice";
+import { addBankAccount as addBankAccountPH } from "../../../store/claimPHSlice";
 import { FormikTextField } from "../../../../_common";
 import BankAccountRelationTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/BankAccountRelationTypeDropDown";
 import BankAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/BankAutocomplete";
+import { addBankAccount as addBankAccountPA } from "../../../store/claimPASlice";
 
 interface Props {
     open: boolean;
+    productTypeId: number;
     onClose: () => void;
 }
 
@@ -57,7 +59,7 @@ const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </Avatar>
 );
 
-const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
+const AddBankAccountModal: React.FC<Props> = ({ open, onClose, productTypeId }) => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -80,18 +82,30 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose }) => {
             return e;
         },
         onSubmit: (values, { resetForm }) => {
-            dispatch(
-                addBankAccount({
-                    id: Date.now().toString(),
-                    relationship: values.relationship_selectedText,
-                    bankId: Number(values.bankId),
-                    bankName: values.bankId_selectedText, // ชื่อธนาคารจาก autocomplete
-                    accountNo: values.accountNo,
-                    accountName: values.accountName,
-                    isDefault: false,
-                    isFromMock: false,
-                })
-            );
+            const bankAccountPayload = {
+                id: Date.now().toString(),
+                bankAccountRelationTypeId: values.relationship ?? 0,
+                bankAccountRelationTypeName: values.relationship_selectedText,
+                bankId: Number(values.bankId),
+                bankName: values.bankId_selectedText,
+                bankAccountNo: values.accountNo,
+                bankAccountName: values.accountName,
+                isDefault: false,
+            };
+
+            switch (productTypeId) {
+                case 6:
+                    dispatch(addBankAccountPH(bankAccountPayload));
+                    break;
+
+                case 26:
+                    dispatch(addBankAccountPA(bankAccountPayload));
+                    break;
+
+                default:
+                    return;
+            }
+
             resetForm();
             onClose();
         },

@@ -8,6 +8,7 @@ import { useMonitorToolbarForm } from "../../hooks/Monitor/useMonitorToolbarForm
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import ProvinceDropdown from "../../../_common/components/ClaimAgent/CustomDropdown/ProvinceDropdown";
+import SchoolByProvinceAutocomplete from "../../../_common/components/ClaimAgent/CustomDropdown/SchoolByProvinceAutocomplete";
 
 const MonitorToolbar: React.FC = () => {
     const { formik, handleClear } = useMonitorToolbarForm();
@@ -66,7 +67,12 @@ const MonitorToolbar: React.FC = () => {
                                     <ProvinceDropdown formik={formik} name="provinceId" fullWidth />
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={4} lg={4}>
-                                    <FormikTextField formik={formik} name="school" label="โรงเรียน" fullWidth />
+                                    <SchoolByProvinceAutocomplete
+                                        name="schoolId"
+                                        formik={formik}
+                                        size="small"
+                                        fullWidth
+                                    />
                                 </Grid>
                             </Grid>
                         </Collapse>

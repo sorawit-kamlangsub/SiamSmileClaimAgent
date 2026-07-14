@@ -1,21 +1,40 @@
 import { useState, useMemo } from "react";
-import { ClaimHistoryItem, mockClaimHistory } from "../../store/mockClaimHistory";
+import { useGetClaimHistory } from "../../../../api/coreClaimApi";
+import { monitorSelector } from "../../store/monitorSlice";
+import { useAppSelector } from "../../../../../redux";
+import { GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client";
+import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 
-const PAGE_SIZE = 2;
+export const useClaimHistory = (appIdFromProp?: string) => {
+    const { selectedPolicy } = useAppSelector(monitorSelector);
+    const appId = selectedPolicy?.appId === undefined ? appIdFromProp : selectedPolicy.appId;
+    const [paginated, setPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 100,
+    });
+    const { data: claimHistoryData, isLoading } = useGetClaimHistory(
+        appId,
+        undefined,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
+    const pagination: PaginationResultDto = useMemo(
+        () => ({
+            totalAmountRecords: claimHistoryData?.totalAmountRecords ?? 0,
+            totalAmountPages: claimHistoryData?.totalAmountPages ?? 0,
+            currentPage: claimHistoryData?.currentPage ?? 0,
+            recordsPerPage: claimHistoryData?.recordsPerPage ?? 0,
+            pageIndex: claimHistoryData?.pageIndex ?? 0,
+        }),
+        [claimHistoryData]
+    );
 
-export const useClaimHistory = () => {
-    const [page, setPage] = useState(0);
-
-    const data: ClaimHistoryItem[] = mockClaimHistory; // เปลี่ยนเป็น API call ได้ภายหลัง
-
-    const totalPages = Math.ceil(data.length / PAGE_SIZE);
-
-    const paged = useMemo(() => data.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE), [data, page]);
-
-    const handleDetailClick = (item: ClaimHistoryItem) => {
-        // TODO: navigate ไปหน้ารายละเอียด หรือ dispatch action
-        console.log("view detail:", item);
+    return {
+        claimHistoryData,
+        setPaginated,
+        pagination,
+        isLoading,
     };
-
-    return { paged, page, setPage, totalPages, total: data.length, handleDetailClick };
 };

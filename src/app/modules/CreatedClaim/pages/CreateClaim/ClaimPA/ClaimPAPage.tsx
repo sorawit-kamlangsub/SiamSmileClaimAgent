@@ -1,52 +1,68 @@
 import React, { useEffect } from "react";
-import { Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { setInsured, setSchool, setBankAccounts, setContacts } from "../../../store/claimPASlice";
+import { Grid, LinearProgress } from "@mui/material";
+import { useNavigate, useParams } from "react-router-dom";
+import { useAppDispatch } from "../../../../../../redux";
+import { setInsured, setSchool, setBankAccounts, setContacts, SchoolInfo } from "../../../store/claimPASlice";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
-import { mockBankAccountsPA, mockContactsPA, mockInsuredPA, mockSchoolPA } from "../../../store/mockClaimPH";
+import { mockSchoolPA } from "../../../store/mockClaimPH";
 import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAFormSection";
-import ClaimHistoryTable from "../../../components/Monitor/ClaimHistoryTable";
-import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
+import {
+    useGetContactPerson,
+    useGetCustomerBankAccount,
+    useGetCustomerDetailById,
+} from "../../../../../api/coreClaimApi";
+import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 
-interface Props {
-    // onNext: () => void;
-}
-
-const ClaimPAPage: React.FC<Props> = ({}) => {
+const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { insured } = useAppSelector((s) => s.claimpa);
-    const onNext: () => void = () => {
-        navigate("/claim/pa/summary");
-    };
+    const { appId, refId } = useParams();
 
-    // ── Load mock data ตอน mount ──────────────────────────────
+    const customerId = refId ? parseInt(atob(refId)) : undefined;
+    const applicationId = appId ? atob(appId) : undefined;
+    const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(customerId as number);
+    const { data: bankAccount, isLoading: bankAccountLoading } = useGetCustomerBankAccount(applicationId);
+    const { data: contact, isLoading: contactLoading } = useGetContactPerson(applicationId || "", 26);
+    const isLoading = claimInfoLoading || bankAccountLoading || contactLoading;
+    // ── Load data ตอน mount ──────────────────────────────
     useEffect(() => {
-        dispatch(setInsured(mockInsuredPA));
-        dispatch(setSchool(mockSchoolPA));
-        dispatch(setBankAccounts(mockBankAccountsPA));
-        dispatch(setContacts(mockContactsPA));
-    }, [dispatch]);
+        if (!claimInfo?.data || isLoading) return;
+
+        const schoolInfo: SchoolInfo = {
+            appId: claimInfo.data.policyCode ?? "",
+            schoolName: claimInfo.data.schoolName ?? "",
+            teacherName: claimInfo.data.contactName ?? "",
+            teacherPhone: claimInfo.data.contactPhoneNo ?? "",
+        };
+
+        dispatch(setInsured(claimInfo.data));
+        dispatch(setSchool(schoolInfo));
+        dispatch(setBankAccounts(bankAccount?.data || []));
+        dispatch(setContacts(contact?.data || []));
+    }, [claimInfo?.data, bankAccount?.data, contact?.data, isLoading, dispatch]);
     // ─────────────────────────────────────────────────────────
 
     return (
         <Grid container spacing={1}>
             {/* ── ข้อมูลผู้เอาประกัน | ประวัติการเคลม ── */}
-            <Grid item xs={12} md={5}>
-                {insured && <InsuredInfoSection data={insured} onEdit={() => navigate("/monitor")} />}
-            </Grid>
+            {isLoading ? (
+                <LinearProgress />
+            ) : (
+                <>
+                    <Grid item xs={12} md={5}>
+                        {<InsuredInfoSection data={claimInfo?.data} onEdit={() => navigate("/monitor-claim")} />}
+                    </Grid>
 
-            <Grid item xs={12} md={7}>
-                <CustomBox sx={{ minHeight: { lg: 360 }, overflowY: "auto" }}>
-                    <ClaimHistoryTable tableId="ClaimHistoryPATable" onContinuousClaim={() => {}} />
-                </CustomBox>
-            </Grid>
+                    <Grid item xs={12} md={7}>
+                        <ClaimHistoryCard appId={applicationId} />
+                    </Grid>
 
-            {/* ── บันทึกข้อมูลเคลม ── */}
-            <Grid item xs={12}>
-                <ClaimPAFormSection onNext={onNext} />
-            </Grid>
+                    {/* ── บันทึกข้อมูลเคลม ── */}
+                    <Grid item xs={12}>
+                        <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />
+                    </Grid>
+                </>
+            )}
         </Grid>
     );
 };

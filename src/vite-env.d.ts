@@ -146,4 +146,14 @@ export interface ImportMetaEnv {
      * URL ของ CoreClaim API
      */
     readonly VITE_CORECLAIM_API_URL: string;
+
+    /**
+     * URL ของ OCR API
+     */
+    readonly VITE_OCR_API_URL: string;
+
+    /**
+     * URL ของ DocStorage API
+     */
+    readonly VITE_DOCSTORAGE_API_URL: string;
 }

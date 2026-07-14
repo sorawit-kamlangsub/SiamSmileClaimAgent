@@ -1,13 +1,11 @@
 import React from "react";
 import { Box, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import PersonIcon from "@mui/icons-material/Person";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-import CreditCardIcon from "@mui/icons-material/CreditCard";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { formatDateString } from "../../../../../functionHelpers";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/claimAgentApi.client";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 
 interface Props {
     data?: GetCustomerDetailByIdDtoResponse;
@@ -60,7 +58,7 @@ const Row = ({
 );
 
 const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
-    <CustomBox sx={{ minHeight: "98%" }}>
+    <CustomBox sx={{ minHeight: "98.5%" }}>
         <HeadingWithColor
             text="ข้อมูลผู้เอาประกัน"
             color="blue"
@@ -89,18 +87,8 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
                     </Link>
                 }
             />
-            <Row
-                label="ชื่อผู้เอาประกัน"
-                icon={<PersonIcon fontSize="small" />}
-                value={data?.customerName}
-                labelWidth={155}
-            />
-            <Row
-                label="เลขบัตรประชาชน"
-                icon={<CreditCardIcon fontSize="small" />}
-                value={data?.customerCode || "-"}
-                labelWidth={155}
-            />
+            <Row label="ชื่อผู้เอาประกัน" value={data?.customerName} />
+            <Row label="เลขบัตรประชาชน" value={data?.cardDetail} />
             <Row label="แผนประกัน" value={data?.productName} />
             <Row label="วันที่เริ่มคุ้มครอง" value={formatDateString(data?.coverageFrom?.toString(), "DD/MM/BBBB")} />
             <Row

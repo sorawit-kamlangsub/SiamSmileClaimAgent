@@ -1,4 +1,4 @@
-import { useGetDocumentRecipientType } from "../../../../../api/claimAgentMaster";
+import { useGetDocumentRecipientType } from "../../../../../api/coreClaimMastersApi";
 import FormikDropdown, { FormikDropdownProps } from "../../CustomFormik/FormikDropdown";
 
 type DocumentRecipientTypeDropDownProps = Omit<

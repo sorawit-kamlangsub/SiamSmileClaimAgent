@@ -2,25 +2,20 @@ import React from "react";
 import { Button } from "@mui/material";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 import { MUIDataTableColumn } from "mui-datatables";
-import {
-    cellAlignOptions,
-    defaultOptionStandardDataTable,
-    formatDateString,
-    smallSizeFooter,
-} from "../../../../functionHelpers";
+import { cellAlignOptions, formatDateString, smallSizeFooter } from "../../../../functionHelpers";
 import { StandardDataTable } from "../../../_common";
 import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
-import { ClaimHistoryItem } from "../../store/monitorSlice";
-import { useMonitorClaimHistory } from "../../hooks/Monitor/useMonitorClaimHistory";
+import { GetClaimHistoryDtoResponseListServiceResponse } from "../../../../api/coreClaimApi.client";
+import { useClaimHistory } from "../../hooks/Monitor/useClaimHistory";
 
 interface Props {
     tableId: string; // "ClaimHistoryPATable" | "ClaimHistoryPHTable"
-    onContinuousClaim: (item: ClaimHistoryItem) => void;
+    onContinuousClaim: (item: GetClaimHistoryDtoResponseListServiceResponse) => void;
 }
 
 const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
-    const { claimHistory, isLoading, paginated, setPaginated } = useMonitorClaimHistory();
+    const { claimHistoryData, isLoading, setPaginated, pagination } = useClaimHistory();
     const columns: MUIDataTableColumn[] = [
         {
             name: "claimNo",
@@ -28,7 +23,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "chiefComplain",
+            name: "chiefComplaintDetail",
             label: "อาการสำคัญ(ChiefComplain)",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
         },
@@ -41,7 +36,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             },
         },
         {
-            name: "totalClaim",
+            name: "caseAmount",
             label: "ยอดเบิกรวม",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -49,7 +44,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             },
         },
         {
-            name: "totalPaid",
+            name: "totalPaidAmount",
             label: "ยอดจ่ายรวม",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -62,7 +57,9 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const item = claimHistory[tableMeta.rowIndex];
+                    const item = claimHistoryData?.data?.[tableMeta.rowIndex] as
+                        | GetClaimHistoryDtoResponseListServiceResponse
+                        | undefined;
                     return (
                         <Button
                             variant="contained"
@@ -70,8 +67,9 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
                             color="primary"
                             startIcon={<AddCommentIcon />}
                             onClick={() => {
-                                onContinuousClaim(item);
+                                if (item) onContinuousClaim(item);
                             }}
+                            disabled={!item}
                             sx={{ whiteSpace: "nowrap" }}
                         >
                             แจ้งเคลมต่อเนื่อง
@@ -89,18 +87,14 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
                 <StandardDataTable
                     name={tableId}
                     title=""
-                    data={claimHistory || []}
+                    data={claimHistoryData?.data || []}
                     isLoading={isLoading}
                     columns={columns}
                     color="primary"
                     columnHeaderAlign="center"
                     setPaginated={setPaginated}
-                    paginated={paginated}
+                    paginated={pagination}
                     displayToolbar={false}
-                    options={{
-                        ...defaultOptionStandardDataTable,
-                        textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
-                    }}
                     sx={smallSizeFooter}
                 />
             </LinearLoading>
