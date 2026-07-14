@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
     Box,
     Button,
@@ -99,7 +99,7 @@ const refInputSx = {
     "& .MuiOutlinedInput-root": {
         borderRadius: "8px",
         backgroundColor: "#fff",
-        fontSize: 13,
+        fontSize: 15,
         height: FORM_FIELD_HEIGHT,
         "& fieldset": { borderColor: REF.lineStrong },
         "&:hover fieldset": { borderColor: REF.primary },
@@ -111,7 +111,7 @@ const refTextAreaSx = {
     "& .MuiOutlinedInput-root": {
         borderRadius: "8px",
         backgroundColor: "#fff",
-        fontSize: 13,
+        fontSize: 15,
         "& fieldset": { borderColor: REF.lineStrong },
         "&:hover fieldset": { borderColor: REF.primary },
         "&.Mui-focused fieldset": { borderColor: REF.primary, borderWidth: 1.5 },
@@ -147,7 +147,7 @@ const tableSelectSx = {
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: REF.primary, borderWidth: 1.5 },
 };
 
-// ─── Category icon map (เหมือนเดิม) ───────────────────────────────────────────
+// ─── Category icon map ───────────────────────────────────────────
 const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
     ค่ารักษาพยาบาลทางการแพทย์: <MedicationOutlinedIcon sx={{ fontSize: 18 }} />,
     การตรวจวินิจฉัย: <BiotechOutlinedIcon sx={{ fontSize: 18 }} />,
@@ -235,7 +235,7 @@ const claimStepBoxSx = {
     borderRadius: 2,
     p: 2,
     mb: 2,
-    bgcolor: "#fbfdff",
+    bgcolor: "#fff",
 };
 
 const DaySummaryCard: React.FC<{ label: string; value: number; color: string; disabled?: boolean }> = ({
@@ -479,9 +479,17 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
         hasReasonError,
         hasAnyAmount,
         handleNext,
+        isHeaderReady,
+        validateHeaderAndFlagErrors,
     } = useClaimSimulatePage(onNext);
 
     const { claimContinueOptions, claimContinueLoading } = useGetDataFromApi(selectedInsured?.policyCode);
+
+    const isAddPanelDisabled = isCategoryLoading || !isHeaderReady;
+
+    useEffect(() => {
+        if (isAddPanelDisabled) setShowAddPanel(false);
+    }, [isAddPanelDisabled]);
 
     const fmt = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
@@ -696,6 +704,15 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             </Box>
                                         );
                                     })}
+                                    {!!selectedInsured && !header.claimCause && (
+                                        <Typography
+                                            variant="caption"
+                                            color="error.main"
+                                            sx={{ mt: 1, display: "block" }}
+                                        >
+                                            กรุณาเลือกเหตุของการเคลม
+                                        </Typography>
+                                    )}
                                 </Box>
                             </Box>
 
@@ -764,6 +781,15 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         })}
                                     </Box>
                                 )}
+                                {!!header.claimCause && !header.coverageType && (
+                                    <Typography
+                                        variant="caption"
+                                        color="error.main"
+                                        sx={{ mt: 1, ml: 1, display: "block" }}
+                                    >
+                                        กรุณาเลือกประเภทความคุ้มครอง
+                                    </Typography>
+                                )}
                             </Box>
 
                             {/* 3) ประเภทรายการค่าใช้จ่าย */}
@@ -824,6 +850,15 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             );
                                         })}
                                     </Box>
+                                    {!header.formatTypeId && (
+                                        <Typography
+                                            variant="caption"
+                                            color="error.main"
+                                            sx={{ mt: 1, ml: 1, display: "block" }}
+                                        >
+                                            กรุณาเลือกประเภทรายการค่าใช้จ่าย
+                                        </Typography>
+                                    )}
                                 </Box>
                             )}
 
@@ -936,6 +971,24 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         })}
                                     </Box>
                                 ) : null}
+                                {!!header.coverageType && isMedicalTypeVisible && !header.medicalType && (
+                                    <Typography
+                                        variant="caption"
+                                        color="error.main"
+                                        sx={{ mt: 1, ml: 1, display: "block" }}
+                                    >
+                                        กรุณาเลือกประเภทการรักษา
+                                    </Typography>
+                                )}
+                                {!!header.coverageType && isCauseOfIncidentVisible && !header.causeOfIncident && (
+                                    <Typography
+                                        variant="caption"
+                                        color="error.main"
+                                        sx={{ mt: 1, ml: 1, display: "block" }}
+                                    >
+                                        กรุณาเลือกสาเหตุของการเกิดเหตุ
+                                    </Typography>
+                                )}
                             </Box>
 
                             {/* 5) วันที่ */}
@@ -1439,12 +1492,26 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                 variant={showAddPanel ? "outlined" : "contained"}
                                                 size="small"
                                                 startIcon={
-                                                    showAddPanel ? <RemoveCircleIcon /> : <AddCircleOutlineIcon />
+                                                    isCategoryLoading ? (
+                                                        <CircularProgress size={16} color="inherit" />
+                                                    ) : showAddPanel ? (
+                                                        <RemoveCircleIcon />
+                                                    ) : (
+                                                        <AddCircleOutlineIcon />
+                                                    )
                                                 }
-                                                onClick={() => setShowAddPanel(!showAddPanel)}
+                                                disabled={isAddPanelDisabled}
+                                                onClick={() => {
+                                                    if (isAddPanelDisabled) return;
+                                                    setShowAddPanel(!showAddPanel);
+                                                }}
                                                 sx={{ borderRadius: 1, fontWeight: 600, whiteSpace: "nowrap" }}
                                             >
-                                                {showAddPanel ? "ซ่อน" : "เพิ่มรายการค่ารักษา"}
+                                                {isCategoryLoading
+                                                    ? "กำลังโหลด..."
+                                                    : showAddPanel
+                                                    ? "ซ่อน"
+                                                    : "เพิ่มรายการค่ารักษา"}
                                             </Button>
                                         </Box>
 
@@ -1862,7 +1929,10 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         color="primary"
                                         size="large"
                                         endIcon={<ArrowForwardIcon />}
-                                        onClick={handleNext}
+                                        onClick={() => {
+                                            if (!validateHeaderAndFlagErrors()) return;
+                                            handleNext();
+                                        }}
                                         fullWidth
                                         disabled={
                                             !hasAnyAmount ||

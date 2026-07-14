@@ -2,7 +2,6 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs, { Dayjs } from "dayjs";
 import { CalculateCaseClaimDtoResponse, GetCustomerSearchDtoResponse } from "../../../api/coreClaimApi.client";
 import { RootState } from "../../../../redux";
-import { OrganLossItem } from "../hooks/organLoss.types";
 
 // IncidentTypeId: 2 = Illness, 3 = Accident
 // CauseOfIncidentId: 2 = โรคทั่วไป, 3 = อุบัติเหตุทั่วไป, 4 = ขับขี่/โดยสารจักรยานยนต์, 5 = ฆาตกรรม, 7 = ภัยสาธารณะ, 8 = รับผิดสถานศึกษา
@@ -64,8 +63,6 @@ interface ClaimSimulateState {
 
     // ── ผลคำนวณ ──
     calculateResult: CalculateCaseClaimDtoResponse | null;
-
-    organLossItems: OrganLossItem[];
 }
 
 const initialState: ClaimSimulateState = {
@@ -97,7 +94,6 @@ const initialState: ClaimSimulateState = {
     filledItems: [],
     medicalTypeId: undefined,
     calculateResult: null,
-    organLossItems: [],
 };
 
 const claimSimulateSlice = createSlice({
@@ -150,9 +146,6 @@ const claimSimulateSlice = createSlice({
         resetClaimSimulate() {
             return initialState;
         },
-        setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
-            state.organLossItems = action.payload;
-        },
     },
 });
 
@@ -168,7 +161,6 @@ export const {
     setCalculateResult,
     resetSimulateItems,
     resetClaimSimulate,
-    setOrganLossItems,
 } = claimSimulateSlice.actions;
 
 export const claimSimulateSelector = (state: RootState) => state.claimsimulate;

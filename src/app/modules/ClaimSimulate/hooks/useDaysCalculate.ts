@@ -7,6 +7,7 @@ import { setDaysCalculate, setCalculateResult } from "../store/claimSimulateSlic
 import { swalError } from "../../_common";
 import { useCalculateCaseClaim } from "../../../api/coreClaimApi";
 import { CalculateCaseClaim, CalculateCaseClaimDtoRequest } from "../../../api/coreClaimApi.client";
+import { useGetDataFromApi } from "./useGetDataFromApi";
 
 export interface DaysCalculateFormValues {
     claimCause: number | undefined;
@@ -105,6 +106,8 @@ export const useDaysCalculate = () => {
     const { daysCalculate, filledItems, medicalTypeId, header, selectedInsured } = useSelector(
         (s: RootState) => s.claimsimulate
     );
+
+    const { claimContinueOptions } = useGetDataFromApi(selectedInsured?.policyCode);
 
     const [openConfirm, setOpenConfirm] = useState(false);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -232,6 +235,10 @@ export const useDaysCalculate = () => {
         const isValid = await validateDaysCalculate();
         if (!isValid) return;
 
+        const selectedContinueClaimNo = formik.values.isContinuous
+            ? claimContinueOptions.find((opt) => opt.claimId === formik.values.continuousFromClaimNo)?.claimNo
+            : undefined;
+
         const calculateDetail: CalculateCaseClaim = {
             productId: selectedInsured?.productId,
             coverageTypeId: header.coverageType,
@@ -240,7 +247,7 @@ export const useDaysCalculate = () => {
             occurrenceDate: formik.values.dateHappen,
             ipdCount: formik.values.ipdDays,
             icuCount: formik.values.icuDays,
-            continueClaimNoe: formik.values.isContinuous ? formik.values.continuousFromClaimNo : undefined,
+            continueClaimNo: formik.values.isContinuous ? selectedContinueClaimNo : undefined,
             expenseList: filledItems.map((item) => ({
                 standardMedicalExpenseId: item.standardMedicalExpenseId,
                 description: item.description,
@@ -250,6 +257,7 @@ export const useDaysCalculate = () => {
                 reason: item.reason,
                 remark: item.remark,
             })),
+            disabilityList: [],
         };
 
         const payload: CalculateCaseClaimDtoRequest = {

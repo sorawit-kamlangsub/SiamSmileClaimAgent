@@ -2064,75 +2064,6 @@ export class MastersClient {
     }
 
     /**
-     * API สำหรับ Get ข้อมูล MedicalType (ประเภทการรักษา)
-     * @param claimSourceId (optional)
-     * @param coverageTypeId (optional)
-     * @param medicalTypeId (optional)
-     * @return Success
-     */
-    getMedicalType(
-        claimSourceId?: number | undefined,
-        coverageTypeId?: number | undefined,
-        medicalTypeId?: number | undefined,
-        cancelToken?: CancelToken | undefined
-    ): Promise<MedicalTypeDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/Masters/medicaltype?";
-        if (claimSourceId === null) throw new Error("The parameter 'claimSourceId' cannot be null.");
-        else if (claimSourceId !== undefined) url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
-        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
-        else if (coverageTypeId !== undefined)
-            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processGetMedicalType(_response);
-            });
-    }
-
-    protected processGetMedicalType(response: AxiosResponse): Promise<MedicalTypeDtoResponseListServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<MedicalTypeDtoResponseListServiceResponse>(result200);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<MedicalTypeDtoResponseListServiceResponse>(null as any);
-    }
-
-    /**
      * API สำหรับ Get ข้อมูล IncidentType (เหตุของการเคลม)
      * @param incidentTypeId (optional)
      * @return Success
@@ -2194,94 +2125,42 @@ export class MastersClient {
     }
 
     /**
-     * API สำหรับ Get ข้อมูล CoverageType (ประเภทความคุ้มครอง)
+     * API สำหรับ Get ข้อมูล CoverageType, MedicalType, CauseOfIncident By IncidentTypeId
+     * @param incidentTypeId (optional)
      * @param claimSourceId (optional)
      * @param productTypeId (optional)
-     * @param incidentTypeId (optional)
-     * @param coverageTypeId (optional)
      * @param productCategoryCode (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param causeOfIncidentId (optional)
      * @return Success
      */
-    getCoverageType(
+    getIncidentTypeMapping(
+        incidentTypeId?: number | undefined,
         claimSourceId?: number | undefined,
         productTypeId?: number | undefined,
-        incidentTypeId?: number | undefined,
-        coverageTypeId?: number | undefined,
         productCategoryCode?: string | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<CoverageTypeDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/Masters/coveragetype?";
+    ): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/incidenttype/mapping?";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
         if (claimSourceId === null) throw new Error("The parameter 'claimSourceId' cannot be null.");
         else if (claimSourceId !== undefined) url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
         if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
         else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
-        else if (incidentTypeId !== undefined)
-            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
-        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
-        else if (coverageTypeId !== undefined)
-            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
         if (productCategoryCode === null) throw new Error("The parameter 'productCategoryCode' cannot be null.");
         else if (productCategoryCode !== undefined)
             url_ += "productCategoryCode=" + encodeURIComponent("" + productCategoryCode) + "&";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processGetCoverageType(_response);
-            });
-    }
-
-    protected processGetCoverageType(response: AxiosResponse): Promise<CoverageTypeDtoResponseListServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<CoverageTypeDtoResponseListServiceResponse>(result200);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<CoverageTypeDtoResponseListServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Get ข้อมูล CauseOfIncident (ประเภทการรักษา) เฉพาะ เสียชีวิต, สูญเสียอวัยวะ, ทุพพลภาพ
-     * @param causeOfIncidentId (optional)
-     * @return Success
-     */
-    getCauserOfIncident(
-        causeOfIncidentId?: number | undefined,
-        cancelToken?: CancelToken | undefined
-    ): Promise<CauseOfIncidentDtoResponseListServiceResponse> {
-        let url_ = this.baseUrl + "/Masters/causeofincident?";
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        else if (coverageTypeId !== undefined)
+            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
         if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
@@ -2306,13 +2185,13 @@ export class MastersClient {
                 }
             })
             .then((_response: AxiosResponse) => {
-                return this.processGetCauserOfIncident(_response);
+                return this.processGetIncidentTypeMapping(_response);
             });
     }
 
-    protected processGetCauserOfIncident(
+    protected processGetIncidentTypeMapping(
         response: AxiosResponse
-    ): Promise<CauseOfIncidentDtoResponseListServiceResponse> {
+    ): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -2327,12 +2206,12 @@ export class MastersClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<CauseOfIncidentDtoResponseListServiceResponse>(result200);
+            return Promise.resolve<GetIncidentTypeMappingDtoResponseListServiceResponse>(result200);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<CauseOfIncidentDtoResponseListServiceResponse>(null as any);
+        return Promise.resolve<GetIncidentTypeMappingDtoResponseListServiceResponse>(null as any);
     }
 
     /**
@@ -2513,8 +2392,9 @@ export interface CalculateCaseClaim {
     occurrenceDate?: dayjs.Dayjs;
     ipdCount?: number;
     icuCount?: number;
-    continueClaimNoe?: string | undefined;
-    expenseList?: CalculateCaseClaimItem[] | undefined;
+    continueClaimNo?: string | undefined;
+    expenseList?: CalculateCaseExpense[] | undefined;
+    disabilityList?: CalculateCaseDisability[] | undefined;
 }
 
 export interface CalculateCaseClaimDtoRequest {
@@ -2530,6 +2410,7 @@ export interface CalculateCaseClaimDtoResponse {
     calculateCaseCode?: string | undefined;
     medicalExpense?: MedicalExpenseList[] | undefined;
     compensateExpense?: CompensateExpenseList[] | undefined;
+    disabilityExpense?: DisabilityExpenseList[] | undefined;
     compensateNet?: number;
     compensateInclude?: number;
     compensateRemain?: number;
@@ -2554,7 +2435,17 @@ export interface CalculateCaseClaimDtoResponseServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface CalculateCaseClaimItem {
+export interface CalculateCaseDisability {
+    standardMedicalExpenseId?: number | undefined;
+    bodyPartId?: number;
+    originalAmount?: number;
+    nonCoverAmount?: number;
+    disabilityPercent?: number;
+    reason?: string | undefined;
+    remark?: string | undefined;
+}
+
+export interface CalculateCaseExpense {
     standardMedicalExpenseId?: number | undefined;
     description?: string | undefined;
     originalAmount?: number;
@@ -2693,26 +2584,6 @@ export interface CaseServicePersonRequest {
     employeeName?: string | undefined;
 }
 
-export interface CauseOfIncidentDtoResponse {
-    indexId?: number;
-    causeOfIncidentId?: number;
-    causeOfIncidentName?: string | undefined;
-}
-
-export interface CauseOfIncidentDtoResponseListServiceResponse {
-    data?: CauseOfIncidentDtoResponse[] | undefined;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
 export interface CheckEligibleDtoResponse {}
 
 export interface CheckEligibleDtoResponseListServiceResponse {
@@ -2758,26 +2629,6 @@ export interface CompensateExpenseList {
     dayOfUnit?: number;
 }
 
-export interface CoverageTypeDtoResponse {
-    coverageTypeId?: number | undefined;
-    coverageTypeNameTH?: string | undefined;
-    indexId?: number;
-}
-
-export interface CoverageTypeDtoResponseListServiceResponse {
-    data?: CoverageTypeDtoResponse[] | undefined;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
 export interface CreateCoreClaimDtoRequest {
     createClaim?: ClaimCreateRequest;
     createCase?: CaseCreateRequest;
@@ -2815,6 +2666,17 @@ export interface CreateCoreClaimDtoResponseServiceResponse {
     currentPage?: number | undefined;
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
+}
+
+export interface DisabilityExpenseList {
+    benefitId?: number | undefined;
+    benefitName?: string | undefined;
+    originalAmount?: number;
+    nonCoveredAmount?: number;
+    benefitPercent?: number;
+    benefitPerUnit?: number;
+    benefitUnitName?: string | undefined;
+    benefitMaxPrice?: number;
 }
 
 export interface GetBankAccountRelationTypeDtoResponse {
@@ -3236,6 +3098,31 @@ export interface GetICD10DtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetIncidentTypeMappingDtoResponse {
+    incidentTypeId?: number | undefined;
+    coverageTypeId?: number | undefined;
+    coverageTypeNameTH?: string | undefined;
+    medicalTypeId?: number | undefined;
+    medicalTypeCode?: string | undefined;
+    causeOfIncidentId?: number | undefined;
+    causeOfIncidentName?: string | undefined;
+    indexId?: number;
+}
+
+export interface GetIncidentTypeMappingDtoResponseListServiceResponse {
+    data?: GetIncidentTypeMappingDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetNonCoveredReasonDtoResponse {
     nonCoveredReasonId?: number;
     nonCoveredReasonName?: string | undefined;
@@ -3417,27 +3304,6 @@ export interface MedicalExpenseList {
     unCover?: number;
     pay?: number;
     unPay?: number;
-}
-
-export interface MedicalTypeDtoResponse {
-    medicalTypeId?: number | undefined;
-    medicalTypeCode?: string | undefined;
-    medicalTypeName?: string | undefined;
-    indexId?: number;
-}
-
-export interface MedicalTypeDtoResponseListServiceResponse {
-    data?: MedicalTypeDtoResponse[] | undefined;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
 }
 
 export interface StandardMedicalExpenseCategoryDtoResponse {

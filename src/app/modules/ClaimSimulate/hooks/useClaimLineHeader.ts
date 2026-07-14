@@ -8,6 +8,7 @@ import {
     CAUSE_OF_INCIDENT_OPTIONS,
     FORMAT_TYPE_OPTIONS,
 } from "../store/claimSimulateOptions";
+import { useState } from "react";
 
 // 6 PH | 10 House | 11 Motor | 26 PA | 27 PAชุมชน | 32 SmilePA | 33 TA | 38 PAPersonnel | 41 PA310 | 42 อัคคีภัย
 const PRODUCT_TYPE_GROUP = {
@@ -186,6 +187,7 @@ export const useClaimLineHeader = () => {
     const dispatch = useDispatch();
     const selectedInsured = useSelector((s: RootState) => s.claimsimulate.selectedInsured);
     const header = useSelector((s: RootState) => s.claimsimulate.header);
+    const [showRequiredErrors, setShowRequiredErrors] = useState(false);
 
     const productTypeId = (selectedInsured as { productTypeId?: number } | null)?.productTypeId;
 
@@ -238,6 +240,12 @@ export const useClaimLineHeader = () => {
         header.causeOfIncident
     );
 
+    const isHeaderReady =
+        !!header.claimCause &&
+        !!header.formatTypeId &&
+        (!isMedicalTypeVisible(header.coverageType) || !!header.medicalType) &&
+        (!isCauseOfIncidentVisible(header.coverageType) || !!header.causeOfIncident);
+
     const validateHeader = (): string | null => {
         if (!selectedInsured) return "กรุณาค้นหาและเลือกผู้เอาประกันก่อน";
         if (!header.claimCause) return "กรุณาเลือกเหตุของการเคลม";
@@ -247,6 +255,16 @@ export const useClaimLineHeader = () => {
         // if (isCauseOfIncidentVisible(header.coverageType) && !header.causeOfIncident)
         //     return "กรุณาเลือกสาเหตุของการเกิดเหตุ";
         return null;
+    };
+
+    const validateHeaderAndFlagErrors = (): boolean => {
+        const errorMessage = validateHeader();
+        if (errorMessage) {
+            setShowRequiredErrors(true);
+            return false;
+        }
+        setShowRequiredErrors(false);
+        return true;
     };
 
     return {
@@ -264,6 +282,7 @@ export const useClaimLineHeader = () => {
         isMedicalTypeVisible: isMedicalTypeVisible(header.coverageType),
         isCauseOfIncidentVisible: isCauseOfIncidentVisible(header.coverageType),
         isOrganLossVisible: header.coverageType === COVERAGE_TYPE.DISABILITY,
+        isHeaderReady,
         noClaimCauseMessage: getNoClaimCauseMessage(productTypeId),
         noCoverageTypeMessage: getNoCoverageTypeMessage(productTypeId),
         handleOpenInsuredSearch,
@@ -273,5 +292,7 @@ export const useClaimLineHeader = () => {
         handleSelectCauseOfIncident,
         handleSelectFormatType,
         validateHeader,
+        showRequiredErrors,
+        validateHeaderAndFlagErrors,
     };
 };
