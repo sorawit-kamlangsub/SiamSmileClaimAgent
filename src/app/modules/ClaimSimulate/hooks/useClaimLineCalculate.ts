@@ -5,27 +5,43 @@ import { RootState } from "../../../../redux";
 import { ClaimLineItem, resetSimulateItems, setFilledItems, setMedicalTypeId } from "../store/claimSimulateSlice";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../api/coreClaimApi.client";
 import { useGetSimB, useGetSimBCategory, useGetNonCoveredReason } from "../../../api/coreClaimMastersApi";
-import { toAmount, hasAmountSumError, hasMissingReasonError } from "../store/Claimsimulateutils";
-import { NOT_COVERED_REASON_OPTIONS } from "../store/claimSimulateOptions";
+import { toAmount, hasAmountSumError } from "../store/Claimsimulateutils";
 import { swalError } from "../../_common/sweetAlert";
 
 // ─── แปลง API response → TreeNode ────────────────────────────────────────────
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
-    data.map((cat) => ({
-        id: cat.inputToStandardCategoryId ?? 0,
-        label: cat.inputToStandardCategoryName ?? "",
-        children: (cat.inputToStandardSubCategoryList ?? []).map((sub) => ({
-            id: sub.inputToStandardSubCategoryId ?? 0,
-            label: sub.inputToStandardSubCategoryName ?? "",
-            children: (sub.inputToStandardMappingList ?? []).map((item) => ({
-                id: item.inputToStandardMappingId ?? 0,
-                standardMedicalExpenseId: item.standardMedicalExpenseId,
-                code: item.inputItemCode ?? "",
-                label: `${item.inputItemCode ?? ""} ${item.descriptionTH ?? ""}`.trim(),
-                children: [],
-            })),
-        })),
-    }));
+    data
+        .map((cat) => {
+            const children = (cat.inputToStandardSubCategoryList ?? [])
+                .map((sub) => {
+                    const leaves = (sub.inputToStandardMappingList ?? []).map((item) => ({
+                        id: item.inputToStandardMappingId ?? 0,
+                        standardMedicalExpenseId: item.standardMedicalExpenseId,
+                        code: item.inputItemCode ?? "",
+                        label: `${item.inputItemCode ?? ""} ${item.descriptionTH ?? ""}`.trim(),
+                        bodyPartId: item.bodyPartId,
+                        children: [],
+                    }));
+
+                    if (leaves.length === 0) return null;
+
+                    return {
+                        id: sub.inputToStandardSubCategoryId ?? 0,
+                        label: sub.inputToStandardSubCategoryName ?? "",
+                        children: leaves,
+                    };
+                })
+                .filter((sub): sub is NonNullable<typeof sub> => sub !== null);
+
+            if (children.length === 0) return null;
+
+            return {
+                id: cat.inputToStandardCategoryId ?? 0,
+                label: cat.inputToStandardCategoryName ?? "",
+                children,
+            };
+        })
+        .filter((cat): cat is NonNullable<typeof cat> => cat !== null);
 
 interface ClaimLineFormValues {
     items: ClaimLineItem[];
@@ -33,11 +49,12 @@ interface ClaimLineFormValues {
 
 export const useClaimLineCalculate = () => {
     const dispatch = useDispatch();
-    const { filledItems, header } = useSelector((s: RootState) => s.claimsimulate);
+    const { filledItems, header, selectedInsured } = useSelector((s: RootState) => s.claimsimulate);
     const medicalType = header.medicalType;
     const causeOfIncident = header.causeOfIncident;
     const formatTypeId = header.formatTypeId;
     const coverageTypeId = header.coverageType;
+    const productTypeId = selectedInsured?.productTypeId;
     const patientTypeId = medicalType ?? causeOfIncident;
 
     const [showAddPanel, setShowAddPanel] = useState(false);
@@ -48,12 +65,14 @@ export const useClaimLineCalculate = () => {
         code: string;
         description: string;
         standardMedicalExpenseId?: number;
+        bodyPartId?: number;
     } | null>(null);
+
     const [selectedLeafId, setSelectedLeafId] = useState<number | null>(null);
     const [pendingAmount, setPendingAmount] = useState("");
     const [pendingDiscount, setPendingDiscount] = useState("");
     const [pendingNotCovered, setPendingNotCovered] = useState("");
-    const [pendingReason, setPendingReason] = useState("");
+    const [pendingReason, setPendingReason] = useState<number | undefined>(undefined);
     const [discountError, setDiscountError] = useState("");
     const [notCoveredError, setNotCoveredError] = useState("");
     const [reasonError, setReasonError] = useState("");
@@ -69,25 +88,26 @@ export const useClaimLineCalculate = () => {
     const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(
         formatTypeId,
         coverageTypeId,
-        patientTypeId,
-        true
+        medicalType,
+        true,
+        productTypeId,
+        causeOfIncident
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         formatTypeId,
         coverageTypeId,
-        patientTypeId
+        medicalType,
+        productTypeId,
+        causeOfIncident
     );
 
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
     const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
 
     const notCoveredReasonOptions = useMemo(() => {
-        const raw =
-            !!nonCoveredReasonData?.data && nonCoveredReasonData?.data?.length > 0
-                ? nonCoveredReasonData?.data
-                : NOT_COVERED_REASON_OPTIONS;
+        const raw = nonCoveredReasonData?.data ?? [];
         return raw.map((r) => ({
             value: r.nonCoveredReasonId,
             label: r.nonCoveredReasonName ?? "-",
@@ -104,10 +124,11 @@ export const useClaimLineCalculate = () => {
             claimAmount: undefined,
             discount: undefined,
             notCovered: undefined,
-            reason: "",
+            reason: undefined,
             remark: "",
             color: item.backgroundColorCode ?? "#FFD6D6",
             disabled: false,
+            bodyPartId: item.bodyPartId,
         }));
     }, [frequentData]);
 
@@ -184,7 +205,13 @@ export const useClaimLineCalculate = () => {
         if (!matched) return;
         setExpandedIds((prev) => [...new Set([...prev, matched!.catId, matched!.subId])]);
         const [code, ...desc] = matched.leaf.label.split(" ");
-        handleSelectLeaf(code, desc.join(" "), matched.leaf.id, matched.leaf.standardMedicalExpenseId);
+        handleSelectLeaf(
+            code,
+            desc.join(" "),
+            matched.leaf.id,
+            matched.leaf.standardMedicalExpenseId,
+            matched.leaf.bodyPartId
+        );
     }, [searchText, categories]);
 
     const totalClaim = items.reduce((s, i) => s + (i.claimAmount || 0), 0);
@@ -209,18 +236,25 @@ export const useClaimLineCalculate = () => {
     const handleToggleExpand = (id: number) =>
         setExpandedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
 
-    const handleSelectLeaf = (code: string, description: string, id: number, standardMedicalExpenseId?: number) => {
+    const handleSelectLeaf = (
+        code: string,
+        description: string,
+        id: number,
+        standardMedicalExpenseId?: number,
+        bodyPartId?: number
+    ) => {
         setSelectedItem({
             code,
             description,
             standardMedicalExpenseId,
+            bodyPartId,
         });
 
         setSelectedLeafId(id);
         setPendingAmount("");
         setPendingDiscount("");
         setPendingNotCovered("");
-        setPendingReason("");
+        setPendingReason(undefined);
         setDiscountError("");
         setNotCoveredError("");
         setReasonError("");
@@ -229,7 +263,7 @@ export const useClaimLineCalculate = () => {
     const hasAnyAmount = items.some((item) => Number(item.claimAmount ?? 0) > 0);
     const hasDiscountError = items.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
     const hasNotCoveredError = items.some((item) => hasAmountSumError(item));
-    const hasReasonError = items.some((item) => hasMissingReasonError(item));
+    // const hasReasonError = items.some((item) => hasMissingReasonError(item));
 
     const handleAddToTable = () => {
         if (!selectedItem) return;
@@ -286,6 +320,7 @@ export const useClaimLineCalculate = () => {
             reason: pendingReason,
             remark: "",
             disabled: false,
+            bodyPartId: selectedItem.bodyPartId,
         };
 
         const next = [...items, newItem];
@@ -297,7 +332,7 @@ export const useClaimLineCalculate = () => {
         setPendingAmount("");
         setPendingDiscount("");
         setPendingNotCovered("");
-        setPendingReason("");
+        setPendingReason(undefined);
         setDiscountError("");
         setNotCoveredError("");
         setReasonError("");
@@ -322,7 +357,7 @@ export const useClaimLineCalculate = () => {
         setPendingAmount("");
         setPendingDiscount("");
         setPendingNotCovered("");
-        setPendingReason("");
+        setPendingReason(undefined);
     }, [headerDetailSignature]);
 
     useEffect(() => {
@@ -340,7 +375,7 @@ export const useClaimLineCalculate = () => {
             const hasClaimAmount = item.claimAmount !== undefined && item.claimAmount !== null;
             const hasDiscount = item.discount !== undefined && item.discount !== null;
             const hasNotCovered = item.notCovered !== undefined && item.notCovered !== null;
-            const hasReason = !!item.reason?.trim();
+            const hasReason = item.reason !== undefined && item.reason !== null;
             const hasRemark = !!item.remark?.trim();
 
             return hasClaimAmount || hasDiscount || hasNotCovered || hasReason || hasRemark;
@@ -355,10 +390,10 @@ export const useClaimLineCalculate = () => {
             swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาตรวจสอบยอดส่วนลด/ไม่คุ้มครองให้ไม่เกินยอดเบิก");
             return false;
         }
-        if (hasReasonError) {
-            swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครองให้ครบทุกรายการที่มียอดไม่คุ้มครอง");
-            return false;
-        }
+        // if (hasReasonError) {
+        //     swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครองให้ครบทุกรายการที่มียอดไม่คุ้มครอง");
+        //     return false;
+        // }
 
         const filteredItems = filterFilledItems(items);
 
@@ -409,7 +444,7 @@ export const useClaimLineCalculate = () => {
         setReasonError,
         hasDiscountError,
         hasNotCoveredError,
-        hasReasonError,
+        // hasReasonError,
         hasAnyAmount,
     };
 };

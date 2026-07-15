@@ -6,7 +6,11 @@ import { RootState } from "../../../../redux";
 import { setDaysCalculate, setCalculateResult } from "../store/claimSimulateSlice";
 import { swalError } from "../../_common";
 import { useCalculateCaseClaim } from "../../../api/coreClaimApi";
-import { CalculateCaseClaim, CalculateCaseClaimDtoRequest } from "../../../api/coreClaimApi.client";
+import {
+    CalculateCaseClaim,
+    CalculateCaseClaimDtoRequest,
+    CalculateCaseDisability,
+} from "../../../api/coreClaimApi.client";
 import { useGetDataFromApi } from "./useGetDataFromApi";
 
 export interface DaysCalculateFormValues {
@@ -100,6 +104,8 @@ const validate = (values: DaysCalculateFormValues) => {
 
     return errors;
 };
+
+const COVERAGE_TYPE_DISABILITY = 4;
 
 export const useDaysCalculate = () => {
     const dispatch = useDispatch();
@@ -239,6 +245,21 @@ export const useDaysCalculate = () => {
             ? claimContinueOptions.find((opt) => opt.claimId === formik.values.continuousFromClaimNo)?.claimNo
             : undefined;
 
+        const isDisabilityCoverage = header.coverageType === COVERAGE_TYPE_DISABILITY;
+
+        const disabilityList: CalculateCaseDisability[] = isDisabilityCoverage
+            ? filledItems.map((item) => ({
+                  standardMedicalExpenseId: item.standardMedicalExpenseId,
+                  bodyPartId: item.bodyPartId,
+                  originalAmount: item.claimAmount,
+                  discountAmount: item.discount,
+                  nonCoverAmount: item.notCovered,
+                  disabilityPercent: undefined,
+                  reasonId: item.reason,
+                  remark: item.remark,
+              }))
+            : [];
+
         const calculateDetail: CalculateCaseClaim = {
             productId: selectedInsured?.productId,
             coverageTypeId: header.coverageType,
@@ -248,16 +269,18 @@ export const useDaysCalculate = () => {
             ipdCount: formik.values.ipdDays,
             icuCount: formik.values.icuDays,
             continueClaimNo: formik.values.isContinuous ? selectedContinueClaimNo : undefined,
-            expenseList: filledItems.map((item) => ({
-                standardMedicalExpenseId: item.standardMedicalExpenseId,
-                description: item.description,
-                originalAmount: item.claimAmount,
-                discountAmount: item.discount,
-                nonCoverAmount: item.notCovered,
-                reason: item.reason,
-                remark: item.remark,
-            })),
-            disabilityList: [],
+            expenseList: isDisabilityCoverage
+                ? []
+                : filledItems.map((item) => ({
+                      standardMedicalExpenseId: item.standardMedicalExpenseId,
+                      description: item.description,
+                      originalAmount: item.claimAmount,
+                      discountAmount: item.discount,
+                      nonCoverAmount: item.notCovered,
+                      reasonId: item.reason,
+                      remark: item.remark,
+                  })),
+            disabilityList,
         };
 
         const payload: CalculateCaseClaimDtoRequest = {

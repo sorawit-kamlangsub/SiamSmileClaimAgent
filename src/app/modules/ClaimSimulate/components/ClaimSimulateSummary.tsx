@@ -29,9 +29,10 @@ import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined
 
 import { useAppSelector } from "../../../../redux";
 import { useClaimSimulatePage } from "../hooks/useClaimSimulatePage";
-import { CLAIM_CAUSE_OPTIONS, COVERAGE_TYPE_OPTIONS, MEDICAL_TYPE_OPTIONS } from "../store/claimSimulateOptions";
+import { CLAIM_CAUSE_OPTIONS } from "../store/claimSimulateOptions";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
 import { useNavigate } from "react-router-dom";
+import { useGetDataFromApi } from "../hooks/useGetDataFromApi";
 
 const REF = {
     primary: "#0b74bd",
@@ -165,16 +166,26 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
     const navigate = useNavigate();
     const { header, daysCalculate, selectedInsured } = useAppSelector((s) => s.claimsimulate);
 
-    const { filledItems, openConfirm, isCalculating, handleConfirmCalculate, handleConfirm, handleCloseConfirm } =
-        useClaimSimulatePage();
+    const {
+        filledItems,
+        coverageTypeOptions,
+        medicalTypeOptions,
+        openConfirm,
+        isCalculating,
+        handleConfirmCalculate,
+        handleConfirm,
+        handleCloseConfirm,
+    } = useClaimSimulatePage();
+
+    const { claimContinueOptions } = useGetDataFromApi(selectedInsured?.policyCode);
 
     const fmt = (n: number) => (n ?? 0).toLocaleString("th-TH", { minimumFractionDigits: 2 });
     const fmtDate = (d: any) => (d ? (d.format ? d.format("DD/MM/BBBB") : String(d)) : "-");
     const fmtDateTime = (d: any) => (d ? (d.format ? d.format("DD/MM/BBBB HH:mm") : String(d)) : "-");
 
     const claimCauseLabel = CLAIM_CAUSE_OPTIONS.find((o) => o.value === header.claimCause)?.label ?? "-";
-    const coverageTypeLabel = COVERAGE_TYPE_OPTIONS.find((o) => o.value === header.coverageType)?.label ?? "-";
-    const medicalTypeLabel = MEDICAL_TYPE_OPTIONS.find((o) => o.value === header.medicalType)?.label ?? "-";
+    const coverageTypeLabel = coverageTypeOptions.find((o) => o.value === header.coverageType)?.label ?? "-";
+    const medicalTypeLabel = medicalTypeOptions.find((o) => o.value === header.medicalType)?.label ?? "-";
 
     const rows = filledItems.map((item) => {
         const claimAmount = item.claimAmount ?? 0;
@@ -193,6 +204,10 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
     const totalClaim = rows.reduce((s, r) => s + r.claimAmount, 0);
     const totalEligible = rows.reduce((s, r) => s + r.eligibleAmount, 0);
     const totalNotCovered = rows.reduce((s, r) => s + r.notCovered, 0);
+
+    const continuousClaimLabel = daysCalculate.isContinuous
+        ? claimContinueOptions.find((opt) => opt.claimId === daysCalculate.continuousFromClaimNo)?.label ?? "-"
+        : null;
 
     useEffect(() => {
         if (!selectedInsured?.policyCode) navigate("..");
@@ -342,6 +357,16 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                         />
                     </Grid>
                 </Grid>
+                {daysCalculate.isContinuous && (
+                    <>
+                        <Divider sx={{ my: 2.5, borderColor: REF.line }} />
+                        <InfoField
+                            icon={<EventOutlinedIcon sx={{ fontSize: 17 }} />}
+                            label="เคลมต่อเนื่องจาก"
+                            value={continuousClaimLabel}
+                        />
+                    </>
+                )}
             </Paper>
 
             {/* ── รายการค่าใช้จ่าย ── */}
@@ -535,7 +560,7 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                             }}
                         >
                             <Typography fontSize={14} color="text.secondary">
-                                ส่วนเกินสิทธิ์รวม
+                                ยอดไม่คุ้มครองรวม
                             </Typography>
                             <Typography fontWeight={800} fontSize={18} color={REF.danger}>
                                 {fmt(totalNotCovered)}
