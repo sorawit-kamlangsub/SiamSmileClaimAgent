@@ -3,6 +3,7 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import { ClaimBankAccount, ContactInfo, DiagnosisModel, SpecifyHospital, SymptomType } from "./claimPHSlice";
 import {
+    CaseDocumentDetailCreateRequest,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -82,6 +83,7 @@ export interface ClaimPAFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
+    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
 }
 
 interface ClaimPAState {
@@ -135,6 +137,7 @@ const defaultForm: ClaimPAFormValues = {
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
     remark: undefined,
+    ocrDocument: [],
 };
 
 const initialState: ClaimPAState = {

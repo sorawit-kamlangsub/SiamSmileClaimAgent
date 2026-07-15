@@ -24,7 +24,6 @@ const getZebraCarOwnerQueryKey = ["getZebraCarOwner"];
 const getSchoolByProvinceIdQueryKey = ["getSchoolByProvinceId"];
 const getAllHospitalQueryKey = ["getAllHospital"];
 
-
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
         cacheTime: 1000 * 60 * 60 * 24,
@@ -98,11 +97,11 @@ export const useGetIncidentTypeMapping = (
                 causeOfIncidentId
             ),
         {
-            refetchOnWindowFocus: true,
+            enabled: !!incidentTypeId,
+            refetchOnWindowFocus: false,
         }
     );
 };
-
 
 export const useGetSimBCategory = (
     formatTypeId?: number | undefined,

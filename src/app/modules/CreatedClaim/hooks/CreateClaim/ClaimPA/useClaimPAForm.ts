@@ -13,10 +13,11 @@ import {
     setClaimForm,
     setClaimItems,
 } from "../../../store/claimPASlice";
-import { setEnabled, SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
+import { claimPHSelector, setEnabled, SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailSearch } from "../../../../../api/coreClaimApi";
+import { swalWarning } from "../../../../_common";
 
 interface Options {
     onNext: () => void;
@@ -26,24 +27,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
     const { form, isContinuous, insured } = useAppSelector(claimPASelector);
+    const { documentDetailById } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
+    const docData = Object.values(documentDetailById);
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
-
-    const MEDICAL_TYPE_BY_COVERAGE_PA: Record<number, Record<number, number[]>> = {
-        3: {
-            // อุบัติเหตุ > ค่ารักษา/ค่าชดเชย
-            2: [1, 2],
-            3: [1, 2],
-        },
-    };
-
-    const CAUSE_OF_ACCIDENT_BY_COVERAGE_PA: Record<number, Record<number, number[]>> = {
-        3: {
-            // อุบัติเหตุ > เสียชีวิต/ทุพพลภาพ > อุบัติเหตุ/ขับขี่รถ/ฆาตกรรม
-            4: [3, 4, 5],
-            5: [3, 4, 5],
-        },
-    };
     const formik = useFormik<ClaimPAFormValues>({
         initialValues: { ...form, serviceProviderId: userProfile?.userId },
         enableReinitialize: true,
@@ -118,8 +105,27 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             return errors;
         },
 
-        onSubmit: (values) => {
-            console.log("values dispatch to redux", values);
+        onSubmit: (values, { setSubmitting }) => {
+            const isDisability = values.coverageTypeId === 4;
+            const isDeath = values.coverageTypeId === 5;
+            const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
+            //เช็คจำนวนเอกสาร
+            const hasError = docData.some((docById) => {
+                if (docById.documentId && documentDetailById[docById.documentId] && (isDeath || isDisability)) {
+                    const doc = documentDetailById[docById.documentId];
+                    if (!doc.docDetail || doc.docDetail.fileCount === undefined || doc.docDetail.fileCount < 1) {
+                        swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารเพิ่มเติม");
+                        return true; // หยุด loop ทันที
+                    }
+                    return false;
+                }
+                return false;
+            });
+
+            if (hasError) {
+                setSubmitting(false);
+                return;
+            }
             const claimItem: ClaimInsuredItem = {
                 id: `${Date.now()}`,
                 seq: 1,
@@ -131,7 +137,12 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 claimAmount: values.transferAmount ?? 0,
             };
 
-            dispatch(setClaimForm(values));
+            dispatch(
+                setClaimForm({
+                    ...values,
+                    ocrDocument: !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds),
+                })
+            );
             dispatch(setClaimItems([claimItem]));
             onNext();
         },
@@ -145,39 +156,54 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
             })) ?? [];
     const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
-        formik.values.incidentTypeId,
+        formik.values.incidentTypeId ?? undefined,
         2, // ClaimAgent
-        6, // PH
-        insured?.productCategoryCode,
-        formik.values.coverageTypeId,
-        formik.values.medicalTypeId,
-        formik.values.causeOfIncidentId
+        26, // PA
+        insured?.productCategoryCode ?? undefined,
+        undefined,
+        undefined,
+        undefined
     );
-    const coverageType: ClaimTypeOption[] =
-        incidentTypeMapping?.data?.map((item) => ({
-            id: item.coverageTypeId ?? 0,
-            name: item.coverageTypeNameTH ?? "",
-            icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
-        })) ?? [];
+    const coverageType: ClaimTypeOption[] = [
+        ...new Map(
+            (incidentTypeMapping?.data ?? []).map((item) => [
+                item.coverageTypeId,
+                {
+                    id: item.coverageTypeId ?? 0,
+                    name: item.coverageTypeNameTH ?? "",
+                    icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
+                },
+            ])
+        ).values(),
+    ];
 
-    const medicalType: ChipOption[] =
-        incidentTypeMapping?.data?.map((item) => ({
-            id: item.medicalTypeId ?? 0,
-            name: item.medicalTypeCode ?? "",
-        })) ?? [];
+    const medicalType: ChipOption[] = [
+        ...new Map(
+            (incidentTypeMapping?.data ?? [])
+                .filter((item) => item.coverageTypeId === formik.values.coverageTypeId)
+                .map((item) => [
+                    item.medicalTypeId,
+                    {
+                        id: item.medicalTypeId ?? 0,
+                        name: item.medicalTypeCode ?? "",
+                    },
+                ])
+        ).values(),
+    ];
 
-    const causeOfAccident: ChipOption[] =
-        incidentTypeMapping?.data
-            ?.filter(
-                (item) =>
-                    CAUSE_OF_ACCIDENT_BY_COVERAGE_PA[formik.values.incidentTypeId ?? 0]?.[
-                        formik.values.coverageTypeId ?? 0
-                    ]?.includes(item.causeOfIncidentId ?? 0)
-            )
-            .map((item) => ({
-                id: item.causeOfIncidentId ?? 0,
-                name: item.causeOfIncidentName ?? "",
-            })) ?? [];
+    const causeOfIncident: ChipOption[] = [
+        ...new Map(
+            (incidentTypeMapping?.data ?? [])
+                .filter((item) => item.coverageTypeId === formik.values.coverageTypeId)
+                .map((item) => [
+                    item.causeOfIncidentId,
+                    {
+                        id: item.causeOfIncidentId ?? 0,
+                        name: item.causeOfIncidentName ?? "",
+                    },
+                ])
+        ).values(),
+    ];
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
         insured?.policyCode,
         0,
@@ -291,7 +317,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         incidentType,
         coverageType,
         medicalType,
-        causeOfAccident,
+        causeOfIncident,
         incidentTypeMapping,
         customerBenefit,
         incidentTypeLoading,

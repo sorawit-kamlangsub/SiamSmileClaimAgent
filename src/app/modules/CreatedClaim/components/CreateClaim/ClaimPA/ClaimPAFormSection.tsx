@@ -56,12 +56,11 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         incidentType,
         coverageType,
         medicalType,
-        causeOfAccident,
+        causeOfIncident,
+        incidentTypeMapping,
         customerBenefit,
+        incidentTypeMappingLoading,
         incidentTypeLoading,
-        coverageTypeLoading,
-        medicalTypeLoading,
-        causeOfAccidentLoading,
         customerBenefitLoading,
         insured,
         shouldShowOcrDocumentScan,
@@ -144,7 +143,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     options={coverageType}
                                     idFieldName="coverageTypeId"
                                     nameFieldName="coverageTypeName"
-                                    isLoading={coverageTypeLoading}
+                                    isLoading={incidentTypeMappingLoading}
                                 />
                             ) : (
                                 <Paper variant="outlined" sx={EMPTY_STATE_SX}>
@@ -167,15 +166,15 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     idFieldName="medicalTypeId"
                                     nameFieldName="medicalTypeName"
                                     options={medicalType}
-                                    isLoading={medicalTypeLoading}
+                                    isLoading={incidentTypeMappingLoading}
                                 />
                             ) : isDeath || isDisability ? (
                                 <ChipSelector
                                     formik={formik}
                                     idFieldName="causeOfIncidentId"
                                     nameFieldName="causeOfIncidentName"
-                                    options={causeOfAccident}
-                                    isLoading={causeOfAccidentLoading}
+                                    options={causeOfIncident}
+                                    isLoading={incidentTypeMappingLoading}
                                 />
                             ) : (
                                 <Paper variant="outlined" sx={EMPTY_STATE_SX}>

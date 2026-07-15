@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
+    CaseDocumentDetailCreateRequest,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -88,6 +89,7 @@ export interface ClaimFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
+    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
 }
 
 export type ClaimBankAccount = GetCustomerBankAccountDtoResponse & {
@@ -159,6 +161,7 @@ const defaultForm: ClaimFormValues = {
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
     remark: undefined,
+    ocrDocument: [],
 };
 export interface DocumentDetailDto {
     documentId?: string | undefined;

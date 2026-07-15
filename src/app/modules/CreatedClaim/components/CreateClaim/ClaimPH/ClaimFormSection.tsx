@@ -57,8 +57,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         incidentType,
         coverageType,
         medicalType,
-        causeOfAccident,
-        incidentTypeMapping,
+        causeOfIncident,
         customerBenefit,
         incidentTypeLoading,
         incidentTypeMappingLoading,
@@ -183,7 +182,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     formik={formik}
                                     idFieldName="causeOfIncidentId"
                                     nameFieldName="causeOfIncidentName"
-                                    options={causeOfAccident}
+                                    options={causeOfIncident}
                                     isLoading={incidentTypeMappingLoading}
                                 />
                             ) : (

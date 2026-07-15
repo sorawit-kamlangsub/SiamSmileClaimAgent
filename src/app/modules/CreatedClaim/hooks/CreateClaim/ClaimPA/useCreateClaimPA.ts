@@ -4,11 +4,9 @@ import { useCreateCoreClaim } from "../../../../../api/coreClaimApi";
 import { CreateCoreClaimDtoRequest } from "../../../../../api/coreClaimApi.client";
 import { useAuth } from "../../../../_auth";
 import { claimPASelector } from "../../../store/claimPASlice";
-import { useOcrDocumentScan } from "../useOcrDocumentScan";
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
     const { form, bankAccounts, contacts, insured } = useAppSelector(claimPASelector);
-    const ocr = useOcrDocumentScan();
     const isMedical = form.coverageTypeId === 2 || form.coverageTypeId === 3;
     const selectedContact = contacts.find((contact) => contact.isDefault) ?? contacts[0];
     const mutation = useCreateCoreClaim(
@@ -26,13 +24,13 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 policyNo: undefined,
                 certificateNo: undefined,
 
-                customerId: 1,
+                customerId: insured?.customerId,
                 customerName: insured?.customerName,
 
                 incidentTypeId: form.incidentTypeId,
                 incidentDate: form.incidentDate,
 
-                accidentPlace: undefined,
+                accidentPlace: form.accidentPlace,
                 accidentDescription: undefined,
 
                 productTypeId: 26,
@@ -50,7 +48,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 latestNonCoveredAmount: 0,
                 latestPatientPayAmount: 0,
 
-                hospitalId: undefined,
+                hospitalId: form.hospitalId,
 
                 hn: undefined,
                 an: undefined,
@@ -59,17 +57,17 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 chiefComplaintId: form.chiefComplaintId,
                 chiefComplaintCustom: form.remark,
 
-                productId: undefined,
-                icd10_1stId: undefined,
-                icd10_2ndId: undefined,
-                icd10_3rdId: undefined,
+                productId: insured?.productId ?? undefined,
+                icd10_1stId: form.diagnoses[0]?.icd10Id,
+                icd10_2ndId: form.diagnoses[1]?.icd10Id,
+                icd10_3rdId: form.diagnoses[2]?.icd10Id,
 
                 medicalTypeId: form.medicalTypeId,
-                isCaseDisability: false,
+                isCaseDisability: form.coverageTypeId === 4 ? true : false,
             },
             createCaseItemList: [],
             createCaseRegistration: {
-                notificationDate: dayjs(),
+                notificationDate: form.notificationDate,
                 notifyBy: userProfile?.fullName,
                 initialCoverageTypeId: form.coverageTypeId,
                 initialCaseAmount: form.transferAmount,
@@ -99,7 +97,11 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 disabilityPercent: 0,
             },
 
-            createCaseDocument: isMedical ? ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds)[0] : undefined,
+            createCaseDocument: {
+                caseDocumentId: undefined,
+                documentSubTypeId: 220,
+                caseDocumentDetailList: isMedical ? form.ocrDocument : undefined,
+            },
 
             createCaseAdjudication: {
                 decisionId: 3,
@@ -132,7 +134,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
 
             createCaseServicePerson: {
                 servicePersonByUserId: form.serviceProviderId,
-                servicePersonByUserCode: undefined,
+                servicePersonByUserCode: form.serviceProviderCode,
                 servicePersonByUserName: form.serviceProviderName,
 
                 zebraId: form.zebraId,

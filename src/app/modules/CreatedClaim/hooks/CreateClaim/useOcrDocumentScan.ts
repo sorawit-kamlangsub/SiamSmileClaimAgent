@@ -72,7 +72,6 @@ const ocrDocumentPayload = (
             ocrResult: JSON.stringify(ocrResult.medCert.result),
         });
     }
-
     return list;
 };
 export const useOcrDocumentScan = () => {
@@ -80,7 +79,6 @@ export const useOcrDocumentScan = () => {
     const [ocrResult, setOcrResult] = useState<OcrDocumentScanResult>({});
     const [isOcrLoading, setIsOcrLoading] = useState(false);
     const [ocrDocumentIds, setOcrDocumentIds] = useState<DocStorageDocumentIds>({});
-
     const getRequiredDocsByCoverageType = (coverageTypeId?: number): RequiredDocsConfig => {
         if (!coverageTypeId) return NO_REQUIRED_DOCS;
         return COVERAGE_TYPE_DOCS_MAP[coverageTypeId] ?? NO_REQUIRED_DOCS;
