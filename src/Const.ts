@@ -51,6 +51,8 @@ export const AUTH_LOGOUT_REDIRECT = VITE_SSO_ISSUER + "/Account/Logout";
 export const API_SURVEY_URL = VITE_SURVEY_API_URL;
 export const API_CLAIM_FUND_URL = VITE_CLAIM_FUND_API_URL;
 
+export const PUBLIC_PATHS: string[] = ["/slip/:id", "/survey/:id", "/survey/summary/:id"];
+
 /*
  * สำหรับใช้ในการเรียกใช้งาน API ให้ใช้งานในรูปแบบ
  * const { data } = await axios.get(API_URL + "/api/...",

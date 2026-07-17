@@ -3,8 +3,6 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import PortraitIcon from "@mui/icons-material/Portrait";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PaymentsIcon from "@mui/icons-material/Payments";
-import NumbersIcon from "@mui/icons-material/Numbers";
-import FindInPageIcon from "@mui/icons-material/FindInPage";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PrintIcon from "@mui/icons-material/Print";
 import AccessTimeFilledOutlinedIcon from "@mui/icons-material/AccessTimeFilledOutlined";
@@ -105,48 +103,6 @@ const ContentDetail = () => {
                                         Net Transaction Amount :
                                     </Typography>
                                     <Typography>1,200</Typography>
-                                </Box>
-                                <Divider orientation="horizontal" />
-                            </Grid>
-                            <Grid item xs={12} sm={12} md={12} lg={12}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        gap: 2,
-                                        alignItems: "center",
-                                        flexWrap: "wrap",
-                                        mt: breakpoint ? 2 : 0,
-                                        mb: breakpoint ? 2 : 0,
-                                    }}
-                                >
-                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
-                                        <FindInPageIcon />
-                                    </Avatar>
-                                    <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
-                                        Payment Ref # :
-                                    </Typography>
-                                    <Typography>A81e0adxxxXxxxxx</Typography>
-                                </Box>
-                                <Divider orientation="horizontal" />
-                            </Grid>
-                            <Grid item xs={12} sm={12} md={12} lg={12}>
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        gap: 2,
-                                        alignItems: "center",
-                                        flexWrap: "wrap",
-                                        mt: breakpoint ? 2 : 0,
-                                        mb: breakpoint ? 2 : 0,
-                                    }}
-                                >
-                                    <Avatar sx={{ background: "#0458AD", boxShadow: 5, color: "#FFFFFF" }}>
-                                        <NumbersIcon />
-                                    </Avatar>
-                                    <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
-                                        Payment Number :
-                                    </Typography>
-                                    <Typography>CPG6804xxXX</Typography>
                                 </Box>
                                 <Divider orientation="horizontal" />
                             </Grid>

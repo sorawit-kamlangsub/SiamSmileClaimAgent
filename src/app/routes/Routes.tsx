@@ -63,40 +63,6 @@ const Routes: RouteMapType[] = [
         permissions: [],
         condition: "AND",
     },
-
-    // Survey
-    {
-        path: "/survey",
-        title: "Survey",
-        children: [
-            { index: true, title: "Survey", element: <SurveyPage />, hideAppBar: true, hideAsideMenu: true },
-            {
-                path: ":id",
-                title: "Survey",
-                element: <SurveyPage />,
-                hideAppBar: true,
-                hideAsideMenu: true,
-            },
-            {
-                path: "summary/:id",
-                title: "Survey Summary",
-                element: <SurveySummaryPage />,
-                hideAppBar: true,
-                hideAsideMenu: true,
-            },
-        ],
-        hideAppBar: true,
-        hideAsideMenu: true,
-    },
-
-    // Slip โอนเงิน
-    {
-        path: "/slip/:id",
-        title: "Transfer Slip",
-        element: <TransferSlipPage />,
-        hideAppBar: true,
-        hideAsideMenu: true,
-    },
 ];
 
 export default Routes;
