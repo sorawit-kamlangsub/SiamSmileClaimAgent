@@ -23,6 +23,8 @@ const getBankQueryKey = ["getBank"];
 const getZebraCarOwnerQueryKey = ["getZebraCarOwner"];
 const getSchoolByProvinceIdQueryKey = ["getSchoolByProvinceId"];
 const getAllHospitalQueryKey = ["getAllHospital"];
+const getBeneficiaryQueryKey = ["getBeneficiary"];
+const getRelationTypeQueryKey = ["getRelationType"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -281,4 +283,35 @@ export const useGetHospitalDetailAllFilter = (
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;
     }, [key, defaultId, data, isLoading]);
+};
+
+export const useGetBeneficiary = (applicationId?: string | undefined) => {
+    return useQuery(
+        [getBeneficiaryQueryKey, applicationId],
+        () => coreClaimMastersClient.getBeneficiary(applicationId || ""),
+        {
+            enabled: !!applicationId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetRelationType = (relationTypeId?: number | undefined) => {
+    return useQuery(
+        [getRelationTypeQueryKey, relationTypeId],
+        () => coreClaimMastersClient.getRelationType(relationTypeId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetTitle = (titleId?: number | undefined, personTypeId?: number) => {
+    return useQuery(
+        [getRelationTypeQueryKey, titleId, personTypeId],
+        () => coreClaimMastersClient.getTitle(titleId, personTypeId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
 };

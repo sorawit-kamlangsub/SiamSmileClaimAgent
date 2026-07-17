@@ -6,9 +6,13 @@ import { useAuth } from "../../../../_auth";
 import { claimPASelector } from "../../../store/claimPASlice";
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
-    const { form, bankAccounts, contacts, insured } = useAppSelector(claimPASelector);
-    const isMedical = form.coverageTypeId === 2 || form.coverageTypeId === 3;
+    const { form, bankAccounts, contacts, insured, beneficiaries } = useAppSelector(claimPASelector);
+    const isMedicalAll = form.coverageTypeId === 2 || form.coverageTypeId === 3;
+    const isMedical = form.coverageTypeId === 2;
+    const isCompensate = form.coverageTypeId === 3;
+    const isDisability = form.coverageTypeId === 4;
     const selectedContact = contacts.find((contact) => contact.isDefault) ?? contacts[0];
+    const selectedAccount = bankAccounts.find((account) => account.isDefault) ?? bankAccounts[0];
     const mutation = useCreateCoreClaim(
         () => onSuccess?.(),
         (message) => onError?.(message)
@@ -63,7 +67,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 icd10_3rdId: form.diagnoses[2]?.icd10Id,
 
                 medicalTypeId: form.medicalTypeId,
-                isCaseDisability: form.coverageTypeId === 4 ? true : false,
+                isCaseDisability: isDisability,
             },
             createCaseItemList: [],
             createCaseRegistration: {
@@ -78,7 +82,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
             createCaseAssessment: {
                 isDocumentComplete: false,
                 documentReceivedDate: dayjs(),
-                documentCompleteDate: dayjs(),
+                documentCompleteDate: form.documentCompleteDate,
                 isFraudSuspect: false,
                 documentReceivedByUserId: form.documentRecipientTypeId,
                 documentReceivedByUserCode: undefined,
@@ -100,7 +104,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
             createCaseDocument: {
                 caseDocumentId: undefined,
                 documentSubTypeId: 220,
-                caseDocumentDetailList: isMedical ? form.ocrDocument : undefined,
+                caseDocumentDetailList: isMedicalAll ? form.ocrDocument : undefined,
             },
 
             createCaseAdjudication: {
@@ -138,10 +142,41 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 servicePersonByUserName: form.serviceProviderName,
 
                 zebraId: form.zebraId,
-                zebraCode: form.zebraCode ?? "",
-                zebraNo: form.zebraNo ?? "",
-                employeeCode: form.employeeCode ?? "",
-                employeeName: form.employeeName ?? "",
+                zebraCode: form.zebraCode ?? undefined,
+                zebraNo: form.zebraNo ?? undefined,
+                employeeCode: form.employeeCode ?? undefined,
+                employeeName: form.employeeName ?? undefined,
+            },
+            createBeneficiaryList:
+                beneficiaries.map((beneficiary) => ({
+                    beneficiaryId: undefined,
+                    policyBeneficiaryId: undefined,
+                    titleId: beneficiary.titleId?.toString(),
+                    firstName: beneficiary.firstName,
+                    lastName: beneficiary.lastName,
+                    idCard: beneficiary.citizenId,
+                    phoneNo: beneficiary.phoneNumber,
+                    relationId: beneficiary.relationTypeId,
+                    bankAccountRelationTypeId: undefined,
+                    bankId: beneficiary.bankId,
+                    bankAccountNo: beneficiary.bankAccountNo,
+                    bankAccountName: beneficiary.bankAccountName,
+                    payoutAmount: beneficiary.amount,
+                })) ?? [],
+            createCasePayable: {
+                payableCategoryId: isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6,
+                payableStatusId: 2, //open
+                payableAmount: form.transferAmount,
+                totalPaidAmount: undefined,
+                outstandingAmount: undefined,
+                payeeTypeId: isMedicalAll ? 2 : 4, // 2 = Medical, 4 = Beneficiary
+                fromBankId: undefined,
+                fromBankName: undefined,
+                fromBankAccountNo: undefined,
+                toBankId: selectedAccount.bankId,
+                toBankName: selectedAccount.bankAccountName,
+                toBankAccountNo: selectedAccount.bankAccountNo,
+                bankAccountRelationTypeId: selectedAccount.bankAccountRelationTypeId,
             },
         };
     };

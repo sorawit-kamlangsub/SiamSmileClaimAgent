@@ -19,7 +19,6 @@ import FormikDatePicker from "../../../../_common/components/CustomFormik/Formik
 import ArticleIcon from "@mui/icons-material/Article";
 import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
 import CalculateIcon from "@mui/icons-material/Calculate";
-import { IPD_COVERAGE_ITEMS, OPD_COVERAGE_ITEMS } from "../../../store/mockClaimPH";
 import DocumentRecipientTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/DocumentRecipientTypeDropDown";
 import UserAutocompleteApi from "../../../../_common/components/ClaimAgent/CustomDropdown/UserAutocompleteApi";
 import ChiefComplaintAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/ChiefComplaintAutocomplete";
@@ -36,7 +35,10 @@ import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDr
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPA from "./DeathClaimAmountCardPA";
-import MockOCR from "../ClaimPH/MockOCR";
+import OrganLossSelector from "../OrganLossSelector";
+import { claimPASelector, setOrganLossItems } from "../../../store/claimPASlice";
+import { claimStepBoxSx } from "../ClaimPH/ClaimFormSection";
+import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -57,7 +59,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         coverageType,
         medicalType,
         causeOfIncident,
-        incidentTypeMapping,
         customerBenefit,
         incidentTypeMappingLoading,
         incidentTypeLoading,
@@ -74,6 +75,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     } = useClaimPAForm({ onNext });
 
     const { values, setFieldValue } = formik;
+    const dispatch = useAppDispatch();
+    const { organLossItems } = useAppSelector(claimPASelector);
     const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
     const isDisability = values.coverageTypeId === 4;
     const isDeath = values.coverageTypeId === 5;
@@ -410,6 +413,15 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </Grid>
                         )}
                     </Grid>
+                    {isDisability && (
+                        <Box sx={claimStepBoxSx} mt={2}>
+                            <Box display="flex" alignItems="center" gap={1} mb={1.5}></Box>
+                            <OrganLossSelector
+                                value={organLossItems}
+                                onChange={(items) => dispatch(setOrganLossItems(items))}
+                            />
+                        </Box>
+                    )}
                     {/* Coverage box */}
                     {(isOPD || isIPD) && (
                         <Grid item xs={12} mt={2}>
@@ -506,14 +518,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         onOcrLoadingChange={setIsOcrLoading}
                         onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
                     />
-                    {/* <MockOCR
-                        requiredDocs={{
-                            idCard: false,
-                            receipt: false,
-                            medCert: false,
-                        }}
-                        formik={formik}
-                    /> */}
                 </CustomPaper>
             )}
             {(isDeath || isDisability) && (

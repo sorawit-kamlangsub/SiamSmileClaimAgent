@@ -1,29 +1,21 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
-import { ClaimBankAccount, ContactInfo, DiagnosisModel, SpecifyHospital, SymptomType } from "./claimPHSlice";
+import {
+    BeneficiaryForm,
+    ClaimBankAccount,
+    ContactInfo,
+    DiagnosisModel,
+    SpecifyHospital,
+    SymptomType,
+} from "./claimPHSlice";
 import {
     CaseDocumentDetailCreateRequest,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../api/coreClaimApi.client";
-
-// export interface InsuredInfoPA {
-//     appId: string;
-//     customerName: string;
-//     prefix: string;
-//     firstName: string;
-//     lastName: string;
-//     nationalId: string;
-//     passport: string;
-//     plan: string;
-//     startCoverDate: string;
-//     effectiveDate: string;
-//     endCoverDate: string;
-//     insuredType: "นักเรียน" | "บุคลากร" | "";
-//     schoolName: string;
-// }
+import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
 
 export interface SchoolInfo {
     appId: string;
@@ -95,6 +87,8 @@ interface ClaimPAState {
     bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
     editingItemId: string | null; // id ของ row ที่กำลังแก้ไข
+    beneficiaries: BeneficiaryForm[];
+    organLossItems: OrganLossItem[];
 }
 
 const defaultForm: ClaimPAFormValues = {
@@ -149,6 +143,8 @@ const initialState: ClaimPAState = {
     bankAccounts: [],
     contacts: [],
     editingItemId: null,
+    organLossItems: [],
+    beneficiaries: [],
 };
 
 const claimPASlice = createSlice({
@@ -250,6 +246,44 @@ const claimPASlice = createSlice({
         setClaimItems(state, action: PayloadAction<ClaimInsuredItem[]>) {
             state.claimItems = action.payload;
         },
+        setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
+            state.organLossItems = action.payload;
+        },
+
+        // Beneficiary
+        setBeneficiaries: (state, action: PayloadAction<BeneficiaryForm[]>) => {
+            state.beneficiaries = action.payload;
+        },
+
+        addBeneficiary: (state, action: PayloadAction<BeneficiaryForm>) => {
+            state.beneficiaries.push(action.payload);
+        },
+
+        updateBeneficiary: (
+            state,
+            action: PayloadAction<{
+                index: number;
+                changes: Partial<BeneficiaryForm>;
+            }>
+        ) => {
+            const beneficiary = state.beneficiaries[action.payload.index];
+
+            if (!beneficiary) return;
+
+            Object.assign(beneficiary, action.payload.changes);
+        },
+
+        removeBeneficiary: (state, action: PayloadAction<number>) => {
+            const index = action.payload;
+
+            if (index < 0 || index >= state.beneficiaries.length) return;
+
+            state.beneficiaries.splice(index, 1);
+
+            state.beneficiaries.forEach((item, itemIndex) => {
+                item.beneficiaryOrder = itemIndex + 1;
+            });
+        },
         resetState: () => initialState,
     },
 });
@@ -273,6 +307,11 @@ export const {
     removeContact,
     selectContact,
     setClaimItems,
+    setOrganLossItems,
+    setBeneficiaries,
+    updateBeneficiary,
+    addBeneficiary,
+    removeBeneficiary,
     resetState,
 } = claimPASlice.actions;
 

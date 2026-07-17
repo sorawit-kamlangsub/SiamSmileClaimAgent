@@ -66,11 +66,7 @@ export const StepBadge: React.FC<{ n: number }> = ({ n }) => (
     </Box>
 );
 
-const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; selected?: boolean; size?: number }> = ({
-    icons,
-    selected,
-    size = 22,
-}) => {
+const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; size?: number }> = ({ icons, size = 22 }) => {
     if (icons.length <= 1) {
         const Icon = ORGAN_ICON_MAP[icons[0]];
         return (
@@ -79,7 +75,7 @@ const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; selected?: boolean
                     width: size + 20,
                     height: size + 20,
                     borderRadius: "50%",
-                    bgcolor: selected ? "#fff" : CARD_SOFT_BG,
+                    bgcolor: CARD_SOFT_BG,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
@@ -107,7 +103,7 @@ const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; selected?: boolean
                                 width: 30,
                                 height: 30,
                                 borderRadius: "50%",
-                                bgcolor: selected ? "#fff" : CARD_SOFT_BG,
+                                bgcolor: CARD_SOFT_BG,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
@@ -392,7 +388,6 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             {/* ── ขั้นตอน 1: เลือกอวัยวะที่สูญเสีย ── */}
             <Box display="flex" alignItems="flex-start" justifyContent="space-between" mb={2} flexWrap="wrap" gap={1}>
                 <Box display="flex" alignItems="flex-start" gap={1.25}>
-                    <StepBadge n={1} />
                     <Box>
                         <Typography fontWeight={800} fontSize={17} color={PRIMARY}>
                             เลือกอวัยวะที่สูญเสีย{" "}
@@ -441,7 +436,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                 "&:hover": { borderColor: PRIMARY, bgcolor: CARD_SOFT_BG },
                             }}
                         >
-                            <OrganIconGroup icons={choice.icons} selected={selected} />
+                            <OrganIconGroup icons={choice.icons} />
                             <Typography fontWeight={800} fontSize={15}>
                                 {choice.label}
                             </Typography>
@@ -518,7 +513,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                         flexShrink: 0,
                                     }}
                                 >
-                                    <OrganIconGroup icons={item.icons} selected size={16} />
+                                    <OrganIconGroup icons={item.icons} size={16} />
                                 </Box>
                                 <Box>
                                     <Typography fontWeight={800}>{item.label}</Typography>
@@ -574,19 +569,19 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                             <Box display="flex" alignItems="center" gap={1.5}>
                                 <Box
                                     sx={{
-                                        width: 44,
-                                        height: 44,
+                                        width: "auto",
+                                        height: "auto",
                                         borderRadius: 2,
-                                        bgcolor: CARD_SOFT_BG,
+                                        bgcolor: "#fff",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                     }}
                                 >
-                                    <OrganIconGroup icons={modal.choice.icons} selected size={20} />
+                                    <OrganIconGroup icons={modal.choice.icons} size={20} />
                                 </Box>
                                 <Box>
-                                    <Typography fontWeight={800}>2 ระบุรายละเอียดการสูญเสีย</Typography>
+                                    <Typography fontWeight={800}>ระบุรายละเอียดการสูญเสีย</Typography>
                                     <Typography variant="body2" color="text.secondary">
                                         กรอกรายละเอียดการสูญเสียแต่ละส่วนที่เลือก — {modal.choice.label}
                                     </Typography>
@@ -725,9 +720,11 @@ const SimpleModalBody: React.FC<{
                                 key={part.key}
                                 sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}
                             >
-                                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                                    <OrganIconGroup icons={[part.icon]} selected size={16} />
-                                    <Typography fontWeight={700}>{part.label}</Typography>
+                                <Box gap={1} mb={1}>
+                                    <OrganIconGroup icons={[part.icon]} size={16} />
+                                    <Typography fontWeight={700} sx={{ display: "flex", justifyContent: "center" }}>
+                                        {part.label}
+                                    </Typography>
                                 </Box>
                                 <SideToggle
                                     value={modal.comboSides[part.key] || "ขวา"}
