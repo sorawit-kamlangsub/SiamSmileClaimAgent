@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
+    CaseDocumentDetailCreateRequest,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -32,6 +33,34 @@ export interface ClaimCaseItem {
     status: string;
     claimAmount: number;
     paidAmount: number;
+}
+
+export interface BeneficiaryForm {
+    id?: number;
+    policyCode?: string;
+    beneficiaryCode?: string;
+
+    relationTypeId?: number;
+    titleId?: number;
+    firstName?: string;
+    lastName?: string;
+    phoneNumber?: string;
+
+    // API นี้มีเป็นเปอร์เซ็นต์
+    percentShare?: number;
+
+    beneficiaryOrder?: number;
+    remark?: string;
+
+    citizenId?: string;
+    bankId?: number;
+    bankAccountNo?: string;
+    bankAccountName?: string;
+
+    amount?: number;
+
+    // สำหรับ UI
+    source?: "system" | "manual";
 }
 
 export interface OldClaimInfo {
@@ -88,6 +117,7 @@ export interface ClaimFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
+    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
 }
 
 export type ClaimBankAccount = GetCustomerBankAccountDtoResponse & {
@@ -99,15 +129,6 @@ export type ContactInfo = GetContactPersonDtoResponse & {
     isDefault: boolean;
 };
 
-// export interface InsuredInfoPH {
-//     appId: string;
-//     customerName: string;
-//     nationalId: string;
-//     plan: string;
-//     startCoverDate: string;
-//     cancelDate: string | undefined;
-// }
-
 interface ClaimPHState {
     isContinuous: boolean;
     oldClaim: OldClaimInfo | undefined;
@@ -118,6 +139,7 @@ interface ClaimPHState {
     documentDetailById: { [key: string]: DocumentDetailDto };
     isEnabled: boolean;
     organLossItems: OrganLossItem[];
+    beneficiaries: BeneficiaryForm[];
 }
 const defaultForm: ClaimFormValues = {
     documentRecipientTypeId: 2,
@@ -159,6 +181,7 @@ const defaultForm: ClaimFormValues = {
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
     remark: undefined,
+    ocrDocument: [],
 };
 export interface DocumentDetailDto {
     documentId?: string | undefined;
@@ -176,6 +199,7 @@ const initialState: ClaimPHState = {
     isEnabled: false,
     documentDetailById: {},
     organLossItems: [],
+    beneficiaries: [],
 };
 
 const claimPHSlice = createSlice({
@@ -280,6 +304,42 @@ const claimPHSlice = createSlice({
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;
         },
+
+        // Beneficiary
+        setBeneficiaries: (state, action: PayloadAction<BeneficiaryForm[]>) => {
+            state.beneficiaries = action.payload;
+        },
+
+        addBeneficiary: (state, action: PayloadAction<BeneficiaryForm>) => {
+            state.beneficiaries.push(action.payload);
+        },
+
+        updateBeneficiary: (
+            state,
+            action: PayloadAction<{
+                index: number;
+                changes: Partial<BeneficiaryForm>;
+            }>
+        ) => {
+            const beneficiary = state.beneficiaries[action.payload.index];
+
+            if (!beneficiary) return;
+
+            Object.assign(beneficiary, action.payload.changes);
+        },
+
+        removeBeneficiary: (state, action: PayloadAction<number>) => {
+            const index = action.payload;
+
+            if (index < 0 || index >= state.beneficiaries.length) return;
+
+            state.beneficiaries.splice(index, 1);
+
+            state.beneficiaries.forEach((item, itemIndex) => {
+                item.beneficiaryOrder = itemIndex + 1;
+            });
+        },
+
         resetState: () => initialState,
     },
 });
@@ -302,6 +362,10 @@ export const {
     setEnabled,
     setDocumentDetailById,
     setOrganLossItems,
+    setBeneficiaries,
+    updateBeneficiary,
+    addBeneficiary,
+    removeBeneficiary,
     resetState,
 } = claimPHSlice.actions;
 

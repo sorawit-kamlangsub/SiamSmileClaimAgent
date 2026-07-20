@@ -1,18 +1,25 @@
 export const validateThaiCitizenID = (id: string): boolean => {
-    // remove -
-    id = id.replace("-", "").trim();
-    if (id.length !== 13 || id.charAt(0).match(/[09]/)) return false;
+    const citizenId = id.replace(/-/g, "").trim();
 
-    let sum = 0;
-    for (let i = 0; i < 12; i++) {
-        sum += parseInt(id.charAt(i)) * (13 - i);
-    }
-
-    if ((11 - (sum % 11)) % 10 !== parseInt(id.charAt(12))) {
+    // ต้องเป็นตัวเลข 13 หลัก
+    if (!/^\d{13}$/.test(citizenId)) {
         return false;
     }
 
-    return true;
+    // business rule: ไม่รับเลขที่ขึ้นต้นด้วย 0 หรือ 9
+    if (/[09]/.test(citizenId.charAt(0))) {
+        return false;
+    }
+
+    const sum = citizenId
+        .slice(0, 12)
+        .split("")
+        .reduce((total, digit, index) => total + Number(digit) * (13 - index), 0);
+
+    const expectedCheckDigit = (11 - (sum % 11)) % 10;
+    const actualCheckDigit = Number(citizenId.charAt(12));
+
+    return expectedCheckDigit === actualCheckDigit;
 };
 
 export const validatePhoneNumber = (phoneNo: string): boolean => {
@@ -27,4 +34,8 @@ export const validatePhoneNumber = (phoneNo: string): boolean => {
     }
 
     return true; //มี 10 หลักและขึ้นต้นด้วย 0
+};
+
+export const validateBankAccountNo = (accountNo: string): boolean => {
+    return /^\d{10,15}$/.test(accountNo);
 };

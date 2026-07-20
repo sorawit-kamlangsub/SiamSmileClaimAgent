@@ -35,8 +35,7 @@ import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDr
 import DocumentScanTable from "../DocumentScanTable";
 import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
-import MockOCR from "./MockOCR";
-import OrganLossSelector, { StepBadge } from "../OrganLossSelector";
+import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 
 const EMPTY_STATE_SX = {
@@ -50,15 +49,21 @@ const EMPTY_STATE_SX = {
 interface Props {
     onNext: () => void;
 }
-
+export const claimStepBoxSx = {
+    border: "1px solid",
+    borderColor: "#e8f0fb",
+    borderRadius: 2,
+    p: 2,
+    mb: 2,
+    bgcolor: "#fff",
+};
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const {
         formik,
         incidentType,
         coverageType,
         medicalType,
-        causeOfAccident,
-        incidentTypeMapping,
+        causeOfIncident,
         customerBenefit,
         incidentTypeLoading,
         incidentTypeMappingLoading,
@@ -104,14 +109,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         }
         formik.submitForm();
     };
-    const claimStepBoxSx = {
-        border: "1px solid",
-        borderColor: "#e8f0fb",
-        borderRadius: 2,
-        p: 2,
-        mb: 2,
-        bgcolor: "#fbfdff",
-    };
+
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
@@ -183,7 +181,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     formik={formik}
                                     idFieldName="causeOfIncidentId"
                                     nameFieldName="causeOfIncidentName"
-                                    options={causeOfAccident}
+                                    options={causeOfIncident}
                                     isLoading={incidentTypeMappingLoading}
                                 />
                             ) : (
@@ -541,14 +539,6 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         onOcrLoadingChange={setIsOcrLoading}
                         onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
                     />
-                    {/* <MockOCR
-                        requiredDocs={{
-                            idCard: false,
-                            receipt: false,
-                            medCert: false,
-                        }}
-                        formik={formik}
-                    /> */}
                 </CustomPaper>
             )}
             {(isDeath || isDisability) && (

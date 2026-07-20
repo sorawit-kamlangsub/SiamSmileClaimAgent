@@ -1,5 +1,17 @@
 import React, { useState } from "react";
-import { Avatar, Box, Button, Card, CardContent, Grid, IconButton, Radio, RadioGroup, Typography } from "@mui/material";
+import {
+    Avatar,
+    Box,
+    Button,
+    Card,
+    CardContent,
+    Grid,
+    IconButton,
+    LinearProgress,
+    Radio,
+    RadioGroup,
+    Typography,
+} from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
@@ -27,6 +39,8 @@ import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSu
 import { useCreateClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateClaimPH";
 import Swal from "sweetalert2";
 import { swalError } from "../../../../_common";
+import { useBeneficiaryPH } from "../../../hooks/CreateClaim/ClaimPH/useBeneficiaryPH";
+import BeneficiarySectionPH from "../../../components/CreateClaim/ClaimPH/BeneficiarySectionPH";
 
 // ── BankAccountCard ───────────────────────────────────────────────────────────
 interface BankCardProps {
@@ -195,6 +209,10 @@ const ClaimPHSummaryPage: React.FC = () => {
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
+    const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPH(() => {
+        setOpenConfirm(true);
+    });
+    const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
 
     const handleSelectBank = (id: string) => {
         dispatch(selectBankAccount(id));
@@ -398,71 +416,79 @@ const ClaimPHSummaryPage: React.FC = () => {
                         </CustomPaper>
                     </Grid>
                     {/* ── บัญชีรับสินไหม | เบอร์โทรติดต่อ ── */}
-                    <Grid item xs={12} sm={6}>
-                        <CustomPaper>
-                            <Grid container spacing={2} p="0 26px 0 26px">
-                                <Grid item xs={12}>
-                                    {/* <CustomPaper sx={{ height: "100%" }}> */}
-                                    <Typography variant="subtitle1" fontWeight={700} mb={2}>
-                                        บัญชีรับสินไหม :
-                                    </Typography>
-                                    <RadioGroup value={bankAccounts.findIndex((b) => b.isDefault).toString()}>
-                                        {bankAccounts.map((bank) => (
-                                            <BankAccountCard
-                                                key={bank.id}
-                                                bank={bank}
-                                                selected={bank.isDefault}
-                                                onSelect={() => handleSelectBank(bank.id)}
-                                                onDelete={() => dispatch(removeBankAccount(bank.id))}
-                                            />
-                                        ))}
-                                    </RadioGroup>
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        startIcon={<AddCircleIcon />}
-                                        onClick={() => setOpenBank(true)}
-                                    >
-                                        เพิ่มบัญชีรับสินไหม
-                                    </Button>
-                                    {/* </CustomPaper> */}
-                                </Grid>
+                    {!isDeathDisability && (
+                        <>
+                            <Grid item xs={12} sm={6}>
+                                <CustomPaper>
+                                    <Grid container spacing={2} p="0 26px 0 26px">
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle1" fontWeight={700} mb={2}>
+                                                บัญชีรับสินไหม :
+                                            </Typography>
+                                            <RadioGroup value={bankAccounts.findIndex((b) => b.isDefault).toString()}>
+                                                {bankAccounts.map((bank) => (
+                                                    <BankAccountCard
+                                                        key={bank.id}
+                                                        bank={bank}
+                                                        selected={bank.isDefault}
+                                                        onSelect={() => handleSelectBank(bank.id)}
+                                                        onDelete={() => dispatch(removeBankAccount(bank.id))}
+                                                    />
+                                                ))}
+                                            </RadioGroup>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<AddCircleIcon />}
+                                                onClick={() => setOpenBank(true)}
+                                            >
+                                                เพิ่มบัญชีรับสินไหม
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </CustomPaper>
                             </Grid>
-                        </CustomPaper>
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <CustomPaper>
-                            <Grid container spacing={2} p="0 26px 0 26px">
-                                <Grid item xs={12}>
-                                    {/* <CustomPaper sx={{ height: "100%" }}> */}
-                                    <Typography variant="subtitle1" fontWeight={700} mb={2}>
-                                        เบอร์โทรติดต่อ :
-                                    </Typography>
-                                    <RadioGroup value={contacts.findIndex((c) => c.isDefault).toString()}>
-                                        {contacts.map((contact) => (
-                                            <ContactCard
-                                                key={contact.id}
-                                                contact={contact}
-                                                selected={contact.isDefault}
-                                                onSelect={() => handleSelectContact(contact.id)}
-                                                onDelete={() => dispatch(removeContact(contact.id))}
-                                            />
-                                        ))}
-                                    </RadioGroup>
+                            <Grid item xs={12} sm={6}>
+                                <CustomPaper>
+                                    <Grid container spacing={2} p="0 26px 0 26px">
+                                        <Grid item xs={12}>
+                                            <Typography variant="subtitle1" fontWeight={700} mb={2}>
+                                                เบอร์โทรติดต่อ :
+                                            </Typography>
+                                            <RadioGroup value={contacts.findIndex((c) => c.isDefault).toString()}>
+                                                {contacts.map((contact) => (
+                                                    <ContactCard
+                                                        key={contact.id}
+                                                        contact={contact}
+                                                        selected={contact.isDefault}
+                                                        onSelect={() => handleSelectContact(contact.id)}
+                                                        onDelete={() => dispatch(removeContact(contact.id))}
+                                                    />
+                                                ))}
+                                            </RadioGroup>
 
-                                    <Button
-                                        size="small"
-                                        variant="outlined"
-                                        startIcon={<AddCircleIcon />}
-                                        onClick={() => setOpenContact(true)}
-                                    >
-                                        เพิ่มเบอร์โทรใหม่
-                                    </Button>
-                                    {/* </CustomPaper> */}
-                                </Grid>
+                                            <Button
+                                                size="small"
+                                                variant="outlined"
+                                                startIcon={<AddCircleIcon />}
+                                                onClick={() => setOpenContact(true)}
+                                            >
+                                                เพิ่มเบอร์โทรใหม่
+                                            </Button>
+                                        </Grid>
+                                    </Grid>
+                                </CustomPaper>
                             </Grid>
-                        </CustomPaper>
-                    </Grid>
+                        </>
+                    )}
+                    {isDeathDisability &&
+                        (beneficiaryLoading ? (
+                            <LinearProgress sx={{ height: "5px" }} />
+                        ) : (
+                            <Grid item xs={12}>
+                                <BeneficiarySectionPH formik={formik} />
+                            </Grid>
+                        ))}
                 </Grid>
             </CustomPaper>
             <Grid container spacing={1}>
@@ -483,7 +509,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                             color="success"
                             startIcon={<CommentIcon />}
                             size="medium"
-                            onClick={() => setOpenConfirm(true)}
+                            onClick={() => (isDeathDisability ? formik.handleSubmit() : setOpenConfirm(true))}
                         >
                             แจ้งโอนเงิน
                         </Button>
