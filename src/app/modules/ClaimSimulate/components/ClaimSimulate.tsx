@@ -144,7 +144,7 @@ interface TreeNode {
     children: TreeNode[];
 }
 
-const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({
+ const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({
     icon,
     title,
     subtitle,
@@ -643,7 +643,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                     gap: 0.75,
                                                     cursor: "pointer",
                                                     userSelect: "none",
-                                                    minWidth: 128,
+                                                    // minWidth: 128,
                                                     border: "1px solid",
                                                     borderColor: isSelected ? REF.primary : REF.line,
                                                     borderRadius: "10px",
@@ -723,7 +723,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         gap: 0.75,
                                                         cursor: "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -796,7 +796,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         gap: 0.75,
                                                         cursor: isFormatTypeLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -869,7 +869,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         justifyContent: "center",
                                                         cursor: isMedicalTypeLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -916,7 +916,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         justifyContent: "center",
                                                         cursor: isCauseOfIncidentLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",

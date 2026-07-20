@@ -853,6 +853,64 @@ export class CoreClaimClient {
         }
         return Promise.resolve<GetCaseByClaimIdDtoResponseListServiceResponse>(null as any);
     }
+
+    /**
+     * API สำหรับ Get ข้อมูล CustomerDetail Encrypt
+     * @return Success
+     */
+    getCustomerDetailEncrypt(
+        cancelToken?: CancelToken | undefined
+    ): Promise<CustomerDetail_encryptListServiceResponse> {
+        let url_ = this.baseUrl + "/customer/detail/encrypt";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerDetailEncrypt(_response);
+            });
+    }
+
+    protected processGetCustomerDetailEncrypt(
+        response: AxiosResponse
+    ): Promise<CustomerDetail_encryptListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CustomerDetail_encryptListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CustomerDetail_encryptListServiceResponse>(null as any);
+    }
 }
 
 export class IClaimClient {
@@ -2525,6 +2583,22 @@ export interface AllUserDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface BeneficiaryCreateRequest {
+    beneficiaryId?: string;
+    policyBeneficiaryId?: number;
+    titleId?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    idCard?: string | undefined;
+    phoneNo?: string | undefined;
+    relationId?: number;
+    bankAccountRelationTypeId?: number;
+    bankId?: number;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
+    payoutAmount?: number;
+}
+
 export interface CalculateCaseClaim {
     productId?: number;
     coverageTypeId?: number;
@@ -2705,6 +2779,22 @@ export interface CaseItemCreateRequest {
     nonCoveredReasonId?: number;
 }
 
+export interface CasePayableCreateRequest {
+    payableCategoryId?: number;
+    payableStatusId?: number;
+    payableAmount?: number;
+    totalPaidAmount?: number;
+    outstandingAmount?: number;
+    payeeTypeId?: number;
+    fromBankId?: number;
+    fromBankName?: string | undefined;
+    fromBankAccountNo?: string | undefined;
+    toBankId?: number;
+    toBankName?: string | undefined;
+    toBankAccountNo?: string | undefined;
+    bankAccountRelationTypeId?: number;
+}
+
 export interface CaseRegistrationCreateRequest {
     notificationDate?: dayjs.Dayjs;
     notifyBy?: string | undefined;
@@ -2783,6 +2873,8 @@ export interface CreateCoreClaimDtoRequest {
     createCaseAdjudication?: CaseAdjudicationCreateRequest;
     createCaseContact?: CaseContactCreateRequest;
     createCaseServicePerson?: CaseServicePersonRequest;
+    createBeneficiaryList?: BeneficiaryCreateRequest[] | undefined;
+    createCasePayable?: CasePayableCreateRequest;
 }
 
 export interface CreateCoreClaimDtoResponse {
@@ -2798,6 +2890,44 @@ export interface CreateCoreClaimDtoResponse {
 
 export interface CreateCoreClaimDtoResponseServiceResponse {
     data?: CreateCoreClaimDtoResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface CustomerDetail_encrypt {
+    id?: number;
+    cardTypeId?: number | undefined;
+    cardDetail?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    productTypeId?: number | undefined;
+    appStatusId?: number | undefined;
+    coverageFrom?: dayjs.Dayjs | undefined;
+    coverageTo?: dayjs.Dayjs | undefined;
+    policyCode?: string | undefined;
+    customerCode?: string | undefined;
+    customerStatusId?: number | undefined;
+    insuredName?: string | undefined;
+    titleName?: string | undefined;
+    productName?: string | undefined;
+    insuredId?: number | undefined;
+    mobilePhoneNumber?: string | undefined;
+    birthDate?: dayjs.Dayjs | undefined;
+    genderId?: number | undefined;
+    occupationId?: number | undefined;
+    customerTypeName?: string | undefined;
+}
+
+export interface CustomerDetail_encryptListServiceResponse {
+    data?: CustomerDetail_encrypt[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -2973,6 +3103,12 @@ export interface GetClaimContinueDtoResponse {
     incidentDate?: dayjs.Dayjs | undefined;
     chiefComplaint?: string | undefined;
     chiefComplaintCustom?: string | undefined;
+    admissionDate?: dayjs.Dayjs | undefined;
+    icD10Detail?: string | undefined;
+    totalCaseAmount?: number | undefined;
+    totalPaidAmount?: number | undefined;
+    claimDetail?: string | undefined;
+    remainAmount?: number | undefined;
     totalCount?: number | undefined;
 }
 

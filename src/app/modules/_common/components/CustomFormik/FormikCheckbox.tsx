@@ -30,6 +30,15 @@ export type FormikCheckboxProps = {
     formLabel?: string;
 
     /**
+     * ปรับแต่ง style ของ label (เช่น fontSize) โดยไม่กระทบ default
+     * ถ้าไม่ส่งมา จะใช้ style เริ่มต้นของ MUI FormControlLabel ตามปกติ
+     *
+     * ใช้ CSSProperties ธรรมดา (ไม่ใช่ SxProps เต็มรูปแบบ) เพราะ SxProps รองรับ array/function
+     * ซึ่ง TypeScript infer ไม่ผ่านเวลาเอาไปซ้อนใน nested selector key
+     */
+    labelSx?: React.CSSProperties;
+
+    /**
      * formik ที่ต้องการใช้
      */
     formik: FormikProps<any>;
@@ -48,6 +57,7 @@ export type FormikCheckboxProps = {
  *  label="I agree"
  *  required
  *  formLabel="You must accepted the term."
+ *  labelSx={{ fontSize: 13 }}
  *  formik={formik}
  * />
  * ```
@@ -61,6 +71,7 @@ const FormikCheckbox = ({
     label,
     required,
     formLabel,
+    labelSx,
     formik,
     useFocusError = true,
     ...checkboxProps
@@ -90,6 +101,7 @@ const FormikCheckbox = ({
                         }
                         label={label}
                         required={required}
+                        sx={labelSx ? { "& .MuiFormControlLabel-label": labelSx } : undefined}
                     />
                 </FormGroup>
                 {touched && !!error && <FormHelperText>{error}</FormHelperText>}

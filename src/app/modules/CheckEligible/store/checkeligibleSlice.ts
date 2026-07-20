@@ -1,113 +1,75 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
-import { checkeligibleMonitorSearchValuesType } from "../hooks/CheckEligibleMonitor/useCheckEligibleMonitorToolbarForm";
-import { ToolbarFormValues } from "../hooks/CheckEligibleDetail/useCheckEligibleToolbar";
+import { ToolbarFormValues } from "../hooks/useCheckEligibleToolbar";
 
-// types/checkEligible.types.ts
 export type ClaimType = "" | "OPD" | "IPD" | "DayCaseSurgery" | "DeathClaim" | "Dismemberment";
 
 export type CoverageBenefit = {
     id: number;
     icon: React.ReactNode;
     title: string;
-    ratePerUnit?: string; // เช่น "700/วัน"
-    maxAmount: number; // วงเงินสูงสุด
-    usedAmount: number; // วงเงินที่ใช้ไปแล้ว
-    maxDays?: number; // จำนวนวันสูงสุด
-    usedDays?: number; // จำนวนวันที่ใช้ไป
-    dayUnit?: string; // เช่น "วัน"
-};
-
-export type ContinuousClaimRow = {
-    claimCode: string;
-    chiefComplain: string;
-    incidentDate: string; // ISO date
+    ratePerUnit?: string;
     maxAmount: number;
-    paidAmount: number;
+    usedAmount: number;
+    maxDays?: number;
+    usedDays?: number;
+    dayUnit?: string;
 };
 
 export type PolicyPlan = {
     planCode: string;
-    effectiveDate: string; // ISO date
+    effectiveDate: string;
     benefits: CoverageBenefit[];
 };
 
 export type checkeligibleState = {
-    checkeligibleMonitorSearch: checkeligibleMonitorSearchValuesType;
     isSearchcheckeligibleMonitor?: boolean;
     CheckeLigibleDetails: ToolbarFormValues;
     isSearchCheckeLigibleDetails?: boolean;
+};
 
-    isContinuousClaim: boolean;
-    selectedContinuousClaims: string[];
+const emptyCheckeligibleDetails: ToolbarFormValues = {
+    claimType: undefined,
+    incidentDate: undefined,
+    isContinuous: false,
+    claimCause: undefined,
+    coverageType: undefined,
+    medicalType: undefined,
+    causeOfIncident: undefined,
+    continuousClaim: undefined,
 };
 
 const initialState: checkeligibleState = {
-    checkeligibleMonitorSearch: {},
     isSearchcheckeligibleMonitor: false,
-
-    CheckeLigibleDetails: {
-        claimType: undefined,
-        incidentDate: undefined,
-        isContinuous: false,
-    },
-
-    isContinuousClaim: false,
-
-    selectedContinuousClaims: [],
+    CheckeLigibleDetails: emptyCheckeligibleDetails,
 };
 
 const checkeligibleSlice = createSlice({
     name: "checkeligible",
     initialState,
     reducers: {
-        setSearchcheckeligibleMonitor: (state, action: PayloadAction<checkeligibleMonitorSearchValuesType>) => {
-            state.checkeligibleMonitorSearch = action.payload;
-            state.isSearchcheckeligibleMonitor = true;
-        },
-        resetSearchcheckeligibleMonitor: (state) => {
-            state.checkeligibleMonitorSearch = {};
-            state.isSearchcheckeligibleMonitor = false;
-        },
-
         setSearchCheckeLigibleDetails: (state, action: PayloadAction<ToolbarFormValues>) => {
             state.CheckeLigibleDetails = action.payload;
             state.isSearchCheckeLigibleDetails = true;
         },
 
         resetSearchCheckeLigibleDetails: (state) => {
-            state.CheckeLigibleDetails = {
-                claimType: undefined,
-                incidentDate: undefined,
-                isContinuous: false,
-            };
+            state.CheckeLigibleDetails = emptyCheckeligibleDetails;
             state.isSearchCheckeLigibleDetails = false;
         },
 
-        setIsContinuousClaim: (state, action: PayloadAction<boolean>) => {
-            state.isContinuousClaim = action.payload;
-            if (!action.payload) state.selectedContinuousClaims = [];
-        },
-        toggleContinuousClaimSelection: (state, action: PayloadAction<string>) => {
-            const code = action.payload;
-            const idx = state.selectedContinuousClaims.indexOf(code);
-            if (idx >= 0) {
-                state.selectedContinuousClaims.splice(idx, 1);
-            } else {
-                state.selectedContinuousClaims.push(code);
-            }
+        setContinuousClaimState: (
+            state,
+            action: PayloadAction<Pick<ToolbarFormValues, "isContinuous" | "continuousClaim">>
+        ) => {
+            state.CheckeLigibleDetails.isContinuous = action.payload.isContinuous;
+            state.CheckeLigibleDetails.continuousClaim = action.payload.continuousClaim;
         },
     },
 });
 
-export const {
-    setSearchcheckeligibleMonitor,
-    resetSearchcheckeligibleMonitor,
-    setSearchCheckeLigibleDetails,
-    resetSearchCheckeLigibleDetails,
-    setIsContinuousClaim,
-    toggleContinuousClaimSelection,
-} = checkeligibleSlice.actions;
+export const { setSearchCheckeLigibleDetails, resetSearchCheckeLigibleDetails, setContinuousClaimState } =
+    checkeligibleSlice.actions;
 
 export const checkeligibleSelector = (state: RootState) => state.checkeligible;
 

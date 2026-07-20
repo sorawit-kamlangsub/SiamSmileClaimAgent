@@ -23,6 +23,7 @@ const getClaimHistoryQueryKey = ["getClaimHistory"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
+
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void

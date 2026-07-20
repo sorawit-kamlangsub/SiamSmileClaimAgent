@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import PrivacyTipIcon from "@mui/icons-material/PrivacyTip";
-import { PersonalExclusionNote } from "../../hooks/CheckEligibleDetail/useCheckEligibleDetail";
-import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
-import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
+import { PersonalExclusionNote } from "../hooks/useCheckEligibleDetail";
+import { HeadingWithColor } from "../../_common/components/CustomComponent/HeadingWithColor";
+import CustomBox from "../../_common/components/CustomComponent/CustomBox";
 
 type Props = {
     notes: PersonalExclusionNote[];

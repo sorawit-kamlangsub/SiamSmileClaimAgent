@@ -1,8 +1,8 @@
 import React from "react";
 import { Button } from "@mui/material";
 import ManageSearchIcon from "@mui/icons-material/ManageSearch";
-import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
-import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
+import CustomBox from "../../_common/components/CustomComponent/CustomBox";
+import { HeadingWithColor } from "../../_common/components/CustomComponent/HeadingWithColor";
 
 type Props = {
     onOpenExclusion: () => void;
