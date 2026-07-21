@@ -36,7 +36,6 @@ import PeopleAltOutlinedIcon from "@mui/icons-material/PeopleAltOutlined";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import SearchIcon from "@mui/icons-material/Search";
-import PersonOutlineOutlinedIcon from "@mui/icons-material/PersonOutlineOutlined";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import RemoveCircleIcon from "@mui/icons-material/RemoveCircle";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
@@ -46,17 +45,6 @@ import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
-import MedicationOutlinedIcon from "@mui/icons-material/MedicationOutlined";
-import BiotechOutlinedIcon from "@mui/icons-material/BiotechOutlined";
-import ContentCutOutlinedIcon from "@mui/icons-material/ContentCutOutlined";
-import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
-import AccessibilityNewOutlinedIcon from "@mui/icons-material/AccessibilityNewOutlined";
-import DevicesOutlinedIcon from "@mui/icons-material/DevicesOutlined";
-import SpaOutlinedIcon from "@mui/icons-material/SpaOutlined";
-import CardGiftcardOutlinedIcon from "@mui/icons-material/CardGiftcardOutlined";
-import ApartmentOutlinedIcon from "@mui/icons-material/ApartmentOutlined";
-import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
-import DirectionsCarOutlinedIcon from "@mui/icons-material/DirectionsCarOutlined";
 import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/MiscellaneousServicesOutlined";
 import PostAddOutlinedIcon from "@mui/icons-material/PostAddOutlined";
 import HealingIcon from "@mui/icons-material/Healing";
@@ -66,19 +54,14 @@ import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePi
 import { FormikDropdown } from "../../_common";
 
 import { useClaimSimulatePage } from "../hooks/useClaimSimulatePage";
-import {
-    sanitizeDecimalInput,
-    toAmount,
-    toInteger,
-    hasAmountSumError,
-    hasMissingReasonError,
-} from "../store/Claimsimulateutils";
+import { sanitizeDecimalInput, toAmount, toInteger, hasAmountSumError } from "../store/Claimsimulateutils";
 import InsuredSearchModal from "./InsuredSearchModal";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { formatDateString } from "../../../functionHelpers";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useGetDataFromApi } from "../hooks/useGetDataFromApi";
+import { CATEGORY_ICON_MAP } from "./CategoryIcon";
 
 const REF = {
     primary: "#0b74bd",
@@ -147,23 +130,6 @@ const tableSelectSx = {
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: REF.primary, borderWidth: 1.5 },
 };
 
-// ─── Category icon map ───────────────────────────────────────────
-const CATEGORY_ICON_MAP: Record<string, React.ReactNode> = {
-    ค่ารักษาพยาบาลทางการแพทย์: <MedicationOutlinedIcon sx={{ fontSize: 18 }} />,
-    การตรวจวินิจฉัย: <BiotechOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มอุปกรณ์: <ContentCutOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มทันตกรรม: <LocalHospitalOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มบริการวิชาชีพและการดูแล: <AccessibilityNewOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มอุปกรณ์เฉพาะทาง: <DevicesOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มแพทย์ทางเลือก: <SpaOutlinedIcon sx={{ fontSize: 18 }} />,
-    บริการเหมาจ่าย: <CardGiftcardOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มค่าบริการโรงพยาบาล: <ApartmentOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มค่าแพทย์: <PersonOutlineOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มค่าห้องและสิ่งอำนวยความสะดวก: <HotelOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มขนส่งและบริการพิเศษ: <DirectionsCarOutlinedIcon sx={{ fontSize: 18 }} />,
-    กลุ่มบริการทั่วไป: <MiscellaneousServicesOutlinedIcon sx={{ fontSize: 18 }} />,
-};
-
 const causeIconMap: Record<number, React.ReactNode> = {
     2: <HealingIcon sx={{ fontSize: 25, color: "primary.main" }} />,
     3: <WarningAmberIcon sx={{ fontSize: 25, color: "primary.main" }} />,
@@ -173,10 +139,12 @@ interface TreeNode {
     id: number;
     label: string;
     code?: string;
+    standardMedicalExpenseId?: number;
+    bodyPartId?: number;
     children: TreeNode[];
 }
 
-const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({
+ const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({
     icon,
     title,
     subtitle,
@@ -278,7 +246,13 @@ const TreeNodeRow = ({
     depth?: number;
     expandedIds: number[];
     onToggle: (id: number) => void;
-    onSelectLeaf: (code: string, description: string, id: number) => void;
+    onSelectLeaf: (
+        code: string,
+        description: string,
+        id: number,
+        standardMedicalExpenseId?: number,
+        bodyPartId?: number
+    ) => void;
     selectedLeafId: number | null;
 }) => {
     const isExpanded = expandedIds.includes(node.id);
@@ -301,7 +275,7 @@ const TreeNodeRow = ({
                         return;
                     }
                     if (!isSelectable) return;
-                    onSelectLeaf(code, description, node.id);
+                    onSelectLeaf(code, description, node.id, node.standardMedicalExpenseId, node.bodyPartId);
                 }}
                 sx={{
                     display: "flex",
@@ -476,7 +450,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
         reasonError,
         hasDiscountError,
         hasNotCoveredError,
-        hasReasonError,
+        // hasReasonError,
         hasAnyAmount,
         handleNext,
         isHeaderReady,
@@ -669,7 +643,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                     gap: 0.75,
                                                     cursor: "pointer",
                                                     userSelect: "none",
-                                                    minWidth: 128,
+                                                    // minWidth: 128,
                                                     border: "1px solid",
                                                     borderColor: isSelected ? REF.primary : REF.line,
                                                     borderRadius: "10px",
@@ -749,7 +723,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         gap: 0.75,
                                                         cursor: "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -822,7 +796,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         gap: 0.75,
                                                         cursor: isFormatTypeLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -895,7 +869,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         justifyContent: "center",
                                                         cursor: isMedicalTypeLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -942,7 +916,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                         justifyContent: "center",
                                                         cursor: isCauseOfIncidentLocked ? "default" : "pointer",
                                                         userSelect: "none",
-                                                        minWidth: 128,
+                                                        // minWidth: 128,
                                                         border: "1px solid",
                                                         borderColor: isSelected ? REF.primary : REF.line,
                                                         borderRadius: "10px",
@@ -1283,7 +1257,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                 Number(item.claimAmount ?? 0);
 
                                                             const rowSumError = hasAmountSumError(item);
-                                                            const rowReasonError = hasMissingReasonError(item);
+                                                            // const rowReasonError = hasMissingReasonError(item);
 
                                                             return (
                                                                 <TableRow key={item.id}>
@@ -1369,47 +1343,50 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
 
                                                                     {/* Reason */}
                                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                                        <Tooltip
+                                                                        {/* <Tooltip
                                                                             title="กรุณาเลือกสาเหตุไม่คุ้มครอง"
                                                                             {...errorTooltipProps}
                                                                             disableHoverListener={!rowReasonError}
+                                                                        > */}
+                                                                        <FormControl
+                                                                            fullWidth
+                                                                            size="small"
+                                                                            // error={rowReasonError}
                                                                         >
-                                                                            <FormControl
-                                                                                fullWidth
-                                                                                size="small"
-                                                                                error={rowReasonError}
+                                                                            <Select
+                                                                                displayEmpty
+                                                                                value={item.reason ?? ""}
+                                                                                sx={tableSelectSx}
+                                                                                onChange={(e) =>
+                                                                                    handleUpdateItem({
+                                                                                        ...item,
+                                                                                        reason:
+                                                                                            e.target.value === ""
+                                                                                                ? undefined
+                                                                                                : Number(
+                                                                                                      e.target.value
+                                                                                                  ),
+                                                                                    })
+                                                                                }
                                                                             >
-                                                                                <Select
-                                                                                    displayEmpty
-                                                                                    value={item.reason ?? ""}
-                                                                                    sx={tableSelectSx}
-                                                                                    onChange={(e) =>
-                                                                                        handleUpdateItem({
-                                                                                            ...item,
-                                                                                            reason: e.target.value,
-                                                                                        })
-                                                                                    }
-                                                                                >
-                                                                                    <MenuItem value="">
-                                                                                        <em>-</em>
-                                                                                    </MenuItem>
+                                                                                <MenuItem value="">
+                                                                                    <em>-</em>
+                                                                                </MenuItem>
 
-                                                                                    {notCoveredReasonOptions.map(
-                                                                                        (o) => (
-                                                                                            <MenuItem
-                                                                                                key={o.value}
-                                                                                                value={o.value}
-                                                                                                sx={{
-                                                                                                    fontSize: 13,
-                                                                                                }}
-                                                                                            >
-                                                                                                {o.label}
-                                                                                            </MenuItem>
-                                                                                        )
-                                                                                    )}
-                                                                                </Select>
-                                                                            </FormControl>
-                                                                        </Tooltip>
+                                                                                {notCoveredReasonOptions.map((o) => (
+                                                                                    <MenuItem
+                                                                                        key={o.value}
+                                                                                        value={o.value}
+                                                                                        sx={{
+                                                                                            fontSize: 13,
+                                                                                        }}
+                                                                                    >
+                                                                                        {o.label}
+                                                                                    </MenuItem>
+                                                                                ))}
+                                                                            </Select>
+                                                                        </FormControl>
+                                                                        {/* </Tooltip> */}
                                                                     </TableCell>
 
                                                                     {/* Remark */}
@@ -1594,7 +1571,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                                 flexShrink: 0,
                                                                             }}
                                                                         >
-                                                                            {CATEGORY_ICON_MAP[cat.label] ?? (
+                                                                            {CATEGORY_ICON_MAP[cat.id] ?? (
                                                                                 <MiscellaneousServicesOutlinedIcon
                                                                                     sx={{ fontSize: 18 }}
                                                                                 />
@@ -1765,7 +1742,13 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                 labelId="not-covered-reason-label"
                                                                 label="สาเหตุไม่คุ้มครอง"
                                                                 value={pendingReason}
-                                                                onChange={(e) => setPendingReason(e.target.value)}
+                                                                onChange={(e) =>
+                                                                    setPendingReason(
+                                                                        e.target.value === ""
+                                                                            ? undefined
+                                                                            : Number(e.target.value)
+                                                                    )
+                                                                }
                                                                 sx={formSelectSx}
                                                             >
                                                                 {notCoveredReasonOptions.map((o) => (
@@ -1938,7 +1921,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             !hasAnyAmount ||
                                             hasDiscountError ||
                                             hasNotCoveredError ||
-                                            hasReasonError ||
+                                            // hasReasonError ||
                                             !selectedInsured
                                         }
                                         sx={{ mt: 2, borderRadius: 1, fontWeight: 700, boxShadow: 2 }}

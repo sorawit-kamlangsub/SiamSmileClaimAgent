@@ -23,6 +23,7 @@ const getBankQueryKey = ["getBank"];
 const getZebraCarOwnerQueryKey = ["getZebraCarOwner"];
 const getSchoolByProvinceIdQueryKey = ["getSchoolByProvinceId"];
 const getAllHospitalQueryKey = ["getAllHospital"];
+const getFormatTypeQueryKey = ["getFormatType"];
 const getBeneficiaryQueryKey = ["getBeneficiary"];
 const getRelationTypeQueryKey = ["getRelationType"];
 const getDisabilityLossPartQueryKey = ["getDisabilityLossPart"];
@@ -110,13 +111,22 @@ export const useGetIncidentTypeMapping = (
 export const useGetSimBCategory = (
     formatTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
-    medicalTypeId?: number | undefined
+    medicalTypeId?: number | undefined,
+    productTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined
 ) => {
     return useQuery(
-        [getSimBCategoryQueryKey, formatTypeId, coverageTypeId, medicalTypeId],
-        () => coreClaimMastersClient.getSimBCategory(formatTypeId, coverageTypeId, medicalTypeId),
+        [getSimBCategoryQueryKey, formatTypeId, coverageTypeId, medicalTypeId, productTypeId, causeOfIncidentId],
+        () =>
+            coreClaimMastersClient.getSimBCategory(
+                formatTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                productTypeId,
+                causeOfIncidentId
+            ),
         {
-            enabled: !!formatTypeId,
+            enabled: !!formatTypeId || !!(medicalTypeId || causeOfIncidentId),
             refetchOnWindowFocus: false,
         }
     );
@@ -126,13 +136,23 @@ export const useGetSimB = (
     formatTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    isUseOften?: boolean | undefined
+    isUseOften?: boolean | undefined,
+    productTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined
 ) => {
     return useQuery(
-        [getSimBQueryKey, formatTypeId, coverageTypeId, medicalTypeId, isUseOften],
-        () => coreClaimMastersClient.getSimB(formatTypeId, coverageTypeId, medicalTypeId, isUseOften),
+        [getSimBQueryKey, formatTypeId, coverageTypeId, medicalTypeId, isUseOften, productTypeId, causeOfIncidentId],
+        () =>
+            coreClaimMastersClient.getSimB(
+                formatTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                isUseOften,
+                productTypeId,
+                causeOfIncidentId
+            ),
         {
-            enabled: !!formatTypeId && !!coverageTypeId && !!medicalTypeId,
+            enabled: !!formatTypeId && !!coverageTypeId && !!(medicalTypeId || causeOfIncidentId),
             refetchOnWindowFocus: false,
         }
     );
@@ -285,6 +305,12 @@ export const useGetHospitalDetailAllFilter = (
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;
     }, [key, defaultId, data, isLoading]);
+};
+
+export const useGetFormatType = (formatTypeId?: number | undefined) => {
+    return useQuery([getFormatTypeQueryKey, formatTypeId], () => coreClaimMastersClient.getFormatType(formatTypeId), {
+        refetchOnWindowFocus: true,
+    });
 };
 
 export const useGetBeneficiary = (applicationId?: string | undefined) => {

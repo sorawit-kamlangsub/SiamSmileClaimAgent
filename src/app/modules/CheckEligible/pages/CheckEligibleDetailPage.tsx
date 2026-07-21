@@ -1,60 +1,46 @@
 import React, { useEffect } from "react";
 import { Grid } from "@mui/material";
 import { useParams } from "react-router-dom";
-import PersonalExclusionCard from "../components/CheckEligibleDetail/PersonalExclusionCard";
-import PolicyConditionCard from "../components/CheckEligibleDetail/PolicyConditionCard";
-import { PAInsuredInfo, PersonalExclusionNote } from "../hooks/CheckEligibleDetail/useCheckEligibleDetail";
-import {
-    checkeligibleSelector,
-    resetSearchCheckeLigibleDetails,
-    toggleContinuousClaimSelection,
-} from "../store/checkeligibleSlice";
+import PersonalExclusionCard from "../components/PersonalExclusionCard";
+import PolicyConditionCard from "../components/PolicyConditionCard";
+import { PersonalExclusionNote } from "../hooks/useCheckEligibleDetail";
+import { checkeligibleSelector, resetSearchCheckeLigibleDetails } from "../store/checkeligibleSlice";
 import { useDispatch, useSelector } from "react-redux";
-import SearchToolbar from "../components/CheckEligibleDetail/SearchToolbar";
-import CoverageSummaryPanel from "../components/CheckEligibleDetail/CoverageSummaryPanel";
-import InsuredInfoCardPA from "../components/CheckEligibleDetail/InsuredInfoCardPA";
-import { useGetCustomerBenefitDetailSearch } from "../../../api/coreClaimApi";
-// import InsuredInfoCardPH from "../components/CheckEligibleDetail/InsuredInfoCardPH";
-
-export const mockPAInsuredInfo: PAInsuredInfo = {
-    applicationId: "69240003",
-    academicYear: 2569,
-    schoolName: "โรงเรียนแม่พิทยาภูมิ",
-    subDistrict: "คลองหลวงแพ่ง",
-    district: "เมืองฉะเชิงเทรา",
-    province: "ฉะเชิงเทรา",
-    status: "สถานะเพิ่มลูกค้าเพื่อเคลม",
-    branch: "ฉะเชิงเทรา",
-    contactTitle: "นางสาว",
-    contactFirstName: "พรพินิต",
-    contactLastName: "แสงสว่าง",
-    contactPhone: "081-2345678",
-    referenceId: "CD69240003000001",
-    insuredTitle: "ด.ช.",
-    insuredFirstName: "ภิตติชัย",
-    insuredLastName: "ศิริเดน",
-    nationalId: "9217505830122",
-    passport: null,
-    educationLevel: "อบ.1",
-    insuredType: "นักเรียน",
-};
+import SearchToolbar from "../components/SearchToolbar";
+import CoverageSummaryPanel from "../components/CoverageSummaryPanel";
+import InsuredInfoCardPA from "../components/InsuredInfoCardPA";
+import { useGetCustomerBenefitDetailSearch, useGetCustomerDetailById } from "../../../api/coreClaimApi";
+import LinearLoading from "../../_common/components/CustomComponent/LinearLoading";
+import InsuredInfoCardPH from "../components/InsuredInfoCardPH";
+import { isProductType, PRODUCT_TYPE_GROUP } from "../../../functionHelpers";
 
 const mockNotes: PersonalExclusionNote[] = [{ id: 1, message: "ติดเงื่อนไข โรคกระเพาะอาหาร" }];
 
 const CheckEligibleDetailPage: React.FC = () => {
-    const { appId } = useParams<{ appId: string; refId: string }>();
+    const { cusId } = useParams<{ cusId: string }>();
     const dispatch = useDispatch();
 
-    const decodedAppId = appId ? atob(appId) : undefined;
+    const decodedCusId = cusId ? atob(cusId) : undefined;
 
-    const { CheckeLigibleDetails, selectedContinuousClaims } = useSelector(checkeligibleSelector);
+    const customerId = decodedCusId ? parseInt(decodedCusId) : 0;
+
+    const { CheckeLigibleDetails, isSearchCheckeLigibleDetails } = useSelector(checkeligibleSelector);
+
+    const { data: customerDetail, isLoading: customerDetailLoading } = useGetCustomerDetailById(customerId);
 
     const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailSearch(
-        decodedAppId,
+        customerDetail?.data?.policyCode,
         CheckeLigibleDetails.claimType,
         CheckeLigibleDetails.incidentDate ?? undefined,
-        CheckeLigibleDetails.isContinuous
+        CheckeLigibleDetails.isContinuous,
+        CheckeLigibleDetails.claimCause,
+        CheckeLigibleDetails.coverageType,
+        CheckeLigibleDetails.medicalType
     );
+
+    const productId = customerDetail?.data?.productTypeId ?? 0;
+    const productCategoryCode = customerDetail?.data?.productCategoryCode;
+    const applicationId = customerDetail?.data?.policyCode;
 
     useEffect(() => {
         return () => {
@@ -67,28 +53,33 @@ const CheckEligibleDetailPage: React.FC = () => {
     };
 
     return (
-        <Grid container spacing={2}>
-            <Grid item xs={12} md={5} lg={4}>
-                {/* <InsuredInfoCardPH insured={mockInsured} /> */}
-                <InsuredInfoCardPA data={mockPAInsuredInfo} />
-                <PersonalExclusionCard notes={mockNotes} />
-                <PolicyConditionCard onOpenExclusion={handleOpenExclusion} />
-            </Grid>
+        <LinearLoading isLoading={customerDetailLoading} sx={{ mb: "1.5rem" }}>
+            <Grid container spacing={2}>
+                <Grid item xs={12} md={5} lg={4}>
+                    {!!customerDetail?.data ? (
+                        isProductType(productId, PRODUCT_TYPE_GROUP.PH) ? (
+                            <InsuredInfoCardPH data={customerDetail?.data} />
+                        ) : isProductType(productId, PRODUCT_TYPE_GROUP.PA) ? (
+                            <InsuredInfoCardPA data={customerDetail?.data} />
+                        ) : isProductType(productId, PRODUCT_TYPE_GROUP.CLAIM_MISC) ? null : null // TODO: ยังไม่มีการ์ดสำหรับกลุ่ม CLAIM_MISC (มอเตอร์/บ้าน/ไฟ ฯลฯ) — ใส่ component ที่ถูกต้องตรงนี้เมื่อพร้อม
+                    ) : null}
+                    <PersonalExclusionCard notes={mockNotes} />
+                    <PolicyConditionCard onOpenExclusion={handleOpenExclusion} />
+                </Grid>
 
-            <Grid item xs={12} md={7} lg={8}>
-                <SearchToolbar />
-                {!CheckeLigibleDetails.claimType ? null : (
-                    <CoverageSummaryPanel
-                        benefitData={benefitData?.data}
-                        isLoading={isBenefitLoading}
-                        continuousRows={[]}
-                        isContinuous={CheckeLigibleDetails.isContinuous as boolean}
-                        selectedClaims={selectedContinuousClaims}
-                        onToggleClaim={(code) => dispatch(toggleContinuousClaimSelection(code))}
+                <Grid item xs={12} md={7} lg={8}>
+                    <SearchToolbar
+                        productTypeId={productId}
+                        productCategoryCode={productCategoryCode}
+                        applicationId={applicationId}
+                        customerId={customerDetail?.data?.customerId}
                     />
-                )}
+                    {!isSearchCheckeLigibleDetails ? null : (
+                        <CoverageSummaryPanel benefitData={benefitData?.data} isLoading={isBenefitLoading} />
+                    )}
+                </Grid>
             </Grid>
-        </Grid>
+        </LinearLoading>
     );
 };
 

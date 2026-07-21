@@ -1,6 +1,5 @@
 import { Outlet } from "react-router-dom";
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
-import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
 import ClaimPHPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHPage";
 import ClaimPHSummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHSummaryPage";
 import MonitorPage from "../modules/CreatedClaim/pages/Monitor/MonitorPage";
@@ -39,16 +38,9 @@ const Routes: RouteMapType[] = [
         element: <BlankPage body="Blank Page" />,
     },
     // ===== ตรวจสอบสิทธิ์ =====
-    {
-        path: "/checkeligible/monitor",
-        title: "Monitor - ตรวจสอบสิทธิ์",
-        element: <CheckEligibleMonitorPage />,
-        permissions: [],
-        condition: "AND",
-    },
 
     {
-        path: "/checkeligible/detail/:appId/:refId",
+        path: "/checkeligible/detail/:cusId",
         title: "ตรวจสอบสิทธิ์ - รายละเอียด",
         element: <CheckEligibleDetailPage />,
         permissions: [],
@@ -106,48 +98,6 @@ const Routes: RouteMapType[] = [
             },
         ],
     },
-    // {
-    //     path: "/claim-line",
-    //     title: "Claim Line",
-    //     element: <Outlet />,
-    //     permissions: [],
-    //     condition: "AND",
-    //     children: [
-    //         {
-    //             index: true,
-    //             title: "Claim Line",
-    //             element: <ClaimLinePage />,
-    //         },
-    //         {
-    //             path: "summary",
-    //             title: "สรุปรายการเคลม",
-    //             element: <ClaimLineSummaryPage />,
-    //             permissions: [],
-    //             condition: "AND",
-    //         },
-    //     ],
-    // },
-    // {
-    //     path: "/claim-simulation",
-    //     title: "Claim Simulation",
-    //     element: <Outlet />,
-    //     permissions: [],
-    //     condition: "AND",
-    //     children: [
-    //         {
-    //             index: true,
-    //             title: "รายการค่าใช้จ่าย",
-    //             element: <ClaimLineCalculatePage />,
-    //         },
-    //         {
-    //             path: "summary",
-    //             title: "คำนวณ",
-    //             element: <DaysCalculatePage />,
-    //             permissions: [],
-    //             condition: "AND",
-    //         },
-    //     ],
-    // },
     {
         path: "/claim-simulation",
         title: "คำนวณวงเงินเคลม",

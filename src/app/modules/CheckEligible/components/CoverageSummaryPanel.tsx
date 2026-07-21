@@ -1,20 +1,19 @@
 import React from "react";
-import { Box, Typography, Divider, Skeleton } from "@mui/material";
+import { Box, Typography, Divider, Skeleton, Grid, Stack } from "@mui/material";
 import ShieldIcon from "@mui/icons-material/Shield";
-import ContinuousClaimTable from "./ContinuousClaimTable";
-import { ContinuousClaimRow } from "../../store/checkeligibleSlice";
-import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
-import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
-import { checkeligibleSelector } from "../../store/checkeligibleSlice";
-import { setBenefitIcons } from "../../../../functionHelpers";
-import { useAppSelector } from "../../../../../redux";
-import { formatDateString } from "../../../../functionHelpers";
-import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../../api/claimAgentApi.client";
+import CustomPaper from "../../_common/components/CustomComponent/CustomPaper";
+import { HeadingWithColor } from "../../_common/components/CustomComponent/HeadingWithColor";
+import { checkeligibleSelector } from "../store/checkeligibleSlice";
+import { useAppSelector } from "../../../../redux";
+import { formatDateString } from "../../../functionHelpers";
+import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../api/coreClaimApi.client";
+import { BenefitIcon } from "./BenefitIcon";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type BenefitDisplay = {
     id: number;
+    benefitId?: number;
     title: string;
     ratePerUnit?: string;
     maxAmount: number;
@@ -30,10 +29,6 @@ type BenefitDisplay = {
 type Props = {
     benefitData?: GetCustomerBenefitDetailSearchDtoResponse[];
     isLoading?: boolean;
-    continuousRows: ContinuousClaimRow[];
-    isContinuous: boolean;
-    selectedClaims: string[];
-    onToggleClaim: (code: string) => void;
 };
 
 // ─── Mapper ───────────────────────────────────────────────────────────────────
@@ -41,49 +36,22 @@ type Props = {
 const mapBenefitData = (data: GetCustomerBenefitDetailSearchDtoResponse[]): BenefitDisplay[] => {
     return data.map((item, index) => ({
         id: index + 1,
+        benefitId: item.benefitId,
         title: item.benefitName ?? "-",
         ratePerUnit:
             item.pricePerUnit && item.pricePerUnit > 0
                 ? `${item.pricePerUnit.toLocaleString("th-TH")}/${item.unitName ?? ""}`
                 : undefined,
         maxAmount: item.maxPrice ?? 0,
-        remainingAmount: item.maxPrice ?? 0,
+        remainingAmount: item.remainBenefit ?? 0,
         maxDays: item.maxQuantity ?? undefined,
+        // TODO: DTO ไม่มี field "จำนวนคงเหลือ" แยกจาก maxQuantity ยืนยันกับ backend ก่อนขึ้น production
         remainingDays: item.maxQuantity ?? undefined,
         dayUnit: (item.quantityUnitName ?? item.unitName ?? "").replace(/ /g, "\u00A0"),
         productName: item.productName ?? undefined,
         coverageFrom: item.coverageFrom?.toString(),
         coverageTo: item.coverageTo?.toString(),
     }));
-};
-
-// ─── BenefitIcon ──────────────────────────────────────────────────────────────
-
-const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
-    const src = setBenefitIcons(benefitId);
-    return src ? (
-        <Box
-            component="img"
-            src={src}
-            alt=""
-            sx={{ width: 60, height: 60, objectFit: "fill", borderRadius: 1, flexShrink: 0 }}
-        />
-    ) : (
-        <Box
-            sx={{
-                bgcolor: "#dbeafe",
-                borderRadius: 2,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                minWidth: 52,
-                minHeight: 52,
-                flexShrink: 0,
-            }}
-        >
-            <ShieldIcon sx={{ fontSize: 30, color: "#1a5da8" }} />
-        </Box>
-    );
 };
 
 // ─── BenefitCard ──────────────────────────────────────────────────────────────
@@ -101,9 +69,8 @@ const BenefitCard: React.FC<{ benefit: BenefitDisplay }> = ({ benefit }) => (
             gap: 2,
         }}
     >
-        {/* Icon + Title + วงเงิน */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, width: "100%" }}>
-            <BenefitIcon benefitId={benefit.id} />
+            <BenefitIcon benefitId={benefit.benefitId} />
 
             <Box flex={1} minWidth={0}>
                 <Typography variant="body2" fontWeight={700} color="#1a5da8">
@@ -121,7 +88,7 @@ const BenefitCard: React.FC<{ benefit: BenefitDisplay }> = ({ benefit }) => (
                     )}
                 </Typography>
 
-                <Box display="flex" alignItems="center" gap={3} flexWrap="wrap" mt={0.5}>
+                <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 3, md: 0, lg: 9 }} flexWrap="wrap" mt={0.5}>
                     <Box>
                         <Typography variant="caption" color="text.secondary" display="block">
                             วงเงินความคุ้มครองสูงสุด
@@ -149,7 +116,6 @@ const BenefitCard: React.FC<{ benefit: BenefitDisplay }> = ({ benefit }) => (
             </Box>
         </Box>
 
-        {/* จำนวนสูงสุด / คงเหลือ */}
         {benefit.maxDays !== undefined && (
             <Box
                 sx={{
@@ -206,15 +172,8 @@ const BenefitSkeleton: React.FC = () => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const CoverageSummaryPanel: React.FC<Props> = ({
-    benefitData,
-    isLoading,
-    continuousRows,
-    isContinuous,
-    selectedClaims,
-    onToggleClaim,
-}) => {
-    const { CheckeLigibleDetails } = useAppSelector(checkeligibleSelector);
+const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading }) => {
+    const { CheckeLigibleDetails, isSearchCheckeLigibleDetails } = useAppSelector(checkeligibleSelector);
 
     const benefits: BenefitDisplay[] = benefitData ? mapBenefitData(benefitData) : [];
 
@@ -224,18 +183,86 @@ const CoverageSummaryPanel: React.FC<Props> = ({
         ? formatDateString(firstItem.coverageFrom.toString(), "DD/MM/BBBB")
         : "-";
 
+    const continuousClaim = CheckeLigibleDetails.continuousClaim;
+
     return (
         <Box>
-            {isContinuous && (
+            {CheckeLigibleDetails.isContinuous && continuousClaim && (
                 <CustomPaper>
-                    <ContinuousClaimTable rows={continuousRows} selected={selectedClaims} onToggle={onToggleClaim} />
+                    <HeadingWithColor text="รายละเอียดเคลม (กรณีเคลมต่อเนื่อง)" />
+                    <Box
+                        sx={{
+                            border: "1px solid",
+                            borderColor: "divider",
+                            borderRadius: 2,
+                            p: 2,
+                            mt: 2,
+                            // bgcolor: "#f7fbff",
+                        }}
+                    >
+                        <Grid container spacing={2}>
+                            {/* ซ้าย */}
+                            <Grid item xs={12} md={6}>
+                                <Typography
+                                    fontSize={14}
+                                    sx={{
+                                        color: "primary.main",
+                                        fontWeight: 700,
+                                        textDecoration: "underline",
+                                        mb: 1,
+                                    }}
+                                >
+                                    {continuousClaim.claimNo ?? "-"}
+                                </Typography>
+
+                                <Stack spacing={0.5}>
+                                    <Typography fontSize={14} color="primary" fontWeight={600}>
+                                        <Typography component="span" fontSize={14} color="text.secondary">
+                                            อาการสำคัญ :
+                                        </Typography>{" "}
+                                        {continuousClaim.chiefComplaint ?? "-"}
+                                    </Typography>
+
+                                    <Typography fontSize={14} color="primary" fontWeight={600}>
+                                        <Typography component="span" fontSize={14} color="text.secondary">
+                                            ยอดเบิกรวม :
+                                        </Typography>{" "}
+                                        -
+                                    </Typography>
+                                </Stack>
+                            </Grid>
+
+                            {/* ขวา */}
+                            <Grid item xs={12} md={6}>
+                                {/* เว้นระยะเท่ากับ mb ของเลขเคลม */}
+                                <Box sx={{ height: 28 }} />
+
+                                <Stack spacing={0.5}>
+                                    <Typography fontSize={14} color="primary" fontWeight={600}>
+                                        <Typography component="span" fontSize={14} color="text.secondary">
+                                            วันที่เกิดเหตุ :
+                                        </Typography>{" "}
+                                        {continuousClaim.incidentDate
+                                            ? formatDateString(continuousClaim.incidentDate, "DD/MM/BBBB")
+                                            : "-"}
+                                    </Typography>
+
+                                    <Typography fontSize={14} color="primary" fontWeight={600}>
+                                        <Typography component="span" fontSize={14} color="text.secondary">
+                                            ยอดจ่ายรวม :
+                                        </Typography>{" "}
+                                        -
+                                    </Typography>
+                                </Stack>
+                            </Grid>
+                        </Grid>
+                    </Box>
                 </CustomPaper>
             )}
 
             <CustomPaper>
                 <HeadingWithColor text="ความคุ้มครอง" />
 
-                {/* Plan Badge */}
                 <Box
                     sx={{
                         background: "linear-gradient(90deg, #6DD2F8 0%, #22B3EE 34%, #007DB3 100%)",
@@ -271,13 +298,12 @@ const CoverageSummaryPanel: React.FC<Props> = ({
                     </Box>
                 </Box>
 
-                {/* Benefits */}
                 <Box sx={{ border: "1px solid #e0e0e0", p: { xs: 1, sm: 2 }, bgcolor: "#fff" }}>
                     {isLoading ? (
                         [1, 2, 3].map((i) => <BenefitSkeleton key={i} />)
                     ) : benefits.length === 0 ? (
-                        <Typography variant="body2" color="text.secondary" textAlign="center" py={3}>
-                            {CheckeLigibleDetails.claimType
+                        <Typography variant="body2" color="text.secondary" textAlign="center" py={1}>
+                            {isSearchCheckeLigibleDetails
                                 ? "ไม่พบข้อมูลความคุ้มครอง"
                                 : "กรุณาเลือกประเภทเคลมและกดค้นหา"}
                         </Typography>
@@ -286,14 +312,7 @@ const CoverageSummaryPanel: React.FC<Props> = ({
                     )}
                 </Box>
 
-                <Box
-                    sx={{
-                        background: "#1a5da8",
-                        py: 0.7,
-                        px: 1,
-                        borderRadius: "0 0 4px 4px",
-                    }}
-                />
+                <Box sx={{ background: "#1a5da8", py: 0.7, px: 1, borderRadius: "0 0 4px 4px" }} />
             </CustomPaper>
         </Box>
     );

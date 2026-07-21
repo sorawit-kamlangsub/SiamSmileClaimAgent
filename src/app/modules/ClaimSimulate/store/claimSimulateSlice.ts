@@ -39,11 +39,12 @@ export interface ClaimLineItem {
     description?: string | undefined;
     claimAmount?: number;
     notCovered?: number;
-    reason?: string | undefined;
+    reason?: number | undefined;
     remark?: string | undefined;
     discount?: number | undefined;
     color?: string;
     disabled: boolean;
+    bodyPartId?: number | undefined;
 }
 
 interface ClaimSimulateState {
