@@ -231,10 +231,36 @@ export interface OrganRuleResult {
     coveredAmount: number;
 }
 
+export interface BodyPartOption {
+    bodyPartId: number;
+    bodyPartName: string;
+    disabilitySideId: number;
+    disabilitySideName: string;
+}
+
+export interface ComboBodyPartOption {
+    bodyPartId: number;
+    disabilitySidePart1Id: number;
+    disabilitySidePart1Name: string;
+    disabilitySidePart2Id: number;
+    disabilitySidePart2Name: string;
+}
+
+export interface SidePickOption {
+    id: number;
+    name: string;
+}
+
+export interface OrganChoiceWithId extends OrganChoice {
+    disabilityLossPartId: number;
+}
+
 export interface OrganLossItem {
     key: string;
     label: string;
     icons: OrganIconKey[];
+    disabilityLossPartId?: number;
+    bodyPartId?: number;
     side?: string;
     comboSides?: Record<string, OrganSide>;
     amount?: string;

@@ -6,7 +6,7 @@ import { useAuth } from "../../../../_auth";
 import { claimPHSelector } from "./../../../store/claimPHSlice";
 export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
-    const { form, bankAccounts, contacts, insured, beneficiaries } = useAppSelector(claimPHSelector);
+    const { form, bankAccounts, contacts, insured, beneficiaries, organLossItems } = useAppSelector(claimPHSelector);
     const isMedicalAll = form.coverageTypeId === 2 || form.coverageTypeId === 3;
     const isMedical = form.coverageTypeId === 2;
     const isCompensate = form.coverageTypeId === 3;
@@ -95,10 +95,10 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
             },
 
             createCaseDisability: {
-                bodyPartId: 0,
-                disabilityTypeId: 0,
-                disabilityLevel: 0,
-                disabilityPercent: 0,
+                bodyPartId: undefined,
+                disabilityTypeId: undefined,
+                disabilityLevel: undefined,
+                disabilityPercent: undefined,
             },
 
             createCaseDocument: {

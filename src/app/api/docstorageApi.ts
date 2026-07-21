@@ -22,6 +22,8 @@ export const useGetDocumentById = (documentId: string) => {
         },
         {
             enabled: documentId == "" ? false : true,
+            refetchOnWindowFocus: true,
+            staleTime: 0,
         }
     );
 };
