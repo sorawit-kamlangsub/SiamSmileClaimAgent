@@ -15,7 +15,7 @@ interface Props {
     onAddInsured: () => void;
 }
 
-const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onEdit, onDelete, onAddInsured }) => {
+const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured }) => {
     return (
         <>
             <HeadingWithColor text="ข้อมูลเคลม" color="blue" />

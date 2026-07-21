@@ -63,7 +63,10 @@ const ClaimHistoryPA: React.FC = () => {
                 </Grid>
             </CustomPaper>
             <CustomPaper>
-                <ClaimHistoryTable tableId="ClaimHistoryPATable" onContinuousClaim={handleContinuousClaim} />
+                <ClaimHistoryTable
+                    tableId="ClaimHistoryPATable"
+                    onContinuousClaim={(item: any) => handleContinuousClaim(item)}
+                />
                 <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
                     <Button
                         variant="outlined"

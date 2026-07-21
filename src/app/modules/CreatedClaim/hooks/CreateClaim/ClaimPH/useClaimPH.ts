@@ -6,8 +6,7 @@ import {
     useGetCustomerBankAccount,
     useGetCustomerDetailById,
 } from "../../../../../api/coreClaimApi";
-import { setBankAccounts, setContacts, setInsured, setOldClaim } from "../../../store/claimPHSlice";
-import { mockOldClaim } from "../../../store/mockClaimPH";
+import { setBankAccounts, setContacts, setInsured } from "../../../store/claimPHSlice";
 
 export const useClaimPH = () => {
     const dispatch = useAppDispatch();
@@ -27,7 +26,6 @@ export const useClaimPH = () => {
         if (!claimInfoQuery.data?.data) return;
 
         dispatch(setInsured(claimInfoQuery.data.data));
-        dispatch(setOldClaim(mockOldClaim));
     }, [dispatch, claimInfoQuery.data]);
 
     useEffect(() => {

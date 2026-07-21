@@ -1,6 +1,6 @@
 // ─── ocrCompareHelpers.ts ──────────────────────────────────────────────────────
 import dayjs, { Dayjs } from "dayjs";
-import { OcrStatus } from "./modules/CreatedClaim/components/CreateClaim/ClaimPH/testOCR";
+import { OcrStatus } from "./modules/CreatedClaim/components/CreateClaim/OcrDocumentScanSection";
 
 const normalizeName = (name?: string | null): string => {
     if (!name) return "";

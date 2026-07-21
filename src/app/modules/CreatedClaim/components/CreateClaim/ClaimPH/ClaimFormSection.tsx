@@ -374,7 +374,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(isDeath || isDisability) && (
                             <>
-                                {values.diagnoses.map((item, index) => (
+                                {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
                                         <CD10Autocomplete
                                             name={`diagnoses.${index}.icd10Id`}

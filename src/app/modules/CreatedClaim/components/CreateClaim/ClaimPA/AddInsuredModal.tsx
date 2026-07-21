@@ -29,6 +29,7 @@ import { FormikDropdown, FormikTextField } from "../../../../_common";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 
 interface SearchResult {
     appId: string;
@@ -109,7 +110,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
             if (!v.keyword.trim()) e.keyword = "โปรดระบุ";
             return e;
         },
-        onSubmit: (values) => {
+        onSubmit: () => {
             // TODO: เรียก API จริง
             setSearchResults(MOCK_SEARCH_RESULTS);
             setSelectedInsured(null);
@@ -130,9 +131,11 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
             id: Date.now().toString(),
             seq: currentItemCount + 1,
             customerName: selectedInsured.customerName,
-            insuredType: selectedInsured.insuredType,
-            claimType: "",
-            opdSubType: "",
+            claimStyle: `${selectedInsured.insuredType} (${selectedInsured.plan})`,
+            incidentDate: dayjs(),
+            admissionDate: dayjs(),
+            dischargeDate: dayjs(),
+            idCard: selectedInsured.appId,
             claimAmount: 0,
         };
 

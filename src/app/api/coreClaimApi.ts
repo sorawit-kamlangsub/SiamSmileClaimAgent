@@ -77,8 +77,8 @@ export const useGetCustomerSearch = (
     );
 };
 
-export const useGetCustomerDetailById = (id: number) => {
-    return useQuery([getCustomerDetailByIdQueryKey, id], () => coreClaimClient.getCustomerDetailById(id), {
+export const useGetCustomerDetailById = (id: number | undefined) => {
+    return useQuery([getCustomerDetailByIdQueryKey, id], () => coreClaimClient.getCustomerDetailById(id as number), {
         enabled: !!id,
         refetchOnWindowFocus: false,
     });
