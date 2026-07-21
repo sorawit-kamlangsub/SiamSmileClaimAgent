@@ -191,7 +191,7 @@ const ConfirmTransferPHModal: React.FC<Props> = ({ open, onClose, onConfirm, isL
                             color="success"
                             fullWidth
                             size="medium"
-                            onClick={onConfirm}
+                            onClick={() => onConfirm()}
                             disabled={isLoading}
                             sx={{ mt: 1 }}
                         >

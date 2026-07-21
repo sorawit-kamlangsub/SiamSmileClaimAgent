@@ -7,7 +7,7 @@ import {
     useGetCustomerDetailById,
 } from "../../../../../api/coreClaimApi";
 import { useGetBeneficiary } from "../../../../../api/coreClaimMastersApi";
-import { setBankAccounts, setBeneficiaries, setContacts, setInsured } from "../../../store/claimPASlice";
+import { SchoolInfo, setBankAccounts, setBeneficiaries, setContacts, setInsured, setSchool } from "../../../store/claimPASlice";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
 
 export const useClaimPA = () => {
@@ -42,7 +42,13 @@ export const useClaimPA = () => {
     });
     useEffect(() => {
         if (!claimInfoQuery.data?.data) return;
-
+        const schoolInfo: SchoolInfo = {
+            appId: claimInfoQuery.data.data.policyCode ?? "",
+            schoolName: claimInfoQuery.data.data.schoolName ?? "",
+            teacherName: claimInfoQuery.data.data.contactName ?? "",
+            teacherPhone: claimInfoQuery.data.data.contactPhoneNo ?? "",
+        };
+        dispatch(setSchool(schoolInfo));
         dispatch(setInsured(claimInfoQuery.data.data));
     }, [dispatch, claimInfoQuery.data]);
 

@@ -134,7 +134,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 claimStyle: values.medicalTypeId
                     ? `${values.medicalTypeName ?? ""} (${values.coverageTypeName ?? ""})`
                     : `${values.causeOfIncidentName ?? ""} (${values.coverageTypeName ?? ""})`,
-                incidentDate: values.incidentDate ?? dayjs(),
+                incidentDate: values.incidentDate ?? undefined,
+                admissionDate: values.admissionDate ?? undefined,
+                dischargeDate: values.dischargeDate ?? undefined,
+                idCard: insured?.cardTypeId === 2 ? insured?.cardDetail ?? "" : "",
                 claimAmount: values.transferAmount ?? 0,
             };
 

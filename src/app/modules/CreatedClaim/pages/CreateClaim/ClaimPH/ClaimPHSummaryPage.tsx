@@ -16,6 +16,7 @@ import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
 import {
+    BeneficiaryForm,
     ClaimBankAccount,
     ContactInfo,
     removeBankAccount,
@@ -209,8 +210,8 @@ const ClaimPHSummaryPage: React.FC = () => {
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
-    const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPH(() => {
-        setOpenConfirm(true);
+    const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPH((beneficiaries) => {
+        handleConfirm(beneficiaries);
     });
     const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
 
@@ -222,7 +223,7 @@ const ClaimPHSummaryPage: React.FC = () => {
         dispatch(selectContact(id));
     };
 
-    const handleConfirm = async () => {
+    const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
         setOpenConfirm(false);
         Swal.fire({
@@ -238,7 +239,7 @@ const ClaimPHSummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await createClaimPH();
+                    const res = await createClaimPH(freshBeneficiaries);
                     return res.data;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
@@ -511,7 +512,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                             size="medium"
                             onClick={() => (isDeathDisability ? formik.handleSubmit() : setOpenConfirm(true))}
                         >
-                            แจ้งโอนเงิน
+                            {isDeathDisability ? "ส่งตรวจสอบ" : "แจ้งโอนเงิน"}
                         </Button>
                     </Box>
                 </Grid>

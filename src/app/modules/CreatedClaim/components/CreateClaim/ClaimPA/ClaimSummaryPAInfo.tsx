@@ -27,15 +27,16 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onEdit, onDelete, onAddInsu
                         sx={{
                             display: "grid",
                             gridTemplateColumns: {
-                                xs: "64px 1fr",
+                                xs: "1fr",
+                                sm: "56px 1fr",
                                 md: "72px 1fr 220px 220px 96px",
                             },
-                            alignItems: "center",
-                            gap: 2,
+                            alignItems: { xs: "flex-start", md: "center" },
+                            gap: { xs: 1.5, md: 2 },
                             border: "1px solid #E3EDF7",
                             borderRadius: 2,
                             bgcolor: "#fff",
-                            p: 3,
+                            p: { xs: 2, md: 3 },
                             boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
                         }}
                     >
@@ -51,28 +52,9 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onEdit, onDelete, onAddInsu
                             {item.seq ?? index + 1}
                         </Avatar>
 
-                        <Box>
+                        <Box sx={{ minWidth: 0 }}>
                             <Stack direction="row" alignItems="center" spacing={1}>
                                 <Typography sx={{ fontWeight: 700, color: "#0F172A" }}>{item.customerName}</Typography>
-
-                                {/* <Typography
-                                    component="button"
-                                    type="button"
-                                    onClick={() => {
-                                        onEdit(item);
-                                    }}
-                                    sx={{
-                                        border: 0,
-                                        bgcolor: "transparent",
-                                        p: 0,
-                                        color: "#005B96",
-                                        textDecoration: "underline",
-                                        cursor: "pointer",
-                                        fontSize: 13,
-                                    }}
-                                >
-                                    ต่อเนื่อง
-                                </Typography> */}
                             </Stack>
 
                             <Typography sx={{ mt: 2 }} color="text.secondary">
@@ -81,6 +63,36 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onEdit, onDelete, onAddInsu
                             <Typography sx={{ mt: 0.5, fontWeight: "bold", color: "#007AC1", whiteSpace: "pre-wrap" }}>
                                 {item.claimStyle}
                             </Typography>
+
+                            <Stack
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={{ xs: 0.5, sm: 2 }}
+                                flexWrap="wrap"
+                                sx={{ mt: 2, rowGap: 0.5 }}
+                            >
+                                <Typography color="text.secondary" fontSize={{ xs: 13, md: 14 }}>
+                                    เลขบัตรประชาชน :{" "}
+                                    <Typography component="span" fontWeight="bold" color="#007AC1" fontSize="inherit">
+                                        {item.idCard ?? "-"}
+                                    </Typography>
+                                </Typography>
+                                <Typography color="text.secondary" fontSize={{ xs: 13, md: 14 }}>
+                                    วันที่เข้า รพ. :{" "}
+                                    <Typography component="span" fontWeight="bold" color="#007AC1" fontSize="inherit">
+                                        {item.admissionDate
+                                            ? formatDateString(item.admissionDate.toString(), "DD/MM/BBBB")
+                                            : "-"}
+                                    </Typography>
+                                </Typography>
+                                <Typography color="text.secondary" fontSize={{ xs: 13, md: 14 }}>
+                                    วันที่ออก รพ. :{" "}
+                                    <Typography component="span" fontWeight="bold" color="#007AC1" fontSize="inherit">
+                                        {item.dischargeDate
+                                            ? formatDateString(item.dischargeDate.toString(), "DD/MM/BBBB")
+                                            : "-"}
+                                    </Typography>
+                                </Typography>
+                            </Stack>
                         </Box>
 
                         <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -108,7 +120,7 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onEdit, onDelete, onAddInsu
                             </Box>
                         </Stack>
 
-                        <Stack direction="row" justifyContent="flex-end" spacing={1}>
+                        <Stack direction="row" justifyContent={{ xs: "flex-start", md: "flex-end" }} spacing={1}>
                             <Tooltip title="แก้ไขรายการ" arrow TransitionComponent={Zoom} placement="top">
                                 <IconButton
                                     size="small"

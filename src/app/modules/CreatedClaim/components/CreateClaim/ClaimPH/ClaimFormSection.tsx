@@ -434,7 +434,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         </Box>
                     )}
                     {/* Coverage box */}
-                    {(isOPD || isIPD) && (
+                    {(isOPD || isIPD || isDisability) && (
                         <Grid item xs={12} mt={2}>
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}

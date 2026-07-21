@@ -43,9 +43,7 @@ export const useOrganLoss = () => {
     const { data: LossPartData, isLoading: LossPartDataLoading } = useGetDisabilityLossPart();
     const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
     const organChoices: OrganChoiceWithId[] = useMemo(() => {
-        return (LossPartData?.data ?? []) // 👈 เพิ่ม .data
-            .map(mapToOrganChoice)
-            .filter((c): c is OrganChoiceWithId => c !== null);
+        return (LossPartData?.data ?? []).map(mapToOrganChoice).filter((c): c is OrganChoiceWithId => c !== null);
     }, [LossPartData]);
 
     return {
@@ -102,8 +100,6 @@ export const useComboBodyPartOptions = (comboDisabilityLossPartId: number | unde
         if (part1Id === undefined || part2Id === undefined) return undefined;
         return rows.find((r) => r.disabilitySidePart1Id === part1Id && r.disabilitySidePart2Id === part2Id);
     };
-
-    // reverse lookup: จาก bodyPartId ตัวจริง -> หา part1Id/part2Id (ใช้ตอนเปิด modal แก้ไขรายการเดิม)
     const findByBodyPartId = (bodyPartId: number | undefined): ComboBodyPartOption | undefined => {
         if (bodyPartId === undefined) return undefined;
         return rows.find((r) => r.bodyPartId === bodyPartId);

@@ -29,7 +29,10 @@ export interface ClaimInsuredItem {
     seq: number;
     customerName: string;
     claimStyle: string;
-    incidentDate: Dayjs;
+    incidentDate: Dayjs | undefined;
+    admissionDate: Dayjs | undefined;
+    dischargeDate: Dayjs | undefined;
+    idCard: string;
     claimAmount: number;
 }
 

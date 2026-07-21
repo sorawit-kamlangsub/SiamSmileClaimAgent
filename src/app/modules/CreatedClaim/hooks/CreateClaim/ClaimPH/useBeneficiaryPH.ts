@@ -5,6 +5,7 @@ import { validateBankAccountNo, validatePhoneNumber, validateThaiCitizenID } fro
 import { useGetBeneficiary } from "../../../../../api/coreClaimMastersApi";
 import { useEffect } from "react";
 import { BeneficiaryFormikValues } from "../../../components/CreateClaim/ClaimPH/BeneficiarySectionPH";
+import React from "react";
 
 export const defaultBeneficiary = (): BeneficiaryForm => ({
     beneficiaryOrder: 1,
@@ -21,7 +22,7 @@ export const defaultBeneficiary = (): BeneficiaryForm => ({
     percentShare: undefined,
     source: "manual",
 });
-export const useBeneficiaryPH = (onValidSubmit: () => void) => {
+export const useBeneficiaryPH = (onValidSubmit: (beneficiaries: BeneficiaryForm[]) => void) => {
     const dispatch = useAppDispatch();
     const beneficiaries = useAppSelector((state) => state.claimph.beneficiaries);
     const { form, insured } = useAppSelector(claimPHSelector);
@@ -95,12 +96,13 @@ export const useBeneficiaryPH = (onValidSubmit: () => void) => {
 
         onSubmit: (values) => {
             dispatch(setBeneficiaries(values.beneficiaries));
-            console.log(values.beneficiaries);
-            onValidSubmit();
+            onValidSubmit(values.beneficiaries);
         },
     });
+    const hasSyncedRef = React.useRef(false);
     useEffect(() => {
-        if (!beneficiaryQuery.isSuccess) return;
+        if (!beneficiaryQuery.isSuccess || hasSyncedRef.current) return;
+        hasSyncedRef.current = true;
 
         const beneficiaryData = beneficiaryQuery.data?.data ?? [];
 
@@ -120,7 +122,7 @@ export const useBeneficiaryPH = (onValidSubmit: () => void) => {
 
         dispatch(setBeneficiaries(nextBeneficiaries));
         formik.setFieldValue("beneficiaries", nextBeneficiaries, true);
-    }, [dispatch, formik.setFieldValue, beneficiaryQuery.isSuccess, beneficiaryQuery.data]);
+    }, [beneficiaryQuery.isSuccess, beneficiaryQuery.data]);
 
     return {
         formik,

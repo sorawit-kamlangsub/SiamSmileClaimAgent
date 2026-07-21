@@ -4,20 +4,22 @@ import { useCreateCoreClaim } from "../../../../../api/coreClaimApi";
 import { CreateCoreClaimDtoRequest } from "../../../../../api/coreClaimApi.client";
 import { useAuth } from "../../../../_auth";
 import { claimPASelector } from "../../../store/claimPASlice";
+import { BeneficiaryForm } from "../../../store/claimPHSlice";
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
-    const { form, bankAccounts, contacts, insured, beneficiaries } = useAppSelector(claimPASelector);
+    const { form, bankAccounts, contacts, insured } = useAppSelector(claimPASelector);
     const isMedicalAll = form.coverageTypeId === 2 || form.coverageTypeId === 3;
     const isMedical = form.coverageTypeId === 2;
     const isCompensate = form.coverageTypeId === 3;
     const isDisability = form.coverageTypeId === 4;
+    const isDeath = form.coverageTypeId === 5;
     const selectedContact = contacts.find((contact) => contact.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((account) => account.isDefault) ?? bankAccounts[0];
     const mutation = useCreateCoreClaim(
         () => onSuccess?.(),
         (message) => onError?.(message)
     );
-    const buildPayload = (): CreateCoreClaimDtoRequest => {
+    const buildPayload = (beneficiaryList: BeneficiaryForm[]): CreateCoreClaimDtoRequest => {
         return {
             createClaim: {
                 createdByUserId: userProfile?.userId,
@@ -91,14 +93,14 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
 
             createCaseDeath: {
                 causeOfIncidentId: form.causeOfIncidentId,
-                deathDate: form.deathDate,
+                deathDate: isDeath ? form.deathDate : undefined,
             },
 
             createCaseDisability: {
-                bodyPartId: 0,
-                disabilityTypeId: 0,
-                disabilityLevel: 0,
-                disabilityPercent: 0,
+                bodyPartId: undefined,
+                disabilityTypeId: undefined,
+                disabilityLevel: undefined,
+                disabilityPercent: undefined,
             },
 
             createCaseDocument: {
@@ -148,7 +150,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 employeeName: form.employeeName ?? undefined,
             },
             createBeneficiaryList:
-                beneficiaries.map((beneficiary) => ({
+                beneficiaryList.map((beneficiary) => ({
                     beneficiaryId: undefined,
                     policyBeneficiaryId: undefined,
                     titleId: beneficiary.titleId?.toString(),
@@ -181,8 +183,9 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
         };
     };
 
-    const createClaimPA = async () => {
-        const payload = buildPayload();
+    const createClaimPA = async (overrideBeneficiaries?: BeneficiaryForm[]) => {
+        const list = overrideBeneficiaries ?? [];
+        const payload = buildPayload(list);
         return await mutation.mutateAsync(payload);
     };
     return {
