@@ -357,3 +357,62 @@ export const PRODUCT_TYPE_GROUP = {
 
 export const isProductType = (productTypeId: number | undefined, group: readonly number[]) =>
     productTypeId !== undefined && (group.includes(productTypeId) as boolean);
+
+
+//ClaimStatus
+export const backgroundColorMapClaimStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    2: "#D4EDBC", // Open
+    3: "#FFCFC9", // Closed
+    4: "#FFF1CD", // Re-Open
+};
+
+export const colorMapClaimStatus: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
+    2: "#11734B", // Open
+    3: "#B32615", // Closed
+    4: "#a56e07", // Re-Open
+};
+
+//CaseStatus
+export const backgroundColorMapCaseStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    2: "#D4EDBC", // Open
+    3: "#FFCFC9", // Close
+    4: "#FFF1CD", // Re-Open
+    5: "#FFCFC9", // Cancel
+};
+
+export const colorMapCaseStatus: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
+    2: "#11734B", // Open
+    3: "#B32615", // Close
+    4: "#a56e07", // Re-Open
+    5: "#B32615", // Cancel
+};
+
+//Decision
+export const backgroundColorMapDecision: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    2: "#D4EDBC", // Approve
+    3: "#FFF1CD", // On Pending
+    4: "#FFCFC9", // Cancel
+    5: "#FFCFC9", // Reject
+};
+
+export const colorMapDecision: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
+    2: "#11734B", // Approve
+    3: "#a56e07", // On Pending
+    4: "#B32615", // Cancel
+    5: "#B32615", // Reject
+};
+
+//PaymentStatus
+export const backgroundColorMapPaymentStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    2: "#FFF1CD", // PendingApproval
+    3: "#D4EDBC", // Paid
+    4: "#FFCFC9", // Cancelled
+    5: "#FFCFC9", // Failed
+};
+
+export const colorMapPaymentStatus: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
+    2: "#a56e07", // PendingApproval
+    3: "#11734B", // Paid
+    4: "#B32615", // Cancelled
+    5: "#B32615", // Failed
+};

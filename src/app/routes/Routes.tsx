@@ -13,6 +13,8 @@ import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimP
 // import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
 import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
 import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
+import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
+import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -126,6 +128,28 @@ const Routes: RouteMapType[] = [
         element: <BlankPage body="พิจารณาเคลม" />,
         permissions: [],
         condition: "AND",
+    },
+
+    // ===== โอนเพิ่ม =====
+    {
+        path: "/payment-monitor",
+        title: "Monitor-โอนเงิน",
+        permissions: [],
+        condition: "AND",
+        children: [
+            {
+                index: true,
+                title: "โอนเพิ่ม",
+                element: <ExtraPaymentListPage />,
+            },
+            {
+                path: "extra-payment",
+                title: "โอนเพิ่ม",
+                element: <ExtraPaymentPage />,
+                permissions: [],
+                condition: "AND",
+            },
+        ],
     },
 ];
 
