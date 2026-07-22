@@ -187,7 +187,7 @@ const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             color="success"
                             fullWidth
                             size="medium"
-                            onClick={onConfirm}
+                            onClick={() => onConfirm()}
                             sx={{ mt: 1 }}
                         >
                             ยืนยันแจ้งโอนเงิน

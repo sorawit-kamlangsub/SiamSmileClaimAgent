@@ -1,5 +1,5 @@
 import { useGetCustomerBenefitDetailSearch } from "./../../../../../api/coreClaimApi";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
 import { useFormik, FormikErrors } from "formik";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
@@ -18,6 +18,7 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/Create
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
+import { amountNumber } from "../organLoss.types";
 interface Options {
     onNext: () => void;
 }
@@ -25,7 +26,8 @@ interface Options {
 export const useClaimPHForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
-    const { form, isContinuous, oldClaim, insured, documentDetailById } = useAppSelector(claimPHSelector);
+    const { form, isContinuous, oldClaim, insured, documentDetailById, organLossItems } =
+        useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const ALLOWED_INCIDENT_IDS = [2, 3];
@@ -103,7 +105,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
-
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
@@ -294,6 +295,13 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         }
     }, [formik.values.coverageTypeId]);
 
+    const totalOrganLossAmount = useMemo(
+        () => organLossItems.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0),
+        [organLossItems]
+    );
+    useEffect(() => {
+        formik.setFieldValue("transferAmount", totalOrganLossAmount);
+    }, [totalOrganLossAmount]);
     useEffect(() => {
         if (isContinuous && oldClaim?.incidentDate) {
             formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));

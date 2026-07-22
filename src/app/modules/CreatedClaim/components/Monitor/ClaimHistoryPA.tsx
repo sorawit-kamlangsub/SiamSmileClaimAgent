@@ -63,17 +63,16 @@ const ClaimHistoryPA: React.FC = () => {
                 </Grid>
             </CustomPaper>
             <CustomPaper>
-                <ClaimHistoryTable tableId="ClaimHistoryPATable" onContinuousClaim={handleContinuousClaim} />
+                <ClaimHistoryTable
+                    tableId="ClaimHistoryPATable"
+                    onContinuousClaim={(item: any) => handleContinuousClaim(item)}
+                />
                 <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
                     <Button
                         variant="outlined"
                         color="primary"
                         startIcon={<PolicyIcon />}
-                        onClick={() =>
-                            navigate(
-                                `/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(selectedPolicy.appId)}`
-                            )
-                        }
+                        onClick={() => navigate(`/checkeligible/detail/${btoa(selectedPolicy.customerId!.toString())}`)}
                         sx={{ height: "33px" }}
                     >
                         ตรวจสอบสิทธิ์

@@ -21,7 +21,7 @@ type DocumentScanTableProps = {
     documentTypeId?: number | undefined;
 };
 
-const DocumentScanTable = ({ productId, aplicationCode, documentTypeId }: DocumentScanTableProps) => {
+const DocumentScanTable = ({ aplicationCode, documentTypeId }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
     const documentSubType = (): number => {
         if (documentTypeId === 15) {

@@ -30,6 +30,7 @@ import { swalError } from "../../../../_common";
 import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPAInfo";
 import { useBeneficiaryPA } from "../../../hooks/CreateClaim/ClaimPA/useBeneficiaryPA";
 import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/BeneficiarySectionPA";
+import { BeneficiaryForm } from "../../../store/claimPHSlice";
 
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
@@ -40,8 +41,8 @@ const ClaimPASummaryPage: React.FC = () => {
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openAddInsured, setOpenAddInsured] = useState(false);
-    const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPA(() => {
-        setOpenConfirm(true);
+    const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPA((beneficiaries) => {
+        handleConfirm(beneficiaries);
     });
     const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
 
@@ -57,7 +58,7 @@ const ClaimPASummaryPage: React.FC = () => {
         navigate(-1);
     };
 
-    const handleConfirm = async () => {
+    const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
         setOpenConfirm(false);
         Swal.fire({
@@ -73,7 +74,7 @@ const ClaimPASummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await createClaimPA();
+                    const res = await createClaimPA(freshBeneficiaries);
                     return res.data;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
@@ -269,7 +270,7 @@ const ClaimPASummaryPage: React.FC = () => {
                             startIcon={<CommentIcon />}
                             onClick={() => (isDeathDisability ? formik.handleSubmit() : setOpenConfirm(true))}
                         >
-                            แจ้งโอนเงิน
+                            {isDeathDisability ? "ส่งตรวจสอบ" : "แจ้งโอนเงิน"}
                         </Button>
                     </Box>
                 </Grid>

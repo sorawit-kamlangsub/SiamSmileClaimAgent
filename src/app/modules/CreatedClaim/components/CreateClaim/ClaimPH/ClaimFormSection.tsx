@@ -37,6 +37,7 @@ import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
 import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
+import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -78,6 +79,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         setOcrDocumentIds,
         getRequiredDocsByCoverageType,
     } = useClaimPHForm({ onNext });
+    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss();
     const { values, setFieldValue } = formik;
     const dispatch = useAppDispatch();
     const { organLossItems } = useAppSelector(claimPHSelector);
@@ -321,7 +323,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 </Grid>
                                 {values.specifyHospital === SpecifyHospital.Specify && (
                                     <Grid item xs={12} lg={9} mt={-1}>
-                                        <HospitalDropdown formik={formik} name="organizeId" required />
+                                        <HospitalDropdown formik={formik} name="hospitalId" required />
                                     </Grid>
                                 )}
                             </>
@@ -372,7 +374,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(isDeath || isDisability) && (
                             <>
-                                {values.diagnoses.map((item, index) => (
+                                {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
                                         <CD10Autocomplete
                                             name={`diagnoses.${index}.icd10Id`}
@@ -423,12 +425,16 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             <Box display="flex" alignItems="center" gap={1} mb={1.5}></Box>
                             <OrganLossSelector
                                 value={organLossItems}
+                                organChoices={organChoices}
+                                isOrganChoicesLoading={isOrganChoicesLoading}
+                                nonCoveredReason={nonCoveredReasonData?.data ?? []}
+                                isNonCoveredReasonLoading={isNonCoveredReasonLoading}
                                 onChange={(items) => dispatch(setOrganLossItems(items))}
                             />
                         </Box>
                     )}
                     {/* Coverage box */}
-                    {(isOPD || isIPD) && (
+                    {(isOPD || isIPD || isDisability) && (
                         <Grid item xs={12} mt={2}>
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useFormik, FormikErrors } from "formik";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useAuth } from "../../../../_auth";
@@ -18,6 +18,7 @@ import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailSearch } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
+import { amountNumber } from "../organLoss.types";
 
 interface Options {
     onNext: () => void;
@@ -26,7 +27,7 @@ interface Options {
 export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
-    const { form, isContinuous, insured } = useAppSelector(claimPASelector);
+    const { form, isContinuous, insured, organLossItems } = useAppSelector(claimPASelector);
     const { documentDetailById } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const docData = Object.values(documentDetailById);
@@ -133,7 +134,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 claimStyle: values.medicalTypeId
                     ? `${values.medicalTypeName ?? ""} (${values.coverageTypeName ?? ""})`
                     : `${values.causeOfIncidentName ?? ""} (${values.coverageTypeName ?? ""})`,
-                incidentDate: values.incidentDate ?? dayjs(),
+                incidentDate: values.incidentDate ?? undefined,
+                admissionDate: values.admissionDate ?? undefined,
+                dischargeDate: values.dischargeDate ?? undefined,
+                idCard: insured?.cardTypeId === 2 ? insured?.cardDetail ?? "" : "",
                 claimAmount: values.transferAmount ?? 0,
             };
 
@@ -303,6 +307,14 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             dispatch(setEnabled(true));
         }
     }, [formik.values.coverageTypeId]);
+
+    const totalOrganLossAmount = useMemo(
+        () => organLossItems.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0),
+        [organLossItems]
+    );
+    useEffect(() => {
+        formik.setFieldValue("transferAmount", totalOrganLossAmount);
+    }, [totalOrganLossAmount]);
 
     // useEffect(() => {
     //     if (isContinuous && oldClaim?.incidentDate) {

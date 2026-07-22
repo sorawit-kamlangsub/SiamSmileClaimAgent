@@ -66,18 +66,14 @@ const InsuredSearchModal: React.FC = () => {
             },
         },
         {
-            name: "policyCode",
+            name: "id",
             label: "AppID",
             options: {
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (value) => (
-                    <Link
-                        href={`/checkeligible/detail/${btoa(value)}/${btoa(value)}`}
-                        target="_blank"
-                        underline="hover"
-                    >
+                    <Link href={`/checkeligible/detail/${btoa(value.toString())}`} target="_blank" underline="hover">
                         {value}
                     </Link>
                 ),

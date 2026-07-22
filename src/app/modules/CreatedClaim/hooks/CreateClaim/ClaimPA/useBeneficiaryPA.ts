@@ -7,8 +7,9 @@ import { useGetBeneficiary } from "../../../../../api/coreClaimMastersApi";
 import { BeneficiaryFormikValues } from "../../../components/CreateClaim/ClaimPH/BeneficiarySectionPH";
 import { defaultBeneficiary } from "../ClaimPH/useBeneficiaryPH";
 import { useEffect } from "react";
+import React from "react";
 
-export const useBeneficiaryPA = (onValidSubmit: () => void) => {
+export const useBeneficiaryPA = (onValidSubmit: (beneficiaries: BeneficiaryForm[]) => void) => {
     const dispatch = useAppDispatch();
     const beneficiaries = useAppSelector((state) => state.claimph.beneficiaries);
     const { form, insured } = useAppSelector(claimPASelector);
@@ -82,13 +83,13 @@ export const useBeneficiaryPA = (onValidSubmit: () => void) => {
 
         onSubmit: (values) => {
             dispatch(setBeneficiaries(values.beneficiaries));
-            console.log(values.beneficiaries);
-            onValidSubmit();
+            onValidSubmit(values.beneficiaries);
         },
     });
+    const hasSyncedRef = React.useRef(false);
     useEffect(() => {
-        if (!beneficiaryQuery.isSuccess) return;
-
+        if (!beneficiaryQuery.isSuccess || hasSyncedRef.current) return;
+        hasSyncedRef.current = true;
         const beneficiaryData = beneficiaryQuery.data?.data ?? [];
 
         const nextBeneficiaries: BeneficiaryForm[] =
@@ -107,7 +108,7 @@ export const useBeneficiaryPA = (onValidSubmit: () => void) => {
 
         dispatch(setBeneficiaries(nextBeneficiaries));
         formik.setFieldValue("beneficiaries", nextBeneficiaries, false);
-    }, [dispatch, formik.setFieldValue, beneficiaryQuery.isSuccess, beneficiaryQuery.data]);
+    }, [beneficiaryQuery.isSuccess, beneficiaryQuery.data]);
 
     return {
         formik,

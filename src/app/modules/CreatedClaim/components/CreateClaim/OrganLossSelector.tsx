@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     Box,
     Typography,
@@ -30,17 +30,15 @@ import {
     FINGER_MAX_JOINTS,
     FingerKey,
     formatNoDecimal,
-    getOrganChoice,
     isComboOrganKey,
-    ORGAN_CHOICES,
     ORGAN_COMBO_PARTS,
-    OrganChoice,
+    OrganChoiceWithId,
     OrganFingerState,
     OrganLossItem,
     OrganRuleResult,
-    OrganSide,
-    UNCOVERED_REASON_OPTIONS,
 } from "../../hooks/CreateClaim/organLoss.types";
+import { useSingleBodyPartOptions, useComboBodyPartOptions } from "../../hooks/CreateClaim/useOrganLoss";
+import { GetNonCoveredReasonDtoResponse } from "../../../../api/coreClaimApi.client";
 
 const CARD_BORDER = "#dbe6f3";
 const CARD_SOFT_BG = "#eef6ff";
@@ -66,7 +64,7 @@ export const StepBadge: React.FC<{ n: number }> = ({ n }) => (
     </Box>
 );
 
-const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; size?: number }> = ({ icons, size = 22 }) => {
+const OrganIconGroup: React.FC<{ icons: OrganChoiceWithId["icons"]; size?: number }> = ({ icons, size = 22 }) => {
     if (icons.length <= 1) {
         const Icon = ORGAN_ICON_MAP[icons[0]];
         return (
@@ -100,8 +98,8 @@ const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; size?: number }> =
                         )}
                         <Box
                             sx={{
-                                width: 30,
-                                height: 30,
+                                width: size + 20,
+                                height: size + 20,
                                 borderRadius: "50%",
                                 bgcolor: CARD_SOFT_BG,
                                 display: "flex",
@@ -109,7 +107,7 @@ const OrganIconGroup: React.FC<{ icons: OrganChoice["icons"]; size?: number }> =
                                 justifyContent: "center",
                             }}
                         >
-                            <Icon sx={{ fontSize: 16, color: PRIMARY }} />
+                            <Icon sx={{ fontSize: size, color: PRIMARY }} />
                         </Box>
                     </React.Fragment>
                 );
@@ -166,18 +164,34 @@ const RuleResultBox: React.FC<{ rule: OrganRuleResult | null | undefined; compac
     );
 };
 
-const SideToggle: React.FC<{
-    value: OrganSide;
-    onChange: (side: OrganSide) => void;
-    includeBoth?: boolean;
-}> = ({ value, onChange, includeBoth = true }) => {
-    const options: OrganSide[] = includeBoth ? ["ซ้าย", "ขวา", "ทั้งสองข้าง"] : ["ซ้าย", "ขวา"];
+// ── ปุ่มเลือกข้าง ใช้ทั้งกรณีอวัยวะเดี่ยว และแต่ละฝั่งของ combo ──
+const SidePickToggle: React.FC<{
+    value: number | undefined;
+    onChange: (id: number, name: string) => void;
+    options: { id: number; name: string }[];
+    loading?: boolean;
+    isCombo?: boolean;
+}> = ({ value, onChange, options, loading, isCombo }) => {
+    if (loading) {
+        return (
+            <Typography variant="body2" color="text.secondary" fontWeight={600}>
+                กำลังโหลดตัวเลือก...
+            </Typography>
+        );
+    }
+    if (options.length === 0) {
+        return (
+            <Typography variant="body2" color="text.disabled" fontWeight={600}>
+                ไม่มีตัวเลือกข้าง
+            </Typography>
+        );
+    }
     return (
-        <Box display="flex" gap={1}>
-            {options.map((side) => (
+        <Box display="flex" gap={1} flexWrap="wrap" justifyContent={isCombo ? "center" : "flex-start"}>
+            {options.map((opt) => (
                 <Box
-                    key={side}
-                    onClick={() => onChange(side)}
+                    key={opt.id}
+                    onClick={() => onChange(opt.id, opt.name)}
                     role="button"
                     tabIndex={0}
                     sx={{
@@ -185,16 +199,16 @@ const SideToggle: React.FC<{
                         py: 0.75,
                         borderRadius: "8px",
                         border: "1px solid",
-                        borderColor: value === side ? PRIMARY : CARD_BORDER,
-                        bgcolor: value === side ? PRIMARY : "#fff",
-                        color: value === side ? "#fff" : "text.secondary",
+                        borderColor: value === opt.id ? PRIMARY : CARD_BORDER,
+                        bgcolor: value === opt.id ? PRIMARY : "#fff",
+                        color: value === opt.id ? "#fff" : "text.secondary",
                         fontWeight: 700,
                         fontSize: 14,
                         cursor: "pointer",
                         userSelect: "none",
                     }}
                 >
-                    {side}
+                    {opt.name}
                 </Box>
             ))}
         </Box>
@@ -205,9 +219,17 @@ const SideToggle: React.FC<{
 interface ModalState {
     key: string;
     editIndex: number;
-    choice: OrganChoice;
-    side: OrganSide;
-    comboSides: Record<string, OrganSide>;
+    choice: OrganChoiceWithId;
+    // อวัยวะเดี่ยว
+    side: number | undefined; // bodyPartId ที่เลือก
+    sideName: string; // disabilitySideName ที่เลือก (เก็บไว้ทำ summary/rule lookup)
+    // combo
+    comboPart1Id: number | undefined;
+    comboPart1Name: string;
+    comboPart2Id: number | undefined;
+    comboPart2Name: string;
+    resolvedComboBodyPartId: number | undefined;
+    // ฟิลด์ร่วม
     amount: string;
     uncoveredAmount: string;
     uncoveredReason: string;
@@ -217,41 +239,46 @@ interface ModalState {
     fingers: OrganFingerState | null;
 }
 
-const buildComboSides = (choice: OrganChoice, existing?: Record<string, OrganSide>, fallback: OrganSide = "ขวา") => {
-    const parts = ORGAN_COMBO_PARTS[choice.key] || [];
-    return parts.reduce(
-        (acc, part) => {
-            acc[part.key] = existing?.[part.key] || fallback;
-            return acc;
-        },
-        {} as Record<string, OrganSide>
-    );
-};
-
 export interface OrganLossSelectorProps {
     value: OrganLossItem[];
     onChange: (items: OrganLossItem[]) => void;
+    organChoices: OrganChoiceWithId[];
+    isOrganChoicesLoading?: boolean;
+    nonCoveredReason?: GetNonCoveredReasonDtoResponse[];
+    isNonCoveredReasonLoading?: boolean;
     priorClaimWarning?: string;
-    getSimpleRule?: (organKey: string, side: OrganSide | "") => OrganRuleResult | null;
+    getSimpleRule?: (organKey: string, sideName: string) => OrganRuleResult | null;
     getFingerRule?: (organKey: string, fingerKey: FingerKey, joints: number) => OrganRuleResult | null;
 }
 
 const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
     value,
     onChange,
+    organChoices,
+    isOrganChoicesLoading,
+    nonCoveredReason,
+    isNonCoveredReasonLoading,
     priorClaimWarning,
     getSimpleRule,
     getFingerRule,
 }) => {
     const [modal, setModal] = useState<ModalState | null>(null);
     const [formError, setFormError] = useState("");
+    const notCoveredReasons = useMemo(() => {
+        const raw = !!nonCoveredReason && nonCoveredReason.length > 0 ? nonCoveredReason : [];
+        return raw.map((r) => ({
+            value: r.nonCoveredReasonId,
+            label: r.nonCoveredReasonName ?? "-",
+        }));
+    }, [nonCoveredReason]);
 
     const selectedKeys = useMemo(() => value.map((i) => i.key), [value]);
+    const findOrganChoice = (key: string) => organChoices.find((c) => c.key === key);
 
     const totalAmount = useMemo(() => value.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0), [value]);
 
     const openModal = (key: string) => {
-        const choice = getOrganChoice(key);
+        const choice = findOrganChoice(key);
         if (!choice) return;
         const editIndex = selectedKeys.indexOf(key);
         const existing = editIndex >= 0 ? value[editIndex] : undefined;
@@ -260,11 +287,16 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             key,
             editIndex,
             choice,
-            side: (existing?.side as OrganSide) || "ขวา",
-            comboSides: buildComboSides(choice, existing?.comboSides, (existing?.side as OrganSide) || "ขวา"),
+            side: existing?.bodyPartId,
+            sideName: "",
+            comboPart1Id: undefined,
+            comboPart1Name: "",
+            comboPart2Id: undefined,
+            comboPart2Name: "",
+            resolvedComboBodyPartId: existing?.bodyPartId,
             amount: existing?.amount || (existing?.totalAmount ? String(existing.totalAmount) : ""),
             uncoveredAmount: existing?.uncoveredAmount || "",
-            uncoveredReason: existing?.uncoveredReason || "สาเหตุไม่คุ้มครอง",
+            uncoveredReason: existing?.uncoveredReason || "",
             exgratiaDeductSource: existing?.exgratiaDeductSource || "",
             exgratiaDeductDetail: existing?.exgratiaDeductDetail || "",
             note: existing?.note || "",
@@ -301,6 +333,8 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
     const handleSave = () => {
         if (!modal) return;
 
+        const isCombo = isComboOrganKey(modal.key);
+
         if (modal.key === "exgratia" && !modal.exgratiaDeductSource) {
             setFormError("กรุณาระบุช่องทางการหัก");
             return;
@@ -313,11 +347,20 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                 return;
             }
         }
+        if (!isCombo && modal.choice.hasSide && !modal.choice.isFinger && !modal.side) {
+            setFormError("กรุณาเลือกข้างที่สูญเสีย");
+            return;
+        }
+        if (isCombo && !modal.resolvedComboBodyPartId) {
+            setFormError("กรุณาเลือกข้างให้ครบทั้งสองอวัยวะ");
+            return;
+        }
 
         const item: OrganLossItem = {
             key: modal.key,
             label: modal.choice.label,
             icons: modal.choice.icons,
+            disabilityLossPartId: modal.choice.disabilityLossPartId,
             uncoveredAmount: modal.uncoveredAmount,
             uncoveredReason: modal.uncoveredReason,
             exgratiaDeductSource: modal.exgratiaDeductSource,
@@ -336,16 +379,19 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                 `ข้างขวา ${rightCount} นิ้ว`,
                 `${formatNoDecimal(modalTotal)} บาท`,
             ].join(" • ");
-        } else if (isComboOrganKey(modal.key)) {
-            item.comboSides = modal.comboSides;
-            item.side = Object.values(modal.comboSides).join(" + ");
+        } else if (isCombo) {
+            const comboParts = ORGAN_COMBO_PARTS[modal.key] || [];
+            item.bodyPartId = modal.resolvedComboBodyPartId;
             item.amount = modal.amount;
-            const comboSummary = (ORGAN_COMBO_PARTS[modal.key] || [])
-                .map((part) => `${part.label}: ${modal.comboSides[part.key] || "-"}`)
-                .join(" • ");
+            item.side = `${modal.comboPart1Name} + ${modal.comboPart2Name}`;
+            const comboSummary = [
+                `${comboParts[0]?.label}: ${modal.comboPart1Name || "-"}`,
+                `${comboParts[1]?.label}: ${modal.comboPart2Name || "-"}`,
+            ].join(" • ");
             item.summaryText = [comboSummary, `${formatNoDecimal(modalTotal)} บาท`].filter(Boolean).join(" • ");
         } else {
-            item.side = modal.choice.hasSide ? modal.side : "";
+            item.bodyPartId = modal.choice.hasSide ? modal.side : undefined;
+            item.side = modal.choice.hasSide ? modal.sideName : "";
             item.amount = modal.amount;
             const exgratiaNote =
                 modal.key === "exgratia" && modal.exgratiaDeductSource ? `หักจาก: ${modal.exgratiaDeductSource}` : "";
@@ -407,59 +453,65 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                 />
             </Box>
 
-            <Box
-                sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
-                    gap: 1.5,
-                    mb: 3,
-                }}
-            >
-                {ORGAN_CHOICES.map((choice) => {
-                    const selected = selectedKeys.includes(choice.key);
-                    return (
-                        <Box
-                            key={choice.key}
-                            onClick={() => openModal(choice.key)}
-                            role="button"
-                            tabIndex={0}
-                            sx={{
-                                position: "relative",
-                                border: "1px solid",
-                                borderColor: selected ? PRIMARY : CARD_BORDER,
-                                borderRadius: 2,
-                                bgcolor: selected ? CARD_SOFT_BG : "#fff",
-                                textAlign: "center",
-                                p: 2,
-                                cursor: "pointer",
-                                transition: "all .15s ease",
-                                "&:hover": { borderColor: PRIMARY, bgcolor: CARD_SOFT_BG },
-                            }}
-                        >
-                            <OrganIconGroup icons={choice.icons} />
-                            <Typography fontWeight={800} fontSize={15}>
-                                {choice.label}
-                            </Typography>
-                            <Typography
-                                variant="caption"
-                                color="text.secondary"
-                                fontWeight={600}
-                                display="block"
-                                mt={0.25}
+            {isOrganChoicesLoading || isNonCoveredReasonLoading ? (
+                <Typography color="text.secondary" fontWeight={600} mb={3}>
+                    กำลังโหลดข้อมูลอวัยวะ...
+                </Typography>
+            ) : (
+                <Box
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
+                        gap: 1.5,
+                        mb: 3,
+                    }}
+                >
+                    {organChoices.map((choice) => {
+                        const selected = selectedKeys.includes(choice.key);
+                        return (
+                            <Box
+                                key={choice.key}
+                                onClick={() => openModal(choice.key)}
+                                role="button"
+                                tabIndex={0}
+                                sx={{
+                                    position: "relative",
+                                    border: "1px solid",
+                                    borderColor: selected ? PRIMARY : CARD_BORDER,
+                                    borderRadius: 2,
+                                    bgcolor: selected ? CARD_SOFT_BG : "#fff",
+                                    textAlign: "center",
+                                    p: 2,
+                                    cursor: "pointer",
+                                    transition: "all .15s ease",
+                                    "&:hover": { borderColor: PRIMARY, bgcolor: CARD_SOFT_BG },
+                                }}
                             >
-                                {choice.description}
-                            </Typography>
-                            {selected && (
-                                <Chip
-                                    size="small"
-                                    label="เลือกแล้ว"
-                                    sx={{ mt: 1, bgcolor: PRIMARY, color: "#fff", fontWeight: 700, fontSize: 11 }}
-                                />
-                            )}
-                        </Box>
-                    );
-                })}
-            </Box>
+                                <OrganIconGroup icons={choice.icons} />
+                                <Typography fontWeight={800} fontSize={15}>
+                                    {choice.label}
+                                </Typography>
+                                <Typography
+                                    variant="caption"
+                                    color="text.secondary"
+                                    fontWeight={600}
+                                    display="block"
+                                    mt={0.25}
+                                >
+                                    {choice.description}
+                                </Typography>
+                                {selected && (
+                                    <Chip
+                                        size="small"
+                                        label="เลือกแล้ว"
+                                        sx={{ mt: 1, bgcolor: PRIMARY, color: "#fff", fontWeight: 700, fontSize: 11 }}
+                                    />
+                                )}
+                            </Box>
+                        );
+                    })}
+                </Box>
+            )}
 
             {/* ── รายการอวัยวะที่เลือก ── */}
             <Box display="flex" alignItems="center" gap={1} mb={1.5}>
@@ -503,28 +555,33 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                             <Box display="flex" alignItems="center" gap={1.5}>
                                 <Box
                                     sx={{
-                                        width: 40,
+                                        width: 100,
                                         height: 40,
-                                        borderRadius: "50%",
-                                        bgcolor: CARD_SOFT_BG,
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         flexShrink: 0,
                                     }}
                                 >
-                                    <OrganIconGroup icons={item.icons} size={16} />
+                                    <Box
+                                        sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            width: item.icons.length <= 1 ? 40 : "auto",
+                                            height: 40,
+                                            borderRadius: item.icons.length <= 1 ? "50%" : 0,
+                                            bgcolor: item.icons.length <= 1 ? CARD_SOFT_BG : "transparent",
+                                        }}
+                                    >
+                                        <OrganIconGroup icons={item.icons} size={22} />
+                                    </Box>
                                 </Box>
-                                <Box>
+                                <Box sx={{ minWidth: 0, flex: 1 }}>
                                     <Typography fontWeight={800}>{item.label}</Typography>
                                     <Typography variant="body2" color="text.secondary" fontWeight={600}>
                                         {item.summaryText || "-"}
                                     </Typography>
-                                    {item.note && (
-                                        <Typography variant="caption" color="text.disabled">
-                                            หมายเหตุ: {item.note}
-                                        </Typography>
-                                    )}
                                 </Box>
                             </Box>
                             <Box display="flex" gap={1}>
@@ -560,7 +617,12 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             </Box>
 
             {/* ── modal ระบุรายละเอียดการสูญเสีย ── */}
-            <Dialog open={!!modal} onClose={closeModal} maxWidth={modal?.choice.isFinger ? "lg" : "sm"} fullWidth>
+            <Dialog
+                open={!!modal}
+                onClose={closeModal}
+                maxWidth={modal?.choice.isFinger ? "lg" : modal?.choice.isCombo ? "md" : "sm"}
+                fullWidth
+            >
                 {modal && (
                     <>
                         <DialogTitle
@@ -632,9 +694,9 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                     value={modal.uncoveredReason}
                                     onChange={(e) => patchModal({ uncoveredReason: e.target.value })}
                                 >
-                                    {UNCOVERED_REASON_OPTIONS.map((r) => (
-                                        <MenuItem key={r} value={r}>
-                                            {r}
+                                    {notCoveredReasons.map((r) => (
+                                        <MenuItem key={r.value ?? r.label} value={r.value}>
+                                            {r.label}
                                         </MenuItem>
                                     ))}
                                 </TextField>
@@ -705,7 +767,44 @@ const SimpleModalBody: React.FC<{
     modalTotal: number;
 }> = ({ modal, patchModal, getSimpleRule, modalTotal }) => {
     const isCombo = isComboOrganKey(modal.key);
-    const rule = isCombo ? null : getSimpleRule?.(modal.key, modal.choice.hasSide ? modal.side : "") ?? null;
+    const comboParts = ORGAN_COMBO_PARTS[modal.key] || [];
+
+    // ── กรณีอวัยวะเดี่ยว: เรียก API ด้วย disabilityLossPartId ของตัวเอง ──
+    const { options: singleOptions, isLoading: singleLoading } = useSingleBodyPartOptions(
+        !isCombo ? modal.choice.disabilityLossPartId : undefined
+    );
+
+    // ── กรณี combo: เรียก API ด้วย disabilityLossPartId ของตัว combo เอง ──
+    const {
+        part1Options,
+        part2Options,
+        resolveBodyPartId,
+        findByBodyPartId,
+        isLoading: comboLoading,
+    } = useComboBodyPartOptions(isCombo ? modal.choice.disabilityLossPartId : undefined);
+
+    // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
+    useEffect(() => {
+        if (!isCombo || modal.editIndex < 0 || modal.comboPart1Id !== undefined) return;
+        const found = findByBodyPartId(modal.resolvedComboBodyPartId);
+        if (found) {
+            patchModal({
+                comboPart1Id: found.disabilitySidePart1Id,
+                comboPart1Name: found.disabilitySidePart1Name,
+                comboPart2Id: found.disabilitySidePart2Id,
+                comboPart2Name: found.disabilitySidePart2Name,
+            });
+        }
+    }, [isCombo, part1Options.length, part2Options.length]);
+
+    // ── ทุกครั้งที่เลือกครบทั้งสองฝั่งของ combo: resolve หา bodyPartId จริง ──
+    useEffect(() => {
+        if (!isCombo) return;
+        const resolved = resolveBodyPartId(modal.comboPart1Id, modal.comboPart2Id);
+        patchModal({ resolvedComboBodyPartId: resolved?.bodyPartId });
+    }, [isCombo, modal.comboPart1Id, modal.comboPart2Id]);
+
+    const rule = isCombo ? null : getSimpleRule?.(modal.key, modal.sideName) ?? null;
 
     return (
         <Box>
@@ -715,25 +814,36 @@ const SimpleModalBody: React.FC<{
                         ข้างที่สูญเสียตามอวัยวะ :
                     </Typography>
                     <Box display="grid" gap={1.5} gridTemplateColumns={{ xs: "1fr", sm: "1fr 1fr" }}>
-                        {(ORGAN_COMBO_PARTS[modal.key] || []).map((part) => (
-                            <Box
-                                key={part.key}
-                                sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}
-                            >
-                                <Box gap={1} mb={1}>
-                                    <OrganIconGroup icons={[part.icon]} size={16} />
-                                    <Typography fontWeight={700} sx={{ display: "flex", justifyContent: "center" }}>
-                                        {part.label}
-                                    </Typography>
-                                </Box>
-                                <SideToggle
-                                    value={modal.comboSides[part.key] || "ขวา"}
-                                    onChange={(side) =>
-                                        patchModal({ comboSides: { ...modal.comboSides, [part.key]: side } })
-                                    }
-                                />
+                        <Box sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}>
+                            <Box gap={1} mb={1}>
+                                <OrganIconGroup icons={comboParts[0] ? [comboParts[0].icon] : []} size={16} />
+                                <Typography fontWeight={700} sx={{ display: "flex", justifyContent: "center" }}>
+                                    {comboParts[0]?.label}
+                                </Typography>
                             </Box>
-                        ))}
+                            <SidePickToggle
+                                value={modal.comboPart1Id}
+                                options={part1Options}
+                                loading={comboLoading}
+                                onChange={(id, name) => patchModal({ comboPart1Id: id, comboPart1Name: name })}
+                                isCombo
+                            />
+                        </Box>
+                        <Box sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}>
+                            <Box gap={1} mb={1}>
+                                <OrganIconGroup icons={comboParts[1] ? [comboParts[1].icon] : []} size={16} />
+                                <Typography fontWeight={700} sx={{ display: "flex", justifyContent: "center" }}>
+                                    {comboParts[1]?.label}
+                                </Typography>
+                            </Box>
+                            <SidePickToggle
+                                value={modal.comboPart2Id}
+                                options={part2Options}
+                                loading={comboLoading}
+                                onChange={(id, name) => patchModal({ comboPart2Id: id, comboPart2Name: name })}
+                                isCombo
+                            />
+                        </Box>
                     </Box>
                 </Box>
             )}
@@ -743,7 +853,12 @@ const SimpleModalBody: React.FC<{
                     <Typography fontWeight={700} mb={1}>
                         ข้างที่สูญเสีย :
                     </Typography>
-                    <SideToggle value={modal.side} onChange={(side) => patchModal({ side, amount: "" })} />
+                    <SidePickToggle
+                        value={modal.side}
+                        options={singleOptions.map((o) => ({ id: o.bodyPartId, name: o.disabilitySideName }))}
+                        loading={singleLoading}
+                        onChange={(id, name) => patchModal({ side: id, sideName: name, amount: "" })}
+                    />
                 </Box>
             )}
 
@@ -754,6 +869,7 @@ const SimpleModalBody: React.FC<{
                 inputMode="decimal"
                 value={modal.amount}
                 onChange={(e) => patchModal({ amount: e.target.value })}
+                sx={{ mt: isCombo ? 0 : undefined }}
             />
 
             {modal.key === "exgratia" && (
@@ -868,7 +984,7 @@ const FingerModalBody: React.FC<{
                                             setFingerField(side, fingerKey, { joints: Math.max(1, data.joints - 1) })
                                         }
                                     >
-                                        −
+                                        -
                                     </IconButton>
                                     <Typography fontWeight={800}>{data.joints}</Typography>
                                     <IconButton

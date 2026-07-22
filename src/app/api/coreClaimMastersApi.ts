@@ -26,6 +26,8 @@ const getAllHospitalQueryKey = ["getAllHospital"];
 const getFormatTypeQueryKey = ["getFormatType"];
 const getBeneficiaryQueryKey = ["getBeneficiary"];
 const getRelationTypeQueryKey = ["getRelationType"];
+const getDisabilityLossPartQueryKey = ["getDisabilityLossPart"];
+const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPart"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -336,6 +338,26 @@ export const useGetTitle = (titleId?: number | undefined, personTypeId?: number)
     return useQuery(
         [getRelationTypeQueryKey, titleId, personTypeId],
         () => coreClaimMastersClient.getTitle(titleId, personTypeId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDisabilityLossPart = (disabilityLossPartId?: number | undefined) => {
+    return useQuery(
+        [getDisabilityLossPartQueryKey, disabilityLossPartId],
+        () => coreClaimMastersClient.getDisabilityLossPart(disabilityLossPartId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetBodyPartByDisabilityLossPart = (disabilityLossPartId?: number | undefined) => {
+    return useQuery(
+        [getBodyPartByDisabilityLossPartQueryKey, disabilityLossPartId],
+        () => coreClaimMastersClient.getBodyPartByDisabilityLossPart(disabilityLossPartId),
         {
             refetchOnWindowFocus: false,
         }

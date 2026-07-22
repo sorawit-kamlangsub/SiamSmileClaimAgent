@@ -1626,6 +1626,66 @@ export class MastersClient {
     }
 
     /**
+     * API สำหรับ Get ข้อมูล Branch (สาขา)
+     * @param branchId (optional)
+     * @return Success
+     */
+    getBranch(
+        branchId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetBranchDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/branch?";
+        if (branchId === null) throw new Error("The parameter 'branchId' cannot be null.");
+        else if (branchId !== undefined) url_ += "branchId=" + encodeURIComponent("" + branchId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBranch(_response);
+            });
+    }
+
+    protected processGetBranch(response: AxiosResponse): Promise<GetBranchDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetBranchDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetBranchDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล Organize (ธนาคาร)
      * @param organizeId (optional)
      * @return Success
@@ -1935,6 +1995,137 @@ export class MastersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล PaymentStatus (สถานะการโอนเงิน)
+     * @param paymentStatusId (optional)
+     * @return Success
+     */
+    getPaymentStatus(
+        paymentStatusId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPaymentStatusDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/paymentstatus?";
+        if (paymentStatusId === null) throw new Error("The parameter 'paymentStatusId' cannot be null.");
+        else if (paymentStatusId !== undefined)
+            url_ += "paymentStatusId=" + encodeURIComponent("" + paymentStatusId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPaymentStatus(_response);
+            });
+    }
+
+    protected processGetPaymentStatus(
+        response: AxiosResponse
+    ): Promise<GetPaymentStatusDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetPaymentStatusDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetPaymentStatusDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล AdjustmentReason (AdjustmentTypeId 2 = โอนเพิ่ม, 3 = คืนเงิน)
+     * @param adjustmentTypeId (optional)
+     * @param adjustmentReasonId (optional)
+     * @return Success
+     */
+    getAdjustmentReason(
+        adjustmentTypeId?: number | undefined,
+        adjustmentReasonId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetAdjustmentReasonDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/adjustment/reason?";
+        if (adjustmentTypeId === null) throw new Error("The parameter 'adjustmentTypeId' cannot be null.");
+        else if (adjustmentTypeId !== undefined)
+            url_ += "adjustmentTypeId=" + encodeURIComponent("" + adjustmentTypeId) + "&";
+        if (adjustmentReasonId === null) throw new Error("The parameter 'adjustmentReasonId' cannot be null.");
+        else if (adjustmentReasonId !== undefined)
+            url_ += "adjustmentReasonId=" + encodeURIComponent("" + adjustmentReasonId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAdjustmentReason(_response);
+            });
+    }
+
+    protected processGetAdjustmentReason(
+        response: AxiosResponse
+    ): Promise<GetAdjustmentReasonDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetAdjustmentReasonDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetAdjustmentReasonDtoResponseListServiceResponse>(null as any);
     }
 
     /**
@@ -2972,6 +3163,25 @@ export interface FormatTypeDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetAdjustmentReasonDtoResponse {
+    adjustmentReasonId?: number;
+    adjustmentReasonName?: string | undefined;
+}
+
+export interface GetAdjustmentReasonDtoResponseListServiceResponse {
+    data?: GetAdjustmentReasonDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetBankAccountRelationTypeDtoResponse {
     bankAccountRelationTypeId?: number;
     bankAccountRelationTypeName?: string | undefined;
@@ -3035,6 +3245,26 @@ export interface GetBodyPartByDisabilityLossPartDtoResponse {
 
 export interface GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse {
     data?: GetBodyPartByDisabilityLossPartDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetBranchDtoResponse {
+    branchId?: number;
+    branchCode?: string | undefined;
+    branchName?: string | undefined;
+}
+
+export interface GetBranchDtoResponseListServiceResponse {
+    data?: GetBranchDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -3286,6 +3516,8 @@ export interface GetCustomerDetailByIdDtoResponse {
     contactPhoneNo?: string | undefined;
     policyExcludeId?: number | undefined;
     policyExcludeDetail?: string | undefined;
+    agentName?: string | undefined;
+    agentBranchName?: string | undefined;
 }
 
 export interface GetCustomerDetailByIdDtoResponseServiceResponse {
@@ -3476,6 +3708,25 @@ export interface GetOrganizeDtoResponse {
 
 export interface GetOrganizeDtoResponseListServiceResponse {
     data?: GetOrganizeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetPaymentStatusDtoResponse {
+    paymentStatusId?: number;
+    paymentStatusNameTH?: string | undefined;
+}
+
+export interface GetPaymentStatusDtoResponseListServiceResponse {
+    data?: GetPaymentStatusDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
