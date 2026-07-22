@@ -49,9 +49,11 @@ const AppRoot = () => {
         ...SSO_CONFIG,
         loadUserInfo: true,
         response_type: "code",
-        automaticSilentRenew: true,
+        // The UAT identity provider does not allow its login page to be framed.
+        // Renew through a top-level redirect when the token expires instead.
+        automaticSilentRenew: false,
         userStore: new WebStorageStateStore({ store: window.localStorage }),
-        monitorSession: true,
+        monitorSession: false,
     });
 
     return (
