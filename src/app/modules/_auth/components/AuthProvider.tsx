@@ -103,19 +103,11 @@ export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) =
         }
     }, [getState, oidcUserManager]);
 
-    const signinSilentThenRedirect = useCallback(async () => {
-        try {
-            await oidcUserManager.signinSilent();
-        } catch {
-            await signinRedirectWithGuard();
-        }
-    }, [oidcUserManager, signinRedirectWithGuard]);
-
     useEffect(() => {
         const onAccessTokenExpired = async () => {
-            oidcUserManager.removeUser();
-            oidcUserManager.clearStaleState();
-            await signinSilentThenRedirect();
+            await oidcUserManager.removeUser();
+            await oidcUserManager.clearStaleState();
+            await signinRedirectWithGuard();
         };
 
         const onUserLoaded = (loadedUser: User) => {
@@ -133,40 +125,36 @@ export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) =
             await signinRedirectWithGuard();
         };
 
-        const onAccessTokenExpiring = () => {
-            oidcUserManager.startSilentRenew();
-        };
-
         oidcUserManager.events.addAccessTokenExpired(onAccessTokenExpired);
         oidcUserManager.events.addUserLoaded(onUserLoaded);
         oidcUserManager.events.addUserUnloaded(onUserUnloaded);
         oidcUserManager.events.addUserSignedOut(onUserSignedOut);
-        oidcUserManager.events.addAccessTokenExpiring(onAccessTokenExpiring);
 
         return () => {
             oidcUserManager.events.removeAccessTokenExpired(onAccessTokenExpired);
             oidcUserManager.events.removeUserLoaded(onUserLoaded);
             oidcUserManager.events.removeUserUnloaded(onUserUnloaded);
             oidcUserManager.events.removeUserSignedOut(onUserSignedOut);
-            oidcUserManager.events.removeAccessTokenExpiring(onAccessTokenExpiring);
         };
-    }, [oidcUserManager, setLogin, setLogout, signinRedirectWithGuard, signinSilentThenRedirect]);
+    }, [oidcUserManager, setLogin, setLogout, signinRedirectWithGuard]);
 
     useEffect(() => {
         const processGetUser = async () => {
             const user = await oidcUserManager.getUser();
-            if (user) {
+            if (user && !user.expired) {
                 clearAuthRedirectInProgress();
                 setLogin(user);
-                oidcUserManager.clearStaleState();
+                await oidcUserManager.clearStaleState();
             } else {
                 setLogout();
-                await signinSilentThenRedirect();
+                await oidcUserManager.removeUser();
+                await oidcUserManager.clearStaleState();
+                await signinRedirectWithGuard();
             }
         };
 
         processGetUser();
-    }, [oidcUserManager, setLogin, setLogout, signinSilentThenRedirect]);
+    }, [oidcUserManager, setLogin, setLogout, signinRedirectWithGuard]);
 
     return (
         <AuthContext.Provider
