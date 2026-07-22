@@ -10,6 +10,7 @@ import {
 } from "@mui/material";
 import { FormikProps } from "formik";
 import { FormikFocusError } from "../FormikFocusError";
+import { useEffect } from "react";
 
 export type FormikDropdownProps = {
     name: string;
@@ -19,7 +20,7 @@ export type FormikDropdownProps = {
     formik: FormikProps<any>;
     valueFieldName?: string;
     displayFieldName?: string;
-    selectedCallback?: (value: any) => void;
+    selectedCallback?: (item: any) => void;
     firstItemText?: string;
     disableFirstItem?: boolean;
     disabledItemValue?: any[];
@@ -46,15 +47,22 @@ const FormikDropdown = ({
 
     const handleOnChange = (event: SelectChangeEvent<string | number | undefined>) => {
         const setValue = event.target.value === "-1" ? undefined : event.target.value;
-        setFieldValue(name, setValue, true);
-        setFieldValue(
-            `${name}_selectedText`,
-            data?.find((item) => item[valueFieldName] === setValue)?.[displayFieldName] ?? undefined,
-            true
-        );
-        selectedCallback && selectedCallback(setValue ?? undefined);
-    };
 
+        const selectedItem = data?.find((item) => item[valueFieldName] === setValue);
+
+        setFieldValue(name, setValue, true);
+        setFieldValue(`${name}_selectedText`, selectedItem?.[displayFieldName] ?? undefined, true);
+        selectedCallback?.(selectedItem);
+    };
+    useEffect(() => {
+        if (value == null) return;
+
+        const item = data?.find((x) => x[valueFieldName] === value);
+
+        if (item) {
+            selectedCallback?.(item);
+        }
+    }, [value, data]);
     return (
         <FormikFocusError formik={formik} useFocusError={useFocusError}>
             <FormControl {...formcontrolProps} error={touched && !!error} id={`${name}-formik-select`}>

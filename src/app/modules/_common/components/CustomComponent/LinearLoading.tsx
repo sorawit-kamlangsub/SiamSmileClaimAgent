@@ -1,7 +1,7 @@
 import { LinearProgress, Paper } from "@mui/material";
 
 type LinearLoadingProps = {
-    children: React.ReactNode;
+    children?: React.ReactNode;
     isLoading?: boolean;
     sx?: Record<string, any>;
 };
@@ -15,7 +15,7 @@ const LinearLoading = ({ children, isLoading, sx }: LinearLoadingProps) => {
                     <LinearProgress sx={{ height: "5px" }} />{" "}
                 </Paper>
             ) : (
-                children
+                children || <></>
             )}
         </>
     );

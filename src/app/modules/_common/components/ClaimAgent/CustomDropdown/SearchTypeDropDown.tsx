@@ -8,10 +8,10 @@ type SearchTypeDropDownProps = Omit<
 };
 
 const searchTypeData = [
-    { searchTypeId: 1, searchTypeName: "เลขบัตรประชาชน" },
-    { searchTypeId: 2, searchTypeName: "Passport" },
-    { searchTypeId: 3, searchTypeName: "ชื่อ-นามสกุล(ผู้เอาประกัน)" },
-    { searchTypeId: 4, searchTypeName: "ApplicationID" },
+    { searchTypeId: 1, searchTypeName: "ApplicationID" },
+    { searchTypeId: 2, searchTypeName: "เลขบัตรประชาชน" },
+    { searchTypeId: 3, searchTypeName: "Passport" },
+    { searchTypeId: 4, searchTypeName: "ชื่อ-นามสกุล(ผู้เอาประกัน)" },
     { searchTypeId: 5, searchTypeName: "เลขที่อ้างอิง(นักเรียน)" },
 ];
 const SearchTypeDropDown = ({ formik, filterIds, ...props }: SearchTypeDropDownProps) => {
