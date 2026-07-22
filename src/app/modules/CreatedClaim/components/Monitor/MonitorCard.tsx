@@ -75,7 +75,7 @@ const MonitorCard: React.FC = () => {
 
                                     {/* Row 3: AppID */}
                                     <Link
-                                        href={`/checkeligible/detail/${btoa(row.policyCode)}/${btoa(row.policyCode)}`}
+                                        href={`/checkeligible/detail/${btoa(row.id.toString())}`}
                                         target="_blank"
                                         underline="hover"
                                         color="primary"
