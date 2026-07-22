@@ -23,7 +23,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "chiefComplaintDetail",
+            name: "lastestChiefComplaint",
             label: "อาการสำคัญ(ChiefComplain)",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
         },
@@ -69,7 +69,8 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
                             onClick={() => {
                                 if (item) onContinuousClaim(item);
                             }}
-                            disabled={!item}
+                            //disabled={!item}
+                            disabled
                             sx={{ whiteSpace: "nowrap" }}
                         >
                             แจ้งเคลมต่อเนื่อง

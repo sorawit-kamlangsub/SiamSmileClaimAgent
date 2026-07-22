@@ -19,6 +19,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
+import { CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
 interface Options {
     onNext: () => void;
 }
@@ -30,7 +31,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
-    const ALLOWED_INCIDENT_IDS = [2, 3];
+    const INCIDENT_TYPES = [IncidentType.Illness, IncidentType.Accident];
     const docData = Object.values(documentDetailById);
 
     const formik = useFormik<ClaimFormValues>({
@@ -49,11 +50,14 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             if (!values.incidentTypeId) errors.incidentTypeId = req;
             if (!values.coverageTypeId) errors.coverageTypeId = req;
 
-            const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
-            const isCause = values.coverageTypeId === 4 || values.coverageTypeId === 5;
-            const isIPD = values.medicalTypeId === 2 || values.medicalTypeId === 6;
-            const isDisability = values.coverageTypeId === 4;
-            const isDeath = values.coverageTypeId === 5;
+            const isMedical =
+                values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+            const isCause =
+                values.coverageTypeId === CoverageType.Death || values.coverageTypeId === CoverageType.Disability;
+            const isIPD =
+                values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+            const isDisability = values.coverageTypeId === CoverageType.Disability;
+            const isDeath = values.coverageTypeId === CoverageType.Death;
 
             if (isMedical && !values.medicalTypeId) errors.medicalTypeId = req;
             if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = req;
@@ -89,17 +93,10 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 if (values.specifyHospital === SpecifyHospital.Specify && !values.hospitalId) errors.hospitalId = req;
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
+                if (!values.chiefComplaintId) errors.chiefComplaintId = req;
+                if (!values.accidentPlace) errors.accidentPlace = req;
                 if (isDeath) {
                     if (!values.deathDate) errors.deathDate = req;
-                    if (!values.accidentPlace) errors.accidentPlace = req;
-                    if (!values.chiefComplaintId) errors.chiefComplaintId = req;
-                    if (!values.diagnoses[0]?.icd10Id) {
-                        errors.diagnoses = [
-                            {
-                                icd10Id: req,
-                            },
-                        ];
-                    }
                 }
             }
 
@@ -108,9 +105,10 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
-            const isDisability = values.coverageTypeId === 4;
-            const isDeath = values.coverageTypeId === 5;
-            const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
+            const isDisability = values.coverageTypeId === CoverageType.Disability;
+            const isDeath = values.coverageTypeId === CoverageType.Death;
+            const isMedical =
+                values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
             //เช็คจำนวนเอกสาร
             const hasError = docData.some((docById) => {
                 if (docById.documentId && documentDetailById[docById.documentId] && (isDeath || isDisability)) {
@@ -139,7 +137,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     });
     const incidentType: ClaimTypeOption[] =
         incidentTypeRaw?.data
-            ?.filter((item) => ALLOWED_INCIDENT_IDS.includes(item.incidentTypeId ?? 0))
+            ?.filter((item) => INCIDENT_TYPES.includes(item.incidentTypeId ?? 0))
             .map((item) => ({
                 id: item.incidentTypeId ?? 0,
                 name: item.incidentTypeNameTH ?? "",
@@ -290,7 +288,10 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         if (!ocr.shouldShowOcrDocumentScan(formik.values.coverageTypeId)) {
             ocr.setIsOcrDocsValid(true);
         }
-        if (formik.values.coverageTypeId === 4 || formik.values.coverageTypeId === 5) {
+        if (
+            formik.values.coverageTypeId === CoverageType.Disability ||
+            formik.values.coverageTypeId === CoverageType.Death
+        ) {
             dispatch(setEnabled(true));
         }
     }, [formik.values.coverageTypeId]);

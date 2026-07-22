@@ -5,14 +5,16 @@ import { CreateCoreClaimDtoRequest } from "../../../../../api/coreClaimApi.clien
 import { useAuth } from "../../../../_auth";
 import { claimPASelector } from "../../../store/claimPASlice";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
+import { CoverageType } from "../../../../../functionHelpers";
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
     const { form, bankAccounts, contacts, insured } = useAppSelector(claimPASelector);
-    const isMedicalAll = form.coverageTypeId === 2 || form.coverageTypeId === 3;
-    const isMedical = form.coverageTypeId === 2;
-    const isCompensate = form.coverageTypeId === 3;
-    const isDisability = form.coverageTypeId === 4;
-    const isDeath = form.coverageTypeId === 5;
+    const isMedicalAll =
+        form.coverageTypeId === CoverageType.Medical || form.coverageTypeId === CoverageType.Compensate;
+    const isMedical = form.coverageTypeId === CoverageType.Medical;
+    const isCompensate = form.coverageTypeId === CoverageType.Compensate;
+    const isDisability = form.coverageTypeId === CoverageType.Disability;
+    const isDeath = form.coverageTypeId === CoverageType.Death;
     const selectedContact = contacts.find((contact) => contact.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((account) => account.isDefault) ?? bankAccounts[0];
     const mutation = useCreateCoreClaim(
@@ -175,10 +177,10 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 fromBankId: undefined,
                 fromBankName: undefined,
                 fromBankAccountNo: undefined,
-                toBankId: selectedAccount.bankId,
-                toBankName: selectedAccount.bankAccountName,
-                toBankAccountNo: selectedAccount.bankAccountNo,
-                bankAccountRelationTypeId: selectedAccount.bankAccountRelationTypeId,
+                toBankId: selectedAccount?.bankId ?? beneficiaryList[0]?.bankId,
+                toBankName: selectedAccount?.bankAccountName ?? beneficiaryList[0]?.bankAccountName,
+                toBankAccountNo: selectedAccount?.bankAccountNo ?? beneficiaryList[0]?.bankAccountNo,
+                bankAccountRelationTypeId: selectedAccount?.bankAccountRelationTypeId,
             },
         };
     };

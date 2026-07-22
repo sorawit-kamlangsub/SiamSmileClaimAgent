@@ -176,7 +176,7 @@ export const useGetICD10 = (
     return useQuery(
         [getICD10QueryKey, iCD10Id, iCD10Code, isTPA],
         () => coreClaimMastersClient.getICD10(iCD10Id, iCD10Code, isTPA),
-        {}
+        { refetchOnMount: false, refetchOnWindowFocus: false }
     );
 };
 export const useGetICD10Filter = (
@@ -188,7 +188,6 @@ export const useGetICD10Filter = (
 
     return useMemo(() => {
         if (isLoading) return { data, isLoading, ...rest } as UseQueryResult<GetICD10DtoResponse[], unknown>;
-        // as UseQueryResult<HospitalDetailRequestDto, unknown>;
 
         const selectedHospital = data?.data?.find((item) => item.icD10Id == defaultId);
         const filteredData = data?.data?.filter((item) => item.icD10Detail?.includes(key)).slice(0, 10);

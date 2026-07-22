@@ -357,3 +357,24 @@ export const PRODUCT_TYPE_GROUP = {
 
 export const isProductType = (productTypeId: number | undefined, group: readonly number[]) =>
     productTypeId !== undefined && (group.includes(productTypeId) as boolean);
+
+export enum IncidentType {
+    Illness = 2,
+    Accident = 3,
+}
+
+export enum CoverageType {
+    Medical = 2,
+    Compensate = 3,
+    Disability = 4,
+    Death = 5,
+}
+
+export enum MedicalType {
+    OPD = 1,
+    IPD = 2,
+    OR = 3,
+    Amb = 4,
+    HM = 5,
+    DayCaseSurgery = 6,
+}
