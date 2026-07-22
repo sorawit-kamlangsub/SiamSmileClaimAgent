@@ -12,7 +12,7 @@ import { Box, Divider, Link, Typography, useMediaQuery, useTheme } from "@mui/ma
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
-const APPLICATION_DETAIL_URL = "https://ssspa.siamsmile.co.th/Modules/PA/frmApplicationDetail";
+const APPLICATION_DETAIL_URL = "";
 
 const NATIONAL_ID_CARD_TYPE = 2;
 const PASSPORT_CARD_TYPE = 3;
@@ -136,13 +136,11 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
             // ไม่มีใน DTO นี้ — ถ้าต้องแสดงต้องขอ field เพิ่มจาก backend
             status: "-",
             isActiveStatus: false,
-            // ไม่มีใน DTO นี้ — ถ้าต้องแสดงต้องขอ field เพิ่มจาก backend
-            branch: "-",
-            employeeFullName: "-",
+            branch: data?.agentBranchName ?? "-",
+            employeeFullName: data?.agentName ?? "-",
 
             contactFullName: data?.contactName ?? "-",
             contactPhone: data?.contactPhoneNo ?? "-",
-            // TODO: ยืนยันว่า customerCode คือเลขที่อ้างอิงที่ต้องการหรือไม่
             referenceId: data?.customerCode ?? "-",
             insuredFullName,
             nationalId: idCardNo ?? "-",

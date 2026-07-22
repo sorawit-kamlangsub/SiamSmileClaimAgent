@@ -72,11 +72,7 @@ const ClaimHistoryPA: React.FC = () => {
                         variant="outlined"
                         color="primary"
                         startIcon={<PolicyIcon />}
-                        onClick={() =>
-                            navigate(
-                                `/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(selectedPolicy.appId)}`
-                            )
-                        }
+                        onClick={() => navigate(`/checkeligible/detail/${btoa(selectedPolicy.customerId!.toString())}`)}
                         sx={{ height: "33px" }}
                     >
                         ตรวจสอบสิทธิ์

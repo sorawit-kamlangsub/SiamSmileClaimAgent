@@ -72,9 +72,7 @@ const ClaimHistoryPH: React.FC = () => {
                         color="primary"
                         startIcon={<PolicyIcon />}
                         onClick={() =>
-                            navigate(
-                                `/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(selectedPolicy.appId)}`
-                            )
+                            navigate(`/checkeligible/detail/${btoa(selectedPolicy.customerId?.toString() as string)}`)
                         }
                         sx={{ height: "33px" }}
                     >

@@ -12,7 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 
 // TODO: ยืนยัน URL จริงของหน้า Application Detail (PH) กับทีม เดิมโค้ดอ้างตัวแปรนี้แต่ไม่เคย declare
-const PH_DETAIL_URL = "https://ssshealth.siamsmile.co.th/Modules/PH/frmApplicationDetail";
+const PH_DETAIL_URL = "";
 
 const NATIONAL_ID_CARD_TYPE = 2;
 const PASSPORT_CARD_TYPE = 3;
@@ -168,14 +168,12 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => {
             <InfoRow icon={<CakeIcon fontSize="small" />} label="วันเกิด" value={birthDateThai} />
             <InfoRow icon={<BadgeIcon fontSize="small" />} label="อายุปัจจุบัน" value={currentAge} />
             <InfoRow icon={<PhoneIphoneIcon fontSize="small" />} label="เบอร์มือถือ" value={data?.mobilePhoneNumber} />
-            {/* <InfoRow icon={<PinDropIcon fontSize="small" />} label="จังหวัด" value={data?.provinceName} /> */}
             <InfoRow icon={<WorkIcon fontSize="small" />} label="อาชีพ" value={data?.occupationName} />
 
             <Divider sx={{ my: 1 }} />
 
-            {/* TODO: "ผู้แทน" และ "สาขา" ตอนนี้ยังไม่มี field จริงจาก data มาผูก (โค้ดเดิมโชว์ policyAge ซ้ำ ซึ่งน่าจะเป็น bug/placeholder) ต้องยืนยันว่าดึงจาก field ไหนของ backend */}
-            <InfoRow label="ผู้แทน" value="-" />
-            <InfoRow label="สาขา" value="-" />
+            <InfoRow label="ผู้แทน" value={data?.agentName} />
+            <InfoRow label="สาขา" value={data?.agentBranchName} />
         </CustomBox>
     );
 };
