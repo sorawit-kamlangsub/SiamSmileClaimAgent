@@ -1,10 +1,18 @@
+import { Outlet } from "react-router-dom";
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
-import CheckEligibleMonitorPage from "../modules/CheckEligible/pages/CheckEligibleMonitorPage";
-import SurveyPage from "../modules/Survey/pages/SurveyPage";
-import SurveySummaryPage from "../modules/Survey/pages/SurveySummaryPage";
-import TransferSlipPage from "../modules/TransferSlips/pages/TransferSlipPage";
+import ClaimPHPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHPage";
+import ClaimPHSummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHSummaryPage";
+import MonitorPage from "../modules/CreatedClaim/pages/Monitor/MonitorPage";
 import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
+import ClaimPAPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPAPage";
+import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPASummaryPage";
+// import ClaimLinePage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLinePage";
+// import ClaimLineSummaryPage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLineSummaryPage";
+// import DaysCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/DaysCalculatePage.tsx";
+// import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
+import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
+import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -30,16 +38,9 @@ const Routes: RouteMapType[] = [
         element: <BlankPage body="Blank Page" />,
     },
     // ===== ตรวจสอบสิทธิ์ =====
-    {
-        path: "/checkeligible/monitor",
-        title: "Monitor - ตรวจสอบสิทธิ์",
-        element: <CheckEligibleMonitorPage />,
-        permissions: [],
-        condition: "AND",
-    },
 
     {
-        path: "/checkeligible/detail/:appId/:refId",
+        path: "/checkeligible/detail/:cusId",
         title: "ตรวจสอบสิทธิ์ - รายละเอียด",
         element: <CheckEligibleDetailPage />,
         permissions: [],
@@ -48,13 +49,76 @@ const Routes: RouteMapType[] = [
 
     // ===== แจ้งเคลม =====
     {
-        path: "/claim",
-        title: "แจ้งเคลม",
-        element: <BlankPage body="แจ้งเคลม" />,
+        path: "/monitor-claim",
+        title: "Monitor - แจ้งเคลม",
+        element: <MonitorPage />,
         permissions: [],
         condition: "AND",
+        children: [],
     },
-
+    {
+        path: "claim/ph/:appId/:refId",
+        title: "แจ้งเคลม - PH",
+        element: <Outlet />,
+        permissions: [],
+        condition: "AND",
+        children: [
+            {
+                index: true,
+                title: "แจ้งเคลม - PH",
+                element: <ClaimPHPage />,
+            },
+            {
+                path: "summary",
+                title: "สรุปรายการเคลม",
+                element: <ClaimPHSummaryPage />,
+                permissions: [],
+                condition: "AND",
+            },
+        ],
+    },
+    {
+        path: "claim/pa/:appId/:refId",
+        title: "แจ้งเคลม - PA",
+        element: <Outlet />,
+        permissions: [],
+        condition: "AND",
+        children: [
+            {
+                index: true,
+                title: "แจ้งเคลม - PA",
+                element: <ClaimPAPage />,
+            },
+            {
+                path: "summary",
+                title: "สรุปรายการเคลม",
+                element: <ClaimPASummaryPage />,
+                permissions: [],
+                condition: "AND",
+            },
+        ],
+    },
+    {
+        path: "/claim-simulation",
+        title: "คำนวณวงเงินเคลม",
+        element: <Outlet />,
+        permissions: [],
+        condition: "AND",
+        children: [
+            {
+                index: true,
+                title: "คำนวณวงเงินเคลม",
+                element: <ClaimSimulatePage />,
+            },
+            {
+                path: "summary",
+                title: "สรุปรายการเคลม",
+                element: <ClaimSimulateSummaryPage />,
+                permissions: [],
+                condition: "AND",
+            },
+        ],
+    },
     // ===== พิจารณาเคลม =====
     {
         path: "/consideration",

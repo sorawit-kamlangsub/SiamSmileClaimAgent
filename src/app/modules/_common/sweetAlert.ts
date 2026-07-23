@@ -92,3 +92,17 @@ export const swalSuccess = (title: string, text: string, confirmButtonText = "Ok
         backdrop: "rgba(0,0,0,0.4)",
     });
 };
+
+export const swalWarningNotOutsideClick = (title: string, text: string, confirmButtonText = "ตกลง") => {
+    return Swal.fire({
+        title,
+        text,
+        icon: "warning",
+        confirmButtonText: confirmButtonText,
+        allowOutsideClick: false,
+        customClass: {
+            confirmButton: "swal2-ok",
+        },
+        backdrop: "rgba(0,0,0,0.4)",
+    });
+};

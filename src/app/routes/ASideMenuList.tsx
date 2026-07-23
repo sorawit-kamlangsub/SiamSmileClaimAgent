@@ -3,10 +3,12 @@ import React, { useEffect } from "react";
 import { APP_INFO } from "../../Const";
 import { useAppDispatch, useAppSelector } from "../../redux";
 import { MenuItem, ParentMenu, selectLayout, setDrawerOpen } from "../layout";
-import ShieldSearchIcon from "../modules/_common/components/ClaimAgent/CustomIcon/ShieldSearchIcon";
+import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import AddCommentIcon from "@mui/icons-material/AddComment";
-import MonitorIcon from "@mui/icons-material/Monitor";
-
+// import MonitorIcon from "@mui/icons-material/Monitor";
+import CalculateIcon from "@mui/icons-material/Calculate";
+// import ManageSearchIcon from "@mui/icons-material/ManageSearch";
+// import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 
 export const ASideMenuList = () => {
     const layoutReducer = useAppSelector(selectLayout);
@@ -47,18 +49,16 @@ export const ASideMenuList = () => {
             <ASideMenuListContainer dense aria-labelledby="nested-list-subheader">
                 <ASideMenuListTopMenu />
                 <MenuItem path="/" icon="home" text="Home" permissions={[]} />
-                <MenuItem
-                    path="/checkeligible/monitor"
-                    icon={<ShieldSearchIcon color="write" />}
-                    text="ตรวจสอบสิทธิ์"
-                    permissions={[]}
-                />
                 <ParentMenu icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]}>
-                    <MenuItem path="/test-permission" icon="home" text="Test Permission" />
+                    <MenuItem path="/monitor-claim" icon={<NoteAddIcon />} text="แจ้งเคลม" />
+                    {/* <MenuItem path="/test-permission" icon={<ManageSearchIcon />} text="ค้นหาการแจ้งเคลม" />
+                    <MenuItem path="/test-permission" icon={<AccountBalanceWalletIcon />} text="ติดตามการโอนเงิน" /> */}
                 </ParentMenu>
-                <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
+                {/* <MenuItem path="/monitor-claim" icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]} /> */}
+                <MenuItem path="/claim-simulation" icon={<CalculateIcon />} text="คำนวณวงเงินเคลม" permissions={[]} />
+                {/* <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
-                </ParentMenu>
+                </ParentMenu> */}
             </ASideMenuListContainer>
         </ASideMenuListDrawer>
     );
@@ -103,4 +103,3 @@ const ASideMenuListDrawer = styled(Drawer)(({ theme }) => ({
         overflowX: "hidden",
     },
 }));
-

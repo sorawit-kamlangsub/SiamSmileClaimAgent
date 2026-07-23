@@ -7,7 +7,7 @@ export const CustomTypographyWithGrid = ({ label, value }: { label: string; valu
     if (typeof value == "string" || typeof value == "undefined")
         return (
             <Grid item xs={12} sm={6} md={3}>
-                <Typography>{label} :</Typography>
+                <Typography color="text.secondary">{label} :</Typography>
                 {value != undefined && value.trim() !== "" ? (
                     <Typography style={detailStyle}>{value}</Typography>
                 ) : (
@@ -18,7 +18,7 @@ export const CustomTypographyWithGrid = ({ label, value }: { label: string; valu
 
     return (
         <Grid item xs={12} sm={6} md={3}>
-            <Typography>{label} :</Typography>
+            <Typography color="text.secondary">{label} :</Typography>
             {value}
         </Grid>
     );
