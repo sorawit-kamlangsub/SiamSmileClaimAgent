@@ -143,6 +143,17 @@ export interface ImportMetaEnv {
     readonly VITE_QUEUE_REFETCH_INTERVAL: number;
 
     /**
+     * URL ของ Survey API
+     */
+
+    readonly VITE_SURVEY_API_URL: string;
+
+    /**
+     * URL ของ Claim Fund API
+     */
+    readonly VITE_CLAIM_FUND_API_URL: string;
+
+    /**
      * URL ของ OCR API
      */
     readonly VITE_OCR_API_URL: string;
@@ -151,4 +162,5 @@ export interface ImportMetaEnv {
      * URL ของ DocStorage API
      */
     readonly VITE_DOCSTORAGE_API_URL: string;
+
 }

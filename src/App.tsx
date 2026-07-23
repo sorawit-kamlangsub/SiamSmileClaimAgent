@@ -5,6 +5,10 @@ import { NoticePage } from "./app/modules/_auth";
 import Home from "./app/pages/Home";
 import { AuthRoutes, RouteMapType, createRouteObject } from "./app/routes";
 import Routes from "./app/routes/Routes";
+import TransferSlipPage from "./app/modules/TransferSlips/pages/TransferSlipPage";
+import LayoutPublic from "./app/layout/LayoutPublic";
+import SurveyPage from "./app/modules/Survey/pages/SurveyPage";
+import SurveySummaryPage from "./app/modules/Survey/pages/SurveySummaryPage";
 
 function App() {
     const queryClient = useQueryClient();
@@ -24,6 +28,46 @@ function App() {
                 },
                 ...Routes,
             ],
+        },
+        {
+            // Slip โอนเงิน
+            path: "/slip",
+            title: "Transfer Slip",
+            element: <LayoutPublic />,
+            children: [
+                {
+                    path: ":id",
+                    title: "Transfer Slip",
+                    element: <TransferSlipPage />,
+                    hideAppBar: true,
+                    hideAsideMenu: true,
+                },
+            ],
+        },
+        // Survey
+        {
+            path: "/survey",
+            title: "Survey",
+            element: <LayoutPublic />,
+            children: [
+                { index: true, title: "Survey", element: <SurveyPage />, hideAppBar: true, hideAsideMenu: true },
+                {
+                    path: ":id",
+                    title: "Survey",
+                    element: <SurveyPage />,
+                    hideAppBar: true,
+                    hideAsideMenu: true,
+                },
+                {
+                    path: "summary/:id",
+                    title: "Survey Summary",
+                    element: <SurveySummaryPage />,
+                    hideAppBar: true,
+                    hideAsideMenu: true,
+                },
+            ],
+            hideAppBar: true,
+            hideAsideMenu: true,
         },
         {
             path: "*",

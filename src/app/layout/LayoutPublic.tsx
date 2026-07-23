@@ -1,8 +1,7 @@
 import { CssBaseline, Fab, Icon, ThemeProvider, Zoom, styled, useScrollTrigger } from "@mui/material";
 import React from "react";
-import { Outlet, useMatches, useNavigate } from "react-router-dom";
+import { Outlet, useMatches } from "react-router-dom";
 import { useAppSelector } from "../../redux";
-import { checkPermissions, useAuth } from "../modules/_auth";
 import { ASideMenuList, RouteHandleType } from "../routes";
 import { AllAppsDialog, ResKeyUpdator, TitleAppBar, VersionChecker } from "./components";
 import { selectLayout } from "./layoutSlice";
@@ -45,28 +44,12 @@ const ScrollTop = ({ children }: { children: React.ReactNode }) => {
     );
 };
 
-const Layout = () => {
+const LayoutPublic = () => {
     const selectedTheme = theme[0];
     const { drawerOpen } = useAppSelector(selectLayout);
     const matches = useMatches();
-    const navigate = useNavigate();
-    const { isAuthenticated, permissions } = useAuth();
-
-    if (!isAuthenticated) {
-        return;
-    }
 
     const matchHandle = matches[matches.length - 1].handle as RouteHandleType;
-
-    if (matchHandle.permissions) {
-        const hasPermission = checkPermissions(permissions, matchHandle.permissions, matchHandle.condition);
-
-        if (!hasPermission) {
-            navigate("/unauthorized");
-
-            return;
-        }
-    }
 
     const hideAppBar = matchHandle.hideAppBar ?? false;
     const hideAsideMenu = matchHandle.hideAsideMenu ?? false;
@@ -99,4 +82,4 @@ const Layout = () => {
     );
 };
 
-export default Layout;
+export default LayoutPublic;
