@@ -34,6 +34,7 @@ const SurveyPage = () => {
                 display: "flex",
                 margin: 0,
                 padding: 3,
+
                 boxSizing: "border-box",
                 overflow: { xs: "auto", sm: "auto", md: "hidden" },
             })}
@@ -43,7 +44,7 @@ const SurveyPage = () => {
                     <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mx: 2, pb: 7 }}>
                         <HeaderSurvey />
                     </Grid>
-                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                    <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mb: 10 }}>
                         <HeaderDetailSurveyBox />
                     </Grid>
                 </Box>

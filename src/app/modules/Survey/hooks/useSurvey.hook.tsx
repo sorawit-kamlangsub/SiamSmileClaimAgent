@@ -157,12 +157,12 @@ const useSurveyHook = () => {
                     {
                         surveyQuestionId: surveySuggestionsQuestionId,
                         surveyAnswerIds: values?.surveySuggestions,
-                        answerMore: hasSelectedMoreOption ? values.remarks : "-",
+                        answerMore: hasSelectedMoreOption ? values.remarks ?? "-" : "-",
                     },
                     {
                         surveyQuestionId: remarksQuestionId,
                         surveyAnswerIds: [],
-                        answerMore: hasSelectedMoreOption ? "-" : values.remarks,
+                        answerMore: hasSelectedMoreOption ? "-" : values.remarks ?? "-",
                     },
                 ],
             };
