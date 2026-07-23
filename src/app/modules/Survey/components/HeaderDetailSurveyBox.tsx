@@ -10,6 +10,9 @@ const HeaderDetailSurveyBox = () => {
     return (
         <Box>
             <Grid container spacing={2}>
+                <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mt: 2 }}>
+                    {!surveyQuestionIsLoading && <SurveyQuestions formik={formik} surveyQuestion={getAnswer} />}
+                </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mx: 1 }}>
                     <Typography variant="body1" sx={{ fontWeight: "bold" }}>
                         รายละเอียด:
@@ -18,9 +21,7 @@ const HeaderDetailSurveyBox = () => {
                 <Grid item xs={12} sm={12} md={12} lg={12}>
                     <HeaderDetailBox />
                 </Grid>
-                <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mt: 2 }}>
-                    {!surveyQuestionIsLoading && <SurveyQuestions formik={formik} surveyQuestion={getAnswer} />}
-                </Grid>
+
                 <Backdrop open={surveyQuestionIsLoading || saveSurveyIsLoading} style={{ zIndex: 9999 }}>
                     <CircularProgress color="inherit" />
                 </Backdrop>
