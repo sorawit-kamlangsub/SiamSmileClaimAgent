@@ -143,11 +143,6 @@ export interface ImportMetaEnv {
     readonly VITE_QUEUE_REFETCH_INTERVAL: number;
 
     /**
-     * URL ของ CoreClaim API
-     */
-    readonly VITE_CORECLAIM_API_URL: string;
-
-    /**
      * URL ของ OCR API
      */
     readonly VITE_OCR_API_URL: string;

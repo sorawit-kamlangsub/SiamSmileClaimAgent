@@ -17,7 +17,6 @@ export const {
     VITE_QUEUE_URL,
     VITE_QUEUE_API_URL,
     VITE_QUEUE_REFETCH_INTERVAL,
-    VITE_CORECLAIM_API_URL,
     VITE_OCR_API_URL,
     VITE_DOCSTORAGE_API_URL,
     MODE,
@@ -48,7 +47,6 @@ export const SSO_CONFIG: UserManagerSettings = {
 
 export const API_URL = VITE_API_URL;
 export const APIGW_URL = VITE_APIGW_BASEURL;
-export const CORECLAIM_API_URL = VITE_CORECLAIM_API_URL;
 export const AUTH_LOGOUT_REDIRECT = VITE_SSO_ISSUER + "/Account/Logout";
 export const OCR_API_URL = VITE_OCR_API_URL + "/ai/ocr";
 export const DOCSTORAGE_API_URL = VITE_DOCSTORAGE_API_URL;
