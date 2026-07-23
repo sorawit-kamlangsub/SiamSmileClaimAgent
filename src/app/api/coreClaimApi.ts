@@ -1,5 +1,4 @@
 import axios from "axios";
-import { CORECLAIM_API_URL } from "../../Const";
 import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
@@ -11,8 +10,9 @@ import {
 } from "./coreClaimApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
+import { API_URL } from "../../Const";
 
-const coreClaimClient = new CoreClaimClient(CORECLAIM_API_URL, axios);
+const coreClaimClient = new CoreClaimClient(API_URL, axios);
 
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
 const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
