@@ -3,9 +3,6 @@ import React from "react";
 import { Navigate, RouteObject } from "react-router-dom";
 import { PermissionList } from "../../Const";
 import { NoticePage, PermissionCondition, SigninCallback, SilentCallback } from "../modules/_auth";
-import SurveyPage from "../modules/Survey/pages/SurveyPage";
-import SurveySummaryPage from "../modules/Survey/pages/SurveySummaryPage";
-import TransferSlipPage from "../modules/TransferSlips/pages/TransferSlipPage";
 
 /**
  * ใช้ในการกำหนด ข้อมูล ของ route
