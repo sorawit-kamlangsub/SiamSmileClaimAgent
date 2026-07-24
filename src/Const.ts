@@ -17,6 +17,8 @@ export const {
     VITE_QUEUE_URL,
     VITE_QUEUE_API_URL,
     VITE_QUEUE_REFETCH_INTERVAL,
+    VITE_SURVEY_API_URL,
+    VITE_CLAIM_FUND_API_URL,
     VITE_OCR_API_URL,
     VITE_DOCSTORAGE_API_URL,
     MODE,
@@ -48,6 +50,10 @@ export const SSO_CONFIG: UserManagerSettings = {
 export const API_URL = VITE_API_URL;
 export const APIGW_URL = VITE_APIGW_BASEURL;
 export const AUTH_LOGOUT_REDIRECT = VITE_SSO_ISSUER + "/Account/Logout";
+export const API_SURVEY_URL = VITE_SURVEY_API_URL;
+export const API_CLAIM_FUND_URL = VITE_CLAIM_FUND_API_URL;
+
+export const PUBLIC_PATHS: string[] = ["/slip/:id", "/survey/:id", "/survey/summary/:id"];
 export const OCR_API_URL = VITE_OCR_API_URL + "/ai/ocr";
 export const DOCSTORAGE_API_URL = VITE_DOCSTORAGE_API_URL;
 export const DOC_STORAGE_URL = VITE_DOCSTORAGE_URL;
