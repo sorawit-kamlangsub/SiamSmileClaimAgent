@@ -32,17 +32,26 @@ const MonitorTable: React.FC = () => {
             },
         },
         {
-            name: "id",
+            name: "policyCode",
             label: "AppID",
             options: {
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (value) => (
-                    <Link href={`/checkeligible/detail/${btoa(value)}`} target="_blank" underline="hover">
-                        {value}
-                    </Link>
-                ),
+                customBodyRender: (value, tableMeta) => {
+                    const item = data?.data?.[tableMeta.rowIndex] || {};
+                    return (
+                        <>
+                            <Link
+                                href={item?.id ? `/checkeligible/detail/${btoa(item.id.toString())}` : ""}
+                                target="_blank"
+                                underline="hover"
+                            >
+                                {value}
+                            </Link>
+                        </>
+                    );
+                },
             },
         },
         {

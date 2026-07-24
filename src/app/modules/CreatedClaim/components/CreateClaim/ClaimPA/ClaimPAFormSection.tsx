@@ -40,6 +40,7 @@ import { claimPASelector, setOrganLossItems } from "../../../store/claimPASlice"
 import { claimStepBoxSx } from "../ClaimPH/ClaimFormSection";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
+import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -78,20 +79,31 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const { values, setFieldValue } = formik;
     const dispatch = useAppDispatch();
     const { organLossItems } = useAppSelector(claimPASelector);
-    const isMedical = values.coverageTypeId === 2 || values.coverageTypeId === 3;
-    const isDisability = values.coverageTypeId === 4;
-    const isDeath = values.coverageTypeId === 5;
-    const isIPD = values.medicalTypeId === 2 || values.medicalTypeId === 6;
-    const isOPD = values.medicalTypeId === 1;
+    const isMedical =
+        values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+    const isDisability = values.coverageTypeId === CoverageType.Disability;
+    const isDeath = values.coverageTypeId === CoverageType.Death;
+    const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
+    const requiresOcrValidation = isMedical && shouldShowOcrDocumentScan(values.coverageTypeId);
 
+    const MAX_DIAGNOSES = 3;
+
+    const MEDICAL_TYPE_LABEL_BY_CONDITION: Record<string, string> = {
+        death: "สาเหตุการเสียชีวิต",
+        medical: "ประเภทการรักษา",
+        disability: "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ",
+        default: "ตัวเลือกเพิ่มเติม",
+    };
     const medicalTypeLabel = isDeath
-        ? "สาเหตุการเสียชีวิต"
+        ? MEDICAL_TYPE_LABEL_BY_CONDITION.death
         : isMedical
-        ? "ประเภทการรักษา"
+        ? MEDICAL_TYPE_LABEL_BY_CONDITION.medical
         : isDisability
-        ? "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ"
-        : "ตัวเลือกเพิ่มเติม";
+        ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
+        : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
+
     const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
@@ -99,7 +111,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
             await formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
             return;
         }
-        if (!isDeath && !isDisability && shouldShowOcrDocumentScan(formik.values.coverageTypeId) && !isOcrDocsValid) {
+        if (requiresOcrValidation && !isOcrDocsValid) {
             swalWarningNotOutsideClick("แจ้งเตือน", "กรุณาแนบเอกสารให้ครบถ้วนตามที่กำหนด");
             return;
         }
@@ -370,18 +382,14 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             <>
                                 {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
-                                        <CD10Autocomplete
-                                            name={`diagnoses.${index}.icd10Id`}
-                                            formik={formik}
-                                            required={index === 0}
-                                        />
+                                        <CD10Autocomplete name={`diagnoses.${index}.icd10Id`} formik={formik} />
                                     </Grid>
                                 ))}
                                 <Grid item xs={12}>
                                     <Button
                                         variant="outlined"
                                         onClick={() => {
-                                            if (values.diagnoses.length < 3) {
+                                            if (values.diagnoses.length < MAX_DIAGNOSES) {
                                                 setFieldValue("diagnoses", [
                                                     ...values.diagnoses,
                                                     {
@@ -392,7 +400,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                             }
                                         }}
                                         size="medium"
-                                        disabled={values.diagnoses.length >= 3}
+                                        disabled={values.diagnoses.length >= MAX_DIAGNOSES}
                                     >
                                         เพิ่มการวินิจฉัย
                                     </Button>
@@ -409,14 +417,13 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     multiline
                                     rows={2}
                                     fullWidth
-                                    required
+                                    required={values.symptomType === SymptomType.Other}
                                 />
                             </Grid>
                         )}
                     </Grid>
                     {isDisability && (
                         <Box sx={claimStepBoxSx} mt={2}>
-                            <Box display="flex" alignItems="center" gap={1} mb={1.5}></Box>
                             <OrganLossSelector
                                 value={organLossItems}
                                 organChoices={organChoices}
@@ -434,7 +441,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 items={customerBenefit?.data ?? []}
                                 isLoading={customerBenefitLoading}
                                 planCode={
-                                    insured?.productTypeId === 6 ? insured?.productName : insured?.productCategoryName
+                                    isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
+                                        ? insured?.productName
+                                        : insured?.productCategoryName
                                 }
                             />
                         </Grid>
@@ -533,7 +542,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     variant="contained"
                     color="primary"
                     size="medium"
-                    disabled={formik.isSubmitting || (isMedical && (!isOcrDocsValid || isOcrLoading))}
+                    disabled={formik.isSubmitting || (requiresOcrValidation && (!isOcrDocsValid || isOcrLoading))}
                     onClick={handleSubmit}
                 >
                     ถัดไป

@@ -3,7 +3,7 @@ import { useAppDispatch } from "../../../../../redux";
 import { checkeligibleMonitorSearchValuesType, setSearchcheckeligibleMonitor } from "../../store/monitorSlice";
 
 const SEARCH_TYPE_RULES: Record<number, (val: string) => boolean> = {
-    1: (v) => /^[a-zA-Z0-9]+$/.test(v), // ApplicationID
+    1: (v) => /^[a-zA-Z0-9-]+$/.test(v), // ApplicationID
     2: (v) => /^\d{13}$/.test(v), // บัตรประชาชน
     3: (v) => /^\d{13}$/.test(v), // Passport
     4: () => true, // ชื่อ-นามสกุล freetext

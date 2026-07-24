@@ -4,6 +4,8 @@ import React, { useCallback, useEffect, useState } from "react";
 import { AuthContext } from "../auth";
 import { CustomClaims, UserProperties } from "../auth.d";
 import { clearAuthRedirectInProgress, isAuthRedirectInProgress, setAuthRedirectInProgress } from "../authRedirect";
+import { PUBLIC_PATHS } from "../../../../Const";
+import { matchPath } from "react-router-dom";
 
 export type AuthProviderProps = {
     children: React.ReactNode;
@@ -21,6 +23,8 @@ const CheckArray = (source: string | string[] | undefined | null): string[] => {
 
     return [source];
 };
+
+const isPublicPath = () => PUBLIC_PATHS.some((pattern) => matchPath(pattern, window.location.pathname));
 
 export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) => {
     const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -161,7 +165,10 @@ export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) =
                 oidcUserManager.clearStaleState();
             } else {
                 setLogout();
-                await signinSilentThenRedirect();
+
+                if (!isPublicPath()) {
+                    await signinSilentThenRedirect();
+                }
             }
         };
 

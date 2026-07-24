@@ -66,6 +66,7 @@ const ClaimSummaryPHTable: React.FC<Props> = ({ data, onEdit }) => {
                                                 ml: 0.5,
                                                 border: "1px solid #fff2c2",
                                             }}
+                                            disabled
                                         >
                                             <EditIcon sx={{ fontSize: 19 }} />
                                         </IconButton>

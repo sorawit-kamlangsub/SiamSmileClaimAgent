@@ -30,9 +30,7 @@ const ClaimHistoryPA: React.FC = () => {
                         label="ApplicationID"
                         value={
                             <Link
-                                href={`/checkeligible/detail/${btoa(selectedPolicy.appId)}/${btoa(
-                                    selectedPolicy.appId
-                                )}`}
+                                href={`/checkeligible/detail/${btoa(selectedPolicy?.customerId?.toString() || "")}`}
                                 target="_blank"
                                 fontWeight={700}
                                 fontSize={16}

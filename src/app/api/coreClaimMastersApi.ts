@@ -1,10 +1,10 @@
 import axios from "axios";
-import { CORECLAIM_API_URL } from "../../Const";
+import { API_URL } from "../../Const";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AllUserDtoResponse, GetICD10DtoResponse, GetOrganizeDtoResponse, MastersClient } from "./coreClaimApi.client";
 import { useMemo } from "react";
 
-const coreClaimMastersClient = new MastersClient(CORECLAIM_API_URL, axios);
+const coreClaimMastersClient = new MastersClient(API_URL, axios);
 
 const getUserQuerykey = ["getUser"];
 const getIncidentTypeQueryKey = ["getIncidentType"];
@@ -178,7 +178,7 @@ export const useGetICD10 = (
     return useQuery(
         [getICD10QueryKey, iCD10Id, iCD10Code, isTPA],
         () => coreClaimMastersClient.getICD10(iCD10Id, iCD10Code, isTPA),
-        {}
+        { refetchOnMount: false, refetchOnWindowFocus: false }
     );
 };
 export const useGetICD10Filter = (
@@ -190,7 +190,6 @@ export const useGetICD10Filter = (
 
     return useMemo(() => {
         if (isLoading) return { data, isLoading, ...rest } as UseQueryResult<GetICD10DtoResponse[], unknown>;
-        // as UseQueryResult<HospitalDetailRequestDto, unknown>;
 
         const selectedHospital = data?.data?.find((item) => item.icD10Id == defaultId);
         const filteredData = data?.data?.filter((item) => item.icD10Detail?.includes(key)).slice(0, 10);

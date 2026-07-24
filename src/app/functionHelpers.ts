@@ -418,3 +418,23 @@ export const colorMapPaymentStatus: Record<number, "#11734B" | "#a56e07" | "#B32
     4: "#B32615", // Cancelled
     5: "#B32615", // Failed
 };
+export enum IncidentType {
+    Illness = 2,
+    Accident = 3,
+}
+
+export enum CoverageType {
+    Medical = 2,
+    Compensate = 3,
+    Disability = 4,
+    Death = 5,
+}
+
+export enum MedicalType {
+    OPD = 1,
+    IPD = 2,
+    OR = 3,
+    Amb = 4,
+    HM = 5,
+    DayCaseSurgery = 6,
+}

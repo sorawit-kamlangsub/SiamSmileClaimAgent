@@ -40,6 +40,16 @@ export type RouteHandleType = {
     loader?: (queryClient: QueryClient) => ({ params }: any) => Promise<any | undefined>;
 
     getTitle?: (data: any) => string;
+
+    /**
+     * ซ่อน App Bar (ค่าเริ่มต้น: false)
+     **/
+    hideAppBar?: boolean;
+
+    /**
+     * ซ่อน Aside Menu (ค่าเริ่มต้น: false)
+     **/
+    hideAsideMenu?: boolean;
 };
 
 export const createRouteObject = (route: RouteMapType, queryClient: QueryClient): RouteObject => {
@@ -54,6 +64,8 @@ export const createRouteObject = (route: RouteMapType, queryClient: QueryClient)
                 condition: route.condition ?? undefined,
                 getTitle: route.getTitle ?? undefined,
                 icon: route.icon ?? undefined,
+                hideAppBar: route.hideAppBar ?? undefined,
+                hideAsideMenu: route.hideAsideMenu ?? undefined,
             },
         };
     }
@@ -69,6 +81,8 @@ export const createRouteObject = (route: RouteMapType, queryClient: QueryClient)
             condition: route.condition ?? undefined,
             getTitle: route.getTitle ?? undefined,
             icon: route.icon ?? undefined,
+            hideAppBar: route.hideAppBar ?? undefined,
+            hideAsideMenu: route.hideAsideMenu ?? undefined,
         },
     };
 };
