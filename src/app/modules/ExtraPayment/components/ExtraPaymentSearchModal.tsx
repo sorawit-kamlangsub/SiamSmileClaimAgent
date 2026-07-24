@@ -8,11 +8,14 @@ import {
     Box,
     Button,
     IconButton,
+    Typography,
+    InputAdornment,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import { useSearchExtraPayment } from "../hooks/useSearchExtraPayment";
 import FormikTextField from "../../_common/components/CustomFormik/FormikTextField";
+import SearchIcon from "@mui/icons-material/Search";
 
 interface ExtraPaymentSearchModalProps {
     open: boolean;
@@ -62,8 +65,23 @@ export const ExtraPaymentSearchModal: React.FC<ExtraPaymentSearchModalProps> = (
         <Dialog open={open} onClose={handleClose} maxWidth="xs" fullWidth>
             <DialogTitle sx={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <Box display="flex" alignItems="center" gap={1}>
-                    <PersonSearchIcon color="primary" />
-                    ค้นหารายการ
+                    <Box
+                        sx={{
+                            width: 38,
+                            height: 38,
+                            borderRadius: "24px",
+                            bgcolor: "#eaf5ff",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            flexShrink: 0,
+                        }}
+                    >
+                        <PersonSearchIcon color="primary" />
+                    </Box>
+                    <Typography fontWeight={700} fontSize={19}>
+                        ค้นหารายการ
+                    </Typography>
                 </Box>
                 <IconButton size="small" onClick={handleClose}>
                     <CloseIcon />
@@ -77,18 +95,23 @@ export const ExtraPaymentSearchModal: React.FC<ExtraPaymentSearchModalProps> = (
                     required
                     name="seaechDetail"
                     formik={formik}
-                    // InputProps={{
-                    //     startAdornment: (
-                    //         <InputAdornment position="start">
-                    //             <PersonSearchIcon fontSize="small" />
-                    //         </InputAdornment>
-                    //     ),
-                    // }}
+                    InputProps={{
+                        startAdornment: (
+                            <InputAdornment position="start">
+                                <SearchIcon fontSize="small" />
+                            </InputAdornment>
+                        ),
+                    }}
                 />
             </DialogContent>
-            <DialogActions sx={{ px: 3, pb: 3 }} >
-                
-                <Button variant="contained" size="medium" onClick={handleSubmit} disabled={isSearching}>
+            <DialogActions sx={{ px: 3, pb: 3 }}>
+                <Button
+                    variant="contained"
+                    size="medium"
+                    onClick={handleSubmit}
+                    sx={{ fontWeight: 700 }}
+                    disabled={isSearching}
+                >
                     บันทึก
                 </Button>
             </DialogActions>

@@ -11,24 +11,24 @@ import { ExtraPaymentListItem, RetryTransferResult, TransferStatusId } from "../
 import { setClaimOnLineId, setCpgNo } from "../store/extraPaymentSlice";
 import { cellAlignOptions, defaultOptionStandardDataTable, smallSizeFooter } from "../../../functionHelpers";
 import CustomPaper from "../../_common/components/CustomComponent/CustomPaper";
-import { FormikDropdown, StandardDataTable } from "../../_common";
-
-import { isRetryableTransferStatus, transferStatusFilterOptions } from "../hooks/TransferStatus";
+import { StandardDataTable } from "../../_common";
 import { useGetExtraPaymentList } from "../hooks/useGetExtraPaymentList";
 import { TransferStatusChip } from "../components/TransferStatusChip";
 import { ExtraPaymentSearchModal } from "../components/ExtraPaymentSearchModal";
 import { EditBankAccountModal } from "../components/EditBankAccountModal";
 import { RetryTransferSuccessModal } from "../components/RetryTransferSuccessModal";
-import { MOCK_BRANCH_OPTIONS } from "../store/ExtraPaymentMock";
+import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
+import PaymentStatusDropDown from "../../_common/components/ClaimAgent/CustomDropdown/PaymentStatusDropDown";
+import { isRetryableTransferStatus } from "../hooks/TransferStatus";
 
 interface StatusFilterFormValues {
     branchId?: number;
     branchId_selectedText: string;
-    statusId?: TransferStatusId;
+    statusId?: number;
     statusId_selectedText: string;
 }
 
-const statusDropdownOptions = transferStatusFilterOptions.filter((opt) => opt.id !== null);
+// const statusDropdownOptions = transferStatusFilterOptions.filter((opt) => opt.id !== null);
 
 const REF = {
     primary: "#0b74bd",
@@ -49,14 +49,13 @@ export const ExtraPaymentListPage: React.FC = () => {
 
     const formik = useFormik<StatusFilterFormValues>({
         initialValues: {
-            branchId: undefined,
+            branchId: 0,
             branchId_selectedText: "",
-            statusId: undefined,
+            statusId: 0,
             statusId_selectedText: "",
         },
         onSubmit: () => {},
     });
-    // const branchFilter = formik.values.branchId ?? null;
     const statusFilter = formik.values.statusId ?? null;
 
     const { data, isLoading, refetch } = useGetExtraPaymentList(statusFilter);
@@ -198,30 +197,10 @@ export const ExtraPaymentListPage: React.FC = () => {
             <CustomPaper>
                 <Grid container spacing={2} alignItems="center" p="3pxx">
                     <Grid item xs={12} sm={3}>
-                        <FormikDropdown
-                            name="branchId"
-                            label="สาขา"
-                            required
-                            fullWidth
-                            formik={formik}
-                            data={MOCK_BRANCH_OPTIONS}
-                            valueFieldName="id"
-                            displayFieldName="name"
-                            firstItemText="ทั้งหมด"
-                        />
+                        <BranchAutocomplete name="branchId" formik={formik} withAllOption />
                     </Grid>
                     <Grid item xs={12} sm={3}>
-                        <FormikDropdown
-                            name="statusId"
-                            label="สถานะ"
-                            required
-                            fullWidth
-                            formik={formik}
-                            data={statusDropdownOptions}
-                            valueFieldName="id"
-                            displayFieldName="name"
-                            firstItemText="ทั้งหมด"
-                        />
+                        <PaymentStatusDropDown name="statusId" formik={formik} withAllOption />
                     </Grid>
                     <Grid item xs={12} sm={8} md={2} lg={1.5}>
                         <Button

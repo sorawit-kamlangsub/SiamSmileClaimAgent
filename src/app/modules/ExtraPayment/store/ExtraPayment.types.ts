@@ -66,7 +66,7 @@ export interface ExtraPaymentFormValues {
 // ---------------------------------------------------------------------------
 
 // 1 = รอดำเนินการ, 2 = Sleep การโอนเงิน, 3 = โอนเงินไม่สำเร็จ
-export type TransferStatusId = 1 | 2 | 3;
+export type TransferStatusId =  2 | 3 | 4 | 5;
 
 export interface ExtraPaymentListItem {
     cpgNo: string; // เลขที่ CPG

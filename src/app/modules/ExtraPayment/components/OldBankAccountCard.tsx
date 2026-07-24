@@ -12,12 +12,21 @@ export const OldBankAccountCard: React.FC<OldBankAccountCardProps> = ({ bankAcco
     const logoSrc = setBankLogo(bankAccount.bankId);
 
     return (
-        <Card variant="outlined" sx={{ p: 1.5, bgcolor: "grey.50" }}>
-            <CardContent sx={{ display: "flex", alignItems: "center", gap: 2, "&:last-child": { pb: 0 } }}>
+        <Card variant="outlined" sx={{ p: 1.5, bgcolor: "grey.50", width: "100%" }}>
+            <CardContent
+                sx={{
+                    display: "flex",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "flex-start", sm: "center" },
+                    gap: 2,
+                    "&:last-child": { pb: 0 },
+                    "&:first-child": { pt: 0 },
+                }}
+            >
                 <Avatar
                     src={logoSrc ?? undefined}
                     variant="circular"
-                    sx={{ width: 48, height: 48, bgcolor: logoSrc ? "transparent" : "#e3f2fd" }}
+                    sx={{ width: 70, height: 70, bgcolor: logoSrc ? "transparent" : "#e3f2fd", flexShrink: 0 }}
                 >
                     {!logoSrc && (
                         <Typography variant="caption" color="primary" fontWeight={700}>
@@ -25,21 +34,33 @@ export const OldBankAccountCard: React.FC<OldBankAccountCardProps> = ({ bankAcco
                         </Typography>
                     )}
                 </Avatar>
-                <Box>
+                <Box width="100%">
                     <Typography variant="body2" fontWeight={700} mb={0.5}>
                         บัญชีรับสินไหมเดิม
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
-                        ความสัมพันธ์ : {bankAccount.bankAccountRelationTypeName}
+                        ความสัมพันธ์ :{" "}
+                        <Typography component="span" variant="caption" color="primary" fontWeight={700}>
+                            {bankAccount.bankAccountRelationTypeName}
+                        </Typography>
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
-                        ธนาคาร : {bankAccount.bankName}
+                        ธนาคาร :{" "}
+                        <Typography component="span" variant="caption" color="primary" fontWeight={700}>
+                            {bankAccount.bankName}
+                        </Typography>
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
-                        เลขที่บัญชี : {bankAccount.bankAccountNo}
+                        เลขที่บัญชี :{" "}
+                        <Typography component="span" variant="caption" color="primary" fontWeight={700}>
+                            {bankAccount.bankAccountNo}
+                        </Typography>
                     </Typography>
                     <Typography variant="caption" color="text.secondary" display="block">
-                        ชื่อบัญชี : {bankAccount.bankAccountName}
+                        ชื่อบัญชี :{" "}
+                        <Typography component="span" variant="caption" color="primary" fontWeight={700}>
+                            {bankAccount.bankAccountName}
+                        </Typography>
                     </Typography>
                 </Box>
             </CardContent>

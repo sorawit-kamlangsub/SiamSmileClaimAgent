@@ -3,19 +3,16 @@ import { useState } from "react";
 import { EditBankAccountFormValues, ExtraPaymentListItem, RetryTransferResult } from "../store/ExtraPayment.types";
 import { USE_MOCK_DATA } from "../store/ExtraPaymentMock";
 
-// ตรวจสอบตาม spec:
-// เลขที่บัญชี: ตัวเลขเท่านั้น 10-15 หลัก
 export const BANK_ACCOUNT_NO_PATTERN = /^\d{10,15}$/;
-// ชื่อบัญชี: ตัวอักษร (ไทย/อังกฤษ) และเว้นวรรคเท่านั้น
 export const BANK_ACCOUNT_NAME_PATTERN = /^[a-zA-Zก-๙\s]+$/;
 
 interface UseEditBankAccountFormParams {
-    item: ExtraPaymentListItem;
+    item: ExtraPaymentListItem | null;
     onRetrySuccess: (result: RetryTransferResult) => void;
 }
 
-// เงื่อนไข: บัญชีรับสินไหมใหม่ default เป็น field ว่างทั้งหมด (ตามเงื่อนไขข้อ 2 ใน spec)
-// TODO: ยืนยันกับทีมอีกที เพราะ field แต่ละอันเขียนโน้ตแยกไว้ว่า "Default ค่าที่กรอกตามการแจ้งเคลม" ซึ่งขัดกับเงื่อนไขข้อนี้
+// item เป็น null ได้ (ตอน modal ปิดอยู่) ต้องรับ optional เพื่อให้ hook นี้เรียกได้แบบ unconditional
+// จาก component แม่ทุกครั้ง — ห้าม early return ก่อนเรียก hook นี้ ไม่งั้นจะชน rules of hooks
 export const useEditBankAccountForm = ({ item, onRetrySuccess }: UseEditBankAccountFormParams) => {
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -38,8 +35,8 @@ export const useEditBankAccountForm = ({ item, onRetrySuccess }: UseEditBankAcco
             }
             return e;
         },
-        // การ submit จริง (ยิง insert) ยังไม่ทำในสเต็ปนี้ — จำลองผลลัพธ์สำเร็จด้วย mock เท่านั้น
         onSubmit: async (values) => {
+            if (!item) return;
             setIsSubmitting(true);
             try {
                 if (USE_MOCK_DATA) {
@@ -61,15 +58,14 @@ export const useEditBankAccountForm = ({ item, onRetrySuccess }: UseEditBankAcco
                     onRetrySuccess(result);
                     return;
                 }
-                // TODO: ต่อ endpoint จริงตอนพร้อมยิง insert (ยังไม่ทำในสเต็ปนี้ตามที่ระบุ)
+                // TODO: ต่อ endpoint จริงตอนพร้อมยิง insert
             } finally {
                 setIsSubmitting(false);
             }
         },
     });
 
-    // จำนวนเงินที่ต้องโอน = จำนวนเงินตามการแจ้งเคลม + ยอดโอนเพิ่ม
-    const totalAmount = item.amount + item.extraTransferAmount;
+    const totalAmount = item ? item.amount + item.extraTransferAmount : 0;
 
     return { formik, isSubmitting, totalAmount };
 };

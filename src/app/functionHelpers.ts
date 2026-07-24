@@ -112,6 +112,7 @@ type CellAlignOptions = {
     align?: "right" | "center" | "left";
     sort?: boolean;
     width?: string;
+    maxWidth?: string;
     headerWhiteSpace?: "normal" | "nowrap" | "pre" | "pre-line" | "pre-wrap" | "initial" | "inherit";
     cellWhiteSpace?: "normal" | "nowrap" | "pre" | "pre-line" | "pre-wrap" | "initial" | "inherit";
     alignContentBody?: "flex-start" | "center" | "flex-end" | "stretch";
@@ -122,6 +123,7 @@ export const cellAlignOptions = (options: CellAlignOptions = {}): MUIDataTableCo
         align = "left",
         sort = false,
         width = "",
+        maxWidth = "",
         headerWhiteSpace = "nowrap",
         cellWhiteSpace = "",
         alignContentBody = "center",
@@ -138,6 +140,7 @@ export const cellAlignOptions = (options: CellAlignOptions = {}): MUIDataTableCo
                 textAlign: align,
                 alignContent: alignContentBody,
                 width,
+                maxWidth,
                 whiteSpace: cellWhiteSpace,
                 overflow: "hidden",
             },
@@ -357,7 +360,6 @@ export const PRODUCT_TYPE_GROUP = {
 
 export const isProductType = (productTypeId: number | undefined, group: readonly number[]) =>
     productTypeId !== undefined && (group.includes(productTypeId) as boolean);
-
 
 //ClaimStatus
 export const backgroundColorMapClaimStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {

@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import { Box, Paper, Tab, Tabs, Typography } from "@mui/material";
+import TransactionHistoryTable from "./TransactionHistoryTable";
+import TransferTransactionHistoryTable from "./TransferTransactionHistoryTable";
+import RefundTransactionHistoryTable from "./RefundTransactionHistoryTable";
 
 interface TabPanelProps {
     children?: React.ReactNode;
@@ -33,8 +36,18 @@ export const ExtraPaymentTabs: React.FC<ExtraPaymentTabsProps> = ({ detailPanel 
 
     const tabs = [
         { label: "ข้อมูลรายละเอียด", panel: detailPanel },
-        { label: "ประวัติการทำรายการ", panel: <Typography color="text.secondary">ยังไม่มีข้อมูล</Typography> },
-        { label: "ประวัติการโอนเงิน", panel: <Typography color="text.secondary">ยังไม่มีข้อมูล</Typography> },
+        { label: "ประวัติการทำรายการ", panel: <TransactionHistoryTable /> },
+        {
+            label: "ประวัติการโอนเงิน",
+            panel: (
+                <>
+                    <TransferTransactionHistoryTable />
+                    <Box mt={4}>
+                        <RefundTransactionHistoryTable />
+                    </Box>
+                </>
+            ),
+        },
     ];
 
     return (

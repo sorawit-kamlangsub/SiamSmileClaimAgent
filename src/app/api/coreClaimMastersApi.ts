@@ -28,6 +28,8 @@ const getBeneficiaryQueryKey = ["getBeneficiary"];
 const getRelationTypeQueryKey = ["getRelationType"];
 const getDisabilityLossPartQueryKey = ["getDisabilityLossPart"];
 const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPart"];
+const getPaymentStatusQueryKey = ["getPaymentStatus"];
+const getBranchQueryKey = ["getBranch"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -358,6 +360,22 @@ export const useGetBodyPartByDisabilityLossPart = (disabilityLossPartId?: number
     return useQuery(
         [getBodyPartByDisabilityLossPartQueryKey, disabilityLossPartId],
         () => coreClaimMastersClient.getBodyPartByDisabilityLossPart(disabilityLossPartId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetBranch = (branchId?: number | undefined) => {
+    return useQuery([getBranchQueryKey, branchId], () => coreClaimMastersClient.getBranch(branchId), {
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useGetPaymentStatus = (paymentStatusId?: number | undefined) => {
+    return useQuery(
+        [getPaymentStatusQueryKey, paymentStatusId],
+        () => coreClaimMastersClient.getPaymentStatus(paymentStatusId),
         {
             refetchOnWindowFocus: false,
         }

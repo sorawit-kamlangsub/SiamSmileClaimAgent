@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ExtraPaymentListItem, TransferStatusId } from "../store/ExtraPayment.types";
+import { ExtraPaymentListItem } from "../store/ExtraPayment.types";
 import { MOCK_EXTRA_PAYMENT_LIST, USE_MOCK_DATA } from "../store/ExtraPaymentMock";
 
 interface UseGetExtraPaymentListResult {
@@ -10,7 +10,7 @@ interface UseGetExtraPaymentListResult {
 }
 
 // statusId = null หมายถึง "ทั้งหมด"
-export const useGetExtraPaymentList = (statusId: TransferStatusId | null): UseGetExtraPaymentListResult => {
+export const useGetExtraPaymentList = (statusId: number | null): UseGetExtraPaymentListResult => {
     const [data, setData] = useState<ExtraPaymentListItem[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [isError, setIsError] = useState(false);

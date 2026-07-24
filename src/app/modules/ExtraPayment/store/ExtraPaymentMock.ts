@@ -74,7 +74,7 @@ export const MOCK_EXTRA_PAYMENT_LIST: ExtraPaymentListItem[] = [
         branchName: "กาญจนบุรี",
         amount: 4000.0,
         extraTransferAmount: 600.0,
-        statusId: 1,
+        statusId: 2,
         reason: null,
         oldBankAccount: {
             id: 101,
@@ -93,7 +93,7 @@ export const MOCK_EXTRA_PAYMENT_LIST: ExtraPaymentListItem[] = [
         branchName: "สำนักงานใหญ่",
         amount: 1700.0,
         extraTransferAmount: 300.0,
-        statusId: 1,
+        statusId: 2,
         reason: null,
         oldBankAccount: {
             id: 102,
@@ -112,7 +112,7 @@ export const MOCK_EXTRA_PAYMENT_LIST: ExtraPaymentListItem[] = [
         branchName: "สำนักงานใหญ่",
         amount: 1000.0,
         extraTransferAmount: 100.0,
-        statusId: 3,
+        statusId: 5,
         reason: "ปัญหาบัญชีผู้ใช้",
         oldBankAccount: {
             id: 103,

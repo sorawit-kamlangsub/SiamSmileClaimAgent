@@ -1,11 +1,8 @@
 import React from "react";
 import { Chip } from "@mui/material";
 import { TransferStatusId } from "../store/ExtraPayment.types";
-import {
-    backgroundColorMapTransferStatus,
-    colorMapTransferStatus,
-    labelMapTransferStatus,
-} from "../hooks/TransferStatus";
+import { labelMapTransferStatus } from "../hooks/TransferStatus";
+import { backgroundColorMapPaymentStatus, colorMapPaymentStatus } from "../../../functionHelpers";
 
 interface TransferStatusChipProps {
     statusId: TransferStatusId;
@@ -16,8 +13,8 @@ export const TransferStatusChip: React.FC<TransferStatusChipProps> = ({ statusId
         label={`• ${labelMapTransferStatus[statusId]}`}
         size="small"
         sx={{
-            backgroundColor: backgroundColorMapTransferStatus[statusId],
-            color: colorMapTransferStatus[statusId],
+            backgroundColor: backgroundColorMapPaymentStatus[statusId],
+            color: colorMapPaymentStatus[statusId],
             fontWeight: 700,
             borderRadius: "16px",
         }}

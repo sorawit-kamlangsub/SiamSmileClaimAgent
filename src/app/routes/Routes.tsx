@@ -15,6 +15,7 @@ import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimula
 import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
+import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -38,6 +39,11 @@ const Routes: RouteMapType[] = [
         path: "/blank-page",
         title: "Blank Page",
         element: <BlankPage body="Blank Page" />,
+    },
+    {
+        path: "/test-sweetalert",
+        title: "test-sweetalert",
+        element: <SweetAlertTestPage />,
     },
     // ===== ตรวจสอบสิทธิ์ =====
 

@@ -71,7 +71,8 @@ export const ExtraPaymentClaimTable: React.FC<ExtraPaymentClaimTableProps> = ({
             options: {
                 sort: false,
                 filter: false,
-                ...cellAlignOptions({ align: "center" }),
+                ...cellAlignOptions({ align: "center", maxWidth: "180px" }),
+
                 customBodyRenderLite: (dataIndex) => {
                     const row = claimItems[dataIndex];
                     const inputValue =
@@ -81,6 +82,7 @@ export const ExtraPaymentClaimTable: React.FC<ExtraPaymentClaimTableProps> = ({
                     return (
                         <TextField
                             size="small"
+                            sx={{ width: "100%", ml: "auto", display: "block" }}
                             value={inputValue}
                             onChange={(e) => {
                                 const input = e.target.value;
@@ -120,6 +122,7 @@ export const ExtraPaymentClaimTable: React.FC<ExtraPaymentClaimTableProps> = ({
                 disableToolbarSelect
                 color="primary"
                 columnHeaderAlign="center"
+                rowHover={false}
                 options={{
                     ...defaultOptionStandardDataTable,
                     setTableProps: () => {

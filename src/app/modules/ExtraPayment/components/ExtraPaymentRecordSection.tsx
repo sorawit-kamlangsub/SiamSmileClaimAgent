@@ -4,6 +4,7 @@ import { FormikProps } from "formik";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import HomeIcon from "@mui/icons-material/Home";
 import DescriptionIcon from "@mui/icons-material/Description";
+import InfoIcon from "@mui/icons-material/Info";
 import CustomPaper from "../../_common/components/CustomComponent/CustomPaper";
 import { BankAccount, ExtraPaymentFormValues, ExtraPaymentReasonOption } from "../store/ExtraPayment.types";
 import { BankAccountSection } from "./BankAccountSection";
@@ -71,9 +72,12 @@ export const ExtraPaymentRecordSection: React.FC<ExtraPaymentRecordSectionProps>
                     </Typography>
                 </Box>
             </Box>
-            <Typography variant="caption" color="primary" fontWeight={700}>
-                • กรุณาระบุข้อมูลที่มีเครื่องหมาย *
-            </Typography>
+            <Box display="flex" alignItems="center" gap={0.75} color="primary.main">
+                <InfoIcon fontSize="small" />
+                <Typography variant="caption" color="primary" fontWeight={700}>
+                    กรุณาระบุข้อมูลที่มีเครื่องหมาย *
+                </Typography>
+            </Box>
         </Box>
         <Paper
             elevation={0}
@@ -133,4 +137,3 @@ export const ExtraPaymentRecordSection: React.FC<ExtraPaymentRecordSectionProps>
         </Paper>
     </CustomPaper>
 );
-
