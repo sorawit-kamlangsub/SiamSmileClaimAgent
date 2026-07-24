@@ -1,9 +1,11 @@
-import React from "react";
-import { Box, Button, Stack, Typography } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Button, Snackbar, Stack, Typography } from "@mui/material";
 import { swalClaimListSuccess, swalConfirmAction, swalExtraPaymentSuccess } from "../modules/_common/customSweetAlert";
 
 // หน้าทดสอบปุ่มเรียก custom sweet alert ทั้ง 3 แบบ — ลบออกได้เมื่อทดสอบเสร็จ ไม่ใช่ route จริงของ feature
 export const SweetAlertTestPage: React.FC = () => {
+    const [copied, setCopied] = useState(false);
+
     const handleTestExtraPaymentSuccess = () => {
         swalExtraPaymentSuccess({
             bankAccount: {
@@ -17,6 +19,7 @@ export const SweetAlertTestPage: React.FC = () => {
                 { fullName: "นายรภีพร วรวงศ์คุณากร", amount: 100 },
                 { fullName: "นางสาวชลธิชา รัตนมณี", amount: 100 },
             ],
+            onCopyAmount: () => setCopied(true),
         });
     };
 
@@ -69,6 +72,14 @@ export const SweetAlertTestPage: React.FC = () => {
                     ทดสอบ: ยืนยันการทำรายการ
                 </Button>
             </Stack>
+
+            <Snackbar
+                open={copied}
+                autoHideDuration={2000}
+                onClose={() => setCopied(false)}
+                message="คัดลอกยอดเงินแล้ว"
+                anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            />
         </Box>
     );
 };

@@ -3,6 +3,13 @@ import { setBankLogo } from "../../functionHelpers";
 
 const formatMoney = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
+// ใช้ path เดียวกับ @mui/icons-material/ContentCopy เพื่อให้หน้าตาตรงกับฝั่ง React
+// (raw html ของ sweetalert2 import React component ตรงๆ ไม่ได้ เลย inline เป็น svg แทน)
+const contentCopyIconSvg = (size = 16, color = "#6b7280") => `
+<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 24 24" fill="${color}">
+<path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+</svg>`;
+
 const bankLogoHtml = (bankId: number, bankName: string) => {
     const logoSrc = setBankLogo(bankId);
     if (logoSrc) {
@@ -14,8 +21,10 @@ const bankLogoHtml = (bankId: number, bankName: string) => {
 };
 
 // ---------------------------------------------------------------------------
-// 1) บันทึกโอนเพิ่มสำเร็จ — แสดงบัญชีรับสินไหม + ยอดรวม + รายการโอนเพิ่มทั้งหมด
+// 1) บันทึกโอนเพิ่มสำเร็จ — แสดงบัญชีรับสินไหม + ยอดรวม (คัดลอกได้) + รายการโอนเพิ่มทั้งหมด
 //    ข้อมูลทั้งหมดมาจากผู้เรียกใช้ ไม่ hardcode ไว้ในนี้
+//    onCopyAmount: sweetalert2 render นอก React tree เลยโชว์ Snackbar ในนี้เองไม่ได้ —
+//    ให้ผู้เรียก (component ที่มี useState) ส่ง callback เข้ามาเปิด Snackbar ของตัวเองแทน
 // ---------------------------------------------------------------------------
 interface ExtraPaymentTransferItem {
     fullName: string;
@@ -34,6 +43,7 @@ interface SwalExtraPaymentSuccessParams {
     totalExtraTransferAmount: number;
     transferItems: ExtraPaymentTransferItem[];
     confirmButtonText?: string;
+    onCopyAmount?: () => void;
 }
 
 export const swalExtraPaymentSuccess = ({
@@ -41,6 +51,7 @@ export const swalExtraPaymentSuccess = ({
     totalExtraTransferAmount,
     transferItems,
     confirmButtonText = "ตกลง",
+    onCopyAmount,
 }: SwalExtraPaymentSuccessParams): Promise<SweetAlertResult> => {
     const transferItemsHtml = transferItems
         .map(
@@ -58,8 +69,8 @@ export const swalExtraPaymentSuccess = ({
         icon: "success",
         title: "บันทึกโอนเพิ่มสำเร็จ",
         html: `
-            <p style="color:#6b7280;margin-top:-8px;font-size:14px">ทั้งหมด ${transferItems.length} รายการ</p>
-            <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:14px 0;text-align:left">
+            <p style="color:#6b7280;margin:6px 0 16px 0;font-size:14px">ทั้งหมด ${transferItems.length} รายการ</p>
+            <div style="border:1px solid #e5e7eb;border-radius:10px;padding:12px;margin:0 0 14px 0;text-align:left">
                 <p style="font-weight:700;font-size:13px;margin:0 0 8px 0;color:#374151">รายละเอียดบัญชี</p>
                 <div style="display:flex;align-items:center;gap:10px">
                     ${bankLogoHtml(bankAccount.bankId, bankAccount.bankName)}
@@ -71,9 +82,14 @@ export const swalExtraPaymentSuccess = ({
                 </div>
             </div>
             <p style="color:#6b7280;margin-bottom:2px;font-size:14px">จำนวนเงินโอนเพิ่มรวม</p>
-            <p style="font-size:24px;font-weight:700;color:#0b74bd;margin:0 0 14px 0">${formatMoney(
-                totalExtraTransferAmount
-            )} บาท</p>
+            <div style="display:flex;align-items:center;justify-content:center;gap:6px;margin:0 0 14px 0">
+                <span style="font-size:24px;font-weight:700;color:#0b74bd">${formatMoney(
+                    totalExtraTransferAmount
+                )} บาท</span>
+                <button type="button" id="swal-copy-total-amount" style="border:none;background:none;cursor:pointer;padding:4px;display:flex;align-items:center">
+                    ${contentCopyIconSvg(18, "#0b74bd")}
+                </button>
+            </div>
             <div style="text-align:left">
                 <p style="font-weight:700;font-size:13px;margin:0 0 6px 0;color:#374151">รายการโอนเพิ่ม</p>
                 <div style="background:#f9fafb;border-radius:8px;overflow:hidden">
@@ -84,6 +100,12 @@ export const swalExtraPaymentSuccess = ({
         confirmButtonText,
         customClass: { confirmButton: "swal2-styled swal2-ok" },
         backdrop: "rgba(0,0,0,0.4)",
+        didOpen: () => {
+            document.getElementById("swal-copy-total-amount")?.addEventListener("click", () => {
+                navigator.clipboard.writeText(String(totalExtraTransferAmount));
+                onCopyAmount?.();
+            });
+        },
     });
 };
 
@@ -96,6 +118,7 @@ interface SwalClaimListSuccessParams {
     subtitle: string;
     claimNos: string[];
     confirmButtonText?: string;
+    onCopy?: () => void;
 }
 
 export const swalClaimListSuccess = ({
@@ -103,6 +126,7 @@ export const swalClaimListSuccess = ({
     subtitle,
     claimNos,
     confirmButtonText = "ตกลง",
+    onCopy,
 }: SwalClaimListSuccessParams): Promise<SweetAlertResult> => {
     const rowsHtml = claimNos
         .map(
@@ -111,7 +135,9 @@ export const swalClaimListSuccess = ({
                 index > 0 ? "border-top:1px solid #eee6c9;" : ""
             }">
                 <span style="font-size:14px">${claimNo}</span>
-                <button type="button" class="swal-copy-row" data-claim-no="${claimNo}" style="border:none;background:none;cursor:pointer;color:#6b7280;font-size:16px">⧉</button>
+                <button type="button" class="swal-copy-row" data-claim-no="${claimNo}" style="border:none;background:none;cursor:pointer;padding:4px;display:flex;align-items:center">
+                    ${contentCopyIconSvg(16, "#6b7280")}
+                </button>
             </div>`
         )
         .join("");
@@ -120,10 +146,12 @@ export const swalClaimListSuccess = ({
         icon: "success",
         title,
         html: `
-            <p style="color:#374151;margin-top:-8px;font-size:15px;font-weight:600">${subtitle}</p>
-            <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 6px 0;font-size:13px;color:#374151">
+            <p style="color:#374151;margin:6px 0 16px 0;font-size:15px;font-weight:600">${subtitle}</p>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin:0 0 6px 0;font-size:13px;color:#374151">
                 <span>เลขที่ CL</span>
-                <button type="button" id="swal-copy-all-claim-nos" style="border:none;background:none;cursor:pointer;color:#0b74bd;font-weight:700;display:flex;align-items:center;gap:4px">คัดลอกทั้งหมด ⧉</button>
+                <button type="button" id="swal-copy-all-claim-nos" style="border:none;background:none;cursor:pointer;color:#0b74bd;font-weight:700;display:flex;align-items:center;gap:4px">
+                    คัดลอกทั้งหมด ${contentCopyIconSvg(14, "#0b74bd")}
+                </button>
             </div>
             <div style="background:#fdf6d8;border-radius:8px;overflow:hidden">
                 ${rowsHtml}
@@ -135,10 +163,12 @@ export const swalClaimListSuccess = ({
         didOpen: () => {
             document.getElementById("swal-copy-all-claim-nos")?.addEventListener("click", () => {
                 navigator.clipboard.writeText(claimNos.join("\n"));
+                onCopy?.();
             });
             document.querySelectorAll<HTMLButtonElement>(".swal-copy-row").forEach((btn) => {
                 btn.addEventListener("click", () => {
                     navigator.clipboard.writeText(btn.dataset.claimNo ?? "");
+                    onCopy?.();
                 });
             });
         },
