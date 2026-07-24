@@ -101,12 +101,12 @@ const StatusBadge: React.FC<{ status: string; isActive: boolean }> = ({ status, 
             display: "inline-block",
             padding: "2px 10px",
             borderRadius: 12,
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: 600,
             whiteSpace: "nowrap",
-            background: isActive ? "#e8f5e9" : "#fff3e0",
-            color: isActive ? "#2e7d32" : "#e65100",
-            border: `1px solid ${isActive ? "#a5d6a7" : "#ffcc80"}`,
+            background: isActive ? "#e8f5e9" : "#FFCFC9",
+            color: isActive ? "#2e7d32" : "#B32615",
+            border: `1px solid ${isActive ? "#a5d6a7" : "#ffb7ae"}`,
         }}
     >
         {status}
@@ -125,28 +125,26 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
         const passportNo = data?.cardTypeId === PASSPORT_CARD_TYPE ? data?.cardDetail : undefined;
         const insuredFullName = [data?.titleName, data?.firstName, data?.lastName].filter(Boolean).join(" ") || "-";
 
+        const appStatus = data?.appStatus ?? "-";
+
         return {
             applicationId: data?.policyCode ?? "-",
-            // ไม่มีใน DTO นี้ — ถ้าต้องแสดงต้องขอ field เพิ่มจาก backend
-            academicYear: "-",
+            academicYear: data?.academicYear ?? "-",
             schoolName: data?.schoolName ?? "-",
             subDistrict: data?.subDistrictName ?? "-",
             district: data?.districtName ?? "-",
             province: data?.provinceName ?? "-",
-            // ไม่มีใน DTO นี้ — ถ้าต้องแสดงต้องขอ field เพิ่มจาก backend
-            status: "-",
-            isActiveStatus: false,
+            status: appStatus,
+            isActiveStatus: appStatus === "มีผลคุ้มครอง",
             branch: data?.agentBranchName ?? "-",
             employeeFullName: data?.agentName ?? "-",
-
             contactFullName: data?.contactName ?? "-",
             contactPhone: data?.contactPhoneNo ?? "-",
             referenceId: data?.customerCode ?? "-",
             insuredFullName,
             nationalId: idCardNo ?? "-",
             passport: passportNo ?? "-",
-            // ไม่มีใน DTO นี้ — ถ้าต้องแสดงต้องขอ field เพิ่มจาก backend
-            educationLevel: "-",
+            educationLevel: data?.levelRoomName ?? "-",
             insuredType: data?.customerTypeName ?? "-",
         };
     }, [data]);

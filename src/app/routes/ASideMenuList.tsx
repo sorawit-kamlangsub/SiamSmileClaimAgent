@@ -9,6 +9,8 @@ import AddCommentIcon from "@mui/icons-material/AddComment";
 import CalculateIcon from "@mui/icons-material/Calculate";
 // import ManageSearchIcon from "@mui/icons-material/ManageSearch";
 // import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import AddCardIcon from "@mui/icons-material/AddCard";
 
 export const ASideMenuList = () => {
     const layoutReducer = useAppSelector(selectLayout);
@@ -59,6 +61,11 @@ export const ASideMenuList = () => {
                 {/* <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
                 </ParentMenu> */}
+                <ParentMenu icon={<PaymentsIcon />} text="จัดการเงินเคลม" permissions={[]}>
+                    <MenuItem path="/payment-monitor" icon={<AddCardIcon />} text="โอนเพิ่ม" />
+                    {/* <MenuItem path="/test-permission" icon={<ManageSearchIcon />} text="ค้นหาการแจ้งเคลม" />
+                    <MenuItem path="/test-permission" icon={<AccountBalanceWalletIcon />} text="ติดตามการโอนเงิน" /> */}
+                </ParentMenu>
             </ASideMenuListContainer>
         </ASideMenuListDrawer>
     );
