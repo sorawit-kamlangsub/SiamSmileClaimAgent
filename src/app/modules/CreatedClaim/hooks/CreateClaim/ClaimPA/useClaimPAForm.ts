@@ -19,7 +19,7 @@ import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailSearch } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
-import { CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType } from "../../../../../functionHelpers";
 
 interface Options {
     onNext: () => void;
@@ -28,12 +28,11 @@ interface Options {
 export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
-    const { form, isContinuous, insured, organLossItems } = useAppSelector(claimPASelector);
+    const { form, isContinuous, oldClaim, insured, organLossItems } = useAppSelector(claimPASelector);
     const { documentDetailById } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const docData = Object.values(documentDetailById);
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
-    const INCIDENT_TYPES = [IncidentType.Illness, IncidentType.Accident];
     const formik = useFormik<ClaimPAFormValues>({
         initialValues: { ...form, serviceProviderId: userProfile?.userId },
         enableReinitialize: true,
@@ -151,13 +150,11 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         },
     });
     const incidentType: ClaimTypeOption[] =
-        incidentTypeRaw?.data
-            ?.filter((item) => INCIDENT_TYPES.includes(item.incidentTypeId ?? 0))
-            .map((item) => ({
-                id: item.incidentTypeId ?? 0,
-                name: item.incidentTypeNameTH ?? "",
-                icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
-            })) ?? [];
+        incidentTypeRaw?.data?.map((item) => ({
+            id: item.incidentTypeId ?? 0,
+            name: item.incidentTypeNameTH ?? "",
+            icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
+        })) ?? [];
     const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         formik.values.incidentTypeId ?? undefined,
         2, // ClaimAgent
@@ -318,16 +315,16 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         formik.setFieldValue("transferAmount", totalOrganLossAmount);
     }, [totalOrganLossAmount]);
 
-    // useEffect(() => {
-    //     if (isContinuous && oldClaim?.incidentDate) {
-    //         formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));
-    //     }
-    // }, [isContinuous, oldClaim?.incidentDate]);
-    // const isIncidentDateDisabled = isContinuous;
+    useEffect(() => {
+        if (isContinuous && oldClaim?.incidentDate) {
+            formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));
+        }
+    }, [isContinuous, oldClaim?.incidentDate]);
+    const isIncidentDateDisabled = isContinuous;
     return {
         formik,
         isContinuous,
-        //isIncidentDateDisabled,
+        isIncidentDateDisabled,
         incidentType,
         coverageType,
         medicalType,

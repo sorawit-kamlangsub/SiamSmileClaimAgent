@@ -1,8 +1,8 @@
 import React from "react";
 import { Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
-import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { claimPHSelector, toggleOldClaimHidden } from "../../../store/claimPHSlice";
+import { useAppSelector } from "../../../../../../redux";
+import { claimPHSelector } from "../../../store/claimPHSlice";
 import InsuredInfoCardPH from "../../../components/CreateClaim/ClaimPH/InsuredInfoCardPH";
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
 import ClaimFormSection from "../../../components/CreateClaim/ClaimPH/ClaimFormSection";
@@ -12,11 +12,9 @@ import { useClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useClaimPH";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
-    const dispatch = useAppDispatch();
 
     const { isContinuous, oldClaim } = useAppSelector(claimPHSelector);
     const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPH();
-
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
 
     return (
@@ -33,7 +31,7 @@ const ClaimPHPage: React.FC = () => {
             {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
             {isContinuous && oldClaim && (
                 <Grid item xs={12}>
-                    <OldClaimSection data={oldClaim} onToggleHidden={() => dispatch(toggleOldClaimHidden())} />
+                    <OldClaimSection data={oldClaim} />
                 </Grid>
             )}
             <Grid item xs={12}>

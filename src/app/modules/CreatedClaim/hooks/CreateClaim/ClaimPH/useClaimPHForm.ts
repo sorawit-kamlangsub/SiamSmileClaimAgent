@@ -19,7 +19,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
-import { CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType } from "../../../../../functionHelpers";
 interface Options {
     onNext: () => void;
 }
@@ -31,7 +31,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
-    const INCIDENT_TYPES = [IncidentType.Illness, IncidentType.Accident];
     const docData = Object.values(documentDetailById);
 
     const formik = useFormik<ClaimFormValues>({
@@ -136,13 +135,11 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         },
     });
     const incidentType: ClaimTypeOption[] =
-        incidentTypeRaw?.data
-            ?.filter((item) => INCIDENT_TYPES.includes(item.incidentTypeId ?? 0))
-            .map((item) => ({
-                id: item.incidentTypeId ?? 0,
-                name: item.incidentTypeNameTH ?? "",
-                icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
-            })) ?? [];
+        incidentTypeRaw?.data?.map((item) => ({
+            id: item.incidentTypeId ?? 0,
+            name: item.incidentTypeNameTH ?? "",
+            icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
+        })) ?? [];
     const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         formik.values.incidentTypeId ?? undefined,
         2, // ClaimAgent

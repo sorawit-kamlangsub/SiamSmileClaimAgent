@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
-import { monitorSelector, SelectedPolicyInfo, setSelectedPolicy } from "../../store/monitorSlice";
+import { monitorSelector, SelectedPolicyInfo, setSelectedPolicy, setSelectedRowIndex } from "../../store/monitorSlice";
 import { PaginationSortableDto } from "../../../_common";
 import React from "react";
 import { useGetCustomerDetailById, useGetCustomerSearch } from "../../../../api/coreClaimApi";
 
 export const useMonitorTable = () => {
     const dispatch = useAppDispatch();
-    const { search, isSearchMonitor } = useAppSelector(monitorSelector);
+    const { search, isSearchMonitor, selectedRowIndex } = useAppSelector(monitorSelector);
     const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -27,18 +27,18 @@ export const useMonitorTable = () => {
         paginated.recordsPerPage
     );
 
-    const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
-
     const selectedId =
-        selectedRowIndex !== null && data?.data?.[selectedRowIndex]?.id != null ? data.data[selectedRowIndex].id : 0;
+        selectedRowIndex !== undefined && data?.data?.[selectedRowIndex]?.id != undefined
+            ? data.data[selectedRowIndex].id
+            : 0;
 
     const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(selectedId);
-
+    const customerDetailLoading = selectedId > 0 && claimInfoLoading;
     useEffect(() => {
         if (!search.searchDetail) return;
 
-        setSelectedRowIndex(null);
-        dispatch(setSelectedPolicy(null));
+        dispatch(setSelectedRowIndex(undefined));
+        dispatch(setSelectedPolicy(undefined));
     }, [search]);
 
     useEffect(() => {
@@ -48,25 +48,27 @@ export const useMonitorTable = () => {
         if (!row) return;
 
         const policy: SelectedPolicyInfo = {
-            appId: claimInfo.data?.policyCode || "",
-            customerName: claimInfo.data?.customerName || "",
-            cardNo: claimInfo.data?.cardDetail || "",
-            productName: claimInfo.data?.productTypeName || "",
+            appId: claimInfo.data?.policyCode || "-",
+            customerName: claimInfo.data?.customerName || "-",
+            cardNo: claimInfo.data?.cardDetail || "-",
+            productName: claimInfo.data?.productTypeName || "-",
             productTypeId: data.data?.[selectedRowIndex!]?.productTypeId,
             customerId: data.data?.[selectedRowIndex!]?.id,
-            startCoverDate: claimInfo.data?.coverageFrom?.toString() || "",
-            endCoverDate: claimInfo.data?.coverageTo?.toString() ?? null,
-            schoolName: claimInfo.data?.schoolName || "",
-            provinceName: claimInfo.data?.provinceName || "",
-            address: claimInfo.data?.address || "",
+            startCoverDate: claimInfo.data?.coverageFrom?.toString() || "-",
+            endCoverDate: claimInfo.data?.coverageTo?.toString() ?? "-",
+            schoolName: claimInfo.data?.schoolName || "-",
+            provinceName: claimInfo.data?.provinceName || "-",
+            address: claimInfo.data?.address || "-",
+            mobilePhoneNumber: claimInfo.data?.mobilePhoneNumber || "-",
+            appStatus: claimInfo.data?.appStatus || "-",
         };
 
         dispatch(setSelectedPolicy(policy));
     }, [claimInfo]);
 
     const handleSelect = (rowIndex: number) => {
-        setSelectedRowIndex(rowIndex);
+        dispatch(setSelectedRowIndex(rowIndex));
     };
 
-    return { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search, claimInfoLoading };
+    return { data, isLoading, paginated, setPaginated, selectedRowIndex, handleSelect, search, customerDetailLoading };
 };

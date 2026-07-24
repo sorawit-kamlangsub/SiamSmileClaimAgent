@@ -3,6 +3,7 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
     CaseDocumentDetailCreateRequest,
+    GetCaseByClaimIdDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -63,18 +64,6 @@ export interface BeneficiaryForm {
     source?: "system" | "manual";
 }
 
-export interface OldClaimInfo {
-    claimNo: string;
-    incidentDate: string;
-    diagnosis: string;
-    totalClaim: number;
-    totalPaid: number;
-    remainingBudget: number;
-    remainingCount: number;
-    cases: ClaimCaseItem[];
-    isHidden: boolean;
-}
-
 export interface ClaimFormValues {
     // ผู้รับเอกสาร
     documentRecipientTypeId: number | undefined;
@@ -131,7 +120,7 @@ export type ContactInfo = GetContactPersonDtoResponse & {
 
 interface ClaimPHState {
     isContinuous: boolean;
-    oldClaim: OldClaimInfo | undefined;
+    oldClaim: GetCaseByClaimIdDtoResponse | undefined;
     form: ClaimFormValues;
     bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
@@ -209,12 +198,12 @@ const claimPHSlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<OldClaimInfo | undefined>) {
+        setOldClaim(state, action: PayloadAction<GetCaseByClaimIdDtoResponse>) {
             state.oldClaim = action.payload;
         },
-        toggleOldClaimHidden(state) {
-            if (state.oldClaim) state.oldClaim.isHidden = !state.oldClaim.isHidden;
-        },
+        // toggleOldClaimHidden(state) {
+        //     if (state.oldClaim) state.oldClaim.isHidden = !state.oldClaim.isHidden;
+        // },
         setClaimForm(state, action: PayloadAction<Partial<ClaimFormValues>>) {
             state.form = { ...state.form, ...action.payload };
         },
@@ -347,7 +336,7 @@ const claimPHSlice = createSlice({
 export const {
     setIsContinuous,
     setOldClaim,
-    toggleOldClaimHidden,
+    //toggleOldClaimHidden,
     setClaimForm,
     resetClaimForm,
     setBankAccounts,

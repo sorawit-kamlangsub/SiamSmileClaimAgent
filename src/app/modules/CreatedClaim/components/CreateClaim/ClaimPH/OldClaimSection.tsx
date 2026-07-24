@@ -1,9 +1,6 @@
 import React from "react";
-import { Box, Chip, Grid, IconButton, Tooltip, Typography, Zoom } from "@mui/material";
-import IndeterminateCheckBoxIcon from "@mui/icons-material/IndeterminateCheckBox";
-import AddBoxIcon from "@mui/icons-material/AddBox";
+import { Box, Chip, Divider, Grid, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
-import { OldClaimInfo } from "../../../store/claimPHSlice";
 import {
     cellAlignOptions,
     defaultOptionStandardDataTable,
@@ -13,13 +10,35 @@ import {
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
+import { GetCaseByClaimIdDtoResponse } from "../../../../../api/coreClaimApi.client";
+import CachedIcon from "@mui/icons-material/Cached";
 
 interface Props {
-    data: OldClaimInfo;
-    onToggleHidden: () => void;
+    data: GetCaseByClaimIdDtoResponse;
 }
-
-const OldClaimSection: React.FC<Props> = ({ data, onToggleHidden }) => {
+const mockClaimHistoryData = [
+    {
+        seq: 1,
+        claimCase: "CL-2026-000123",
+        claimType: "ผู้ป่วยใน (IPD)",
+        chiefComplain: "ไข้เลือดออก มีไข้สูง 3 วัน",
+        admitDate: "2026-05-12",
+        status: "จ่ายแล้ว",
+        claimAmount: 45000,
+        paidAmount: 42000,
+    },
+    {
+        seq: 2,
+        claimCase: "CL-2026-000456",
+        claimType: "ผู้ป่วยนอก (OPD)",
+        chiefComplain: "ปวดท้อง คลื่นไส้ อาเจียน",
+        admitDate: "2026-06-03",
+        status: "รอพิจารณา",
+        claimAmount: 3500,
+        paidAmount: 0,
+    },
+];
+const OldClaimSection: React.FC<Props> = ({ data }) => {
     const columns: MUIDataTableColumn[] = [
         {
             name: "seq",
@@ -33,8 +52,8 @@ const OldClaimSection: React.FC<Props> = ({ data, onToggleHidden }) => {
         },
         {
             name: "claimType",
-            label: "ลักษณะการเคลม",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+            label: "ประเภทการรักษา",
+            options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
         },
         {
             name: "chiefComplain",
@@ -43,7 +62,7 @@ const OldClaimSection: React.FC<Props> = ({ data, onToggleHidden }) => {
         },
         {
             name: "admitDate",
-            label: "วันที่เข้า รพ.",
+            label: "วันที่เข้ารักษา",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (value) => formatDateString(value, "DD/MM/BBBB"),
@@ -59,8 +78,8 @@ const OldClaimSection: React.FC<Props> = ({ data, onToggleHidden }) => {
                         label={value}
                         size="small"
                         sx={{
-                            backgroundColor: value === "อนุมัติ" ? "#e8f5e9" : "#fff3e0",
-                            color: value === "อนุมัติ" ? "#2e7d32" : "#e65100",
+                            backgroundColor: value === "จ่ายแล้ว" ? "#e8f5e9" : "#fff3e0",
+                            color: value === "จ่ายแล้ว" ? "#2e7d32" : "#e65100",
                             fontWeight: 600,
                             fontSize: 11,
                         }}
@@ -88,155 +107,117 @@ const OldClaimSection: React.FC<Props> = ({ data, onToggleHidden }) => {
 
     return (
         <CustomBox>
-            <HeadingWithColor
-                text="ข้อมูลเคลมเดิม"
-                color="blue"
-                button={
-                    <Tooltip
-                        title={data.isHidden ? "ยกเลิกการซ่อน" : "ซ่อน"}
-                        arrow
-                        placement="top"
-                        TransitionComponent={Zoom}
-                        enterDelay={100}
-                        leaveDelay={50}
-                    >
-                        <IconButton size="small" color="primary" onClick={onToggleHidden}>
-                            {data.isHidden ? (
-                                <AddBoxIcon fontSize="small" />
-                            ) : (
-                                <IndeterminateCheckBoxIcon fontSize="small" />
-                            )}
-                        </IconButton>
-                    </Tooltip>
-                }
-            />
+            <HeadingWithColor icon={<CachedIcon sx={{ fontSize: 27 }} />} text="ข้อมูลเคลมเดิม" color="blue" />
 
-            {!data.isHidden && (
-                <>
-                    <Box
-                        sx={{
-                            border: "1px solid #b3d4f0",
-                            borderRadius: 2,
-                            p: 1,
-                            bgcolor: "#eaf3fb",
-                            mb: 2,
-                        }}
-                    >
-                        <Grid container spacing={1} alignItems="center">
-                            <Grid item xs={12} sm={9}>
-                                <Grid container spacing={1}>
-                                    <Grid item xs={12} sm={6}>
-                                        <Typography variant="body2" color="text.secondary" component="span">
-                                            ClaimNo :{" "}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                            {data.claimNo}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Typography variant="body2" color="text.secondary" component="span">
-                                            วันที่เกิดเหตุ :{" "}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                            {formatDateString(data.incidentDate, "DD/MM/BBBB")}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={12} sm={12}>
-                                        <Typography variant="body2" color="text.secondary" component="span">
-                                            Diagnosis :{" "}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                            {data.diagnosis}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Typography variant="body2" color="text.secondary" component="span">
-                                            ยอดเบิกรวม :{" "}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                            {data.totalClaim.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
-                                        </Typography>
-                                    </Grid>
-                                    <Grid item xs={12} sm={6}>
-                                        <Typography variant="body2" color="text.secondary" component="span">
-                                            ยอดจ่ายรวม :{" "}
-                                        </Typography>
-                                        <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                            {data.totalPaid.toLocaleString("th-TH", { minimumFractionDigits: 2 })}
-                                        </Typography>
-                                    </Grid>
+            <>
+                <Box
+                    sx={{
+                        border: "1px solid #b3d4f0",
+                        borderRadius: 2,
+                        p: 1,
+                        bgcolor: "#eaf3fb",
+                        mb: 2,
+                    }}
+                >
+                    <Grid container spacing={1} alignItems="center">
+                        <Grid item xs={12} sm={9}>
+                            <Grid container spacing={1} ml={1}>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="body2" color="text.secondary" component="span">
+                                        ClaimNo :{" "}
+                                    </Typography>
+                                    <Typography variant="body2" color="primary" fontWeight={700} component="span">
+                                        {data.claimNo}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="body2" color="text.secondary" component="span">
+                                        วันที่เกิดเหตุ :{" "}
+                                    </Typography>
+                                    <Typography variant="body2" color="primary" fontWeight={700} component="span">
+                                        {formatDateString(data?.incidentDate?.toString(), "DD/MM/BBBB")}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={12}>
+                                    <Typography variant="body2" color="text.secondary" component="span">
+                                        Diagnosis :{" "}
+                                    </Typography>
+                                    <Typography variant="body2" color="primary" fontWeight={700} component="span">
+                                        {data.icD10Detail ?? "-"}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="body2" color="text.secondary" component="span">
+                                        ยอดเบิกรวม :{" "}
+                                    </Typography>
+                                    <Typography variant="body2" color="primary" fontWeight={700} component="span">
+                                        {data?.totalCaseAmount?.toLocaleString("th-TH", { minimumFractionDigits: 2 }) ??
+                                            "-"}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12} sm={6}>
+                                    <Typography variant="body2" color="text.secondary" component="span">
+                                        ยอดจ่ายรวม :{" "}
+                                    </Typography>
+                                    <Typography variant="body2" color="primary" fontWeight={700} component="span">
+                                        {data?.totalPaidAmount?.toLocaleString("th-TH", { minimumFractionDigits: 2 }) ??
+                                            "0.00"}
+                                    </Typography>
                                 </Grid>
                             </Grid>
-                            <Grid item xs={12} sm={3}>
-                                {" "}
-                                <Box
-                                    sx={{
-                                        border: "1.5px dashed #1976d2",
-                                        borderRadius: 2,
-                                        p: 2,
-                                        bgcolor: "#fff",
-                                        mb: 0,
-                                        width: "100%",
-                                        height: "100%",
-                                        alignItems: "center",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        justifyContent: "center",
-                                    }}
-                                >
-                                    <Grid container spacing={0.5}>
-                                        <Grid item xs={7} sx={{ textAlign: "right" }}>
-                                            <Typography variant="body2" color="text.secondary" component="span">
-                                                วงเงินคงเหลือ :
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={5}>
-                                            <Typography
-                                                color={data.remainingBudget > 0 ? "#2e7d32" : "error"}
-                                                fontWeight={700}
-                                                component="span"
-                                                fontSize={16}
-                                            >
-                                                {data.remainingBudget.toLocaleString("th-TH", {
-                                                    minimumFractionDigits: 2,
-                                                })}
-                                            </Typography>
-                                        </Grid>
-
-                                        <Grid item xs={7} sx={{ textAlign: "right" }}>
-                                            <Typography variant="body2" color="text.secondary" component="span">
-                                                จำนวนครั้งคงเหลือ :
-                                            </Typography>
-                                        </Grid>
-                                        <Grid item xs={5}>
-                                            <Typography
-                                                color={data.remainingCount > 0 ? "#2e7d32" : "error"}
-                                                fontWeight={700}
-                                                component="span"
-                                                fontSize={16}
-                                            >
-                                                {data.remainingCount}
-                                            </Typography>
-                                        </Grid>
-                                    </Grid>
-                                </Box>
-                            </Grid>
                         </Grid>
-                    </Box>
-                    <StandardDataTable
-                        name="OldClaimCaseTable"
-                        title=""
-                        data={data.cases}
-                        isLoading={false}
-                        columns={columns}
-                        color="primary"
-                        columnHeaderAlign="center"
-                        displayToolbar={false}
-                        options={{ ...defaultOptionStandardDataTable }}
-                        sx={smallSizeFooter}
-                    />
-                </>
-            )}
+                        <Grid item xs={12} sm={3}>
+                            <Box
+                                sx={{
+                                    border: "1.5px dashed #1976d2",
+                                    borderRadius: 2,
+                                    p: 2,
+                                    bgcolor: "#F0FDF4",
+                                    width: "100%",
+                                    height: "100%",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    gap: 1.5,
+                                }}
+                            >
+                                <Box sx={{ textAlign: "center" }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        วงเงินคงเหลือ
+                                    </Typography>
+                                    <Typography color="#2e7d32" fontWeight={700} fontSize={18}>
+                                        {(3200).toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                                    </Typography>
+                                </Box>
+
+                                <Divider flexItem sx={{ width: "100%" }} />
+
+                                <Box sx={{ textAlign: "center" }}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        คงเหลือหลังหักเคลมเดิม
+                                    </Typography>
+                                    <Typography color="#2e7d32" fontWeight={700} fontSize={18}>
+                                        {(500000).toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </Grid>
+                    </Grid>
+                </Box>
+                <StandardDataTable
+                    name="OldClaimCaseTable"
+                    title=""
+                    data={mockClaimHistoryData ?? []}
+                    isLoading={false}
+                    columns={columns}
+                    color="primary"
+                    columnHeaderAlign="center"
+                    displayToolbar={false}
+                    options={{ ...defaultOptionStandardDataTable }}
+                    sx={smallSizeFooter}
+                />
+            </>
         </CustomBox>
     );
 };

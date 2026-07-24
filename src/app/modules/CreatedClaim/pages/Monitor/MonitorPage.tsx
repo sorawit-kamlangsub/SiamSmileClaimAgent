@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Box, Grid, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { Box, Grid, LinearProgress, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import { monitorSelector, resetMonitor } from "../../store/monitorSlice";
 import { useAppSelector } from "../../../../../redux";
 import MonitorToolbar from "../../components/Monitor/MonitorToolbar";
@@ -10,6 +10,8 @@ import MonitorCard from "../../components/Monitor/MonitorCard";
 import { useDispatch } from "react-redux";
 import GridViewIcon from "@mui/icons-material/GridView";
 import TableRowsIcon from "@mui/icons-material/TableRows";
+import { useMonitorTable } from "../../hooks/Monitor/useMonitorTable";
+import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 
 type ViewMode = "card" | "table";
 const MonitorPage: React.FC = () => {
@@ -22,6 +24,7 @@ const MonitorPage: React.FC = () => {
         },
     };
     const { selectedPolicy } = useAppSelector(monitorSelector);
+    const { customerDetailLoading } = useMonitorTable();
     const productTypeId = selectedPolicy?.productTypeId;
     const [view, setView] = useState<ViewMode>("table");
     useEffect(() => {
@@ -51,10 +54,20 @@ const MonitorPage: React.FC = () => {
             <Grid item xs={12}>
                 {view === "table" ? <MonitorTable /> : <MonitorCard />}
             </Grid>
-            {selectedPolicy && (
+            {(selectedPolicy || customerDetailLoading) && (
                 <Grid item xs={12} mt={3}>
-                    {productTypeId === 6 && <ClaimHistoryPH />}
-                    {productTypeId === 26 && <ClaimHistoryPA />}
+                    {customerDetailLoading ? (
+                        <>
+                            <CustomPaper>
+                                <LinearProgress sx={{ height: "5px" }} />
+                            </CustomPaper>
+                        </>
+                    ) : (
+                        <>
+                            {productTypeId === 6 && <ClaimHistoryPH />}
+                            {productTypeId === 26 && <ClaimHistoryPA />}
+                        </>
+                    )}
                 </Grid>
             )}
         </Grid>

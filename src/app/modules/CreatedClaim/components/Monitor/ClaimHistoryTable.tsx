@@ -69,8 +69,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
                             onClick={() => {
                                 if (item) onContinuousClaim(item);
                             }}
-                            //disabled={!item}
-                            disabled
+                            disabled={!item}
                             sx={{ whiteSpace: "nowrap" }}
                         >
                             แจ้งเคลมต่อเนื่อง

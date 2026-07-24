@@ -45,13 +45,16 @@ export interface SelectedPolicyInfo {
     address?: string;
     productTypeId?: number;
     customerId?: number;
+    mobilePhoneNumber?: string;
+    appStatus?: string;
 }
 
 interface MonitorState {
     search: checkeligibleMonitorSearchValuesType;
-    selectedPolicy: SelectedPolicyInfo | null;
+    selectedPolicy: SelectedPolicyInfo | undefined;
     claimHistory: GetClaimHistoryDtoResponse[];
     isSearchMonitor?: boolean;
+    selectedRowIndex: number | undefined;
 }
 
 const initialState: MonitorState = {
@@ -64,7 +67,8 @@ const initialState: MonitorState = {
         isAdvancedSearch: false,
         isSearchMonitor: false,
     },
-    selectedPolicy: null,
+    selectedPolicy: undefined,
+    selectedRowIndex: undefined,
     claimHistory: [],
 };
 
@@ -76,9 +80,12 @@ const monitorSlice = createSlice({
             state.search = action.payload;
             state.isSearchMonitor = true;
         },
-        setSelectedPolicy(state, action: PayloadAction<SelectedPolicyInfo | null>) {
+        setSelectedPolicy(state, action: PayloadAction<SelectedPolicyInfo | undefined>) {
             state.selectedPolicy = action.payload;
             state.claimHistory = [];
+        },
+        setSelectedRowIndex: (state, action: PayloadAction<number | undefined>) => {
+            state.selectedRowIndex = action.payload;
         },
         setClaimHistory(state, action: PayloadAction<GetClaimHistoryDtoResponse[]>) {
             state.claimHistory = action.payload;
@@ -87,7 +94,8 @@ const monitorSlice = createSlice({
     },
 });
 
-export const { setSearchcheckeligibleMonitor, setSelectedPolicy, setClaimHistory, resetMonitor } = monitorSlice.actions;
+export const { setSearchcheckeligibleMonitor, setSelectedPolicy, setSelectedRowIndex, setClaimHistory, resetMonitor } =
+    monitorSlice.actions;
 
 export const monitorSelector = (state: RootState) => state.monitorcreatedclaim;
 

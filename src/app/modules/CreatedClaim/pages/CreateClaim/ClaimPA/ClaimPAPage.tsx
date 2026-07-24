@@ -6,10 +6,14 @@ import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAF
 import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 import { useClaimPA } from "../../../hooks/CreateClaim/ClaimPA/useClaimPA";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
+import { claimPASelector } from "../../../store/claimPASlice";
+import { useAppSelector } from "../../../../../../redux";
 
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
-    const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPA();
+    const { isContinuous, oldClaim } = useAppSelector(claimPASelector);
+    const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPA();  
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
     // ─────────────────────────────────────────────────────────
 
@@ -23,7 +27,12 @@ const ClaimPAPage: React.FC = () => {
             <Grid item xs={12} md={7}>
                 <ClaimHistoryCard appId={applicationId} />
             </Grid>
-
+            {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
+            {isContinuous && oldClaim && (
+                <Grid item xs={12}>
+                    <OldClaimSection data={oldClaim} />
+                </Grid>
+            )}
             {/* ── บันทึกข้อมูลเคลม ── */}
             <Grid item xs={12}>
                 <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />

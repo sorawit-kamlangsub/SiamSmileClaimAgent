@@ -11,6 +11,7 @@ import {
 } from "./claimPHSlice";
 import {
     CaseDocumentDetailCreateRequest,
+    GetCaseByClaimIdDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -83,6 +84,7 @@ export interface ClaimPAFormValues {
 
 interface ClaimPAState {
     isContinuous: boolean;
+    oldClaim: GetCaseByClaimIdDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
@@ -139,6 +141,7 @@ const defaultForm: ClaimPAFormValues = {
 
 const initialState: ClaimPAState = {
     isContinuous: false,
+    oldClaim: undefined,
     insured: undefined,
     school: null,
     form: defaultForm,
@@ -156,6 +159,9 @@ const claimPASlice = createSlice({
     reducers: {
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
+        },
+        setOldClaim(state, action: PayloadAction<GetCaseByClaimIdDtoResponse>) {
+            state.oldClaim = action.payload;
         },
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
@@ -183,6 +189,7 @@ const claimPASlice = createSlice({
         setEditingItemId(state, action: PayloadAction<string | null>) {
             state.editingItemId = action.payload;
         },
+
         // ── BankAccounts (เหมือน PH) ──
         setBankAccounts(state, action: PayloadAction<GetCustomerBankAccountDtoResponse[]>) {
             state.bankAccounts = action.payload.map((item, index) => ({
@@ -293,6 +300,7 @@ const claimPASlice = createSlice({
 
 export const {
     setIsContinuous,
+    setOldClaim,
     setInsured,
     setSchool,
     setClaimForm,
