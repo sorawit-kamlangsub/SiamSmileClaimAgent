@@ -43,9 +43,8 @@ const mapBenefitData = (data: GetCustomerBenefitDetailSearchDtoResponse[]): Bene
                 ? `${item.pricePerUnit.toLocaleString("th-TH")}/${item.unitName ?? ""}`
                 : undefined,
         maxAmount: item.maxPrice ?? 0,
-        remainingAmount: (item.remainBenefit ?? 0) * (item.pricePerUnit ?? 0),
+        remainingAmount: item.remainAmount ?? 0,
         maxDays: item.maxQuantity ?? undefined,
-        // TODO: DTO ไม่มี field "จำนวนคงเหลือ" แยกจาก maxQuantity ยืนยันกับ backend ก่อนขึ้น production
         remainingDays: item.remainBenefit ?? undefined,
         dayUnit: (item.quantityUnitName ?? item.unitName ?? "").replace(/ /g, "\u00A0"),
         productName: item.productName ?? undefined,

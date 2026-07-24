@@ -3465,6 +3465,7 @@ export interface GetCustomerBenefitDetailSearchDtoResponse {
     benefitId?: number | undefined;
     medicalTypeId?: number | undefined;
     medicalTypeName?: string | undefined;
+    remainAmount?: number | undefined;
 }
 
 export interface GetCustomerBenefitDetailSearchDtoResponseListServiceResponse {
@@ -3518,6 +3519,9 @@ export interface GetCustomerDetailByIdDtoResponse {
     policyExcludeDetail?: string | undefined;
     agentName?: string | undefined;
     agentBranchName?: string | undefined;
+    levelRoomName?: string | undefined;
+    academicYear?: number | undefined;
+    appStatus?: string | undefined;
 }
 
 export interface GetCustomerDetailByIdDtoResponseServiceResponse {
