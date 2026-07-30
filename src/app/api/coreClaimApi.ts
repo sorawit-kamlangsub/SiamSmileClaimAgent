@@ -91,7 +91,8 @@ export const useGetCustomerBenefitDetailSearch = (
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
-    medicalTypeId?: number | undefined
+    medicalTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -103,6 +104,7 @@ export const useGetCustomerBenefitDetailSearch = (
             incidentTypeId,
             coverageTypeId,
             medicalTypeId,
+            causeOfIncidentId,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
@@ -112,7 +114,8 @@ export const useGetCustomerBenefitDetailSearch = (
                 isContinue,
                 incidentTypeId,
                 coverageTypeId,
-                medicalTypeId
+                medicalTypeId,
+                causeOfIncidentId
             ),
         {
             enabled: !!policyCode,

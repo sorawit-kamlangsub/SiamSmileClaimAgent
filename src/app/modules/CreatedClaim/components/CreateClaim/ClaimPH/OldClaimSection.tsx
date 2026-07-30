@@ -10,58 +10,43 @@ import {
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import { GetCaseByClaimIdDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { GetClaimHistoryDtoResponse } from "../../../../../api/coreClaimApi.client";
 import CachedIcon from "@mui/icons-material/Cached";
+import { useClaimHistory } from "../../../hooks/Monitor/useClaimHistory";
 
 interface Props {
-    data: GetCaseByClaimIdDtoResponse;
+    data: GetClaimHistoryDtoResponse;
 }
-const mockClaimHistoryData = [
-    {
-        seq: 1,
-        claimCase: "CL-2026-000123",
-        claimType: "ผู้ป่วยใน (IPD)",
-        chiefComplain: "ไข้เลือดออก มีไข้สูง 3 วัน",
-        admitDate: "2026-05-12",
-        status: "จ่ายแล้ว",
-        claimAmount: 45000,
-        paidAmount: 42000,
-    },
-    {
-        seq: 2,
-        claimCase: "CL-2026-000456",
-        claimType: "ผู้ป่วยนอก (OPD)",
-        chiefComplain: "ปวดท้อง คลื่นไส้ อาเจียน",
-        admitDate: "2026-06-03",
-        status: "รอพิจารณา",
-        claimAmount: 3500,
-        paidAmount: 0,
-    },
-];
 const OldClaimSection: React.FC<Props> = ({ data }) => {
+    const { caseData, caseDataisLoading } = useClaimHistory(undefined, data?.claimId);
     const columns: MUIDataTableColumn[] = [
         {
-            name: "seq",
+            name: "",
             label: "ลำดับ",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+            options: {
+                filter: false,
+                sort: false,
+                ...cellAlignOptions({ align: "center" }),
+                customBodyRender: (_value, tableMeta) => tableMeta.rowIndex + 1,
+            },
         },
         {
-            name: "claimCase",
+            name: "caseNo",
             label: "ClaimCase",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "claimType",
+            name: "medicalTypeCode",
             label: "ประเภทการรักษา",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
         },
         {
-            name: "chiefComplain",
+            name: "lastestChiefComplaint",
             label: "อาการสำคัญ",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
         },
         {
-            name: "admitDate",
+            name: "admissionDate",
             label: "วันที่เข้ารักษา",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
@@ -69,26 +54,40 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
             },
         },
         {
-            name: "status",
+            name: "payableStatusName",
             label: "สถานะ",
             options: {
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (value) => (
-                    <Chip
-                        label={value}
-                        size="small"
-                        sx={{
-                            backgroundColor: value === "จ่ายแล้ว" ? "#e8f5e9" : "#fff3e0",
-                            color: value === "จ่ายแล้ว" ? "#2e7d32" : "#e65100",
-                            fontWeight: 600,
-                            fontSize: 11,
-                        }}
-                    />
-                ),
+                customBodyRender: (value, tableMeta) => {
+                    const item = caseData?.data?.[tableMeta.rowIndex];
+                    const statusId = item?.payableStatusId;
+
+                    const statusStyleMap: Record<number, { bg: string; color: string }> = {
+                        2: { bg: "#e3f2fd", color: "#1565c0" }, // Open
+                        3: { bg: "#fff3e0", color: "#e65100" }, // Partial Paid
+                        4: { bg: "#e8f5e9", color: "#2e7d32" }, // Fully Paid
+                        5: { bg: "#ffebee", color: "#c62828" }, // Canceled
+                    };
+
+                    const style = statusId != null ? statusStyleMap[statusId] : undefined;
+
+                    return (
+                        <Chip
+                            label={value}
+                            size="small"
+                            sx={{
+                                backgroundColor: style?.bg ?? "#f5f5f5",
+                                color: style?.color ?? "#616161",
+                                fontWeight: 600,
+                                fontSize: 11,
+                            }}
+                        />
+                    );
+                },
             },
         },
         {
-            name: "claimAmount",
+            name: "totalCaseAmount",
             label: "ยอดเบิก",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -96,7 +95,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
             },
         },
         {
-            name: "paidAmount",
+            name: "totalPaidAmount",
             label: "ยอดจ่าย",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -143,7 +142,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         Diagnosis :{" "}
                                     </Typography>
                                     <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                        {data.icD10Detail ?? "-"}
+                                        {data?.icD10Detail ?? "-"}
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
@@ -160,7 +159,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         ยอดจ่ายรวม :{" "}
                                     </Typography>
                                     <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                        {data?.totalPaidAmount?.toLocaleString("th-TH", { minimumFractionDigits: 2 }) ??
+                                        {data?.paidAmount?.toLocaleString("th-TH", { minimumFractionDigits: 2 }) ??
                                             "0.00"}
                                     </Typography>
                                 </Grid>
@@ -208,8 +207,8 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                 <StandardDataTable
                     name="OldClaimCaseTable"
                     title=""
-                    data={mockClaimHistoryData ?? []}
-                    isLoading={false}
+                    data={caseData?.data ?? []}
+                    isLoading={caseDataisLoading}
                     columns={columns}
                     color="primary"
                     columnHeaderAlign="center"

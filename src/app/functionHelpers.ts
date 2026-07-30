@@ -30,10 +30,10 @@ export const formatDateString = (
     dateString: string | undefined,
     format: string = "DD/MM/BBBB HH:mm:ss"
 ): string | undefined => {
-    if (dateString) {
-        return dayjs(dateString).format(format);
-    }
-    return undefined;
+    if (!dateString) return undefined;
+
+    const parsed = dayjs(dateString);
+    return parsed.isValid() ? parsed.format(format) : undefined;
 };
 
 export const handleClickLink = (redirectURL?: string) => {

@@ -11,7 +11,7 @@ import {
 } from "./claimPHSlice";
 import {
     CaseDocumentDetailCreateRequest,
-    GetCaseByClaimIdDtoResponse,
+    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -84,7 +84,7 @@ export interface ClaimPAFormValues {
 
 interface ClaimPAState {
     isContinuous: boolean;
-    oldClaim: GetCaseByClaimIdDtoResponse | undefined;
+    oldClaim: GetClaimHistoryDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
@@ -160,7 +160,7 @@ const claimPASlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<GetCaseByClaimIdDtoResponse>) {
+        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
             state.oldClaim = action.payload;
         },
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {

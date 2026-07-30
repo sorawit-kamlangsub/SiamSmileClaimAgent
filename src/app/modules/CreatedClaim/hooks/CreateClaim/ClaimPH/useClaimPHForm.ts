@@ -196,7 +196,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         false,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
-        formik.values.medicalTypeId
+        formik.values.medicalTypeId,
+        formik.values.causeOfIncidentId
     );
 
     const isFirstRenderIncident = useRef(true);

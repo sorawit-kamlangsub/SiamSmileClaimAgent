@@ -158,143 +158,151 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, claim, caseData,
 
                         <Divider sx={{ my: 3 }} />
                         {caseData?.map((item, index) => (
-                            <div key={index} style={{ marginBottom: "16px" }}>
-                                <Paper
-                                    variant="outlined"
-                                    sx={{
-                                        borderRadius: 4,
-                                        p: 2,
-                                        display: "flex",
-                                        alignItems: "center",
-                                        justifyContent: "space-between",
-                                        flexWrap: { xs: "wrap", md: "nowrap" }, // รองรับ responsive
-                                        gap: 2,
-                                    }}
+                            <Paper
+                                key={index}
+                                variant="outlined"
+                                sx={{
+                                    borderRadius: 4,
+                                    p: 2,
+                                    mb: 2,
+                                    display: "flex",
+                                    flexDirection: { xs: "column", md: "row" },
+                                    alignItems: { xs: "stretch", md: "center" },
+                                    justifyContent: "space-between",
+                                    gap: 2,
+                                }}
+                            >
+                                {/* ซ้าย: ไอคอน + caseNo + badge */}
+                                <Box
+                                    display="flex"
+                                    alignItems="center"
+                                    gap={2}
+                                    sx={{ minWidth: { xs: "auto", md: 220 }, flexShrink: 0 }}
                                 >
-                                    <Box display="flex" alignItems="center" gap={2} sx={{ minWidth: 280 }}>
+                                    <Box
+                                        sx={{
+                                            backgroundColor: "#e8f4fd",
+                                            borderRadius: 3,
+                                            width: 48,
+                                            height: 48,
+                                            flexShrink: 0,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        <DescriptionIcon sx={{ color: "#10609d", fontSize: 24 }} />
+                                    </Box>
+
+                                    <Typography
+                                        fontSize={16}
+                                        fontWeight={600}
+                                        color="#10609d"
+                                        sx={{ cursor: "pointer" }}
+                                    >
+                                        {item?.caseNo}
+                                    </Typography>
+
+                                    {index === 0 && (
                                         <Box
                                             sx={{
-                                                backgroundColor: "#e8f4fd",
-                                                borderRadius: 3,
-                                                width: 48,
-                                                height: 48,
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
+                                                border: "1px solid",
+                                                borderColor: "divider",
+                                                px: 1.5,
+                                                py: 0.5,
+                                                borderRadius: 4,
+                                                backgroundColor: "#f8f9fa",
+                                                flexShrink: 0,
                                             }}
                                         >
-                                            <DescriptionIcon sx={{ color: "#10609d", fontSize: 24 }} />
+                                            <Typography fontSize={13} fontWeight={500} color="text.secondary" noWrap>
+                                                เคสแรก
+                                            </Typography>
                                         </Box>
+                                    )}
+                                </Box>
 
-                                        <Typography
-                                            fontSize={16}
-                                            fontWeight={600}
-                                            color="#10609d"
-                                            sx={{ cursor: "pointer" }}
-                                        >
-                                            {item?.caseNo}
+                                {/* ขวา: กล่องข้อมูล 4 กล่อง เป็น grid ที่ปรับจำนวนคอลัมน์ตามจอ */}
+                                <Box
+                                    sx={{
+                                        display: "grid",
+                                        gridTemplateColumns: {
+                                            xs: "1fr 1fr",
+                                            sm: "repeat(4, 1fr)",
+                                        },
+                                        gap: 1.5,
+                                        width: "100%",
+                                    }}
+                                >
+                                    <Box
+                                        sx={{
+                                            border: "1px solid #f0f0f0",
+                                            borderRadius: 3,
+                                            p: 1.5,
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
+                                            วันที่เข้ารักษา
                                         </Typography>
-
-                                        {index === 0 && (
-                                            <Box
-                                                sx={{
-                                                    border: "1px solid",
-                                                    borderColor: "divider",
-                                                    px: 1.5,
-                                                    py: 0.5,
-                                                    borderRadius: 4,
-                                                    backgroundColor: "#f8f9fa",
-                                                }}
-                                            >
-                                                <Typography fontSize={13} fontWeight={500} color="text.secondary">
-                                                    เคสแรก
-                                                </Typography>
-                                            </Box>
-                                        )}
+                                        <Typography fontSize={15} fontWeight={600} color="text.primary">
+                                            {item?.occurrenceDate
+                                                ? formatDateString(item?.occurrenceDate?.toString(), "DD/MM/BBBB")
+                                                : "18/02/2569"}
+                                        </Typography>
                                     </Box>
 
                                     <Box
-                                        display="flex"
-                                        alignItems="center"
-                                        gap={2}
-                                        flex={1}
-                                        justifyContent="flex-end"
-                                        sx={{ flexWrap: { xs: "wrap", sm: "nowrap" }, width: "100%" }}
+                                        sx={{
+                                            border: "1px solid #f0f0f0",
+                                            borderRadius: 3,
+                                            p: 1.5,
+                                            gridColumn: { xs: "span 2", sm: "span 1" },
+                                        }}
                                     >
-                                        <Box
-                                            sx={{
-                                                border: "1px solid #f0f0f0",
-                                                borderRadius: 3,
-                                                p: 1.5,
-                                                minWidth: 130,
-                                                textAlign: "center",
-                                            }}
-                                        >
-                                            <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                                วันที่เข้ารักษา
-                                            </Typography>
-                                            <Typography fontSize={15} fontWeight={600} color="text.primary">
-                                                {item?.occurrenceDate
-                                                    ? formatDateString(item?.occurrenceDate?.toString(), "DD/MM/BBBB")
-                                                    : "18/02/2569"}
-                                            </Typography>
-                                        </Box>
-
-                                        {/* อาการสำคัญ */}
-                                        <Box
-                                            sx={{
-                                                border: "1px solid #f0f0f0",
-                                                borderRadius: 3,
-                                                p: 1.5,
-                                                flex: 1,
-                                                minWidth: 200,
-                                            }}
-                                        >
-                                            <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                                อาการสำคัญ
-                                            </Typography>
-                                            <Typography fontSize={15} fontWeight={600} color="text.primary" noWrap>
-                                                {item?.lastestChiefComplaint}
-                                            </Typography>
-                                        </Box>
-
-                                        <Box
-                                            sx={{
-                                                backgroundColor: "#f0f6ff",
-                                                border: "1px solid #e1eeff",
-                                                borderRadius: 3,
-                                                p: 1.5,
-                                                minWidth: 120,
-                                            }}
-                                        >
-                                            <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                                ยอดเบิก
-                                            </Typography>
-                                            <Typography fontSize={16} fontWeight={700} color="#10609d">
-                                                {fmt(item?.totalCaseAmount ?? 0)}
-                                            </Typography>
-                                        </Box>
-
-                                        {/* ยอดจ่าย (กล่องสีเขียวอ่อน) */}
-                                        <Box
-                                            sx={{
-                                                backgroundColor: "#f4fbf7",
-                                                border: "1px solid #e6f7ed",
-                                                borderRadius: 3,
-                                                p: 1.5,
-                                                minWidth: 120,
-                                            }}
-                                        >
-                                            <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                                ยอดจ่าย
-                                            </Typography>
-                                            <Typography fontSize={16} fontWeight={700} color="#2e7d32">
-                                                {fmt(item?.casePaidAmount ?? 0)}
-                                            </Typography>
-                                        </Box>
+                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
+                                            อาการสำคัญ
+                                        </Typography>
+                                        <Typography fontSize={15} fontWeight={600} color="text.primary" noWrap>
+                                            {item?.lastestChiefComplaint}
+                                        </Typography>
                                     </Box>
-                                </Paper>
-                            </div>
+
+                                    <Box
+                                        sx={{
+                                            backgroundColor: "#f0f6ff",
+                                            border: "1px solid #e1eeff",
+                                            borderRadius: 3,
+                                            p: 1.5,
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
+                                            ยอดเบิก
+                                        </Typography>
+                                        <Typography fontSize={16} fontWeight={700} color="#10609d">
+                                            {fmt(item?.totalCaseAmount ?? 0)}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box
+                                        sx={{
+                                            backgroundColor: "#f4fbf7",
+                                            border: "1px solid #e6f7ed",
+                                            borderRadius: 3,
+                                            p: 1.5,
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
+                                            ยอดจ่าย
+                                        </Typography>
+                                        <Typography fontSize={16} fontWeight={700} color="#2e7d32">
+                                            {fmt(item?.casePaidAmount ?? 0)}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Paper>
                         ))}
                     </>
                 )}

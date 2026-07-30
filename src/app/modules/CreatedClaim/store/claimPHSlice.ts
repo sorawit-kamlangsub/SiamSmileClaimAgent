@@ -3,7 +3,7 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
     CaseDocumentDetailCreateRequest,
-    GetCaseByClaimIdDtoResponse,
+    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -96,6 +96,7 @@ export interface ClaimFormValues {
     documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
     notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
+    benefitAmounts: Record<number, string>;
     transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
     specifyHospital: SpecifyHospital | undefined;
@@ -120,7 +121,7 @@ export type ContactInfo = GetContactPersonDtoResponse & {
 
 interface ClaimPHState {
     isContinuous: boolean;
-    oldClaim: GetCaseByClaimIdDtoResponse | undefined;
+    oldClaim: GetClaimHistoryDtoResponse | undefined;
     form: ClaimFormValues;
     bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
@@ -156,6 +157,7 @@ const defaultForm: ClaimFormValues = {
     documentCompleteDate: dayjs(),
     notificationDate: dayjs(),
     transferAmount: 0,
+    benefitAmounts: {},
     symptomType: 1,
     specifyHospital: 1,
     hospitalId: undefined,
@@ -198,7 +200,7 @@ const claimPHSlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<GetCaseByClaimIdDtoResponse>) {
+        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
             state.oldClaim = action.payload;
         },
         // toggleOldClaimHidden(state) {

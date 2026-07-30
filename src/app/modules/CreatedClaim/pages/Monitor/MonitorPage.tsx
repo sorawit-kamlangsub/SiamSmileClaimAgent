@@ -12,6 +12,7 @@ import GridViewIcon from "@mui/icons-material/GridView";
 import TableRowsIcon from "@mui/icons-material/TableRows";
 import { useMonitorTable } from "../../hooks/Monitor/useMonitorTable";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
+import { RemainCreditLimit } from "../../components/Monitor/RemainCreditLimit";
 
 type ViewMode = "card" | "table";
 const MonitorPage: React.FC = () => {
@@ -34,6 +35,11 @@ const MonitorPage: React.FC = () => {
     }, []);
     return (
         <Grid container>
+            <Grid container justifyContent={"flex-End"} paddingTop={1} paddingBottom={3}>
+                <Grid item>
+                    <RemainCreditLimit />
+                </Grid>
+            </Grid>
             <Grid item xs={12}>
                 <MonitorToolbar />
             </Grid>

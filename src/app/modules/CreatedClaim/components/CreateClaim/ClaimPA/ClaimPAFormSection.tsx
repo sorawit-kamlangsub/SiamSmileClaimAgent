@@ -28,7 +28,7 @@ import dayjs from "dayjs";
 import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
 import { useClaimPAForm } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 import OcrDocumentScanSection from "../OcrDocumentScanSection";
-import CoverageBox from "../ClaimPH/CoverageBox";
+import CoverageBox from "../CoverageBox";
 import { SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
 import DocumentScanTable from "../DocumentScanTable";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
@@ -41,6 +41,7 @@ import { claimStepBoxSx } from "../ClaimPH/ClaimFormSection";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
+import { useNavigate } from "react-router-dom";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -78,12 +79,14 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss();
     const { values, setFieldValue } = formik;
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { organLossItems } = useAppSelector(claimPASelector);
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDisability = values.coverageTypeId === CoverageType.Disability;
     const isDeath = values.coverageTypeId === CoverageType.Death;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
     const requiresOcrValidation = isMedical && shouldShowOcrDocumentScan(values.coverageTypeId);
@@ -450,17 +453,18 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     )}
 
                     {/* ปุ่มคำนวณวงเงิน */}
-                    {isIPD && (
-                        <Grid item xs={12} md={6} lg={4} mt={2}>
+                    {isIPDMedical && (
+                        <Grid item xs={12} mt={2}>
                             <Grid container justifyContent="center">
                                 <Button
                                     variant="outlined"
                                     color="primary"
                                     size="small"
                                     startIcon={<CalculateIcon />}
-                                    sx={{ width: { xs: "100%", sm: "30%", md: "50%" }, mb: 1 }}
+                                    sx={{ mb: 1 }}
+                                    onClick={() => navigate("/claim-simulation")}
                                 >
-                                    เปิดโปรแกรมคำนวณวงเงิน
+                                    เปิดโปรแกรมคำนวณวงเงินเคลม
                                 </Button>
                             </Grid>
                         </Grid>

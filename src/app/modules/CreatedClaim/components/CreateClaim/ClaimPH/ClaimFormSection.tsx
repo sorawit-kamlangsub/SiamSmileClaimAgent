@@ -20,7 +20,7 @@ import FormikDatePicker from "../../../../_common/components/CustomFormik/Formik
 import ArticleIcon from "@mui/icons-material/Article";
 import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
 import CalculateIcon from "@mui/icons-material/Calculate";
-import CoverageBox from "./CoverageBox";
+import CoverageBox from "../CoverageBox";
 import OcrDocumentScanSection from "../OcrDocumentScanSection";
 import DocumentRecipientTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/DocumentRecipientTypeDropDown";
 import UserAutocompleteApi from "../../../../_common/components/ClaimAgent/CustomDropdown/UserAutocompleteApi";
@@ -39,6 +39,8 @@ import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
+import { useNavigate } from "react-router-dom";
+import CoverageAndTransferBox from "../CoverageAndTransferBox";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -83,6 +85,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss();
     const { values, setFieldValue } = formik;
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { organLossItems } = useAppSelector(claimPHSelector);
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
@@ -90,6 +93,9 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    const isManualIPD =
+        values.coverageTypeId === CoverageType.Medical &&
+        (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
     const requiresOcrValidation = isMedical && shouldShowOcrDocumentScan(values.coverageTypeId);
@@ -441,7 +447,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         </Box>
                     )}
                     {/* Coverage box */}
-                    {(isOPD || isIPD || isDisability) && (
+                    {(isIPD || isOPD || isDisability) && !isManualIPD && (
                         <Grid item xs={12} mt={2}>
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}
@@ -456,24 +462,42 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                     )}
 
                     {/* ปุ่มคำนวณวงเงิน */}
-                    {isIPD && (
-                        <Grid item xs={12} md={6} lg={4} mt={2}>
-                            <Grid container justifyContent="center">
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    size="small"
-                                    startIcon={<CalculateIcon />}
-                                    sx={{ width: { xs: "100%", sm: "30%", md: "50%" }, mb: 1 }}
-                                >
-                                    เปิดโปรแกรมคำนวณวงเงิน
-                                </Button>
+                    {isManualIPD && (
+                        <>
+                            <Grid item xs={12} mt={2}>
+                                <CoverageAndTransferBox
+                                    items={customerBenefit?.data ?? []}
+                                    isLoading={customerBenefitLoading}
+                                    planCode={
+                                        isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
+                                            ? insured?.productName
+                                            : insured?.productCategoryName
+                                    }
+                                    benefitAmounts={formik.values.benefitAmounts}
+                                    onBenefitAmountsChange={(value) => formik.setFieldValue("benefitAmounts", value)}
+                                    onTransferAmountChange={(value) => formik.setFieldValue("transferAmount", value)}
+                                    debounceMs={300}
+                                />
                             </Grid>
-                        </Grid>
+                            <Grid item xs={12} mt={2}>
+                                <Grid container justifyContent="center">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        size="large"
+                                        startIcon={<CalculateIcon />}
+                                        sx={{ mb: 1 }}
+                                        onClick={() => navigate("/claim-simulation")}
+                                    >
+                                        เปิดโปรแกรมคำนวณวงเงินเคลม
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </>
                     )}
 
                     {/* จำนวนเงิน */}
-                    {!isDisability && !isDeath && (
+                    {!isDisability && !isDeath && !isManualIPD && (
                         <Grid item xs={12}>
                             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
                                 <Grid item xs={12} sm={5.9} md={2.9} mt={1}>

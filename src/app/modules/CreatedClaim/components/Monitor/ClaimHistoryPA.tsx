@@ -45,13 +45,13 @@ const ClaimHistoryPA: React.FC = () => {
                     <Field label="ผลิตภัณฑ์" value={selectedPolicy.productName} />
                     <Field
                         label="วันที่เริ่มคุ้มครอง"
-                        value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB") as string}
+                        value={formatDateString(selectedPolicy.startCoverDate, "DD/MM/BBBB")}
                     />
                     <Field
                         label="วันที่สิ้นสุดความคุ้มครอง"
                         value={
                             selectedPolicy.endCoverDate
-                                ? (formatDateString(selectedPolicy.endCoverDate, "DD/MM/BBBB") as string)
+                                ? formatDateString(selectedPolicy.endCoverDate, "DD/MM/BBBB")
                                 : undefined
                         }
                     />
@@ -62,7 +62,13 @@ const ClaimHistoryPA: React.FC = () => {
                     <Field
                         label="สถานะ App"
                         value={selectedPolicy.appStatus}
-                        color={selectedPolicy.appStatus === "หมดความคุ้มครอง" ? "#D32F2F" : "#2E7D32"}
+                        color={
+                            selectedPolicy.appStatus === "ปกติ"
+                                ? "#2E7D32"
+                                : selectedPolicy.appStatus === "ยกเลิก" || selectedPolicy.appStatus === "ยกเลิกก่อน DCR"
+                                ? "#D32F2F"
+                                : "#F0E434"
+                        }
                     />
                 </Grid>
             </CustomPaper>

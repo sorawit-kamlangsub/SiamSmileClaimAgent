@@ -9,6 +9,7 @@ import ClaimHistoryTable from "./ClaimHistoryTable";
 import { Box, Button, Grid, Link } from "@mui/material";
 import PolicyIcon from "@mui/icons-material/Policy";
 import { useNavigate } from "react-router-dom";
+import { GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client";
 
 const Field = ({ label, value, color }: { label: string; value: ReactNode | undefined; color?: string }) => (
     <Grid item xs={12} sm={6} md={4}>
@@ -61,14 +62,20 @@ const ClaimHistoryPH: React.FC = () => {
                     <Field
                         label="สถานะ App"
                         value={selectedPolicy.appStatus}
-                        color={selectedPolicy.appStatus === "หมดความคุ้มครอง" ? "#D32F2F" : "#2E7D32"}
+                        color={
+                            selectedPolicy.appStatus === "ปกติ"
+                                ? "#2E7D32"
+                                : selectedPolicy.appStatus === "ยกเลิก" || selectedPolicy.appStatus === "ยกเลิกก่อน DCR"
+                                ? "#D32F2F"
+                                : "#F0E434"
+                        }
                     />
                 </Grid>
             </CustomPaper>
             <CustomPaper>
                 <ClaimHistoryTable
                     tableId="ClaimHistoryPHTable"
-                    onContinuousClaim={(item: any) => handleContinuousClaim(item)}
+                    onContinuousClaim={(item: GetClaimHistoryDtoResponse) => handleContinuousClaim(item)}
                 />
                 <Box display="flex" justifyContent="flex-end" gap={1} mt={2}>
                     <Button

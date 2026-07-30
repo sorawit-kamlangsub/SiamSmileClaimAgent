@@ -6,12 +6,12 @@ import { cellAlignOptions, formatDateString, smallSizeFooter } from "../../../..
 import { StandardDataTable } from "../../../_common";
 import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
-import { GetClaimHistoryDtoResponseListServiceResponse } from "../../../../api/coreClaimApi.client";
+import { GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useClaimHistory } from "../../hooks/Monitor/useClaimHistory";
 
 interface Props {
     tableId: string; // "ClaimHistoryPATable" | "ClaimHistoryPHTable"
-    onContinuousClaim: (item: GetClaimHistoryDtoResponseListServiceResponse) => void;
+    onContinuousClaim: (item: GetClaimHistoryDtoResponse) => void;
 }
 
 const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
@@ -57,9 +57,7 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const item = claimHistoryData?.data?.[tableMeta.rowIndex] as
-                        | GetClaimHistoryDtoResponseListServiceResponse
-                        | undefined;
+                    const item = claimHistoryData?.data?.[tableMeta.rowIndex] as GetClaimHistoryDtoResponse | undefined;
                     return (
                         <Button
                             variant="contained"
