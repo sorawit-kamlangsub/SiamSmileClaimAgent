@@ -5,8 +5,8 @@ import {
     BeneficiaryForm,
     ClaimBankAccount,
     ContactInfo,
+    DeathPlaceType,
     DiagnosisModel,
-    SpecifyHospital,
     SymptomType,
 } from "./claimPHSlice";
 import {
@@ -71,7 +71,7 @@ export interface ClaimPAFormValues {
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
-    specifyHospital: SpecifyHospital | undefined;
+    deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
     hospitalName: string | undefined;
     diagnoses: DiagnosisModel[];
@@ -123,7 +123,7 @@ const defaultForm: ClaimPAFormValues = {
     notificationDate: dayjs(),
     transferAmount: 0,
     symptomType: 1,
-    specifyHospital: 1,
+    deathPlaceType: 1,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [

@@ -13,7 +13,7 @@ import {
     setClaimForm,
     setClaimItems,
 } from "../../../store/claimPASlice";
-import { claimPHSelector, setEnabled, SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
+import { claimPHSelector, DeathPlaceType, setEnabled, SymptomType } from "../../../store/claimPHSlice";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailSearch } from "../../../../../api/coreClaimApi";
@@ -89,13 +89,17 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 errors.chiefComplaintId = req;
             if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
             if (isDeath || isDisability) {
-                if (values.specifyHospital === SpecifyHospital.Specify && !values.hospitalId) errors.hospitalId = req;
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
                 if (!values.chiefComplaintId) errors.chiefComplaintId = req;
-                if (!values.accidentPlace) errors.accidentPlace = req;
                 if (isDeath) {
                     if (!values.deathDate) errors.deathDate = req;
+                    if (values.deathPlaceType === DeathPlaceType.Hospital && !values.hospitalId)
+                        errors.hospitalId = req;
+                    if (values.deathPlaceType === DeathPlaceType.Other && !values.accidentPlace)
+                        errors.accidentPlace = req;
+                } else {
+                    if (!values.hospitalId) errors.hospitalId = req;
                 }
             }
             // ── จำนวนเงิน ──
@@ -240,7 +244,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 notificationDate: dayjs(),
                 transferAmount: 0,
                 symptomType: 1,
-                specifyHospital: 1,
+                deathPlaceType: 1,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [
@@ -279,7 +283,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 notificationDate: dayjs(),
                 transferAmount: 0,
                 symptomType: 1,
-                specifyHospital: 1,
+                deathPlaceType: 1,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [

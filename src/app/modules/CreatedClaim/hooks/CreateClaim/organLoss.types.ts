@@ -236,6 +236,7 @@ export interface BodyPartOption {
     bodyPartName: string;
     disabilitySideId: number;
     disabilitySideName: string;
+    standardMedicalExpenseId: number;
 }
 
 export interface ComboBodyPartOption {
@@ -244,6 +245,7 @@ export interface ComboBodyPartOption {
     disabilitySidePart1Name: string;
     disabilitySidePart2Id: number;
     disabilitySidePart2Name: string;
+    standardMedicalExpenseId: number;
 }
 
 export interface SidePickOption {

@@ -155,11 +155,23 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                             ไม่พบข้อมูล
                         </Typography>
                     </Box>
-                    <Box sx={{ border: "0.5px solid #B5D4F4", borderRadius: 2 }} />
+                    <Box
+                        display="flex"
+                        flexDirection="column"
+                        alignItems="center"
+                        justifyContent="center"
+                        py={3}
+                        gap={0.5}
+                        sx={{ border: "0.5px solid #B5D4F4", borderRadius: 2 }}
+                    >
+                        <SearchOffIcon sx={{ fontSize: 28, color: "text.disabled" }} />
+                        <Typography fontSize={12} color="text.disabled">
+                            ไม่พบข้อมูล
+                        </Typography>
+                    </Box>
                 </>
             )}
 
-            {/* คู่ item ซ้าย-ขวา: อยู่คนละคอลัมน์ แต่คนละแถวเดียวกัน -> สูงเท่ากันอัตโนมัติ */}
             {!isLoading &&
                 items.map((item) => (
                     <React.Fragment key={item.benefitId}>
@@ -221,7 +233,6 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                     </React.Fragment>
                 ))}
 
-            {/* จำนวนเงินโอนรวม: กินเต็มความกว้าง คอลัมน์ขวาเท่านั้น */}
             <Box sx={{ display: { xs: "none", md: "block" } }} />
             <Box
                 display="flex"

@@ -29,7 +29,7 @@ import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/Cus
 import { useClaimPAForm } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 import OcrDocumentScanSection from "../OcrDocumentScanSection";
 import CoverageBox from "../CoverageBox";
-import { SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
+import { DeathPlaceType, SymptomType } from "../../../store/claimPHSlice";
 import DocumentScanTable from "../DocumentScanTable";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
@@ -86,7 +86,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const isDisability = values.coverageTypeId === CoverageType.Disability;
     const isDeath = values.coverageTypeId === CoverageType.Death;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
-    const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD
+    const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD;
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
     const requiresOcrValidation = isMedical && shouldShowOcrDocumentScan(values.coverageTypeId);
@@ -312,43 +312,67 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                         required
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <RadioGroup
-                                        row
-                                        value={values.specifyHospital}
-                                        onChange={(e) => setFieldValue("specifyHospital", Number(e.target.value))}
-                                    >
-                                        <FormControlLabel
-                                            value={SpecifyHospital.Unspecified}
-                                            control={<Radio size="small" />}
-                                            label="ไม่ระบุสถานพยาบาล"
-                                        />
-                                        <FormControlLabel
-                                            value={SpecifyHospital.Specify}
-                                            control={<Radio size="small" />}
-                                            label="ระบุสถานพยาบาล"
-                                        />
-                                    </RadioGroup>
-                                </Grid>
-                                {values.specifyHospital === SpecifyHospital.Specify && (
+                                {isDeath && (
+                                    <>
+                                        <Grid item xs={12}>
+                                            <Typography fontWeight={600} fontSize={16}>
+                                                สถานที่เสียชีวิต{" "}
+                                                <Typography component="span" color="error">
+                                                    *
+                                                </Typography>
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <RadioGroup
+                                                row
+                                                value={values.deathPlaceType}
+                                                onChange={(e) =>
+                                                    setFieldValue("deathPlaceType", Number(e.target.value))
+                                                }
+                                            >
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Home}
+                                                    control={<Radio size="small" />}
+                                                    label="ที่บ้าน"
+                                                />
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Hospital}
+                                                    control={<Radio size="small" />}
+                                                    label="สถานพยาบาล"
+                                                />
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Other}
+                                                    control={<Radio size="small" />}
+                                                    label="อื่นๆ"
+                                                />
+                                            </RadioGroup>
+                                        </Grid>
+                                        {values.deathPlaceType === DeathPlaceType.Hospital && (
+                                            <Grid item xs={12} lg={9} mt={-1}>
+                                                <HospitalDropdown formik={formik} name="hospitalId" required />
+                                            </Grid>
+                                        )}
+                                        {values.deathPlaceType === DeathPlaceType.Other && (
+                                            <Grid item xs={12} lg={9}>
+                                                <FormikTextField
+                                                    name="accidentPlace"
+                                                    label="สถานที่เสียชีวิต"
+                                                    formik={formik}
+                                                    size="small"
+                                                    fullWidth
+                                                    required
+                                                    placeholder="ระบุสถานที่เสียชีวิต"
+                                                />
+                                            </Grid>
+                                        )}
+                                    </>
+                                )}
+                                {isDisability && (
                                     <Grid item xs={12} lg={9} mt={-1}>
                                         <HospitalDropdown formik={formik} name="hospitalId" required />
                                     </Grid>
                                 )}
                             </>
-                        )}
-                        {isDeath && (
-                            <Grid item xs={12} lg={9}>
-                                <FormikTextField
-                                    name="accidentPlace"
-                                    label="สถานที่เกิดเหตุ"
-                                    formik={formik}
-                                    size="small"
-                                    fullWidth
-                                    required
-                                    placeholder="ระบุสถานที่เกิดเหตุ เช่น บ้าน / โรงพยาบาล / สถานที่เกิดเหตุ"
-                                />
-                            </Grid>
                         )}
                         {/* ระบุอาการ */}
                         {!isDeath && !isDisability && (
@@ -434,6 +458,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 nonCoveredReason={nonCoveredReasonData?.data ?? []}
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
                                 onChange={(items) => dispatch(setOrganLossItems(items))}
+                                customerId={insured?.customerId}
                             />
                         </Box>
                     )}

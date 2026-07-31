@@ -37,7 +37,11 @@ import {
     OrganLossItem,
     OrganRuleResult,
 } from "../../hooks/CreateClaim/organLoss.types";
-import { useSingleBodyPartOptions, useComboBodyPartOptions } from "../../hooks/CreateClaim/useOrganLoss";
+import {
+    useSingleBodyPartOptions,
+    useComboBodyPartOptions,
+    useCalculateDisabilityOptions,
+} from "../../hooks/CreateClaim/useOrganLoss";
 import { GetNonCoveredReasonDtoResponse } from "../../../../api/coreClaimApi.client";
 
 const CARD_BORDER = "#dbe6f3";
@@ -247,8 +251,8 @@ export interface OrganLossSelectorProps {
     nonCoveredReason?: GetNonCoveredReasonDtoResponse[];
     isNonCoveredReasonLoading?: boolean;
     priorClaimWarning?: string;
-    getSimpleRule?: (organKey: string, sideName: string) => OrganRuleResult | null;
     getFingerRule?: (organKey: string, fingerKey: FingerKey, joints: number) => OrganRuleResult | null;
+    customerId: number | undefined;
 }
 
 const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
@@ -259,7 +263,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
     nonCoveredReason,
     isNonCoveredReasonLoading,
     priorClaimWarning,
-    getSimpleRule,
+    customerId,
     getFingerRule,
 }) => {
     const [modal, setModal] = useState<ModalState | null>(null);
@@ -672,7 +676,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                 <SimpleModalBody
                                     modal={modal}
                                     patchModal={patchModal}
-                                    getSimpleRule={getSimpleRule}
+                                    customerId={customerId}
                                     modalTotal={modalTotal}
                                 />
                             )}
@@ -763,30 +767,42 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
 const SimpleModalBody: React.FC<{
     modal: ModalState;
     patchModal: (patch: Partial<ModalState>) => void;
-    getSimpleRule?: OrganLossSelectorProps["getSimpleRule"];
     modalTotal: number;
-}> = ({ modal, patchModal, getSimpleRule, modalTotal }) => {
+    customerId: number | undefined;
+}> = ({ modal, patchModal, customerId, modalTotal }) => {
     const isCombo = isComboOrganKey(modal.key);
     const comboParts = ORGAN_COMBO_PARTS[modal.key] || [];
 
     // ── กรณีอวัยวะเดี่ยว: เรียก API ด้วย disabilityLossPartId ของตัวเอง ──
-    const { options: singleOptions, isLoading: singleLoading } = useSingleBodyPartOptions(
-        !isCombo ? modal.choice.disabilityLossPartId : undefined
-    );
+    const {
+        options: singleOptions,
+        isLoading: singleLoading,
+        findByBodyPartId: findSingleByBodyPartId,
+    } = useSingleBodyPartOptions(!isCombo ? modal.choice.disabilityLossPartId : undefined);
 
     // ── กรณี combo: เรียก API ด้วย disabilityLossPartId ของตัว combo เอง ──
     const {
         part1Options,
         part2Options,
         resolveBodyPartId,
-        findByBodyPartId,
+        findByBodyPartId: findComboByBodyPartId,
         isLoading: comboLoading,
     } = useComboBodyPartOptions(isCombo ? modal.choice.disabilityLossPartId : undefined);
 
+    const standardMedicalExpenseId = isCombo
+        ? findComboByBodyPartId(modal.resolvedComboBodyPartId)?.standardMedicalExpenseId
+        : findSingleByBodyPartId(modal.side)?.standardMedicalExpenseId;
+
+    const { options: disabilityOptions, isLoading: isRuleLoading } = useCalculateDisabilityOptions(
+        customerId,
+        !isCombo ? modal.side : undefined,
+        !isCombo ? standardMedicalExpenseId : undefined
+    );
+    const rule: OrganRuleResult | null = isCombo ? null : disabilityOptions[0] ?? null;
     // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
     useEffect(() => {
         if (!isCombo || modal.editIndex < 0 || modal.comboPart1Id !== undefined) return;
-        const found = findByBodyPartId(modal.resolvedComboBodyPartId);
+        const found = findComboByBodyPartId(modal.resolvedComboBodyPartId);
         if (found) {
             patchModal({
                 comboPart1Id: found.disabilitySidePart1Id,
@@ -803,8 +819,6 @@ const SimpleModalBody: React.FC<{
         const resolved = resolveBodyPartId(modal.comboPart1Id, modal.comboPart2Id);
         patchModal({ resolvedComboBodyPartId: resolved?.bodyPartId });
     }, [isCombo, modal.comboPart1Id, modal.comboPart2Id]);
-
-    const rule = isCombo ? null : getSimpleRule?.(modal.key, modal.sideName) ?? null;
 
     return (
         <Box>
@@ -916,7 +930,26 @@ const SimpleModalBody: React.FC<{
                 </Box>
             )}
 
-            {!isCombo && <RuleResultBox rule={rule} />}
+            {!isCombo &&
+                (isRuleLoading ? (
+                    <Box
+                        sx={{
+                            border: "1px solid",
+                            borderColor: CARD_BORDER,
+                            borderRadius: 2,
+                            bgcolor: CARD_SOFT_BG,
+                            px: 2,
+                            py: 1.5,
+                            mt: 1.5,
+                        }}
+                    >
+                        <Typography variant="body2" fontWeight={700} color="text.secondary">
+                            กำลังคำนวณเงื่อนไข...
+                        </Typography>
+                    </Box>
+                ) : (
+                    <RuleResultBox rule={rule} />
+                ))}
             {isCombo && (
                 <Box mt={1.5}>
                     <Typography variant="body2" color="text.secondary" fontWeight={600}>

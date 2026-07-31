@@ -16,10 +16,12 @@ export enum SymptomType {
     Other = 2,
 }
 
-export enum SpecifyHospital {
-    Unspecified = 1,
-    Specify = 2,
+export enum DeathPlaceType {
+    Home = 1,
+    Hospital = 2,
+    Other = 3,
 }
+
 export interface DiagnosisModel {
     icd10Id?: number;
     icd10Detail?: string;
@@ -99,7 +101,7 @@ export interface ClaimFormValues {
     benefitAmounts: Record<number, string>;
     transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
-    specifyHospital: SpecifyHospital | undefined;
+    deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
     hospitalName: string | undefined;
     diagnoses: DiagnosisModel[];
@@ -159,7 +161,7 @@ const defaultForm: ClaimFormValues = {
     transferAmount: 0,
     benefitAmounts: {},
     symptomType: 1,
-    specifyHospital: 1,
+    deathPlaceType: 1,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [

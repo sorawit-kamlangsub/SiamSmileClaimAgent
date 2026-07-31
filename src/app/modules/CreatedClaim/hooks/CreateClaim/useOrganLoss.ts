@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { GetDisabilityLossPartDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDisabilityLossPart, useGetNonCoveredReason } from "../../../../api/coreClaimMastersApi";
-import { getOrganChoice, OrganChoiceWithId } from "./organLoss.types";
+import { getOrganChoice, OrganChoiceWithId, OrganRuleResult } from "./organLoss.types";
 import { useGetBodyPartByDisabilityLossPart } from "../../../../api/coreClaimMastersApi";
 import { BodyPartOption, ComboBodyPartOption, SidePickOption } from "./organLoss.types";
+import { useCalculateCaseDisability } from "../../../../api/coreClaimApi";
 
 const API_CODE_TO_ORGAN_KEY: Record<string, string> = {
     HAND: "hand",
@@ -64,10 +65,16 @@ export const useSingleBodyPartOptions = (disabilityLossPartId: number | undefine
             bodyPartName: item.bodyPartName ?? "",
             disabilitySideId: item.disabilitySideId ?? 0,
             disabilitySideName: item.disabilitySideName ?? "",
+            standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
         }));
     }, [data]);
 
-    return { options, isLoading };
+    const findByBodyPartId = (bodyPartId: number | undefined): BodyPartOption | undefined => {
+        if (bodyPartId === undefined) return undefined;
+        return options.find((o) => o.bodyPartId === bodyPartId);
+    };
+
+    return { options, isLoading, findByBodyPartId };
 };
 
 // ── กรณีที่ 2: combo (มือ+เท้า, มือ+ตา, เท้า+ตา) ──
@@ -81,6 +88,7 @@ export const useComboBodyPartOptions = (comboDisabilityLossPartId: number | unde
             disabilitySidePart1Name: item.disabilitySidePart1Name ?? "",
             disabilitySidePart2Id: item.disabilitySidePart2Id ?? 0,
             disabilitySidePart2Name: item.disabilitySidePart2Name ?? "",
+            standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
         }));
     }, [data]);
 
@@ -106,4 +114,27 @@ export const useComboBodyPartOptions = (comboDisabilityLossPartId: number | unde
     };
 
     return { part1Options, part2Options, resolveBodyPartId, findByBodyPartId, isLoading };
+};
+
+export const useCalculateDisabilityOptions = (
+    customerId: number | undefined,
+    bodyPartId: number | undefined,
+    standardMedicalExpenseId: number | undefined
+) => {
+    const { data, isLoading } = useCalculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId);
+
+    const options: OrganRuleResult[] = useMemo(() => {
+        const item = data?.data;
+        if (!item) return [];
+
+        return [
+            {
+                description: item.benefitName ?? "",
+                percent: item.benefitPercent ?? 0,
+                coveredAmount: item.maxPrice ?? 0,
+            },
+        ];
+    }, [data]);
+
+    return { options, isLoading };
 };

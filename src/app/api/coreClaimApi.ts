@@ -23,6 +23,7 @@ const getClaimHistoryQueryKey = ["getClaimHistory"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
+const calculateCaseDisabilityQueryKey = ["calculateCaseDisability"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -252,6 +253,21 @@ export const useGetCaseByClaimId = (
             ),
         {
             enabled: !!claimId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useCalculateCaseDisability = (
+    customerId?: number | undefined,
+    bodyPartId?: number | undefined,
+    standardMedicalExpenseId?: number | undefined
+) => {
+    return useQuery(
+        [calculateCaseDisabilityQueryKey, customerId, bodyPartId, standardMedicalExpenseId],
+        () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
+        {
+            enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
             refetchOnWindowFocus: false,
         }
     );
