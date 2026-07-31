@@ -13,7 +13,7 @@ import { useAppSelector } from "../../../../../../redux";
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const { isContinuous, oldClaim } = useAppSelector(claimPASelector);
-    const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPA();  
+    const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPA();
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
     // ─────────────────────────────────────────────────────────
 
