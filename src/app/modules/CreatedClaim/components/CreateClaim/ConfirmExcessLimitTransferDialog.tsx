@@ -171,18 +171,18 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                                 {idCardNo && (
                                     <Chip size="small" variant="outlined" label={`เลขบัตรประชาชน ${idCardNo}`} />
                                 )}
-                                {appId && (
-                                    <Chip size="small" variant="outlined" color="success" label={`AppID ${appId}`} />
-                                )}
-                                {extraChips.map((chip, idx) => (
-                                    <Chip
-                                        key={idx}
-                                        size="small"
-                                        variant="outlined"
-                                        icon={chip.icon as React.ReactElement}
-                                        label={chip.label}
-                                    />
-                                ))}
+                                {appId && <Chip size="small" variant="outlined" label={`AppID ${appId}`} />}
+                                {extraChips
+                                    .filter((chip) => Boolean(chip.label))
+                                    .map((chip, idx) => (
+                                        <Chip
+                                            key={idx}
+                                            size="small"
+                                            variant="outlined"
+                                            icon={chip.icon as React.ReactElement}
+                                            label={chip.label}
+                                        />
+                                    ))}
                             </Box>
                         </Box>
                     </Box>
@@ -305,6 +305,7 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                         display: "flex",
                         alignItems: "center",
                         px: 1,
+                        py: 0.5,
                     }}
                 >
                     <Checkbox checked={agree} onChange={(e) => setAgree(e.target.checked)} color="primary" />
@@ -315,11 +316,17 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                 </Box>
             </DialogContent>
 
-            <DialogActions sx={{ px: 3, pb: 3 }}>
-                <Button variant="outlined" color="inherit" onClick={onClose} disabled={loading}>
+            <DialogActions sx={{ px: 3, pb: 3, borderTop: "1px solid #e0e0e0" }}>
+                <Button variant="outlined" color="inherit" onClick={onClose} disabled={loading} size="medium">
                     กลับไปแก้ไข
                 </Button>
-                <Button variant="contained" color="primary" onClick={handleConfirm} disabled={!canConfirm}>
+                <Button
+                    variant="contained"
+                    color="primary"
+                    onClick={handleConfirm}
+                    disabled={!canConfirm}
+                    size="medium"
+                >
                     ยืนยันจ่ายเกินสิทธิ์
                 </Button>
             </DialogActions>
@@ -328,4 +335,3 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
 };
 
 export default ConfirmExcessLimitTransferDialog;
-

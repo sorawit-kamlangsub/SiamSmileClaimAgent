@@ -19,6 +19,7 @@ import FormikDatePicker from "../../../../_common/components/CustomFormik/Formik
 import ArticleIcon from "@mui/icons-material/Article";
 import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
 import CalculateIcon from "@mui/icons-material/Calculate";
+import SchoolIcon from "@mui/icons-material/School";
 import DocumentRecipientTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/DocumentRecipientTypeDropDown";
 import UserAutocompleteApi from "../../../../_common/components/ClaimAgent/CustomDropdown/UserAutocompleteApi";
 import ChiefComplaintAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/ChiefComplaintAutocomplete";
@@ -81,7 +82,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const { values, setFieldValue } = formik;
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const { organLossItems } = useAppSelector(claimPASelector);
+    const { organLossItems, school } = useAppSelector(claimPASelector);
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDisability = values.coverageTypeId === CoverageType.Disability;
@@ -111,7 +112,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
 
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
-    const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
+    const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(true);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
     const maxPrice = currentBenefit?.maxPrice;
     const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
@@ -581,12 +582,16 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
             )}
 
             <ConfirmExcessLimitTransferDialog
-                open={true}
+                open={isConfirmExcessOpen}
                 onClose={() => setIsConfirmExcessOpen(false)}
                 loading={formik.isSubmitting}
                 customerName={insured?.customerName as string}
                 productLabel="PA"
                 idCardNo={insured?.cardDetail as string}
+                appId={insured?.policyCode}
+                extraChips={
+                    school?.schoolName ? [{ icon: <SchoolIcon fontSize="small" />, label: school.schoolName }] : []
+                }
                 requestedAmount={values.transferAmount ?? 0}
                 maxEligibleAmount={maxPrice ?? 0}
                 onConfirm={async ({ withdrawableAmount }) => {

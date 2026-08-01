@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     Backdrop,
     Box,
@@ -41,6 +41,7 @@ import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
 import { useNavigate } from "react-router-dom";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
+import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -117,6 +118,13 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
 
     const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
+
+    // ── ยอดโอนเกินสิทธิ์ (NPL) ──
+    const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
+    const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    const maxPrice = currentBenefit?.maxPrice;
+    const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
+
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
@@ -125,6 +133,11 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         }
         if (requiresOcrValidation && !isOcrDocsValid) {
             swalWarningNotOutsideClick("แจ้งเตือน", "กรุณาแนบเอกสารให้ครบถ้วนตามที่กำหนด");
+            return;
+        }
+        // ยอดที่ขอเบิกเกินสิทธิ์เบิกสูงสุด (NPL) ต้องให้ผู้ใช้ยืนยันยอดก่อน
+        if (isOverEligibleLimit) {
+            setIsConfirmExcessOpen(true);
             return;
         }
         formik.submitForm();
@@ -608,6 +621,23 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
             {(isDeath || isDisability) && (
                 <DocumentScanTable productId={6} documentTypeId={15} aplicationCode={insured?.policyCode} />
             )}
+
+            <ConfirmExcessLimitTransferDialog
+                open={isConfirmExcessOpen}
+                onClose={() => setIsConfirmExcessOpen(false)}
+                loading={formik.isSubmitting}
+                customerName={insured?.customerName as string}
+                productLabel="PH"
+                idCardNo={insured?.cardDetail as string}
+                appId={insured?.policyCode}
+                requestedAmount={values.transferAmount ?? 0}
+                maxEligibleAmount={maxPrice ?? 0}
+                onConfirm={async ({ withdrawableAmount }) => {
+                    setIsConfirmExcessOpen(false);
+                    await setFieldValue("transferAmount", withdrawableAmount);
+                    formik.submitForm();
+                }}
+            />
 
             <Box display="flex" justifyContent="flex-end" mb={5}>
                 <Button
