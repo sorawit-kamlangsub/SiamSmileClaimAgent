@@ -152,21 +152,41 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 employeeName: form.employeeName ?? undefined,
             },
             createBeneficiaryList:
-                beneficiaryList.map((beneficiary) => ({
-                    beneficiaryId: undefined,
-                    policyBeneficiaryId: undefined,
-                    titleId: beneficiary.titleId?.toString(),
-                    firstName: beneficiary.firstName,
-                    lastName: beneficiary.lastName,
-                    idCard: beneficiary.citizenId,
-                    phoneNo: beneficiary.phoneNumber,
-                    relationId: beneficiary.relationTypeId,
-                    bankAccountRelationTypeId: undefined,
-                    bankId: beneficiary.bankId,
-                    bankAccountNo: beneficiary.bankAccountNo,
-                    bankAccountName: beneficiary.bankAccountName,
-                    payoutAmount: beneficiary.amount,
-                })) ?? [],
+                beneficiaryList.length > 0
+                    ? beneficiaryList.map((beneficiary) => ({
+                          beneficiaryId: undefined,
+                          policyBeneficiaryId: undefined,
+                          titleId: beneficiary.titleId?.toString(),
+                          firstName: beneficiary.firstName,
+                          lastName: beneficiary.lastName,
+                          idCard: beneficiary.citizenId,
+                          phoneNo: beneficiary.phoneNumber,
+                          relationId: beneficiary.relationTypeId,
+                          bankAccountRelationTypeId: undefined,
+                          bankId: beneficiary.bankId,
+                          bankAccountNo: beneficiary.bankAccountNo,
+                          bankAccountName: beneficiary.bankAccountName,
+                          payoutAmount: beneficiary.amount,
+                      }))
+                    : selectedAccount
+                    ? [
+                          {
+                              beneficiaryId: undefined,
+                              policyBeneficiaryId: undefined,
+                              titleId: undefined,
+                              firstName: undefined,
+                              lastName: undefined,
+                              idCard: undefined,
+                              phoneNo: selectedContact?.contactPhoneNo,
+                              relationId: undefined,
+                              bankAccountRelationTypeId: selectedAccount.bankAccountRelationTypeId,
+                              bankId: selectedAccount.bankId,
+                              bankAccountNo: selectedAccount.bankAccountNo,
+                              bankAccountName: selectedAccount.bankAccountName,
+                              payoutAmount: form.transferAmount,
+                          },
+                      ]
+                    : [],
             createCasePayable: {
                 payableCategoryId: isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6,
             },

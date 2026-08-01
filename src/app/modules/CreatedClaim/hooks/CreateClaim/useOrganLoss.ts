@@ -129,7 +129,7 @@ export const useCalculateDisabilityOptions = (
 
         return [
             {
-                description: item.benefitName ?? "",
+                description: item.bodyPartName ?? "",
                 percent: item.benefitPercent ?? 0,
                 coveredAmount: item.maxPrice ?? 0,
             },

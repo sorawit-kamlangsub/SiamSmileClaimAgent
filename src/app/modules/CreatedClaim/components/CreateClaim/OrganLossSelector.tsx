@@ -791,14 +791,22 @@ const SimpleModalBody: React.FC<{
 
     const standardMedicalExpenseId = isCombo
         ? findComboByBodyPartId(modal.resolvedComboBodyPartId)?.standardMedicalExpenseId
-        : findSingleByBodyPartId(modal.side)?.standardMedicalExpenseId;
+        : modal.choice.hasSide
+        ? findSingleByBodyPartId(modal.side)?.standardMedicalExpenseId
+        : singleOptions[0]?.standardMedicalExpenseId;
+
+    const bodyPartIdForCalculate = isCombo
+        ? modal.resolvedComboBodyPartId
+        : modal.choice.hasSide
+        ? modal.side
+        : singleOptions[0]?.bodyPartId;
 
     const { options: disabilityOptions, isLoading: isRuleLoading } = useCalculateDisabilityOptions(
         customerId,
-        !isCombo ? modal.side : undefined,
-        !isCombo ? standardMedicalExpenseId : undefined
+        bodyPartIdForCalculate,
+        standardMedicalExpenseId
     );
-    const rule: OrganRuleResult | null = isCombo ? null : disabilityOptions[0] ?? null;
+    const rule: OrganRuleResult | null = disabilityOptions[0] ?? null;
     // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
     useEffect(() => {
         if (!isCombo || modal.editIndex < 0 || modal.comboPart1Id !== undefined) return;
@@ -930,7 +938,37 @@ const SimpleModalBody: React.FC<{
                 </Box>
             )}
 
-            {!isCombo &&
+            {isRuleLoading ? (
+                <Box
+                    sx={{
+                        border: "1px solid",
+                        borderColor: CARD_BORDER,
+                        borderRadius: 2,
+                        bgcolor: CARD_SOFT_BG,
+                        px: 2,
+                        py: 1.5,
+                        mt: 1.5,
+                    }}
+                >
+                    {modal.key === "exgratia" ? (
+                        <>
+                            <Typography variant="body2" fontWeight={700} color="text.secondary">
+                                จำนวนเงิน Exgratia เป็นจำนวนเงินที่พิจารณาอนุมัติตามดุลยพินิจ
+                            </Typography>
+                            <Typography variant="body2" fontWeight={700} color="#0b74bd">
+                                กรุณาระบุจำนวนเงินที่ต้องการจ่ายจริง
+                            </Typography>
+                        </>
+                    ) : (
+                        <Typography variant="body2" fontWeight={700} color="text.secondary">
+                            กำลังคำนวณเงื่อนไข...
+                        </Typography>
+                    )}
+                </Box>
+            ) : (
+                <RuleResultBox rule={rule} />
+            )}
+            {/* {isCombo &&
                 (isRuleLoading ? (
                     <Box
                         sx={{
@@ -949,14 +987,7 @@ const SimpleModalBody: React.FC<{
                     </Box>
                 ) : (
                     <RuleResultBox rule={rule} />
-                ))}
-            {isCombo && (
-                <Box mt={1.5}>
-                    <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                        ยอดเบิกรวม: {formatNoDecimal(modalTotal)} บาท (คำนวณจากยอดเบิกที่กรอกด้านบน)
-                    </Typography>
-                </Box>
-            )}
+                ))} */}
         </Box>
     );
 };
