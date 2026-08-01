@@ -169,18 +169,6 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 })) ?? [],
             createCasePayable: {
                 payableCategoryId: isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6,
-                payableStatusId: 2, //open
-                payableAmount: form.transferAmount,
-                totalPaidAmount: undefined,
-                outstandingAmount: undefined,
-                payeeTypeId: isMedicalAll ? 2 : 4, // 2 = Medical, 4 = Beneficiary
-                fromBankId: undefined,
-                fromBankName: undefined,
-                fromBankAccountNo: undefined,
-                toBankId: selectedAccount?.bankId ?? beneficiaryList[0]?.bankId,
-                toBankName: selectedAccount?.bankAccountName ?? beneficiaryList[0]?.bankAccountName,
-                toBankAccountNo: selectedAccount?.bankAccountNo ?? beneficiaryList[0]?.bankAccountNo,
-                bankAccountRelationTypeId: selectedAccount?.bankAccountRelationTypeId,
             },
         };
     };

@@ -37,7 +37,9 @@ const ClaimPAPage: React.FC = () => {
             <Grid item xs={12}>
                 <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />
             </Grid>
+            
         </Grid>
+        
     );
 };
 

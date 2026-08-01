@@ -25,11 +25,12 @@ import {
     smallSizeFooter,
 } from "../../../../../functionHelpers";
 import { StandardDataTable } from "../../../../_common";
-import { FormikDropdown, FormikTextField } from "../../../../_common";
+import { FormikTextField } from "../../../../_common";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import SearchTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/SearchTypeDropDown";
 
 interface SearchResult {
     appId: string;
@@ -88,11 +89,11 @@ const MOCK_SEARCH_RESULTS: SearchResult[] = [
 
 const MOCK_CLAIM_HISTORY: ClaimHistoryRow[] = [];
 
-const SEARCH_BY_OPTIONS = [
-    { value: "nationalId", label: "เลขบัตรประชาชน" },
-    { value: "passport", label: "Passport" },
-    { value: "name", label: "ชื่อ-นามสกุล" },
-];
+// const SEARCH_BY_OPTIONS = [
+//     { value: "nationalId", label: "เลขบัตรประชาชน" },
+//     { value: "passport", label: "Passport" },
+//     { value: "name", label: "ชื่อ-นามสกุล" },
+// ];
 
 const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) => {
     const dispatch = useAppDispatch();
@@ -103,7 +104,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
     const [hasSearched, setHasSearched] = useState(false);
 
     const formik = useFormik({
-        initialValues: { searchBy: "nationalId", keyword: "" },
+        initialValues: { searchBy: 3, keyword: "" },
         validate: (v) => {
             const e: any = {};
             if (!v.searchBy) e.searchBy = "โปรดระบุ";
@@ -287,7 +288,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
                 <Grid container spacing={2}>
                     {/* ── Search bar ── */}
                     <Grid item xs={12} sm={4} md={3}>
-                        <FormikDropdown
+                        {/* <FormikDropdown
                             name="searchBy"
                             label="ค้นหาจาก *"
                             formik={formik}
@@ -297,7 +298,8 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
                             valueFieldName="value"
                             fullWidth
                             size="small"
-                        />
+                        /> */}
+                        <SearchTypeDropDown formik={formik} name="searchBy" filterIds={[2, 4, 5]} required />
                     </Grid>
                     <Grid item xs={12} sm={6} md={7}>
                         <FormikTextField
