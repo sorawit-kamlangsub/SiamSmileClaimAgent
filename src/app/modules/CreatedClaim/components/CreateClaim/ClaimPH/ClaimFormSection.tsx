@@ -479,7 +479,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 isOrganChoicesLoading={isOrganChoicesLoading}
                                 nonCoveredReason={nonCoveredReasonData?.data ?? []}
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
-                                onChange={(items) => dispatch(setOrganLossItems(items))}
+                                onChange={(items) => {
+                                    console.log("organLoss items before dispatch:", items);
+                                    dispatch(setOrganLossItems(items));
+                                }}
                                 customerId={insured?.customerId}
                             />
                         </Box>
