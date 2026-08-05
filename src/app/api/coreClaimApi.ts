@@ -24,6 +24,7 @@ const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
 const calculateCaseDisabilityQueryKey = ["calculateCaseDisability"];
+const getCustomerBenefitDetailHalfQueryKey = ["getCustomerBenefitDetailHalf"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -268,6 +269,49 @@ export const useCalculateCaseDisability = (
         () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
         {
             enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCustomerBenefitDetailHalf = (
+    policyCode?: string | undefined,
+    caseTypeId?: number | undefined,
+    incidentDate?: Dayjs | undefined,
+    isContinue?: boolean | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    medicalTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined,
+    formatTypeId?: number | undefined
+) => {
+    return useQuery(
+        [
+            getCustomerBenefitDetailHalfQueryKey,
+            policyCode,
+            caseTypeId,
+            incidentDate,
+            isContinue,
+            incidentTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            causeOfIncidentId,
+            formatTypeId,
+        ],
+        () =>
+            coreClaimClient.getCustomerBenefitDetailHalf(
+                policyCode,
+                caseTypeId,
+                incidentDate,
+                isContinue,
+                incidentTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                causeOfIncidentId,
+                formatTypeId
+            ),
+        {
+            enabled: !!policyCode,
             refetchOnWindowFocus: false,
         }
     );

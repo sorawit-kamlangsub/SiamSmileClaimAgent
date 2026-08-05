@@ -246,6 +246,8 @@ const ClaimPHSummaryPage: React.FC = () => {
                 }
             },
         }).then((result: any) => {
+            const data = result?.value;
+            const firstItem = data?.responseList?.[0];
             if (result.isConfirmed && result.value.isResult) {
                 Swal.fire({
                     icon: "success",
@@ -308,12 +310,12 @@ const ClaimPHSummaryPage: React.FC = () => {
                                         "
                                     >
                                         <span style="font-size:18px;font-weight:700;color:#27AE60;">
-                                            ${result.value.claimNo}
+                                            ${firstItem.claimNo ?? "-"}
                                         </span>
 
                                         <span
                                             class="material-icons copy-btn"
-                                            data-copy="${result.value.claimNo}"
+                                            data-copy="${firstItem.claimNo ?? "-"}"
                                             style="
                                                 cursor:pointer;
                                                 color:#2196F3;
@@ -350,7 +352,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                                 <div>
                                     <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
                                     <div style="font-size:18px;font-weight:700;color:#2F80ED;">
-                                        ${result.value.caseNo}
+                                        ${firstItem.caseNo ?? "-"}
                                     </div>
                                 </div>
                             </div>
