@@ -168,6 +168,23 @@ export const FINGER_MAX_JOINTS: Record<string, Record<FingerKey, number>> = {
     toe: { thumb: 2, index: 3, middle: 3, ring: 3, little: 3 },
 };
 
+export const FINGER_KEY_TO_SUB_PART_ID: Record<string, Record<FingerKey, number>> = {
+    finger: { thumb: 1, index: 2, middle: 3, ring: 4, little: 5 },
+    toe: { thumb: 6, index: 7, middle: 8, ring: 9, little: 10 },
+};
+
+export const FINGER_SIDE_ID: Record<"left" | "right", number> = {
+    left: 2,
+    right: 3,
+};
+
+export interface FingerBodyPartOption {
+    bodyPartId: number;
+    disabilityLossSubPartId: number;
+    disabilitySideId: number;
+    lossJointCount: number;
+    standardMedicalExpenseId: number;
+}
 export interface FingerJointState {
     selected: boolean;
     joints: number;
@@ -229,6 +246,7 @@ export interface OrganRuleResult {
     description: string;
     percent: number;
     coveredAmount: number;
+    sumUsedAmount: number;
 }
 
 export interface BodyPartOption {
@@ -267,7 +285,7 @@ export interface OrganLossItem {
     comboSides?: Record<string, OrganSide>;
     amount?: string;
     uncoveredAmount?: string;
-    uncoveredReason?: string;
+    uncoveredReason?: number;
     exgratiaDeductSource?: string;
     exgratiaDeductDetail?: string;
     note?: string;
