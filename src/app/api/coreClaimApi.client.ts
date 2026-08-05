@@ -134,6 +134,94 @@ export class CoreClaimClient {
     }
 
     /**
+     * API สำหรับ Search Customer By PolicyCode
+     * @param policyCode (optional)
+     * @param searchIndex (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    getCustomerSearchByPolicyCode(
+        policyCode?: string | undefined,
+        searchIndex?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/customer/search-by-policy-code?";
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (searchIndex === null) throw new Error("The parameter 'searchIndex' cannot be null.");
+        else if (searchIndex !== undefined) url_ += "searchIndex=" + encodeURIComponent("" + searchIndex) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerSearchByPolicyCode(_response);
+            });
+    }
+
+    protected processGetCustomerSearchByPolicyCode(
+        response: AxiosResponse
+    ): Promise<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล Customer Detail By Id
      * @return Success
      */
@@ -289,6 +377,107 @@ export class CoreClaimClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get Customer Benefit Detail Half
+     * @param policyCode (optional)
+     * @param caseTypeId (optional)
+     * @param incidentDate (optional)
+     * @param isContinue (optional)
+     * @param incidentTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param formatTypeId (optional)
+     * @return Success
+     */
+    getCustomerBenefitDetailHalf(
+        policyCode?: string | undefined,
+        caseTypeId?: number | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        isContinue?: boolean | undefined,
+        incidentTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        formatTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/customer/benefit-detail/half?";
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (caseTypeId === null) throw new Error("The parameter 'caseTypeId' cannot be null.");
+        else if (caseTypeId !== undefined) url_ += "caseTypeId=" + encodeURIComponent("" + caseTypeId) + "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
+        else if (incidentDate !== undefined)
+            url_ +=
+                "incidentDate=" +
+                encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (isContinue === null) throw new Error("The parameter 'isContinue' cannot be null.");
+        else if (isContinue !== undefined) url_ += "isContinue=" + encodeURIComponent("" + isContinue) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        else if (coverageTypeId !== undefined)
+            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        else if (causeOfIncidentId !== undefined)
+            url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
+        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerBenefitDetailHalf(_response);
+            });
+    }
+
+    protected processGetCustomerBenefitDetailHalf(
+        response: AxiosResponse
+    ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse>(null as any);
     }
 
     /**
@@ -563,7 +752,7 @@ export class CoreClaimClient {
     createCoreClaim(
         body?: CreateCoreClaimDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<CreateCoreClaimDtoResponseServiceResponse> {
+    ): Promise<CreateCoreClaimDataTableServiceResponse> {
         let url_ = this.baseUrl + "/create/coreclaim";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -594,7 +783,7 @@ export class CoreClaimClient {
             });
     }
 
-    protected processCreateCoreClaim(response: AxiosResponse): Promise<CreateCoreClaimDtoResponseServiceResponse> {
+    protected processCreateCoreClaim(response: AxiosResponse): Promise<CreateCoreClaimDataTableServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -609,12 +798,12 @@ export class CoreClaimClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<CreateCoreClaimDtoResponseServiceResponse>(result200);
+            return Promise.resolve<CreateCoreClaimDataTableServiceResponse>(result200);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<CreateCoreClaimDtoResponseServiceResponse>(null as any);
+        return Promise.resolve<CreateCoreClaimDataTableServiceResponse>(null as any);
     }
 
     /**
@@ -2851,8 +3040,30 @@ export interface AllUserDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface Assembly {
+    readonly definedTypes?: TypeInfo[] | undefined;
+    readonly exportedTypes?: Type[] | undefined;
+    readonly codeBase?: string | undefined;
+    entryPoint?: MethodInfo;
+    readonly fullName?: string | undefined;
+    readonly imageRuntimeVersion?: string | undefined;
+    readonly isDynamic?: boolean;
+    readonly location?: string | undefined;
+    readonly reflectionOnly?: boolean;
+    readonly isCollectible?: boolean;
+    readonly isFullyTrusted?: boolean;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly escapedCodeBase?: string | undefined;
+    manifestModule?: Module;
+    readonly modules?: Module[] | undefined;
+    readonly globalAssemblyCache?: boolean;
+    readonly hostContext?: number;
+    securityRuleSet?: SecurityRuleSet;
+}
+
 export interface BeneficiaryCreateRequest {
-    beneficiaryId?: string;
+    tempClaimId?: string | undefined;
+    tempCaseId?: string | undefined;
     policyBeneficiaryId?: number;
     titleId?: string | undefined;
     firstName?: string | undefined;
@@ -2967,7 +3178,23 @@ export interface CalculateCaseExpense {
     remark?: string | undefined;
 }
 
+export interface Calendar {
+    readonly minSupportedDateTime?: dayjs.Dayjs;
+    readonly maxSupportedDateTime?: dayjs.Dayjs;
+    algorithmType?: CalendarAlgorithmType;
+    readonly isReadOnly?: boolean;
+    readonly eras?: number[] | undefined;
+    twoDigitYearMax?: number;
+}
+
+export type CalendarAlgorithmType = 0 | 1 | 2 | 3;
+
+export type CalendarWeekRule = 0 | 1 | 2;
+
+export type CallingConventions = 1 | 2 | 3 | 32 | 64;
+
 export interface CaseAdjudicationCreateRequest {
+    tempCaseId?: string | undefined;
     decisionId?: number;
     decisionDate?: dayjs.Dayjs;
     approvedAdmissionDate?: dayjs.Dayjs;
@@ -2991,6 +3218,7 @@ export interface CaseAdjudicationCreateRequest {
 }
 
 export interface CaseAssessmentCreateRequest {
+    tempCaseId?: string | undefined;
     isDocumentComplete?: boolean;
     documentReceivedDate?: dayjs.Dayjs;
     documentCompleteDate?: dayjs.Dayjs;
@@ -3001,12 +3229,15 @@ export interface CaseAssessmentCreateRequest {
 }
 
 export interface CaseContactCreateRequest {
+    tempCaseId?: string | undefined;
     contactPersonTypeId?: number;
     contactPersonName?: string | undefined;
     contactPhoneNo?: string | undefined;
 }
 
 export interface CaseCreateRequest {
+    tempCaseId?: string | undefined;
+    tempClaimId?: string | undefined;
     coverageTypeId?: number;
     occurrenceDate?: dayjs.Dayjs | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
@@ -3023,18 +3254,31 @@ export interface CaseCreateRequest {
     chiefComplaintId?: number;
     chiefComplaintCustom?: string | undefined;
     productId?: number;
-    icd10_1stId?: number;
-    icd10_2ndId?: number | undefined;
-    icd10_3rdId?: number | undefined;
+    icD10_1stId?: number;
+    icD10_2ndId?: number | undefined;
+    icD10_3rdId?: number | undefined;
     medicalTypeId?: number;
+    createCaseItem?: CaseItemCreateRequest[] | undefined;
+    createCaseRegistration?: CaseRegistrationCreateRequest[] | undefined;
+    createCaseAssessment?: CaseAssessmentCreateRequest[] | undefined;
+    createCaseDeath?: CaseDeathCreateRequest[] | undefined;
+    createCaseDisability?: CaseDisabilityCreateRequest[] | undefined;
+    createCaseDocument?: CaseDocumentCreateRequest[] | undefined;
+    createCaseAdjudication?: CaseAdjudicationCreateRequest[] | undefined;
+    createCaseContact?: CaseContactCreateRequest[] | undefined;
+    createCaseServicePerson?: CaseServicePersonRequest[] | undefined;
+    createBeneficiary?: BeneficiaryCreateRequest[] | undefined;
+    createCasePayable?: CasePayableCreateRequest[] | undefined;
 }
 
 export interface CaseDeathCreateRequest {
+    tempCaseId?: string | undefined;
     causeOfIncidentId?: number;
     deathDate?: dayjs.Dayjs;
 }
 
 export interface CaseDisabilityCreateRequest {
+    tempCaseId?: string | undefined;
     bodyPartId?: number;
     disabilityTypeId?: number;
     disabilityLevel?: number;
@@ -3042,12 +3286,14 @@ export interface CaseDisabilityCreateRequest {
 }
 
 export interface CaseDocumentCreateRequest {
-    caseDocumentId?: string;
+    tempCaseId?: string | undefined;
+    tempCaseDocumentId?: string | undefined;
     documentSubTypeId?: number;
-    caseDocumentDetailList?: CaseDocumentDetailCreateRequest[] | undefined;
+    caseDocumentDetail?: CaseDocumentDetailCreateRequest[] | undefined;
 }
 
 export interface CaseDocumentDetailCreateRequest {
+    tempCaseDocumentId?: string | undefined;
     documentId?: string;
     documentNo?: string | undefined;
     firstName?: string | undefined;
@@ -3062,7 +3308,7 @@ export interface CaseDocumentDetailCreateRequest {
 }
 
 export interface CaseItemCreateRequest {
-    caseItemId?: string;
+    tempCaseId?: string | undefined;
     inputToStandardMappingId?: number;
     standardMedicalExpenseId?: number;
     quantity?: number;
@@ -3076,10 +3322,12 @@ export interface CaseItemCreateRequest {
 }
 
 export interface CasePayableCreateRequest {
+    tempCaseId?: string | undefined;
     payableCategoryId?: number;
 }
 
 export interface CaseRegistrationCreateRequest {
+    tempCaseId?: string | undefined;
     notificationDate?: dayjs.Dayjs;
     notifyBy?: string | undefined;
     initialCoverageTypeId?: number;
@@ -3090,6 +3338,7 @@ export interface CaseRegistrationCreateRequest {
 }
 
 export interface CaseServicePersonRequest {
+    tempCaseId?: string | undefined;
     servicePersonByUserId?: number;
     servicePersonByUserCode?: string | undefined;
     servicePersonByUserName?: string | undefined;
@@ -3117,6 +3366,7 @@ export interface CheckEligibleDtoResponseListServiceResponse {
 }
 
 export interface ClaimCreateRequest {
+    tempClaimId?: string | undefined;
     createdByUserId?: number;
     createdByUserCode?: string | undefined;
     createdByUserName?: string | undefined;
@@ -3131,6 +3381,13 @@ export interface ClaimCreateRequest {
     accidentDescription?: string | undefined;
     productTypeId?: number;
     claimSourceId?: number;
+    createCase?: CaseCreateRequest[] | undefined;
+}
+
+export interface CompareInfo {
+    readonly name?: string | undefined;
+    version?: SortVersion;
+    readonly lcid?: number;
 }
 
 export interface CompensateExpenseList {
@@ -3145,35 +3402,60 @@ export interface CompensateExpenseList {
     dayOfUnit?: number;
 }
 
-export interface CreateCoreClaimDtoRequest {
-    createClaim?: ClaimCreateRequest;
-    createCase?: CaseCreateRequest;
-    createCaseItemList?: CaseItemCreateRequest[] | undefined;
-    createCaseRegistration?: CaseRegistrationCreateRequest;
-    createCaseAssessment?: CaseAssessmentCreateRequest;
-    createCaseDeath?: CaseDeathCreateRequest;
-    createCaseDisability?: CaseDisabilityCreateRequest;
-    createCaseDocument?: CaseDocumentCreateRequest;
-    createCaseAdjudication?: CaseAdjudicationCreateRequest;
-    createCaseContact?: CaseContactCreateRequest;
-    createCaseServicePerson?: CaseServicePersonRequest;
-    createBeneficiaryList?: BeneficiaryCreateRequest[] | undefined;
-    createCasePayable?: CasePayableCreateRequest;
+export interface ConstructorInfo {
+    readonly name?: string | undefined;
+    declaringType?: Type;
+    reflectedType?: Type;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    attributes?: MethodAttributes;
+    methodImplementationFlags?: MethodImplAttributes;
+    callingConvention?: CallingConventions;
+    readonly isAbstract?: boolean;
+    readonly isConstructor?: boolean;
+    readonly isFinal?: boolean;
+    readonly isHideBySig?: boolean;
+    readonly isSpecialName?: boolean;
+    readonly isStatic?: boolean;
+    readonly isVirtual?: boolean;
+    readonly isAssembly?: boolean;
+    readonly isFamily?: boolean;
+    readonly isFamilyAndAssembly?: boolean;
+    readonly isFamilyOrAssembly?: boolean;
+    readonly isPrivate?: boolean;
+    readonly isPublic?: boolean;
+    readonly isConstructedGenericMethod?: boolean;
+    readonly isGenericMethod?: boolean;
+    readonly isGenericMethodDefinition?: boolean;
+    readonly containsGenericParameters?: boolean;
+    methodHandle?: RuntimeMethodHandle;
+    readonly isSecurityCritical?: boolean;
+    readonly isSecuritySafeCritical?: boolean;
+    readonly isSecurityTransparent?: boolean;
+    memberType?: MemberTypes;
 }
 
-export interface CreateCoreClaimDtoResponse {
-    isResult?: boolean;
-    result?: string | undefined;
-    msg?: string | undefined;
-    claimId?: string | undefined;
-    caseRegistrationId?: string | undefined;
-    caseId?: string | undefined;
-    claimNo?: string | undefined;
-    caseNo?: string | undefined;
+export interface CreateCoreClaimDataTable {
+    claim?: DataTable;
+    case?: DataTable;
+    caseItem?: DataTable;
+    caseRegistration?: DataTable;
+    caseAssessment?: DataTable;
+    caseDeath?: DataTable;
+    caseDisability?: DataTable;
+    caseDocument?: DataTable;
+    caseDocumentDetail?: DataTable;
+    caseAdjudication?: DataTable;
+    caseContact?: DataTable;
+    caseServicePerson?: DataTable;
+    beneficiary?: DataTable;
+    casePayable?: DataTable;
 }
 
-export interface CreateCoreClaimDtoResponseServiceResponse {
-    data?: CreateCoreClaimDtoResponse;
+export interface CreateCoreClaimDataTableServiceResponse {
+    data?: CreateCoreClaimDataTable;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -3184,6 +3466,55 @@ export interface CreateCoreClaimDtoResponseServiceResponse {
     currentPage?: number | undefined;
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
+}
+
+export interface CreateCoreClaimDtoRequest {
+    createClaim?: ClaimCreateRequest[] | undefined;
+}
+
+export interface CultureInfo {
+    parent?: CultureInfo;
+    readonly lcid?: number;
+    readonly keyboardLayoutId?: number;
+    name?: string | undefined;
+    readonly ietfLanguageTag?: string | undefined;
+    readonly displayName?: string | undefined;
+    readonly nativeName?: string | undefined;
+    readonly englishName?: string | undefined;
+    readonly twoLetterISOLanguageName?: string | undefined;
+    readonly threeLetterISOLanguageName?: string | undefined;
+    readonly threeLetterWindowsLanguageName?: string | undefined;
+    compareInfo?: CompareInfo;
+    textInfo?: TextInfo;
+    readonly isNeutralCulture?: boolean;
+    cultureTypes?: CultureTypes;
+    numberFormat?: NumberFormatInfo;
+    dateTimeFormat?: DateTimeFormatInfo;
+    calendar?: Calendar;
+    readonly optionalCalendars?: Calendar[] | undefined;
+    readonly useUserOverride?: boolean;
+    readonly isReadOnly?: boolean;
+}
+
+export type CultureTypes = 1 | 2 | 4 | 7 | 8 | 16 | 32 | 64;
+
+export interface CustomAttributeData {
+    attributeType?: Type;
+    constructor?: ConstructorInfo;
+    readonly constructorArguments?: CustomAttributeTypedArgument[] | undefined;
+    readonly namedArguments?: CustomAttributeNamedArgument[] | undefined;
+}
+
+export interface CustomAttributeNamedArgument {
+    memberInfo?: MemberInfo;
+    typedValue?: CustomAttributeTypedArgument;
+    readonly memberName?: string | undefined;
+    readonly isField?: boolean;
+}
+
+export interface CustomAttributeTypedArgument {
+    argumentType?: Type;
+    value?: any | undefined;
 }
 
 export interface CustomerDetail_encrypt {
@@ -3224,6 +3555,111 @@ export interface CustomerDetail_encryptListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface DataColumn {
+    site?: ISite;
+    container?: IContainer;
+    readonly designMode?: boolean;
+    allowDBNull?: boolean;
+    autoIncrement?: boolean;
+    autoIncrementSeed?: number;
+    autoIncrementStep?: number;
+    caption?: string | undefined;
+    columnName?: string | undefined;
+    prefix?: string | undefined;
+    dataType?: Type;
+    dateTimeMode?: DataSetDateTime;
+    defaultValue?: any | undefined;
+    expression?: string | undefined;
+    readonly extendedProperties?: { [key: string]: any } | undefined;
+    maxLength?: number;
+    namespace?: string | undefined;
+    readonly ordinal?: number;
+    readOnly?: boolean;
+    table?: DataTable;
+    unique?: boolean;
+    columnMapping?: MappingType;
+}
+
+export interface DataSet {
+    container?: IContainer;
+    readonly designMode?: boolean;
+    remotingFormat?: SerializationFormat;
+    schemaSerializationMode?: SchemaSerializationMode;
+    caseSensitive?: boolean;
+    readonly defaultViewManager?: any[] | undefined;
+    enforceConstraints?: boolean;
+    dataSetName?: string | undefined;
+    namespace?: string | undefined;
+    prefix?: string | undefined;
+    readonly extendedProperties?: { [key: string]: any } | undefined;
+    readonly hasErrors?: boolean;
+    readonly isInitialized?: boolean;
+    locale?: CultureInfo;
+    site?: ISite;
+    readonly relations?: any[] | undefined;
+    readonly tables?: any[] | undefined;
+}
+
+export type DataSetDateTime = 1 | 2 | 3 | 4;
+
+export interface DataTable {
+    container?: IContainer;
+    readonly designMode?: boolean;
+    caseSensitive?: boolean;
+    readonly isInitialized?: boolean;
+    remotingFormat?: SerializationFormat;
+    readonly childRelations?: any[] | undefined;
+    readonly columns?: any[] | undefined;
+    readonly constraints?: any[] | undefined;
+    dataSet?: DataSet;
+    readonly defaultView?: any[] | undefined;
+    displayExpression?: string | undefined;
+    readonly extendedProperties?: { [key: string]: any } | undefined;
+    readonly hasErrors?: boolean;
+    locale?: CultureInfo;
+    minimumCapacity?: number;
+    readonly parentRelations?: any[] | undefined;
+    primaryKey?: DataColumn[] | undefined;
+    readonly rows?: any[] | undefined;
+    tableName?: string | undefined;
+    namespace?: string | undefined;
+    prefix?: string | undefined;
+    site?: ISite;
+}
+
+export interface DateTimeFormatInfo {
+    amDesignator?: string | undefined;
+    calendar?: Calendar;
+    dateSeparator?: string | undefined;
+    firstDayOfWeek?: DayOfWeek;
+    calendarWeekRule?: CalendarWeekRule;
+    fullDateTimePattern?: string | undefined;
+    longDatePattern?: string | undefined;
+    longTimePattern?: string | undefined;
+    monthDayPattern?: string | undefined;
+    pmDesignator?: string | undefined;
+    readonly rfC1123Pattern?: string | undefined;
+    shortDatePattern?: string | undefined;
+    shortTimePattern?: string | undefined;
+    readonly sortableDateTimePattern?: string | undefined;
+    timeSeparator?: string | undefined;
+    readonly universalSortableDateTimePattern?: string | undefined;
+    yearMonthPattern?: string | undefined;
+    abbreviatedDayNames?: string[] | undefined;
+    shortestDayNames?: string[] | undefined;
+    dayNames?: string[] | undefined;
+    abbreviatedMonthNames?: string[] | undefined;
+    monthNames?: string[] | undefined;
+    readonly isReadOnly?: boolean;
+    readonly nativeCalendarName?: string | undefined;
+    abbreviatedMonthGenitiveNames?: string[] | undefined;
+    monthGenitiveNames?: string[] | undefined;
+}
+
+export type DayOfWeek = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+export type DigitShapes = 0 | 1 | 2;
+
 export interface DisabilityExpenseList {
     benefitId?: number | undefined;
     benefitName?: string | undefined;
@@ -3233,6 +3669,76 @@ export interface DisabilityExpenseList {
     benefitPerUnit?: number;
     benefitUnitName?: string | undefined;
     benefitMaxPrice?: number;
+}
+
+export type EventAttributes = 0 | 512 | 1024;
+
+export interface EventInfo {
+    readonly name?: string | undefined;
+    declaringType?: Type;
+    reflectedType?: Type;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    memberType?: MemberTypes;
+    attributes?: EventAttributes;
+    readonly isSpecialName?: boolean;
+    addMethod?: MethodInfo;
+    removeMethod?: MethodInfo;
+    raiseMethod?: MethodInfo;
+    readonly isMulticast?: boolean;
+    eventHandlerType?: Type;
+}
+
+export type FieldAttributes =
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 16
+    | 32
+    | 64
+    | 128
+    | 256
+    | 512
+    | 1024
+    | 4096
+    | 8192
+    | 32768
+    | 38144;
+
+export interface FieldInfo {
+    readonly name?: string | undefined;
+    declaringType?: Type;
+    reflectedType?: Type;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    memberType?: MemberTypes;
+    attributes?: FieldAttributes;
+    fieldType?: Type;
+    readonly isInitOnly?: boolean;
+    readonly isLiteral?: boolean;
+    readonly isNotSerialized?: boolean;
+    readonly isPinvokeImpl?: boolean;
+    readonly isSpecialName?: boolean;
+    readonly isStatic?: boolean;
+    readonly isAssembly?: boolean;
+    readonly isFamily?: boolean;
+    readonly isFamilyAndAssembly?: boolean;
+    readonly isFamilyOrAssembly?: boolean;
+    readonly isPrivate?: boolean;
+    readonly isPublic?: boolean;
+    readonly isSecurityCritical?: boolean;
+    readonly isSecuritySafeCritical?: boolean;
+    readonly isSecurityTransparent?: boolean;
+    fieldHandle?: RuntimeFieldHandle;
 }
 
 export interface FormatTypeDtoResponse {
@@ -3255,6 +3761,8 @@ export interface FormatTypeDtoResponseListServiceResponse {
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
 }
+
+export type GenericParameterAttributes = 0 | 1 | 2 | 3 | 4 | 8 | 16 | 28;
 
 export interface GetAdjustmentReasonDtoResponse {
     adjustmentReasonId?: number;
@@ -3550,6 +4058,42 @@ export interface GetCustomerBankAccountDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetCustomerBenefitDetailHalfDtoResponse {
+    productName?: string | undefined;
+    coverageFrom?: dayjs.Dayjs | undefined;
+    coverageTo?: dayjs.Dayjs | undefined;
+    benefitName?: string | undefined;
+    pricePerUnit?: number | undefined;
+    unitName?: string | undefined;
+    maxQuantity?: number | undefined;
+    quantityUnitName?: string | undefined;
+    maxPrice?: number | undefined;
+    customerTypeCode?: string | undefined;
+    remainBenefit?: number | undefined;
+    benefitId?: number | undefined;
+    medicalTypeId?: number | undefined;
+    medicalTypeName?: string | undefined;
+    remainAmount?: number | undefined;
+    incidentTypeId?: number | undefined;
+    coverageTypeId?: number | undefined;
+    inputToStandardMappingId?: number;
+    standardMedicalExpenseId?: number;
+}
+
+export interface GetCustomerBenefitDetailHalfDtoResponseListServiceResponse {
+    data?: GetCustomerBenefitDetailHalfDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetCustomerBenefitDetailSearchDtoResponse {
     productName?: string | undefined;
     coverageFrom?: dayjs.Dayjs | undefined;
@@ -3621,11 +4165,47 @@ export interface GetCustomerDetailByIdDtoResponse {
     agentBranchName?: string | undefined;
     levelRoomName?: string | undefined;
     academicYear?: number | undefined;
+    appStatusId?: number | undefined;
     appStatus?: string | undefined;
 }
 
 export interface GetCustomerDetailByIdDtoResponseServiceResponse {
     data?: GetCustomerDetailByIdDtoResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetCustomerSearchByPolicyCodeDtoResponse {
+    id?: number;
+    cardTypeId?: number | undefined;
+    cardDetail?: string | undefined;
+    customerName?: string | undefined;
+    productTypeId?: number | undefined;
+    productTypeName?: string | undefined;
+    policyCode?: string | undefined;
+    customerCode?: string | undefined;
+    appStatusId?: number | undefined;
+    coverageFrom?: dayjs.Dayjs | undefined;
+    coverageTo?: dayjs.Dayjs | undefined;
+    productName?: string | undefined;
+    schoolName?: string | undefined;
+    totalCount?: number | undefined;
+    mobilePhoneNumber?: string | undefined;
+    productId?: number | undefined;
+    productCategoryCode?: string | undefined;
+    productCategoryName?: string | undefined;
+}
+
+export interface GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse {
+    data?: GetCustomerSearchByPolicyCodeDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -3926,6 +4506,23 @@ export interface GetZebraCarOwnerDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface IComponent {
+    site?: ISite;
+}
+
+export interface IContainer {
+    readonly components?: any[] | undefined;
+}
+
+export interface ICustomAttributeProvider {}
+
+export interface ISite {
+    component?: IComponent;
+    container?: IContainer;
+    readonly designMode?: boolean;
+    name?: string | undefined;
+}
+
 export interface IncidentTypeDtoResponse {
     indexId?: number;
     incidentTypeId?: number;
@@ -3979,6 +4576,12 @@ export interface InputToStandardSubCategoryList {
     inputToStandardMappingList?: InputToStandardMappingDtoResponse[] | undefined;
 }
 
+export interface IntPtr {}
+
+export type LayoutKind = 0 | 2 | 3;
+
+export type MappingType = 1 | 2 | 3 | 4;
+
 export interface MedicalExpenseList {
     benefitId?: number | undefined;
     benefitName?: string | undefined;
@@ -3987,6 +4590,228 @@ export interface MedicalExpenseList {
     unCover?: number;
     pay?: number;
     unPay?: number;
+}
+
+export interface MemberInfo {
+    memberType?: MemberTypes;
+    declaringType?: Type;
+    reflectedType?: Type;
+    readonly name?: string | undefined;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+}
+
+export type MemberTypes = 1 | 2 | 4 | 8 | 16 | 32 | 64 | 128 | 191;
+
+export type MethodAttributes =
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 16
+    | 32
+    | 64
+    | 128
+    | 256
+    | 512
+    | 1024
+    | 2048
+    | 4096
+    | 8192
+    | 16384
+    | 32768
+    | 53248;
+
+export interface MethodBase {
+    memberType?: MemberTypes;
+    readonly name?: string | undefined;
+    declaringType?: Type;
+    reflectedType?: Type;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    attributes?: MethodAttributes;
+    methodImplementationFlags?: MethodImplAttributes;
+    callingConvention?: CallingConventions;
+    readonly isAbstract?: boolean;
+    readonly isConstructor?: boolean;
+    readonly isFinal?: boolean;
+    readonly isHideBySig?: boolean;
+    readonly isSpecialName?: boolean;
+    readonly isStatic?: boolean;
+    readonly isVirtual?: boolean;
+    readonly isAssembly?: boolean;
+    readonly isFamily?: boolean;
+    readonly isFamilyAndAssembly?: boolean;
+    readonly isFamilyOrAssembly?: boolean;
+    readonly isPrivate?: boolean;
+    readonly isPublic?: boolean;
+    readonly isConstructedGenericMethod?: boolean;
+    readonly isGenericMethod?: boolean;
+    readonly isGenericMethodDefinition?: boolean;
+    readonly containsGenericParameters?: boolean;
+    methodHandle?: RuntimeMethodHandle;
+    readonly isSecurityCritical?: boolean;
+    readonly isSecuritySafeCritical?: boolean;
+    readonly isSecurityTransparent?: boolean;
+}
+
+export type MethodImplAttributes = 0 | 1 | 2 | 3 | 4 | 8 | 16 | 32 | 64 | 128 | 256 | 512 | 4096 | 65535;
+
+export interface MethodInfo {
+    readonly name?: string | undefined;
+    declaringType?: Type;
+    reflectedType?: Type;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    attributes?: MethodAttributes;
+    methodImplementationFlags?: MethodImplAttributes;
+    callingConvention?: CallingConventions;
+    readonly isAbstract?: boolean;
+    readonly isConstructor?: boolean;
+    readonly isFinal?: boolean;
+    readonly isHideBySig?: boolean;
+    readonly isSpecialName?: boolean;
+    readonly isStatic?: boolean;
+    readonly isVirtual?: boolean;
+    readonly isAssembly?: boolean;
+    readonly isFamily?: boolean;
+    readonly isFamilyAndAssembly?: boolean;
+    readonly isFamilyOrAssembly?: boolean;
+    readonly isPrivate?: boolean;
+    readonly isPublic?: boolean;
+    readonly isConstructedGenericMethod?: boolean;
+    readonly isGenericMethod?: boolean;
+    readonly isGenericMethodDefinition?: boolean;
+    readonly containsGenericParameters?: boolean;
+    methodHandle?: RuntimeMethodHandle;
+    readonly isSecurityCritical?: boolean;
+    readonly isSecuritySafeCritical?: boolean;
+    readonly isSecurityTransparent?: boolean;
+    memberType?: MemberTypes;
+    returnParameter?: ParameterInfo;
+    returnType?: Type;
+    returnTypeCustomAttributes?: ICustomAttributeProvider;
+}
+
+export interface Module {
+    assembly?: Assembly;
+    readonly fullyQualifiedName?: string | undefined;
+    readonly name?: string | undefined;
+    readonly mdStreamVersion?: number;
+    readonly moduleVersionId?: string;
+    readonly scopeName?: string | undefined;
+    moduleHandle?: ModuleHandle;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly metadataToken?: number;
+}
+
+export interface ModuleHandle {
+    readonly mdStreamVersion?: number;
+}
+
+export interface NumberFormatInfo {
+    currencyDecimalDigits?: number;
+    currencyDecimalSeparator?: string | undefined;
+    readonly isReadOnly?: boolean;
+    currencyGroupSizes?: number[] | undefined;
+    numberGroupSizes?: number[] | undefined;
+    percentGroupSizes?: number[] | undefined;
+    currencyGroupSeparator?: string | undefined;
+    currencySymbol?: string | undefined;
+    naNSymbol?: string | undefined;
+    currencyNegativePattern?: number;
+    numberNegativePattern?: number;
+    percentPositivePattern?: number;
+    percentNegativePattern?: number;
+    negativeInfinitySymbol?: string | undefined;
+    negativeSign?: string | undefined;
+    numberDecimalDigits?: number;
+    numberDecimalSeparator?: string | undefined;
+    numberGroupSeparator?: string | undefined;
+    currencyPositivePattern?: number;
+    positiveInfinitySymbol?: string | undefined;
+    positiveSign?: string | undefined;
+    percentDecimalDigits?: number;
+    percentDecimalSeparator?: string | undefined;
+    percentGroupSeparator?: string | undefined;
+    percentSymbol?: string | undefined;
+    perMilleSymbol?: string | undefined;
+    nativeDigits?: string[] | undefined;
+    digitSubstitution?: DigitShapes;
+}
+
+export type ParameterAttributes = 0 | 1 | 2 | 4 | 8 | 16 | 4096 | 8192 | 16384 | 32768 | 61440;
+
+export interface ParameterInfo {
+    attributes?: ParameterAttributes;
+    member?: MemberInfo;
+    readonly name?: string | undefined;
+    parameterType?: Type;
+    readonly position?: number;
+    readonly isIn?: boolean;
+    readonly isLcid?: boolean;
+    readonly isOptional?: boolean;
+    readonly isOut?: boolean;
+    readonly isRetval?: boolean;
+    readonly defaultValue?: any | undefined;
+    readonly rawDefaultValue?: any | undefined;
+    readonly hasDefaultValue?: boolean;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly metadataToken?: number;
+}
+
+export type PropertyAttributes = 0 | 512 | 1024 | 4096 | 8192 | 16384 | 32768 | 62464;
+
+export interface PropertyInfo {
+    readonly name?: string | undefined;
+    declaringType?: Type;
+    reflectedType?: Type;
+    module?: Module;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    memberType?: MemberTypes;
+    propertyType?: Type;
+    attributes?: PropertyAttributes;
+    readonly isSpecialName?: boolean;
+    readonly canRead?: boolean;
+    readonly canWrite?: boolean;
+    getMethod?: MethodInfo;
+    setMethod?: MethodInfo;
+}
+
+export interface RuntimeFieldHandle {
+    value?: IntPtr;
+}
+
+export interface RuntimeMethodHandle {
+    value?: IntPtr;
+}
+
+export interface RuntimeTypeHandle {
+    value?: IntPtr;
+}
+
+export type SchemaSerializationMode = 1 | 2;
+
+export type SecurityRuleSet = 0 | 1 | 2;
+
+export type SerializationFormat = 0 | 1;
+
+export interface SortVersion {
+    fullVersion?: number;
+    sortId?: string;
 }
 
 export interface StandardMedicalExpenseCategoryDtoResponse {
@@ -4007,6 +4832,208 @@ export interface StandardMedicalExpenseCategoryDtoResponseListServiceResponse {
     currentPage?: number | undefined;
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
+}
+
+export interface StructLayoutAttribute {
+    readonly typeId?: any | undefined;
+    value?: LayoutKind;
+}
+
+export interface TextInfo {
+    readonly ansiCodePage?: number;
+    readonly oemCodePage?: number;
+    readonly macCodePage?: number;
+    readonly ebcdicCodePage?: number;
+    readonly lcid?: number;
+    readonly cultureName?: string | undefined;
+    readonly isReadOnly?: boolean;
+    listSeparator?: string | undefined;
+    readonly isRightToLeft?: boolean;
+}
+
+export interface Type {
+    readonly name?: string | undefined;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    readonly isInterface?: boolean;
+    memberType?: MemberTypes;
+    readonly namespace?: string | undefined;
+    readonly assemblyQualifiedName?: string | undefined;
+    readonly fullName?: string | undefined;
+    assembly?: Assembly;
+    module?: Module;
+    readonly isNested?: boolean;
+    declaringType?: Type;
+    declaringMethod?: MethodBase;
+    reflectedType?: Type;
+    underlyingSystemType?: Type;
+    readonly isTypeDefinition?: boolean;
+    readonly isArray?: boolean;
+    readonly isByRef?: boolean;
+    readonly isPointer?: boolean;
+    readonly isConstructedGenericType?: boolean;
+    readonly isGenericParameter?: boolean;
+    readonly isGenericTypeParameter?: boolean;
+    readonly isGenericMethodParameter?: boolean;
+    readonly isGenericType?: boolean;
+    readonly isGenericTypeDefinition?: boolean;
+    readonly isSZArray?: boolean;
+    readonly isVariableBoundArray?: boolean;
+    readonly isByRefLike?: boolean;
+    readonly hasElementType?: boolean;
+    readonly genericTypeArguments?: Type[] | undefined;
+    readonly genericParameterPosition?: number;
+    genericParameterAttributes?: GenericParameterAttributes;
+    attributes?: TypeAttributes;
+    readonly isAbstract?: boolean;
+    readonly isImport?: boolean;
+    readonly isSealed?: boolean;
+    readonly isSpecialName?: boolean;
+    readonly isClass?: boolean;
+    readonly isNestedAssembly?: boolean;
+    readonly isNestedFamANDAssem?: boolean;
+    readonly isNestedFamily?: boolean;
+    readonly isNestedFamORAssem?: boolean;
+    readonly isNestedPrivate?: boolean;
+    readonly isNestedPublic?: boolean;
+    readonly isNotPublic?: boolean;
+    readonly isPublic?: boolean;
+    readonly isAutoLayout?: boolean;
+    readonly isExplicitLayout?: boolean;
+    readonly isLayoutSequential?: boolean;
+    readonly isAnsiClass?: boolean;
+    readonly isAutoClass?: boolean;
+    readonly isUnicodeClass?: boolean;
+    readonly isCOMObject?: boolean;
+    readonly isContextful?: boolean;
+    readonly isEnum?: boolean;
+    readonly isMarshalByRef?: boolean;
+    readonly isPrimitive?: boolean;
+    readonly isValueType?: boolean;
+    readonly isSignatureType?: boolean;
+    readonly isSecurityCritical?: boolean;
+    readonly isSecuritySafeCritical?: boolean;
+    readonly isSecurityTransparent?: boolean;
+    structLayoutAttribute?: StructLayoutAttribute;
+    typeInitializer?: ConstructorInfo;
+    typeHandle?: RuntimeTypeHandle;
+    readonly guid?: string;
+    baseType?: Type;
+    readonly isSerializable?: boolean;
+    readonly containsGenericParameters?: boolean;
+    readonly isVisible?: boolean;
+}
+
+export type TypeAttributes =
+    | 0
+    | 1
+    | 2
+    | 3
+    | 4
+    | 5
+    | 6
+    | 7
+    | 8
+    | 16
+    | 24
+    | 32
+    | 128
+    | 256
+    | 1024
+    | 2048
+    | 4096
+    | 8192
+    | 16384
+    | 65536
+    | 131072
+    | 196608
+    | 262144
+    | 264192
+    | 1048576
+    | 12582912;
+
+export interface TypeInfo {
+    readonly name?: string | undefined;
+    readonly customAttributes?: CustomAttributeData[] | undefined;
+    readonly isCollectible?: boolean;
+    readonly metadataToken?: number;
+    readonly isInterface?: boolean;
+    memberType?: MemberTypes;
+    readonly namespace?: string | undefined;
+    readonly assemblyQualifiedName?: string | undefined;
+    readonly fullName?: string | undefined;
+    assembly?: Assembly;
+    module?: Module;
+    readonly isNested?: boolean;
+    declaringType?: Type;
+    declaringMethod?: MethodBase;
+    reflectedType?: Type;
+    underlyingSystemType?: Type;
+    readonly isTypeDefinition?: boolean;
+    readonly isArray?: boolean;
+    readonly isByRef?: boolean;
+    readonly isPointer?: boolean;
+    readonly isConstructedGenericType?: boolean;
+    readonly isGenericParameter?: boolean;
+    readonly isGenericTypeParameter?: boolean;
+    readonly isGenericMethodParameter?: boolean;
+    readonly isGenericType?: boolean;
+    readonly isGenericTypeDefinition?: boolean;
+    readonly isSZArray?: boolean;
+    readonly isVariableBoundArray?: boolean;
+    readonly isByRefLike?: boolean;
+    readonly hasElementType?: boolean;
+    readonly genericTypeArguments?: Type[] | undefined;
+    readonly genericParameterPosition?: number;
+    genericParameterAttributes?: GenericParameterAttributes;
+    attributes?: TypeAttributes;
+    readonly isAbstract?: boolean;
+    readonly isImport?: boolean;
+    readonly isSealed?: boolean;
+    readonly isSpecialName?: boolean;
+    readonly isClass?: boolean;
+    readonly isNestedAssembly?: boolean;
+    readonly isNestedFamANDAssem?: boolean;
+    readonly isNestedFamily?: boolean;
+    readonly isNestedFamORAssem?: boolean;
+    readonly isNestedPrivate?: boolean;
+    readonly isNestedPublic?: boolean;
+    readonly isNotPublic?: boolean;
+    readonly isPublic?: boolean;
+    readonly isAutoLayout?: boolean;
+    readonly isExplicitLayout?: boolean;
+    readonly isLayoutSequential?: boolean;
+    readonly isAnsiClass?: boolean;
+    readonly isAutoClass?: boolean;
+    readonly isUnicodeClass?: boolean;
+    readonly isCOMObject?: boolean;
+    readonly isContextful?: boolean;
+    readonly isEnum?: boolean;
+    readonly isMarshalByRef?: boolean;
+    readonly isPrimitive?: boolean;
+    readonly isValueType?: boolean;
+    readonly isSignatureType?: boolean;
+    readonly isSecurityCritical?: boolean;
+    readonly isSecuritySafeCritical?: boolean;
+    readonly isSecurityTransparent?: boolean;
+    structLayoutAttribute?: StructLayoutAttribute;
+    typeInitializer?: ConstructorInfo;
+    typeHandle?: RuntimeTypeHandle;
+    readonly guid?: string;
+    baseType?: Type;
+    readonly isSerializable?: boolean;
+    readonly containsGenericParameters?: boolean;
+    readonly isVisible?: boolean;
+    readonly genericTypeParameters?: Type[] | undefined;
+    readonly declaredConstructors?: ConstructorInfo[] | undefined;
+    readonly declaredEvents?: EventInfo[] | undefined;
+    readonly declaredFields?: FieldInfo[] | undefined;
+    readonly declaredMembers?: MemberInfo[] | undefined;
+    readonly declaredMethods?: MethodInfo[] | undefined;
+    readonly declaredNestedTypes?: TypeInfo[] | undefined;
+    readonly declaredProperties?: PropertyInfo[] | undefined;
+    readonly implementedInterfaces?: Type[] | undefined;
 }
 
 export class ApiException extends Error {

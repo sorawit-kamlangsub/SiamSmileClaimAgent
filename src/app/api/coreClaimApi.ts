@@ -3,8 +3,8 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
+    CreateCoreClaimDataTableServiceResponse,
     CreateCoreClaimDtoRequest,
-    CreateCoreClaimDtoResponseServiceResponse,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
 } from "./coreClaimApi.client";
@@ -24,6 +24,7 @@ const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
 const calculateCaseDisabilityQueryKey = ["calculateCaseDisability"];
+const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -126,7 +127,7 @@ export const useGetCustomerBenefitDetailSearch = (
 };
 
 export const useCreateCoreClaim = (
-    onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
+    onSuccessCallback?: (response: CreateCoreClaimDataTableServiceResponse) => void,
     onErrorCallback?: (error: string, type: number) => void
 ) => {
     return useMutation((body: CreateCoreClaimDtoRequest) => coreClaimClient.createCoreClaim(body), {
@@ -268,6 +269,43 @@ export const useCalculateCaseDisability = (
         () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
         {
             enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCustomerSearchByPolicyCode = (
+    policyCode?: string | undefined,
+    searchIndex?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getCustomerSearchByPolicyCodeQueryKey,
+            policyCode,
+            searchIndex,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getCustomerSearchByPolicyCode(
+                policyCode,
+                searchIndex,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!policyCode && !!searchIndex && !!searchDetail,
             refetchOnWindowFocus: false,
         }
     );

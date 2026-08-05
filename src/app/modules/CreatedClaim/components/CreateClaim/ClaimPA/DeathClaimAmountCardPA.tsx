@@ -14,11 +14,13 @@ type CoverageItem = {
     description: string;
     maxAmount?: number;
     helperText?: string;
+    businessId?: number; // id ทางธุรกิจของความคุ้มครองเพิ่มเติม (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
 };
 
 type Props = {
     causeOfIncidentName?: string;
     mainMaxAmount: number;
+    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่ถูกเลือก (checkbox) จากฟอร์ม
     formik: FormikProps<ClaimPAFormValues>;
 };
 
@@ -36,6 +38,7 @@ const coverageItems: CoverageItem[] = [
         title: "ความคุ้มครองเพิ่มเติม",
         description: "เสียชีวิต จากภัยสาธารณะ อีก 1 เท่าของทุนประกันภัย",
         helperText: "กรอกเฉพาะยอดเพิ่มเติมภัยสาธารณะ",
+        businessId: 7,
     },
     {
         id: "student-liability",
@@ -43,10 +46,11 @@ const coverageItems: CoverageItem[] = [
         title: "ความคุ้มครองเพิ่มเติม",
         description: "ประกันความรับผิดชอบของสถานศึกษา (นักเรียน) เพิ่ม 1 เท่า สูงสุดไม่เกิน 10 เท่าของทุนประกัน",
         helperText: "กรอกเฉพาะยอดเพิ่มเติมความรับผิดสถานศึกษา",
+        businessId: 8,
     },
 ];
 
-const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, formik }: Props) => {
+const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCoverageIds, formik }: Props) => {
     const [amounts, setAmounts] = useState<Record<string, number>>({
         main: 0,
         "public-disaster": 0,
@@ -63,9 +67,14 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, formik }: 
             : item
     );
 
+    // แสดงเฉพาะ main กับ extra ที่ถูกติ๊กเลือกไว้เท่านั้น (ที่เหลือตามการ check ของ checkbox)
+    const visibleItems = items.filter(
+        (item) => item.type === "main" || extraCoverageIds.includes(item.businessId ?? -1)
+    );
+
     const transferAmount = useMemo(() => {
-        return Object.values(amounts).reduce((sum, value) => sum + value, 0);
-    }, [amounts]);
+        return visibleItems.reduce((sum, item) => sum + (amounts[item.id] ?? 0), 0);
+    }, [amounts, visibleItems]);
 
     useEffect(() => {
         formik.setFieldValue("transferAmount", transferAmount, false);
@@ -100,7 +109,7 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, formik }: 
                     gap: 2.5,
                 }}
             >
-                {items.map((item) => (
+                {visibleItems.map((item) => (
                     <TransferAmountCard
                         key={item.id}
                         item={item}
@@ -226,7 +235,7 @@ const TransferAmountCard = ({
                                 justifyContent: "center",
                             }}
                         >
-                            <PaymentsIcon sx={{ color: "#0076B6" }} />
+                            <PaymentsIcon sx={{ color: "#00833E" }} />
                         </Box>
 
                         <Typography
@@ -308,7 +317,7 @@ const SummaryTotalCard = ({ totalAmount }: { totalAmount: number }) => {
                     </Typography>
                 </Box>
 
-                <Typography sx={{ fontSize: 16, color: "#1F2A44" }}>
+                <Typography sx={{ fontSize: 18, color: "#0076B6", fontWeight: 700, minWidth: 150, textAlign: "right" }}>
                     THB{" "}
                     {totalAmount.toLocaleString("th-TH", {
                         minimumFractionDigits: 2,

@@ -7,11 +7,11 @@ import { useGetIncidentType, useGetIncidentTypeMapping } from "../../../../../ap
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
 import {
+    addClaimItem,
     ClaimInsuredItem,
     ClaimPAFormValues,
     claimPASelector,
     setClaimForm,
-    setClaimItems,
 } from "../../../store/claimPASlice";
 import { claimPHSelector, DeathPlaceType, setEnabled, SymptomType } from "../../../store/claimPHSlice";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
@@ -28,7 +28,7 @@ interface Options {
 export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
-    const { form, isContinuous, oldClaim, insured, organLossItems } = useAppSelector(claimPASelector);
+    const { form, isContinuous, oldClaim, insured, organLossItems, claimItems } = useAppSelector(claimPASelector);
     const { documentDetailById } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const docData = Object.values(documentDetailById);
@@ -131,7 +131,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             }
             const claimItem: ClaimInsuredItem = {
                 id: `${Date.now()}`,
-                seq: 1,
+                seq: claimItems.length + 1,
                 customerName: insured?.customerName ?? "",
                 claimStyle: values.medicalTypeId
                     ? `${values.medicalTypeName ?? ""} (${values.coverageTypeName ?? ""})`
@@ -141,6 +141,14 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 dischargeDate: values.dischargeDate ?? undefined,
                 idCard: insured?.cardTypeId === 2 ? insured?.cardDetail ?? "" : "",
                 claimAmount: values.transferAmount ?? 0,
+                applicationId: insured?.policyCode,
+                customerId: insured?.customerId,
+                productId: insured?.productId ?? undefined,
+                // เก็บ snapshot ฟอร์มทั้งหมดของคนนี้ไว้ ใช้สร้าง createCase ของตัวเองตอนยิง API จริง
+                formValues: {
+                    ...values,
+                    ocrDocument: !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds),
+                },
             };
 
             dispatch(
@@ -149,7 +157,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     ocrDocument: !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds),
                 })
             );
-            dispatch(setClaimItems([claimItem]));
+            // stack ต่อท้าย ไม่ทับของเดิม เพื่อรองรับผู้เอาประกันหลายคนในเคลมเดียวกัน
+            dispatch(addClaimItem(claimItem));
             onNext();
         },
     });
@@ -257,6 +266,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
                 remark: undefined,
+                extraCoverageIds: [],
             },
             false
         );
@@ -296,6 +306,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
                 remark: undefined,
+                extraCoverageIds: [],
             },
             false
         );

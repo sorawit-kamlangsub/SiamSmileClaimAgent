@@ -109,7 +109,6 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
             setNplAmount(excessAmount);
             setAgree(false);
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [open, maxEligibleAmount, excessAmount]);
 
     const totalAmount = useMemo(() => (withdrawableAmount || 0) + (nplAmount || 0), [withdrawableAmount, nplAmount]);
@@ -306,6 +305,7 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                         alignItems: "center",
                         px: 1,
                         py: 0.5,
+                        shadow: "1px 2px 2px rgba(0, 0, 0, 0.1)",
                     }}
                 >
                     <Checkbox checked={agree} onChange={(e) => setAgree(e.target.checked)} color="primary" />
@@ -317,7 +317,14 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
             </DialogContent>
 
             <DialogActions sx={{ px: 3, pb: 3, borderTop: "1px solid #e0e0e0" }}>
-                <Button variant="outlined" color="inherit" onClick={onClose} disabled={loading} size="medium">
+                <Button
+                    variant="outlined"
+                    color="inherit"
+                    onClick={onClose}
+                    disabled={loading}
+                    size="medium"
+                    sx={{ shadow: "1px 2px 2px rgba(0, 0, 0, 0.1)" }}
+                >
                     กลับไปแก้ไข
                 </Button>
                 <Button

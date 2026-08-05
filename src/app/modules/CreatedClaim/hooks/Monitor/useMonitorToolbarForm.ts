@@ -23,10 +23,10 @@ export const useMonitorToolbarForm = () => {
 
     const defaultValues: checkeligibleMonitorSearchValuesType = {
         searchTypeId: 2,
-        searchDetail: "",
+        searchDetail: undefined,
         dateHappen: undefined,
         schoolId: undefined,
-        provinceId: 0,
+        provinceId: undefined,
         isAdvancedSearch: false,
         isSearchMonitor: false,
     };
@@ -63,7 +63,7 @@ export const useMonitorToolbarForm = () => {
             dispatch(
                 setSearchcheckeligibleMonitor({
                     searchTypeId: values.searchTypeId,
-                    searchDetail: values.searchDetail.trim(),
+                    searchDetail: values.searchDetail?.trim(),
                     dateHappen: values.dateHappen,
                     schoolId: values.schoolId,
                     provinceId: values.provinceId,
