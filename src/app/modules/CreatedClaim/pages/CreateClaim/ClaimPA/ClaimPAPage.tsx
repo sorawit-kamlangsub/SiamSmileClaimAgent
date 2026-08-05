@@ -20,11 +20,11 @@ const ClaimPAPage: React.FC = () => {
     return (
         <Grid container spacing={1}>
             {/* ── ข้อมูลผู้เอาประกัน | ประวัติการเคลม ── */}
-            <Grid item xs={12} md={5}>
+            <Grid item xs={12} md={4.5}>
                 {<InsuredInfoSection data={claimInfo} onEdit={() => navigate("/monitor-claim")} />}
             </Grid>
 
-            <Grid item xs={12} md={7}>
+            <Grid item xs={12} md={7.5}>
                 <ClaimHistoryCard appId={applicationId} />
             </Grid>
             {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
@@ -37,9 +37,7 @@ const ClaimPAPage: React.FC = () => {
             <Grid item xs={12}>
                 <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />
             </Grid>
-            
         </Grid>
-        
     );
 };
 

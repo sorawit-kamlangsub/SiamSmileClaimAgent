@@ -35,6 +35,18 @@ export interface ClaimInsuredItem {
     dischargeDate: Dayjs | undefined;
     idCard: string;
     claimAmount: number;
+    // ── เพิ่มเข้ามาเพื่อ map เข้า payload ตอนสร้างเคลม (แยกคนละ createClaim ตามคนที่เลือกเพิ่ม) ──
+    applicationId?: string; // เลข AppID/policyCode ของผู้เอาประกันรายนี้
+    customerId?: number;
+    productId?: number; // productId ของผู้เอาประกันรายนี้ (ต่างกันได้ต่อคน)
+    // ── snapshot ฟอร์มทั้งหมดของคนนี้ ณ ตอนกดถัดไป (ใช้สร้าง createCase ของตัวเอง ไม่ใช้ form กลางร่วมกัน) ──
+    formValues: ClaimPAFormValues;
+}
+
+// ความคุ้มครองเพิ่มเติมสำหรับกรณีเสียชีวิต (เลือกได้มากกว่า 1 อย่าง)
+export enum DeathExtraCoverageId {
+    PublicDisaster = 7, // ภัยสาธารณะ
+    SchoolLiability = 8, // ความรับผิดสถานศึกษา
 }
 
 export interface ClaimPAFormValues {
@@ -80,6 +92,7 @@ export interface ClaimPAFormValues {
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
     ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
+    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
 }
 
 interface ClaimPAState {
@@ -137,6 +150,7 @@ const defaultForm: ClaimPAFormValues = {
     chiefComplaintId_selectedText: undefined,
     remark: undefined,
     ocrDocument: [],
+    extraCoverageIds: [],
 };
 
 const initialState: ClaimPAState = {

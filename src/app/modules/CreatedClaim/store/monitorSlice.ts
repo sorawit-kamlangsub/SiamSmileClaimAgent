@@ -7,7 +7,7 @@ export type SearchTypeId = 1 | 2 | 3 | 4 | 5;
 
 export interface checkeligibleMonitorSearchValuesType {
     searchTypeId: SearchTypeId;
-    searchDetail: string;
+    searchDetail: string | undefined;
     dateHappen: Dayjs | undefined;
     schoolId: number | undefined;
     provinceId: number | undefined;
