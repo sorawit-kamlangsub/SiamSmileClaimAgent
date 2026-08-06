@@ -1120,7 +1120,7 @@ const FingerCell: React.FC<{
     setFingerField: (
         side: "left" | "right",
         fingerKey: FingerKey,
-        patch: Partial<{ selected: boolean; joints: number; amount: string }>
+        patch: Partial<{ selected: boolean; joints: number; amount: string; bodyPartId?: number }>
     ) => void;
     findFingerBodyPart: (subPartId: number, sideId: number, jointCount: number) => FingerBodyPartOption | undefined;
     isFingerOptionsLoading: boolean;
@@ -1154,6 +1154,12 @@ const FingerCell: React.FC<{
     useEffect(() => {
         onRuleChange(side, fingerKey, data.selected ? rule : null);
     }, [rule, data.selected]);
+
+    useEffect(() => {
+        if (data.selected && matched) {
+            setFingerField(side, fingerKey, { bodyPartId: matched.bodyPartId });
+        }
+    }, [data.selected, matched?.bodyPartId]);
 
     useEffect(() => {
         if (data.selected && rule) {

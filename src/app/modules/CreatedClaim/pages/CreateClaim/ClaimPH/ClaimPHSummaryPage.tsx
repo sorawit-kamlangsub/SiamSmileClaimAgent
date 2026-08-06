@@ -247,117 +247,120 @@ const ClaimPHSummaryPage: React.FC = () => {
             },
         }).then((result: any) => {
             const data = result?.value;
-            const firstItem = data?.responseList?.[0];
-            if (result.isConfirmed && result.value.isResult) {
+            const responseList = data?.responseList ?? [];
+
+            if (result.isConfirmed && data?.isResult && responseList.length > 0) {
+                const itemsHtml = responseList
+                    .map(
+                        (item: any, index: number) => `
+                    <div
+                        style="
+                            background:#fff;
+                            border:1px solid #E5E5E5;
+                            border-radius:12px;
+                            padding:16px;
+                            width:300px;
+                            margin:0 auto;
+                            margin-bottom:${index < responseList.length - 1 ? "12px" : "0"};
+                            box-shadow:0 2px 8px rgba(0,0,0,.12);
+                            text-align:left;
+                        "
+                    >
+                        <div style="display:flex;align-items:center;margin-bottom:12px;">
+                            <div
+                                style="
+                                    width:24px;
+                                    height:24px;
+                                    border-radius:50%;
+                                    background:#27AE60;
+                                    color:#fff;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    font-size:12px;
+                                    font-weight:bold;
+                                    margin-right:10px;
+                                "
+                            >
+                                ✓
+                            </div>
+
+                            <div>
+                                <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span style="font-size:18px;font-weight:700;color:#27AE60;">
+                                        ${item?.claimNo ?? "-"}
+                                    </span>
+
+                                    <span
+                                        class="material-icons copy-btn"
+                                        data-copy="${item?.claimNo ?? ""}"
+                                        style="
+                                            cursor:pointer;
+                                            color:#2196F3;
+                                            font-size:18px;
+                                            margin-left:6px;
+                                            user-select:none;
+                                        "
+                                    >
+                                        content_copy
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display:flex;align-items:center;">
+                            <div
+                                style="
+                                    width:24px;
+                                    height:24px;
+                                    border-radius:50%;
+                                    background:#2F80ED;
+                                    color:#fff;
+                                    display:flex;
+                                    align-items:center;
+                                    justify-content:center;
+                                    font-size:12px;
+                                    font-weight:bold;
+                                    margin-right:10px;
+                                "
+                            >
+                                $
+                            </div>
+
+                            <div>
+                                <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
+                                <div style="font-size:18px;font-weight:700;color:#2F80ED;">
+                                    ${item?.caseNo ?? "-"}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `
+                    )
+                    .join("");
+
                 Swal.fire({
                     icon: "success",
                     title: "ทำรายการสำเร็จ",
                     html: `
-                        <div
-                            style="
-                                color:#666;
-                                font-size:14px;
-                                margin-top:-8px;
-                                margin-bottom:24px;
-                                text-align:center;
-                                letter-spacing:normal;
-                                word-spacing:normal;
-                                font-family:inherit;
-                                line-height:3;
-                            "
-                        >
-                            ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
-                        </div>
-
-                        <div
-                            style="
-                                background:#fff;
-                                border:1px solid #E5E5E5;
-                                border-radius:12px;
-                                padding:16px;
-                                width:300px;
-                                margin:0 auto;
-                                box-shadow:0 2px 8px rgba(0,0,0,.12);
-                                text-align:left;
-                            "
-                        >
-                            <div style="display:flex;align-items:center;margin-bottom:12px;">
-                                <div
-                                    style="
-                                        width:24px;
-                                        height:24px;
-                                        border-radius:50%;
-                                        background:#27AE60;
-                                        color:#fff;
-                                        display:flex;
-                                        align-items:center;
-                                        justify-content:center;
-                                        font-size:12px;
-                                        font-weight:bold;
-                                        margin-right:10px;
-                                    "
-                                >
-                                    ✓
-                                </div>
-
-                                <div>
-                                    <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
-                                    <div
-                                        style="
-                                            display:flex;
-                                            align-items:center;
-                                            gap:6px;
-                                        "
-                                    >
-                                        <span style="font-size:18px;font-weight:700;color:#27AE60;">
-                                            ${firstItem.claimNo ?? "-"}
-                                        </span>
-
-                                        <span
-                                            class="material-icons copy-btn"
-                                            data-copy="${firstItem.claimNo ?? "-"}"
-                                            style="
-                                                cursor:pointer;
-                                                color:#2196F3;
-                                                font-size:18px;
-                                                margin-left:6px;
-                                                user-select:none;
-                                            "
-                                        >
-                                            content_copy
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div style="display:flex;align-items:center;">
-                                <div
-                                    style="
-                                        width:24px;
-                                        height:24px;
-                                        border-radius:50%;
-                                        background:#2F80ED;
-                                        color:#fff;
-                                        display:flex;
-                                        align-items:center;
-                                        justify-content:center;
-                                        font-size:12px;
-                                        font-weight:bold;
-                                        margin-right:10px;
-                                    "
-                                >
-                                    $
-                                </div>
-
-                                <div>
-                                    <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
-                                    <div style="font-size:18px;font-weight:700;color:#2F80ED;">
-                                        ${firstItem.caseNo ?? "-"}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `,
+                    <div
+                        style="
+                            color:#666;
+                            font-size:14px;
+                            margin-top:-8px;
+                            margin-bottom:24px;
+                            text-align:center;
+                            letter-spacing:normal;
+                            word-spacing:normal;
+                            font-family:inherit;
+                            line-height:3;
+                        "
+                    >
+                        ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
+                    </div>
+                    ${itemsHtml}
+                `,
                     confirmButtonText: "ตกลง",
                     allowOutsideClick: false,
                     backdrop: "rgba(0,0,0,0.4)",
@@ -376,17 +379,15 @@ const ClaimPHSummaryPage: React.FC = () => {
                                 el.style.color = "#4CAF50";
                                 el.style.cursor = "default";
 
-                                // กันการกดซ้ำ
                                 el.classList.remove("copy-btn");
                             });
                         });
                     },
                 });
                 dispatch(resetState());
-
                 navigate(`/monitor-claim`);
-            } else {
-                swalError("บันทึกไม่สำเร็จ !", "กรุณาลองใหม่อีกครั้ง");
+            } else if (result.isConfirmed) {
+                swalError("บันทึกไม่สำเร็จ !", data?.msg || "กรุณาลองใหม่อีกครั้ง");
             }
         });
     };

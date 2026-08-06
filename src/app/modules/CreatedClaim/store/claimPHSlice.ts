@@ -57,6 +57,7 @@ export interface BeneficiaryForm {
 
     citizenId?: string;
     bankId?: number;
+    bankName?: string;
     bankAccountNo?: string;
     bankAccountName?: string;
 
@@ -288,6 +289,7 @@ const claimPHSlice = createSlice({
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
+
         setEnabled: (state, action: PayloadAction<boolean>) => {
             state.isEnabled = action.payload;
         },

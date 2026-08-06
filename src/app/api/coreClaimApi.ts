@@ -3,8 +3,8 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
-    CreateCoreClaimDataTableServiceResponse,
     CreateCoreClaimDtoRequest,
+    CreateCoreClaimDtoResponseServiceResponse,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
 } from "./coreClaimApi.client";
@@ -128,7 +128,7 @@ export const useGetCustomerBenefitDetailSearch = (
 };
 
 export const useCreateCoreClaim = (
-    onSuccessCallback?: (response: CreateCoreClaimDataTableServiceResponse) => void,
+    onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string, type: number) => void
 ) => {
     return useMutation((body: CreateCoreClaimDtoRequest) => coreClaimClient.createCoreClaim(body), {

@@ -81,8 +81,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         getRequiredDocsByCoverageType,
     } = useClaimPAForm({ onNext });
 
-    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss();
     const { values, setFieldValue } = formik;
+    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
+        values.coverageTypeId
+    );
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { organLossItems, school } = useAppSelector(claimPASelector);
