@@ -57,6 +57,7 @@ export const useClaimLineCalculate = () => {
     const coverageTypeId = header.coverageType;
     const productTypeId = selectedInsured?.productTypeId;
     const patientTypeId = medicalType ?? causeOfIncident;
+    const planId = selectedInsured?.productId;
 
     const [showAddPanel, setShowAddPanel] = useState(false);
     const [searchText, setSearchText] = useState("");
@@ -93,7 +94,8 @@ export const useClaimLineCalculate = () => {
         medicalType,
         true,
         productTypeId,
-        causeOfIncident
+        causeOfIncident,
+        planId
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
@@ -102,9 +104,9 @@ export const useClaimLineCalculate = () => {
         coverageTypeId,
         medicalType,
         productTypeId,
-        causeOfIncident
+        causeOfIncident,
+        planId
     );
-
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
     const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
 

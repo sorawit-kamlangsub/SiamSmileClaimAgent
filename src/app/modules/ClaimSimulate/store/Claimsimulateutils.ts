@@ -75,12 +75,10 @@ export const applyMaximumLimit = ({
         return { claimAmount, discount, notCovered, reason, maximumLimit };
     }
 
-    const excess = Math.round((claimAmount - limit) * 100) / 100;
-
     return {
-        claimAmount: limit,
+        claimAmount,
         discount,
-        notCovered: Math.round((notCovered + excess) * 100) / 100,
+        notCovered: Math.round((claimAmount - limit) * 100) / 100,
         reason: NON_COVERED_REASON_EXCEED_LIMIT,
         maximumLimit,
     };

@@ -115,20 +115,30 @@ export const useGetSimBCategory = (
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
     productTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    planId?: number | undefined
 ) => {
     return useQuery(
-        [getSimBCategoryQueryKey, formatTypeId, coverageTypeId, medicalTypeId, productTypeId, causeOfIncidentId],
+        [
+            getSimBCategoryQueryKey,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            productTypeId,
+            causeOfIncidentId,
+            planId,
+        ],
         () =>
             coreClaimMastersClient.getSimBCategory(
                 formatTypeId,
                 coverageTypeId,
                 medicalTypeId,
                 productTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                planId
             ),
         {
-            enabled: !!formatTypeId || !!(medicalTypeId || causeOfIncidentId),
+            enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
             refetchOnWindowFocus: false,
         }
     );
@@ -140,10 +150,20 @@ export const useGetSimB = (
     medicalTypeId?: number | undefined,
     isUseOften?: boolean | undefined,
     productTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    plandId?: number | undefined
 ) => {
     return useQuery(
-        [getSimBQueryKey, formatTypeId, coverageTypeId, medicalTypeId, isUseOften, productTypeId, causeOfIncidentId],
+        [
+            getSimBQueryKey,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            isUseOften,
+            productTypeId,
+            causeOfIncidentId,
+            plandId,
+        ],
         () =>
             coreClaimMastersClient.getSimB(
                 formatTypeId,
@@ -151,10 +171,11 @@ export const useGetSimB = (
                 medicalTypeId,
                 isUseOften,
                 productTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                plandId
             ),
         {
-            enabled: !!formatTypeId && !!coverageTypeId && !!(medicalTypeId || causeOfIncidentId),
+            enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
             refetchOnWindowFocus: false,
         }
     );
