@@ -23,7 +23,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { claimPASelector, resetClaimForm, setInsured } from "../../../store/claimPASlice";
+import { claimPASelector, resetClaimForm, setPendingInsured } from "../../../store/claimPASlice";
 import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../../functionHelpers";
 import { FormikDropdown, FormikTextField, StandardDataTable } from "../../../../_common";
 import { useFormik } from "formik";
@@ -122,7 +122,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
 
     const [searchPaginated, setSearchPaginated] = useState<PaginationSortableDto>({
         page: 1,
-        recordsPerPage: 10,
+        recordsPerPage: 5,
     });
 
     const { data: searchResponse, isFetching: isSearchLoading } = useGetCustomerSearchByPolicyCode(
@@ -135,10 +135,8 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
         searchPaginated.recordsPerPage
     );
     const searchResults: SearchResult[] = (searchResponse?.data ?? []).map(mapToSearchResult);
-    // แต่ละแถวมี totalCount ติดมาด้วย (pattern paging ฝั่ง backend) ใช้เป็นจำนวนรวมทั้งหมด
     const searchTotalCount = searchResponse?.data?.[0]?.totalCount ?? searchResults.length;
 
-    // ── ประวัติการเคลม (API จริง, server-side pagination) ──
     const [historyPaginated, setHistoryPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 5,
@@ -153,7 +151,6 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
         historyPaginated.recordsPerPage
     );
     const claimHistoryItems = claimHistoryResponse?.data ?? [];
-    // แต่ละแถวมี totalCount ติดมาด้วย (pattern paging ฝั่ง backend) ใช้เป็นจำนวนรวมทั้งหมด
     const claimHistoryTotalCount = claimHistoryItems[0]?.totalCount ?? claimHistoryItems.length;
 
     const handleSelect = (result: SearchResult) => {
@@ -164,11 +161,8 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     const handleAddClaim = () => {
         if (!selectedInsured) return;
 
-        // ตั้งให้ผู้เอาประกันที่เลือกเป็น "คนที่กำลังกรอกเคลมอยู่" แล้วเคลียร์ฟอร์มให้ว่าง
-        // เพื่อกลับไปกรอกรายละเอียดเคลม (ประเภทความคุ้มครอง/วันที่/จำนวนเงิน ฯลฯ) ของคนนี้ใหม่ทั้งหมด
-        // ตัวเคลมจริง ๆ จะถูก stack เข้า claimItems ตอนกด "ถัดไป" ที่ ClaimPAFormSection (ดู useClaimPAForm.onSubmit)
         dispatch(
-            setInsured({
+            setPendingInsured({
                 customerId: selectedInsured.id,
                 customerName: selectedInsured.customerName,
                 policyCode: selectedInsured.appId,
@@ -176,8 +170,6 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                 cardDetail: selectedInsured.idCardNo,
                 productName: selectedInsured.plan,
                 productCategoryName: selectedInsured.insuredType,
-                // TODO: เติม field อื่นของ GetCustomerDetailByIdDtoResponse ที่ ClaimPAFormSection/useClaimPAForm
-                // ใช้ต่อ (เช่น productId, productCategoryCode) ถ้า SearchResult ยังไม่มี ต้องขอ API ค้นหาเพิ่ม field ให้
             } as any)
         );
         dispatch(resetClaimForm());
@@ -361,14 +353,14 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                     <Grid container spacing={2} p={2}>
                         <Grid item xs={12} sm={4} md={3}>
                             <FormikDropdown
-                                formik={formik}
                                 label="ค้นหาจาก"
-                                name="searchBy"
-                                required
+                                fullWidth
                                 data={searchTypeData}
+                                formik={formik}
                                 valueFieldName="searchTypeId"
                                 displayFieldName="searchTypeName"
-                                fullWidth
+                                name="searchBy"
+                                required
                             />
                         </Grid>
                         <Grid item xs={12} sm={6} md={7}>

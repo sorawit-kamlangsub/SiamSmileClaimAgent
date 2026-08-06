@@ -10,7 +10,10 @@ import {
     SymptomType,
 } from "./claimPHSlice";
 import {
+    CaseCreateRequest,
     CaseDocumentDetailCreateRequest,
+    ClaimCreateRequest,
+    CreateCoreClaimDtoRequest,
     GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
@@ -35,11 +38,14 @@ export interface ClaimInsuredItem {
     dischargeDate: Dayjs | undefined;
     idCard: string;
     claimAmount: number;
-    // ── เพิ่มเข้ามาเพื่อ map เข้า payload ตอนสร้างเคลม (แยกคนละ createClaim ตามคนที่เลือกเพิ่ม) ──
-    applicationId?: string; // เลข AppID/policyCode ของผู้เอาประกันรายนี้
+    applicationId?: string;
     customerId?: number;
-    productId?: number; // productId ของผู้เอาประกันรายนี้ (ต่างกันได้ต่อคน)
-    // ── snapshot ฟอร์มทั้งหมดของคนนี้ ณ ตอนกดถัดไป (ใช้สร้าง createCase ของตัวเอง ไม่ใช้ form กลางร่วมกัน) ──
+    productId?: number;
+
+    // ── ผูกกับ createClaim/createCase ใน tmpCoreClaim เพื่อรู้ว่าจะ update/remove ตัวไหน ──
+    // ไม่ต้องเป็น crypto-grade guid เพราะไม่ได้ใช้ตัดสินอะไรเรื่อง security แค่ใช้เป็น key จับคู่/ส่งไป API
+    tempClaimId: string;
+    tempCaseId: string;
     formValues: ClaimPAFormValues;
 }
 
@@ -95,10 +101,13 @@ export interface ClaimPAFormValues {
     extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
 }
 
+export interface CreateCoreClaimDto extends CreateCoreClaimDtoRequest {}
+
 interface ClaimPAState {
     isContinuous: boolean;
     oldClaim: GetClaimHistoryDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
+    pendingInsured: GetCustomerDetailByIdDtoResponse | undefined;
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
     claimItems: ClaimInsuredItem[]; // รายการผู้เอาประกันในตาราง
@@ -107,6 +116,8 @@ interface ClaimPAState {
     editingItemId: string | null; // id ของ row ที่กำลังแก้ไข
     beneficiaries: BeneficiaryForm[];
     organLossItems: OrganLossItem[];
+
+    tmpCoreClaim: CreateCoreClaimDtoRequest;
 }
 
 const defaultForm: ClaimPAFormValues = {
@@ -157,6 +168,7 @@ const initialState: ClaimPAState = {
     isContinuous: false,
     oldClaim: undefined,
     insured: undefined,
+    pendingInsured: undefined,
     school: null,
     form: defaultForm,
     claimItems: [],
@@ -165,6 +177,10 @@ const initialState: ClaimPAState = {
     editingItemId: null,
     organLossItems: [],
     beneficiaries: [],
+
+    tmpCoreClaim: {
+        createClaim: [],
+    },
 };
 
 const claimPASlice = createSlice({
@@ -179,6 +195,9 @@ const claimPASlice = createSlice({
         },
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
+        },
+        setPendingInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
+            state.pendingInsured = action.payload;
         },
         setSchool(state, action: PayloadAction<SchoolInfo | null>) {
             state.school = action.payload;
@@ -202,6 +221,61 @@ const claimPASlice = createSlice({
         },
         setEditingItemId(state, action: PayloadAction<string | null>) {
             state.editingItemId = action.payload;
+        },
+
+        //credate claim
+        setTmpCoreClaimHeader(state, action: PayloadAction<CreateCoreClaimDtoRequest>) {
+            state.tmpCoreClaim = {
+                ...action.payload,
+                createClaim: action.payload.createClaim ?? [],
+            };
+        },
+        setTmpClaimItem(state, action: PayloadAction<ClaimCreateRequest[]>) {
+            state.tmpCoreClaim.createClaim = [...(state.tmpCoreClaim.createClaim ?? []), ...action.payload];
+        },
+
+        setTmpCaseItem(
+            state,
+            action: PayloadAction<{
+                tempClaimId: string;
+                cases: CaseCreateRequest[];
+            }>
+        ) {
+            const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
+
+            if (!claim) return;
+
+            claim.createCase = [...(claim.createCase ?? []), ...action.payload.cases];
+        },
+
+        updateTmpClaimItem(state, action: PayloadAction<ClaimCreateRequest>) {
+            const idx = state.tmpCoreClaim.createClaim?.findIndex((c) => c.tempClaimId === action.payload.tempClaimId);
+            if (idx === undefined || idx === -1 || !state.tmpCoreClaim.createClaim) return;
+            // payload ไม่มี createCase (แยก set กันคนละ action) เก็บของเดิมไว้
+            state.tmpCoreClaim.createClaim[idx] = {
+                ...action.payload,
+                createCase: state.tmpCoreClaim.createClaim[idx].createCase,
+            };
+        },
+
+        updateTmpCaseItem(state, action: PayloadAction<{ tempClaimId: string; case: CaseCreateRequest }>) {
+            const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
+            if (!claim) return;
+
+            const idx = claim.createCase?.findIndex((c) => c.tempCaseId === action.payload.case.tempCaseId);
+            if (idx === undefined || idx === -1 || !claim.createCase) {
+                claim.createCase = [...(claim.createCase ?? []), action.payload.case];
+                return;
+            }
+            claim.createCase[idx] = action.payload.case;
+        },
+
+        removeTmpClaim(
+            state,
+            action: PayloadAction<string> // tempClaimId
+        ) {
+            state.tmpCoreClaim.createClaim =
+                state.tmpCoreClaim.createClaim?.filter((x) => x.tempClaimId !== action.payload) ?? [];
         },
 
         // ── BankAccounts (เหมือน PH) ──
@@ -316,6 +390,7 @@ export const {
     setIsContinuous,
     setOldClaim,
     setInsured,
+    setPendingInsured,
     setSchool,
     setClaimForm,
     resetClaimForm,
@@ -338,6 +413,12 @@ export const {
     addBeneficiary,
     removeBeneficiary,
     resetState,
+    setTmpCoreClaimHeader,
+    setTmpClaimItem,
+    setTmpCaseItem,
+    updateTmpClaimItem,
+    updateTmpCaseItem,
+    removeTmpClaim,
 } = claimPASlice.actions;
 
 export const claimPASelector = (state: RootState) => state.claimpa;

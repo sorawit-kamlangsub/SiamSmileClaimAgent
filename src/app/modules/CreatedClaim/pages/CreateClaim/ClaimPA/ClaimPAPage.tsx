@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
@@ -7,16 +7,33 @@ import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 import { useClaimPA } from "../../../hooks/CreateClaim/ClaimPA/useClaimPA";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
-import { claimPASelector } from "../../../store/claimPASlice";
-import { useAppSelector } from "../../../../../../redux";
+import { claimPASelector, setTmpCoreClaimHeader } from "../../../store/claimPASlice";
+import { useAppDispatch, useAppSelector } from "../../../../../../redux";
+import { useAuth } from "../../../../_auth";
 
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const { isContinuous, oldClaim } = useAppSelector(claimPASelector);
     const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPA();
-    if (isLoading) return <LinearLoading isLoading={isLoading} />;
-    // ─────────────────────────────────────────────────────────
 
+    // ─────────────────────────────────────────────────────────
+    const dispatch = useAppDispatch();
+    const { userProfile } = useAuth();
+
+    useEffect(() => {
+        dispatch(
+            setTmpCoreClaimHeader({
+                claimSourceId: 2,
+                createdByUserId: userProfile?.userId,
+                createdByUserCode: userProfile?.employeeCode,
+                createdByUserName: userProfile?.fullName,
+                productTypeId: 26,
+                createClaim: [],
+            })
+        );
+    }, []);
+
+    if (isLoading) return <LinearLoading isLoading={isLoading} />;
     return (
         <Grid container spacing={1}>
             {/* ── ข้อมูลผู้เอาประกัน | ประวัติการเคลม ── */}

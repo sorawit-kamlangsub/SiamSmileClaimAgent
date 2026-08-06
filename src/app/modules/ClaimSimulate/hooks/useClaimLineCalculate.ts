@@ -5,7 +5,7 @@ import { RootState } from "../../../../redux";
 import { ClaimLineItem, resetSimulateItems, setFilledItems, setMedicalTypeId } from "../store/claimSimulateSlice";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../api/coreClaimApi.client";
 import { useGetSimB, useGetSimBCategory, useGetNonCoveredReason } from "../../../api/coreClaimMastersApi";
-import { toAmount, hasAmountSumError } from "../store/Claimsimulateutils";
+import { toAmount, hasAmountSumError, applyMaximumLimit } from "../store/Claimsimulateutils";
 import { swalError } from "../../_common/sweetAlert";
 
 // ─── แปลง API response → TreeNode ────────────────────────────────────────────
@@ -20,6 +20,7 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
                         code: item.inputItemCode ?? "",
                         label: `${item.inputItemCode ?? ""} ${item.descriptionTH ?? ""}`.trim(),
                         bodyPartId: item.bodyPartId,
+                        maximumLimit: item.maximumLimit,
                         children: [],
                     }));
 
@@ -66,6 +67,7 @@ export const useClaimLineCalculate = () => {
         description: string;
         standardMedicalExpenseId?: number;
         bodyPartId?: number;
+        maximumLimit?: number;
     } | null>(null);
 
     const [selectedLeafId, setSelectedLeafId] = useState<number | null>(null);
@@ -129,6 +131,7 @@ export const useClaimLineCalculate = () => {
             color: item.backgroundColorCode ?? "#FFD6D6",
             disabled: false,
             bodyPartId: item.bodyPartId,
+            maximumLimit: item.maximumLimit,
         }));
     }, [frequentData]);
 
@@ -210,7 +213,8 @@ export const useClaimLineCalculate = () => {
             desc.join(" "),
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
-            matched.leaf.bodyPartId
+            matched.leaf.bodyPartId,
+            matched.leaf.maximumLimit
         );
     }, [searchText, categories]);
 
@@ -221,8 +225,29 @@ export const useClaimLineCalculate = () => {
 
     const syncItemsToRedux = (next: ClaimLineItem[]) => dispatch(setFilledItems(next));
 
+    // const handleUpdateItem = (item: ClaimLineItem) => {
+    //     const next = items.map((i) => (i.id === item.id ? item : i));
+    //     formik.setFieldValue("items", next);
+    //     syncItemsToRedux(next);
+    // };
+
     const handleUpdateItem = (item: ClaimLineItem) => {
-        const next = items.map((i) => (i.id === item.id ? item : i));
+        const adjusted = applyMaximumLimit({
+            claimAmount: Number(item.claimAmount ?? 0),
+            discount: Number(item.discount ?? 0),
+            notCovered: Number(item.notCovered ?? 0),
+            reason: item.reason,
+            maximumLimit: item.maximumLimit,
+        });
+
+        const nextItem: ClaimLineItem = {
+            ...item,
+            claimAmount: adjusted.claimAmount,
+            notCovered: adjusted.notCovered,
+            reason: adjusted.reason,
+        };
+
+        const next = items.map((i) => (i.id === nextItem.id ? nextItem : i));
         formik.setFieldValue("items", next);
         syncItemsToRedux(next);
     };
@@ -241,15 +266,16 @@ export const useClaimLineCalculate = () => {
         description: string,
         id: number,
         standardMedicalExpenseId?: number,
-        bodyPartId?: number
+        bodyPartId?: number,
+        maximumLimit?: number
     ) => {
         setSelectedItem({
             code,
             description,
             standardMedicalExpenseId,
             bodyPartId,
+            maximumLimit,
         });
-
         setSelectedLeafId(id);
         setPendingAmount("");
         setPendingDiscount("");
@@ -276,9 +302,25 @@ export const useClaimLineCalculate = () => {
             swalError("ไม่สามารถเพิ่มรายการได้", "รายการค่ารักษานี้ถูกเพิ่มไปแล้ว");
             return;
         }
-        const amount = toAmount(pendingAmount);
-        const discount = toAmount(pendingDiscount);
-        const notCovered = toAmount(pendingNotCovered);
+        const rawAmount = toAmount(pendingAmount);
+        const rawDiscount = toAmount(pendingDiscount);
+        const rawNotCovered = toAmount(pendingNotCovered);
+        // const amount = toAmount(pendingAmount);
+        // const discount = toAmount(pendingDiscount);
+        // const notCovered = toAmount(pendingNotCovered);
+
+        const {
+            claimAmount: amount,
+            discount,
+            notCovered,
+            reason,
+        } = applyMaximumLimit({
+            claimAmount: rawAmount,
+            discount: rawDiscount,
+            notCovered: rawNotCovered,
+            reason: pendingReason,
+            maximumLimit: selectedItem.maximumLimit,
+        });
 
         let hasError = false;
         if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
@@ -317,10 +359,11 @@ export const useClaimLineCalculate = () => {
             claimAmount: amount,
             discount: discount,
             notCovered: notCovered,
-            reason: pendingReason,
-            remark: "",
+            reason: reason,
+            remark: undefined,
             disabled: false,
             bodyPartId: selectedItem.bodyPartId,
+            maximumLimit: selectedItem.maximumLimit,
         };
 
         const next = [...items, newItem];

@@ -170,6 +170,7 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured }) =
                     color="primary"
                     onClick={() => onAddInsured()}
                     startIcon={<PersonAddIcon />}
+                    
                 >
                     เพิ่มรายการ
                 </Button>

@@ -7,7 +7,14 @@ import {
     useGetCustomerDetailById,
 } from "../../../../../api/coreClaimApi";
 import { useGetBeneficiary } from "../../../../../api/coreClaimMastersApi";
-import { SchoolInfo, setBankAccounts, setBeneficiaries, setContacts, setInsured, setSchool } from "../../../store/claimPASlice";
+import {
+    SchoolInfo,
+    setBankAccounts,
+    setBeneficiaries,
+    setContacts,
+    setInsured,
+    setSchool,
+} from "../../../store/claimPASlice";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
 
 export const useClaimPA = () => {
