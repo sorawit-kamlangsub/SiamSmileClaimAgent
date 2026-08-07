@@ -8,303 +8,254 @@ import {
     IconButton,
     Paper,
     Divider,
-    Avatar,
     LinearProgress,
+    Chip,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import { GetCaseByClaimIdDtoResponse, GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import DescriptionIcon from "@mui/icons-material/Description";
+import { GetCaseByClaimIdDtoResponse } from "../../../../api/coreClaimApi.client";
 import { formatDateString } from "../../../../functionHelpers";
 import { fmt } from "./ClaimHistoryCard";
-import DescriptionIcon from "@mui/icons-material/Description";
-import StickyNote2Icon from "@mui/icons-material/StickyNote2";
+
 interface Props {
     open: boolean;
     onClose: () => void;
-    claim?: GetClaimHistoryDtoResponse;
     caseData?: GetCaseByClaimIdDtoResponse[];
     isLoading?: boolean;
 }
 
-const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, claim, caseData, isLoading }) => {
-    return (
-        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
-            <DialogTitle>
-                <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
-                    <Box display="flex" alignItems="center" gap={1}>
-                        <Avatar sx={{ width: 40, height: 40, bgcolor: "#DCEFFC" }}>
-                            <StickyNote2Icon sx={{ fontSize: 24, color: "primary.main" }} />
-                        </Avatar>
-                        <Typography fontWeight="bold" fontSize={18}>
-                            รายละเอียดเคส
-                        </Typography>
-                    </Box>
-                    <IconButton
-                        onClick={onClose}
-                        size="small"
-                        sx={{
-                            bgcolor: "error.main",
-                            color: "common.white",
-                            width: 25,
-                            height: 25,
-                            "&:hover": { bgcolor: "error.dark" },
-                        }}
-                    >
-                        <CloseIcon sx={{ fontSize: 23 }} />
-                    </IconButton>
-                </Box>
+const isTransferSuccess = (item: GetCaseByClaimIdDtoResponse) => item.paymentStatusId === 3;
 
+// ช่วยลด repeat: label เทาอ่อน + value เข้ม
+const Field: React.FC<{ label: string; value?: React.ReactNode }> = ({ label, value }) => (
+    <Box minWidth={0}>
+        <Typography fontSize={11} color="text.secondary" mb={0.4} noWrap>
+            {label}
+        </Typography>
+        <Typography fontSize={13} fontWeight={600} sx={{ wordBreak: "break-word" }}>
+            {value ?? "-"}
+        </Typography>
+    </Box>
+);
+
+const MEDICAL_TYPE_LABEL_BY_CONDITION: Record<string, string> = {
+    death: "สาเหตุการเสียชีวิต",
+    medical: "ประเภทการรักษา",
+    disability: "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ",
+};
+
+const getMedicalTypeLabel = (item: GetCaseByClaimIdDtoResponse) => {
+    const isDeath = item?.coverageTypeId === 5;
+    const isDisability = item?.coverageTypeId === 4;
+
+    return isDeath
+        ? MEDICAL_TYPE_LABEL_BY_CONDITION.death
+        : isDisability
+        ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
+        : MEDICAL_TYPE_LABEL_BY_CONDITION.medical;
+};
+
+const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoading }) => {
+    return (
+        <Dialog
+            open={open}
+            onClose={onClose}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{
+                sx: {
+                    borderRadius: { xs: 0, sm: 3 },
+                    m: { xs: 0, sm: 3 },
+                    height: { xs: "100%", sm: "auto" },
+                    maxHeight: { xs: "100%", sm: "90vh" },
+                },
+            }}
+        >
+            <DialogTitle sx={{ p: { xs: 2, sm: 3 } }}>
+                <Box
+                    display="flex"
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    justifyContent="space-between"
+                    flexWrap="wrap"
+                    gap={1.5}
+                >
+                    <Typography fontWeight={600} fontSize={{ xs: 16, sm: 18 }}>
+                        รายละเอียด ClaimCase
+                    </Typography>
+                    <Box display="flex" alignItems="center" gap={1.5}>
+                        <Chip
+                            label={`${caseData?.[0]?.totalCount ?? "-"} ClaimCase`}
+                            size="small"
+                            sx={{ bgcolor: "#d9ecfb", color: "primary.dark", fontWeight: 600 }}
+                        />
+                        <IconButton
+                            onClick={onClose}
+                            size="small"
+                            sx={{
+                                bgcolor: "error.main",
+                                color: "common.white",
+                                width: 32,
+                                height: 32,
+                                "&:hover": { bgcolor: "error.dark" },
+                            }}
+                        >
+                            <CloseIcon sx={{ fontSize: 20 }} />
+                        </IconButton>
+                    </Box>
+                </Box>
                 <Divider sx={{ mt: 1.5 }} />
             </DialogTitle>
 
-            <DialogContent>
+            <DialogContent sx={{ p: { xs: 1.5, sm: 3 } }}>
                 {isLoading ? (
-                    <LinearProgress sx={{ height: "5px" }} />
+                    <LinearProgress sx={{ height: 5 }} />
                 ) : (
-                    <>
-                        <Paper variant="outlined" sx={{ borderRadius: 3 }}>
-                            <Box>
-                                <Box
-                                    display="flex"
-                                    alignItems="center"
-                                    justifyContent="space-between"
-                                    px={2}
-                                    pt={2}
-                                    pb={1.5}
-                                >
-                                    <Box>
-                                        <Typography fontSize={16} color="text.secondary">
-                                            เลขที่เคลม
-                                        </Typography>
-                                        <Typography
-                                            fontSize={16}
-                                            fontWeight={700}
-                                            color="primary.main"
-                                            sx={{ textDecoration: "underline", cursor: "pointer" }}
-                                        >
-                                            {claim?.claimNo}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box
-                                        display="flex"
-                                        alignItems="center"
-                                        gap={0.75}
-                                        sx={{
-                                            border: "1px solid",
-                                            borderColor: "divider",
-                                            px: 1.5,
-                                            py: 0.5,
-                                            borderRadius: 5,
-                                        }}
-                                    >
-                                        <CheckCircleIcon sx={{ fontSize: 18, color: "text.secondary" }} />
-                                        <Typography fontSize={14} fontWeight={700} color="text.secondary">
-                                            เคลมปกติ
-                                        </Typography>
-                                    </Box>
-                                </Box>
-
-                                <Box
-                                    display="flex"
-                                    flexWrap="wrap"
-                                    justifyContent="space-between"
-                                    alignItems="flex-start"
-                                    columnGap={3}
-                                    rowGap={1.5}
-                                    px={2}
-                                    pb={2}
-                                >
-                                    <Box>
-                                        <Typography fontSize={16} color="text.secondary">
-                                            วันที่เกิดเหตุ
-                                        </Typography>
-                                        <Typography fontSize={16} fontWeight={600}>
-                                            {claim?.incidentDate
-                                                ? formatDateString(claim?.incidentDate.toString(), "DD/MM/BBBB")
-                                                : "-"}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box sx={{ flex: 1, minWidth: 160 }}>
-                                        <Typography fontSize={16} color="text.secondary">
-                                            อาการสำคัญ
-                                        </Typography>
-                                        <Typography fontSize={16} fontWeight={600}>
-                                            {claim?.lastestChiefComplaint || "-"}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box textAlign="right">
-                                        <Typography fontSize={16} color="text.secondary">
-                                            ยอดเบิกรวม
-                                        </Typography>
-                                        <Typography fontSize={16} fontWeight={700} color="primary.main">
-                                            {fmt(claim?.totalCaseAmount ?? 0)}
-                                        </Typography>
-                                    </Box>
-
-                                    <Box textAlign="right">
-                                        <Typography fontSize={16} color="text.secondary">
-                                            ยอดจ่ายรวม
-                                        </Typography>
-                                        <Typography fontSize={16} fontWeight={700} color="success.main">
-                                            {fmt(claim?.paidAmount ?? 0)}
-                                        </Typography>
-                                    </Box>
-                                </Box>
-                            </Box>
-                        </Paper>
-
-                        <Divider sx={{ my: 3 }} />
-                        {caseData?.map((item, index) => (
-                            <Paper
-                                key={index}
-                                variant="outlined"
-                                sx={{
-                                    borderRadius: 4,
-                                    p: 2,
-                                    mb: 2,
-                                    display: "flex",
-                                    flexDirection: { xs: "column", md: "row" },
-                                    alignItems: { xs: "stretch", md: "center" },
-                                    justifyContent: "space-between",
-                                    gap: 2,
-                                }}
-                            >
-                                {/* ซ้าย: ไอคอน + caseNo + badge */}
-                                <Box
-                                    display="flex"
-                                    alignItems="center"
-                                    gap={2}
-                                    sx={{ minWidth: { xs: "auto", md: 220 }, flexShrink: 0 }}
-                                >
-                                    <Box
-                                        sx={{
-                                            backgroundColor: "#e8f4fd",
-                                            borderRadius: 3,
-                                            width: 48,
-                                            height: 48,
-                                            flexShrink: 0,
-                                            display: "flex",
-                                            alignItems: "center",
-                                            justifyContent: "center",
-                                        }}
-                                    >
-                                        <DescriptionIcon sx={{ color: "#10609d", fontSize: 24 }} />
-                                    </Box>
-
-                                    <Typography
-                                        fontSize={16}
-                                        fontWeight={600}
-                                        color="#10609d"
-                                        sx={{ cursor: "pointer" }}
-                                    >
-                                        {item?.caseNo}
-                                    </Typography>
-
-                                    {index === 0 && (
-                                        <Box
-                                            sx={{
-                                                border: "1px solid",
-                                                borderColor: "divider",
-                                                px: 1.5,
-                                                py: 0.5,
-                                                borderRadius: 4,
-                                                backgroundColor: "#f8f9fa",
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            <Typography fontSize={13} fontWeight={500} color="text.secondary" noWrap>
-                                                เคสแรก
-                                            </Typography>
-                                        </Box>
-                                    )}
-                                </Box>
-
-                                {/* ขวา: กล่องข้อมูล 4 กล่อง เป็น grid ที่ปรับจำนวนคอลัมน์ตามจอ */}
+                    caseData?.map((item, index) => {
+                        const transferred = isTransferSuccess(item);
+                        const medicalTypeLabel = getMedicalTypeLabel(item);
+                        return (
+                            <Paper key={index} variant="outlined" sx={{ borderRadius: 3, mb: 2, overflow: "hidden" }}>
+                                {/* Header แถบสีอ่อน */}
                                 <Box
                                     sx={{
-                                        display: "grid",
-                                        gridTemplateColumns: {
-                                            xs: "1fr 1fr",
-                                            sm: "repeat(4, 1fr)",
-                                        },
+                                        bgcolor: "#f8f9fa",
+                                        px: { xs: 2, sm: 2.5 },
+                                        py: 1.5,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "space-between",
                                         gap: 1.5,
-                                        width: "100%",
+                                        flexWrap: "wrap",
                                     }}
                                 >
-                                    <Box
-                                        sx={{
-                                            border: "1px solid #f0f0f0",
-                                            borderRadius: 3,
-                                            p: 1.5,
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                            วันที่เข้ารักษา
-                                        </Typography>
-                                        <Typography fontSize={15} fontWeight={600} color="text.primary">
-                                            {item?.occurrenceDate
-                                                ? formatDateString(item?.occurrenceDate?.toString(), "DD/MM/BBBB")
-                                                : "18/02/2569"}
-                                        </Typography>
+                                    <Box display="flex" alignItems="center" gap={1.25} minWidth={0}>
+                                        <DescriptionIcon sx={{ color: "primary.main", fontSize: 20 }} />
+                                        <Box minWidth={0}>
+                                            <Typography fontSize={11} color="text.secondary" noWrap>
+                                                ClaimCaseNo
+                                            </Typography>
+                                            <Typography fontSize={14} fontWeight={600} color="primary.main" noWrap>
+                                                {item?.caseNo}
+                                            </Typography>
+                                        </Box>
                                     </Box>
 
+                                    <Chip
+                                        size="small"
+                                        icon={
+                                            transferred ? (
+                                                <CheckCircleIcon sx={{ fontSize: 14, color: "#2e7d32 !important" }} />
+                                            ) : (
+                                                <AccessTimeIcon sx={{ fontSize: 14, color: "#ed6c02 !important" }} />
+                                            )
+                                        }
+                                        label={item?.paymentStatusName}
+                                        sx={{
+                                            bgcolor: transferred ? "#e6f4ea" : "#fdf1e6",
+                                            color: transferred ? "#2e7d32" : "#ed6c02",
+                                            fontWeight: 600,
+                                            borderRadius: "999px",
+                                        }}
+                                    />
+                                </Box>
+
+                                {/* เนื้อหา */}
+                                <Box sx={{ px: { xs: 2, sm: 2.5 }, py: 2 }}>
+                                    {/* แถวข้อมูลหลัก: วันที่ / เหตุ / ความคุ้มครอง / ประเภทรักษา */}
                                     <Box
                                         sx={{
-                                            border: "1px solid #f0f0f0",
-                                            borderRadius: 3,
-                                            p: 1.5,
-                                            gridColumn: { xs: "span 2", sm: "span 1" },
+                                            display: "grid",
+                                            gridTemplateColumns: {
+                                                xs: "repeat(2, 1fr)",
+                                                sm: "repeat(4, 1fr)",
+                                            },
+                                            gap: 2,
+                                            mb: 2,
                                         }}
                                     >
-                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                            อาการสำคัญ
-                                        </Typography>
-                                        <Typography fontSize={15} fontWeight={600} color="text.primary" noWrap>
-                                            {item?.lastestChiefComplaint}
-                                        </Typography>
+                                        <Field
+                                            label="วันที่เข้ารักษา"
+                                            value={
+                                                item?.occurrenceDate
+                                                    ? formatDateString(item.occurrenceDate.toString(), "DD/MM/BBBB")
+                                                    : "-"
+                                            }
+                                        />
+                                        <Field label="เหตุของการเคลม" value={item?.incidentTypeName} />
+                                        <Field label="ประเภทความคุ้มครอง" value={item?.coverageTypeName} />
+                                        <Field label={medicalTypeLabel} value={item?.medicalTypeCode} />
                                     </Box>
 
-                                    <Box
-                                        sx={{
-                                            backgroundColor: "#f0f6ff",
-                                            border: "1px solid #e1eeff",
-                                            borderRadius: 3,
-                                            p: 1.5,
-                                            textAlign: "center",
-                                        }}
-                                    >
-                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                            ยอดเบิก
-                                        </Typography>
-                                        <Typography fontSize={16} fontWeight={700} color="#10609d">
-                                            {fmt(item?.totalCaseAmount ?? 0)}
-                                        </Typography>
-                                    </Box>
+                                    <Divider sx={{ mb: 2 }} />
 
+                                    {/* แถวล่าง: อาการ+หมายเหตุ / ยอดเบิก-ยอดจ่าย */}
                                     <Box
                                         sx={{
-                                            backgroundColor: "#f4fbf7",
-                                            border: "1px solid #e6f7ed",
-                                            borderRadius: 3,
-                                            p: 1.5,
-                                            textAlign: "center",
+                                            display: "grid",
+                                            gridTemplateColumns: { xs: "1fr", md: "1fr auto" },
+                                            gap: 2,
+                                            alignItems: "end",
                                         }}
                                     >
-                                        <Typography fontSize={13} color="text.secondary" mb={0.5}>
-                                            ยอดจ่าย
-                                        </Typography>
-                                        <Typography fontSize={16} fontWeight={700} color="#2e7d32">
-                                            {fmt(item?.casePaidAmount ?? 0)}
-                                        </Typography>
+                                        <Box
+                                            sx={{
+                                                display: "grid",
+                                                gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                                                gap: 2,
+                                            }}
+                                        >
+                                            <Field label="อาการสำคัญ" value={item?.caseChiefComlaint} />
+                                            <Field label="หมายเหตุ" value={item?.chiefComplaintCustom} />
+                                        </Box>
+
+                                        <Box
+                                            sx={{
+                                                display: "grid",
+                                                gridTemplateColumns: "1fr 1fr",
+                                                gap: 1,
+                                                width: { xs: "100%", md: 260 },
+                                            }}
+                                        >
+                                            <Box
+                                                sx={{
+                                                    bgcolor: "#e6f1fb",
+                                                    borderRadius: 2,
+                                                    px: 2,
+                                                    py: 1,
+                                                    textAlign: "center",
+                                                }}
+                                            >
+                                                <Typography fontSize={11} color="#185fa5">
+                                                    ยอดเบิก
+                                                </Typography>
+                                                <Typography fontSize={15} fontWeight={600} color="#185fa5">
+                                                    {fmt(item?.totalCaseAmount ?? 0)}
+                                                </Typography>
+                                            </Box>
+                                            <Box
+                                                sx={{
+                                                    bgcolor: "#eaf3de",
+                                                    borderRadius: 2,
+                                                    px: 2,
+                                                    py: 1,
+                                                    textAlign: "center",
+                                                }}
+                                            >
+                                                <Typography fontSize={11} color="#3b6d11">
+                                                    ยอดจ่าย
+                                                </Typography>
+                                                <Typography fontSize={15} fontWeight={600} color="#3b6d11">
+                                                    {fmt(item?.casePaidAmount ?? 0)}
+                                                </Typography>
+                                            </Box>
+                                        </Box>
                                     </Box>
                                 </Box>
                             </Paper>
-                        ))}
-                    </>
+                        );
+                    })
                 )}
             </DialogContent>
         </Dialog>

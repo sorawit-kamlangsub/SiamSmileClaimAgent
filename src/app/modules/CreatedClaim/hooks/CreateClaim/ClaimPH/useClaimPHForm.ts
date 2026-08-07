@@ -7,6 +7,7 @@ import {
     ClaimFormValues,
     claimPHSelector,
     DeathPlaceType,
+    setCaseItems,
     setClaimForm,
     setEnabled,
     SymptomType,
@@ -18,8 +19,9 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/Create
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
-import { amountNumber } from "../organLoss.types";
+import { amountNumber, FingerKey } from "../organLoss.types";
 import { CoverageType, MedicalType } from "../../../../../functionHelpers";
+import { CaseItemCreateRequest } from "../../../../../api/coreClaimApi.client";
 interface Options {
     onNext: () => void;
 }
@@ -112,6 +114,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             const isDeath = values.coverageTypeId === CoverageType.Death;
             const isMedical =
                 values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+            const isManualIPD =
+                values.coverageTypeId === CoverageType.Medical &&
+                (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
             //เช็คจำนวนเอกสาร
             const hasError = docData.some((docById) => {
                 if (docById.documentId && documentDetailById[docById.documentId] && (isDeath || isDisability)) {
@@ -129,6 +134,109 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 setSubmitting(false);
                 return;
             }
+
+            const items = customerBenefit?.data ?? [];
+            let caseItems: CaseItemCreateRequest[] = [];
+
+            if (isDisability) {
+                const benefitItem = customerBenefit?.data?.[0];
+
+                for (const organ of organLossItems) {
+                    if (organ.fingers) {
+                        const sides: ("left" | "right")[] = ["left", "right"];
+                        let totalAmount = 0;
+                        let firstStandardMedicalExpenseId: number | undefined;
+
+                        for (const side of sides) {
+                            for (const fingerKey of Object.keys(organ.fingers[side]) as FingerKey[]) {
+                                const finger = organ.fingers[side][fingerKey];
+                                if (!finger.selected || !finger.bodyPartId) continue;
+
+                                totalAmount += amountNumber(finger.amount);
+                                if (firstStandardMedicalExpenseId === undefined) {
+                                    firstStandardMedicalExpenseId = finger.standardMedicalExpenseId;
+                                }
+                            }
+                        }
+
+                        if (firstStandardMedicalExpenseId !== undefined) {
+                            caseItems.push({
+                                tempCaseItemId: undefined,
+                                tempCaseId: undefined,
+                                inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
+                                standardMedicalExpenseId: firstStandardMedicalExpenseId ?? 0,
+                                quantity: benefitItem?.maxQuantity ?? 1,
+                                perUnit: benefitItem?.pricePerUnit ?? 0,
+                                originalAmount: totalAmount,
+                                discountAmount: 0,
+                                netCaseAmount: organ.totalAmount,
+                                medicalTypeId: benefitItem?.medicalTypeId,
+                                nonCoveredAmount: amountNumber(organ.uncoveredAmount),
+                                nonCoveredReasonId: organ.uncoveredReason ?? 0,
+                            });
+                        }
+                    } else if (organ.bodyPartId) {
+                        caseItems.push({
+                            tempCaseItemId: undefined,
+                            tempCaseId: undefined,
+                            inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
+                            standardMedicalExpenseId: organ.standardMedicalExpenseId ?? 0,
+                            quantity: benefitItem?.maxQuantity ?? 1,
+                            perUnit: benefitItem?.pricePerUnit ?? 0,
+                            originalAmount: amountNumber(organ.amount),
+                            discountAmount: 0,
+                            netCaseAmount: organ.totalAmount,
+                            medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
+                            nonCoveredAmount: amountNumber(organ.uncoveredAmount),
+                            nonCoveredReasonId: organ.uncoveredReason ?? 0,
+                        });
+                    }
+                }
+            } else if (isManualIPD) {
+                caseItems = items
+                    .filter((item) => item.benefitId != null)
+                    .map((item) => {
+                        const originalAmount = Number(values.benefitAmounts[item.benefitId!] ?? 0);
+                        return {
+                            tempCaseItemId: undefined,
+                            tempCaseId: undefined,
+                            inputToStandardMappingId: item.inputToStandardMappingId ?? undefined,
+                            standardMedicalExpenseId: item.standardMedicalExpenseId ?? undefined,
+                            quantity: item.maxQuantity ?? undefined,
+                            perUnit: item.pricePerUnit ?? undefined,
+                            originalAmount: originalAmount,
+                            discountAmount: undefined,
+                            netCaseAmount: undefined,
+                            medicalTypeId: item.medicalTypeId,
+                            nonCoveredAmount: undefined,
+                            nonCoveredReasonId: undefined,
+                        };
+                    })
+                    .filter((d) => d.originalAmount > 0);
+            } else {
+                const matched = items[items.length - 1];
+                if (matched) {
+                    caseItems = [
+                        {
+                            tempCaseItemId: undefined,
+                            tempCaseId: undefined,
+                            inputToStandardMappingId: matched.inputToStandardMappingId ?? undefined,
+                            standardMedicalExpenseId: matched.standardMedicalExpenseId ?? undefined,
+                            quantity: matched.maxQuantity ?? undefined,
+                            perUnit: matched.pricePerUnit ?? undefined,
+                            originalAmount: values.transferAmount ?? undefined,
+                            discountAmount: undefined,
+                            netCaseAmount: undefined,
+                            medicalTypeId: matched.medicalTypeId ?? undefined,
+                            nonCoveredAmount: undefined,
+                            nonCoveredReasonId: undefined,
+                        },
+                    ];
+                }
+            }
+            dispatch(setCaseItems(caseItems));
+            console.log("caseItems", caseItems);
+
             dispatch(
                 setClaimForm({
                     ...values,
@@ -206,6 +314,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const FORMAT_TYPE_MAP: Record<string, number> = {
         "2-1": 7,
         "2-2": 8,
+        "2-6": 12,
         "3-2": 9,
     };
     const formatType = FORMAT_TYPE_MAP[`${formik.values.coverageTypeId}-${formik.values.medicalTypeId}`] ?? undefined;
@@ -272,13 +381,32 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             return;
         }
         if (!formik.values.coverageTypeId) return;
+
+        // เช็คว่า combo นี้ต้อง auto-select อะไรไหม
+        const isMedicalAuto =
+            formik.values.coverageTypeId === 3 &&
+            (formik.values.incidentTypeId === 2 || formik.values.incidentTypeId === 3);
+        const isCauseAuto = formik.values.coverageTypeId === 5 && formik.values.incidentTypeId === 2;
+
+        const autoMedical = isMedicalAuto
+            ? incidentTypeMapping?.data?.find(
+                  (i) =>
+                      i.coverageTypeId === 3 &&
+                      (formik.values.incidentTypeId === 2 || formik.values.incidentTypeId === 3)
+              )
+            : undefined;
+        const autoCause = isCauseAuto
+            ? incidentTypeMapping?.data?.find((i) => i.coverageTypeId === 5 && i.incidentTypeId === 2)
+            : undefined;
+
+        // ➕ reset + auto-select ในรอบเดียว ไม่แยกกัน ไม่มี race
         formik.setValues(
             {
                 ...formik.values,
-                medicalTypeId: undefined,
-                medicalTypeName: undefined,
-                causeOfIncidentId: undefined,
-                causeOfIncidentName: undefined,
+                medicalTypeId: autoMedical?.medicalTypeId ?? undefined,
+                medicalTypeName: autoMedical?.medicalTypeCode ?? undefined,
+                causeOfIncidentId: autoCause?.causeOfIncidentId ?? undefined,
+                causeOfIncidentName: autoCause?.causeOfIncidentName ?? undefined,
                 incidentDate: dayjs(),
                 admissionDate: dayjs(),
                 dischargeDate: dayjs(),
@@ -290,12 +418,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 deathPlaceType: 1,
                 hospitalId: undefined,
                 hospitalName: undefined,
-                diagnoses: [
-                    {
-                        icd10Id: undefined,
-                        icd10Detail: undefined,
-                    },
-                ],
+                diagnoses: [{ icd10Id: undefined, icd10Detail: undefined }],
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
@@ -304,7 +427,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             false
         );
 
-        // ถ้า coverageType นี้ไม่ต้องบังคับเอกสารเลย ให้ valid ทันที
         if (!ocr.shouldShowOcrDocumentScan(formik.values.coverageTypeId)) {
             ocr.setIsOcrDocsValid(true);
         }
@@ -314,7 +436,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         ) {
             dispatch(setEnabled(true));
         }
-    }, [formik.values.coverageTypeId]);
+    }, [formik.values.coverageTypeId, formik.values.incidentTypeId, incidentTypeMapping]);
 
     const totalOrganLossAmount = useMemo(
         () => organLossItems.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0),

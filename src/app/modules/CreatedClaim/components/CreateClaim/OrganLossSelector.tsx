@@ -247,6 +247,7 @@ interface ModalState {
     fingers: OrganFingerState | null;
     rule: OrganRuleResult | null;
     fingerRules: Record<string, OrganRuleResult | null>;
+    standardMedicalExpenseId: number | undefined;
 }
 
 export interface OrganLossSelectorProps {
@@ -311,6 +312,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             fingers: choice.isFinger ? createFingerState(key, existing?.fingers) : null,
             rule: null,
             fingerRules: {},
+            standardMedicalExpenseId: existing?.standardMedicalExpenseId,
         });
     };
 
@@ -458,6 +460,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
         } else if (isCombo) {
             const comboParts = ORGAN_COMBO_PARTS[modal.key] || [];
             item.bodyPartId = modal.resolvedComboBodyPartId;
+            item.standardMedicalExpenseId = modal.standardMedicalExpenseId;
             item.amount = modal.amount;
             item.side = `${modal.comboPart1Name} + ${modal.comboPart2Name}`;
             const comboSummary = [
@@ -468,6 +471,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
         } else {
             item.bodyPartId = modal.choice.hasSide ? modal.side : undefined;
             item.side = modal.choice.hasSide ? modal.sideName : "";
+            item.standardMedicalExpenseId = modal.standardMedicalExpenseId;
             item.amount = modal.amount;
             const exgratiaNote =
                 modal.key === "exgratia" && modal.exgratiaDeductSource ? `หักจาก: ${modal.exgratiaDeductSource}` : "";
@@ -928,6 +932,9 @@ const SimpleModalBody: React.FC<{
         patchModal({ resolvedComboBodyPartId: resolved?.bodyPartId });
     }, [isCombo, modal.comboPart1Id, modal.comboPart2Id]);
 
+    useEffect(() => {
+        patchModal({ standardMedicalExpenseId });
+    }, [standardMedicalExpenseId]);
     return (
         <Box>
             {isCombo && (
@@ -1120,7 +1127,13 @@ const FingerCell: React.FC<{
     setFingerField: (
         side: "left" | "right",
         fingerKey: FingerKey,
-        patch: Partial<{ selected: boolean; joints: number; amount: string; bodyPartId?: number }>
+        patch: Partial<{
+            selected: boolean;
+            joints: number;
+            amount: string;
+            bodyPartId?: number;
+            standardMedicalExpenseId?: number;
+        }>
     ) => void;
     findFingerBodyPart: (subPartId: number, sideId: number, jointCount: number) => FingerBodyPartOption | undefined;
     isFingerOptionsLoading: boolean;
@@ -1157,9 +1170,12 @@ const FingerCell: React.FC<{
 
     useEffect(() => {
         if (data.selected && matched) {
-            setFingerField(side, fingerKey, { bodyPartId: matched.bodyPartId });
+            setFingerField(side, fingerKey, {
+                bodyPartId: matched.bodyPartId,
+                standardMedicalExpenseId: matched.standardMedicalExpenseId,
+            });
         }
-    }, [data.selected, matched?.bodyPartId]);
+    }, [data.selected, matched?.bodyPartId, matched?.standardMedicalExpenseId]);
 
     useEffect(() => {
         if (data.selected && rule) {

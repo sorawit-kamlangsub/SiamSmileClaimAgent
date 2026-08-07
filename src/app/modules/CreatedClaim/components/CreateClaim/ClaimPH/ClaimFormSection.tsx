@@ -33,7 +33,6 @@ import { claimPHSelector, DeathPlaceType, setOrganLossItems, SymptomType } from 
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import DocumentScanTable from "../DocumentScanTable";
-// import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
 import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
@@ -118,8 +117,6 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         : isDisability
         ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
         : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
-
-    // const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
 
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);

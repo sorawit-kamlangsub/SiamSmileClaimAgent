@@ -3,6 +3,7 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
     CaseDocumentDetailCreateRequest,
+    CaseItemCreateRequest,
     GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
@@ -133,6 +134,7 @@ interface ClaimPHState {
     isEnabled: boolean;
     organLossItems: OrganLossItem[];
     beneficiaries: BeneficiaryForm[];
+    caseItems: CaseItemCreateRequest[];
 }
 const defaultForm: ClaimFormValues = {
     documentRecipientTypeId: 2,
@@ -194,6 +196,7 @@ const initialState: ClaimPHState = {
     documentDetailById: {},
     organLossItems: [],
     beneficiaries: [],
+    caseItems: [],
 };
 
 const claimPHSlice = createSlice({
@@ -335,6 +338,10 @@ const claimPHSlice = createSlice({
             });
         },
 
+        setCaseItems(state, action: PayloadAction<CaseItemCreateRequest[]>) {
+            state.caseItems = action.payload;
+        },
+
         resetState: () => initialState,
     },
 });
@@ -361,6 +368,7 @@ export const {
     updateBeneficiary,
     addBeneficiary,
     removeBeneficiary,
+    setCaseItems,
     resetState,
 } = claimPHSlice.actions;
 

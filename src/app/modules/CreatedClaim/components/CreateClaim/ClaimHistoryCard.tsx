@@ -291,7 +291,6 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
             <ViewClaimDetailModal
                 open={openDetailCase}
                 onClose={() => setOpenDetailCase(false)}
-                claim={selectedClaim}
                 caseData={caseData?.data ?? []}
                 isLoading={caseDataisLoading}
             />
