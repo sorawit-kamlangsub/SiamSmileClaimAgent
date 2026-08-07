@@ -13,6 +13,7 @@ import {
     resetState,
     selectBankAccount,
     selectContact,
+    removeTmpClaim,
 } from "../../../store/claimPASlice";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
@@ -31,6 +32,7 @@ import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSum
 import { useBeneficiaryPA } from "../../../hooks/CreateClaim/ClaimPA/useBeneficiaryPA";
 import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/BeneficiarySectionPA";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
+import { CoverageType } from "../../../../../functionHelpers";
 
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
@@ -57,6 +59,18 @@ const ClaimPASummaryPage: React.FC = () => {
         dispatch(setEditingItemId(item.id));
         navigate(-1);
     };
+
+    const handleDeleteItem = (id: string) => {
+        const item = claimItems.find((c) => c.id === id);
+        dispatch(removeClaimItem(id));
+        if (item?.tempClaimId) dispatch(removeTmpClaim(item.tempClaimId));
+    };
+
+    const hasSingleOnlyCoverage = claimItems.some(
+        (item) =>
+            item.formValues.coverageTypeId === CoverageType.Death ||
+            item.formValues.coverageTypeId === CoverageType.Disability
+    );
 
     const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
@@ -162,8 +176,9 @@ const ClaimPASummaryPage: React.FC = () => {
                             <ClaimSummaryPAInfo
                                 data={claimItems}
                                 onEdit={handleEditItem}
-                                onDelete={(id) => dispatch(removeClaimItem(id))}
+                                onDelete={handleDeleteItem}
                                 onAddInsured={() => setOpenAddInsured(true)}
+                                disableAddInsured={hasSingleOnlyCoverage}
                             />
                         </CustomPaper>
                     </Grid>

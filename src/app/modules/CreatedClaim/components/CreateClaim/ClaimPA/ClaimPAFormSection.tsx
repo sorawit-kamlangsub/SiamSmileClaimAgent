@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Backdrop,
     Box,
@@ -85,7 +85,19 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const { values, setFieldValue } = formik;
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const { organLossItems, school } = useAppSelector(claimPASelector);
+    const { organLossItems, school, claimItems, editingItemId } = useAppSelector(claimPASelector);
+
+    const otherInsuredCount = editingItemId
+        ? claimItems.filter((c) => c.id !== editingItemId).length
+        : claimItems.length;
+    const isAddingAdditionalInsured = otherInsuredCount > 0;
+
+    const coverageTypeOptions = isAddingAdditionalInsured
+        ? (coverageType ?? []).filter(
+              (opt: any) => opt.coverageTypeId !== CoverageType.Death && opt.coverageTypeId !== CoverageType.Disability
+          )
+        : coverageType;
+
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDisability = values.coverageTypeId === CoverageType.Disability;
@@ -138,6 +150,16 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         formik.submitForm();
     };
 
+    useEffect(() => {
+        if (
+            isAddingAdditionalInsured &&
+            (values.coverageTypeId === CoverageType.Death || values.coverageTypeId === CoverageType.Disability)
+        ) {
+            setFieldValue("coverageTypeId", undefined);
+            setFieldValue("coverageTypeName", undefined);
+        }
+    }, [isAddingAdditionalInsured]);
+
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
@@ -156,13 +178,23 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     *
                                 </Typography>
                             </Typography>
-                            <ClaimTypeSelector
-                                formik={formik}
-                                options={incidentType}
-                                idFieldName="incidentTypeId"
-                                nameFieldName="incidentTypeName"
-                                isLoading={incidentTypeLoading}
-                            />
+                            {values.incidentTypeId ? (
+                                <ClaimTypeSelector
+                                    formik={formik}
+                                    options={coverageTypeOptions}
+                                    idFieldName="coverageTypeId"
+                                    nameFieldName="coverageTypeName"
+                                    isLoading={incidentTypeMappingLoading}
+                                />
+                            ) : (
+                                <ClaimTypeSelector
+                                    formik={formik}
+                                    options={incidentType}
+                                    idFieldName="incidentTypeId"
+                                    nameFieldName="incidentTypeName"
+                                    isLoading={incidentTypeLoading}
+                                />
+                            )}
                         </Grid>
 
                         {/* ประเภทความคุ้มครอง */}

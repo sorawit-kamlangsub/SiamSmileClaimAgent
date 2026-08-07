@@ -32,6 +32,7 @@ import dayjs from "dayjs";
 import { PaginationSortableDto } from "../../../../_common/types";
 import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../../../api/coreClaimApi";
 import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
+import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 
 interface InsuredDetailItem {
     label: string;
@@ -60,8 +61,6 @@ interface Props {
     currentItemCount: number; // เพื่อคำนวณ seq
 }
 
-// TODO: appStatusId ยังไม่รู้ค่าจริงของแต่ละสถานะ ตอนนี้เดาว่า 1 = คุ้มครอง นอกนั้นถือว่าไม่คุ้มครอง
-// รบกวนยืนยัน mapping จริงแล้วแก้ตรงนี้
 const mapCoverageStatus = (appStatusId?: number) => (appStatusId === 1 ? "คุ้มครอง" : "ไม่คุ้มครอง");
 
 const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): SearchResult => {
@@ -392,29 +391,31 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
 
                 {/* ── ผลการค้นหา + ข้อมูลเพิ่มเติมของผู้ที่เลือก (การ์ดเดียวกัน) ── */}
                 {hasSearched && (
-                    <Box sx={cardSx} mb={2}>
-                        <StandardDataTable
-                            name="InsuredSearchTable"
-                            title=""
-                            data={searchResults}
-                            isLoading={isSearchLoading}
-                            columns={searchColumns}
-                            color="primary"
-                            columnHeaderAlign="center"
-                            displayToolbar={false}
-                            paginated={{
-                                totalAmountRecords: searchTotalCount,
-                                currentPage: searchPaginated.page,
-                                recordsPerPage: searchPaginated.recordsPerPage ?? 10,
-                            }}
-                            setPaginated={setSearchPaginated}
-                            rowsPerPage={[10]}
-                            options={{
-                                ...defaultOptionStandardDataTable,
-                                textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
-                            }}
-                        />
-                    </Box>
+                    <LinearLoading isLoading={isSearchLoading}>
+                        <Box sx={cardSx} mb={2}>
+                            <StandardDataTable
+                                name="InsuredSearchTable"
+                                title=""
+                                data={searchResults}
+                                isLoading={isSearchLoading}
+                                columns={searchColumns}
+                                color="primary"
+                                columnHeaderAlign="center"
+                                displayToolbar={false}
+                                paginated={{
+                                    totalAmountRecords: searchTotalCount,
+                                    currentPage: searchPaginated.page,
+                                    recordsPerPage: searchPaginated.recordsPerPage ?? 5,
+                                }}
+                                setPaginated={setSearchPaginated}
+                                rowsPerPage={[10]}
+                                options={{
+                                    ...defaultOptionStandardDataTable,
+                                    textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
+                                }}
+                            />
+                        </Box>
+                    </LinearLoading>
                 )}
 
                 {/* ── ข้อมูลความคุ้มครองของผู้เอาประกันที่เลือก ── */}
@@ -482,34 +483,38 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                         </Box>
 
                         {!isClaimHistoryLoading && claimHistoryTotalCount === 0 ? (
-                            <Box py={4} textAlign="center" color="text.secondary">
-                                <Inventory2OutlinedIcon sx={{ fontSize: 32, color: "#c7d3e0" }} />
-                                <Typography fontSize={14} color="text.secondary" mt={0.5}>
-                                    ไม่พบประวัติการเคลมของผู้เอาประกันรายนี้
-                                </Typography>
-                            </Box>
+                            <LinearLoading isLoading={isClaimHistoryLoading}>
+                                <Box py={4} textAlign="center" color="text.secondary">
+                                    <Inventory2OutlinedIcon sx={{ fontSize: 32, color: "#c7d3e0" }} />
+                                    <Typography fontSize={14} color="text.secondary" mt={0.5}>
+                                        ไม่พบประวัติการเคลมของผู้เอาประกันรายนี้
+                                    </Typography>
+                                </Box>
+                            </LinearLoading>
                         ) : (
-                            <StandardDataTable
-                                name="InsuredClaimHistoryTable"
-                                title=""
-                                data={claimHistoryItems}
-                                isLoading={isClaimHistoryLoading}
-                                columns={historyColumns}
-                                color="primary"
-                                columnHeaderAlign="center"
-                                displayToolbar={false}
-                                paginated={{
-                                    totalAmountRecords: claimHistoryTotalCount,
-                                    currentPage: historyPaginated.page,
-                                    recordsPerPage: historyPaginated.recordsPerPage ?? 10,
-                                }}
-                                setPaginated={setHistoryPaginated}
-                                rowsPerPage={[10, 20, 50]}
-                                options={{
-                                    ...defaultOptionStandardDataTable,
-                                    textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
-                                }}
-                            />
+                            <LinearLoading isLoading={isClaimHistoryLoading}>
+                                <StandardDataTable
+                                    name="InsuredClaimHistoryTable"
+                                    title=""
+                                    data={claimHistoryItems}
+                                    isLoading={isClaimHistoryLoading}
+                                    columns={historyColumns}
+                                    color="primary"
+                                    columnHeaderAlign="center"
+                                    displayToolbar={false}
+                                    paginated={{
+                                        totalAmountRecords: claimHistoryTotalCount,
+                                        currentPage: historyPaginated.page,
+                                        recordsPerPage: historyPaginated.recordsPerPage ?? 5,
+                                    }}
+                                    setPaginated={setHistoryPaginated}
+                                    rowsPerPage={[10, 20, 50]}
+                                    options={{
+                                        ...defaultOptionStandardDataTable,
+                                        textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
+                                    }}
+                                />
+                            </LinearLoading>
                         )}
                     </Box>
                 )}

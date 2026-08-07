@@ -13,9 +13,10 @@ interface Props {
     onEdit: (item: ClaimInsuredItem) => void;
     onDelete: (id: string) => void;
     onAddInsured: () => void;
+    disableAddInsured?: boolean;
 }
 
-const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured }) => {
+const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, disableAddInsured }) => {
     return (
         <>
             <HeadingWithColor text="ข้อมูลเคลม" color="blue" />
@@ -170,7 +171,7 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured }) =
                     color="primary"
                     onClick={() => onAddInsured()}
                     startIcon={<PersonAddIcon />}
-                    
+                    disabled={disableAddInsured}
                 >
                     เพิ่มรายการ
                 </Button>

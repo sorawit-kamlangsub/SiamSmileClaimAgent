@@ -33,8 +33,6 @@ import {
     CaseDeathCreateRequest,
     CaseDisabilityCreateRequest,
     CaseDocumentCreateRequest,
-    // CaseAdjudicationCreateRequest,
-    CaseContactCreateRequest,
     CaseServicePersonCreateRequest,
     CasePayableCreateRequest,
 } from "../../../../../api/coreClaimApi.client";
@@ -211,6 +209,20 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             } else {
                 dispatch(addClaimItem(claimItem));
                 dispatch(setPendingInsured(undefined));
+            }
+
+            // ── header ของ tmpCoreClaim เซ็ตครั้งเดียว (กันทับ createClaim เดิม) ──
+            if (!tmpCoreClaim.claimSourceId) {
+                dispatch(
+                    setTmpCoreClaimHeader({
+                        claimSourceId: 2,
+                        productTypeId: 26,
+                        createdByUserId: userProfile?.userId,
+                        createdByUserCode: userProfile?.employeeCode,
+                        createdByUserName: userProfile?.fullName,
+                        createClaim: tmpCoreClaim.createClaim ?? [],
+                    })
+                );
             }
 
             // ── claim entry ──
