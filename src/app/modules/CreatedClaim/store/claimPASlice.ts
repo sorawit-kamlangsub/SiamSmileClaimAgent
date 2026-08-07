@@ -41,9 +41,6 @@ export interface ClaimInsuredItem {
     applicationId?: string;
     customerId?: number;
     productId?: number;
-
-    // ── ผูกกับ createClaim/createCase ใน tmpCoreClaim เพื่อรู้ว่าจะ update/remove ตัวไหน ──
-    // ไม่ต้องเป็น crypto-grade guid เพราะไม่ได้ใช้ตัดสินอะไรเรื่อง security แค่ใช้เป็น key จับคู่/ส่งไป API
     tempClaimId: string;
     tempCaseId: string;
     formValues: ClaimPAFormValues;
@@ -54,6 +51,8 @@ export enum DeathExtraCoverageId {
     PublicDisaster = 7, // ภัยสาธารณะ
     SchoolLiability = 8, // ความรับผิดสถานศึกษา
 }
+
+export const MAX_INSURED_PER_CLAIM = 2;
 
 export interface ClaimPAFormValues {
     // ผู้รับเอกสาร

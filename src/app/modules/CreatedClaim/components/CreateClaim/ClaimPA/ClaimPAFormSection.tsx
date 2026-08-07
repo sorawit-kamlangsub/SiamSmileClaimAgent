@@ -180,23 +180,13 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     *
                                 </Typography>
                             </Typography>
-                            {values.incidentTypeId ? (
-                                <ClaimTypeSelector
-                                    formik={formik}
-                                    options={coverageTypeOptions}
-                                    idFieldName="coverageTypeId"
-                                    nameFieldName="coverageTypeName"
-                                    isLoading={incidentTypeMappingLoading}
-                                />
-                            ) : (
-                                <ClaimTypeSelector
-                                    formik={formik}
-                                    options={incidentType}
-                                    idFieldName="incidentTypeId"
-                                    nameFieldName="incidentTypeName"
-                                    isLoading={incidentTypeLoading}
-                                />
-                            )}
+                            <ClaimTypeSelector
+                                formik={formik}
+                                options={incidentType}
+                                idFieldName="incidentTypeId"
+                                nameFieldName="incidentTypeName"
+                                isLoading={incidentTypeLoading}
+                            />
                         </Grid>
 
                         {/* ประเภทความคุ้มครอง */}
@@ -210,7 +200,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             {values.incidentTypeId ? (
                                 <ClaimTypeSelector
                                     formik={formik}
-                                    options={coverageType}
+                                    options={coverageTypeOptions}
                                     idFieldName="coverageTypeId"
                                     nameFieldName="coverageTypeName"
                                     isLoading={incidentTypeMappingLoading}

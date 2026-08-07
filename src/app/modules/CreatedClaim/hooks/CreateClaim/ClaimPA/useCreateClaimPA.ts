@@ -1,7 +1,38 @@
 import { useAppSelector } from "../../../../../../redux";
 import { useCreateCoreClaim } from "../../../../../api/coreClaimApi";
+import { CaseDisabilityCreateRequest } from "../../../../../api/coreClaimApi.client";
 import { claimPASelector } from "../../../store/claimPASlice";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
+import { FingerKey, OrganLossItem } from "../organLoss.types";
+
+export const mapOrganLossToDisabilityRequests = (organLossItems: OrganLossItem[]): CaseDisabilityCreateRequest[] => {
+    const requests: CaseDisabilityCreateRequest[] = [];
+    for (const organ of organLossItems) {
+        if (organ.fingers) {
+            const sides: ("left" | "right")[] = ["left", "right"];
+            for (const side of sides) {
+                for (const fingerKey of Object.keys(organ.fingers[side]) as FingerKey[]) {
+                    const finger = organ.fingers[side][fingerKey];
+                    if (!finger.selected || !finger.bodyPartId) continue;
+                    requests.push({
+                        bodyPartId: finger.bodyPartId,
+                        disabilityTypeId: undefined,
+                        disabilityLevel: undefined,
+                        disabilityPercent: undefined,
+                    });
+                }
+            }
+        } else if (organ.bodyPartId) {
+            requests.push({
+                bodyPartId: organ.bodyPartId,
+                disabilityTypeId: organ.bodyPartId === 67 ? 3 : organ.bodyPartId === 68 ? 2 : undefined,
+                disabilityLevel: undefined,
+                disabilityPercent: undefined,
+            });
+        }
+    }
+    return requests;
+};
 
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);

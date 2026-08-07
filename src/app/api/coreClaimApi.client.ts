@@ -3643,6 +3643,7 @@ export interface GetCaseByClaimIdDtoResponse {
     claimNo?: string | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
     lastestChiefComplaint?: string | undefined;
+    chiefComplaintCustom?: string | undefined;
     totalCaseAmount?: number | undefined;
     totalPaidAmount?: number | undefined;
     caseId?: string;
@@ -3654,8 +3655,10 @@ export interface GetCaseByClaimIdDtoResponse {
     icD10Detail?: string | undefined;
     medicalTypeCode?: string | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
-    payableStatusId?: number | undefined;
-    payableStatusName?: string | undefined;
+    paymentStatusId?: number;
+    paymentStatusName?: string | undefined;
+    coverageTypeName?: string | undefined;
+    incidentTypeName?: string | undefined;
     totalCount?: number | undefined;
 }
 

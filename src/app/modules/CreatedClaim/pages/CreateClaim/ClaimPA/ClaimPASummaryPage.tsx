@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Grid, LinearProgress, RadioGroup, Typography } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
     removeBankAccount,
@@ -14,6 +14,7 @@ import {
     selectBankAccount,
     selectContact,
     removeTmpClaim,
+    MAX_INSURED_PER_CLAIM,
 } from "../../../store/claimPASlice";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
@@ -37,7 +38,8 @@ import { CoverageType } from "../../../../../functionHelpers";
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { bankAccounts, contacts, claimItems, school, form } = useAppSelector((s) => s.claimpa);
+    const { appId, refId } = useParams();
+    const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim } = useAppSelector((s) => s.claimpa);
     const { createClaimPA, isLoading } = useCreateClaimPA();
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
@@ -47,6 +49,15 @@ const ClaimPASummaryPage: React.FC = () => {
         handleConfirm(beneficiaries);
     });
     const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
+
+    useEffect(() => {
+        const isEmptyState =
+            claimItems.length === 0 || !tmpCoreClaim.createClaim || tmpCoreClaim.createClaim.length === 0;
+
+        if (isEmptyState) {
+            navigate(`/claim/pa/${appId}/${refId}`, { replace: true });
+        }
+    }, []);
 
     const handleSelectBank = (id: string) => {
         dispatch(selectBankAccount(id));
@@ -71,6 +82,14 @@ const ClaimPASummaryPage: React.FC = () => {
             item.formValues.coverageTypeId === CoverageType.Death ||
             item.formValues.coverageTypeId === CoverageType.Disability
     );
+
+    const isMaxInsuredReached = claimItems.length >= MAX_INSURED_PER_CLAIM;
+    const disableAddInsured = hasSingleOnlyCoverage || isMaxInsuredReached;
+    const disableAddInsuredReason = hasSingleOnlyCoverage
+        ? "เคลมเสียชีวิต/ทุพพลภาพ รองรับผู้เอาประกันได้เพียงคนเดียวต่อเคลม"
+        : isMaxInsuredReached
+        ? `เคลมนี้มีผู้เอาประกันครบ ${MAX_INSURED_PER_CLAIM} คนแล้ว`
+        : "";
 
     const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
@@ -178,7 +197,8 @@ const ClaimPASummaryPage: React.FC = () => {
                                 onEdit={handleEditItem}
                                 onDelete={handleDeleteItem}
                                 onAddInsured={() => setOpenAddInsured(true)}
-                                disableAddInsured={hasSingleOnlyCoverage}
+                                disableAddInsured={disableAddInsured}
+                                disableAddInsuredReason={disableAddInsuredReason}
                             />
                         </CustomPaper>
                     </Grid>

@@ -14,9 +14,16 @@ interface Props {
     onDelete: (id: string) => void;
     onAddInsured: () => void;
     disableAddInsured?: boolean;
+    disableAddInsuredReason?: string;
 }
 
-const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, disableAddInsured }) => {
+const ClaimSummaryPAInfo: React.FC<Props> = ({
+    data,
+    onDelete,
+    onAddInsured,
+    disableAddInsured,
+    disableAddInsuredReason,
+}) => {
     return (
         <>
             <HeadingWithColor text="ข้อมูลเคลม" color="blue" />
@@ -165,16 +172,25 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, dis
                 ))}
             </Stack>
             <Grid container justifyContent="flex-end" sx={{ mt: 2 }}>
-                <Button
-                    variant="outlined"
-                    sx={{ height: 32 }}
-                    color="primary"
-                    onClick={() => onAddInsured()}
-                    startIcon={<PersonAddIcon />}
-                    disabled={disableAddInsured}
+                <Tooltip
+                    title={disableAddInsured ? disableAddInsuredReason ?? "" : ""}
+                    arrow
+                    TransitionComponent={Zoom}
+                    placement="top"
                 >
-                    เพิ่มรายการ
-                </Button>
+                    <span>
+                        <Button
+                            variant="outlined"
+                            sx={{ height: 32 }}
+                            color="primary"
+                            onClick={() => onAddInsured()}
+                            startIcon={<PersonAddIcon />}
+                            disabled={disableAddInsured}
+                        >
+                            เพิ่มรายการ
+                        </Button>
+                    </span>
+                </Tooltip>
             </Grid>
         </>
     );
