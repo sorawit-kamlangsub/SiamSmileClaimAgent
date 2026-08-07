@@ -61,6 +61,7 @@ export const useMonitorTable = () => {
             address: claimInfo.data?.address || "-",
             mobilePhoneNumber: claimInfo.data?.mobilePhoneNumber || "-",
             appStatus: claimInfo.data?.appStatus || "-",
+            appStatusId: claimInfo.data?.appStatusId,
         };
 
         dispatch(setSelectedPolicy(policy));

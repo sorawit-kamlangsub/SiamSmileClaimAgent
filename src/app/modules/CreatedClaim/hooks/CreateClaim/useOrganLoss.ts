@@ -40,9 +40,12 @@ const mapToOrganChoice = (item: GetDisabilityLossPartDtoResponse): OrganChoiceWi
         disabilityLossPartId: item.disabilityLossPartId || 0,
     };
 };
-export const useOrganLoss = () => {
+export const useOrganLoss = (coverageTypeId: number | undefined) => {
     const { data: LossPartData, isLoading: LossPartDataLoading } = useGetDisabilityLossPart();
-    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason(
+        undefined,
+        coverageTypeId
+    );
     const organChoices: OrganChoiceWithId[] = useMemo(() => {
         return (LossPartData?.data ?? []).map(mapToOrganChoice).filter((c): c is OrganChoiceWithId => c !== null);
     }, [LossPartData]);

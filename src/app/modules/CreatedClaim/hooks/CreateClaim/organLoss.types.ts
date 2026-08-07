@@ -189,6 +189,7 @@ export interface FingerJointState {
     selected: boolean;
     joints: number;
     amount: string;
+    bodyPartId?: number;
 }
 export type FingerSideState = Record<FingerKey, FingerJointState>;
 export interface OrganFingerState {

@@ -3,11 +3,11 @@ import { Box, Typography, Chip, CircularProgress } from "@mui/material";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import { numberWithCommas, setBenefitIcons } from "../../../../functionHelpers";
-import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../../api/coreClaimApi.client";
+import { GetCustomerBenefitDetailHalfDtoResponse } from "../../../../api/coreClaimApi.client";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
 
 interface Props {
-    items: GetCustomerBenefitDetailSearchDtoResponse[];
+    items: GetCustomerBenefitDetailHalfDtoResponse[];
     isLoading: boolean;
     planCode: string | undefined;
 }

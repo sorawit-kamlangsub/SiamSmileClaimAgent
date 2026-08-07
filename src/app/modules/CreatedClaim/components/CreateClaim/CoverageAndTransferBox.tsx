@@ -4,10 +4,10 @@ import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import SearchOffIcon from "@mui/icons-material/SearchOff";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import MonitorHeartIcon from "@mui/icons-material/MonitorHeart";
-import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../../api/coreClaimApi.client";
+import { GetCustomerBenefitDetailHalfDtoResponse } from "../../../../api/coreClaimApi.client";
 import { numberWithCommas, setBenefitIcons } from "../../../../functionHelpers";
 interface Props {
-    items: GetCustomerBenefitDetailSearchDtoResponse[];
+    items: GetCustomerBenefitDetailHalfDtoResponse[];
     isLoading: boolean;
     planCode: string | undefined;
     benefitAmounts: Record<number, string>;

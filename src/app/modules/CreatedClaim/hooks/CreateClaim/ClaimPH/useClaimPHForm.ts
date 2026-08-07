@@ -1,4 +1,4 @@
-import { useGetCustomerBenefitDetailSearch } from "./../../../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf, useGetCustomerBenefitDetailSearch } from "./../../../../../api/coreClaimApi";
 import { useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
 import { useFormik, FormikErrors } from "formik";
@@ -193,15 +193,33 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 ])
         ).values(),
     ];
-    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
+    // const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
+    //     insured?.policyCode,
+    //     0,
+    //     formik.values.incidentDate,
+    //     false,
+    //     formik.values.incidentTypeId,
+    //     formik.values.coverageTypeId,
+    //     formik.values.medicalTypeId,
+    //     formik.values.causeOfIncidentId
+    // );
+    const FORMAT_TYPE_MAP: Record<string, number> = {
+        "2-1": 7,
+        "2-2": 8,
+        "3-2": 9,
+    };
+    const formatType = FORMAT_TYPE_MAP[`${formik.values.coverageTypeId}-${formik.values.medicalTypeId}`] ?? undefined;
+
+    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         insured?.policyCode,
         0,
         formik.values.incidentDate,
-        false,
+        isContinuous,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
         formik.values.medicalTypeId,
-        formik.values.causeOfIncidentId
+        formik.values.causeOfIncidentId,
+        formatType
     );
 
     const isFirstRenderIncident = useRef(true);

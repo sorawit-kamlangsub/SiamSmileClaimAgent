@@ -47,6 +47,7 @@ export interface SelectedPolicyInfo {
     customerId?: number;
     mobilePhoneNumber?: string;
     appStatus?: string;
+    appStatusId?: number;
 }
 
 interface MonitorState {

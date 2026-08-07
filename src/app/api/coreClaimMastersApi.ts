@@ -233,10 +233,13 @@ export const useGetDocumentRecipientType = (documentRecipientTypeId?: number | u
     );
 };
 
-export const useGetNonCoveredReason = (nonCoveredReasonId?: number | undefined) => {
+export const useGetNonCoveredReason = (
+    nonCoveredReasonId?: number | undefined,
+    coverageTypeId?: number | undefined
+) => {
     return useQuery(
-        [getNonCoveredReasonQueryKey, nonCoveredReasonId],
-        () => coreClaimMastersClient.getNonCoveredReason(nonCoveredReasonId),
+        [getNonCoveredReasonQueryKey, nonCoveredReasonId, coverageTypeId],
+        () => coreClaimMastersClient.getNonCoveredReason(nonCoveredReasonId, coverageTypeId),
         {
             refetchOnWindowFocus: false,
         }

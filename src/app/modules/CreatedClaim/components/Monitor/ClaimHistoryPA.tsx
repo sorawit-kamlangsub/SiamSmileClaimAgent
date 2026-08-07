@@ -63,9 +63,9 @@ const ClaimHistoryPA: React.FC = () => {
                         label="สถานะ App"
                         value={selectedPolicy.appStatus}
                         color={
-                            selectedPolicy.appStatus === "ปกติ"
+                            selectedPolicy.appStatusId === 2 //ปกติ
                                 ? "#2E7D32"
-                                : selectedPolicy.appStatus === "ยกเลิก" || selectedPolicy.appStatus === "ยกเลิกก่อน DCR"
+                                : selectedPolicy.appStatusId === 4 || selectedPolicy.appStatusId === 5 //ยกเลิก,ยกเลิกก่อน DCR
                                 ? "#D32F2F"
                                 : "#F0E434"
                         }
