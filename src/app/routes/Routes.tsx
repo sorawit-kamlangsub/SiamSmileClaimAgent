@@ -13,6 +13,9 @@ import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimP
 // import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
 import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
 import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
+import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
+import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
+import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -36,6 +39,11 @@ const Routes: RouteMapType[] = [
         path: "/blank-page",
         title: "Blank Page",
         element: <BlankPage body="Blank Page" />,
+    },
+    {
+        path: "/test-sweetalert",
+        title: "test-sweetalert",
+        element: <SweetAlertTestPage />,
     },
     // ===== ตรวจสอบสิทธิ์ =====
 
@@ -126,6 +134,28 @@ const Routes: RouteMapType[] = [
         element: <BlankPage body="พิจารณาเคลม" />,
         permissions: [],
         condition: "AND",
+    },
+
+    // ===== โอนเพิ่ม =====
+    {
+        path: "/payment-monitor",
+        title: "Monitor-โอนเงิน",
+        permissions: [],
+        condition: "AND",
+        children: [
+            {
+                index: true,
+                title: "โอนเพิ่ม",
+                element: <ExtraPaymentListPage />,
+            },
+            {
+                path: "extra-payment",
+                title: "โอนเพิ่ม",
+                element: <ExtraPaymentPage />,
+                permissions: [],
+                condition: "AND",
+            },
+        ],
     },
 ];
 

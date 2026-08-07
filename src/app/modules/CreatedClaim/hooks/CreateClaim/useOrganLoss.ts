@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { GetDisabilityLossPartDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDisabilityLossPart, useGetNonCoveredReason } from "../../../../api/coreClaimMastersApi";
-import { getOrganChoice, OrganChoiceWithId } from "./organLoss.types";
+import { FingerBodyPartOption, getOrganChoice, OrganChoiceWithId, OrganRuleResult } from "./organLoss.types";
 import { useGetBodyPartByDisabilityLossPart } from "../../../../api/coreClaimMastersApi";
 import { BodyPartOption, ComboBodyPartOption, SidePickOption } from "./organLoss.types";
+import { useCalculateCaseDisability } from "../../../../api/coreClaimApi";
 
 const API_CODE_TO_ORGAN_KEY: Record<string, string> = {
     HAND: "hand",
@@ -39,9 +40,12 @@ const mapToOrganChoice = (item: GetDisabilityLossPartDtoResponse): OrganChoiceWi
         disabilityLossPartId: item.disabilityLossPartId || 0,
     };
 };
-export const useOrganLoss = () => {
+export const useOrganLoss = (coverageTypeId: number | undefined) => {
     const { data: LossPartData, isLoading: LossPartDataLoading } = useGetDisabilityLossPart();
-    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason(
+        undefined,
+        coverageTypeId
+    );
     const organChoices: OrganChoiceWithId[] = useMemo(() => {
         return (LossPartData?.data ?? []).map(mapToOrganChoice).filter((c): c is OrganChoiceWithId => c !== null);
     }, [LossPartData]);
@@ -64,10 +68,16 @@ export const useSingleBodyPartOptions = (disabilityLossPartId: number | undefine
             bodyPartName: item.bodyPartName ?? "",
             disabilitySideId: item.disabilitySideId ?? 0,
             disabilitySideName: item.disabilitySideName ?? "",
+            standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
         }));
     }, [data]);
 
-    return { options, isLoading };
+    const findByBodyPartId = (bodyPartId: number | undefined): BodyPartOption | undefined => {
+        if (bodyPartId === undefined) return undefined;
+        return options.find((o) => o.bodyPartId === bodyPartId);
+    };
+
+    return { options, isLoading, findByBodyPartId };
 };
 
 // ── กรณีที่ 2: combo (มือ+เท้า, มือ+ตา, เท้า+ตา) ──
@@ -81,6 +91,7 @@ export const useComboBodyPartOptions = (comboDisabilityLossPartId: number | unde
             disabilitySidePart1Name: item.disabilitySidePart1Name ?? "",
             disabilitySidePart2Id: item.disabilitySidePart2Id ?? 0,
             disabilitySidePart2Name: item.disabilitySidePart2Name ?? "",
+            standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
         }));
     }, [data]);
 
@@ -106,4 +117,66 @@ export const useComboBodyPartOptions = (comboDisabilityLossPartId: number | unde
     };
 
     return { part1Options, part2Options, resolveBodyPartId, findByBodyPartId, isLoading };
+};
+
+export const useCalculateDisabilityOptions = (
+    customerId: number | undefined,
+    bodyPartId: number | undefined,
+    standardMedicalExpenseId: number | undefined
+) => {
+    const enabled = !!customerId && !!bodyPartId && !!standardMedicalExpenseId;
+
+    const { data, isLoading: queryIsLoading } = useCalculateCaseDisability(
+        customerId,
+        bodyPartId,
+        standardMedicalExpenseId
+    );
+
+    const isLoading = enabled ? queryIsLoading : false;
+
+    const options: OrganRuleResult[] = useMemo(() => {
+        if (!enabled) return [];
+        const item = data?.data;
+        if (!item) return [];
+
+        return [
+            {
+                description: item.bodyPartName ?? "",
+                percent: item.benefitPercent ?? 0,
+                coveredAmount: item.maxPrice ?? 0,
+                sumUsedAmount: item.sumUsedAmount ?? 0,
+            },
+        ];
+    }, [data, enabled]);
+
+    return { options, isLoading };
+};
+
+// ── กรณีที่ 3: กลุ่มนิ้ว (นิ้วมือ/นิ้วเท้า) — 1 row ต่อ (นิ้ว + ข้าง + จำนวนข้อ) ──
+export const useFingerBodyPartOptions = (disabilityLossPartId: number | undefined) => {
+    const { data, isLoading } = useGetBodyPartByDisabilityLossPart(disabilityLossPartId);
+
+    const options: FingerBodyPartOption[] = useMemo(() => {
+        return (data?.data ?? []).map((item) => ({
+            bodyPartId: item.bodyPartId ?? 0,
+            disabilityLossSubPartId: item.disabilityLossSubPartId ?? 0,
+            disabilitySideId: item.disabilitySideId ?? 0,
+            lossJointCount: item.lossJointCount ?? 0,
+            standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
+        }));
+    }, [data]);
+
+    const findFingerBodyPart = (
+        subPartId: number,
+        sideId: number,
+        jointCount: number
+    ): FingerBodyPartOption | undefined =>
+        options.find(
+            (o) =>
+                o.disabilityLossSubPartId === subPartId &&
+                o.disabilitySideId === sideId &&
+                o.lossJointCount === jointCount
+        );
+
+    return { options, isLoading, findFingerBodyPart };
 };

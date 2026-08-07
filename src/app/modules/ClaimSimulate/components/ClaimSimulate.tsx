@@ -141,10 +141,11 @@ interface TreeNode {
     code?: string;
     standardMedicalExpenseId?: number;
     bodyPartId?: number;
+    maximumLimit?: number;
     children: TreeNode[];
 }
 
- const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({
+const SectionTitle: React.FC<{ icon: React.ReactNode; title: string; subtitle?: string }> = ({
     icon,
     title,
     subtitle,
@@ -251,7 +252,8 @@ const TreeNodeRow = ({
         description: string,
         id: number,
         standardMedicalExpenseId?: number,
-        bodyPartId?: number
+        bodyPartId?: number,
+        maximumLimit?: number
     ) => void;
     selectedLeafId: number | null;
 }) => {
@@ -275,7 +277,14 @@ const TreeNodeRow = ({
                         return;
                     }
                     if (!isSelectable) return;
-                    onSelectLeaf(code, description, node.id, node.standardMedicalExpenseId, node.bodyPartId);
+                    onSelectLeaf(
+                        code,
+                        description,
+                        node.id,
+                        node.standardMedicalExpenseId,
+                        node.bodyPartId,
+                        node.maximumLimit
+                    );
                 }}
                 sx={{
                     display: "flex",

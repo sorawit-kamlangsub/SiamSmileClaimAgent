@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
     Backdrop,
     Box,
     Button,
+    Checkbox,
     CircularProgress,
     FormControlLabel,
     Grid,
@@ -19,6 +20,7 @@ import FormikDatePicker from "../../../../_common/components/CustomFormik/Formik
 import ArticleIcon from "@mui/icons-material/Article";
 import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
 import CalculateIcon from "@mui/icons-material/Calculate";
+import SchoolIcon from "@mui/icons-material/School";
 import DocumentRecipientTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/DocumentRecipientTypeDropDown";
 import UserAutocompleteApi from "../../../../_common/components/ClaimAgent/CustomDropdown/UserAutocompleteApi";
 import ChiefComplaintAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/ChiefComplaintAutocomplete";
@@ -28,19 +30,22 @@ import dayjs from "dayjs";
 import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
 import { useClaimPAForm } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 import OcrDocumentScanSection from "../OcrDocumentScanSection";
-import CoverageBox from "../ClaimPH/CoverageBox";
-import { SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
+import CoverageBox from "../CoverageBox";
+import { DeathPlaceType, SymptomType } from "../../../store/claimPHSlice";
 import DocumentScanTable from "../DocumentScanTable";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPA from "./DeathClaimAmountCardPA";
 import OrganLossSelector from "../OrganLossSelector";
-import { claimPASelector, setOrganLossItems } from "../../../store/claimPASlice";
+import { claimPASelector, DeathExtraCoverageId, setOrganLossItems } from "../../../store/claimPASlice";
 import { claimStepBoxSx } from "../ClaimPH/ClaimFormSection";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
+import { useNavigate } from "react-router-dom";
+import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
+import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -75,15 +80,32 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         setOcrDocumentIds,
         getRequiredDocsByCoverageType,
     } = useClaimPAForm({ onNext });
-    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss();
+
     const { values, setFieldValue } = formik;
+    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
+        values.coverageTypeId
+    );
     const dispatch = useAppDispatch();
-    const { organLossItems } = useAppSelector(claimPASelector);
+    const navigate = useNavigate();
+    const { organLossItems, school, claimItems, editingItemId } = useAppSelector(claimPASelector);
+
+    const otherInsuredCount = editingItemId
+        ? claimItems.filter((c) => c.id !== editingItemId).length
+        : claimItems.length;
+    const isAddingAdditionalInsured = otherInsuredCount > 0;
+
+    const coverageTypeOptions = isAddingAdditionalInsured
+        ? (coverageType ?? []).filter(
+              (opt: any) => opt.coverageTypeId !== CoverageType.Death && opt.coverageTypeId !== CoverageType.Disability
+          )
+        : coverageType;
+
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDisability = values.coverageTypeId === CoverageType.Disability;
     const isDeath = values.coverageTypeId === CoverageType.Death;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD;
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
     const requiresOcrValidation = isMedical && shouldShowOcrDocumentScan(values.coverageTypeId);
@@ -105,6 +127,13 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
 
     const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
+
+    // ── ยอดโอนเกินสิทธิ์ (NPL) ──
+    const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
+    const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    const maxPrice = currentBenefit?.maxPrice;
+    const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
+
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
@@ -115,8 +144,23 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
             swalWarningNotOutsideClick("แจ้งเตือน", "กรุณาแนบเอกสารให้ครบถ้วนตามที่กำหนด");
             return;
         }
+        // ยอดที่ขอเบิกเกินสิทธิ์เบิกสูงสุด (NPL) ต้องให้ผู้ใช้ยืนยันยอดก่อน
+        if (isOverEligibleLimit) {
+            setIsConfirmExcessOpen(true);
+            return;
+        }
         formik.submitForm();
     };
+
+    useEffect(() => {
+        if (
+            isAddingAdditionalInsured &&
+            (values.coverageTypeId === CoverageType.Death || values.coverageTypeId === CoverageType.Disability)
+        ) {
+            setFieldValue("coverageTypeId", undefined);
+            setFieldValue("coverageTypeName", undefined);
+        }
+    }, [isAddingAdditionalInsured]);
 
     return (
         <>
@@ -136,13 +180,23 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     *
                                 </Typography>
                             </Typography>
-                            <ClaimTypeSelector
-                                formik={formik}
-                                options={incidentType}
-                                idFieldName="incidentTypeId"
-                                nameFieldName="incidentTypeName"
-                                isLoading={incidentTypeLoading}
-                            />
+                            {values.incidentTypeId ? (
+                                <ClaimTypeSelector
+                                    formik={formik}
+                                    options={coverageTypeOptions}
+                                    idFieldName="coverageTypeId"
+                                    nameFieldName="coverageTypeName"
+                                    isLoading={incidentTypeMappingLoading}
+                                />
+                            ) : (
+                                <ClaimTypeSelector
+                                    formik={formik}
+                                    options={incidentType}
+                                    idFieldName="incidentTypeId"
+                                    nameFieldName="incidentTypeName"
+                                    isLoading={incidentTypeLoading}
+                                />
+                            )}
                         </Grid>
 
                         {/* ประเภทความคุ้มครอง */}
@@ -198,6 +252,78 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 </Paper>
                             )}
                         </Grid>
+
+                        {/* ความคุ้มครองเพิ่มเติม (ภัยสาธารณะ / ความรับผิดสถานศึกษา) — โชว์ทุกครั้งที่เลือกสาเหตุการเสียชีวิตแล้ว */}
+                        {isDeath && values.causeOfIncidentId && (
+                            <Grid item xs={12}>
+                                <Box
+                                    sx={{
+                                        border: "1px solid #cfe3f7",
+                                        borderRadius: 2,
+                                        bgcolor: "#f3f8fd",
+                                        p: 2,
+                                    }}
+                                >
+                                    <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                        <VerifiedUserIcon color="primary" fontSize="small" />
+                                        <Typography fontWeight={700} fontSize={15}>
+                                            ความคุ้มครองเพิ่มเติม
+                                        </Typography>
+                                    </Box>
+                                    <Box display="flex" gap={3} flexWrap="wrap">
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={values.extraCoverageIds.includes(
+                                                        DeathExtraCoverageId.PublicDisaster
+                                                    )}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        setFieldValue(
+                                                            "extraCoverageIds",
+                                                            checked
+                                                                ? [
+                                                                      ...values.extraCoverageIds,
+                                                                      DeathExtraCoverageId.PublicDisaster,
+                                                                  ]
+                                                                : values.extraCoverageIds.filter(
+                                                                      (id) => id !== DeathExtraCoverageId.PublicDisaster
+                                                                  )
+                                                        );
+                                                    }}
+                                                />
+                                            }
+                                            label="ภัยสาธารณะ"
+                                        />
+                                        <FormControlLabel
+                                            control={
+                                                <Checkbox
+                                                    checked={values.extraCoverageIds.includes(
+                                                        DeathExtraCoverageId.SchoolLiability
+                                                    )}
+                                                    onChange={(e) => {
+                                                        const checked = e.target.checked;
+                                                        setFieldValue(
+                                                            "extraCoverageIds",
+                                                            checked
+                                                                ? [
+                                                                      ...values.extraCoverageIds,
+                                                                      DeathExtraCoverageId.SchoolLiability,
+                                                                  ]
+                                                                : values.extraCoverageIds.filter(
+                                                                      (id) =>
+                                                                          id !== DeathExtraCoverageId.SchoolLiability
+                                                                  )
+                                                        );
+                                                    }}
+                                                />
+                                            }
+                                            label="ความรับผิดสถานศึกษา"
+                                        />
+                                    </Box>
+                                </Box>
+                            </Grid>
+                        )}
 
                         {/* ผู้รับเอกสาร / ผู้ให้บริการ / เจ้าของรถ */}
                         <Grid item xs={12} md={4}>
@@ -309,43 +435,67 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                         required
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <RadioGroup
-                                        row
-                                        value={values.specifyHospital}
-                                        onChange={(e) => setFieldValue("specifyHospital", Number(e.target.value))}
-                                    >
-                                        <FormControlLabel
-                                            value={SpecifyHospital.Unspecified}
-                                            control={<Radio size="small" />}
-                                            label="ไม่ระบุสถานพยาบาล"
-                                        />
-                                        <FormControlLabel
-                                            value={SpecifyHospital.Specify}
-                                            control={<Radio size="small" />}
-                                            label="ระบุสถานพยาบาล"
-                                        />
-                                    </RadioGroup>
-                                </Grid>
-                                {values.specifyHospital === SpecifyHospital.Specify && (
+                                {isDeath && (
+                                    <>
+                                        <Grid item xs={12}>
+                                            <Typography fontWeight={600} fontSize={16}>
+                                                สถานที่เสียชีวิต{" "}
+                                                <Typography component="span" color="error">
+                                                    *
+                                                </Typography>
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <RadioGroup
+                                                row
+                                                value={values.deathPlaceType}
+                                                onChange={(e) =>
+                                                    setFieldValue("deathPlaceType", Number(e.target.value))
+                                                }
+                                            >
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Home}
+                                                    control={<Radio size="small" />}
+                                                    label="ที่บ้าน"
+                                                />
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Hospital}
+                                                    control={<Radio size="small" />}
+                                                    label="สถานพยาบาล"
+                                                />
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Other}
+                                                    control={<Radio size="small" />}
+                                                    label="อื่นๆ"
+                                                />
+                                            </RadioGroup>
+                                        </Grid>
+                                        {values.deathPlaceType === DeathPlaceType.Hospital && (
+                                            <Grid item xs={12} lg={9} mt={-1}>
+                                                <HospitalDropdown formik={formik} name="hospitalId" required />
+                                            </Grid>
+                                        )}
+                                        {values.deathPlaceType === DeathPlaceType.Other && (
+                                            <Grid item xs={12} lg={9}>
+                                                <FormikTextField
+                                                    name="accidentPlace"
+                                                    label="สถานที่เสียชีวิต"
+                                                    formik={formik}
+                                                    size="small"
+                                                    fullWidth
+                                                    required
+                                                    placeholder="ระบุสถานที่เสียชีวิต"
+                                                />
+                                            </Grid>
+                                        )}
+                                    </>
+                                )}
+                                {isDisability && (
                                     <Grid item xs={12} lg={9} mt={-1}>
                                         <HospitalDropdown formik={formik} name="hospitalId" required />
                                     </Grid>
                                 )}
                             </>
-                        )}
-                        {isDeath && (
-                            <Grid item xs={12} lg={9}>
-                                <FormikTextField
-                                    name="accidentPlace"
-                                    label="สถานที่เกิดเหตุ"
-                                    formik={formik}
-                                    size="small"
-                                    fullWidth
-                                    required
-                                    placeholder="ระบุสถานที่เกิดเหตุ เช่น บ้าน / โรงพยาบาล / สถานที่เกิดเหตุ"
-                                />
-                            </Grid>
                         )}
                         {/* ระบุอาการ */}
                         {!isDeath && !isDisability && (
@@ -431,6 +581,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 nonCoveredReason={nonCoveredReasonData?.data ?? []}
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
                                 onChange={(items) => dispatch(setOrganLossItems(items))}
+                                customerId={insured?.customerId}
                             />
                         </Box>
                     )}
@@ -450,17 +601,18 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     )}
 
                     {/* ปุ่มคำนวณวงเงิน */}
-                    {isIPD && (
-                        <Grid item xs={12} md={6} lg={4} mt={2}>
+                    {isIPDMedical && (
+                        <Grid item xs={12} mt={2}>
                             <Grid container justifyContent="center">
                                 <Button
                                     variant="outlined"
                                     color="primary"
                                     size="small"
                                     startIcon={<CalculateIcon />}
-                                    sx={{ width: { xs: "100%", sm: "30%", md: "50%" }, mb: 1 }}
+                                    sx={{ mb: 1 }}
+                                    onClick={() => navigate("/claim-simulation")}
                                 >
-                                    เปิดโปรแกรมคำนวณวงเงิน
+                                    เปิดโปรแกรมคำนวณวงเงินเคลม
                                 </Button>
                             </Grid>
                         </Grid>
@@ -504,6 +656,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             <DeathClaimAmountCardPA
                                 causeOfIncidentName={formik.values.causeOfIncidentName}
                                 mainMaxAmount={transferConfig.maxAmount}
+                                extraCoverageIds={formik.values.extraCoverageIds}
                                 formik={formik}
                             />
                         </Box>
@@ -537,6 +690,27 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
             {(isDeath || isDisability) && (
                 <DocumentScanTable productId={26} documentTypeId={15} aplicationCode={insured?.policyCode} />
             )}
+
+            <ConfirmExcessLimitTransferDialog
+                open={isConfirmExcessOpen}
+                onClose={() => setIsConfirmExcessOpen(false)}
+                loading={formik.isSubmitting}
+                customerName={insured?.customerName as string}
+                productLabel="PA"
+                idCardNo={insured?.cardDetail as string}
+                appId={insured?.policyCode}
+                extraChips={
+                    school?.schoolName ? [{ icon: <SchoolIcon fontSize="small" />, label: school.schoolName }] : []
+                }
+                requestedAmount={values.transferAmount ?? 0}
+                maxEligibleAmount={maxPrice ?? 0}
+                onConfirm={async ({ withdrawableAmount }) => {
+                    setIsConfirmExcessOpen(false);
+                    await setFieldValue("transferAmount", withdrawableAmount);
+                    formik.submitForm();
+                }}
+            />
+
             <Box display="flex" justifyContent="flex-end" mb={5}>
                 <Button
                     variant="contained"

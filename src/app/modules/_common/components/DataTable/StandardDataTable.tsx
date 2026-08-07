@@ -120,7 +120,7 @@ const StandardDataTable = ({
     columnHeaderAlign = "flex-start",
     options,
     sx,
-    rowHover = true,
+    rowHover = false,
     rowBackgroundColor = false,
     hideBorderBottom = false,
     ...muiDataTableProps
@@ -357,4 +357,3 @@ const StandardDataTable = ({
 };
 
 export default StandardDataTable;
-

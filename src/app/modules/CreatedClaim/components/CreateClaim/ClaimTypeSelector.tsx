@@ -56,6 +56,9 @@ const ClaimTypeSelector: React.FC<Props> = ({ formik, options, idFieldName, name
                                     variant="outlined"
                                     sx={{
                                         borderColor: isSelected ? "#02579B" : "divider",
+                                        background: isSelected
+                                            ? "linear-gradient(90deg, #ffffff 0%, #f8fbff 35%, #eef7ff 100%)"
+                                            : "transparent",
                                         borderRadius: 2,
                                         transition: "all 0.2s",
                                         width: "100%",

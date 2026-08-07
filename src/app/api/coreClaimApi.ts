@@ -23,6 +23,9 @@ const getClaimHistoryQueryKey = ["getClaimHistory"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
+const calculateCaseDisabilityQueryKey = ["calculateCaseDisability"];
+const getCustomerBenefitDetailHalfQueryKey = ["getCustomerBenefitDetailHalf"];
+const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -91,7 +94,8 @@ export const useGetCustomerBenefitDetailSearch = (
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
-    medicalTypeId?: number | undefined
+    medicalTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -103,6 +107,7 @@ export const useGetCustomerBenefitDetailSearch = (
             incidentTypeId,
             coverageTypeId,
             medicalTypeId,
+            causeOfIncidentId,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
@@ -112,7 +117,8 @@ export const useGetCustomerBenefitDetailSearch = (
                 isContinue,
                 incidentTypeId,
                 coverageTypeId,
-                medicalTypeId
+                medicalTypeId,
+                causeOfIncidentId
             ),
         {
             enabled: !!policyCode,
@@ -249,6 +255,101 @@ export const useGetCaseByClaimId = (
             ),
         {
             enabled: !!claimId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useCalculateCaseDisability = (
+    customerId?: number | undefined,
+    bodyPartId?: number | undefined,
+    standardMedicalExpenseId?: number | undefined
+) => {
+    return useQuery(
+        [calculateCaseDisabilityQueryKey, customerId, bodyPartId, standardMedicalExpenseId],
+        () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
+        {
+            enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCustomerBenefitDetailHalf = (
+    policyCode?: string | undefined,
+    caseTypeId?: number | undefined,
+    incidentDate?: Dayjs | undefined,
+    isContinue?: boolean | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    medicalTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined,
+    formatTypeId?: number | undefined
+) => {
+    return useQuery(
+        [
+            getCustomerBenefitDetailHalfQueryKey,
+            policyCode,
+            caseTypeId,
+            incidentDate,
+            isContinue,
+            incidentTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            causeOfIncidentId,
+            formatTypeId,
+        ],
+        () =>
+            coreClaimClient.getCustomerBenefitDetailHalf(
+                policyCode,
+                caseTypeId,
+                incidentDate,
+                isContinue,
+                incidentTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                causeOfIncidentId,
+                formatTypeId
+            ),
+        {
+            enabled: !!policyCode,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCustomerSearchByPolicyCode = (
+    policyCode?: string | undefined,
+    searchIndex?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getCustomerSearchByPolicyCodeQueryKey,
+            policyCode,
+            searchIndex,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getCustomerSearchByPolicyCode(
+                policyCode,
+                searchIndex,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!policyCode && !!searchIndex && !!searchDetail,
             refetchOnWindowFocus: false,
         }
     );

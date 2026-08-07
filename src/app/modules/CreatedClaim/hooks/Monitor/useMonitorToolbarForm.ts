@@ -5,17 +5,17 @@ import { checkeligibleMonitorSearchValuesType, setSearchcheckeligibleMonitor } f
 const SEARCH_TYPE_RULES: Record<number, (val: string) => boolean> = {
     1: (v) => /^[a-zA-Z0-9-]+$/.test(v), // ApplicationID
     2: (v) => /^\d{13}$/.test(v), // บัตรประชาชน
-    3: (v) => /^\d{13}$/.test(v), // Passport
+    3: () => true, // Passport / G-Code
     4: () => true, // ชื่อ-นามสกุล freetext
-    5: (v) => /^[a-zA-Z0-9]+$/.test(v), // เลขที่อ้างอิง
+    5: (v) => /^\d{10}$/.test(v), // เลขประจำตัวผู้เอาประกัน
 };
 
 const SEARCH_TYPE_MESSAGES: Record<number, string> = {
     1: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
     2: "กรอกได้เฉพาะตัวเลข 13 หลัก",
-    3: "กรอกได้เฉพาะตัวเลข 13 หลัก",
+    3: "",
     4: "",
-    5: "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ",
+    5: "กรอกได้เฉพาะตัวเลข 10 หลัก",
 };
 
 export const useMonitorToolbarForm = () => {
@@ -23,10 +23,10 @@ export const useMonitorToolbarForm = () => {
 
     const defaultValues: checkeligibleMonitorSearchValuesType = {
         searchTypeId: 2,
-        searchDetail: "",
+        searchDetail: undefined,
         dateHappen: undefined,
         schoolId: undefined,
-        provinceId: 0,
+        provinceId: undefined,
         isAdvancedSearch: false,
         isSearchMonitor: false,
     };
@@ -63,7 +63,7 @@ export const useMonitorToolbarForm = () => {
             dispatch(
                 setSearchcheckeligibleMonitor({
                     searchTypeId: values.searchTypeId,
-                    searchDetail: values.searchDetail.trim(),
+                    searchDetail: values.searchDetail?.trim(),
                     dateHappen: values.dateHappen,
                     schoolId: values.schoolId,
                     provinceId: values.provinceId,

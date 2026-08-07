@@ -1,4 +1,4 @@
-import { useGetCustomerBenefitDetailSearch } from "./../../../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf } from "./../../../../../api/coreClaimApi";
 import { useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
 import { useFormik, FormikErrors } from "formik";
@@ -6,9 +6,9 @@ import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
     ClaimFormValues,
     claimPHSelector,
+    DeathPlaceType,
     setClaimForm,
     setEnabled,
-    SpecifyHospital,
     SymptomType,
 } from "../../../store/claimPHSlice";
 import { useAuth } from "../../../../_auth";
@@ -19,7 +19,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
-import { CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType } from "../../../../../functionHelpers";
 interface Options {
     onNext: () => void;
 }
@@ -31,7 +31,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
-    const INCIDENT_TYPES = [IncidentType.Illness, IncidentType.Accident];
     const docData = Object.values(documentDetailById);
 
     const formik = useFormik<ClaimFormValues>({
@@ -90,13 +89,17 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 errors.chiefComplaintId = req;
             if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
             if (isDeath || isDisability) {
-                if (values.specifyHospital === SpecifyHospital.Specify && !values.hospitalId) errors.hospitalId = req;
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
                 if (!values.chiefComplaintId) errors.chiefComplaintId = req;
-                if (!values.accidentPlace) errors.accidentPlace = req;
                 if (isDeath) {
                     if (!values.deathDate) errors.deathDate = req;
+                    if (values.deathPlaceType === DeathPlaceType.Hospital && !values.hospitalId)
+                        errors.hospitalId = req;
+                    if (values.deathPlaceType === DeathPlaceType.Other && !values.accidentPlace)
+                        errors.accidentPlace = req;
+                } else {
+                    if (!values.hospitalId) errors.hospitalId = req;
                 }
             }
 
@@ -136,13 +139,11 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         },
     });
     const incidentType: ClaimTypeOption[] =
-        incidentTypeRaw?.data
-            ?.filter((item) => INCIDENT_TYPES.includes(item.incidentTypeId ?? 0))
-            .map((item) => ({
-                id: item.incidentTypeId ?? 0,
-                name: item.incidentTypeNameTH ?? "",
-                icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
-            })) ?? [];
+        incidentTypeRaw?.data?.map((item) => ({
+            id: item.incidentTypeId ?? 0,
+            name: item.incidentTypeNameTH ?? "",
+            icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
+        })) ?? [];
     const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         formik.values.incidentTypeId ?? undefined,
         2, // ClaimAgent
@@ -192,14 +193,33 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 ])
         ).values(),
     ];
-    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
+    // const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
+    //     insured?.policyCode,
+    //     0,
+    //     formik.values.incidentDate,
+    //     false,
+    //     formik.values.incidentTypeId,
+    //     formik.values.coverageTypeId,
+    //     formik.values.medicalTypeId,
+    //     formik.values.causeOfIncidentId
+    // );
+    const FORMAT_TYPE_MAP: Record<string, number> = {
+        "2-1": 7,
+        "2-2": 8,
+        "3-2": 9,
+    };
+    const formatType = FORMAT_TYPE_MAP[`${formik.values.coverageTypeId}-${formik.values.medicalTypeId}`] ?? undefined;
+
+    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         insured?.policyCode,
         0,
         formik.values.incidentDate,
-        false,
+        isContinuous,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
-        formik.values.medicalTypeId
+        formik.values.medicalTypeId,
+        formik.values.causeOfIncidentId,
+        formatType
     );
 
     const isFirstRenderIncident = useRef(true);
@@ -228,7 +248,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 notificationDate: dayjs(),
                 transferAmount: 0,
                 symptomType: 1,
-                specifyHospital: 1,
+                deathPlaceType: 1,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [
@@ -267,7 +287,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 notificationDate: dayjs(),
                 transferAmount: 0,
                 symptomType: 1,
-                specifyHospital: 1,
+                deathPlaceType: 1,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [

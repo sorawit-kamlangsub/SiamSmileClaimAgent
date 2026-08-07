@@ -51,3 +51,35 @@ export const hasMissingReasonError = (item: ExpenseAmountLike) => {
     const hasReason = item.reason !== undefined && item.reason !== null;
     return hasNotCovered && !hasReason;
 };
+
+export const NON_COVERED_REASON_EXCEED_LIMIT = 5; // เกินสิทธิ์ความคุ้มครอง
+
+export interface MaximumLimitInput {
+    claimAmount: number;
+    discount: number;
+    notCovered: number;
+    reason: number | undefined;
+    maximumLimit?: number;
+}
+
+export const applyMaximumLimit = ({
+    claimAmount,
+    discount,
+    notCovered,
+    reason,
+    maximumLimit,
+}: MaximumLimitInput): MaximumLimitInput => {
+    const limit = Number(maximumLimit ?? 0);
+
+    if (limit <= 0 || claimAmount <= limit) {
+        return { claimAmount, discount, notCovered, reason, maximumLimit };
+    }
+
+    return {
+        claimAmount,
+        discount,
+        notCovered: Math.round((claimAmount - limit) * 100) / 100,
+        reason: NON_COVERED_REASON_EXCEED_LIMIT,
+        maximumLimit,
+    };
+};

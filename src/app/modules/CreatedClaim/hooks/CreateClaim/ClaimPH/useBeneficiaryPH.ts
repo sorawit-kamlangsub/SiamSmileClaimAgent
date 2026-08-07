@@ -112,6 +112,7 @@ export const useBeneficiaryPH = (onValidSubmit: (beneficiaries: BeneficiaryForm[
                       ...item,
                       citizenId: undefined,
                       bankId: undefined,
+                      bankName: undefined,
                       bankAccountNo: undefined,
                       bankAccountName: undefined,
                       amount: undefined,

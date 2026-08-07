@@ -33,7 +33,7 @@ export const useInsuredSearchModal = () => {
 
     const [selectedRowIndex, setSelectedRowIndex] = useState<number | null>(null);
     const [pendingSelection, setPendingSelection] = useState<GetCustomerSearchDtoResponse | null>(null);
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({ page: 1, recordsPerPage: 10 });
+    const [paginated, setPaginated] = useState<PaginationSortableDto>({ page: 1, recordsPerPage: 5 });
     const [isSearchTriggered, setIsSearchTriggered] = useState(false);
 
     const [searchParams, setSearchParams] = useState<{
@@ -73,7 +73,7 @@ export const useInsuredSearchModal = () => {
 
             setPaginated({
                 page: 1,
-                recordsPerPage: 10,
+                recordsPerPage: 5,
             });
 
             setSearchParams({

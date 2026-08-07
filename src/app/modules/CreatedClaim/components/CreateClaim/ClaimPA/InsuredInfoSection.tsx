@@ -5,6 +5,7 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
 import { formatDateString } from "../../../../../functionHelpers";
 import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
 interface Props {
     data: GetCustomerDetailByIdDtoResponse | undefined;
@@ -12,7 +13,7 @@ interface Props {
 }
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <Box display="flex" alignItems="center" gap={1} py={0.3}>
+    <Box display="flex" alignItems="center" gap={1} py={0.5}>
         <Typography variant="body2" color="text.secondary" minWidth={180}>
             {label} :
         </Typography>
@@ -26,6 +27,7 @@ const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
         <HeadingWithColor
             text="ข้อมูลผู้เอาประกัน"
             color="blue"
+            icon={<AccountCircleIcon sx={{ fontSize: 27 }} />}
             button={
                 <Tooltip title="แก้ไขผู้เอาประกัน" arrow placement="top" TransitionComponent={Zoom}>
                     <IconButton size="small" color="primary" onClick={onEdit}>
@@ -38,12 +40,7 @@ const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
             <Row
                 label="Application ID"
                 value={
-                    <Link
-                        href="https://ssspa.siamsmile.co.th/Modules/PA/frmApplicationDetail"
-                        target="_blank"
-                        rel="noreferrer"
-                        fontWeight={700}
-                    >
+                    <Link href="" target="_blank" rel="noreferrer" fontWeight={700}>
                         {data?.policyCode}
                     </Link>
                 }

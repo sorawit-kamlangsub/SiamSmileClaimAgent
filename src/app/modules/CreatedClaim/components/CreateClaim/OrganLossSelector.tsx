@@ -25,9 +25,12 @@ import {
     countSelectedFingers,
     createFingerState,
     EXGRATIA_DEDUCT_SOURCE_OPTIONS,
+    FINGER_KEY_TO_SUB_PART_ID,
     FINGER_KEYS,
     FINGER_LABELS,
     FINGER_MAX_JOINTS,
+    FINGER_SIDE_ID,
+    FingerBodyPartOption,
     FingerKey,
     formatNoDecimal,
     isComboOrganKey,
@@ -37,7 +40,12 @@ import {
     OrganLossItem,
     OrganRuleResult,
 } from "../../hooks/CreateClaim/organLoss.types";
-import { useSingleBodyPartOptions, useComboBodyPartOptions } from "../../hooks/CreateClaim/useOrganLoss";
+import {
+    useSingleBodyPartOptions,
+    useComboBodyPartOptions,
+    useCalculateDisabilityOptions,
+    useFingerBodyPartOptions,
+} from "../../hooks/CreateClaim/useOrganLoss";
 import { GetNonCoveredReasonDtoResponse } from "../../../../api/coreClaimApi.client";
 
 const CARD_BORDER = "#dbe6f3";
@@ -134,7 +142,7 @@ const RuleResultBox: React.FC<{ rule: OrganRuleResult | null | undefined; compac
                 }}
             >
                 <Typography variant="body2" fontWeight={700} color="text.secondary">
-                    ไม่พบรายละเอียดเงื่อนไขการคำนวณ
+                    ไม่พบเปอร์เซ็นต์ตามเงื่อนไข
                 </Typography>
             </Box>
         );
@@ -232,11 +240,13 @@ interface ModalState {
     // ฟิลด์ร่วม
     amount: string;
     uncoveredAmount: string;
-    uncoveredReason: string;
+    uncoveredReason: number | undefined;
     exgratiaDeductSource: string;
     exgratiaDeductDetail: string;
     note: string;
     fingers: OrganFingerState | null;
+    rule: OrganRuleResult | null;
+    fingerRules: Record<string, OrganRuleResult | null>;
 }
 
 export interface OrganLossSelectorProps {
@@ -247,8 +257,7 @@ export interface OrganLossSelectorProps {
     nonCoveredReason?: GetNonCoveredReasonDtoResponse[];
     isNonCoveredReasonLoading?: boolean;
     priorClaimWarning?: string;
-    getSimpleRule?: (organKey: string, sideName: string) => OrganRuleResult | null;
-    getFingerRule?: (organKey: string, fingerKey: FingerKey, joints: number) => OrganRuleResult | null;
+    customerId: number | undefined;
 }
 
 const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
@@ -259,8 +268,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
     nonCoveredReason,
     isNonCoveredReasonLoading,
     priorClaimWarning,
-    getSimpleRule,
-    getFingerRule,
+    customerId,
 }) => {
     const [modal, setModal] = useState<ModalState | null>(null);
     const [formError, setFormError] = useState("");
@@ -296,11 +304,13 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             resolvedComboBodyPartId: existing?.bodyPartId,
             amount: existing?.amount || (existing?.totalAmount ? String(existing.totalAmount) : ""),
             uncoveredAmount: existing?.uncoveredAmount || "",
-            uncoveredReason: existing?.uncoveredReason || "",
+            uncoveredReason: existing?.uncoveredReason,
             exgratiaDeductSource: existing?.exgratiaDeductSource || "",
             exgratiaDeductDetail: existing?.exgratiaDeductDetail || "",
             note: existing?.note || "",
             fingers: choice.isFinger ? createFingerState(key, existing?.fingers) : null,
+            rule: null,
+            fingerRules: {},
         });
     };
 
@@ -322,12 +332,40 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             return { ...m, fingers };
         });
     };
+    const setRule = (rule: OrganRuleResult | null) => setModal((m) => (m ? { ...m, rule } : m));
+    const setFingerRule = (side: "left" | "right", fingerKey: FingerKey, rule: OrganRuleResult | null) =>
+        setModal((m) => (m ? { ...m, fingerRules: { ...m.fingerRules, [`${side}-${fingerKey}`]: rule } } : m));
 
+    useEffect(() => {
+        if (!modal || !modal.choice.isFinger) return;
+
+        let totalExcess = 0;
+        const sides: ("left" | "right")[] = ["left", "right"];
+        for (const side of sides) {
+            for (const fingerKey of FINGER_KEYS) {
+                const data = modal.fingers![side][fingerKey];
+                if (!data.selected) continue;
+                const rule = modal.fingerRules[`${side}-${fingerKey}`];
+                if (!rule) continue;
+
+                const calculatedAmount = rule.coveredAmount * (rule.percent / 100);
+                const available = rule.coveredAmount - rule.sumUsedAmount;
+                if (calculatedAmount > available) {
+                    totalExcess += calculatedAmount - available;
+                }
+            }
+        }
+
+        if (totalExcess > 0) {
+            setModal((m) => (m ? { ...m, uncoveredAmount: String(totalExcess), uncoveredReason: 12 } : m));
+        }
+    }, [modal?.fingers, modal?.fingerRules]);
     const modalTotal = useMemo(() => {
         if (!modal) return 0;
-        if (modal.choice.isFinger)
-            return calculateFingerSideTotal(modal.fingers, "left") + calculateFingerSideTotal(modal.fingers, "right");
-        return amountNumber(modal.amount);
+        const gross = modal.choice.isFinger
+            ? calculateFingerSideTotal(modal.fingers, "left") + calculateFingerSideTotal(modal.fingers, "right")
+            : amountNumber(modal.amount);
+        return gross - amountNumber(modal.uncoveredAmount);
     }, [modal]);
 
     const handleSave = () => {
@@ -339,6 +377,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             setFormError("กรุณาระบุช่องทางการหัก");
             return;
         }
+
         if (modal.choice.isFinger) {
             const leftCount = countSelectedFingers(modal.fingers, "left");
             const rightCount = countSelectedFingers(modal.fingers, "right");
@@ -346,7 +385,44 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                 setFormError("กรุณาเลือกนิ้วที่สูญเสียอย่างน้อย 1 รายการ");
                 return;
             }
+            // ── validate ห้ามเกินวงเงินคุ้มครอง - ยอดที่ใช้ไปแล้ว (เก็บ error ทุกนิ้วที่ผิด ไม่หยุดตัวแรก) ──
+            const errors: string[] = [];
+            const sides: ("left" | "right")[] = ["left", "right"];
+            for (const side of sides) {
+                for (const fingerKey of FINGER_KEYS) {
+                    const data = modal.fingers![side][fingerKey];
+                    if (!data.selected) continue;
+
+                    const rule = modal.fingerRules[`${side}-${fingerKey}`];
+                    const sideLabel = side === "left" ? "ซ้าย" : "ขวา";
+                    const fingerLabel = FINGER_LABELS[modal.key]?.[fingerKey];
+
+                    if (!rule) {
+                        errors.push(`${fingerLabel}ข้าง${sideLabel} ไม่อยู่ในความคุ้มครอง`);
+                    }
+                }
+            }
+            if (errors.length > 0) {
+                setFormError(errors.join("\n"));
+                return;
+            }
+        } else {
+            if (!modal.rule) {
+                setFormError("รายการนี้ไม่อยู่ในความคุ้มครอง ไม่สามารถกรอกยอดเบิกได้");
+                return;
+            }
         }
+
+        // ── ยอดไม่คุ้มครองห้ามเกินยอดเบิก (ไม่งั้นยอดสุทธิติดลบ) ──
+        const grossAmount = modal.choice.isFinger
+            ? calculateFingerSideTotal(modal.fingers, "left") + calculateFingerSideTotal(modal.fingers, "right")
+            : amountNumber(modal.amount);
+        const uncovered = amountNumber(modal.uncoveredAmount);
+        if (uncovered > grossAmount) {
+            setFormError(`ยอดไม่คุ้มครองต้องไม่เกินยอดเบิก (${formatNoDecimal(grossAmount)} บาท)`);
+            return;
+        }
+
         if (!isCombo && modal.choice.hasSide && !modal.choice.isFinger && !modal.side) {
             setFormError("กรุณาเลือกข้างที่สูญเสีย");
             return;
@@ -666,14 +742,16 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                 <FingerModalBody
                                     modal={modal}
                                     setFingerField={setFingerField}
-                                    getFingerRule={getFingerRule}
+                                    customerId={customerId}
+                                    onRuleChange={setFingerRule}
                                 />
                             ) : (
                                 <SimpleModalBody
                                     modal={modal}
                                     patchModal={patchModal}
-                                    getSimpleRule={getSimpleRule}
+                                    customerId={customerId}
                                     modalTotal={modalTotal}
+                                    onRuleChange={setRule}
                                 />
                             )}
 
@@ -692,7 +770,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                     size="small"
                                     fullWidth
                                     value={modal.uncoveredReason}
-                                    onChange={(e) => patchModal({ uncoveredReason: e.target.value })}
+                                    onChange={(e) => patchModal({ uncoveredReason: Number(e.target.value) })}
                                 >
                                     {notCoveredReasons.map((r) => (
                                         <MenuItem key={r.value ?? r.label} value={r.value}>
@@ -763,30 +841,76 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
 const SimpleModalBody: React.FC<{
     modal: ModalState;
     patchModal: (patch: Partial<ModalState>) => void;
-    getSimpleRule?: OrganLossSelectorProps["getSimpleRule"];
     modalTotal: number;
-}> = ({ modal, patchModal, getSimpleRule, modalTotal }) => {
+    customerId: number | undefined;
+    onRuleChange: (rule: OrganRuleResult | null) => void;
+}> = ({ modal, patchModal, customerId, onRuleChange }) => {
     const isCombo = isComboOrganKey(modal.key);
     const comboParts = ORGAN_COMBO_PARTS[modal.key] || [];
 
     // ── กรณีอวัยวะเดี่ยว: เรียก API ด้วย disabilityLossPartId ของตัวเอง ──
-    const { options: singleOptions, isLoading: singleLoading } = useSingleBodyPartOptions(
-        !isCombo ? modal.choice.disabilityLossPartId : undefined
-    );
+    const {
+        options: singleOptions,
+        isLoading: singleLoading,
+        findByBodyPartId: findSingleByBodyPartId,
+    } = useSingleBodyPartOptions(!isCombo ? modal.choice.disabilityLossPartId : undefined);
 
     // ── กรณี combo: เรียก API ด้วย disabilityLossPartId ของตัว combo เอง ──
     const {
         part1Options,
         part2Options,
         resolveBodyPartId,
-        findByBodyPartId,
+        findByBodyPartId: findComboByBodyPartId,
         isLoading: comboLoading,
     } = useComboBodyPartOptions(isCombo ? modal.choice.disabilityLossPartId : undefined);
+
+    const standardMedicalExpenseId = isCombo
+        ? findComboByBodyPartId(modal.resolvedComboBodyPartId)?.standardMedicalExpenseId
+        : modal.choice.hasSide
+        ? findSingleByBodyPartId(modal.side)?.standardMedicalExpenseId
+        : singleOptions[0]?.standardMedicalExpenseId;
+
+    const bodyPartIdForCalculate = isCombo
+        ? modal.resolvedComboBodyPartId
+        : modal.choice.hasSide
+        ? modal.side
+        : singleOptions[0]?.bodyPartId;
+
+    const { options: disabilityOptions, isLoading: isRuleLoading } = useCalculateDisabilityOptions(
+        customerId,
+        bodyPartIdForCalculate,
+        standardMedicalExpenseId
+    );
+    const rule: OrganRuleResult | null = disabilityOptions[0] ?? null;
+
+    useEffect(() => {
+        onRuleChange(rule);
+    }, [rule]);
+
+    useEffect(() => {
+        if (rule) {
+            const calculatedAmount = rule.coveredAmount * (rule.percent / 100);
+            const available = rule.coveredAmount - rule.sumUsedAmount;
+
+            if (calculatedAmount > available) {
+                const excess = calculatedAmount - available;
+                patchModal({
+                    amount: String(calculatedAmount),
+                    uncoveredAmount: String(excess),
+                    uncoveredReason: 12,
+                });
+            } else {
+                patchModal({ amount: String(calculatedAmount) });
+            }
+        } else {
+            patchModal({ amount: "" });
+        }
+    }, [rule?.coveredAmount, rule?.percent, rule?.sumUsedAmount]);
 
     // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
     useEffect(() => {
         if (!isCombo || modal.editIndex < 0 || modal.comboPart1Id !== undefined) return;
-        const found = findByBodyPartId(modal.resolvedComboBodyPartId);
+        const found = findComboByBodyPartId(modal.resolvedComboBodyPartId);
         if (found) {
             patchModal({
                 comboPart1Id: found.disabilitySidePart1Id,
@@ -803,8 +927,6 @@ const SimpleModalBody: React.FC<{
         const resolved = resolveBodyPartId(modal.comboPart1Id, modal.comboPart2Id);
         patchModal({ resolvedComboBodyPartId: resolved?.bodyPartId });
     }, [isCombo, modal.comboPart1Id, modal.comboPart2Id]);
-
-    const rule = isCombo ? null : getSimpleRule?.(modal.key, modal.sideName) ?? null;
 
     return (
         <Box>
@@ -866,10 +988,11 @@ const SimpleModalBody: React.FC<{
                 label="ยอดเบิก"
                 size="small"
                 fullWidth
-                inputMode="decimal"
                 value={modal.amount}
-                onChange={(e) => patchModal({ amount: e.target.value })}
-                sx={{ mt: isCombo ? 0 : undefined }}
+                InputProps={{ readOnly: true }}
+                disabled
+                helperText="คำนวณอัตโนมัติจาก % ของจำนวนเงินเอาประกันภัย"
+                sx={{ mt: isCombo ? 0 : undefined, mb: 2 }}
             />
 
             {modal.key === "exgratia" && (
@@ -916,13 +1039,24 @@ const SimpleModalBody: React.FC<{
                 </Box>
             )}
 
-            {!isCombo && <RuleResultBox rule={rule} />}
-            {isCombo && (
-                <Box mt={1.5}>
-                    <Typography variant="body2" color="text.secondary" fontWeight={600}>
-                        ยอดเบิกรวม: {formatNoDecimal(modalTotal)} บาท (คำนวณจากยอดเบิกที่กรอกด้านบน)
+            {isRuleLoading ? (
+                <Box
+                    sx={{
+                        border: "1px solid",
+                        borderColor: CARD_BORDER,
+                        borderRadius: 2,
+                        bgcolor: CARD_SOFT_BG,
+                        px: 2,
+                        py: 1.5,
+                        mt: 1.5,
+                    }}
+                >
+                    <Typography variant="body2" fontWeight={700} color="text.secondary">
+                        กำลังคำนวณเงื่อนไข...
                     </Typography>
                 </Box>
+            ) : (
+                <RuleResultBox rule={rule} />
             )}
         </Box>
     );
@@ -936,92 +1070,33 @@ const FingerModalBody: React.FC<{
         fingerKey: FingerKey,
         patch: Partial<{ selected: boolean; joints: number; amount: string }>
     ) => void;
-    getFingerRule?: OrganLossSelectorProps["getFingerRule"];
-}> = ({ modal, setFingerField, getFingerRule }) => {
+    customerId: number | undefined;
+    onRuleChange: (side: "left" | "right", fingerKey: FingerKey, rule: OrganRuleResult | null) => void;
+}> = ({ modal, setFingerField, customerId, onRuleChange }) => {
+    // ── โหลดตาราง bodyPart ของกลุ่มนิ้วนี้ทั้งหมด (ครั้งเดียว ใช้ร่วมกันทุกช่อง) ──
+    const { findFingerBodyPart, isLoading: isFingerOptionsLoading } = useFingerBodyPartOptions(
+        modal.choice.disabilityLossPartId
+    );
+
     const renderSide = (side: "left" | "right", label: string) => (
         <Box mb={2}>
             <Typography fontWeight={800} mb={1}>
                 ข้าง{label} :
             </Typography>
             <Box display="grid" gap={1.5} gridTemplateColumns={{ xs: "1fr 1fr", sm: "repeat(5, 1fr)" }}>
-                {FINGER_KEYS.map((fingerKey) => {
-                    const data = modal.fingers![side][fingerKey];
-                    const label2 = FINGER_LABELS[modal.key]?.[fingerKey];
-                    const maxJoints = FINGER_MAX_JOINTS[modal.key]?.[fingerKey] || 3;
-                    const rule = data.selected ? getFingerRule?.(modal.key, fingerKey, data.joints) ?? null : null;
-                    return (
-                        <Box
-                            key={fingerKey}
-                            sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}
-                        >
-                            <Box
-                                component="label"
-                                display="flex"
-                                alignItems="center"
-                                gap={1}
-                                sx={{ cursor: "pointer" }}
-                                onClick={() => setFingerField(side, fingerKey, { selected: !data.selected })}
-                            >
-                                <input
-                                    type="checkbox"
-                                    checked={data.selected}
-                                    readOnly
-                                    style={{ width: 16, height: 16 }}
-                                />
-                                <Typography fontWeight={700} fontSize={14}>
-                                    {label2}
-                                </Typography>
-                            </Box>
-
-                            <Box mt={1.5}>
-                                <Typography variant="caption" fontWeight={700} color="text.secondary">
-                                    จำนวนข้อ
-                                </Typography>
-                                <Box display="flex" alignItems="center" justifyContent="center" gap={1.5} mt={0.5}>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                            setFingerField(side, fingerKey, { joints: Math.max(1, data.joints - 1) })
-                                        }
-                                    >
-                                        -
-                                    </IconButton>
-                                    <Typography fontWeight={800}>{data.joints}</Typography>
-                                    <IconButton
-                                        size="small"
-                                        onClick={() =>
-                                            setFingerField(side, fingerKey, {
-                                                joints: Math.min(maxJoints, data.joints + 1),
-                                            })
-                                        }
-                                    >
-                                        +
-                                    </IconButton>
-                                </Box>
-                            </Box>
-
-                            <TextField
-                                label={`ยอดเบิก${label2}`}
-                                size="small"
-                                fullWidth
-                                inputMode="decimal"
-                                sx={{ mt: 1.5 }}
-                                value={data.amount}
-                                onChange={(e) => setFingerField(side, fingerKey, { amount: e.target.value })}
-                            />
-
-                            {data.selected ? (
-                                <RuleResultBox rule={rule} compact />
-                            ) : (
-                                <Box mt={1.5}>
-                                    <Typography variant="caption" color="text.disabled">
-                                        เปอร์เซ็นต์: เลือกนิ้วเพื่อแสดงเปอร์เซ็นต์
-                                    </Typography>
-                                </Box>
-                            )}
-                        </Box>
-                    );
-                })}
+                {FINGER_KEYS.map((fingerKey) => (
+                    <FingerCell
+                        key={fingerKey}
+                        modal={modal}
+                        side={side}
+                        fingerKey={fingerKey}
+                        setFingerField={setFingerField}
+                        findFingerBodyPart={findFingerBodyPart}
+                        isFingerOptionsLoading={isFingerOptionsLoading}
+                        customerId={customerId}
+                        onRuleChange={onRuleChange}
+                    />
+                ))}
             </Box>
         </Box>
     );
@@ -1033,6 +1108,144 @@ const FingerModalBody: React.FC<{
             </Alert>
             {renderSide("left", "ซ้าย")}
             {renderSide("right", "ขวา")}
+        </Box>
+    );
+};
+
+// ── ช่องนิ้วเดี่ยว 1 ช่อง: ผูก bodyPartId ตาม (นิ้ว, ข้าง, จำนวนข้อ) ที่เปลี่ยนแบบ dynamic แล้วยิง API คำนวณ ──
+const FingerCell: React.FC<{
+    modal: ModalState;
+    side: "left" | "right";
+    fingerKey: FingerKey;
+    setFingerField: (
+        side: "left" | "right",
+        fingerKey: FingerKey,
+        patch: Partial<{ selected: boolean; joints: number; amount: string; bodyPartId?: number }>
+    ) => void;
+    findFingerBodyPart: (subPartId: number, sideId: number, jointCount: number) => FingerBodyPartOption | undefined;
+    isFingerOptionsLoading: boolean;
+    customerId: number | undefined;
+    onRuleChange: (side: "left" | "right", fingerKey: FingerKey, rule: OrganRuleResult | null) => void;
+}> = ({
+    modal,
+    side,
+    fingerKey,
+    setFingerField,
+    findFingerBodyPart,
+    isFingerOptionsLoading,
+    customerId,
+    onRuleChange,
+}) => {
+    const data = modal.fingers![side][fingerKey];
+    const label2 = FINGER_LABELS[modal.key]?.[fingerKey];
+    const maxJoints = FINGER_MAX_JOINTS[modal.key]?.[fingerKey] || 3;
+
+    const subPartId = FINGER_KEY_TO_SUB_PART_ID[modal.key]?.[fingerKey];
+    const sideId = FINGER_SIDE_ID[side];
+    const matched = subPartId !== undefined ? findFingerBodyPart(subPartId, sideId, data.joints) : undefined;
+
+    const { options: ruleOptions, isLoading: isRuleLoading } = useCalculateDisabilityOptions(
+        customerId,
+        data.selected ? matched?.bodyPartId : undefined,
+        data.selected ? matched?.standardMedicalExpenseId : undefined
+    );
+    const rule: OrganRuleResult | null = ruleOptions[0] ?? null;
+
+    useEffect(() => {
+        onRuleChange(side, fingerKey, data.selected ? rule : null);
+    }, [rule, data.selected]);
+
+    useEffect(() => {
+        if (data.selected && matched) {
+            setFingerField(side, fingerKey, { bodyPartId: matched.bodyPartId });
+        }
+    }, [data.selected, matched?.bodyPartId]);
+
+    useEffect(() => {
+        if (data.selected && rule) {
+            const percent = rule.percent / 100;
+            setFingerField(side, fingerKey, { amount: String(rule.coveredAmount * percent) });
+        } else if (!data.selected) {
+            setFingerField(side, fingerKey, { amount: "" });
+        }
+    }, [rule?.coveredAmount, data.selected]);
+
+    return (
+        <Box sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}>
+            <Box
+                component="label"
+                display="flex"
+                alignItems="center"
+                gap={1}
+                sx={{ cursor: "pointer" }}
+                onClick={() => setFingerField(side, fingerKey, { selected: !data.selected })}
+            >
+                <input type="checkbox" checked={data.selected} readOnly style={{ width: 16, height: 16 }} />
+                <Typography fontWeight={700} fontSize={14}>
+                    {label2}
+                </Typography>
+            </Box>
+
+            <Box mt={1.5}>
+                <Typography variant="caption" fontWeight={700} color="text.secondary">
+                    จำนวนข้อ
+                </Typography>
+                <Box display="flex" alignItems="center" justifyContent="center" gap={1.5} mt={0.5}>
+                    <IconButton
+                        size="small"
+                        onClick={() => setFingerField(side, fingerKey, { joints: Math.max(1, data.joints - 1) })}
+                    >
+                        -
+                    </IconButton>
+                    <Typography fontWeight={800}>{data.joints}</Typography>
+                    <IconButton
+                        size="small"
+                        onClick={() =>
+                            setFingerField(side, fingerKey, { joints: Math.min(maxJoints, data.joints + 1) })
+                        }
+                    >
+                        +
+                    </IconButton>
+                </Box>
+            </Box>
+
+            <TextField
+                label={`ยอดเบิก${label2}`}
+                size="small"
+                fullWidth
+                value={data.amount}
+                InputProps={{ readOnly: true }}
+                disabled
+                sx={{ mt: 1.5 }}
+            />
+
+            {data.selected ? (
+                isFingerOptionsLoading || isRuleLoading ? (
+                    <Box
+                        sx={{
+                            border: "1px solid",
+                            borderColor: CARD_BORDER,
+                            borderRadius: 2,
+                            bgcolor: CARD_SOFT_BG,
+                            px: 2,
+                            py: 1,
+                            mt: 1.5,
+                        }}
+                    >
+                        <Typography variant="body2" fontWeight={700} color="text.secondary">
+                            กำลังคำนวณเงื่อนไข...
+                        </Typography>
+                    </Box>
+                ) : (
+                    <RuleResultBox rule={rule} compact />
+                )
+            ) : (
+                <Box mt={1.5}>
+                    <Typography variant="caption" color="text.disabled">
+                        เปอร์เซ็นต์: เลือกนิ้วเพื่อแสดงเปอร์เซ็นต์
+                    </Typography>
+                </Box>
+            )}
         </Box>
     );
 };

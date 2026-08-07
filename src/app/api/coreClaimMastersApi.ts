@@ -28,6 +28,8 @@ const getBeneficiaryQueryKey = ["getBeneficiary"];
 const getRelationTypeQueryKey = ["getRelationType"];
 const getDisabilityLossPartQueryKey = ["getDisabilityLossPart"];
 const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPart"];
+const getPaymentStatusQueryKey = ["getPaymentStatus"];
+const getBranchQueryKey = ["getBranch"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -113,20 +115,30 @@ export const useGetSimBCategory = (
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
     productTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    planId?: number | undefined
 ) => {
     return useQuery(
-        [getSimBCategoryQueryKey, formatTypeId, coverageTypeId, medicalTypeId, productTypeId, causeOfIncidentId],
+        [
+            getSimBCategoryQueryKey,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            productTypeId,
+            causeOfIncidentId,
+            planId,
+        ],
         () =>
             coreClaimMastersClient.getSimBCategory(
                 formatTypeId,
                 coverageTypeId,
                 medicalTypeId,
                 productTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                planId
             ),
         {
-            enabled: !!formatTypeId || !!(medicalTypeId || causeOfIncidentId),
+            enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
             refetchOnWindowFocus: false,
         }
     );
@@ -138,10 +150,20 @@ export const useGetSimB = (
     medicalTypeId?: number | undefined,
     isUseOften?: boolean | undefined,
     productTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    plandId?: number | undefined
 ) => {
     return useQuery(
-        [getSimBQueryKey, formatTypeId, coverageTypeId, medicalTypeId, isUseOften, productTypeId, causeOfIncidentId],
+        [
+            getSimBQueryKey,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            isUseOften,
+            productTypeId,
+            causeOfIncidentId,
+            plandId,
+        ],
         () =>
             coreClaimMastersClient.getSimB(
                 formatTypeId,
@@ -149,10 +171,11 @@ export const useGetSimB = (
                 medicalTypeId,
                 isUseOften,
                 productTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                plandId
             ),
         {
-            enabled: !!formatTypeId && !!coverageTypeId && !!(medicalTypeId || causeOfIncidentId),
+            enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
             refetchOnWindowFocus: false,
         }
     );
@@ -210,10 +233,13 @@ export const useGetDocumentRecipientType = (documentRecipientTypeId?: number | u
     );
 };
 
-export const useGetNonCoveredReason = (nonCoveredReasonId?: number | undefined) => {
+export const useGetNonCoveredReason = (
+    nonCoveredReasonId?: number | undefined,
+    coverageTypeId?: number | undefined
+) => {
     return useQuery(
-        [getNonCoveredReasonQueryKey, nonCoveredReasonId],
-        () => coreClaimMastersClient.getNonCoveredReason(nonCoveredReasonId),
+        [getNonCoveredReasonQueryKey, nonCoveredReasonId, coverageTypeId],
+        () => coreClaimMastersClient.getNonCoveredReason(nonCoveredReasonId, coverageTypeId),
         {
             refetchOnWindowFocus: false,
         }
@@ -357,6 +383,22 @@ export const useGetBodyPartByDisabilityLossPart = (disabilityLossPartId?: number
     return useQuery(
         [getBodyPartByDisabilityLossPartQueryKey, disabilityLossPartId],
         () => coreClaimMastersClient.getBodyPartByDisabilityLossPart(disabilityLossPartId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetBranch = (branchId?: number | undefined) => {
+    return useQuery([getBranchQueryKey, branchId], () => coreClaimMastersClient.getBranch(branchId), {
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useGetPaymentStatus = (paymentStatusId?: number | undefined) => {
+    return useQuery(
+        [getPaymentStatusQueryKey, paymentStatusId],
+        () => coreClaimMastersClient.getPaymentStatus(paymentStatusId),
         {
             refetchOnWindowFocus: false,
         }

@@ -10,9 +10,9 @@ type SearchTypeDropDownProps = Omit<
 const searchTypeData = [
     { searchTypeId: 1, searchTypeName: "ApplicationID" },
     { searchTypeId: 2, searchTypeName: "เลขบัตรประชาชน" },
-    { searchTypeId: 3, searchTypeName: "Passport" },
+    { searchTypeId: 3, searchTypeName: "Passport / G-Code" },
     { searchTypeId: 4, searchTypeName: "ชื่อ-นามสกุล(ผู้เอาประกัน)" },
-    { searchTypeId: 5, searchTypeName: "เลขที่อ้างอิง(นักเรียน)" },
+    { searchTypeId: 5, searchTypeName: "เลขประจำตัวผู้เอาประกัน" },
 ];
 const SearchTypeDropDown = ({ formik, filterIds, ...props }: SearchTypeDropDownProps) => {
     let filteredData = filterIds

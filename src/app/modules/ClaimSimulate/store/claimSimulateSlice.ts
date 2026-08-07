@@ -45,6 +45,7 @@ export interface ClaimLineItem {
     color?: string;
     disabled: boolean;
     bodyPartId?: number | undefined;
+    maximumLimit?: number | undefined;
 }
 
 interface ClaimSimulateState {

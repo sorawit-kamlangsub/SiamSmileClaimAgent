@@ -3,6 +3,7 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
     CaseDocumentDetailCreateRequest,
+    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -15,10 +16,12 @@ export enum SymptomType {
     Other = 2,
 }
 
-export enum SpecifyHospital {
-    Unspecified = 1,
-    Specify = 2,
+export enum DeathPlaceType {
+    Home = 1,
+    Hospital = 2,
+    Other = 3,
 }
+
 export interface DiagnosisModel {
     icd10Id?: number;
     icd10Detail?: string;
@@ -54,6 +57,7 @@ export interface BeneficiaryForm {
 
     citizenId?: string;
     bankId?: number;
+    bankName?: string;
     bankAccountNo?: string;
     bankAccountName?: string;
 
@@ -61,18 +65,6 @@ export interface BeneficiaryForm {
 
     // สำหรับ UI
     source?: "system" | "manual";
-}
-
-export interface OldClaimInfo {
-    claimNo: string;
-    incidentDate: string;
-    diagnosis: string;
-    totalClaim: number;
-    totalPaid: number;
-    remainingBudget: number;
-    remainingCount: number;
-    cases: ClaimCaseItem[];
-    isHidden: boolean;
 }
 
 export interface ClaimFormValues {
@@ -107,9 +99,10 @@ export interface ClaimFormValues {
     documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
     notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
+    benefitAmounts: Record<number, string>;
     transferAmount: number | undefined; //เงินโอน
     symptomType: SymptomType | undefined;
-    specifyHospital: SpecifyHospital | undefined;
+    deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
     hospitalName: string | undefined;
     diagnoses: DiagnosisModel[];
@@ -131,7 +124,7 @@ export type ContactInfo = GetContactPersonDtoResponse & {
 
 interface ClaimPHState {
     isContinuous: boolean;
-    oldClaim: OldClaimInfo | undefined;
+    oldClaim: GetClaimHistoryDtoResponse | undefined;
     form: ClaimFormValues;
     bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
@@ -167,8 +160,9 @@ const defaultForm: ClaimFormValues = {
     documentCompleteDate: dayjs(),
     notificationDate: dayjs(),
     transferAmount: 0,
+    benefitAmounts: {},
     symptomType: 1,
-    specifyHospital: 1,
+    deathPlaceType: 1,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [
@@ -209,12 +203,12 @@ const claimPHSlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<OldClaimInfo | undefined>) {
+        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
             state.oldClaim = action.payload;
         },
-        toggleOldClaimHidden(state) {
-            if (state.oldClaim) state.oldClaim.isHidden = !state.oldClaim.isHidden;
-        },
+        // toggleOldClaimHidden(state) {
+        //     if (state.oldClaim) state.oldClaim.isHidden = !state.oldClaim.isHidden;
+        // },
         setClaimForm(state, action: PayloadAction<Partial<ClaimFormValues>>) {
             state.form = { ...state.form, ...action.payload };
         },
@@ -295,6 +289,7 @@ const claimPHSlice = createSlice({
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
+
         setEnabled: (state, action: PayloadAction<boolean>) => {
             state.isEnabled = action.payload;
         },
@@ -347,7 +342,7 @@ const claimPHSlice = createSlice({
 export const {
     setIsContinuous,
     setOldClaim,
-    toggleOldClaimHidden,
+    //toggleOldClaimHidden,
     setClaimForm,
     resetClaimForm,
     setBankAccounts,

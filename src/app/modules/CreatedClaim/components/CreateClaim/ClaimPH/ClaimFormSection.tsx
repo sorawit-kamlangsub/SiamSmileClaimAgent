@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
     Backdrop,
     Box,
@@ -20,7 +20,7 @@ import FormikDatePicker from "../../../../_common/components/CustomFormik/Formik
 import ArticleIcon from "@mui/icons-material/Article";
 import UploadFileSharpIcon from "@mui/icons-material/UploadFileSharp";
 import CalculateIcon from "@mui/icons-material/Calculate";
-import CoverageBox from "./CoverageBox";
+import CoverageBox from "../CoverageBox";
 import OcrDocumentScanSection from "../OcrDocumentScanSection";
 import DocumentRecipientTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/DocumentRecipientTypeDropDown";
 import UserAutocompleteApi from "../../../../_common/components/ClaimAgent/CustomDropdown/UserAutocompleteApi";
@@ -29,16 +29,19 @@ import ClaimTypeSelector from "../ClaimTypeSelector";
 import ChipSelector from "../ChipSelector";
 import dayjs from "dayjs";
 import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
-import { claimPHSelector, setOrganLossItems, SpecifyHospital, SymptomType } from "../../../store/claimPHSlice";
+import { claimPHSelector, DeathPlaceType, setOrganLossItems, SymptomType } from "../../../store/claimPHSlice";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import DocumentScanTable from "../DocumentScanTable";
-import { getTransferConfig } from "../ClaimTransferConfig";
+// import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
 import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
+import { useNavigate } from "react-router-dom";
+import CoverageAndTransferBox from "../CoverageAndTransferBox";
+import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -80,9 +83,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         setOcrDocumentIds,
         getRequiredDocsByCoverageType,
     } = useClaimPHForm({ onNext });
-    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss();
     const { values, setFieldValue } = formik;
+    const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
+        values.coverageTypeId
+    );
     const dispatch = useAppDispatch();
+    const navigate = useNavigate();
     const { organLossItems } = useAppSelector(claimPHSelector);
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
@@ -90,6 +96,9 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    const isManualIPD =
+        values.coverageTypeId === CoverageType.Medical &&
+        (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
     const requiresOcrValidation = isMedical && shouldShowOcrDocumentScan(values.coverageTypeId);
@@ -110,7 +119,14 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
         : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
 
-    const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
+    // const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
+
+    // ── ยอดโอนเกินสิทธิ์ (NPL) ──
+    const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
+    const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    const maxPrice = currentBenefit?.maxPrice;
+    const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
+
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
@@ -119,6 +135,11 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         }
         if (requiresOcrValidation && !isOcrDocsValid) {
             swalWarningNotOutsideClick("แจ้งเตือน", "กรุณาแนบเอกสารให้ครบถ้วนตามที่กำหนด");
+            return;
+        }
+        // ยอดที่ขอเบิกเกินสิทธิ์เบิกสูงสุด (NPL) ต้องให้ผู้ใช้ยืนยันยอดก่อน
+        if (isOverEligibleLimit) {
+            setIsConfirmExcessOpen(true);
             return;
         }
         formik.submitForm();
@@ -315,43 +336,67 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                         required
                                     />
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <RadioGroup
-                                        row
-                                        value={values.specifyHospital}
-                                        onChange={(e) => setFieldValue("specifyHospital", Number(e.target.value))}
-                                    >
-                                        <FormControlLabel
-                                            value={SpecifyHospital.Unspecified}
-                                            control={<Radio size="small" />}
-                                            label="ไม่ระบุสถานพยาบาล"
-                                        />
-                                        <FormControlLabel
-                                            value={SpecifyHospital.Specify}
-                                            control={<Radio size="small" />}
-                                            label="ระบุสถานพยาบาล"
-                                        />
-                                    </RadioGroup>
-                                </Grid>
-                                {values.specifyHospital === SpecifyHospital.Specify && (
+                                {isDeath && (
+                                    <>
+                                        <Grid item xs={12}>
+                                            <Typography fontWeight={600} fontSize={16}>
+                                                สถานที่เสียชีวิต{" "}
+                                                <Typography component="span" color="error">
+                                                    *
+                                                </Typography>
+                                            </Typography>
+                                        </Grid>
+                                        <Grid item xs={12}>
+                                            <RadioGroup
+                                                row
+                                                value={values.deathPlaceType}
+                                                onChange={(e) =>
+                                                    setFieldValue("deathPlaceType", Number(e.target.value))
+                                                }
+                                            >
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Home}
+                                                    control={<Radio size="small" />}
+                                                    label="ที่บ้าน"
+                                                />
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Hospital}
+                                                    control={<Radio size="small" />}
+                                                    label="สถานพยาบาล"
+                                                />
+                                                <FormControlLabel
+                                                    value={DeathPlaceType.Other}
+                                                    control={<Radio size="small" />}
+                                                    label="อื่นๆ"
+                                                />
+                                            </RadioGroup>
+                                        </Grid>
+                                        {values.deathPlaceType === DeathPlaceType.Hospital && (
+                                            <Grid item xs={12} lg={9} mt={-1}>
+                                                <HospitalDropdown formik={formik} name="hospitalId" required />
+                                            </Grid>
+                                        )}
+                                        {values.deathPlaceType === DeathPlaceType.Other && (
+                                            <Grid item xs={12} lg={9}>
+                                                <FormikTextField
+                                                    name="accidentPlace"
+                                                    label="สถานที่เสียชีวิต"
+                                                    formik={formik}
+                                                    size="small"
+                                                    fullWidth
+                                                    required
+                                                    placeholder="ระบุสถานที่เสียชีวิต"
+                                                />
+                                            </Grid>
+                                        )}
+                                    </>
+                                )}
+                                {isDisability && (
                                     <Grid item xs={12} lg={9} mt={-1}>
                                         <HospitalDropdown formik={formik} name="hospitalId" required />
                                     </Grid>
                                 )}
                             </>
-                        )}
-                        {isDeath && (
-                            <Grid item xs={12} lg={9}>
-                                <FormikTextField
-                                    name="accidentPlace"
-                                    label="สถานที่เกิดเหตุ"
-                                    formik={formik}
-                                    size="small"
-                                    fullWidth
-                                    required
-                                    placeholder="ระบุสถานที่เกิดเหตุ เช่น บ้าน / โรงพยาบาล / สถานที่เกิดเหตุ"
-                                />
-                            </Grid>
                         )}
                         {/* ระบุอาการ */}
                         {!isDeath && !isDisability && (
@@ -436,12 +481,15 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 isOrganChoicesLoading={isOrganChoicesLoading}
                                 nonCoveredReason={nonCoveredReasonData?.data ?? []}
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
-                                onChange={(items) => dispatch(setOrganLossItems(items))}
+                                onChange={(items) => {
+                                    dispatch(setOrganLossItems(items));
+                                }}
+                                customerId={insured?.customerId}
                             />
                         </Box>
                     )}
                     {/* Coverage box */}
-                    {(isOPD || isIPD || isDisability) && (
+                    {(isIPD || isOPD || isDisability) && !isManualIPD && (
                         <Grid item xs={12} mt={2}>
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}
@@ -456,24 +504,42 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                     )}
 
                     {/* ปุ่มคำนวณวงเงิน */}
-                    {isIPD && (
-                        <Grid item xs={12} md={6} lg={4} mt={2}>
-                            <Grid container justifyContent="center">
-                                <Button
-                                    variant="outlined"
-                                    color="primary"
-                                    size="small"
-                                    startIcon={<CalculateIcon />}
-                                    sx={{ width: { xs: "100%", sm: "30%", md: "50%" }, mb: 1 }}
-                                >
-                                    เปิดโปรแกรมคำนวณวงเงิน
-                                </Button>
+                    {isManualIPD && (
+                        <>
+                            <Grid item xs={12} mt={2}>
+                                <CoverageAndTransferBox
+                                    items={customerBenefit?.data ?? []}
+                                    isLoading={customerBenefitLoading}
+                                    planCode={
+                                        isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
+                                            ? insured?.productName
+                                            : insured?.productCategoryName
+                                    }
+                                    benefitAmounts={formik.values.benefitAmounts}
+                                    onBenefitAmountsChange={(value) => formik.setFieldValue("benefitAmounts", value)}
+                                    onTransferAmountChange={(value) => formik.setFieldValue("transferAmount", value)}
+                                    debounceMs={300}
+                                />
                             </Grid>
-                        </Grid>
+                            <Grid item xs={12} mt={2}>
+                                <Grid container justifyContent="center">
+                                    <Button
+                                        variant="outlined"
+                                        color="primary"
+                                        size="large"
+                                        startIcon={<CalculateIcon />}
+                                        sx={{ mb: 1 }}
+                                        onClick={() => navigate("/claim-simulation")}
+                                    >
+                                        เปิดโปรแกรมคำนวณวงเงินเคลม
+                                    </Button>
+                                </Grid>
+                            </Grid>
+                        </>
                     )}
 
                     {/* จำนวนเงิน */}
-                    {!isDisability && !isDeath && (
+                    {!isDisability && !isDeath && !isManualIPD && (
                         <Grid item xs={12}>
                             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
                                 <Grid item xs={12} sm={5.9} md={2.9} mt={1}>
@@ -508,8 +574,8 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                     {isDeath && formik.values.causeOfIncidentId && (
                         <Box>
                             <DeathClaimAmountCardPH
-                                causeOfIncidentName={formik.values.causeOfIncidentName}
-                                maxAmount={transferConfig.maxAmount}
+                                items={customerBenefit?.data ?? []}
+                                isLoading={customerBenefitLoading}
                             />
 
                             <Box mt={3}>
@@ -559,6 +625,23 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
             {(isDeath || isDisability) && (
                 <DocumentScanTable productId={6} documentTypeId={15} aplicationCode={insured?.policyCode} />
             )}
+
+            <ConfirmExcessLimitTransferDialog
+                open={isConfirmExcessOpen}
+                onClose={() => setIsConfirmExcessOpen(false)}
+                loading={formik.isSubmitting}
+                customerName={insured?.customerName as string}
+                productLabel="PH"
+                idCardNo={insured?.cardDetail as string}
+                appId={insured?.policyCode}
+                requestedAmount={values.transferAmount ?? 0}
+                maxEligibleAmount={maxPrice ?? 0}
+                onConfirm={async ({ withdrawableAmount }) => {
+                    setIsConfirmExcessOpen(false);
+                    await setFieldValue("transferAmount", withdrawableAmount);
+                    formik.submitForm();
+                }}
+            />
 
             <Box display="flex" justifyContent="flex-end" mb={5}>
                 <Button

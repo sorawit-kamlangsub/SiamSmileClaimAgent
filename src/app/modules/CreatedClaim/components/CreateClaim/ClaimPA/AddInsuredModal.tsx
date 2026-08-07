@@ -3,6 +3,7 @@ import {
     Avatar,
     Box,
     Button,
+    Chip,
     Dialog,
     DialogContent,
     DialogTitle,
@@ -15,41 +16,43 @@ import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import PersonIcon from "@mui/icons-material/Person";
+import ManageSearchIcon from "@mui/icons-material/ManageSearch";
+import HistoryIcon from "@mui/icons-material/History";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { MUIDataTableColumn } from "mui-datatables";
-import { useAppDispatch } from "../../../../../../redux";
-import { addClaimItem, ClaimInsuredItem } from "../../../store/claimPASlice";
-import {
-    cellAlignOptions,
-    defaultOptionStandardDataTable,
-    formatDateString,
-    smallSizeFooter,
-} from "../../../../../functionHelpers";
-import { StandardDataTable } from "../../../../_common";
-import { FormikDropdown, FormikTextField } from "../../../../_common";
-import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
+import { useAppDispatch, useAppSelector } from "../../../../../../redux";
+import { claimPASelector, resetClaimForm, setPendingInsured } from "../../../store/claimPASlice";
+import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../../functionHelpers";
+import { FormikDropdown, FormikTextField, StandardDataTable } from "../../../../_common";
 import { useFormik } from "formik";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
+import { PaginationSortableDto } from "../../../../_common/types";
+import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../../../api/coreClaimApi";
+import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
+import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 
-interface SearchResult {
-    appId: string;
-    customerName: string;
-    insuredType: string;
-    plan: string;
-    startCoverDate: string;
-    effectiveDate: string;
-    endCoverDate: string;
-    prefix: string;
-    firstName: string;
-    lastName: string;
+interface InsuredDetailItem {
+    label: string;
+    value: string;
 }
 
-interface ClaimHistoryRow {
-    claimCase: string;
-    chiefComplain: string;
-    incidentDate: string;
-    claimAmount: number;
-    paidAmount: number;
+interface SearchResult {
+    id: number; // ใช้เป็น customerId ตอนสร้างเคลม
+    appId: string; // = policyCode ของผู้เอาประกันรายนี้ (ใช้เป็น applicationId ตอนสร้างเคลมด้วย)
+    customerName: string;
+    idCardNo: string;
+    insuredType: string; // productCategoryName
+    plan: string; // productName
+    startCoverDate?: dayjs.Dayjs;
+    endCoverDate?: dayjs.Dayjs;
+    // ── ข้อมูลหลัก (แสดงตลอดหลังเลือกแล้ว) ──
+    coverageStatus: string;
+    productLabel: string;
+    // ── ข้อมูลเพิ่มเติม (ไม่จำกัดจำนวน ไม่ผูกกับ field ตายตัว) ──
+    extraDetails?: InsuredDetailItem[];
 }
 
 interface Props {
@@ -58,134 +61,163 @@ interface Props {
     currentItemCount: number; // เพื่อคำนวณ seq
 }
 
-// ── Mock search results ───────────────────────────────────────
-const MOCK_SEARCH_RESULTS: SearchResult[] = [
-    {
-        appId: "69360005",
-        prefix: "ด.ญ.",
-        firstName: "วิจิตรัน",
-        lastName: "อุตมกัตถ์",
-        customerName: "ด.ญ.วิจิตรัน อุตมกัตถ์",
-        insuredType: "นักเรียน",
-        plan: "เลือกสิทธิ์",
-        startCoverDate: "2026-01-01",
-        effectiveDate: "2026-01-01",
-        endCoverDate: "2026-12-31",
-    },
-    {
-        appId: "69360006",
-        prefix: "ด.ช.",
-        firstName: "วิชัย",
-        lastName: "อุตมกัตถ์",
-        customerName: "ด.ช.วิชัย อุตมกัตถ์",
-        insuredType: "นักเรียน",
-        plan: "เลือกสิทธิ์",
-        startCoverDate: "2026-01-01",
-        effectiveDate: "2026-01-01",
-        endCoverDate: "2026-12-31",
-    },
+const mapCoverageStatus = (appStatusId?: number) => (appStatusId === 1 ? "คุ้มครอง" : "ไม่คุ้มครอง");
+
+const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): SearchResult => {
+    const extraDetails: InsuredDetailItem[] = [];
+    if (dto.schoolName) extraDetails.push({ label: "สถานศึกษา", value: dto.schoolName });
+    if (dto.customerCode) extraDetails.push({ label: "เลขบัตรประกันนักเรียน", value: dto.customerCode });
+    if (dto.mobilePhoneNumber) extraDetails.push({ label: "เบอร์โทรศัพท์", value: dto.mobilePhoneNumber });
+
+    return {
+        id: dto.id ?? 0,
+        appId: dto.policyCode ?? "",
+        customerName: dto.customerName ?? "",
+        idCardNo: dto.cardDetail ?? "",
+        insuredType: dto.productCategoryName ?? dto.productTypeName ?? "-",
+        plan: dto.productName ?? "-",
+        startCoverDate: dto.coverageFrom,
+        endCoverDate: dto.coverageTo,
+        coverageStatus: mapCoverageStatus(dto.appStatusId),
+        productLabel: [dto.productTypeName, dto.productCategoryName].filter(Boolean).join(" ") || "-",
+        extraDetails,
+    };
+};
+
+const cardSx = {
+    border: "1px solid #d9e6f5",
+    borderRadius: 2,
+    overflow: "hidden",
+} as const;
+
+const searchTypeData = [
+    { searchTypeId: 1, searchTypeName: "เลขบัตรประชาชน" },
+    { searchTypeId: 2, searchTypeName: "ชื่อ-นามสกุล(ผู้เอาประกัน)" },
+    { searchTypeId: 3, searchTypeName: "เลขประจำตัวผู้เอาประกัน" },
 ];
 
-const MOCK_CLAIM_HISTORY: ClaimHistoryRow[] = [];
-
-const SEARCH_BY_OPTIONS = [
-    { value: "nationalId", label: "เลขบัตรประชาชน" },
-    { value: "passport", label: "Passport" },
-    { value: "name", label: "ชื่อ-นามสกุล" },
-];
-
-const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) => {
+const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+    const { insured } = useAppSelector(claimPASelector);
     const [selectedInsured, setSelectedInsured] = useState<SearchResult | null>(null);
-    const [claimHistory, setClaimHistory] = useState<ClaimHistoryRow[]>([]);
-    const [hasSearched, setHasSearched] = useState(false);
+    const [submittedSearch, setSubmittedSearch] = useState<{ searchIndex: number; searchDetail: string } | null>(null);
+    const hasSearched = submittedSearch !== null;
 
     const formik = useFormik({
-        initialValues: { searchBy: "nationalId", keyword: "" },
+        initialValues: { searchBy: 2, keyword: "" },
         validate: (v) => {
             const e: any = {};
             if (!v.searchBy) e.searchBy = "โปรดระบุ";
             if (!v.keyword.trim()) e.keyword = "โปรดระบุ";
             return e;
         },
-        onSubmit: () => {
-            // TODO: เรียก API จริง
-            setSearchResults(MOCK_SEARCH_RESULTS);
+        onSubmit: (values) => {
+            setSubmittedSearch({ searchIndex: values.searchBy, searchDetail: values.keyword });
             setSelectedInsured(null);
-            setClaimHistory([]);
-            setHasSearched(true);
+            setSearchPaginated({ page: 1, recordsPerPage: 10 });
         },
     });
 
+    const [searchPaginated, setSearchPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 5,
+    });
+
+    const { data: searchResponse, isFetching: isSearchLoading } = useGetCustomerSearchByPolicyCode(
+        insured?.policyCode,
+        submittedSearch?.searchIndex,
+        submittedSearch?.searchDetail,
+        searchPaginated.orderingField,
+        searchPaginated.ascendingOrder,
+        searchPaginated.page,
+        searchPaginated.recordsPerPage
+    );
+    const searchResults: SearchResult[] = (searchResponse?.data ?? []).map(mapToSearchResult);
+    const searchTotalCount = searchResponse?.data?.[0]?.totalCount ?? searchResults.length;
+
+    const [historyPaginated, setHistoryPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 5,
+    });
+
+    const { data: claimHistoryResponse, isLoading: isClaimHistoryLoading } = useGetClaimHistory(
+        selectedInsured?.appId,
+        undefined,
+        historyPaginated.orderingField,
+        historyPaginated.ascendingOrder,
+        historyPaginated.page,
+        historyPaginated.recordsPerPage
+    );
+    const claimHistoryItems = claimHistoryResponse?.data ?? [];
+    const claimHistoryTotalCount = claimHistoryItems[0]?.totalCount ?? claimHistoryItems.length;
+
     const handleSelect = (result: SearchResult) => {
         setSelectedInsured(result);
-        // TODO: เรียก API ดึงประวัติเคลม
-        setClaimHistory(MOCK_CLAIM_HISTORY);
+        setHistoryPaginated({ page: 1, recordsPerPage: historyPaginated.recordsPerPage ?? 10 });
     };
 
     const handleAddClaim = () => {
         if (!selectedInsured) return;
-        const item: ClaimInsuredItem = {
-            id: Date.now().toString(),
-            seq: currentItemCount + 1,
-            customerName: selectedInsured.customerName,
-            claimStyle: `${selectedInsured.insuredType} (${selectedInsured.plan})`,
-            incidentDate: dayjs(),
-            admissionDate: dayjs(),
-            dischargeDate: dayjs(),
-            idCard: selectedInsured.appId,
-            claimAmount: 0,
-        };
 
-        dispatch(addClaimItem(item));
+        dispatch(
+            setPendingInsured({
+                customerId: selectedInsured.id,
+                customerName: selectedInsured.customerName,
+                policyCode: selectedInsured.appId,
+                cardTypeId: 2,
+                cardDetail: selectedInsured.idCardNo,
+                productName: selectedInsured.plan,
+                productCategoryName: selectedInsured.insuredType,
+            } as any)
+        );
+        dispatch(resetClaimForm());
+
         navigate(-1);
         handleClose();
     };
 
     const handleClose = () => {
         formik.resetForm();
-        setSearchResults([]);
+        setSubmittedSearch(null);
         setSelectedInsured(null);
-        setClaimHistory([]);
-        setHasSearched(false);
         onClose();
     };
 
-    // ── columns: ตารางค้นหา ──
+    // ── columns: ผลการค้นหา ──
     const searchColumns: MUIDataTableColumn[] = [
         {
-            name: "select",
-            label: " ",
+            name: "customerName",
+            label: "ผู้เอาประกัน",
             options: {
-                ...cellAlignOptions({ align: "center" }),
+                ...cellAlignOptions({ align: "left" }),
                 customBodyRenderLite: (i) => {
                     const result = searchResults[i];
-                    const isSelected = selectedInsured?.appId === result.appId;
                     return (
-                        <Button
-                            size="small"
-                            variant={isSelected ? "contained" : "outlined"}
-                            color="primary"
-                            onClick={() => handleSelect(result)}
-                            sx={{ minWidth: 60 }}
-                        >
-                            เลือก
-                        </Button>
+                        <Box display="flex" alignItems="center" gap={1.5} py={0.5}>
+                            <Avatar sx={{ width: 32, height: 32, bgcolor: "primary.main" }}>
+                                <PersonIcon sx={{ fontSize: 18 }} />
+                            </Avatar>
+                            <Box>
+                                <Typography fontWeight={700} fontSize={14}>
+                                    {result.customerName}
+                                </Typography>
+                                <Typography variant="caption" color="text.secondary">
+                                    เลขบัตรประชาชน {result.idCardNo}
+                                </Typography>
+                            </Box>
+                        </Box>
                     );
                 },
             },
         },
         {
-            name: "customerName",
-            label: "ชื่อผู้เอาประกัน",
-            options: { ...cellAlignOptions({ align: "left" }) },
-        },
-        {
             name: "insuredType",
-            label: "ประเภทผู้เอาประกัน",
-            options: { ...cellAlignOptions({ align: "center" }) },
+            label: "ประเภท",
+            options: {
+                ...cellAlignOptions({ align: "center" }),
+                customBodyRenderLite: (i) => <Chip size="small" color="info" label={searchResults[i].insuredType} />,
+            },
         },
         {
             name: "plan",
@@ -194,26 +226,41 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
         },
         {
             name: "startCoverDate",
-            label: "วันที่เริ่มคุ้มครอง",
+            label: "เริ่มคุ้มครอง",
             options: {
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (v) => formatDateString(v, "DD/MM/BBBB"),
-            },
-        },
-        {
-            name: "effectiveDate",
-            label: "วันที่มีผลคุ้มครอง",
-            options: {
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (v) => formatDateString(v, "DD/MM/BBBB"),
+                customBodyRender: (v) => (v ? formatDateString(v, "DD/MM/BBBB") : "-"),
             },
         },
         {
             name: "endCoverDate",
-            label: "วันที่สิ้นสุดความคุ้มครอง",
+            label: "สิ้นสุดคุ้มครอง",
             options: {
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (v) => formatDateString(v, "DD/MM/BBBB"),
+                customBodyRender: (v) => (v ? formatDateString(v, "DD/MM/BBBB") : "-"),
+            },
+        },
+        {
+            name: "appId",
+            label: "ดำเนินการ",
+            options: {
+                ...cellAlignOptions({ align: "center" }),
+                customBodyRenderLite: (i) => {
+                    const result = searchResults[i];
+                    const isSelected = selectedInsured?.appId === result.appId;
+                    return (
+                        <Button
+                            size="small"
+                            variant="contained"
+                            color={isSelected ? "success" : "primary"}
+                            startIcon={isSelected ? <CheckCircleIcon fontSize="small" /> : undefined}
+                            onClick={() => handleSelect(result)}
+                            sx={{ minWidth: 100 }}
+                        >
+                            {isSelected ? "เลือกแล้ว" : "เลือก"}
+                        </Button>
+                    );
+                },
             },
         },
     ];
@@ -221,29 +268,33 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
     // ── columns: ประวัติการเคลม ──
     const historyColumns: MUIDataTableColumn[] = [
         {
-            name: "claimCase",
+            name: "claimNo",
             label: "ClaimCase",
             options: { ...cellAlignOptions({ align: "center" }) },
         },
         {
-            name: "chiefComplain",
-            label: "ChiefComplain",
-            options: { ...cellAlignOptions({ align: "left" }) },
+            name: "lastestChiefComplaint",
+            label: "อาการ/สาเหตุล่าสุด",
+            options: {
+                ...cellAlignOptions({ align: "left" }),
+                customBodyRenderLite: (i) =>
+                    claimHistoryItems[i].lastestChiefComplaint ?? claimHistoryItems[i].icD10Detail ?? "-",
+            },
         },
         {
             name: "incidentDate",
             label: "วันที่เกิดเหตุ",
             options: {
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (v) => formatDateString(v, "DD/MM/BBBB"),
+                customBodyRender: (v) => (v ? formatDateString(v, "DD/MM/BBBB") : "-"),
             },
         },
         {
-            name: "claimAmount",
+            name: "totalCaseAmount",
             label: "ยอดเบิก",
             options: {
                 ...cellAlignOptions({ align: "right" }),
-                customBodyRender: (v) => Number(v).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+                customBodyRender: (v) => Number(v ?? 0).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
             },
         },
         {
@@ -251,20 +302,25 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
             label: "ยอดจ่าย",
             options: {
                 ...cellAlignOptions({ align: "right" }),
-                customBodyRender: (v) => Number(v).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
+                customBodyRender: (v) => Number(v ?? 0).toLocaleString("th-TH", { minimumFractionDigits: 2 }),
             },
         },
     ];
 
     return (
-        <Dialog open={open} maxWidth="md" fullWidth>
+        <Dialog open={open} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
             <DialogTitle>
-                <Grid container alignItems="center" justifyContent="space-between">
-                    <Box display="flex" alignItems="center" gap={1}>
+                <Grid container alignItems="center" justifyContent="space-between" flexWrap="nowrap">
+                    <Box display="flex" alignItems="flex-start" gap={1.5}>
                         <Avatar sx={{ width: 40, height: 40, bgcolor: "#DCEFFC" }}>
-                            <PersonSearchIcon sx={{ fontSize: 30, color: "primary.main" }} />
+                            <PersonSearchIcon sx={{ fontSize: 24, color: "primary.main" }} />
                         </Avatar>
-                        <Typography fontWeight={700}>ค้นหาผู้เอาประกัน</Typography>
+                        <Box>
+                            <Typography fontWeight={700}>ค้นหาผู้เอาประกัน</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                ค้นหาและตรวจสอบสิทธิ์ก่อนเพิ่มผู้เอาประกันในรายการเคลม
+                            </Typography>
+                        </Box>
                     </Box>
                     <IconButton
                         onClick={handleClose}
@@ -272,127 +328,224 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose, currentItemCount }) =
                         sx={{
                             bgcolor: "error.main",
                             color: "common.white",
-                            width: 25,
-                            height: 25,
+                            width: 30,
+                            height: 30,
+                            flexShrink: 0,
                             "&:hover": { bgcolor: "error.dark" },
                         }}
                     >
-                        <CloseIcon sx={{ fontSize: 23 }} />
+                        <CloseIcon sx={{ fontSize: 20 }} />
                     </IconButton>
                 </Grid>
-                <Divider sx={{ mt: 1.5 }} />
             </DialogTitle>
+            <Divider />
 
             <DialogContent>
-                <Grid container spacing={2}>
-                    {/* ── Search bar ── */}
-                    <Grid item xs={12} sm={4} md={3}>
-                        <FormikDropdown
-                            name="searchBy"
-                            label="ค้นหาจาก *"
-                            formik={formik}
-                            data={SEARCH_BY_OPTIONS}
-                            firstItemText="-- เลือก --"
-                            displayFieldName="label"
-                            valueFieldName="value"
-                            fullWidth
-                            size="small"
-                        />
+                {/* ── เงื่อนไขการค้นหา ── */}
+                <Box sx={cardSx} mb={2}>
+                    <Box display="flex" alignItems="center" gap={1} sx={{ bgcolor: "#f3f7fc", px: 2, py: 1 }}>
+                        <ManageSearchIcon fontSize="small" color="primary" />
+                        <Typography fontWeight={700} fontSize={15}>
+                            เงื่อนไขการค้นหา
+                        </Typography>
+                    </Box>
+                    <Grid container spacing={2} p={2}>
+                        <Grid item xs={12} sm={4} md={3}>
+                            <FormikDropdown
+                                label="ค้นหาจาก"
+                                fullWidth
+                                data={searchTypeData}
+                                formik={formik}
+                                valueFieldName="searchTypeId"
+                                displayFieldName="searchTypeName"
+                                name="searchBy"
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={6} md={7}>
+                            <FormikTextField
+                                name="keyword"
+                                label="คำค้นหา *"
+                                placeholder="ระบุเลขบัตรประชาชน หรือชื่อ-สกุล"
+                                formik={formik}
+                                size="small"
+                                fullWidth
+                                onKeyDown={(e) => {
+                                    if (e.key === "Enter") formik.handleSubmit();
+                                }}
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={2} md={2} display="flex" alignItems="center">
+                            <Button
+                                variant="contained"
+                                sx={{ height: "38px", fontSize: 15 }}
+                                startIcon={<SearchIcon sx={{ fontSize: 20 }} />}
+                                onClick={() => formik.handleSubmit()}
+                                fullWidth
+                            >
+                                ค้นหา
+                            </Button>
+                        </Grid>
                     </Grid>
-                    <Grid item xs={12} sm={6} md={7}>
-                        <FormikTextField
-                            name="keyword"
-                            label="คำค้นหา *"
-                            formik={formik}
-                            size="small"
-                            fullWidth
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter") formik.handleSubmit();
-                            }}
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={2} md={2} display="flex" alignItems="center">
-                        <Button
-                            variant="contained"
-                            sx={{ height: "38px", fontSize: 15 }}
-                            startIcon={<SearchIcon sx={{ fontSize: 20 }} />}
-                            onClick={() => formik.handleSubmit()}
-                            fullWidth
-                        >
-                            ค้นหา
-                        </Button>
-                    </Grid>
+                </Box>
 
-                    {/* ── ตารางผลลัพธ์ ── */}
-                    {hasSearched && (
-                        <Grid item xs={12}>
+                {/* ── ผลการค้นหา + ข้อมูลเพิ่มเติมของผู้ที่เลือก (การ์ดเดียวกัน) ── */}
+                {hasSearched && (
+                    <LinearLoading isLoading={isSearchLoading}>
+                        <Box sx={cardSx} mb={2}>
                             <StandardDataTable
                                 name="InsuredSearchTable"
                                 title=""
                                 data={searchResults}
-                                isLoading={false}
+                                isLoading={isSearchLoading}
                                 columns={searchColumns}
                                 color="primary"
                                 columnHeaderAlign="center"
                                 displayToolbar={false}
+                                paginated={{
+                                    totalAmountRecords: searchTotalCount,
+                                    currentPage: searchPaginated.page,
+                                    recordsPerPage: searchPaginated.recordsPerPage ?? 5,
+                                }}
+                                setPaginated={setSearchPaginated}
+                                rowsPerPage={[10]}
                                 options={{
                                     ...defaultOptionStandardDataTable,
                                     textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
                                 }}
-                                sx={smallSizeFooter}
                             />
-                        </Grid>
-                    )}
+                        </Box>
+                    </LinearLoading>
+                )}
 
-                    {/* ── ประวัติการเคลม (แสดงเมื่อเลือกแล้ว) ── */}
-                    {selectedInsured && (
-                        <Grid item xs={12}>
-                            <Box
-                                sx={{
-                                    border: "1px solid #b3d4f0",
-                                    borderRadius: 1,
-                                    p: 2,
-                                    bgcolor: "#F5FCFF",
-                                }}
-                            >
-                                <HeadingWithColor text="ประวัติการเคลม" color="blue" />
+                {/* ── ข้อมูลความคุ้มครองของผู้เอาประกันที่เลือก ── */}
+                {selectedInsured && (
+                    <Box sx={cardSx} mb={2}>
+                        <Box display="flex" alignItems="center" gap={1} sx={{ bgcolor: "#eaf2fc", px: 2, py: 1.25 }}>
+                            <CheckCircleIcon fontSize="small" color="primary" />
+                            <Typography fontWeight={700} fontSize={15} color="primary.dark">
+                                ข้อมูลความคุ้มครองของผู้เอาประกันที่เลือก
+                            </Typography>
+                        </Box>
+                        <Grid container spacing={2} sx={{ px: 2, py: 2 }}>
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                                    สถานะความคุ้มครอง
+                                </Typography>
+                                <Typography
+                                    fontWeight={700}
+                                    color={
+                                        selectedInsured.coverageStatus === "คุ้มครอง" ? "success.main" : "error.main"
+                                    }
+                                >
+                                    {selectedInsured.coverageStatus}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={6} sm={3}>
+                                <Typography variant="body2" color="text.secondary" mb={0.5}>
+                                    ผลิตภัณฑ์
+                                </Typography>
+                                <Typography fontWeight={700} color="primary.dark">
+                                    {selectedInsured.productLabel}
+                                </Typography>
+                            </Grid>
+                            {/* ไม่ว่า API จริงจะส่งมากี่ field ก็ผ่าน .map() เดียวตรงนี้ */}
+                            {selectedInsured.extraDetails?.map((detail, dIdx) => (
+                                <Grid item xs={6} sm={3} key={dIdx}>
+                                    <Typography variant="body2" color="text.secondary" mb={0.5}>
+                                        {detail.label}
+                                    </Typography>
+                                    <Typography fontWeight={700} color="primary.dark">
+                                        {detail.value}
+                                    </Typography>
+                                </Grid>
+                            ))}
+                        </Grid>
+                    </Box>
+                )}
+
+                {/* ── ประวัติการเคลม ── */}
+                {selectedInsured && (
+                    <Box sx={cardSx} mb={2}>
+                        <Box
+                            display="flex"
+                            alignItems="center"
+                            justifyContent="space-between"
+                            sx={{ bgcolor: "#f3f7fc", px: 2, py: 1 }}
+                        >
+                            <Box display="flex" alignItems="center" gap={1}>
+                                <HistoryIcon fontSize="small" color="primary" />
+                                <Typography fontWeight={700} fontSize={15}>
+                                    ประวัติการเคลม
+                                </Typography>
+                            </Box>
+                            <Chip size="small" color="primary" label={`${claimHistoryTotalCount} รายการ`} />
+                        </Box>
+
+                        {!isClaimHistoryLoading && claimHistoryTotalCount === 0 ? (
+                            <LinearLoading isLoading={isClaimHistoryLoading}>
+                                <Box py={4} textAlign="center" color="text.secondary">
+                                    <Inventory2OutlinedIcon sx={{ fontSize: 32, color: "#c7d3e0" }} />
+                                    <Typography fontSize={14} color="text.secondary" mt={0.5}>
+                                        ไม่พบประวัติการเคลมของผู้เอาประกันรายนี้
+                                    </Typography>
+                                </Box>
+                            </LinearLoading>
+                        ) : (
+                            <LinearLoading isLoading={isClaimHistoryLoading}>
                                 <StandardDataTable
                                     name="InsuredClaimHistoryTable"
                                     title=""
-                                    data={claimHistory}
-                                    isLoading={false}
+                                    data={claimHistoryItems}
+                                    isLoading={isClaimHistoryLoading}
                                     columns={historyColumns}
                                     color="primary"
                                     columnHeaderAlign="center"
                                     displayToolbar={false}
+                                    paginated={{
+                                        totalAmountRecords: claimHistoryTotalCount,
+                                        currentPage: historyPaginated.page,
+                                        recordsPerPage: historyPaginated.recordsPerPage ?? 5,
+                                    }}
+                                    setPaginated={setHistoryPaginated}
+                                    rowsPerPage={[10, 20, 50]}
                                     options={{
                                         ...defaultOptionStandardDataTable,
                                         textLabels: { body: { noMatch: "ไม่พบข้อมูล" } },
                                     }}
-                                    sx={smallSizeFooter}
                                 />
-                            </Box>
-                        </Grid>
-                    )}
+                            </LinearLoading>
+                        )}
+                    </Box>
+                )}
 
-                    {/* ── ปุ่มแจ้งเคลม ── */}
-                    {selectedInsured && (
-                        <Grid item xs={12}>
-                            <Box display="flex" justifyContent="flex-end">
-                                <Button
-                                    variant="contained"
-                                    color="success"
-                                    size="medium"
-                                    startIcon={<AddCircleIcon />}
-                                    // disabled={!selectedInsured}
-                                    onClick={handleAddClaim}
-                                >
-                                    แจ้งเคลม
-                                </Button>
-                            </Box>
-                        </Grid>
-                    )}
-                </Grid>
+                {/* ── ยืนยัน / แจ้งเคลม ── */}
+                {selectedInsured && (
+                    <Box
+                        display="flex"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        flexWrap="wrap"
+                        gap={1.5}
+                        sx={{ bgcolor: "#eaf8ee", border: "1px solid #bfe6c9", borderRadius: 2, px: 2, py: 1.5 }}
+                    >
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <CheckCircleIcon color="success" fontSize="small" />
+                            <Typography fontWeight={600} color="success.dark" fontSize={14}>
+                                ตรวจสอบสิทธิ์และข้อมูลผู้เอาประกันแล้ว
+                            </Typography>
+                        </Box>
+                        <Button
+                            variant="contained"
+                            color="success"
+                            size="medium"
+                            startIcon={<AddCircleIcon />}
+                            onClick={handleAddClaim}
+                        >
+                            แจ้งเคลม
+                        </Button>
+                    </Box>
+                )}
             </DialogContent>
         </Dialog>
     );
