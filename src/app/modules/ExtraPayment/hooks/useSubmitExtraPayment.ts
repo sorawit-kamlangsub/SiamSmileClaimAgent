@@ -12,7 +12,7 @@ export const useSubmitExtraPayment = () => {
         try {
             if (USE_MOCK_DATA) {
                 await new Promise((r) => setTimeout(r, 400));
-                return { success: true, transferRefNo: "MOCK-REF-0001" };
+                // return { success: true, transferRefNo: "MOCK-REF-0001" };
             }
             // TODO: เปลี่ยน endpoint ให้ตรงกับ backend จริง
             const res = await fetch(`/api/extra-payment`, {

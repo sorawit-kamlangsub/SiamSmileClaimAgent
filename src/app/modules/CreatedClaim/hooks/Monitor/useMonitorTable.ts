@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { monitorSelector, SelectedPolicyInfo, setSelectedPolicy, setSelectedRowIndex } from "../../store/monitorSlice";
 import { PaginationSortableDto } from "../../../_common";
@@ -33,7 +33,7 @@ export const useMonitorTable = () => {
             : 0;
 
     const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(selectedId);
-    const customerDetailLoading = selectedId > 0 && claimInfoLoading;
+    const customerDetailLoading = selectedId! > 0 && claimInfoLoading;
     useEffect(() => {
         if (!search.searchDetail) return;
 

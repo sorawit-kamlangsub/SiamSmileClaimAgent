@@ -1,4 +1,4 @@
-import { useGetCustomerBenefitDetailHalf, useGetCustomerBenefitDetailSearch } from "./../../../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf } from "./../../../../../api/coreClaimApi";
 import { useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
 import { useFormik, FormikErrors } from "formik";

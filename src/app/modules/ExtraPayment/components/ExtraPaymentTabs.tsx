@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Box, Paper, Tab, Tabs, Typography } from "@mui/material";
+import { Box, Paper, Tab, Tabs } from "@mui/material";
 import TransactionHistoryTable from "./TransactionHistoryTable";
 import TransferTransactionHistoryTable from "./TransferTransactionHistoryTable";
 import RefundTransactionHistoryTable from "./RefundTransactionHistoryTable";
