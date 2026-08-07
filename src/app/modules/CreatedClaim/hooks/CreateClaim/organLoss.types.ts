@@ -190,6 +190,7 @@ export interface FingerJointState {
     joints: number;
     amount: string;
     bodyPartId?: number;
+    standardMedicalExpenseId?: number;
 }
 export type FingerSideState = Record<FingerKey, FingerJointState>;
 export interface OrganFingerState {
@@ -282,6 +283,7 @@ export interface OrganLossItem {
     icons: OrganIconKey[];
     disabilityLossPartId?: number;
     bodyPartId?: number;
+    standardMedicalExpenseId?: number;
     side?: string;
     comboSides?: Record<string, OrganSide>;
     amount?: string;

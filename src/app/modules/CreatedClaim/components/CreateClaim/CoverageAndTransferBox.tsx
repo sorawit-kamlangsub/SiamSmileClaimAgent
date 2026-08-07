@@ -43,6 +43,23 @@ const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
     );
 };
 
+const sanitizeAmountInput = (raw: string): string => {
+    // ตัดอักขระที่ไม่ใช่ตัวเลขกับจุดทิ้งทั้งหมด (กัน - และตัวอักษร/สัญลักษณ์)
+    const cleaned = raw.replace(/[^0-9.]/g, "");
+
+    const dotIndex = cleaned.indexOf(".");
+    if (dotIndex === -1) return cleaned; // ไม่มีจุด ไม่ต้องทำอะไรต่อ
+
+    const intPart = cleaned.slice(0, dotIndex);
+    // เอาเฉพาะตัวเลขหลังจุดแรก (ตัดจุดซ้ำที่เหลือทิ้งไปในตัว) แล้วจำกัด 2 ตำแหน่ง
+    const decPart = cleaned
+        .slice(dotIndex + 1)
+        .replace(/\./g, "")
+        .slice(0, 2);
+
+    return `${intPart}.${decPart}`;
+};
+
 const CoverageAndTransferBox: React.FC<Props> = ({
     items,
     isLoading,
@@ -65,7 +82,8 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     );
 
     const handleAmountChange = (benefitId: number, value: string) => {
-        const next = { ...localAmounts, [benefitId]: value };
+        const sanitized = sanitizeAmountInput(value);
+        const next = { ...localAmounts, [benefitId]: sanitized };
         setLocalAmounts(next);
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -74,6 +92,20 @@ const CoverageAndTransferBox: React.FC<Props> = ({
             const nextTotal = Object.values(next).reduce((sum, v) => sum + (Number(v) || 0), 0);
             onTransferAmountChange(nextTotal);
         }, debounceMs);
+    };
+
+    const handleAmountBlur = (benefitId: number) => {
+        const currentValue = localAmounts[benefitId] ?? "";
+        const numValue = Number(currentValue) || 0;
+        const formatted = numValue.toFixed(2);
+
+        if (formatted !== currentValue) {
+            const next = { ...localAmounts, [benefitId]: formatted };
+            setLocalAmounts(next);
+            onBenefitAmountsChange(next);
+            const nextTotal = Object.values(next).reduce((sum, v) => sum + (Number(v) || 0), 0);
+            onTransferAmountChange(nextTotal);
+        }
     };
 
     useEffect(() => {
@@ -221,6 +253,11 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                             onChange={(e) =>
                                 item.benefitId != null && handleAmountChange(item.benefitId, e.target.value)
                             }
+                            onBlur={() => item.benefitId != null && handleAmountBlur(item.benefitId)}
+                            inputProps={{
+                                inputMode: "decimal",
+                                style: { textAlign: "right" },
+                            }}
                             sx={{
                                 "& .MuiOutlinedInput-root": {
                                     height: "100%",

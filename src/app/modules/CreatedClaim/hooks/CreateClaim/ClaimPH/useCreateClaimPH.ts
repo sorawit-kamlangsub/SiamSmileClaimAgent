@@ -13,7 +13,7 @@ import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreateTransfer } from "../../../../../api/claimFundApi";
 export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
-    const { form, bankAccounts, contacts, insured, organLossItems } = useAppSelector(claimPHSelector);
+    const { form, bankAccounts, contacts, insured, organLossItems, caseItems } = useAppSelector(claimPHSelector);
     const isMedicalAll =
         form.coverageTypeId === CoverageType.Medical || form.coverageTypeId === CoverageType.Compensate;
     const isMedical = form.coverageTypeId === CoverageType.Medical;
@@ -116,7 +116,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                             medicalTypeId: form.medicalTypeId,
 
-                            createCaseItem: [],
+                            createCaseItem: caseItems,
 
                             createCaseRegistration: [
                                 {
