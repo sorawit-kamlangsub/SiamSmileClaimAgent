@@ -7,8 +7,8 @@ const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 
 const createTransferKey = "createTransfer";
 
-const createTransfer = (payload: any) => {
-    const url = `${claimFundAPI_URL}/Transfer/v1/CreateTransfer`;
+const createPayment = (payload: any) => {
+    const url = `${claimFundAPI_URL}/Transfer/v1/CreatePayment`;
     return axios
         .post(url, payload)
         .then((res) => {
@@ -23,12 +23,12 @@ const createTransfer = (payload: any) => {
         });
 };
 
-export const useCreateTransfer = (
+export const useCreatePayment = (
     onSuccessCallBack: (response: any) => void,
     onErrorCallback: (error: string) => void
 ) => {
     const queryClient = useQueryClient();
-    return useMutation((payload: any) => createTransfer(payload), {
+    return useMutation((payload: any) => createPayment(payload), {
         onSuccess: (response) => {
             if (!response.isSuccess) {
                 onErrorCallback(response.message || response.exceptionMessage || "Unknown error");

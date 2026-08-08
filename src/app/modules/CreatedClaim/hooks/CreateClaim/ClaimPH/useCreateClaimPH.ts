@@ -10,7 +10,7 @@ import { useAuth } from "../../../../_auth";
 import { BeneficiaryForm, claimPHSelector } from "./../../../store/claimPHSlice";
 import { CoverageType } from "../../../../../functionHelpers";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
-import { getEncryptText, useCreateTransfer } from "../../../../../api/claimFundApi";
+import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
 export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
     const { form, bankAccounts, contacts, insured, organLossItems, caseItems } = useAppSelector(claimPHSelector);
@@ -59,7 +59,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
         (message) => onError?.(message)
     );
 
-    const { mutateAsync: createTransferAsync } = useCreateTransfer(
+    const { mutateAsync: createPaymentAsync } = useCreatePayment(
         () => {},
         (message) => onError?.(message)
     );
@@ -73,7 +73,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
             createClaim: [
                 {
-                    tempClaimId: undefined, // gen guid ถ้า backend ต้องการ map กับ case
+                    tempClaimId: undefined,
                     applicationId: insured?.policyCode,
                     policyNo: insured?.policyNo ?? undefined,
                     certificateNo: insured?.certificateNo ?? undefined,
@@ -226,7 +226,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
             ],
         };
     };
-    const buildTransferPayload = async (
+    const buildPaymentPayload = async (
         claimResponse: CreateCoreClaimDtoResponseServiceResponse,
         beneficiaryList: BeneficiaryForm[]
     ): Promise<any[]> => {
@@ -243,21 +243,16 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     );
 
                     return {
-                        totalNetPaidAmount: beneficiary.amount,
+                        casePayableId: item?.casePayableId,
+                        grossPaidAmount: 0,
+                        withHoldingTaxAmount: 0,
+                        netPaidAmount: beneficiary.amount ?? 0,
                         receivingBankId: beneficiary.bankId,
                         receivingBankAccountNo: encryptResult.accountNoResult,
-                        receivingBankName: beneficiary.bankName,
+                        receivingBankName: beneficiary.bankId_selectedText,
                         receivingAccountName: encryptResult.bankAccountNameResult,
-                        receivingPhoneNumber: encryptResult.phoneNumberResult,
-                        referentTransactionId: item?.casePayableId,
-                        claimPayListHeaderCreateDetailDTO: [
-                            {
-                                payListDetailCode: item?.claimNo,
-                                amount: beneficiary.amount,
-                                refDetail01: item?.caseId,
-                                refDetail02: item?.caseNo,
-                            },
-                        ],
+                        phoneNumber: encryptResult.phoneNumberResult,
+                        claimCase: item?.claimNo,
                     };
                 })
             );
@@ -275,21 +270,16 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
             return [
                 {
-                    totalNetPaidAmount: form.transferAmount ?? 0,
+                    casePayableId: firstItem?.casePayableId,
+                    grossPaidAmount: 0,
+                    withHoldingTaxAmount: 0,
+                    netPaidAmount: form.transferAmount ?? 0,
                     receivingBankId: selectedAccount.bankId,
                     receivingBankAccountNo: encryptResult.accountNoResult,
                     receivingBankName: selectedAccount.bankName,
                     receivingAccountName: encryptResult.bankAccountNameResult,
-                    receivingPhoneNumber: encryptResult.phoneNumberResult,
-                    referentTransactionId: firstItem?.casePayableId,
-                    claimPayListHeaderCreateDetailDTO: [
-                        {
-                            payListDetailCode: firstItem?.claimNo,
-                            amount: form.transferAmount,
-                            refDetail01: firstItem?.caseId,
-                            refDetail02: firstItem?.caseNo,
-                        },
-                    ],
+                    phoneNumber: encryptResult.phoneNumberResult,
+                    claimCase: firstItem?.claimNo,
                 },
             ];
         }
@@ -305,16 +295,11 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
             return claimResponse;
         }
         try {
-            const transferPayloadList = await buildTransferPayload(claimResponse, list);
-            const transferResponses = [];
-
-            for (const transferPayload of transferPayloadList) {
-                const res = await createTransferAsync(transferPayload);
-                transferResponses.push(res);
-            }
+            const paymentPayloadList = await buildPaymentPayload(claimResponse, list);
+            const paymentResponses = paymentPayloadList.length > 0 ? await createPaymentAsync(paymentPayloadList) : [];
 
             onSuccess?.();
-            return { ...claimResponse, transferResponses };
+            return { ...claimResponse, paymentResponses };
         } catch (err: any) {
             onError?.(err?.message || "สร้างเคลมสำเร็จ แต่โอนเงินไม่สำเร็จ");
             return claimResponse;

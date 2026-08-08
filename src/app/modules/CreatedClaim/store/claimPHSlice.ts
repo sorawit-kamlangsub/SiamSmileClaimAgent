@@ -58,7 +58,7 @@ export interface BeneficiaryForm {
 
     citizenId?: string;
     bankId?: number;
-    bankName?: string;
+    bankId_selectedText?: string;
     bankAccountNo?: string;
     bankAccountName?: string;
 

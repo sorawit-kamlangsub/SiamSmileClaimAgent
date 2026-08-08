@@ -235,7 +235,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 }
             }
             dispatch(setCaseItems(caseItems));
-            console.log("caseItems", caseItems);
 
             dispatch(
                 setClaimForm({

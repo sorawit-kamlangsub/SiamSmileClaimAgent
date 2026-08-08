@@ -71,6 +71,7 @@ export const swalError = (title: string, text: string) => {
             confirmButton: "swal2-ok",
         },
         backdrop: "rgba(0,0,0,0.4)",
+        returnFocus: false,
     });
 };
 

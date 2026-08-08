@@ -128,6 +128,34 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
             await formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            const fieldOrder = [
+                "documentRecipientTypeId",
+                "serviceProviderId",
+                "zebraId",
+                "incidentTypeId",
+                "coverageTypeId",
+                "medicalTypeId",
+                "causeOfIncidentId",
+                "incidentDate",
+                "admissionDate",
+                "dischargeDate",
+                "symptomType",
+                "chiefComplaintId",
+                "remark",
+                "notificationDate",
+                "documentCompleteDate",
+                "deathDate",
+                "hospitalId",
+                "accidentPlace",
+                "transferAmount",
+            ];
+            const firstErrorField = fieldOrder.find((f) => errs[f as keyof typeof errs]);
+            if (firstErrorField) {
+                setTimeout(() => {
+                    const el = document.querySelector(`[data-field-name="${firstErrorField}"]`);
+                    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }, 100);
+            }
             return;
         }
         if (requiresOcrValidation && !isOcrDocsValid) {
@@ -150,7 +178,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
 
             <CustomPaper>
                 <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
-                <Box component="form" onSubmit={formik.handleSubmit} p={2}>
+                <Box component="form" p={2}>
                     <Grid container spacing={2}>
                         {/* เหตุของการเคลม */}
                         <Grid item xs={12}>
@@ -225,113 +253,134 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
 
                         {/* ผู้รับเอกสาร / ผู้ให้บริการ / เจ้าของรถ */}
                         <Grid item xs={12} md={4}>
-                            <DocumentRecipientTypeDropDown
-                                firstItemText="-- เลือก --"
-                                formik={formik}
-                                name="documentRecipientTypeId"
-                                fullWidth
-                                required
-                                selectedCallback={(item) => {
-                                    formik.setFieldValue("documentRecipientTypeName", item?.documentRecipientTypeName);
-                                }}
-                            />
+                            <Box data-field-name="documentRecipientTypeId">
+                                <DocumentRecipientTypeDropDown
+                                    firstItemText="-- เลือก --"
+                                    formik={formik}
+                                    name="documentRecipientTypeId"
+                                    fullWidth
+                                    required
+                                    selectedCallback={(item) => {
+                                        formik.setFieldValue(
+                                            "documentRecipientTypeName",
+                                            item?.documentRecipientTypeName
+                                        );
+                                    }}
+                                />
+                            </Box>
                         </Grid>
                         <Grid item xs={12} md={4} mt={-1}>
-                            <UserAutocompleteApi
-                                formik={formik}
-                                name="serviceProviderId"
-                                fullWidth
-                                required
-                                selectedCallback={(item) => {
-                                    formik.setFieldValue("serviceProviderName", item?.personName);
-                                    formik.setFieldValue("serviceProviderCode", item?.employeeCode);
-                                }}
-                            />
+                            <Box data-field-name="serviceProviderId">
+                                <UserAutocompleteApi
+                                    formik={formik}
+                                    name="serviceProviderId"
+                                    fullWidth
+                                    required
+                                    selectedCallback={(item) => {
+                                        formik.setFieldValue("serviceProviderName", item?.personName);
+                                        formik.setFieldValue("serviceProviderCode", item?.employeeCode);
+                                    }}
+                                />
+                            </Box>
                         </Grid>
                         <Grid item xs={12} md={4}>
-                            <ZebraCarOwnerDropDown
-                                firstItemText="-- เลือก --"
-                                formik={formik}
-                                name="zebraId"
-                                fullWidth
-                                required
-                                selectedCallback={(item) => {
-                                    formik.setFieldValue("zebraCode", item?.zebraCode);
-                                    formik.setFieldValue("zebraNo", item?.zebraNo);
-                                    formik.setFieldValue("employeeCode", item?.employeeCode);
-                                    formik.setFieldValue("employeeName", item?.employeeName);
-                                }}
-                            />
+                            <Box data-field-name="zebraId">
+                                <ZebraCarOwnerDropDown
+                                    firstItemText="-- เลือก --"
+                                    formik={formik}
+                                    name="zebraId"
+                                    fullWidth
+                                    required
+                                    selectedCallback={(item) => {
+                                        formik.setFieldValue("zebraCode", item?.zebraCode);
+                                        formik.setFieldValue("zebraNo", item?.zebraNo);
+                                        formik.setFieldValue("employeeCode", item?.employeeCode);
+                                        formik.setFieldValue("employeeName", item?.employeeName);
+                                    }}
+                                />
+                            </Box>
                         </Grid>
 
                         {/* วันที่ต่างๆ */}
                         <Grid item xs={12} sm={6} md={4}>
-                            <FormikDatePicker
-                                name="incidentDate"
-                                label="วันที่เกิดเหตุ"
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                maxDate={dayjs()}
-                                required
-                            />
-                        </Grid>
-                        {isMedical && (
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Box data-field-name="incidentDate">
                                 <FormikDatePicker
-                                    name="admissionDate"
-                                    label="วันที่เข้า รพ."
+                                    name="incidentDate"
+                                    label="วันที่เกิดเหตุ"
                                     formik={formik}
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
                                 />
+                            </Box>
+                        </Grid>
+                        {isMedical && (
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Box data-field-name="admissionDate">
+                                    <FormikDatePicker
+                                        name="admissionDate"
+                                        label="วันที่เข้า รพ."
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
+                                </Box>
                             </Grid>
                         )}
                         {isIPD && (
                             <Grid item xs={12} sm={6} md={4}>
-                                <FormikDatePicker
-                                    name="dischargeDate"
-                                    label="วันที่ออก รพ."
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    maxDate={dayjs()}
-                                    required
-                                />
+                                <Box data-field-name="dischargeDate">
+                                    <FormikDatePicker
+                                        name="dischargeDate"
+                                        label="วันที่ออก รพ."
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
+                                </Box>
                             </Grid>
                         )}
                         {isDeath && (
                             <Grid item xs={12} sm={6} md={4}>
-                                <FormikDatePicker
-                                    name="deathDate"
-                                    label="วันที่เสียชีวิต"
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    maxDate={dayjs()}
-                                    required
-                                />
+                                <Box data-field-name="deathDate">
+                                    <FormikDatePicker
+                                        name="deathDate"
+                                        label="วันที่เสียชีวิต"
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
+                                </Box>
                             </Grid>
                         )}
                         {(isDeath || isDisability) && (
                             <>
                                 <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDatePicker
-                                        name="notificationDate"
-                                        label="วันที่รับแจ้ง"
-                                        formik={formik}
-                                        slotProps={{ textField: { size: "small" } }}
-                                        maxDate={dayjs()}
-                                        required
-                                    />
+                                    <Box data-field-name="notificationDate">
+                                        <FormikDatePicker
+                                            name="notificationDate"
+                                            label="วันที่รับแจ้ง"
+                                            formik={formik}
+                                            slotProps={{ textField: { size: "small" } }}
+                                            maxDate={dayjs()}
+                                            required
+                                        />
+                                    </Box>
                                 </Grid>
                                 <Grid item xs={12} sm={6} md={4}>
-                                    <FormikDatePicker
-                                        name="documentCompleteDate"
-                                        label="วันที่เอกสารครบ"
-                                        formik={formik}
-                                        slotProps={{ textField: { size: "small" } }}
-                                        maxDate={dayjs()}
-                                        required
-                                    />
+                                    <Box data-field-name="documentCompleteDate">
+                                        <FormikDatePicker
+                                            name="documentCompleteDate"
+                                            label="วันที่เอกสารครบ"
+                                            formik={formik}
+                                            slotProps={{ textField: { size: "small" } }}
+                                            maxDate={dayjs()}
+                                            required
+                                        />
+                                    </Box>
                                 </Grid>
                                 {isDeath && (
                                     <>
@@ -370,27 +419,33 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                         </Grid>
                                         {values.deathPlaceType === DeathPlaceType.Hospital && (
                                             <Grid item xs={12} lg={9} mt={-1}>
-                                                <HospitalDropdown formik={formik} name="hospitalId" required />
+                                                <Box data-field-name="hospitalId">
+                                                    <HospitalDropdown formik={formik} name="hospitalId" required />
+                                                </Box>
                                             </Grid>
                                         )}
                                         {values.deathPlaceType === DeathPlaceType.Other && (
                                             <Grid item xs={12} lg={9}>
-                                                <FormikTextField
-                                                    name="accidentPlace"
-                                                    label="สถานที่เสียชีวิต"
-                                                    formik={formik}
-                                                    size="small"
-                                                    fullWidth
-                                                    required
-                                                    placeholder="ระบุสถานที่เสียชีวิต"
-                                                />
+                                                <Box data-field-name="accidentPlace">
+                                                    <FormikTextField
+                                                        name="accidentPlace"
+                                                        label="สถานที่เสียชีวิต"
+                                                        formik={formik}
+                                                        size="small"
+                                                        fullWidth
+                                                        required
+                                                        placeholder="ระบุสถานที่เสียชีวิต"
+                                                    />
+                                                </Box>
                                             </Grid>
                                         )}
                                     </>
                                 )}
                                 {isDisability && (
                                     <Grid item xs={12} lg={9} mt={-1}>
-                                        <HospitalDropdown formik={formik} name="hospitalId" required />
+                                        <Box data-field-name="hospitalId">
+                                            <HospitalDropdown formik={formik} name="hospitalId" required />
+                                        </Box>
                                     </Grid>
                                 )}
                             </>
@@ -418,12 +473,14 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(values.symptomType === SymptomType.ChiefComplaint || isDeath || isDisability) && (
                             <Grid item xs={12} lg={9}>
-                                <ChiefComplaintAutocomplete
-                                    name="chiefComplaintId"
-                                    formik={formik}
-                                    size="small"
-                                    required
-                                />
+                                <Box data-field-name="chiefComplaintId">
+                                    <ChiefComplaintAutocomplete
+                                        name="chiefComplaintId"
+                                        formik={formik}
+                                        size="small"
+                                        required
+                                    />
+                                </Box>
                             </Grid>
                         )}
                         {(isDeath || isDisability) && (
@@ -457,16 +514,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
                             <Grid item xs={12} lg={9}>
-                                <FormikTextField
-                                    name="remark"
-                                    label="หมายเหตุ"
-                                    formik={formik}
-                                    size="small"
-                                    multiline
-                                    rows={2}
-                                    fullWidth
-                                    required={values.symptomType === SymptomType.Other}
-                                />
+                                <Box data-field-name="remark">
+                                    <FormikTextField
+                                        name="remark"
+                                        label="หมายเหตุ"
+                                        formik={formik}
+                                        size="small"
+                                        multiline
+                                        rows={2}
+                                        fullWidth
+                                        required={values.symptomType === SymptomType.Other}
+                                    />
+                                </Box>
                             </Grid>
                         )}
                     </Grid>
@@ -540,17 +599,19 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         <Grid item xs={12}>
                             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
                                 <Grid item xs={12} sm={5.9} md={2.9} mt={1}>
-                                    <FormikTextNumber
-                                        name="transferAmount"
-                                        label="จำนวนเงิน"
-                                        formik={formik}
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                        InputProps={{
-                                            endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
-                                        }}
-                                        required
-                                    />
+                                    <Box data-field-name="transferAmount">
+                                        <FormikTextNumber
+                                            name="transferAmount"
+                                            label="จำนวนเงิน"
+                                            formik={formik}
+                                            decimalScale={2}
+                                            fixedDecimalScale
+                                            InputProps={{
+                                                endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
+                                            }}
+                                            required
+                                        />
+                                    </Box>
                                 </Grid>
                                 <Typography
                                     variant="body2"
@@ -578,17 +639,19 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             <Box mt={3}>
                                 <Typography mb={1}>จำนวนเงินที่ต้องการโอน</Typography>
                                 <Grid item xs={12} lg={6}>
-                                    <FormikTextNumber
-                                        name="transferAmount"
-                                        label="จำนวนเงินที่ต้องการโอน"
-                                        formik={formik}
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                        InputProps={{
-                                            endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
-                                        }}
-                                        required
-                                    />
+                                    <Box data-field-name="transferAmount">
+                                        <FormikTextNumber
+                                            name="transferAmount"
+                                            label="จำนวนเงินที่ต้องการโอน"
+                                            formik={formik}
+                                            decimalScale={2}
+                                            fixedDecimalScale
+                                            InputProps={{
+                                                endAdornment: <InputAdornment position="end">บาท</InputAdornment>,
+                                            }}
+                                            required
+                                        />
+                                    </Box>
                                 </Grid>
                             </Box>
                         </Box>
@@ -642,6 +705,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
 
             <Box display="flex" justifyContent="flex-end" mb={5}>
                 <Button
+                    type="button"
                     variant="contained"
                     color="primary"
                     size="medium"
