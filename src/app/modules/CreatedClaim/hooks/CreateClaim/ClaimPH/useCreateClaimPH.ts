@@ -252,7 +252,8 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                         receivingBankName: beneficiary.bankId_selectedText,
                         receivingAccountName: encryptResult.bankAccountNameResult,
                         phoneNumber: encryptResult.phoneNumberResult,
-                        claimCase: item?.claimNo,
+                        claimCase: item?.caseNo,
+                        claimNo: item?.claimNo,
                     };
                 })
             );
@@ -279,7 +280,8 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     receivingBankName: selectedAccount.bankName,
                     receivingAccountName: encryptResult.bankAccountNameResult,
                     phoneNumber: encryptResult.phoneNumberResult,
-                    claimCase: firstItem?.claimNo,
+                    claimCase: firstItem?.caseNo,
+                    claimNo: firstItem?.claimNo,
                 },
             ];
         }
@@ -292,12 +294,17 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
         const claimResponse = await mutation.mutateAsync(payload);
         if (!claimResponse?.data?.isResult) {
             onError?.(claimResponse?.data?.msg || "สร้างเคลมไม่สำเร็จ");
-            return claimResponse;
         }
-        try {
-            const paymentPayloadList = await buildPaymentPayload(claimResponse, list);
-            const paymentResponses = paymentPayloadList.length > 0 ? await createPaymentAsync(paymentPayloadList) : [];
+        return { claimResponse, beneficiaryList: list };
+    };
 
+    const confirmPayment = async (
+        claimResponse: CreateCoreClaimDtoResponseServiceResponse,
+        beneficiaryList: BeneficiaryForm[]
+    ) => {
+        try {
+            const paymentPayloadList = await buildPaymentPayload(claimResponse, beneficiaryList);
+            const paymentResponses = paymentPayloadList.length > 0 ? await createPaymentAsync(paymentPayloadList) : [];
             onSuccess?.();
             return { ...claimResponse, paymentResponses };
         } catch (err: any) {
@@ -305,8 +312,10 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
             return claimResponse;
         }
     };
+
     return {
         createClaimPH,
+        confirmPayment,
         isLoading: mutation.isLoading,
     };
 };

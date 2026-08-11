@@ -312,7 +312,13 @@ export const useGetCustomerBenefitDetailHalf = (
                 formatTypeId
             ),
         {
-            enabled: !!policyCode,
+            enabled:
+                !!policyCode &&
+                !!incidentDate &&
+                !!incidentTypeId &&
+                !!coverageTypeId &&
+                (coverageTypeId === 2 || coverageTypeId === 3 ? !!medicalTypeId : true) &&
+                (coverageTypeId === 4 || coverageTypeId === 5 ? !!causeOfIncidentId : true),
             refetchOnWindowFocus: false,
         }
     );
