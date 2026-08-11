@@ -4,6 +4,8 @@ import HistoryIcon from "@mui/icons-material/History";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import CustomBox from "../../../_common/components/CustomComponent/CustomBox";
 import { useClaimHistory } from "../../hooks/Monitor/useClaimHistory";
 import { formatDateString } from "../../../../functionHelpers";
@@ -13,22 +15,28 @@ import { GetClaimHistoryDtoResponse } from "../../../../api/coreClaimApi.client"
 import ViewClaimDetailModal from "./ViewClaimDetailModal";
 
 export const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 type ClaimHistoryCardProps = {
     appId?: string;
 };
+
 const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
     const [selectedClaim, setSelectedClaim] = useState<GetClaimHistoryDtoResponse>();
     const [openDetailCase, setOpenDetailCase] = useState(false);
     const [openAllHistory, setOpenAllHistory] = useState(false);
+    const [showList, setShowList] = useState(false);
+
     const { claimHistoryData, caseData, setPaginated, pagination, caseDataisLoading } = useClaimHistory(
         appId,
         selectedClaim?.claimId
     );
     const items = claimHistoryData?.data ?? [];
+
     const handleDetailClick = (item: GetClaimHistoryDtoResponse) => {
         setSelectedClaim(item);
         setOpenDetailCase(true);
     };
+
     return (
         <CustomBox sx={{ minHeight: 284 }}>
             <Box
@@ -63,6 +71,30 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                             fontSize: 13,
                         }}
                     />
+
+                    {/* ปุ่มซ่อน/แสดงรายการ */}
+                    <Button
+                        variant="outlined"
+                        size="small"
+                        startIcon={
+                            showList ? (
+                                <VisibilityOffIcon sx={{ fontSize: 15 }} />
+                            ) : (
+                                <VisibilityIcon sx={{ fontSize: 15 }} />
+                            )
+                        }
+                        sx={{
+                            bgcolor: "background.paper",
+                            borderRadius: 2,
+                            textTransform: "none",
+                            fontWeight: "bold",
+                            fontSize: 13,
+                        }}
+                        onClick={() => setShowList((prev) => !prev)}
+                    >
+                        {showList ? "ซ่อนรายการ" : "แสดงรายการ"}
+                    </Button>
+
                     <Button
                         variant="outlined"
                         size="small"
@@ -81,205 +113,198 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                 </Box>
             </Box>
 
-            {items.length === 0 ? (
-                <Box textAlign="center" py={4} color="text.secondary">
-                    <Typography fontSize={14}>ไม่มีประวัติการเคลม</Typography>
-                </Box>
-            ) : (
-                items.slice(0, 2).map((item, idx) => (
-                    <Box
-                        key={idx}
-                        sx={{
-                            border: "1px solid",
-                            borderColor: "divider",
-                            borderRadius: 3,
-                            mb: 1.5,
-                            overflow: "hidden",
-                            transition: "all 0.2s",
-                            "&:hover": {
-                                borderColor: "primary.light",
-                                boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
-                            },
-                        }}
-                    >
-                        {/* 1. เลขที่เคลม + badge สถานะ */}
-                        <Box display="flex" alignItems="center" justifyContent="space-between" px={2} pt={2} pb={1.5}>
-                            <Box>
-                                <Typography fontSize={12} color="text.secondary">
-                                    เลขที่เคลม
-                                </Typography>
-                                <Typography
-                                    fontSize={16}
-                                    fontWeight="bold"
-                                    color="primary.main"
-                                    sx={{ textDecoration: "underline", cursor: "pointer" }}
-                                    onClick={() => handleDetailClick(item)}
-                                >
-                                    {item.claimNo}
-                                </Typography>
-                            </Box>
-
+            {showList ? (
+                <>
+                    {items.length === 0 ? (
+                        <Box textAlign="center" py={4} color="text.secondary">
+                            <Typography fontSize={14}>ไม่มีประวัติการเคลม</Typography>
+                        </Box>
+                    ) : (
+                        items.slice(0, 2).map((item, idx) => (
                             <Box
-                                display="flex"
-                                alignItems="center"
-                                gap={0.75}
+                                key={idx}
                                 sx={{
                                     border: "1px solid",
                                     borderColor: "divider",
-                                    px: 1.5,
-                                    py: 0.5,
-                                    borderRadius: 5,
+                                    borderRadius: 3,
+                                    mb: 1.5,
+                                    overflow: "hidden",
+                                    transition: "all 0.2s",
+                                    "&:hover": {
+                                        borderColor: "primary.light",
+                                        boxShadow: "0 4px 12px rgba(0,0,0,0.05)",
+                                    },
                                 }}
                             >
+                                {/* 1. เลขที่เคลม + badge สถานะ */}
                                 <Box
                                     display="flex"
                                     alignItems="center"
-                                    justifyContent="center"
-                                    sx={{
-                                        width: 20,
-                                        height: 20,
-                                        borderRadius: "50%",
-                                        bgcolor: "text.secondary",
-                                    }}
+                                    justifyContent="space-between"
+                                    px={2}
+                                    pt={2}
+                                    pb={1.5}
                                 >
-                                    <CheckCircleIcon sx={{ fontSize: 14, color: "#fff" }} />
-                                </Box>
-                                <Typography fontSize={13} fontWeight="bold" color="text.secondary">
-                                    เคลมปกติ
-                                </Typography>
-                            </Box>
-                        </Box>
+                                    <Box>
+                                        <Typography fontSize={12} color="text.secondary">
+                                            เลขที่เคลม
+                                        </Typography>
+                                        <Typography
+                                            fontSize={16}
+                                            fontWeight="bold"
+                                            color="primary.main"
+                                            sx={{ textDecoration: "underline", cursor: "pointer" }}
+                                            onClick={() => handleDetailClick(item)}
+                                        >
+                                            {item.claimNo}
+                                        </Typography>
+                                    </Box>
 
-                        {/* {true && (
-                            <Box
-                                mx={2}
-                                mb={1.5}
-                                display="flex"
-                                alignItems="center"
-                                gap={1}
-                                sx={{
-                                    border: "1px dashed",
-                                    borderColor: "divider",
-                                    borderRadius: 2,
-                                    px: 1.5,
-                                    py: 1,
-                                }}
-                            >
-                                <Box
-                                    display="flex"
-                                    alignItems="center"
-                                    justifyContent="center"
-                                    sx={{
-                                        width: 20,
-                                        height: 20,
-                                        borderRadius: "50%",
-                                        bgcolor: "text.secondary",
-                                        flexShrink: 0,
-                                    }}
-                                >
-                                    <InfoOutlinedIcon sx={{ fontSize: 13, color: "#fff" }} />
-                                </Box>
-                                <Typography fontSize={13} color="text.secondary">
-                                    เคยเบิกสูญเสียอวัยวะแล้ว
-                                </Typography>
-                            </Box>
-                        )} */}
-
-                        <Box
-                            display="flex"
-                            flexWrap="wrap"
-                            justifyContent="space-between"
-                            alignItems="flex-start"
-                            columnGap={3}
-                            rowGap={1.5}
-                            px={2}
-                            pb={2}
-                        >
-                            <Box>
-                                <Typography fontSize={12} color="text.secondary">
-                                    วันที่เกิดเหตุ
-                                </Typography>
-                                <Typography fontSize={14} fontWeight="600" color="text.primary">
-                                    {item.incidentDate
-                                        ? formatDateString(item.incidentDate.toString(), "DD/MM/BBBB")
-                                        : "-"}
-                                </Typography>
-                            </Box>
-
-                            <Box sx={{ flex: 1, minWidth: 160 }}>
-                                <Typography fontSize={12} color="text.secondary">
-                                    อาการสำคัญ
-                                </Typography>
-                                <Typography fontSize={14} fontWeight="600" color="text.primary">
-                                    {item.lastestChiefComplaint}
-                                </Typography>
-                            </Box>
-
-                            <Box textAlign="right">
-                                <Typography fontSize={12} color="text.secondary">
-                                    ยอดเบิกรวม
-                                </Typography>
-                                <Typography fontSize={15} fontWeight="bold" color="primary.main">
-                                    {fmt(item.totalCaseAmount ?? 0)}
-                                </Typography>
-                            </Box>
-
-                            <Box textAlign="right">
-                                <Typography fontSize={12} color="text.secondary">
-                                    ยอดจ่ายรวม
-                                </Typography>
-                                <Typography fontSize={15} fontWeight="bold" color="success.main">
-                                    {fmt(item.paidAmount ?? 0)}
-                                </Typography>
-                            </Box>
-                        </Box>
-
-                        <Box px={2} pb={2}>
-                            <Box
-                                display="flex"
-                                alignItems="center"
-                                justifyContent="space-between"
-                                sx={{
-                                    border: "1px solid",
-                                    borderColor: "primary.light",
-                                    borderRadius: 2,
-                                    px: 2,
-                                    py: 1.25,
-                                }}
-                            >
-                                <Box>
                                     <Box
                                         display="flex"
                                         alignItems="center"
                                         gap={0.75}
-                                        sx={{ cursor: "pointer" }}
-                                        onClick={() => handleDetailClick(item)}
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "divider",
+                                            px: 1.5,
+                                            py: 0.5,
+                                            borderRadius: 5,
+                                        }}
                                     >
-                                        <ReceiptLongIcon sx={{ fontSize: 18, color: "primary.main" }} />
-                                        <Typography fontSize={13} fontWeight="600" color="primary.main">
-                                            ดูรายละเอียดเคสในเคลมนี้
+                                        <Box
+                                            display="flex"
+                                            alignItems="center"
+                                            justifyContent="center"
+                                            sx={{
+                                                width: 20,
+                                                height: 20,
+                                                borderRadius: "50%",
+                                                bgcolor: "text.secondary",
+                                            }}
+                                        >
+                                            <CheckCircleIcon sx={{ fontSize: 14, color: "#fff" }} />
+                                        </Box>
+                                        <Typography fontSize={13} fontWeight="bold" color="text.secondary">
+                                            เคลมปกติ
                                         </Typography>
                                     </Box>
-                                    {/* TODO: ยังไม่มี field จำนวนเคสจริง (เช่น item.caseCount) จึงใช้ static ไปก่อน */}
-                                    <Typography fontSize={12} color="text.secondary" sx={{ mt: 0.5 }}>
-                                        ทั้งหมด {item.countCase} เคส
-                                    </Typography>
                                 </Box>
 
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    startIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
-                                    sx={{ borderRadius: 2, textTransform: "none", fontWeight: "bold" }}
-                                    onClick={() => handleDetailClick(item)}
+                                <Box
+                                    display="flex"
+                                    flexWrap="wrap"
+                                    justifyContent="space-between"
+                                    alignItems="flex-start"
+                                    columnGap={3}
+                                    rowGap={1.5}
+                                    px={2}
+                                    pb={2}
                                 >
-                                    ดูรายละเอียด
-                                </Button>
+                                    <Box>
+                                        <Typography fontSize={12} color="text.secondary">
+                                            วันที่เกิดเหตุ
+                                        </Typography>
+                                        <Typography fontSize={14} fontWeight="600" color="text.primary">
+                                            {item.incidentDate
+                                                ? formatDateString(item.incidentDate.toString(), "DD/MM/BBBB")
+                                                : "-"}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box sx={{ flex: 1, minWidth: 160 }}>
+                                        <Typography fontSize={12} color="text.secondary">
+                                            อาการสำคัญ
+                                        </Typography>
+                                        <Typography fontSize={14} fontWeight="600" color="text.primary">
+                                            {item.lastestChiefComplaint}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box textAlign="right">
+                                        <Typography fontSize={12} color="text.secondary">
+                                            ยอดเบิกรวม
+                                        </Typography>
+                                        <Typography fontSize={15} fontWeight="bold" color="primary.main">
+                                            {fmt(item.totalCaseAmount ?? 0)}
+                                        </Typography>
+                                    </Box>
+
+                                    <Box textAlign="right">
+                                        <Typography fontSize={12} color="text.secondary">
+                                            ยอดจ่ายรวม
+                                        </Typography>
+                                        <Typography fontSize={15} fontWeight="bold" color="success.main">
+                                            {fmt(item.paidAmount ?? 0)}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+
+                                <Box px={2} pb={2}>
+                                    <Box
+                                        display="flex"
+                                        alignItems="center"
+                                        justifyContent="space-between"
+                                        sx={{
+                                            border: "1px solid",
+                                            borderColor: "primary.light",
+                                            borderRadius: 2,
+                                            px: 2,
+                                            py: 1.25,
+                                        }}
+                                    >
+                                        <Box>
+                                            <Box
+                                                display="flex"
+                                                alignItems="center"
+                                                gap={0.75}
+                                                sx={{ cursor: "pointer" }}
+                                                onClick={() => handleDetailClick(item)}
+                                            >
+                                                <ReceiptLongIcon sx={{ fontSize: 18, color: "primary.main" }} />
+                                                <Typography fontSize={13} fontWeight="600" color="primary.main">
+                                                    ดูรายละเอียดเคสในเคลมนี้
+                                                </Typography>
+                                            </Box>
+                                            <Typography fontSize={12} color="text.secondary" sx={{ mt: 0.5 }}>
+                                                ทั้งหมด {item.countCase} เคส
+                                            </Typography>
+                                        </Box>
+
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            startIcon={<OpenInNewIcon sx={{ fontSize: 16 }} />}
+                                            sx={{ borderRadius: 2, textTransform: "none", fontWeight: "bold" }}
+                                            onClick={() => handleDetailClick(item)}
+                                        >
+                                            ดูรายละเอียด
+                                        </Button>
+                                    </Box>
+                                </Box>
                             </Box>
-                        </Box>
-                    </Box>
-                ))
+                        ))
+                    )}
+                </>
+            ) : (
+                <Box
+                    textAlign="center"
+                    py={4}
+                    color="text.secondary"
+                    sx={{
+                        border: "1px dashed",
+                        borderColor: "divider",
+                        borderRadius: 3,
+                    }}
+                >
+                    <VisibilityOffIcon sx={{ fontSize: 24, mb: 1, color: "text.disabled" }} />
+                    <Typography fontSize={14}>รายการถูกซ่อนอยู่</Typography>
+                    <Typography fontSize={12} color="text.disabled">
+                        กดปุ่ม "แสดงรายการ" เพื่อดูข้อมูล
+                    </Typography>
+                </Box>
             )}
+
             <ViewClaimHistoryModal
                 items={items}
                 handleDetailClick={handleDetailClick}

@@ -20,7 +20,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber, FingerKey } from "../organLoss.types";
-import { CoverageType, MedicalType } from "../../../../../functionHelpers";
+import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
 import { CaseItemCreateRequest } from "../../../../../api/coreClaimApi.client";
 interface Options {
     onNext: () => void;
@@ -310,13 +310,51 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     //     formik.values.medicalTypeId,
     //     formik.values.causeOfIncidentId
     // );
-    const FORMAT_TYPE_MAP: Record<string, number> = {
-        "2-1": 7,
-        "2-2": 8,
-        "2-6": 12,
-        "3-2": 9,
+    const getFormatType = (
+        incidentTypeId?: number,
+        coverageTypeId?: number,
+        medicalTypeId?: number,
+        causeOfIncidentId?: number
+    ): number | undefined => {
+        // ค่ารักษา (OPD / IPD / DayCase) - ทั้งเจ็บป่วยและอุบัติเหตุ
+        if (
+            coverageTypeId === CoverageType.Medical &&
+            [MedicalType.OPD, MedicalType.IPD, MedicalType.DayCaseSurgery].includes(medicalTypeId ?? 0)
+        ) {
+            return 7;
+        }
+
+        // ชดเชย (Compensate Half) - ทั้งเจ็บป่วยและอุบัติเหตุ
+        if (coverageTypeId === CoverageType.Compensate) {
+            return 7;
+        }
+
+        // Death
+        if (coverageTypeId === CoverageType.Death) {
+            // เจ็บป่วย -> โรคทั่วไป
+            if (incidentTypeId === IncidentType.Illness && causeOfIncidentId === CauseOfIncident.Illness) {
+                return 4;
+            }
+            // อุบัติเหตุ -> อุบัติเหตุทั่วไป / ขับขี่-โดยสาร จยย. / ฆาตกรรม
+            if (
+                incidentTypeId === IncidentType.Accident &&
+                [CauseOfIncident.Accident, CauseOfIncident.Motorcycle, CauseOfIncident.Murder].includes(
+                    causeOfIncidentId ?? 0
+                )
+            ) {
+                return 4;
+            }
+        }
+
+        return undefined;
     };
-    const formatType = FORMAT_TYPE_MAP[`${formik.values.coverageTypeId}-${formik.values.medicalTypeId}`] ?? undefined;
+
+    const formatType = getFormatType(
+        formik.values.incidentTypeId,
+        formik.values.coverageTypeId,
+        formik.values.medicalTypeId,
+        formik.values.causeOfIncidentId
+    );
 
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         insured?.policyCode,
@@ -325,7 +363,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         isContinuous,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
-        formik.values.medicalTypeId,
+        formik.values.medicalTypeId ?? 0,
         formik.values.causeOfIncidentId,
         formatType
     );
