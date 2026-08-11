@@ -2,6 +2,7 @@ import { FormikErrors, useFormik } from "formik";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
+    useGetPaymentDetails,
     useGetPayTransferTransactionId,
     useGetSurveyId,
     useGetSurveyQuestion,
@@ -71,6 +72,7 @@ const useSurveyHook = () => {
     const { data: surveyQuestionData, isLoading: surveyQuestionIsLoading } = useGetSurveyQuestion(
         surveyCreated?.surveyToken
     );
+    const { data: paymentDetailsData, isLoading: paymentDetailsIsLoading } = useGetPaymentDetails(id);
 
     const getAnswer = surveyQuestionData?.data?.questions?.map((item: any) => {
         return item;
@@ -175,7 +177,15 @@ const useSurveyHook = () => {
         },
     });
 
-    return { formik, getAnswer, surveyQuestionIsLoading, saveSurveyIsLoading, updateSurveyIdIsLoading };
+    return {
+        formik,
+        getAnswer,
+        paymentDetailsData,
+        surveyQuestionIsLoading,
+        saveSurveyIsLoading,
+        updateSurveyIdIsLoading,
+        paymentDetailsIsLoading,
+    };
 };
 
 export default useSurveyHook;

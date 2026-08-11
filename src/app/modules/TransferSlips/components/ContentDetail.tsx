@@ -7,9 +7,13 @@ import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import PrintIcon from "@mui/icons-material/Print";
 import AccessTimeFilledOutlinedIcon from "@mui/icons-material/AccessTimeFilledOutlined";
 import ViewTimelineIcon from "@mui/icons-material/ViewTimeline";
+import useGetPaymentDataHook from "../hooks/useGetPaymentData";
+import { numberWithCommas } from "../../../functionHelpers";
+import dayjs from "dayjs";
 
 const ContentDetail = () => {
     const breakpoint = useMediaQuery((theme: Theme) => theme.breakpoints.down("md"));
+    const { data } = useGetPaymentDataHook();
     return (
         <Box sx={{ display: "flex", flexDirection: "column" }}>
             <Grid container>
@@ -41,7 +45,8 @@ const ContentDetail = () => {
                                         <AccountBalanceWalletIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>Account No :</Typography>
-                                    <Typography>035-3-35302-0</Typography>
+                                    <br></br>
+                                    <Typography>{data?.data?.accountNo}</Typography>
                                 </Box>
                                 <Divider orientation="horizontal" />
                             </Grid>
@@ -62,7 +67,8 @@ const ContentDetail = () => {
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
                                         Name Mapping Account No :
                                     </Typography>
-                                    <Typography>นายกรภัทร วรวงศ์คุณากร</Typography>
+                                    <br></br>
+                                    <Typography>{data?.data?.accountName}</Typography>
                                 </Box>
                                 <Divider orientation="horizontal" />
                             </Grid>
@@ -81,7 +87,8 @@ const ContentDetail = () => {
                                         <AccountBalanceIcon />
                                     </Avatar>
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>Bank :</Typography>
-                                    <Typography>KASIKORNBANK</Typography>
+                                    <br></br>
+                                    <Typography>{data?.data?.bankName}</Typography>
                                 </Box>
                                 <Divider orientation="horizontal" />
                             </Grid>
@@ -102,7 +109,8 @@ const ContentDetail = () => {
                                     <Typography sx={{ color: "#0458AD", fontWeight: "bold" }}>
                                         Net Transaction Amount :
                                     </Typography>
-                                    <Typography>1,200</Typography>
+                                    <br></br>
+                                    <Typography>{numberWithCommas(data?.data?.totalNetPaidAmount ?? 0)}</Typography>
                                 </Box>
                                 <Divider orientation="horizontal" />
                             </Grid>
@@ -157,7 +165,11 @@ const ContentDetail = () => {
                                                     >
                                                         Debit Date :
                                                     </Typography>
-                                                    <Typography sx={{ fontSize: "16px" }}>28/04/2026</Typography>
+                                                    <Typography sx={{ fontSize: "16px" }}>
+                                                        {data?.data?.paymentDate
+                                                            ? dayjs(data?.data?.paymentDate).format("MM/DD/YYYY")
+                                                            : "-"}
+                                                    </Typography>
                                                 </Box>
                                             </Box>
                                             <Divider orientation="horizontal" sx={{ mt: "auto" }} />
@@ -212,7 +224,11 @@ const ContentDetail = () => {
                                                     >
                                                         Print Date :
                                                     </Typography>
-                                                    <Typography sx={{ fontSize: "16px" }}>29/04/2026</Typography>
+                                                    <Typography sx={{ fontSize: "16px" }}>
+                                                        {data?.data?.printDate
+                                                            ? dayjs(data?.data?.printDate).format("DD/MM/YYYY")
+                                                            : "-"}
+                                                    </Typography>
                                                 </Box>
                                             </Box>
                                             <Divider orientation="horizontal" sx={{ mt: "auto" }} />
@@ -266,7 +282,11 @@ const ContentDetail = () => {
                                                     >
                                                         Debit Time :
                                                     </Typography>
-                                                    <Typography sx={{ fontSize: "16px" }}>10:41:29 AM.</Typography>
+                                                    <Typography sx={{ fontSize: "16px" }}>
+                                                        {data?.data?.paymentDate
+                                                            ? dayjs(data?.data?.paymentDate).format("HH:mm:ss")
+                                                            : "-"}
+                                                    </Typography>
                                                 </Box>
                                             </Box>
                                             <Divider
@@ -324,7 +344,11 @@ const ContentDetail = () => {
                                                     >
                                                         Print Time :
                                                     </Typography>
-                                                    <Typography sx={{ fontSize: "16px" }}>11:20:55 AM.</Typography>
+                                                    <Typography sx={{ fontSize: "16px" }}>
+                                                        {data?.data?.printDate
+                                                            ? dayjs(data?.data?.printDate).format("HH:mm:ss")
+                                                            : "-"}
+                                                    </Typography>
                                                 </Box>
                                             </Box>
                                             <Divider

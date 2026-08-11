@@ -1,16 +1,12 @@
 import { Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
+import { useParams } from "react-router-dom";
+import { useGetPaymentDetails } from "../../Survey/surveyAPI";
+import { numberWithCommas } from "../../../functionHelpers";
 
 const useGetPaymentDataHook = () => {
-    const data = [
-        {
-            claimNo: "CL6804000123",
-            customerName: "นายกรภัทร วรวงศ์คุณากร",
-            transactionAmount: 1200.0,
-            narrative: "Krungthai Corporate Online",
-            approvedAmount: 1200.0,
-        },
-    ];
+    const { id } = useParams();
+    const { data } = useGetPaymentDetails(id);
     const column: MUIDataTableColumn[] = [
         {
             name: "claimNo",
@@ -43,7 +39,7 @@ const useGetPaymentDataHook = () => {
                 customBodyRenderLite: (rowIndex) => {
                     return (
                         <>
-                            <Typography>{data?.[rowIndex]?.claimNo}</Typography>
+                            <Typography>{data?.data?.paymentItemDetail?.[rowIndex]?.claimNo}</Typography>
                         </>
                     );
                 },
@@ -80,7 +76,7 @@ const useGetPaymentDataHook = () => {
                 customBodyRenderLite: (rowIndex) => {
                     return (
                         <>
-                            <Typography>{data?.[rowIndex]?.customerName}</Typography>
+                            <Typography>{data?.data?.paymentItemDetail?.[rowIndex]?.customerName}</Typography>
                         </>
                     );
                 },
@@ -117,14 +113,16 @@ const useGetPaymentDataHook = () => {
                 customBodyRenderLite: (rowIndex) => {
                     return (
                         <>
-                            <Typography>{data?.[rowIndex]?.transactionAmount}</Typography>
+                            <Typography>
+                                {numberWithCommas(data?.data?.paymentItemDetail?.[rowIndex]?.transactionAmount ?? 0)}
+                            </Typography>
                         </>
                     );
                 },
             },
         },
         {
-            name: "narrative",
+            name: "bankName",
             label: "Narrative",
             options: {
                 filter: false,
@@ -181,6 +179,15 @@ const useGetPaymentDataHook = () => {
                         {columnMeta.label}
                     </th>
                 ),
+                customBodyRenderLite: (rowIndex) => {
+                    return (
+                        <>
+                            <Typography>
+                                {numberWithCommas(data?.data?.paymentItemDetail?.[rowIndex]?.approvedAmount ?? 0)}
+                            </Typography>
+                        </>
+                    );
+                },
             },
         },
     ];
