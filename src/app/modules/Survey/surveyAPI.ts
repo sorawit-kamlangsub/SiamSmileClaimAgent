@@ -9,6 +9,7 @@ const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 const getPayTransferTransactionIdKey = "getPayTransferTransactionId";
 // const getSurveyIdKey = "getSurveyId";
 const getSurveyKey = "getSurvey";
+const getPaymentDetailsKey = "getPaymentDetails";
 
 export const useGetPayTransferTransactionId = (payload: object) => {
     return useQuery([getPayTransferTransactionIdKey], () => getPayTransferTransactionData(payload));
@@ -161,6 +162,28 @@ const updateSurveyId = (payload: UpdateSurveyType) => {
     const url = `${claimFundAPI_URL}/Notification/UpdateSMSTransactionSurvey`;
     return axios
         .post(url, payload)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+//NOTE - PaymentDetails
+export const useGetPaymentDetails = (ref: string | undefined) => {
+    return useQuery([getPaymentDetailsKey], () => getPaymentDetailsByRef(ref), { enabled: !!ref });
+};
+
+const getPaymentDetailsByRef = (ref: string | undefined) => {
+    const url = encodeURLWithParams(`${claimFundAPI_URL}/Transfer/v1/PaymentDetails`, { referenceCode: [ref] });
+
+    return axios
+        .get(url)
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;
