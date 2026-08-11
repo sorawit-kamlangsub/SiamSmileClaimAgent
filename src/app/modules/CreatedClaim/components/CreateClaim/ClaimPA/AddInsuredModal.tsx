@@ -23,7 +23,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { claimPASelector, resetClaimForm, setPendingInsured } from "../../../store/claimPASlice";
+import { claimPASelector, resetClaimForm, setPendingInsured, setTmpClaimItem } from "../../../store/claimPASlice";
 import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../../functionHelpers";
 import { FormikDropdown, FormikTextField, StandardDataTable } from "../../../../_common";
 import { useFormik } from "formik";
@@ -31,8 +31,10 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { PaginationSortableDto } from "../../../../_common/types";
 import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../../../api/coreClaimApi";
-import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { ClaimCreateRequest, GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import { generateTempId } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
+
 
 interface InsuredDetailItem {
     label: string;
@@ -171,6 +173,21 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                 productCategoryName: selectedInsured.insuredType,
             } as any)
         );
+
+        const stubClaim: ClaimCreateRequest = {
+            tempClaimId: generateTempId(),
+            applicationId: selectedInsured.appId,
+            policyNo: undefined,
+            certificateNo: undefined,
+            customerId: selectedInsured.id,
+            customerName: selectedInsured.customerName,
+            incidentTypeId: undefined,
+            incidentDate: undefined,
+            accidentPlace: undefined,
+            accidentDescription: undefined,
+        };
+        dispatch(setTmpClaimItem([stubClaim]));
+
         dispatch(resetClaimForm());
 
         navigate(-1);

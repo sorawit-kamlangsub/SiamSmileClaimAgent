@@ -89,6 +89,13 @@ export const useOcrDocumentScan = () => {
         return docs.idCard || docs.receipt || docs.medCert;
     };
 
+    const resetOcr = () => {
+        setIsOcrDocsValid(true);
+        setOcrResult({});
+        setIsOcrLoading(false);
+        setOcrDocumentIds({});
+    };
+
     return {
         isOcrDocsValid,
         ocrResult,
@@ -101,5 +108,6 @@ export const useOcrDocumentScan = () => {
         getRequiredDocsByCoverageType,
         shouldShowOcrDocumentScan,
         ocrDocumentPayload,
+        resetOcr,
     };
 };

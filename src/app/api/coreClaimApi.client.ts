@@ -390,6 +390,8 @@ export class CoreClaimClient {
      * @param medicalTypeId (optional)
      * @param causeOfIncidentId (optional)
      * @param formatTypeId (optional)
+     * @param cusTomerTypeCode (optional)
+     * @param customerCode (optional)
      * @return Success
      */
     getCustomerBenefitDetailHalf(
@@ -402,6 +404,8 @@ export class CoreClaimClient {
         medicalTypeId?: number | undefined,
         causeOfIncidentId?: number | undefined,
         formatTypeId?: number | undefined,
+        cusTomerTypeCode?: string | undefined,
+        customerCode?: string | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/half?";
@@ -430,6 +434,11 @@ export class CoreClaimClient {
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
         if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
         else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (cusTomerTypeCode === null) throw new Error("The parameter 'cusTomerTypeCode' cannot be null.");
+        else if (cusTomerTypeCode !== undefined)
+            url_ += "CusTomerTypeCode=" + encodeURIComponent("" + cusTomerTypeCode) + "&";
+        if (customerCode === null) throw new Error("The parameter 'customerCode' cannot be null.");
+        else if (customerCode !== undefined) url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -3657,6 +3666,7 @@ export interface GetCaseByClaimIdDtoResponse {
     admissionDate?: dayjs.Dayjs | undefined;
     paymentStatusId?: number;
     paymentStatusName?: string | undefined;
+    coverageTypeId?: number | undefined;
     coverageTypeName?: string | undefined;
     incidentTypeName?: string | undefined;
     totalCount?: number | undefined;

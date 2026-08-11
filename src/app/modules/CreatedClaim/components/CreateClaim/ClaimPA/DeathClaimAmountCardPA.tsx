@@ -50,12 +50,16 @@ const coverageItems: CoverageItem[] = [
     },
 ];
 
+// เก็บเป็น string ดิบตามที่ผู้ใช้พิมพ์ (ไม่แปลงเป็น number ทันที)
+// เพื่อไม่ให้จุดทศนิยม/เลขศูนย์ท้ายจุดหายระหว่างพิมพ์ (controlled input ปกติ)
+const EMPTY_AMOUNTS: Record<string, string> = {
+    main: "",
+    "public-disaster": "",
+    "student-liability": "",
+};
+
 const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCoverageIds, formik }: Props) => {
-    const [amounts, setAmounts] = useState<Record<string, number>>({
-        main: 0,
-        "public-disaster": 0,
-        "student-liability": 0,
-    });
+    const [amounts, setAmounts] = useState<Record<string, string>>(EMPTY_AMOUNTS);
 
     const items = coverageItems.map((item) =>
         item.id === "main"
@@ -73,7 +77,7 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
     );
 
     const transferAmount = useMemo(() => {
-        return visibleItems.reduce((sum, item) => sum + (amounts[item.id] ?? 0), 0);
+        return visibleItems.reduce((sum, item) => sum + (Number(amounts[item.id]) || 0), 0);
     }, [amounts, visibleItems]);
 
     useEffect(() => {
@@ -89,11 +93,21 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
     }, [transferAmount, mainMaxAmount]);
 
     const handleAmountChange = (id: string, value: string) => {
-        const numericValue = Number(value.replace(/,/g, "")) || 0;
+        // ตัด comma ที่ format ไว้ออก แล้วอนุญาตเฉพาะตัวเลขกับจุดทศนิยม
+        let cleaned = value.replace(/,/g, "").replace(/[^\d.]/g, "");
+
+        // กันกรณีมีจุดทศนิยมมากกว่า 1 จุด (เก็บจุดแรกไว้ ตัดที่เหลือทิ้ง)
+        const firstDotIndex = cleaned.indexOf(".");
+        if (firstDotIndex !== -1) {
+            const integerPart = cleaned.slice(0, firstDotIndex);
+            const decimalPart = cleaned.slice(firstDotIndex + 1).replace(/\./g, "");
+            // จำกัดทศนิยมไว้สูงสุด 2 ตำแหน่ง
+            cleaned = `${integerPart}.${decimalPart.slice(0, 2)}`;
+        }
 
         setAmounts((prev) => ({
             ...prev,
-            [id]: numericValue,
+            [id]: cleaned,
         }));
     };
 
@@ -113,7 +127,7 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
                     <TransferAmountCard
                         key={item.id}
                         item={item}
-                        value={amounts[item.id] ?? 0}
+                        value={amounts[item.id] ?? ""}
                         onAmountChange={handleAmountChange}
                     />
                 ))}
@@ -130,7 +144,7 @@ const TransferAmountCard = ({
     onAmountChange,
 }: {
     item: CoverageItem;
-    value: number;
+    value: string;
     onAmountChange: (id: string, value: string) => void;
 }) => {
     const isMain = item.type === "main";
@@ -256,12 +270,12 @@ const TransferAmountCard = ({
                     <TextField
                         fullWidth
                         name={`${item.id}Amount`}
-                        value={value || ""}
+                        value={value}
                         onChange={(e) => onAmountChange(item.id, e.target.value)}
                         placeholder="จำนวนเงินที่ต้องการโอน"
                         size="medium"
                         inputProps={{
-                            inputMode: "numeric",
+                            inputMode: "decimal",
                         }}
                         sx={{
                             "& .MuiOutlinedInput-root": {

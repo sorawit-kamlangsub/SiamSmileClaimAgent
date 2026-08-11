@@ -79,6 +79,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         setOcrResult,
         setOcrDocumentIds,
         getRequiredDocsByCoverageType,
+        resetOcr,
     } = useClaimPAForm({ onNext });
 
     const { values, setFieldValue } = formik;
@@ -87,17 +88,16 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     );
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const { organLossItems, school, claimItems, editingItemId } = useAppSelector(claimPASelector);
+    const { organLossItems, school, claimItems, editingItemId, tmpCoreClaim } = useAppSelector(claimPASelector);
 
-    const otherInsuredCount = editingItemId
-        ? claimItems.filter((c) => c.id !== editingItemId).length
-        : claimItems.length;
+    const editingTempClaimId = editingItemId ? claimItems.find((c) => c.id === editingItemId)?.tempClaimId : undefined;
+    const otherInsuredCount = (tmpCoreClaim.createClaim ?? []).filter(
+        (c) => c.tempClaimId !== editingTempClaimId
+    ).length;
     const isAddingAdditionalInsured = otherInsuredCount > 0;
 
     const coverageTypeOptions = isAddingAdditionalInsured
-        ? (coverageType ?? []).filter(
-              (opt: any) => opt.coverageTypeId !== CoverageType.Death && opt.coverageTypeId !== CoverageType.Disability
-          )
+        ? (coverageType ?? []).filter((opt) => opt.id !== CoverageType.Death && opt.id !== CoverageType.Disability)
         : coverageType;
 
     const isMedical =
@@ -153,13 +153,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     };
 
     useEffect(() => {
-        if (
-            isAddingAdditionalInsured &&
-            (values.coverageTypeId === CoverageType.Death || values.coverageTypeId === CoverageType.Disability)
-        ) {
-            setFieldValue("coverageTypeId", undefined);
-            setFieldValue("coverageTypeName", undefined);
-        }
+        if (!isAddingAdditionalInsured) return;
+
+        formik.resetForm();
+        resetOcr();
     }, [isAddingAdditionalInsured]);
 
     return (

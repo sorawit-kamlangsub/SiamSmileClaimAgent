@@ -24,6 +24,7 @@ import {
     setTmpClaimItem,
     setTmpCoreClaimHeader,
     updateClaimItem,
+    updateTmpClaimItem,
 } from "../../../store/claimPASlice";
 import {
     ClaimCreateRequest,
@@ -42,7 +43,7 @@ interface Options {
     onNext: () => void;
 }
 
-const generateTempId = () =>
+export const generateTempId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -169,17 +170,22 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
             const ocrDocument = !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds);
 
-            // ── โหมดแก้ไข: มี editingItemId และหาเจอใน claimItems ──
             const editingItem = editingItemId ? claimItems.find((c) => c.id === editingItemId) : undefined;
             const isEditing = !!editingItem;
-
-            const tempClaimId = editingItem?.tempClaimId ?? generateTempId();
-            const tempCaseId = editingItem?.tempCaseId ?? generateTempId();
 
             const applicationId = isEditing ? editingItem!.applicationId : effectiveInsured?.policyCode;
             const customerId = isEditing ? editingItem!.customerId : effectiveInsured?.customerId;
             const customerName = isEditing ? editingItem!.customerName : effectiveInsured?.customerName;
             const productId = isEditing ? editingItem!.productId : effectiveInsured?.productId;
+
+            const stubClaim = !isEditing
+                ? tmpCoreClaim.createClaim?.find(
+                      (c) => c.applicationId === applicationId && c.customerId === customerId
+                  )
+                : undefined;
+
+            const tempClaimId = editingItem?.tempClaimId ?? stubClaim?.tempClaimId ?? generateTempId();
+            const tempCaseId = editingItem?.tempCaseId ?? generateTempId();
 
             const claimItem: ClaimInsuredItem = {
                 id: editingItem?.id ?? `${Date.now()}`,
@@ -374,7 +380,11 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 createCasePayable,
             };
 
-            dispatch(setTmpClaimItem([claimEntry]));
+            if (stubClaim) {
+                dispatch(updateTmpClaimItem(claimEntry));
+            } else {
+                dispatch(setTmpClaimItem([claimEntry]));
+            }
             dispatch(setTmpCaseItem({ tempClaimId, cases: [caseEntry] }));
 
             onNext();
