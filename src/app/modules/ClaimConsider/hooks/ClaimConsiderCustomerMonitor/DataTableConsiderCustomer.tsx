@@ -2,8 +2,10 @@ import { IconButton, Tooltip, Grid } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import VisibilityIcon from "@mui/icons-material/Visibility";
+import { useNavigate } from "react-router-dom";
 
 const useDataTableConsiderCustomerHook = () => {
+    const navigate = useNavigate();
     const mockData = [
         {
             transferDate: "2026-08-01",
@@ -143,6 +145,9 @@ const useDataTableConsiderCustomerHook = () => {
                             <Grid container sx={{ gap: 1.5 }}>
                                 <Tooltip title="พิจารณาเคลม">
                                     <IconButton
+                                        onClick={() => {
+                                            navigate(`customers/${mockData?.[rowIndex]?.claimCode}`);
+                                        }}
                                         sx={{
                                             backgroundColor: "#FFF263",
                                             ":hover": {
