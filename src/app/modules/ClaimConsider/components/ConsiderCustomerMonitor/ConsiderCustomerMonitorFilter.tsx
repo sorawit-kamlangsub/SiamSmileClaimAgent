@@ -66,7 +66,13 @@ const ConsiderCustomerMonitorFilter = () => {
                             onClick={() => {
                                 formik.resetForm();
                             }}
-                            sx={{ borderColor: "#BF360C", color: "#870000" }}
+                            sx={{
+                                borderColor: "#BF360C",
+                                color: "#870000",
+                                ":hover": {
+                                    borderColor: "#BF360C",
+                                },
+                            }}
                         >
                             ล้างค่า
                         </Button>
