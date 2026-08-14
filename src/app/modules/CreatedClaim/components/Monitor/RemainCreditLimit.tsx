@@ -1,7 +1,11 @@
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
-import { Box, Grid, Typography } from "@mui/material";
+import { Box, Grid, Skeleton, Typography } from "@mui/material";
+import { useGetEmployeeClaimPaymentLimit } from "../../../../api/coreClaimMastersApi";
+import { useAuth } from "../../../_auth";
 
 export const RemainCreditLimit = () => {
+    const { userProfile } = useAuth();
+    const { data: employeeClaimPaymentLimit, isLoading } = useGetEmployeeClaimPaymentLimit(userProfile?.userId ?? 0);
     return (
         <>
             <Grid
@@ -33,13 +37,17 @@ export const RemainCreditLimit = () => {
                     <Typography component="div" sx={{ fontWeight: "bold", fontSize: "14px", color: "#7A7A7A" }}>
                         วงเงินคงเหลือ (ผู้คีย์เคลม) :
                     </Typography>
-                    <Typography color={"primary"} sx={{ fontWeight: "bold", fontSize: "18px" }}>
-                        THB&nbsp;&nbsp;&nbsp;
-                        {(30000).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                        }) ?? "0.00"}
-                    </Typography>
+                    {isLoading ? (
+                        <Skeleton variant="text" width={140} height={28} />
+                    ) : (
+                        <Typography color={"primary"} sx={{ fontWeight: "bold", fontSize: "18px" }}>
+                            THB&nbsp;&nbsp;&nbsp;
+                            {(employeeClaimPaymentLimit?.data?.remainingLimit ?? 0).toLocaleString(undefined, {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2,
+                            })}
+                        </Typography>
+                    )}
                 </Box>
             </Grid>
         </>

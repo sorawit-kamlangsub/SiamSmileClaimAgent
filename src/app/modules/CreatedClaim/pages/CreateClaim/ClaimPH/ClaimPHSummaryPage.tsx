@@ -524,7 +524,6 @@ const ClaimPHSummaryPage: React.FC = () => {
                                         claimAmount: Number(form.transferAmount),
                                     },
                                 ]}
-                                onEdit={() => navigate(-1)}
                             />
                         </CustomPaper>
                     </Grid>
