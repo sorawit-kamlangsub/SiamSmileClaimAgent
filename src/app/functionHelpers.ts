@@ -447,3 +447,4 @@ export enum CauseOfIncident {
     PublicDisaster = 7, // ภัยสาธารณะ
     SchoolLiability = 8, // รับผิดสถานศึกษา
 }
+

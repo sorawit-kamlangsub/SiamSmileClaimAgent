@@ -46,12 +46,12 @@ export const useClaimPA = () => {
     useEffect(() => {
         if (!bankAccountQuery.data?.data) return;
         dispatch(setBankAccounts(bankAccountQuery.data.data));
-    }, [dispatch, bankAccountQuery.data]);
+    }, [bankAccountQuery.data]);
 
     useEffect(() => {
         if (!contactQuery.data?.data) return;
         dispatch(setContacts(contactQuery.data.data));
-    }, [dispatch, contactQuery.data]);
+    }, [contactQuery.data]);
 
     return {
         appId,

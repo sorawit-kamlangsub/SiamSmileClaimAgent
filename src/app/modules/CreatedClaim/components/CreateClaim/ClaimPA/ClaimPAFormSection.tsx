@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
     Backdrop,
     Box,
@@ -54,6 +54,31 @@ const EMPTY_STATE_SX = {
     color: "text.secondary",
     fontSize: 14,
 } as const;
+
+const FIELD_ORDER = [
+    "incidentTypeId",
+    "coverageTypeId",
+    "medicalTypeId",
+    "causeOfIncidentId",
+    "documentRecipientTypeId",
+    "serviceProviderId",
+    "zebraId",
+    "incidentDate",
+    "admissionDate",
+    "dischargeDate",
+    "deathDate",
+    "notificationDate",
+    "documentCompleteDate",
+    "hospitalId",
+    "accidentPlace",
+    "symptomType",
+    "chiefComplaintId",
+    "remark",
+    "transferAmount",
+    "ocrDocumentSection",
+] as const;
+
+type FieldRefName = (typeof FIELD_ORDER)[number];
 
 interface Props {
     onNext: () => void;
@@ -134,17 +159,50 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const maxPrice = currentBenefit?.maxPrice;
     const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
+    const fieldRefs = useRef<Partial<Record<FieldRefName, HTMLElement | null>>>({});
+
+    const registerFieldRef = (name: FieldRefName) => (el: HTMLElement | null) => {
+        fieldRefs.current[name] = el;
+    };
+
+    const focusField = (name: FieldRefName) => {
+        const container = fieldRefs.current[name];
+        if (!container) return false;
+
+        container.scrollIntoView({ behavior: "smooth", block: "center" });
+
+        window.setTimeout(() => {
+            const focusable = container.querySelector<HTMLElement>(
+                'input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), [role="radio"], [role="checkbox"], button:not([disabled]), [tabindex]'
+            );
+            if (focusable) {
+                focusable.focus();
+            } else {
+                container.setAttribute("tabindex", "-1");
+                container.focus();
+            }
+        }, 300);
+
+        return true;
+    };
+
+    const focusFirstError = (errs: Record<string, unknown>) => {
+        const firstErrorField = FIELD_ORDER.find((name) => !!errs[name]);
+        if (firstErrorField) focusField(firstErrorField);
+    };
+
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
             await formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            focusFirstError(errs as Record<string, unknown>);
             return;
         }
         if (requiresOcrValidation && !isOcrDocsValid) {
             swalWarningNotOutsideClick("แจ้งเตือน", "กรุณาแนบเอกสารให้ครบถ้วนตามที่กำหนด");
+            focusField("ocrDocumentSection");
             return;
         }
-        // ยอดที่ขอเบิกเกินสิทธิ์เบิกสูงสุด (NPL) ต้องให้ผู้ใช้ยืนยันยอดก่อน
         if (isOverEligibleLimit) {
             setIsConfirmExcessOpen(true);
             return;
@@ -159,6 +217,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         resetOcr();
     }, [isAddingAdditionalInsured]);
 
+                                console.log("🚀 ~ ClaimPAFormSection ~ insured?.customerId:", insured?.customerId)
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
@@ -170,7 +229,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                 <Box component="form" onSubmit={formik.handleSubmit} p={2}>
                     <Grid container spacing={2}>
                         {/* เหตุของการเคลม */}
-                        <Grid item xs={12}>
+                        <Grid item xs={12} ref={registerFieldRef("incidentTypeId")}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
                                 เหตุของการเคลม{" "}
                                 <Typography component="span" color="error">
@@ -187,7 +246,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         </Grid>
 
                         {/* ประเภทความคุ้มครอง */}
-                        <Grid item xs={12}>
+                        <Grid item xs={12} ref={registerFieldRef("coverageTypeId")}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
                                 ประเภทความคุ้มครอง{" "}
                                 <Typography component="span" color="error">
@@ -210,7 +269,14 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         </Grid>
 
                         {/* ประเภทการรักษา / สาเหตุ */}
-                        <Grid item xs={12}>
+                        <Grid
+                            item
+                            xs={12}
+                            ref={(el: HTMLDivElement | null) => {
+                                fieldRefs.current.medicalTypeId = el;
+                                fieldRefs.current.causeOfIncidentId = el;
+                            }}
+                        >
                             <Typography fontWeight={600} fontSize={16} mb={2}>
                                 {medicalTypeLabel}{" "}
                                 <Typography component="span" color="error">
@@ -313,7 +379,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
 
                         {/* ผู้รับเอกสาร / ผู้ให้บริการ / เจ้าของรถ */}
-                        <Grid item xs={12} md={4}>
+                        <Grid item xs={12} md={4} ref={registerFieldRef("documentRecipientTypeId")}>
                             <DocumentRecipientTypeDropDown
                                 firstItemText="-- เลือก --"
                                 formik={formik}
@@ -325,7 +391,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={4} mt={-1}>
+                        <Grid item xs={12} md={4} mt={-1} ref={registerFieldRef("serviceProviderId")}>
                             <UserAutocompleteApi
                                 formik={formik}
                                 name="serviceProviderId"
@@ -337,7 +403,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 }}
                             />
                         </Grid>
-                        <Grid item xs={12} md={4}>
+                        <Grid item xs={12} md={4} ref={registerFieldRef("zebraId")}>
                             <ZebraCarOwnerDropDown
                                 firstItemText="-- เลือก --"
                                 formik={formik}
@@ -354,7 +420,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         </Grid>
 
                         {/* วันที่ต่างๆ */}
-                        <Grid item xs={12} sm={6} md={4}>
+                        <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("incidentDate")}>
                             <FormikDatePicker
                                 name="incidentDate"
                                 label="วันที่เกิดเหตุ"
@@ -365,7 +431,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             />
                         </Grid>
                         {isMedical && (
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("admissionDate")}>
                                 <FormikDatePicker
                                     name="admissionDate"
                                     label="วันที่เข้า รพ."
@@ -377,7 +443,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </Grid>
                         )}
                         {isIPD && (
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("dischargeDate")}>
                                 <FormikDatePicker
                                     name="dischargeDate"
                                     label="วันที่ออก รพ."
@@ -389,7 +455,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </Grid>
                         )}
                         {isDeath && (
-                            <Grid item xs={12} sm={6} md={4}>
+                            <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
                                 <FormikDatePicker
                                     name="deathDate"
                                     label="วันที่เสียชีวิต"
@@ -402,7 +468,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(isDeath || isDisability) && (
                             <>
-                                <Grid item xs={12} sm={6} md={4}>
+                                <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("notificationDate")}>
                                     <FormikDatePicker
                                         name="notificationDate"
                                         label="วันที่รับแจ้ง"
@@ -412,7 +478,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                         required
                                     />
                                 </Grid>
-                                <Grid item xs={12} sm={6} md={4}>
+                                <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("documentCompleteDate")}>
                                     <FormikDatePicker
                                         name="documentCompleteDate"
                                         label="วันที่เอกสารครบ"
@@ -458,12 +524,12 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                             </RadioGroup>
                                         </Grid>
                                         {values.deathPlaceType === DeathPlaceType.Hospital && (
-                                            <Grid item xs={12} lg={9} mt={-1}>
+                                            <Grid item xs={12} lg={9} mt={-1} ref={registerFieldRef("hospitalId")}>
                                                 <HospitalDropdown formik={formik} name="hospitalId" required />
                                             </Grid>
                                         )}
                                         {values.deathPlaceType === DeathPlaceType.Other && (
-                                            <Grid item xs={12} lg={9}>
+                                            <Grid item xs={12} lg={9} ref={registerFieldRef("accidentPlace")}>
                                                 <FormikTextField
                                                     name="accidentPlace"
                                                     label="สถานที่เสียชีวิต"
@@ -478,7 +544,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     </>
                                 )}
                                 {isDisability && (
-                                    <Grid item xs={12} lg={9} mt={-1}>
+                                    <Grid item xs={12} lg={9} mt={-1} ref={registerFieldRef("hospitalId")}>
                                         <HospitalDropdown formik={formik} name="hospitalId" required />
                                     </Grid>
                                 )}
@@ -486,7 +552,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {/* ระบุอาการ */}
                         {!isDeath && !isDisability && (
-                            <Grid item xs={12}>
+                            <Grid item xs={12} ref={registerFieldRef("symptomType")}>
                                 <RadioGroup
                                     row
                                     value={values.symptomType}
@@ -506,7 +572,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </Grid>
                         )}
                         {(values.symptomType === SymptomType.ChiefComplaint || isDeath || isDisability) && (
-                            <Grid item xs={12} lg={9}>
+                            <Grid item xs={12} lg={9} ref={registerFieldRef("chiefComplaintId")}>
                                 <ChiefComplaintAutocomplete
                                     name="chiefComplaintId"
                                     formik={formik}
@@ -545,7 +611,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </>
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
-                            <Grid item xs={12} lg={9}>
+                            <Grid item xs={12} lg={9} ref={registerFieldRef("remark")}>
                                 <FormikTextField
                                     name="remark"
                                     label="หมายเหตุ"
@@ -560,7 +626,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                     </Grid>
                     {isDisability && (
-                        <Box sx={claimStepBoxSx} mt={2}>
+                        <Box sx={claimStepBoxSx} mt={2} ref={registerFieldRef("transferAmount")}>
                             <OrganLossSelector
                                 value={organLossItems}
                                 organChoices={organChoices}
@@ -607,7 +673,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
 
                     {/* จำนวนเงิน */}
                     {!isDisability && !isDeath && (
-                        <Grid item xs={12}>
+                        <Grid item xs={12} ref={registerFieldRef("transferAmount")}>
                             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
                                 <Grid item xs={12} sm={5.9} md={2.9}>
                                     <FormikTextNumber
@@ -639,7 +705,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                         </Grid>
                     )}
                     {isDeath && formik.values.causeOfIncidentId && (
-                        <Box>
+                        <Box ref={registerFieldRef("transferAmount")}>
                             <DeathClaimAmountCardPA
                                 causeOfIncidentName={formik.values.causeOfIncidentName}
                                 mainMaxAmount={transferConfig.maxAmount}
@@ -653,26 +719,28 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
 
             {/* แนบเอกสาร */}
             {showOcr && (
-                <CustomPaper>
-                    <HeadingWithColor
-                        icon={<UploadFileSharpIcon sx={{ fontSize: 27 }} />}
-                        text="สแกนเอกสาร OCR (PA)"
-                        color="blue"
-                    />
-                    <OcrDocumentScanSection
-                        requiredDocs={getRequiredDocsByCoverageType(formik.values.coverageTypeId ?? 0)}
-                        onFilesValidChange={setIsOcrDocsValid}
-                        systemFullName={insured?.customerName}
-                        systemIdCardNo={insured?.cardDetail}
-                        systemAmount={formik.values.transferAmount}
-                        systemDateIn={formik.values.admissionDate}
-                        onOcrChange={(result) => setOcrResult(result)}
-                        formik={formik}
-                        applicationCode={insured?.policyCode as string}
-                        onOcrLoadingChange={setIsOcrLoading}
-                        onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
-                    />
-                </CustomPaper>
+                <Box ref={registerFieldRef("ocrDocumentSection")}>
+                    <CustomPaper>
+                        <HeadingWithColor
+                            icon={<UploadFileSharpIcon sx={{ fontSize: 27 }} />}
+                            text="สแกนเอกสาร OCR (PA)"
+                            color="blue"
+                        />
+                        <OcrDocumentScanSection
+                            requiredDocs={getRequiredDocsByCoverageType(formik.values.coverageTypeId ?? 0)}
+                            onFilesValidChange={setIsOcrDocsValid}
+                            systemFullName={insured?.customerName}
+                            systemIdCardNo={insured?.cardDetail}
+                            systemAmount={formik.values.transferAmount}
+                            systemDateIn={formik.values.admissionDate}
+                            onOcrChange={(result) => setOcrResult(result)}
+                            formik={formik}
+                            applicationCode={insured?.policyCode as string}
+                            onOcrLoadingChange={setIsOcrLoading}
+                            onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
+                        />
+                    </CustomPaper>
+                </Box>
             )}
             {(isDeath || isDisability) && (
                 <DocumentScanTable productId={26} documentTypeId={15} aplicationCode={insured?.policyCode} />

@@ -50,8 +50,7 @@ const coverageItems: CoverageItem[] = [
     },
 ];
 
-// เก็บเป็น string ดิบตามที่ผู้ใช้พิมพ์ (ไม่แปลงเป็น number ทันที)
-// เพื่อไม่ให้จุดทศนิยม/เลขศูนย์ท้ายจุดหายระหว่างพิมพ์ (controlled input ปกติ)
+
 const EMPTY_AMOUNTS: Record<string, string> = {
     main: "",
     "public-disaster": "",

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Grid } from "@mui/material";
+import { Box, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
 import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAFormSection";
@@ -9,6 +9,7 @@ import LinearLoading from "../../../../_common/components/CustomComponent/Linear
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
 import { claimPASelector, resetState } from "../../../store/claimPASlice";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
+import ClaimStickyHeader from "../../../components/CreateClaim/ClaimStickyHeader";
 
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
@@ -24,23 +25,25 @@ const ClaimPAPage: React.FC = () => {
 
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
     return (
-        <Grid container spacing={1}>
-            <Grid item xs={12} md={4.5}>
-                {<InsuredInfoSection data={claimInfo} onEdit={() => navigate("/monitor-claim")} />}
-            </Grid>
-
-            <Grid item xs={12} md={7.5}>
-                <ClaimHistoryCard appId={applicationId} />
-            </Grid>
-            {isContinuous && oldClaim && (
-                <Grid item xs={12}>
-                    <OldClaimSection data={oldClaim} />
+        <Box>
+            <ClaimStickyHeader data={claimInfo} />
+            <Grid container spacing={1} mt={1.5}>
+                <Grid item xs={12} md={4.5}>
+                    {<InsuredInfoSection data={claimInfo} onEdit={() => navigate("/monitor-claim")} />}
                 </Grid>
-            )}
-            <Grid item xs={12}>
-                <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />
+                <Grid item xs={12} md={7.5}>
+                    <ClaimHistoryCard appId={applicationId} />
+                </Grid>
+                {isContinuous && oldClaim && (
+                    <Grid item xs={12}>
+                        <OldClaimSection data={oldClaim} />
+                    </Grid>
+                )}
+                <Grid item xs={12}>
+                    <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />
+                </Grid>
             </Grid>
-        </Grid>
+        </Box>
     );
 };
 

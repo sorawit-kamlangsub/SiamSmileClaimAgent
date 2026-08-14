@@ -15,11 +15,12 @@ import {
     selectContact,
     removeTmpClaim,
     MAX_INSURED_PER_CLAIM,
+    addContact as addContactPA,
 } from "../../../store/claimPASlice";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import AddBankAccountModal from "../../../components/CreateClaim/ClaimPH/AddBankAccountModal";
-import AddContactModal from "../../../components/CreateClaim/ClaimPH/AddContactModal";
+import AddBankAccountModal from "../../../components/CreateClaim/AddBankAccountModal";
+import AddContactModal from "../../../components/CreateClaim/AddContactModal";
 import ConfirmTransferPAModal from "../../../components/CreateClaim/ClaimPA/ConfirmTransferPAModal";
 import SchoolInfoSection from "../../../components/CreateClaim/ClaimPA/SchoolInfoSection";
 import AddInsuredModal from "../../../components/CreateClaim/ClaimPA/AddInsuredModal";
@@ -32,19 +33,21 @@ import { swalError } from "../../../../_common";
 import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPAInfo";
 import { useBeneficiaryPA } from "../../../hooks/CreateClaim/ClaimPA/useBeneficiaryPA";
 import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/BeneficiarySectionPA";
-import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { CoverageType } from "../../../../../functionHelpers";
+import { CreateCoreClaimDtoResponseServiceResponse } from "../../../../../api/coreClaimApi.client";
+import { BeneficiaryForm } from "../../../store/claimPHSlice";
 
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { appId, refId } = useParams();
     const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim } = useAppSelector((s) => s.claimpa);
-    const { createClaimPA, isLoading } = useCreateClaimPA();
+    const { createClaimPA, confirmPayment, isLoading } = useCreateClaimPA();
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openAddInsured, setOpenAddInsured] = useState(false);
+    const [claimResult, setClaimResult] = useState<CreateCoreClaimDtoResponseServiceResponse | undefined>(undefined);
     const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPA((beneficiaries) => {
         handleConfirm(beneficiaries);
     });
@@ -71,6 +74,14 @@ const ClaimPASummaryPage: React.FC = () => {
         navigate(-1);
     };
 
+    const handleBack = () => {
+        const lastItem = claimItems[claimItems.length - 1];
+        if (lastItem) {
+            dispatch(setEditingItemId(lastItem.id));
+        }
+        navigate(-1);
+    };
+
     const handleDeleteItem = (id: string) => {
         const item = claimItems.find((c) => c.id === id);
         dispatch(removeClaimItem(id));
@@ -93,7 +104,7 @@ const ClaimPASummaryPage: React.FC = () => {
 
     const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
-        setOpenConfirm(false);
+
         Swal.fire({
             icon: "question",
             iconHtml: "?",
@@ -103,44 +114,172 @@ const ClaimPASummaryPage: React.FC = () => {
             reverseButtons: true,
             allowOutsideClick: false,
             backdrop: "rgba(0,0,0,0.4)",
-            title: "ยืนยันการทำรายการ",
+            title: "ยืนยันการสร้างรายการ",
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
                     const res = await createClaimPA(freshBeneficiaries);
-                    return res.data;
+                    return res;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
                 }
             },
         }).then((result: any) => {
-            if (result.isConfirmed && result.value.isResult) {
+            const claimResponse: CreateCoreClaimDtoResponseServiceResponse | undefined = result?.value;
+            const data = claimResponse?.data;
+            const responseList = data?.responseList ?? [];
+
+            if (result.isConfirmed && data?.isResult && responseList.length > 0) {
+                const itemsHtml = responseList
+                    .map(
+                        (item: any, index: number) => `
+                <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
+                    index < responseList.length - 1 ? "12px" : "0"
+                };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
+                    <div style="display:flex;align-items:center;margin-bottom:12px;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#27AE60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">✓</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="font-size:18px;font-weight:700;color:#27AE60;">${
+                                    item?.claimNo ?? "-"
+                                }</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่เคส :</div>
+                            <div style="font-size:18px;font-weight:700;color:#2F80ED;">${item?.caseNo ?? "-"}</div>
+                        </div>
+                    </div>
+                </div>
+            `
+                    )
+                    .join("");
+
+                if (isDeathDisability) {
+                    // เคลมเสียชีวิต/ทุพพลภาพ: ส่งให้ฝ่ายพิจารณาเคลมตรวจสอบ ไม่มีขั้นโอนเงินทันที
+                    Swal.fire({
+                        icon: "success",
+                        title: "ทำรายการสำเร็จ",
+                        html: `
+                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:3;">
+                        ระบบได้ส่งข้อมูลให้ฝ่ายพิจารณาเคลมเรียบร้อย
+                    </div>
+                    ${itemsHtml}
+                `,
+                        confirmButtonText: "ตกลง",
+                        allowOutsideClick: false,
+                        backdrop: "rgba(0,0,0,0.4)",
+                    }).then(() => {
+                        dispatch(resetState());
+                        navigate(`/monitor-claim`);
+                    });
+                } else {
+                    // เคลมปกติ: บันทึกเคลมสำเร็จแล้ว ให้เลือกจะ "โอนเงิน" ต่อเลย หรือ "ปิด" ไว้ก่อนแล้วค่อยมาโอนทีหลัง
+                    Swal.fire({
+                        icon: "success",
+                        title: "ทำรายการสำเร็จ",
+                        html: `
+                <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:3;">
+                    ระบบได้ทำรายการเรียบร้อย กรุณากด "โอนเงิน" เพื่อดำเนินการโอนเงินต่อ
+                </div>
+                ${itemsHtml}
+            `,
+                        confirmButtonText: "โอนเงิน",
+                        showCancelButton: true,
+                        cancelButtonText: "ปิด",
+                        allowOutsideClick: false,
+                        backdrop: "rgba(0,0,0,0.4)",
+                    }).then((confirmResult) => {
+                        if (confirmResult.isConfirmed) {
+                            setClaimResult(claimResponse);
+                            setOpenConfirm(true);
+                        } else {
+                            dispatch(resetState());
+                            navigate(`/monitor-claim`);
+                        }
+                    });
+                }
+            } else if (result.isConfirmed) {
+                swalError("บันทึกไม่สำเร็จ !", data?.msg || "กรุณาลองใหม่อีกครั้ง");
+            }
+        });
+    };
+
+    // ── ขั้นที่ 2: โอนเงินจริง (แยกออกจากขั้นบันทึกเคลมด้านบน) เรียกหลังผู้ใช้ตรวจสอบบัญชีใน ConfirmTransferPAModal แล้วกดยืนยัน ──
+    const handleActualTransfer = async () => {
+        if (!claimResult) return;
+
+        setOpenConfirm(false);
+
+        Swal.fire({
+            icon: "question",
+            iconHtml: "?",
+            showCancelButton: true,
+            confirmButtonText: "ตกลง",
+            cancelButtonText: "ยกเลิก",
+            reverseButtons: true,
+            allowOutsideClick: false,
+            backdrop: "rgba(0,0,0,0.4)",
+            title: "ยืนยันการโอนเงิน",
+            showLoaderOnConfirm: true,
+            preConfirm: async () => {
+                try {
+                    const res = await confirmPayment(claimResult);
+                    return res;
+                } catch (error) {
+                    Swal.showValidationMessage(`Request failed: ${error}`);
+                }
+            },
+        }).then((result: any) => {
+            if (result.isConfirmed) {
+                const responseList = claimResult.data?.responseList ?? [];
+                const itemsHtml = responseList
+                    .map(
+                        (item: any, index: number) => `
+                <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
+                    index < responseList.length - 1 ? "12px" : "0"
+                };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
+                    <div style="display:flex;align-items:center;margin-bottom:12px;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#27AE60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">✓</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="font-size:18px;font-weight:700;color:#27AE60;">${
+                                    item?.claimNo ?? "-"
+                                }</span>
+                                <span
+                                    class="material-icons copy-btn"
+                                    data-copy="${item?.claimNo ?? ""}"
+                                    style="cursor:pointer;color:#2196F3;font-size:18px;margin-left:6px;user-select:none;"
+                                >content_copy</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
+                            <div style="font-size:18px;font-weight:700;color:#2F80ED;">${item?.caseNo ?? "-"}</div>
+                        </div>
+                    </div>
+                </div>
+            `
+                    )
+                    .join("");
+
                 Swal.fire({
                     icon: "success",
                     title: "ทำรายการสำเร็จ",
                     html: `
-                    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:16px;">
-                        <span style="font-size:20px;font-weight:700;color:#2196F3;">${result.value.claimNo}</span>
-                        <span
-                            class="material-icons copy-btn"
-                            data-copy="${result.value.claimNo}"
-                            style="cursor:pointer;color:#2196F3;font-size:20px;user-select:none;"
-                        >content_copy</span>
+                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:3;">
+                        ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
                     </div>
-
-                    <div style="
-                        background:#f5f5f5;
-                        border-radius:8px;
-                        padding:14px 20px;
-                        text-align:center;
-                        color:#555;
-                        font-size:15px;
-                        font-weight:600;
-                        letter-spacing:0.5px;
-                    ">
-                        ${result.value.caseNo}
-                    </div>
-            `,
+                    ${itemsHtml}
+                `,
                     confirmButtonText: "ตกลง",
                     allowOutsideClick: false,
                     backdrop: "rgba(0,0,0,0.4)",
@@ -160,12 +299,12 @@ const ClaimPASummaryPage: React.FC = () => {
                             });
                         });
                     },
+                }).then(() => {
+                    dispatch(resetState());
+                    navigate(`/monitor-claim`);
                 });
-                dispatch(resetState());
-
-                navigate(`/monitor-claim`);
             } else {
-                swalError("บันทึกไม่สำเร็จ !", "กรุณาลองใหม่อีกครั้ง");
+                swalError("โอนเงินไม่สำเร็จ !", "กรุณาลองใหม่อีกครั้ง");
             }
         });
     };
@@ -292,7 +431,7 @@ const ClaimPASummaryPage: React.FC = () => {
                         <Button
                             variant="outlined"
                             startIcon={<ArrowBackIcon />}
-                            onClick={() => navigate(-1)}
+                            onClick={handleBack}
                             sx={{ bgcolor: "#fff" }}
                             size="medium"
                         >
@@ -303,7 +442,7 @@ const ClaimPASummaryPage: React.FC = () => {
                             color="success"
                             size="medium"
                             startIcon={<CommentIcon />}
-                            onClick={() => (isDeathDisability ? formik.handleSubmit() : setOpenConfirm(true))}
+                            onClick={() => (isDeathDisability ? formik.handleSubmit() : handleConfirm())}
                         >
                             {isDeathDisability ? "ส่งตรวจสอบ" : "แจ้งโอนเงิน"}
                         </Button>
@@ -312,11 +451,16 @@ const ClaimPASummaryPage: React.FC = () => {
 
                 {/* ── Modals ── */}
                 <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} productTypeId={26} />
-                <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
+                <AddContactModal
+                    open={openContact}
+                    onClose={() => setOpenContact(false)}
+                    onAdd={(contact) => dispatch(addContactPA(contact))}
+                />
                 <ConfirmTransferPAModal
                     open={openConfirm}
                     onClose={() => setOpenConfirm(false)}
-                    onConfirm={handleConfirm}
+                    onConfirm={handleActualTransfer}
+                    isLoading={isLoading}
                 />
                 <AddInsuredModal
                     open={openAddInsured}

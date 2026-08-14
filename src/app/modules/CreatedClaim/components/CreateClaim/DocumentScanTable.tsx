@@ -206,3 +206,4 @@ const FileCount = ({ docData }: FileCountProps) => {
     const fileCount = documentData?.data?.fileCount ?? 0;
     return <>{fileCount}</>;
 };
+ 

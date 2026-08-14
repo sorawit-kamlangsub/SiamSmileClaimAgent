@@ -9,7 +9,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { claimPHSelector, DeathPlaceType, setEnabled, SymptomType } from "../../../store/claimPHSlice";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import dayjs from "dayjs";
-import { useGetCustomerBenefitDetailSearch } from "../../../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
 import { CoverageType, MedicalType } from "../../../../../functionHelpers";
@@ -37,7 +37,11 @@ import {
     CaseServicePersonCreateRequest,
     CasePayableCreateRequest,
 } from "../../../../../api/coreClaimApi.client";
-import { mapOrganLossToDisabilityRequests } from "./useCreateClaimPA";
+import {
+    mapBankAccountToBeneficiary,
+    mapBenefitToCaseItems,
+    mapOrganLossToDisabilityRequests,
+} from "./useCreateClaimPA";
 
 interface Options {
     onNext: () => void;
@@ -61,6 +65,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         claimItems,
         editingItemId,
         tmpCoreClaim,
+        bankAccounts,
+        contacts,
     } = useAppSelector(claimPASelector);
 
     const effectiveInsured = pendingInsured ?? insured;
@@ -170,6 +176,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
             const ocrDocument = !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds);
 
+            // ── โหมดแก้ไข: มี editingItemId และหาเจอใน claimItems ──
             const editingItem = editingItemId ? claimItems.find((c) => c.id === editingItemId) : undefined;
             const isEditing = !!editingItem;
 
@@ -293,31 +300,6 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 },
             ];
 
-            // const createCaseAdjudication: CaseAdjudicationCreateRequest[] = [
-            //     {
-            //         tempCaseId,
-            //         decisionId: 3,
-            //         decisionDate: dayjs(),
-            //         approvedAdmissionDate: isMedical ? values.admissionDate : undefined,
-            //         approvedDischargeDate: isIPD ? values.dischargeDate : undefined,
-            //         coveredAmount: 0,
-            //         nonCoveredAmount: 0,
-            //         compensateAmount: 0,
-            //         approvedMedicalAmount: 0,
-            //         approvedCompensateAmount: 0,
-            //         patientPayAmount: 0,
-            //         isExgratia: false,
-            //         exgratiaAmount: 0,
-            //         deductibleAmount: 0,
-            //         coPayAmount: 0,
-            //         coInsuranceAmount: 0,
-            //         rejectReasonId: undefined,
-            //         rejectDate: undefined, // เดิมใส่ dayjs() ไว้เฉย ๆ ทั้งที่ยังไม่ reject แก้เป็น undefined ให้ตรงสถานะจริง
-            //         isLatest: true,
-            //         approvedIPDDayCount: 0,
-            //         approvedICUDayCount: 0,
-            //     },
-            // ];
 
             const createCaseServicePerson: CaseServicePersonCreateRequest[] = [
                 {
@@ -336,6 +318,31 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             const createCasePayable: CasePayableCreateRequest[] = [
                 { tempCaseId, payableCategoryId: isMedicalOnly ? 2 : isCompensate ? 3 : isDisability ? 5 : 6 },
             ];
+
+            const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
+            const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
+            const createBeneficiary =
+                !isDeath && !isDisability
+                    ? mapBankAccountToBeneficiary(
+                          selectedAccount,
+                          selectedContact,
+                          values.transferAmount ?? 0,
+                          tempClaimId,
+                          tempCaseId
+                      )
+                    : [];
+
+            // ── กรอง benefit ที่จะส่งเป็น createCaseItem ──
+            const filteredBenefits = isDeath
+                ? (customerBenefit?.data ?? []).filter((b) => {
+                      const rowCauseId = b.incidentTypeId; // ← เปลี่ยน field นี้ถ้า log แล้วไม่ตรง
+                      const isMainCause = rowCauseId === values.causeOfIncidentId;
+                      const isSelectedExtra = values.extraCoverageIds.includes(rowCauseId as number);
+                      return isMainCause || isSelectedExtra;
+                  })
+                : customerBenefit?.data ?? [];
+
+            const createCaseItem = mapBenefitToCaseItems(filteredBenefits, values.transferAmount ?? 0);
 
             const caseEntry: CaseCreateRequest = {
                 tempCaseId,
@@ -367,20 +374,19 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 icD10_2ndId: isDeath || isDisability ? values.diagnoses[1]?.icd10Id : undefined,
                 icD10_3rdId: isDeath || isDisability ? values.diagnoses[2]?.icd10Id : undefined,
                 medicalTypeId: isMedical ? values.medicalTypeId : undefined,
-                createCaseItem: [],
+                createCaseItem,
                 createCaseRegistration,
                 createCaseAssessment,
                 createCaseDeath,
                 createCaseDisability,
                 createCaseDocument,
-                // createCaseAdjudication,
                 createCaseContact: [],
                 createCaseServicePerson,
-                createBeneficiary: [],
+                createBeneficiary,
                 createCasePayable,
             };
 
-            if (stubClaim) {
+            if (isEditing || stubClaim) {
                 dispatch(updateTmpClaimItem(claimEntry));
             } else {
                 dispatch(setTmpClaimItem([claimEntry]));
@@ -448,16 +454,25 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 ])
         ).values(),
     ];
-    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
+
+    const isDisability = formik.values.coverageTypeId === CoverageType.Disability;
+    const isDeath = formik.values.coverageTypeId === CoverageType.Death;
+    const formattype = isDisability ? 3 : isDeath ? 4 : 7;
+
+    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         effectiveInsured?.policyCode,
-        0,
+        undefined,
         formik.values.incidentDate,
         false,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
-        formik.values.medicalTypeId,
-        formik.values.causeOfIncidentId
+        formik.values.medicalTypeId ?? 0,
+        formik.values.causeOfIncidentId,
+        formattype,
+        "8901",
+        effectiveInsured?.customerCode
     );
+
     const isFirstRenderIncident = useRef(true);
     const isFirstRenderCoverage = useRef(true);
 

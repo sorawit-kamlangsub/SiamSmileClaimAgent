@@ -46,10 +46,9 @@ export interface ClaimInsuredItem {
     formValues: ClaimPAFormValues;
 }
 
-// ความคุ้มครองเพิ่มเติมสำหรับกรณีเสียชีวิต (เลือกได้มากกว่า 1 อย่าง)
 export enum DeathExtraCoverageId {
-    PublicDisaster = 7, // ภัยสาธารณะ
-    SchoolLiability = 8, // ความรับผิดสถานศึกษา
+    PublicDisaster = 6, // ภัยสาธารณะ
+    SchoolLiability = 7, // รับผิดสถานศึกษา
 }
 
 export const MAX_INSURED_PER_CLAIM = 2;
@@ -277,12 +276,19 @@ const claimPASlice = createSlice({
                 state.tmpCoreClaim.createClaim?.filter((x) => x.tempClaimId !== action.payload) ?? [];
         },
 
-        // ── BankAccounts (เหมือน PH) ──
         setBankAccounts(state, action: PayloadAction<GetCustomerBankAccountDtoResponse[]>) {
-            state.bankAccounts = action.payload.map((item, index) => ({
+            const manualAccounts = state.bankAccounts.filter((b) => b.id.startsWith("manual-"));
+            const apiAccounts = action.payload.map((item, index) => ({
                 ...item,
                 id: String(item.indexId ?? index),
-                isDefault: index === 0,
+                isDefault: false,
+            }));
+            const merged = [...apiAccounts, ...manualAccounts];
+            const prevDefaultId = state.bankAccounts.find((b) => b.isDefault)?.id;
+            const defaultStillExists = merged.some((b) => b.id === prevDefaultId);
+            state.bankAccounts = merged.map((b, index) => ({
+                ...b,
+                isDefault: defaultStillExists ? b.id === prevDefaultId : index === 0,
             }));
         },
         selectBankAccount(state, action: PayloadAction<string>) {
@@ -303,10 +309,18 @@ const claimPASlice = createSlice({
             });
         },
         setContacts(state, action: PayloadAction<GetContactPersonDtoResponse[]>) {
-            state.contacts = action.payload.map((item, index) => ({
+            const manualContacts = state.contacts.filter((c) => c.id.startsWith("manual-"));
+            const apiContacts = action.payload.map((item, index) => ({
                 ...item,
                 id: String(item.indexId ?? index),
-                isDefault: index === 0,
+                isDefault: false,
+            }));
+            const merged = [...apiContacts, ...manualContacts];
+            const prevDefaultId = state.contacts.find((c) => c.isDefault)?.id;
+            const defaultStillExists = merged.some((c) => c.id === prevDefaultId);
+            state.contacts = merged.map((c, index) => ({
+                ...c,
+                isDefault: defaultStillExists ? c.id === prevDefaultId : index === 0,
             }));
         },
         selectContact(state, action: PayloadAction<string>) {
