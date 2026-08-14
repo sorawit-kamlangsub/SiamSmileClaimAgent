@@ -22,27 +22,25 @@ const ClaimPHPage: React.FC = () => {
         <>
             <Box>
                 <ClaimStickyHeader data={claimInfo} />
-                <Box>
-                    <Grid container spacing={2} mt={1.5}>
-                        {/* ข้อมูลผู้เอาประกัน | ประวัติการเคลม */}
-                        <Grid item xs={12} md={4}>
-                            <InsuredInfoCardPH data={claimInfo} onEdit={() => navigate("/monitor-claim")} />
-                        </Grid>
-                        <Grid item xs={12} md={8}>
-                            <ClaimHistoryCard appId={applicationId} />
-                        </Grid>
-
-                        {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
-                        {isContinuous && oldClaim && (
-                            <Grid item xs={12}>
-                                <OldClaimSection data={oldClaim} />
-                            </Grid>
-                        )}
-                        <Grid item xs={12}>
-                            <ClaimFormSection onNext={() => navigate(`/claim/ph/${appId}/${refId}/summary`)} />
-                        </Grid>
+                <Grid container spacing={2} mt={1.5}>
+                    {/* ข้อมูลผู้เอาประกัน | ประวัติการเคลม */}
+                    <Grid item xs={12} md={4}>
+                        <InsuredInfoCardPH data={claimInfo} onEdit={() => navigate("/monitor-claim")} />
                     </Grid>
-                </Box>
+                    <Grid item xs={12} md={8}>
+                        <ClaimHistoryCard appId={applicationId} />
+                    </Grid>
+
+                    {/* ข้อมูลเคลมเดิม เฉพาะ continuous */}
+                    {isContinuous && oldClaim && (
+                        <Grid item xs={12}>
+                            <OldClaimSection data={oldClaim} />
+                        </Grid>
+                    )}
+                    <Grid item xs={12}>
+                        <ClaimFormSection onNext={() => navigate(`/claim/ph/${appId}/${refId}/summary`)} />
+                    </Grid>
+                </Grid>
             </Box>
         </>
     );

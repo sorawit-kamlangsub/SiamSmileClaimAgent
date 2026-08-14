@@ -1,3 +1,4 @@
+import { OrganLossItem } from './../organLoss.types';
 import { useGetCustomerBenefitDetailHalf } from "./../../../../../api/coreClaimApi";
 import { useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
@@ -41,6 +42,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         validate: (values) => {
             const errors: FormikErrors<ClaimFormValues> = {};
             const req = "โปรดระบุ";
+            const today = dayjs().endOf("day");
 
             // ── ข้อมูลผู้ให้บริการ ──
             if (!values.documentRecipientTypeId) errors.documentRecipientTypeId = req;
@@ -64,23 +66,48 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = req;
 
             // ── วันที่ ──
-            if (!values.incidentDate) errors.incidentDate = req;
+            if (!values.incidentDate) {
+                errors.incidentDate = "กรุณาระบุวันที่เกิดเหตุ";
+            } else if (dayjs(values.incidentDate).isAfter(today)) {
+                errors.incidentDate = "วันที่เกิดเหตุต้องไม่เป็นวันที่อนาคต";
+            } else if (insured?.coverageFrom) {
+                const incidentDate = dayjs(values.incidentDate);
+                const coverageFrom = dayjs(insured.coverageFrom);
+
+                if (incidentDate.isBefore(coverageFrom, "day")) {
+                    errors.incidentDate = "วันที่เกิดเหตุต้องไม่ก่อนวันเริ่มความคุ้มครอง";
+                } else if (insured?.coverageTo) {
+                    const coverageTo = dayjs(insured.coverageTo);
+                    if (incidentDate.isAfter(coverageTo, "day")) {
+                        errors.incidentDate = "วันที่เกิดเหตุต้องไม่เกินวันสิ้นสุดความคุ้มครอง";
+                    }
+                }
+            }
 
             if (isMedical) {
                 if (!values.admissionDate) {
-                    errors.admissionDate = req;
-                } else if (values.admissionDate.isBefore(values.incidentDate, "day")) {
-                    errors.admissionDate = "ไม่สามารถเลือกวันที่เข้า รพ. ก่อนวันที่เกิดเหตุได้";
+                    errors.admissionDate = "กรุณาระบุวันที่เข้าโรงพยาบาล";
+                } else if (dayjs(values.admissionDate).isAfter(today)) {
+                    errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่เป็นวันที่อนาคต";
+                } else if (values.incidentDate && dayjs(values.admissionDate).isBefore(values.incidentDate, "day")) {
+                    errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่น้อยกว่าวันที่เกิดเหตุ";
                 }
 
                 if (isIPD) {
                     if (!values.dischargeDate) {
-                        errors.dischargeDate = req;
+                        errors.dischargeDate = "กรุณาระบุวันที่ออกโรงพยาบาล";
+                    } else if (dayjs(values.dischargeDate).isAfter(today)) {
+                        errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่เป็นวันที่อนาคต";
                     } else if (
-                        values.dischargeDate.isBefore(values.admissionDate, "day") ||
-                        values.dischargeDate.isBefore(values.incidentDate, "day")
+                        values.incidentDate &&
+                        dayjs(values.dischargeDate).isBefore(values.incidentDate, "day")
                     ) {
-                        errors.dischargeDate = "รบกวนตรวจสอบวันที่ออก รพ.";
+                        errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
+                    } else if (
+                        values.admissionDate &&
+                        !dayjs(values.dischargeDate).isAfter(values.admissionDate, "day")
+                    ) {
+                        errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
                     }
                 }
             }
@@ -142,10 +169,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 const benefitItem = customerBenefit?.data?.[0];
 
                 for (const organ of organLossItems) {
+                    let totalAmount = 0;
                     if (organ.fingers) {
                         const sides: ("left" | "right")[] = ["left", "right"];
-                        let totalAmount = 0;
-                        let firstStandardMedicalExpenseId: number | undefined;
 
                         for (const side of sides) {
                             for (const fingerKey of Object.keys(organ.fingers[side]) as FingerKey[]) {
@@ -153,44 +179,25 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                                 if (!finger.selected || !finger.bodyPartId) continue;
 
                                 totalAmount += amountNumber(finger.amount);
-                                if (firstStandardMedicalExpenseId === undefined) {
-                                    firstStandardMedicalExpenseId = finger.standardMedicalExpenseId;
-                                }
                             }
                         }
-
-                        if (firstStandardMedicalExpenseId !== undefined) {
-                            caseItems.push({
-                                tempCaseItemId: undefined,
-                                tempCaseId: undefined,
-                                inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
-                                standardMedicalExpenseId: firstStandardMedicalExpenseId ?? 0,
-                                quantity: benefitItem?.maxQuantity ?? 1,
-                                perUnit: benefitItem?.pricePerUnit ?? 0,
-                                originalAmount: totalAmount,
-                                discountAmount: 0,
-                                netCaseAmount: organ.totalAmount,
-                                medicalTypeId: benefitItem?.medicalTypeId,
-                                nonCoveredAmount: amountNumber(organ.uncoveredAmount),
-                                nonCoveredReasonId: organ.uncoveredReason ?? 0,
-                            });
-                        }
                     } else if (organ.bodyPartId) {
-                        caseItems.push({
-                            tempCaseItemId: undefined,
-                            tempCaseId: undefined,
-                            inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
-                            standardMedicalExpenseId: organ.standardMedicalExpenseId ?? 0,
-                            quantity: benefitItem?.maxQuantity ?? 1,
-                            perUnit: benefitItem?.pricePerUnit ?? 0,
-                            originalAmount: amountNumber(organ.amount),
-                            discountAmount: 0,
-                            netCaseAmount: organ.totalAmount,
-                            medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
-                            nonCoveredAmount: amountNumber(organ.uncoveredAmount),
-                            nonCoveredReasonId: organ.uncoveredReason ?? 0,
-                        });
+                        totalAmount = amountNumber(organ.amount);
                     }
+                    caseItems.push({
+                        tempCaseItemId: undefined,
+                        tempCaseId: undefined,
+                        inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
+                        standardMedicalExpenseId: benefitItem?.standardMedicalExpenseId ?? 0,
+                        quantity: benefitItem?.maxQuantity ?? 1,
+                        perUnit: benefitItem?.pricePerUnit ?? 0,
+                        originalAmount: totalAmount,
+                        discountAmount: 0,
+                        netCaseAmount: organ.totalAmount,
+                        medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
+                        nonCoveredAmount: amountNumber(organ.uncoveredAmount),
+                        nonCoveredReasonId: organ.uncoveredReason ?? 0,
+                    });
                 }
             } else if (isManualIPD) {
                 caseItems = items
@@ -234,6 +241,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     ];
                 }
             }
+            console.log("caseItems", caseItems);
+            console.log("organLossItems", organLossItems);
             dispatch(setCaseItems(caseItems));
 
             dispatch(
@@ -300,16 +309,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 ])
         ).values(),
     ];
-    // const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
-    //     insured?.policyCode,
-    //     0,
-    //     formik.values.incidentDate,
-    //     false,
-    //     formik.values.incidentTypeId,
-    //     formik.values.coverageTypeId,
-    //     formik.values.medicalTypeId,
-    //     formik.values.causeOfIncidentId
-    // );
     const getFormatType = (
         incidentTypeId?: number,
         coverageTypeId?: number,
@@ -344,6 +343,10 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             ) {
                 return 4;
             }
+        }
+
+        if (coverageTypeId === CoverageType.Disability) {
+            return 3;
         }
 
         return undefined;

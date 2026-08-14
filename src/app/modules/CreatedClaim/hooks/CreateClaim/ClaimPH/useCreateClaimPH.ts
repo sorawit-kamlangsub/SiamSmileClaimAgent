@@ -13,7 +13,8 @@ import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
 export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
-    const { form, bankAccounts, contacts, insured, organLossItems, caseItems } = useAppSelector(claimPHSelector);
+    const { form, bankAccounts, contacts, insured, organLossItems, caseItems, documentScanList } =
+        useAppSelector(claimPHSelector);
     const isMedicalAll =
         form.coverageTypeId === CoverageType.Medical || form.coverageTypeId === CoverageType.Compensate;
     const isMedical = form.coverageTypeId === CoverageType.Medical;
@@ -155,7 +156,14 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                             createCaseDocument: [
                                 {
                                     documentSubTypeId: 220,
-                                    caseDocumentDetail: isMedicalAll ? form.ocrDocument : undefined,
+                                    caseDocumentDetail: isMedicalAll
+                                        ? form.ocrDocument
+                                        : documentScanList.map((d) => ({
+                                              documentId: d.documentId,
+                                              documentNo: d.documentCode,
+                                              receiptAdmissionDate: dayjs(), //mock
+                                              receiptAmount: 0, //mock
+                                          })),
                                 },
                             ],
 

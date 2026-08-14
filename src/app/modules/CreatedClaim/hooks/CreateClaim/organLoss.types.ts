@@ -289,7 +289,7 @@ export interface OrganLossItem {
     amount?: string;
     uncoveredAmount?: string;
     uncoveredReason?: number;
-    exgratiaDeductSource?: string;
+    exgratiaDeductSourceId?: number;
     exgratiaDeductDetail?: string;
     note?: string;
     fingers?: OrganFingerState;

@@ -8,6 +8,7 @@ import {
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
+    GetDocumentSubTypeDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { DocumentByIdResponseDto } from "../../../api/docstorageApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
@@ -135,6 +136,7 @@ interface ClaimPHState {
     organLossItems: OrganLossItem[];
     beneficiaries: BeneficiaryForm[];
     caseItems: CaseItemCreateRequest[];
+    documentScanList: GetDocumentSubTypeDtoResponse[];
 }
 const defaultForm: ClaimFormValues = {
     documentRecipientTypeId: 2,
@@ -197,6 +199,7 @@ const initialState: ClaimPHState = {
     organLossItems: [],
     beneficiaries: [],
     caseItems: [],
+    documentScanList: [],
 };
 
 const claimPHSlice = createSlice({
@@ -299,6 +302,9 @@ const claimPHSlice = createSlice({
         setDocumentDetailById: (state, action: PayloadAction<DocumentDetailDto>) => {
             state.documentDetailById[action.payload.documentId ?? ""] = action.payload;
         },
+        setDocument: (state, action: PayloadAction<GetDocumentSubTypeDtoResponse[]>) => {
+            state.documentScanList = action.payload;
+        },
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;
         },
@@ -363,6 +369,7 @@ export const {
     setInsured,
     setEnabled,
     setDocumentDetailById,
+    setDocument,
     setOrganLossItems,
     setBeneficiaries,
     updateBeneficiary,

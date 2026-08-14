@@ -7,7 +7,7 @@ import { useGetDocumentType } from "../../../../api/coreClaimApi";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../functionHelpers";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import { StandardDataTable } from "../../../_common";
-import { claimPHSelector, setDocumentDetailById } from "../../store/claimPHSlice";
+import { claimPHSelector, setDocument, setDocumentDetailById } from "../../store/claimPHSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { DOC_STORAGE_URL } from "../../../../../Const";
 import { GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
@@ -23,6 +23,7 @@ type DocumentScanTableProps = {
 
 const DocumentScanTable = ({ aplicationCode, documentTypeId }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
+    const dispatch = useAppDispatch();
     const documentSubType = (): number => {
         if (documentTypeId === 15) {
             //เอกสารประกอบการพิจารณาเคลม
@@ -40,6 +41,12 @@ const DocumentScanTable = ({ aplicationCode, documentTypeId }: DocumentScanTable
         isEnabled
     );
     const enrichedData = data?.data || [];
+
+    useEffect(() => {
+        if (enrichedData.length > 0) {
+            dispatch(setDocument(enrichedData));
+        }
+    }, [data]);
 
     const columns: MUIDataTableColumn[] = [
         {
