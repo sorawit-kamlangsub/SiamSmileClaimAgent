@@ -1,5 +1,5 @@
 import { Grid } from "@mui/material";
-import ConsiderCustomerHeaderCard from "../components/ConsiderCustomerMonitor/ConsiderCustomerHeaderCard";
+import ConsiderCustomerHeader from "../components/ConsiderCustomerMonitor/ConsiderCustomerHeader";
 import ConsiderCustomerMonitorFilter from "../components/ConsiderCustomerMonitor/ConsiderCustomerMonitorFilter";
 import ConsiderCustomerDataTable from "../components/ConsiderCustomerMonitor/ConsiderCustomerDataTable";
 
@@ -8,7 +8,7 @@ const ConsiderMonitorPage = () => {
         <>
             <Grid container spacing={2} sx={{ py: 2 }}>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <ConsiderCustomerHeaderCard />
+                    <ConsiderCustomerHeader />
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} sx={{ py: 2 }}>
                     <ConsiderCustomerMonitorFilter />
