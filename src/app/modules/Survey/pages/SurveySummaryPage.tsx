@@ -27,7 +27,7 @@ const SurveySummaryPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
 
-    const { data, isLoading } = useGetPaymentDetails(id);
+    const { data } = useGetPaymentDetails(id);
 
     return (
         <Box
