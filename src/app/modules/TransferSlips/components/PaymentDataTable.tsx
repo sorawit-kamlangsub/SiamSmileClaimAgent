@@ -1,6 +1,7 @@
 import { Chip, Grid, Paper, Theme, Typography, useMediaQuery } from "@mui/material";
 import { StandardDataTable } from "../../_common";
 import useGetPaymentDataHook from "../hooks/useGetPaymentData";
+import { numberWithCommas } from "../../../functionHelpers";
 
 const PaymentDataTable = () => {
     const { column, data } = useGetPaymentDataHook();
@@ -30,7 +31,7 @@ const PaymentDataTable = () => {
                         <StandardDataTable
                             name="paymentSlipDataTable"
                             columns={column ?? []}
-                            data={data ?? []}
+                            data={data?.data?.paymentItemDetail ?? []}
                             displayFooter={false}
                             sx={{
                                 width: "100%",
@@ -50,7 +51,12 @@ const PaymentDataTable = () => {
                                                 <Typography
                                                     sx={{ color: "#0458AD", fontWeight: "bold", textAlign: "end" }}
                                                 >
-                                                    0
+                                                    {numberWithCommas(
+                                                        data?.data?.paymentItemDetail?.reduce(
+                                                            (acc: any, curr: any) => acc + curr.transactionAmount,
+                                                            0
+                                                        )
+                                                    )}
                                                 </Typography>
                                             </td>
                                             <td style={{ padding: "10px" }}></td>
@@ -58,7 +64,12 @@ const PaymentDataTable = () => {
                                                 <Typography
                                                     sx={{ color: "#0458AD", fontWeight: "bold", textAlign: "end" }}
                                                 >
-                                                    0
+                                                    {numberWithCommas(
+                                                        data?.data?.paymentItemDetail?.reduce(
+                                                            (acc: any, curr: any) => acc + curr.approvedAmount,
+                                                            0
+                                                        )
+                                                    )}
                                                 </Typography>
                                             </td>
                                         </tr>
