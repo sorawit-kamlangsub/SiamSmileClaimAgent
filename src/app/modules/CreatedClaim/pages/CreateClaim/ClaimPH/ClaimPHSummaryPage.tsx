@@ -357,6 +357,8 @@ const ClaimPHSummaryPage: React.FC = () => {
         }).then((result: any) => {
             const data = result?.value?.data;
             const responseList = data?.responseList ?? [];
+            const paymentResponses = result?.value?.paymentResponses;
+            const paymentCodeList = paymentResponses?.data?.paymentCodeResponse ?? [];
 
             if (result.isConfirmed && responseList.length > 0) {
                 const itemsHtml = responseList
@@ -440,7 +442,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                         <div>
                             <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
                             <div style="font-size:18px;font-weight:700;color:#2F80ED;">
-                                ${item?.caseNo ?? "-"}
+                                ${paymentCodeList[index]?.paymentCode ?? "-"}
                             </div>
                         </div>
                     </div>

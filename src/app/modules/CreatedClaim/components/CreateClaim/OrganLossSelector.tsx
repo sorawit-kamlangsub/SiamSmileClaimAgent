@@ -24,7 +24,6 @@ import {
     calculateFingerSideTotal,
     countSelectedFingers,
     createFingerState,
-    EXGRATIA_DEDUCT_SOURCE_OPTIONS,
     FINGER_KEY_TO_SUB_PART_ID,
     FINGER_KEYS,
     FINGER_LABELS,
@@ -47,6 +46,7 @@ import {
     useFingerBodyPartOptions,
 } from "../../hooks/CreateClaim/useOrganLoss";
 import { GetNonCoveredReasonDtoResponse } from "../../../../api/coreClaimApi.client";
+import { useGetDeductionSource } from "../../../../api/coreClaimMastersApi";
 
 const CARD_BORDER = "#dbe6f3";
 const CARD_SOFT_BG = "#eef6ff";
@@ -147,6 +147,9 @@ const RuleResultBox: React.FC<{ rule: OrganRuleResult | null | undefined; compac
             </Box>
         );
     }
+
+    const availableAmount = rule.coveredAmount - rule.sumUsedAmount;
+
     return (
         <Box
             sx={{
@@ -166,8 +169,14 @@ const RuleResultBox: React.FC<{ rule: OrganRuleResult | null | undefined; compac
                 {rule.percent}% ของจำนวนเงินเอาประกันภัย
             </Typography>
             <Typography variant="body2" fontWeight={800} color="#0b65b1">
-                ยอดที่คุ้มครอง : {formatNoDecimal(rule.coveredAmount)} บาท
+                ยอดที่คุ้มครอง : {formatNoDecimal(availableAmount)} บาท
             </Typography>
+            {/* {rule.sumUsedAmount > 0 && (
+                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                    (จากยอดคุ้มครองเต็ม {formatNoDecimal(rule.coveredAmount)} บาท ใช้ไปแล้ว{" "}
+                    {formatNoDecimal(rule.sumUsedAmount)} บาท)
+                </Typography>
+            )} */}
         </Box>
     );
 };
@@ -237,11 +246,12 @@ interface ModalState {
     comboPart2Id: number | undefined;
     comboPart2Name: string;
     resolvedComboBodyPartId: number | undefined;
+    resolvedSingleBodyPartId: number | undefined;
     // ฟิลด์ร่วม
     amount: string;
     uncoveredAmount: string;
     uncoveredReason: number | undefined;
-    exgratiaDeductSource: string;
+    exgratiaDeductSourceId: number | undefined;
     exgratiaDeductDetail: string;
     note: string;
     fingers: OrganFingerState | null;
@@ -303,10 +313,11 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             comboPart2Id: undefined,
             comboPart2Name: "",
             resolvedComboBodyPartId: existing?.bodyPartId,
+            resolvedSingleBodyPartId: undefined,
             amount: existing?.amount || (existing?.totalAmount ? String(existing.totalAmount) : ""),
             uncoveredAmount: existing?.uncoveredAmount || "",
             uncoveredReason: existing?.uncoveredReason,
-            exgratiaDeductSource: existing?.exgratiaDeductSource || "",
+            exgratiaDeductSourceId: existing?.exgratiaDeductSourceId || undefined,
             exgratiaDeductDetail: existing?.exgratiaDeductDetail || "",
             note: existing?.note || "",
             fingers: choice.isFinger ? createFingerState(key, existing?.fingers) : null,
@@ -375,7 +386,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
 
         const isCombo = isComboOrganKey(modal.key);
 
-        if (modal.key === "exgratia" && !modal.exgratiaDeductSource) {
+        if (modal.key === "exgratia" && (!modal.exgratiaDeductSourceId || modal.exgratiaDeductSourceId === 0)) {
             setFormError("กรุณาระบุช่องทางการหัก");
             return;
         }
@@ -441,7 +452,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             disabilityLossPartId: modal.choice.disabilityLossPartId,
             uncoveredAmount: modal.uncoveredAmount,
             uncoveredReason: modal.uncoveredReason,
-            exgratiaDeductSource: modal.exgratiaDeductSource,
+            exgratiaDeductSourceId: modal.exgratiaDeductSourceId,
             exgratiaDeductDetail: modal.exgratiaDeductDetail,
             note: modal.note,
             totalAmount: modalTotal,
@@ -469,12 +480,14 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             ].join(" • ");
             item.summaryText = [comboSummary, `${formatNoDecimal(modalTotal)} บาท`].filter(Boolean).join(" • ");
         } else {
-            item.bodyPartId = modal.choice.hasSide ? modal.side : undefined;
+            item.bodyPartId = modal.choice.hasSide ? modal.side : modal.resolvedSingleBodyPartId;
             item.side = modal.choice.hasSide ? modal.sideName : "";
             item.standardMedicalExpenseId = modal.standardMedicalExpenseId;
             item.amount = modal.amount;
             const exgratiaNote =
-                modal.key === "exgratia" && modal.exgratiaDeductSource ? `หักจาก: ${modal.exgratiaDeductSource}` : "";
+                modal.key === "exgratia" && modal.exgratiaDeductSourceId
+                    ? `หักจาก: ${modal.exgratiaDeductSourceId}`
+                    : "";
             item.summaryText = [item.side, exgratiaNote, `${formatNoDecimal(modalTotal)} บาท`]
                 .filter(Boolean)
                 .join(" • ");
@@ -885,31 +898,15 @@ const SimpleModalBody: React.FC<{
         bodyPartIdForCalculate,
         standardMedicalExpenseId
     );
+
+    const { data: deductionSource } = useGetDeductionSource();
+    const deductionSourceOptions = deductionSource?.data ?? [];
+
     const rule: OrganRuleResult | null = disabilityOptions[0] ?? null;
 
     useEffect(() => {
         onRuleChange(rule);
     }, [rule]);
-
-    useEffect(() => {
-        if (rule) {
-            const calculatedAmount = rule.coveredAmount * (rule.percent / 100);
-            const available = rule.coveredAmount - rule.sumUsedAmount;
-
-            if (calculatedAmount > available) {
-                const excess = calculatedAmount - available;
-                patchModal({
-                    amount: String(calculatedAmount),
-                    uncoveredAmount: String(excess),
-                    uncoveredReason: 12,
-                });
-            } else {
-                patchModal({ amount: String(calculatedAmount) });
-            }
-        } else {
-            patchModal({ amount: "" });
-        }
-    }, [rule?.coveredAmount, rule?.percent, rule?.sumUsedAmount]);
 
     // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
     useEffect(() => {
@@ -935,6 +932,12 @@ const SimpleModalBody: React.FC<{
     useEffect(() => {
         patchModal({ standardMedicalExpenseId });
     }, [standardMedicalExpenseId]);
+
+    useEffect(() => {
+        if (!isCombo && !modal.choice.hasSide) {
+            patchModal({ resolvedSingleBodyPartId: singleOptions[0]?.bodyPartId });
+        }
+    }, [isCombo, modal.choice.hasSide, singleOptions[0]?.bodyPartId]);
     return (
         <Box>
             {isCombo && (
@@ -995,10 +998,14 @@ const SimpleModalBody: React.FC<{
                 label="ยอดเบิก"
                 size="small"
                 fullWidth
+                inputMode="decimal"
                 value={modal.amount}
-                InputProps={{ readOnly: true }}
-                disabled
-                helperText="คำนวณอัตโนมัติจาก % ของจำนวนเงินเอาประกันภัย"
+                onChange={(e) => patchModal({ amount: e.target.value })}
+                helperText={
+                    rule
+                        ? `แนะนำ: ${formatNoDecimal(rule.coveredAmount * (rule.percent / 100))} บาท (${rule.percent}%)`
+                        : "กรอกยอดเบิกเอง"
+                }
                 sx={{ mt: isCombo ? 0 : undefined, mb: 2 }}
             />
 
@@ -1024,16 +1031,16 @@ const SimpleModalBody: React.FC<{
                             label="ช่องทางการหัก *"
                             size="small"
                             fullWidth
-                            value={modal.exgratiaDeductSource}
-                            onChange={(e) => patchModal({ exgratiaDeductSource: e.target.value })}
+                            value={modal.exgratiaDeductSourceId}
+                            onChange={(e) => patchModal({ exgratiaDeductSourceId: Number(e.target.value) })}
                         >
-                            <MenuItem value="">--- โปรดระบุ ---</MenuItem>
-                            {EXGRATIA_DEDUCT_SOURCE_OPTIONS.map((o) => (
-                                <MenuItem key={o} value={o}>
-                                    {o}
+                            {deductionSourceOptions.map((opt) => (
+                                <MenuItem key={opt.deductionSourceId} value={opt.deductionSourceId}>
+                                    {opt.deductionSourceName}
                                 </MenuItem>
                             ))}
                         </TextField>
+
                         <TextField
                             label="รายละเอียดเพิ่มเติม"
                             size="small"
@@ -1176,16 +1183,11 @@ const FingerCell: React.FC<{
             });
         }
     }, [data.selected, matched?.bodyPartId, matched?.standardMedicalExpenseId]);
-
     useEffect(() => {
-        if (data.selected && rule) {
-            const percent = rule.percent / 100;
-            setFingerField(side, fingerKey, { amount: String(rule.coveredAmount * percent) });
-        } else if (!data.selected) {
+        if (!data.selected) {
             setFingerField(side, fingerKey, { amount: "" });
         }
-    }, [rule?.coveredAmount, data.selected]);
-
+    }, [data.selected]);
     return (
         <Box sx={{ border: "1px solid", borderColor: CARD_BORDER, borderRadius: 2, p: 1.5 }}>
             <Box
@@ -1229,9 +1231,9 @@ const FingerCell: React.FC<{
                 label={`ยอดเบิก${label2}`}
                 size="small"
                 fullWidth
+                inputMode="decimal"
                 value={data.amount}
-                InputProps={{ readOnly: true }}
-                disabled
+                onChange={(e) => setFingerField(side, fingerKey, { amount: e.target.value })}
                 sx={{ mt: 1.5 }}
             />
 
