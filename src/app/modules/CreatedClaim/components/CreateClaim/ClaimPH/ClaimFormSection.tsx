@@ -81,6 +81,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         setOcrResult,
         setOcrDocumentIds,
         getRequiredDocsByCoverageType,
+        maxTransferAmount,
     } = useClaimPHForm({ onNext });
     const { values, setFieldValue } = formik;
     const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
@@ -541,6 +542,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     dispatch(setOrganLossItems(items));
                                 }}
                                 customerId={insured?.customerId}
+                                maxTransferAmount={maxTransferAmount}
                             />
                         </Box>
                     )}
@@ -572,6 +574,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                             : insured?.productCategoryName
                                     }
                                     benefitAmounts={formik.values.benefitAmounts}
+                                    medicalTypeId={formik.values.medicalTypeId}
                                     onBenefitAmountsChange={(value) => formik.setFieldValue("benefitAmounts", value)}
                                     onTransferAmountChange={(value) => formik.setFieldValue("transferAmount", value)}
                                     debounceMs={300}

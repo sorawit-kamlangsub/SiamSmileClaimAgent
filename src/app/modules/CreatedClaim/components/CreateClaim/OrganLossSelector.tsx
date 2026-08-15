@@ -269,6 +269,7 @@ export interface OrganLossSelectorProps {
     isNonCoveredReasonLoading?: boolean;
     priorClaimWarning?: string;
     customerId: number | undefined;
+    maxTransferAmount?: number;
 }
 
 const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
@@ -280,6 +281,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
     isNonCoveredReasonLoading,
     priorClaimWarning,
     customerId,
+    maxTransferAmount,
 }) => {
     const [modal, setModal] = useState<ModalState | null>(null);
     const [formError, setFormError] = useState("");
@@ -361,10 +363,10 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                 const rule = modal.fingerRules[`${side}-${fingerKey}`];
                 if (!rule) continue;
 
-                const calculatedAmount = rule.coveredAmount * (rule.percent / 100);
+                const requestedAmount = amountNumber(data.amount); // ← ยอดที่ user กรอกจริง
                 const available = rule.coveredAmount - rule.sumUsedAmount;
-                if (calculatedAmount > available) {
-                    totalExcess += calculatedAmount - available;
+                if (requestedAmount > available) {
+                    totalExcess += requestedAmount - available;
                 }
             }
         }
@@ -496,6 +498,12 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
         const next = [...value];
         if (modal.editIndex >= 0) next[modal.editIndex] = item;
         else next.push(item);
+
+        const nextTotal = next.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0);
+        if (maxTransferAmount != null && nextTotal > maxTransferAmount) {
+            setFormError(`ยอดเบิกรวมทั้งหมดเกินวงเงินสูงสุด (${formatNoDecimal(maxTransferAmount)} บาท)`);
+            return;
+        }
         onChange(next);
         closeModal();
     };
@@ -786,7 +794,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                     label="สาเหตุไม่คุ้มครอง"
                                     size="small"
                                     fullWidth
-                                    value={modal.uncoveredReason}
+                                    value={modal.uncoveredReason ?? ""}
                                     onChange={(e) => patchModal({ uncoveredReason: Number(e.target.value) })}
                                 >
                                     {notCoveredReasons.map((r) => (
@@ -907,6 +915,17 @@ const SimpleModalBody: React.FC<{
     useEffect(() => {
         onRuleChange(rule);
     }, [rule]);
+
+    useEffect(() => {
+        if (!rule || isCombo === undefined) return;
+        const grossAmount = amountNumber(modal.amount);
+        const available = rule.coveredAmount - rule.sumUsedAmount;
+
+        if (grossAmount > available) {
+            const excess = grossAmount - available;
+            patchModal({ uncoveredAmount: String(excess), uncoveredReason: 12 });
+        }
+    }, [modal.amount, rule]);
 
     // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
     useEffect(() => {

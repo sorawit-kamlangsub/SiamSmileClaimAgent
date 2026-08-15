@@ -3,6 +3,7 @@ import { Box, Button, Card, CardContent, Chip, Divider, Grid, Link, Skeleton, Ty
 import { formatDateString } from "../../../../functionHelpers";
 import { useMonitorTable } from "../../hooks/Monitor/useMonitorTable";
 import LinearLoading from "../../../_common/components/CustomComponent/LinearLoading";
+import InboxOutlinedIcon from "@mui/icons-material/InboxOutlined";
 
 const MonitorCard: React.FC = () => {
     const { data, isLoading, selectedRowIndex, handleSelect, search } = useMonitorTable();
@@ -23,8 +24,24 @@ const MonitorCard: React.FC = () => {
 
     if (rows.length === 0) {
         return (
-            <Box display="flex" justifyContent="center" mt={4}>
-                <Typography color="text.secondary">ไม่พบข้อมูล</Typography>
+            <Box
+                display="flex"
+                flexDirection="column"
+                alignItems="center"
+                justifyContent="center"
+                mt={4}
+                py={6}
+                sx={{
+                    border: "1px dashed",
+                    borderColor: "divider",
+                    borderRadius: 2,
+                    backgroundColor: "#FAFBFC",
+                }}
+            >
+                <InboxOutlinedIcon sx={{ fontSize: 56, color: "text.disabled", mb: 1.5 }} />
+                <Typography color="text.secondary" fontWeight={500}>
+                    ไม่พบข้อมูล
+                </Typography>
             </Box>
         );
     }
