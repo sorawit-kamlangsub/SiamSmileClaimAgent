@@ -16,6 +16,9 @@ import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
+import ManageTransferPage from "../modules/ManageClaimFund/pages/ManageTransferPage.tsx";
+import RepayPage from "../modules/ManageTransfer/pages/RepayPage.tsx";
+import BankStatusCheck from "../modules/BankStatus/pages/BankStatusCheck.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -156,6 +159,28 @@ const Routes: RouteMapType[] = [
                 condition: "AND",
             },
         ],
+    },
+
+    /**
+     * จัดการเงินเคลม
+     */
+    {
+        path: "/manage/transfer/repay",
+        title: "แก้ไขการโอนเงิน",
+        permissions: [],
+        element: <RepayPage />,
+    },
+    {
+        path: "/manage/bank/status",
+        title: "สอบถามธนาคาร",
+        permissions: [],
+        element: <BankStatusCheck />,
+    },
+    {
+        path: "/manage/setting/transfer",
+        title: "ตั้งค่าการโอนเงิน",
+        permissions: [],
+        element: <ManageTransferPage />,
     },
 ];
 

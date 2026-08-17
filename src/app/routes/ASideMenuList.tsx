@@ -7,10 +7,14 @@ import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import AddCommentIcon from "@mui/icons-material/AddComment";
 // import MonitorIcon from "@mui/icons-material/Monitor";
 import CalculateIcon from "@mui/icons-material/Calculate";
-// import ManageSearchIcon from "@mui/icons-material/ManageSearch";
-// import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
-// import PaymentsIcon from "@mui/icons-material/Payments";
-// import AddCardIcon from "@mui/icons-material/AddCard";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import AddCardIcon from "@mui/icons-material/AddCard";
+import SettingsIcon from "@mui/icons-material/Settings";
+import PriceCheckIcon from "@mui/icons-material/PriceCheck";
+import PersonIcon from "@mui/icons-material/Person";
+import TrendingUpIcon from "@mui/icons-material/TrendingUp";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 
 export const ASideMenuList = () => {
     const layoutReducer = useAppSelector(selectLayout);
@@ -61,11 +65,19 @@ export const ASideMenuList = () => {
                 {/* <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
                 </ParentMenu> */}
-                {/* <ParentMenu icon={<PaymentsIcon />} text="จัดการเงินเคลม" permissions={[]}>
-                    <MenuItem path="/payment-monitor" icon={<AddCardIcon />} text="โอนเพิ่ม" />
-                    <MenuItem path="/test-permission" icon={<ManageSearchIcon />} text="ค้นหาการแจ้งเคลม" />
-                    <MenuItem path="/test-permission" icon={<AccountBalanceWalletIcon />} text="ติดตามการโอนเงิน" />
-                </ParentMenu> */}
+
+                {/**
+                 * จัดการเงินเคลม
+                 */}
+                <ParentMenu icon={<AccountBalanceWalletIcon />} text="จัดการเงินเคลม" permissions={[]}>
+                    <MenuItem path="/" icon={<AddCardIcon />} text="โอนเพิ่ม" />
+                    <MenuItem path="/" icon={<PriceCheckIcon />} text="คืนเงิน" />
+                    <MenuItem path="/" icon={<PersonIcon />} text="อนุมัติคืนเงิน" />
+                    <MenuItem path="/" icon={<TrendingUpIcon />} text="ขยายวงเงิน" />
+                    <MenuItem path="/manage/transfer/repay" icon={<ReceiptLongOutlinedIcon />} text="แก้ไขการโอนเงิน" />
+                    <MenuItem path="/manage/bank/status" icon={<AccountBalanceIcon />} text="สอบถามธนาคาร" />
+                    <MenuItem path="/manage/setting/transfer" icon={<SettingsIcon />} text="ตั้งค่าการโอนเงิน" />
+                </ParentMenu>
             </ASideMenuListContainer>
         </ASideMenuListDrawer>
     );
