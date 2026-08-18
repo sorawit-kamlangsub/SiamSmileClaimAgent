@@ -10,6 +10,8 @@ import {
     Divider,
     LinearProgress,
     Chip,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -58,6 +60,8 @@ const getMedicalTypeLabel = (item: GetCaseByClaimIdDtoResponse) => {
 };
 
 const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoading }) => {
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     return (
         <Dialog
             open={open}
@@ -72,6 +76,7 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoad
                     maxHeight: { xs: "100%", sm: "90vh" },
                 },
             }}
+            fullScreen={fullScreen}
         >
             <DialogTitle sx={{ p: { xs: 2, sm: 3 } }}>
                 <Box

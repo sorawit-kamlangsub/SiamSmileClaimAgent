@@ -35,7 +35,6 @@ import { DeathPlaceType, SymptomType } from "../../../store/claimPHSlice";
 import DocumentScanTable from "../DocumentScanTable";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
-import { getTransferConfig } from "../ClaimTransferConfig";
 import DeathClaimAmountCardPA from "./DeathClaimAmountCardPA";
 import OrganLossSelector from "../OrganLossSelector";
 import { claimPASelector, DeathExtraCoverageId, setOrganLossItems } from "../../../store/claimPASlice";
@@ -151,8 +150,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
         : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
 
-    const transferConfig = getTransferConfig(formik.values.causeOfIncidentId);
-
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
@@ -217,7 +214,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         resetOcr();
     }, [isAddingAdditionalInsured]);
 
-                                console.log("🚀 ~ ClaimPAFormSection ~ insured?.customerId:", insured?.customerId)
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
@@ -707,8 +703,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     {isDeath && formik.values.causeOfIncidentId && (
                         <Box ref={registerFieldRef("transferAmount")}>
                             <DeathClaimAmountCardPA
-                                causeOfIncidentName={formik.values.causeOfIncidentName}
-                                mainMaxAmount={transferConfig.maxAmount}
+                                benefits={(customerBenefit?.data ?? []).filter(
+                                    (b) => b.coverageTypeId === CoverageType.Death
+                                )}
+                                isLoading={customerBenefitLoading}
                                 extraCoverageIds={formik.values.extraCoverageIds}
                                 formik={formik}
                             />

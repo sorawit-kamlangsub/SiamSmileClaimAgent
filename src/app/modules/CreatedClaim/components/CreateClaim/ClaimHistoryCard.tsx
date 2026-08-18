@@ -49,18 +49,17 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                     borderRadius: "0 4px 4px 0",
                     justifyContent: "space-between",
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "flex-start", sm: "center" },
+                    gap: { xs: 1, sm: 0 },
                     fontSize: 27,
                 }}
             >
-                <Box display="flex" alignItems="center" gap={1}>
+                <Box display="flex" alignItems="center" gap={1} flexShrink={0}>
                     <HistoryIcon sx={{ fontSize: 27, color: colorLine.blue }} />
-                    <Typography fontSize={16} fontWeight="bold" color={colorLine.blue}>
+                    <Typography fontSize={16} fontWeight="bold" color={colorLine.blue} noWrap>
                         ประวัติการเคลม
                     </Typography>
-                </Box>
-
-                <Box display="flex" alignItems="center" gap={1}>
                     <Chip
                         label={`${items[0]?.totalCount || 0} รายการ`}
                         size="small"
@@ -71,7 +70,9 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                             fontSize: 13,
                         }}
                     />
+                </Box>
 
+                <Box display="flex" flexWrap="wrap" alignItems="center" gap={1} width={{ xs: "100%", sm: "auto" }}>
                     {/* ปุ่มซ่อน/แสดงรายการ */}
                     <Button
                         variant="outlined"
@@ -89,6 +90,7 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                             textTransform: "none",
                             fontWeight: "bold",
                             fontSize: 13,
+                            flex: { xs: "1 1 auto", sm: "0 0 auto" },
                         }}
                         onClick={() => setShowList((prev) => !prev)}
                     >
@@ -105,6 +107,7 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                             textTransform: "none",
                             fontWeight: "bold",
                             fontSize: 13,
+                            flex: { xs: "1 1 auto", sm: "0 0 auto" },
                         }}
                         onClick={() => setOpenAllHistory(true)}
                     >
@@ -243,8 +246,10 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                                 <Box px={2} pb={2}>
                                     <Box
                                         display="flex"
-                                        alignItems="center"
+                                        flexDirection={{ xs: "column", sm: "row" }}
+                                        alignItems={{ xs: "stretch", sm: "center" }}
                                         justifyContent="space-between"
+                                        gap={{ xs: 1.5, sm: 0 }}
                                         sx={{
                                             border: "1px solid",
                                             borderColor: "primary.light",

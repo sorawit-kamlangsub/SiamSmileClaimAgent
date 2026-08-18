@@ -827,7 +827,7 @@ export class CoreClaimClient {
      * @return Success
      */
     createCoreClaim(
-        body?: CreateCoreClaimDtoRequest | undefined,
+        body?: CreateCoreClaimV2DtoRequest | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<CreateCoreClaimDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/create/coreclaim";
@@ -1282,6 +1282,78 @@ export class CoreClaimClient {
     }
 
     /**
+     * Service สำหรับ Get ข้อมูล Dashboard Customer Consider (พิจารณาเคลมลูกค้า)
+     * @param dateOption (optional)
+     * @param dateFrom (optional)
+     * @param dateTo (optional)
+     * @return Success
+     */
+    getDashboardCustomerConsider(
+        dateOption?: number | undefined,
+        dateFrom?: dayjs.Dayjs | undefined,
+        dateTo?: dayjs.Dayjs | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDashboardCustomerConsiderDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/dashboard/customer-consider/filter?";
+        if (dateOption === null) throw new Error("The parameter 'dateOption' cannot be null.");
+        else if (dateOption !== undefined) url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
+        if (dateFrom === null) throw new Error("The parameter 'dateFrom' cannot be null.");
+        else if (dateFrom !== undefined)
+            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (dateTo === null) throw new Error("The parameter 'dateTo' cannot be null.");
+        else if (dateTo !== undefined)
+            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDashboardCustomerConsider(_response);
+            });
+    }
+
+    protected processGetDashboardCustomerConsider(
+        response: AxiosResponse
+    ): Promise<GetDashboardCustomerConsiderDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDashboardCustomerConsiderDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDashboardCustomerConsiderDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล Claim Transaction Monitor
      * @param dateOption (optional)
      * @param dateFrom (optional)
@@ -1453,6 +1525,249 @@ export class CoreClaimClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetClaimDetailConsiderDtoResponseServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล TransactionLog Claim (ประวัติการทำรายการ)
+     * @param claimId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    getClaimTransactionLog(
+        claimId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimTransactionLogDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/claim/transaction-log/filter?";
+        if (claimId === null) throw new Error("The parameter 'claimId' cannot be null.");
+        else if (claimId !== undefined) url_ += "claimId=" + encodeURIComponent("" + claimId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimTransactionLog(_response);
+            });
+    }
+
+    protected processGetClaimTransactionLog(
+        response: AxiosResponse
+    ): Promise<GetClaimTransactionLogDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetClaimTransactionLogDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetClaimTransactionLogDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * Service สำหรับ Get ข้อมูล PolicyBenefit (ความคุ้มครอง)
+     * @param productTypeId (optional)
+     * @param applicationCode (optional)
+     * @param productId (optional)
+     * @param customerTypeCode (optional)
+     * @return Success
+     */
+    getPolicyBenefit(
+        productTypeId?: number | undefined,
+        applicationCode?: string | undefined,
+        productId?: number | undefined,
+        customerTypeCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPolicyBenefitDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/policy/benefit?";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
+        else if (applicationCode !== undefined)
+            url_ += "applicationCode=" + encodeURIComponent("" + applicationCode) + "&";
+        if (productId === null) throw new Error("The parameter 'productId' cannot be null.");
+        else if (productId !== undefined) url_ += "productId=" + encodeURIComponent("" + productId) + "&";
+        if (customerTypeCode === null) throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        else if (customerTypeCode !== undefined)
+            url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPolicyBenefit(_response);
+            });
+    }
+
+    protected processGetPolicyBenefit(
+        response: AxiosResponse
+    ): Promise<GetPolicyBenefitDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetPolicyBenefitDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetPolicyBenefitDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * Service สำหรับ Get ข้อมูล DCR (การชำระเงิน)
+     * @param applicationCode (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    getDCR(
+        applicationCode?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDCRDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/dcr/filter?";
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
+        else if (applicationCode !== undefined)
+            url_ += "applicationCode=" + encodeURIComponent("" + applicationCode) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDCR(_response);
+            });
+    }
+
+    protected processGetDCR(response: AxiosResponse): Promise<GetDCRDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDCRDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDCRDtoResponseListServiceResponse>(null as any);
     }
 }
 
@@ -2680,6 +2995,193 @@ export class MastersClient {
     }
 
     /**
+     * API สำหรับ Get ข้อมูล DeductionSource (ช่องทางการหักเงิน)
+     * @param deductionSourceId (optional)
+     * @return Success
+     */
+    getDeductionSource(
+        deductionSourceId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDeductionSourceDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/deduction-source?";
+        if (deductionSourceId === null) throw new Error("The parameter 'deductionSourceId' cannot be null.");
+        else if (deductionSourceId !== undefined)
+            url_ += "deductionSourceId=" + encodeURIComponent("" + deductionSourceId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDeductionSource(_response);
+            });
+    }
+
+    protected processGetDeductionSource(
+        response: AxiosResponse
+    ): Promise<GetDeductionSourceDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDeductionSourceDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDeductionSourceDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล ClaimTransactionType (สถานะรายการเคลม)
+     * @param claimTransactionTypeId (optional)
+     * @return Success
+     */
+    getClaimTransactionType(
+        claimTransactionTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimTransactionTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/claim/transactiontype?";
+        if (claimTransactionTypeId === null) throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
+        else if (claimTransactionTypeId !== undefined)
+            url_ += "claimTransactionTypeId=" + encodeURIComponent("" + claimTransactionTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimTransactionType(_response);
+            });
+    }
+
+    protected processGetClaimTransactionType(
+        response: AxiosResponse
+    ): Promise<GetClaimTransactionTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetClaimTransactionTypeDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetClaimTransactionTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล EmployeeClaimPaymentLimit (วงเงินผู้คีย์เคลม)
+     * @return Success
+     */
+    employeePaymentLimit(
+        userId: number,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/employee-payment-limit/{userId}";
+        if (userId === undefined || userId === null) throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processEmployeePaymentLimit(_response);
+            });
+    }
+
+    protected processEmployeePaymentLimit(
+        response: AxiosResponse
+    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล DocumentRecipientType (ประเภทผู้รับเอกสาร)
      * @param documentRecipientTypeId (optional)
      * @return Success
@@ -3330,21 +3832,20 @@ export interface AllUserDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface BeneficiaryCreateRequest {
-    tempClaimId?: string | undefined;
-    tempCaseId?: string | undefined;
+export interface BeneficiaryV2Request {
     policyBeneficiaryId?: number;
     titleId?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     idCard?: string | undefined;
     phoneNo?: string | undefined;
-    relationId?: number;
+    relationId?: number | undefined;
     bankAccountRelationTypeId?: number | undefined;
     bankId?: number;
     bankAccountNo?: string | undefined;
     bankAccountName?: string | undefined;
     payoutAmount?: number;
+    payables?: CasePayableV2Request[] | undefined;
 }
 
 export interface CalculateCaseClaim {
@@ -3447,28 +3948,92 @@ export interface CalculateCaseExpense {
     remark?: string | undefined;
 }
 
-export interface CaseAssessmentCreateRequest {
-    tempCaseId?: string | undefined;
+export interface CaseAssessmentV2Request {
     isDocumentComplete?: boolean;
     documentReceivedDate?: dayjs.Dayjs;
     documentCompleteDate?: dayjs.Dayjs;
     isFraudSuspect?: boolean;
-    documentReceivedByUserId?: number;
+    documentReceivedByUserId?: number | undefined;
     documentReceivedByUserCode?: string | undefined;
     documentReceivedByUserName?: string | undefined;
 }
 
-export interface CaseContactCreateRequest {
-    tempCaseId?: string | undefined;
+export interface CaseContactV2Request {
     contactPersonTypeId?: number | undefined;
     contactPersonName?: string | undefined;
     contactPhoneNo?: string | undefined;
 }
 
-export interface CaseCreateRequest {
-    tempCaseId?: string | undefined;
-    tempClaimId?: string | undefined;
-    tempCaseRegistrationId?: string | undefined;
+export interface CaseDeathV2Request {
+    causeOfIncidentId?: number | undefined;
+    deathDate?: dayjs.Dayjs;
+}
+
+export interface CaseDisabilityV2Request {
+    bodyPartId?: number | undefined;
+    disabilityTypeId?: number | undefined;
+    disabilityLevel?: number | undefined;
+    disabilityPercent?: number | undefined;
+}
+
+export interface CaseDocumentDetailV2Request {
+    documentId?: string;
+    documentNo?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
+}
+
+export interface CaseDocumentV2Request {
+    documentSubTypeId?: number;
+    details?: CaseDocumentDetailV2Request[] | undefined;
+}
+
+export interface CaseItemV2Request {
+    inputToStandardMappingId?: number;
+    standardMedicalExpenseId?: number;
+    quantity?: number;
+    perUnit?: number;
+    originalAmount?: number;
+    discountAmount?: number;
+    netCaseAmount?: number;
+    medicalTypeId?: number | undefined;
+    nonCoveredAmount?: number;
+    nonCoveredReasonId?: number;
+}
+
+export interface CasePayableV2Request {
+    payableCategoryId?: number;
+}
+
+export interface CaseRegistrationV2Request {
+    notificationDate?: dayjs.Dayjs;
+    notifyBy?: string | undefined;
+    initialCoverageTypeId?: number | undefined;
+    initialCaseAmount?: number;
+    initialCaseSourceId?: number | undefined;
+    preAuthId?: string | undefined;
+    initialMedicalTypeId?: number | undefined;
+}
+
+export interface CaseServicePersonV2Request {
+    servicePersonByUserId?: number;
+    servicePersonByUserCode?: string | undefined;
+    servicePersonByUserName?: string | undefined;
+    zebraId?: number;
+    zebraCode?: string | undefined;
+    zebraNo?: string | undefined;
+    employeeCode?: string | undefined;
+    employeeName?: string | undefined;
+}
+
+export interface CaseV2Request {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
@@ -3482,103 +4047,22 @@ export interface CaseCreateRequest {
     hn?: string | undefined;
     an?: string | undefined;
     vn?: string | undefined;
-    chiefComplaintId?: number;
+    chiefComplaintId?: number | undefined;
     chiefComplaintCustom?: string | undefined;
     productId?: number | undefined;
-    icD10_1stId?: number;
+    icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
     medicalTypeId?: number | undefined;
-    createCaseItem?: CaseItemCreateRequest[] | undefined;
-    createCaseRegistration?: CaseRegistrationCreateRequest[] | undefined;
-    createCaseAssessment?: CaseAssessmentCreateRequest[] | undefined;
-    createCaseDeath?: CaseDeathCreateRequest[] | undefined;
-    createCaseDisability?: CaseDisabilityCreateRequest[] | undefined;
-    createCaseDocument?: CaseDocumentCreateRequest[] | undefined;
-    createCaseContact?: CaseContactCreateRequest[] | undefined;
-    createCaseServicePerson?: CaseServicePersonCreateRequest[] | undefined;
-    createBeneficiary?: BeneficiaryCreateRequest[] | undefined;
-    createCasePayable?: CasePayableCreateRequest[] | undefined;
-}
-
-export interface CaseDeathCreateRequest {
-    tempCaseId?: string | undefined;
-    causeOfIncidentId?: number | undefined;
-    deathDate?: dayjs.Dayjs;
-}
-
-export interface CaseDisabilityCreateRequest {
-    tempCaseId?: string | undefined;
-    bodyPartId?: number;
-    disabilityTypeId?: number | undefined;
-    disabilityLevel?: number;
-    disabilityPercent?: number;
-}
-
-export interface CaseDocumentCreateRequest {
-    tempCaseDocumentId?: string | undefined;
-    tempCaseId?: string | undefined;
-    documentSubTypeId?: number;
-    caseDocumentDetail?: CaseDocumentDetailCreateRequest[] | undefined;
-}
-
-export interface CaseDocumentDetailCreateRequest {
-    tempCaseDocumentId?: string | undefined;
-    documentId?: string;
-    documentNo?: string | undefined;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    fullName?: string | undefined;
-    hospitalName?: string | undefined;
-    receiptAdmissionDate?: dayjs.Dayjs;
-    receiptNumber?: string | undefined;
-    receiptAmount?: number;
-    ocrDocumentTypeId?: number | undefined;
-    ocrResult?: string | undefined;
-}
-
-export interface CaseItemCreateRequest {
-    tempCaseItemId?: string | undefined;
-    tempCaseId?: string | undefined;
-    inputToStandardMappingId?: number;
-    standardMedicalExpenseId?: number;
-    quantity?: number;
-    perUnit?: number;
-    originalAmount?: number;
-    discountAmount?: number;
-    netCaseAmount?: number;
-    medicalTypeId?: number | undefined;
-    nonCoveredAmount?: number;
-    nonCoveredReasonId?: number;
-}
-
-export interface CasePayableCreateRequest {
-    tempCaseId?: string | undefined;
-    payableCategoryId?: number;
-}
-
-export interface CaseRegistrationCreateRequest {
-    tempCaseRegistrationId?: string | undefined;
-    tempCaseId?: string | undefined;
-    notificationDate?: dayjs.Dayjs;
-    notifyBy?: string | undefined;
-    initialCoverageTypeId?: number | undefined;
-    initialCaseAmount?: number;
-    initialCaseSourceId?: number;
-    preAuthId?: string | undefined;
-    initialMedicalTypeId?: number;
-}
-
-export interface CaseServicePersonCreateRequest {
-    tempCaseId?: string | undefined;
-    servicePersonByUserId?: number;
-    servicePersonByUserCode?: string | undefined;
-    servicePersonByUserName?: string | undefined;
-    zebraId?: number;
-    zebraCode?: string | undefined;
-    zebraNo?: string | undefined;
-    employeeCode?: string | undefined;
-    employeeName?: string | undefined;
+    items?: CaseItemV2Request[] | undefined;
+    registrations?: CaseRegistrationV2Request[] | undefined;
+    assessments?: CaseAssessmentV2Request[] | undefined;
+    deaths?: CaseDeathV2Request[] | undefined;
+    disabilities?: CaseDisabilityV2Request[] | undefined;
+    documents?: CaseDocumentV2Request[] | undefined;
+    contacts?: CaseContactV2Request[] | undefined;
+    servicePersons?: CaseServicePersonV2Request[] | undefined;
+    beneficiaries?: BeneficiaryV2Request[] | undefined;
 }
 
 export interface CheckEligibleDtoResponse {}
@@ -3597,18 +4081,17 @@ export interface CheckEligibleDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface ClaimCreateRequest {
-    tempClaimId?: string | undefined;
-    applicationId?: string | undefined;
+export interface ClaimV2Request {
+    applicationId: string;
     policyNo?: string | undefined;
     certificateNo?: string | undefined;
     customerId?: number;
-    customerName?: string | undefined;
+    customerName: string;
     incidentTypeId?: number | undefined;
     incidentDate?: dayjs.Dayjs;
     accidentPlace?: string | undefined;
     accidentDescription?: string | undefined;
-    createCase?: CaseCreateRequest[] | undefined;
+    cases: CaseV2Request[];
 }
 
 export interface CompensateExpenseList {
@@ -3621,15 +4104,6 @@ export interface CompensateExpenseList {
     unPay?: number;
     countDay?: number;
     dayOfUnit?: number;
-}
-
-export interface CreateCoreClaimDtoRequest {
-    claimSourceId?: number;
-    productTypeId?: number;
-    createdByUserId?: number;
-    createdByUserCode?: string | undefined;
-    createdByUserName?: string | undefined;
-    createClaim?: ClaimCreateRequest[] | undefined;
 }
 
 export interface CreateCoreClaimDtoResponse {
@@ -3659,7 +4133,16 @@ export interface CreateCoreClaimResponseItem {
     caseId?: string | undefined;
     claimNo?: string | undefined;
     caseNo?: string | undefined;
-    casePayableId?: string | undefined;
+    casePayableId?: string[] | undefined;
+}
+
+export interface CreateCoreClaimV2DtoRequest {
+    requestId: string;
+    claimSourceId?: number;
+    productTypeId?: number;
+    createdByUserCode?: string | undefined;
+    createdByUserName?: string | undefined;
+    claims: ClaimV2Request[];
 }
 
 export interface DisabilityExpenseList {
@@ -3678,6 +4161,16 @@ export interface FormatTypeDtoResponse {
     formatTypeId?: number;
     /** ชื่อรูปแบบใบ invoice */
     formatTypeName?: string | undefined;
+    /** สถานะ */
+    isActive?: boolean | undefined;
+    /** ผู้สร้าง */
+    createdByUserId?: number | undefined;
+    /** วันที่สร้าง */
+    createdDate?: dayjs.Dayjs | undefined;
+    /** ผู้แก้ไข */
+    updatedByUserId?: number | undefined;
+    /** วันที่แก้ไข */
+    updatedDate?: dayjs.Dayjs | undefined;
 }
 
 export interface FormatTypeDtoResponseListServiceResponse {
@@ -3964,6 +4457,33 @@ export interface GetClaimHistoryDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetClaimTransactionLogDtoResponse {
+    claimId?: string | undefined;
+    caseId?: string | undefined;
+    transactionLogTypeId?: number | undefined;
+    transactionLogTypeName?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    employeeName?: string | undefined;
+    totalAmount?: number | undefined;
+    paymentStatusId?: number | undefined;
+    paymentStatusNameTH?: string | undefined;
+    totalCount?: number | undefined;
+}
+
+export interface GetClaimTransactionLogDtoResponseListServiceResponse {
+    data?: GetClaimTransactionLogDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetClaimTransactionMonitorDtoResponse {
     claimId?: string;
     paymentDate?: dayjs.Dayjs | undefined;
@@ -3980,6 +4500,25 @@ export interface GetClaimTransactionMonitorDtoResponse {
 
 export interface GetClaimTransactionMonitorDtoResponseListServiceResponse {
     data?: GetClaimTransactionMonitorDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetClaimTransactionTypeDtoResponse {
+    claimTransactionTypeId?: number;
+    claimTransactionTypeName?: string | undefined;
+}
+
+export interface GetClaimTransactionTypeDtoResponseListServiceResponse {
+    data?: GetClaimTransactionTypeDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -4253,6 +4792,79 @@ export interface GetCustomerSearchDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetDCRDtoResponse {
+    applicationCode?: string | undefined;
+    period?: dayjs.Dayjs;
+    insuredCompanyName?: string | undefined;
+    productName?: string | undefined;
+    premiumDept?: number | undefined;
+    premiumRecieve?: number | undefined;
+    paymentTypeId?: number | undefined;
+    payMethodCode?: string | undefined;
+    paymentType?: string | undefined;
+    policyNo?: string | undefined;
+    bankTransactionDatetime?: dayjs.Dayjs | undefined;
+    totalCount?: number | undefined;
+}
+
+export interface GetDCRDtoResponseListServiceResponse {
+    data?: GetDCRDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetDashboardCustomerConsiderDtoResponse {
+    customerTotalCount?: number | undefined;
+    customerWaitReceiveCount?: number | undefined;
+    customerWaitPaymentCount?: number | undefined;
+    customerCancelCount?: number | undefined;
+    hospitalTotalCount?: number | undefined;
+    hospitalCheckEligibilityCount?: number | undefined;
+    hospitalWaitConsiderCount?: number | undefined;
+    hospitalRequestBillingCount?: number | undefined;
+}
+
+export interface GetDashboardCustomerConsiderDtoResponseListServiceResponse {
+    data?: GetDashboardCustomerConsiderDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetDeductionSourceDtoResponse {
+    deductionSourceId?: number;
+    deductionSourceName?: string | undefined;
+}
+
+export interface GetDeductionSourceDtoResponseListServiceResponse {
+    data?: GetDeductionSourceDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetDisabilityLossPartDtoResponse {
     disabilityLossPartId?: number;
     disabilityLossPartCode?: string | undefined;
@@ -4332,6 +4944,28 @@ export interface GetDocumentSubTypeDtoResponse {
 
 export interface GetDocumentSubTypeDtoResponseListServiceResponse {
     data?: GetDocumentSubTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetEmployeeClaimPaymentLimitResponse {
+    employeeClaimPaymentLimitId?: string;
+    userId?: number;
+    paymentLimit?: number;
+    totalNetPaidAmount?: number;
+    remainingLimit?: number;
+}
+
+export interface GetEmployeeClaimPaymentLimitResponseServiceResponse {
+    data?: GetEmployeeClaimPaymentLimitResponse;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -4434,6 +5068,34 @@ export interface GetPaymentStatusDtoResponse {
 
 export interface GetPaymentStatusDtoResponseListServiceResponse {
     data?: GetPaymentStatusDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetPolicyBenefitDtoResponse {
+    applicationCode?: string | undefined;
+    benefitId?: number | undefined;
+    benefitTypeName?: string | undefined;
+    benefitName?: string | undefined;
+    pricePerUnit?: number | undefined;
+    pricePerUnitName?: string | undefined;
+    maxPrice?: number | undefined;
+    maxQuantity?: number | undefined;
+    quantityUnitName?: string | undefined;
+    customerTypeCode?: string | undefined;
+    fullBenefitDisplay?: string | undefined;
+}
+
+export interface GetPolicyBenefitDtoResponseListServiceResponse {
+    data?: GetPolicyBenefitDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

@@ -10,16 +10,84 @@ import {
     SymptomType,
 } from "./claimPHSlice";
 import {
-    CaseCreateRequest,
-    CaseDocumentDetailCreateRequest,
-    ClaimCreateRequest,
-    CreateCoreClaimDtoRequest,
+    BeneficiaryV2Request,
+    CaseAssessmentV2Request,
+    CaseContactV2Request,
+    CaseDeathV2Request,
+    CaseDisabilityV2Request,
+    CaseDocumentDetailV2Request,
+    CaseItemV2Request,
+    CaseRegistrationV2Request,
+    CaseServicePersonV2Request,
+    CaseV2Request,
+    ClaimV2Request,
+    CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
+
+/**
+ * ── Local (internal) types ──
+ * API จริง (CreateCoreClaimV2DtoRequest) ไม่มี temp id แล้ว เพราะโครงสร้างเป็น nested
+ * claims → cases → items/registrations/... อยู่แล้ว แต่ tmpCoreClaim ในสเตตนี้ยังต้องใช้
+ * tempClaimId/tempCaseId ผูกคู่ claim/case กันเอง (multi-insured stacking, editingItemId,
+ * AddInsuredModal ฯลฯ) จึงคง temp id ไว้เป็น type ภายในชุดนี้ แล้วค่อย strip ทิ้ง + rename field
+ * เป็น V2 จริงตอนสร้าง payload ใน useCreateClaimPA.ts (ดู mapLocalCoreClaimToV2Request)
+ */
+export type LocalCaseItem = CaseItemV2Request & { tempCaseId?: string; tempCaseItemId?: string };
+export type LocalCaseRegistration = CaseRegistrationV2Request & { tempCaseId?: string };
+export type LocalCaseAssessment = CaseAssessmentV2Request & { tempCaseId?: string };
+export type LocalCaseDeath = CaseDeathV2Request & { tempCaseId?: string };
+export type LocalCaseDisability = CaseDisabilityV2Request & { tempCaseId?: string };
+
+export type LocalCaseDocument = {
+    tempCaseId?: string;
+    tempCaseDocumentId?: string;
+    documentSubTypeId?: number;
+    caseDocumentDetail?: any[];
+};
+export type LocalCaseContact = CaseContactV2Request & { tempCaseId?: string };
+export type LocalCaseServicePerson = CaseServicePersonV2Request & { tempCaseId?: string };
+export type LocalBeneficiary = Omit<BeneficiaryV2Request, "payables"> & { tempClaimId?: string; tempCaseId?: string };
+
+export type LocalCaseEntry = Omit<
+    CaseV2Request,
+    | "items"
+    | "registrations"
+    | "assessments"
+    | "deaths"
+    | "disabilities"
+    | "documents"
+    | "contacts"
+    | "servicePersons"
+    | "beneficiaries"
+> & {
+    tempCaseId: string;
+    tempClaimId: string;
+    // แทนที่ createCasePayable เดิม เพราะ V2 ย้าย payable ไปแนบใต้ beneficiary.payables แล้ว
+    payableCategoryId?: number;
+    createCaseItem: LocalCaseItem[];
+    createCaseRegistration: LocalCaseRegistration[];
+    createCaseAssessment: LocalCaseAssessment[];
+    createCaseDeath: LocalCaseDeath[];
+    createCaseDisability: LocalCaseDisability[];
+    createCaseDocument: LocalCaseDocument[];
+    createCaseContact: LocalCaseContact[];
+    createCaseServicePerson: LocalCaseServicePerson[];
+    createBeneficiary: LocalBeneficiary[];
+};
+
+export type LocalClaimEntry = Omit<ClaimV2Request, "cases"> & {
+    tempClaimId: string;
+    createCase?: LocalCaseEntry[];
+};
+
+export type LocalCoreClaim = Omit<CreateCoreClaimV2DtoRequest, "claims" | "requestId"> & {
+    createClaim?: LocalClaimEntry[];
+};
 
 export interface SchoolInfo {
     appId: string;
@@ -51,7 +119,7 @@ export enum DeathExtraCoverageId {
     SchoolLiability = 7, // รับผิดสถานศึกษา
 }
 
-export const MAX_INSURED_PER_CLAIM = 2;
+export const MAX_INSURED_PER_CLAIM = 15;
 
 export interface ClaimPAFormValues {
     // ผู้รับเอกสาร
@@ -95,11 +163,12 @@ export interface ClaimPAFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
-    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
+    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
+    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (ุ6 = ภัยสาธารณะ, 7 = ความรับผิดสถานศึกษา)
+    deathBenefitAmounts: Record<number, string>; // จำนวนเงินที่กรอกต่อ benefit (key = standardMedicalExpenseId — benefitId ไม่ unique พอ เช่น MC/Murder ใช้ benefitId ร่วมกัน)
 }
 
-export interface CreateCoreClaimDto extends CreateCoreClaimDtoRequest {}
+export type CreateCoreClaimDto = LocalCoreClaim;
 
 interface ClaimPAState {
     isContinuous: boolean;
@@ -115,7 +184,7 @@ interface ClaimPAState {
     beneficiaries: BeneficiaryForm[];
     organLossItems: OrganLossItem[];
 
-    tmpCoreClaim: CreateCoreClaimDtoRequest;
+    tmpCoreClaim: LocalCoreClaim;
 }
 
 const defaultForm: ClaimPAFormValues = {
@@ -160,6 +229,7 @@ const defaultForm: ClaimPAFormValues = {
     remark: undefined,
     ocrDocument: [],
     extraCoverageIds: [],
+    deathBenefitAmounts: {},
 };
 
 const initialState: ClaimPAState = {
@@ -222,13 +292,13 @@ const claimPASlice = createSlice({
         },
 
         //credate claim
-        setTmpCoreClaimHeader(state, action: PayloadAction<CreateCoreClaimDtoRequest>) {
+        setTmpCoreClaimHeader(state, action: PayloadAction<LocalCoreClaim>) {
             state.tmpCoreClaim = {
                 ...action.payload,
                 createClaim: action.payload.createClaim ?? [],
             };
         },
-        setTmpClaimItem(state, action: PayloadAction<ClaimCreateRequest[]>) {
+        setTmpClaimItem(state, action: PayloadAction<LocalClaimEntry[]>) {
             state.tmpCoreClaim.createClaim = [...(state.tmpCoreClaim.createClaim ?? []), ...action.payload];
         },
 
@@ -236,7 +306,7 @@ const claimPASlice = createSlice({
             state,
             action: PayloadAction<{
                 tempClaimId: string;
-                cases: CaseCreateRequest[];
+                cases: LocalCaseEntry[];
             }>
         ) {
             const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
@@ -246,17 +316,16 @@ const claimPASlice = createSlice({
             claim.createCase = [...(claim.createCase ?? []), ...action.payload.cases];
         },
 
-        updateTmpClaimItem(state, action: PayloadAction<ClaimCreateRequest>) {
+        updateTmpClaimItem(state, action: PayloadAction<LocalClaimEntry>) {
             const idx = state.tmpCoreClaim.createClaim?.findIndex((c) => c.tempClaimId === action.payload.tempClaimId);
             if (idx === undefined || idx === -1 || !state.tmpCoreClaim.createClaim) return;
-            // payload ไม่มี createCase (แยก set กันคนละ action) เก็บของเดิมไว้
             state.tmpCoreClaim.createClaim[idx] = {
                 ...action.payload,
                 createCase: state.tmpCoreClaim.createClaim[idx].createCase,
             };
         },
 
-        updateTmpCaseItem(state, action: PayloadAction<{ tempClaimId: string; case: CaseCreateRequest }>) {
+        updateTmpCaseItem(state, action: PayloadAction<{ tempClaimId: string; case: LocalCaseEntry }>) {
             const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
             if (!claim) return;
 

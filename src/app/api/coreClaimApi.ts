@@ -3,8 +3,8 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
-    CreateCoreClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
+    CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
 } from "./coreClaimApi.client";
@@ -131,7 +131,7 @@ export const useCreateCoreClaim = (
     onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string, type: number) => void
 ) => {
-    return useMutation((body: CreateCoreClaimDtoRequest) => coreClaimClient.createCoreClaim(body), {
+    return useMutation((body?: CreateCoreClaimV2DtoRequest | undefined) => coreClaimClient.createCoreClaim(body), {
         onSuccess: (response) => {
             if (!response.isSuccess)
                 onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error", 1);

@@ -1,83 +1,51 @@
-import { useEffect, useMemo, useState } from "react";
-import { Box, Stack, Typography, TextField } from "@mui/material";
+import { useEffect, useMemo } from "react";
+import { Box, Skeleton, Stack, Typography, TextField, Paper } from "@mui/material";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import { ClaimPAFormValues } from "../../../store/claimPASlice";
+import { ClaimPAFormValues, DeathExtraCoverageId } from "../../../store/claimPASlice";
 import { FormikProps } from "formik";
-
-type CoverageItem = {
-    id: string;
-    type: "main" | "extra";
-    title: string;
-    description: string;
-    maxAmount?: number;
-    helperText?: string;
-    businessId?: number; // id ทางธุรกิจของความคุ้มครองเพิ่มเติม (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
-};
+import { GetCustomerBenefitDetailHalfDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { classifyDeathBenefit, getDeathMainBenefit } from "../../../../../deathBenefitHelpers";
 
 type Props = {
-    causeOfIncidentName?: string;
-    mainMaxAmount: number;
-    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่ถูกเลือก (checkbox) จากฟอร์ม
+    benefits: GetCustomerBenefitDetailHalfDtoResponse[];
+    isLoading?: boolean;
+    extraCoverageIds: number[];
     formik: FormikProps<ClaimPAFormValues>;
 };
 
-const coverageItems: CoverageItem[] = [
-    {
-        id: "main",
-        type: "main",
-        title: "ความคุ้มครองหลัก",
-        description: "เสียชีวิตเนื่องจากอุบัติเหตุทั่วไป",
-        maxAmount: 100000,
-    },
-    {
-        id: "public-disaster",
-        type: "extra",
-        title: "ความคุ้มครองเพิ่มเติม",
-        description: "เสียชีวิต จากภัยสาธารณะ อีก 1 เท่าของทุนประกันภัย",
-        helperText: "กรอกเฉพาะยอดเพิ่มเติมภัยสาธารณะ",
-        businessId: 7,
-    },
-    {
-        id: "student-liability",
-        type: "extra",
-        title: "ความคุ้มครองเพิ่มเติม",
-        description: "ประกันความรับผิดชอบของสถานศึกษา (นักเรียน) เพิ่ม 1 เท่า สูงสุดไม่เกิน 10 เท่าของทุนประกัน",
-        helperText: "กรอกเฉพาะยอดเพิ่มเติมความรับผิดสถานศึกษา",
-        businessId: 8,
-    },
-];
-
-
-const EMPTY_AMOUNTS: Record<string, string> = {
-    main: "",
-    "public-disaster": "",
-    "student-liability": "",
+const EXTRA_HELPER_TEXT: Partial<Record<DeathExtraCoverageId, string>> = {
+    [DeathExtraCoverageId.PublicDisaster]: "กรอกเฉพาะยอดเพิ่มเติมภัยสาธารณะ",
+    [DeathExtraCoverageId.SchoolLiability]: "กรอกเฉพาะยอดเพิ่มเติมความรับผิดสถานศึกษา",
 };
 
-const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCoverageIds, formik }: Props) => {
-    const [amounts, setAmounts] = useState<Record<string, string>>(EMPTY_AMOUNTS);
+const DeathClaimAmountCardPA = ({ benefits, isLoading, extraCoverageIds, formik }: Props) => {
+    const mainBenefit = useMemo(() => getDeathMainBenefit(benefits), [benefits]);
 
-    const items = coverageItems.map((item) =>
-        item.id === "main"
-            ? {
-                  ...item,
-                  description: `เสียชีวิตเนื่องจาก${causeOfIncidentName ?? "-"}`,
-                  maxAmount: mainMaxAmount,
-              }
-            : item
+    const extraBenefits = useMemo(
+        () =>
+            benefits.filter((b) => {
+                const category = classifyDeathBenefit(b);
+                return category !== undefined && category !== "main" && extraCoverageIds.includes(category);
+            }),
+        [benefits, extraCoverageIds]
     );
 
-    // แสดงเฉพาะ main กับ extra ที่ถูกติ๊กเลือกไว้เท่านั้น (ที่เหลือตามการ check ของ checkbox)
-    const visibleItems = items.filter(
-        (item) => item.type === "main" || extraCoverageIds.includes(item.businessId ?? -1)
+    const visibleBenefits = useMemo(
+        () => (mainBenefit ? [mainBenefit, ...extraBenefits] : []),
+        [mainBenefit, extraBenefits]
     );
 
-    const transferAmount = useMemo(() => {
-        return visibleItems.reduce((sum, item) => sum + (Number(amounts[item.id]) || 0), 0);
-    }, [amounts, visibleItems]);
+    const amounts = formik.values.deathBenefitAmounts ?? {};
+
+    const transferAmount = useMemo(
+        () => visibleBenefits.reduce((sum, b) => sum + (Number(amounts[b.standardMedicalExpenseId ?? -1]) || 0), 0),
+        [amounts, visibleBenefits]
+    );
+
+    const mainMaxAmount = mainBenefit?.maxPrice ?? 0;
 
     useEffect(() => {
         formik.setFieldValue("transferAmount", transferAmount, false);
@@ -91,24 +59,51 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
         }
     }, [transferAmount, mainMaxAmount]);
 
-    const handleAmountChange = (id: string, value: string) => {
-        // ตัด comma ที่ format ไว้ออก แล้วอนุญาตเฉพาะตัวเลขกับจุดทศนิยม
+    const handleAmountChange = (standardMedicalExpenseId: number | undefined, value: string, maxPrice?: number) => {
+        if (standardMedicalExpenseId == null) return;
+
         let cleaned = value.replace(/,/g, "").replace(/[^\d.]/g, "");
 
-        // กันกรณีมีจุดทศนิยมมากกว่า 1 จุด (เก็บจุดแรกไว้ ตัดที่เหลือทิ้ง)
         const firstDotIndex = cleaned.indexOf(".");
         if (firstDotIndex !== -1) {
             const integerPart = cleaned.slice(0, firstDotIndex);
             const decimalPart = cleaned.slice(firstDotIndex + 1).replace(/\./g, "");
-            // จำกัดทศนิยมไว้สูงสุด 2 ตำแหน่ง
             cleaned = `${integerPart}.${decimalPart.slice(0, 2)}`;
         }
 
-        setAmounts((prev) => ({
-            ...prev,
-            [id]: cleaned,
-        }));
+        if (maxPrice != null) {
+            const numericValue = Number(cleaned);
+            if (!Number.isNaN(numericValue) && numericValue > maxPrice) {
+                cleaned = String(maxPrice);
+            }
+        }
+
+        formik.setFieldValue(
+            "deathBenefitAmounts",
+            {
+                ...amounts,
+                [standardMedicalExpenseId]: cleaned,
+            },
+            false
+        );
     };
+
+    if (isLoading) {
+        return (
+            <Stack spacing={2.5} mt={2} direction={{ xs: "column", md: "row" }}>
+                <Skeleton variant="rounded" width="100%" height={430} />
+                <Skeleton variant="rounded" width="100%" height={430} />
+            </Stack>
+        );
+    }
+
+    if (!mainBenefit) {
+        return (
+            <Paper variant="outlined" sx={{ p: 3, mt: 2, textAlign: "center", color: "text.secondary" }}>
+                ไม่พบข้อมูลความคุ้มครองเสียชีวิตสำหรับกรมธรรม์นี้
+            </Paper>
+        );
+    }
 
     return (
         <Stack spacing={3} mt={2}>
@@ -122,11 +117,12 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
                     gap: 2.5,
                 }}
             >
-                {visibleItems.map((item) => (
+                {visibleBenefits.map((benefit) => (
                     <TransferAmountCard
-                        key={item.id}
-                        item={item}
-                        value={amounts[item.id] ?? ""}
+                        key={benefit.standardMedicalExpenseId}
+                        benefit={benefit}
+                        isMain={benefit.standardMedicalExpenseId === mainBenefit.standardMedicalExpenseId}
+                        value={amounts[benefit.standardMedicalExpenseId ?? -1] ?? ""}
                         onAmountChange={handleAmountChange}
                     />
                 ))}
@@ -138,21 +134,25 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
 };
 
 const TransferAmountCard = ({
-    item,
+    benefit,
+    isMain,
     value,
     onAmountChange,
 }: {
-    item: CoverageItem;
+    benefit: GetCustomerBenefitDetailHalfDtoResponse;
+    isMain: boolean;
     value: string;
-    onAmountChange: (id: string, value: string) => void;
+    onAmountChange: (standardMedicalExpenseId: number | undefined, value: string, maxPrice?: number) => void;
 }) => {
-    const isMain = item.type === "main";
-
     const color = isMain ? "#0076B6" : "#B85F00";
     const borderColor = isMain ? "#A7D7FF" : "#FFA726";
     const sideColor = isMain ? "#0B84C6" : "#F57C00";
     const badgeBg = isMain ? "#E5F5FF" : "#FFF4D8";
     const cardBg = isMain ? "#FBFDFF" : "#FFFDF6";
+    const title = isMain ? "ความคุ้มครองหลัก" : "ความคุ้มครองเพิ่มเติม";
+    const category = classifyDeathBenefit(benefit);
+    const helperText =
+        !isMain && category !== "main" && category !== undefined ? EXTRA_HELPER_TEXT[category] : undefined;
 
     return (
         <Box
@@ -202,7 +202,7 @@ const TransferAmountCard = ({
                                 fontSize: 15,
                             }}
                         >
-                            {item.title}
+                            {title}
                         </Typography>
 
                         <Typography
@@ -214,7 +214,7 @@ const TransferAmountCard = ({
                                 lineHeight: 1.8,
                             }}
                         >
-                            {item.description}
+                            {benefit.benefitName ?? "-"}
                         </Typography>
                     </Box>
                 </Stack>
@@ -258,7 +258,7 @@ const TransferAmountCard = ({
                                 fontSize: 16,
                             }}
                         >
-                            วงเงินสูงสุด {(item.maxAmount ?? 0).toLocaleString("th-TH")} บาท
+                            วงเงินสูงสุด {(benefit.maxPrice ?? 0).toLocaleString("th-TH")} บาท
                         </Typography>
                     </Stack>
                 </Box>
@@ -268,9 +268,11 @@ const TransferAmountCard = ({
 
                     <TextField
                         fullWidth
-                        name={`${item.id}Amount`}
+                        name={`benefit-${benefit.standardMedicalExpenseId}-amount`}
                         value={value}
-                        onChange={(e) => onAmountChange(item.id, e.target.value)}
+                        onChange={(e) =>
+                            onAmountChange(benefit.standardMedicalExpenseId, e.target.value, benefit.maxPrice)
+                        }
                         placeholder="จำนวนเงินที่ต้องการโอน"
                         size="medium"
                         inputProps={{
@@ -289,8 +291,8 @@ const TransferAmountCard = ({
                         }}
                     />
 
-                    {!isMain && item.helperText && (
-                        <Typography sx={{ fontSize: 11, color: "#7890B2" }}>{item.helperText}</Typography>
+                    {!isMain && helperText && (
+                        <Typography sx={{ fontSize: 11, color: "#7890B2" }}>{helperText}</Typography>
                     )}
                 </Stack>
             </Stack>

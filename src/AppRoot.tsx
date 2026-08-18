@@ -35,7 +35,14 @@ const queryClient = new QueryClient({
         },
     },
 });
-
+const oidcUserManager = new UserManager({
+        ...SSO_CONFIG,
+        loadUserInfo: true,
+        response_type: "code",
+        automaticSilentRenew: true,
+        userStore: new WebStorageStateStore({ store: window.localStorage }),
+        monitorSession: true,
+    });
 const AppRoot = () => {
     console.log(
         `%c${VITE_APP_NAME} v${VITE_APP_VERSION}\n` +
@@ -45,14 +52,7 @@ const AppRoot = () => {
         "font-size: 14px;"
     );
 
-    const oidcUserManager = new UserManager({
-        ...SSO_CONFIG,
-        loadUserInfo: true,
-        response_type: "code",
-        automaticSilentRenew: true,
-        userStore: new WebStorageStateStore({ store: window.localStorage }),
-        monitorSession: true,
-    });
+    
 
     return (
         <AuthProvider oidcUserManager={oidcUserManager}>

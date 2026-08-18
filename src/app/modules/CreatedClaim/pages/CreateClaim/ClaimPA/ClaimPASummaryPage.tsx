@@ -48,6 +48,7 @@ const ClaimPASummaryPage: React.FC = () => {
     const [openConfirm, setOpenConfirm] = useState(false);
     const [openAddInsured, setOpenAddInsured] = useState(false);
     const [claimResult, setClaimResult] = useState<CreateCoreClaimDtoResponseServiceResponse | undefined>(undefined);
+    const [claimBeneficiaries, setClaimBeneficiaries] = useState<BeneficiaryForm[]>([]);
     const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPA((beneficiaries) => {
         handleConfirm(beneficiaries);
     });
@@ -125,7 +126,7 @@ const ClaimPASummaryPage: React.FC = () => {
                 }
             },
         }).then((result: any) => {
-            const claimResponse: CreateCoreClaimDtoResponseServiceResponse | undefined = result?.value;
+            const { claimResponse, beneficiaryList } = result?.value ?? {};
             const data = claimResponse?.data;
             const responseList = data?.responseList ?? [];
 
@@ -160,7 +161,6 @@ const ClaimPASummaryPage: React.FC = () => {
                     .join("");
 
                 if (isDeathDisability) {
-                    // เคลมเสียชีวิต/ทุพพลภาพ: ส่งให้ฝ่ายพิจารณาเคลมตรวจสอบ ไม่มีขั้นโอนเงินทันที
                     Swal.fire({
                         icon: "success",
                         title: "ทำรายการสำเร็จ",
@@ -178,7 +178,6 @@ const ClaimPASummaryPage: React.FC = () => {
                         navigate(`/monitor-claim`);
                     });
                 } else {
-                    // เคลมปกติ: บันทึกเคลมสำเร็จแล้ว ให้เลือกจะ "โอนเงิน" ต่อเลย หรือ "ปิด" ไว้ก่อนแล้วค่อยมาโอนทีหลัง
                     Swal.fire({
                         icon: "success",
                         title: "ทำรายการสำเร็จ",
@@ -196,6 +195,7 @@ const ClaimPASummaryPage: React.FC = () => {
                     }).then((confirmResult) => {
                         if (confirmResult.isConfirmed) {
                             setClaimResult(claimResponse);
+                            setClaimBeneficiaries(beneficiaryList ?? []);
                             setOpenConfirm(true);
                         } else {
                             dispatch(resetState());
@@ -209,7 +209,6 @@ const ClaimPASummaryPage: React.FC = () => {
         });
     };
 
-    // ── ขั้นที่ 2: โอนเงินจริง (แยกออกจากขั้นบันทึกเคลมด้านบน) เรียกหลังผู้ใช้ตรวจสอบบัญชีใน ConfirmTransferPAModal แล้วกดยืนยัน ──
     const handleActualTransfer = async () => {
         if (!claimResult) return;
 
@@ -228,7 +227,7 @@ const ClaimPASummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await confirmPayment(claimResult);
+                    const res = await confirmPayment(claimResult, claimBeneficiaries);
                     return res;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
@@ -236,34 +235,27 @@ const ClaimPASummaryPage: React.FC = () => {
             },
         }).then((result: any) => {
             if (result.isConfirmed) {
-                const responseList = claimResult.data?.responseList ?? [];
-                const itemsHtml = responseList
+                const paymentCodeResponse = result.value?.data?.paymentCodeResponse ?? [];
+                const itemsHtml = paymentCodeResponse
                     .map(
                         (item: any, index: number) => `
                 <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
-                    index < responseList.length - 1 ? "12px" : "0"
+                    index < paymentCodeResponse.length - 1 ? "12px" : "0"
                 };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
-                    <div style="display:flex;align-items:center;margin-bottom:12px;">
-                        <div style="width:24px;height:24px;border-radius:50%;background:#27AE60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">✓</div>
-                        <div>
-                            <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
-                            <div style="display:flex;align-items:center;gap:6px;">
-                                <span style="font-size:18px;font-weight:700;color:#27AE60;">${
-                                    item?.claimNo ?? "-"
-                                }</span>
-                                <span
-                                    class="material-icons copy-btn"
-                                    data-copy="${item?.claimNo ?? ""}"
-                                    style="cursor:pointer;color:#2196F3;font-size:18px;margin-left:6px;user-select:none;"
-                                >content_copy</span>
-                            </div>
-                        </div>
-                    </div>
                     <div style="display:flex;align-items:center;">
                         <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
                         <div>
-                            <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
-                            <div style="font-size:18px;font-weight:700;color:#2F80ED;">${item?.caseNo ?? "-"}</div>
+                            <div style="font-size:12px;color:#888;">รหัสการโอนเงิน :</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="font-size:18px;font-weight:700;color:#2F80ED;">${
+                                    item?.paymentCode ?? "-"
+                                }</span>
+                                <span
+                                    class="material-icons copy-btn"
+                                    data-copy="${item?.paymentCode ?? ""}"
+                                    style="cursor:pointer;color:#2196F3;font-size:18px;margin-left:6px;user-select:none;"
+                                >content_copy</span>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -346,7 +338,7 @@ const ClaimPASummaryPage: React.FC = () => {
 
                     {!isDeathDisability && (
                         <>
-                            <Grid item xs={12} sm={6}>
+                            <Grid item xs={12} md={6}>
                                 <CustomPaper>
                                     <Grid container spacing={2} p="0 26px 0 26px">
                                         <Grid item xs={12}>
@@ -378,7 +370,7 @@ const ClaimPASummaryPage: React.FC = () => {
                                     </Grid>
                                 </CustomPaper>
                             </Grid>
-                            <Grid item xs={12} sm={6}>
+                            <Grid item xs={12} md={6}>
                                 <CustomPaper>
                                     <Grid container spacing={2} p="0 26px 0 26px">
                                         <Grid item xs={12}>

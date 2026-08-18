@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Box, Avatar, Typography, Chip, useTheme, useMediaQuery, useScrollTrigger } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import VerifiedIcon from '@mui/icons-material/Verified';
 import SchoolIcon from "@mui/icons-material/School";
 import { GetCustomerDetailByIdDtoResponse } from "../../../../api/coreClaimApi.client";
 
@@ -38,19 +38,16 @@ const ClaimStickyHeader: React.FC<Props> = ({ data }) => {
     return (
         <Box
             sx={{
+                borderRadius: 3,
+                p: 2,
+                mb: 2,
+                bgcolor: "#eaf2fe",
+                border: "1px solid",
+                borderColor: "primary.light",
                 position: "sticky",
                 top: appBarHeight,
                 transition: "top 0.2s ease",
                 zIndex: (t) => t.zIndex.appBar - 1,
-                bgcolor: "#E8F0FB",
-                borderBottom: "1px solid #bcdcf0",
-                mx: { xs: -1.5, sm: -3 },
-                px: { xs: 1.5, sm: 3 },
-                py: { xs: 1, sm: 1.5 },
-                display: "flex",
-                alignItems: "center",
-                gap: { xs: 1, sm: 2 },
-                boxSizing: "border-box",
             }}
         >
             <Avatar
@@ -66,7 +63,7 @@ const ClaimStickyHeader: React.FC<Props> = ({ data }) => {
 
             <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, color: "text.secondary" }}>
-                    <CheckCircleIcon sx={{ fontSize: 16, color: "#9e9e9e", flexShrink: 0 }} />
+                    <VerifiedIcon sx={{ fontSize: 16, color: "#9e9e9e", flexShrink: 0 }} />
                     <Typography
                         variant="body2"
                         color="text.secondary"
