@@ -1,4 +1,3 @@
-import { OrganLossItem } from './../organLoss.types';
 import { useGetCustomerBenefitDetailHalf } from "./../../../../../api/coreClaimApi";
 import { useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
@@ -105,7 +104,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                         errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
                     } else if (
                         values.admissionDate &&
-                        !dayjs(values.dischargeDate).isAfter(values.admissionDate, "day")
+                        dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")
                     ) {
                         errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
                     }
@@ -134,6 +133,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
+            else if (Number(values.transferAmount) > maxTransferAmount) {
+                errors.transferAmount = `ไม่เกินวงเงินสูงสุด ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
+            }
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
@@ -212,8 +214,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                             quantity: item.maxQuantity ?? undefined,
                             perUnit: item.pricePerUnit ?? undefined,
                             originalAmount: originalAmount,
-                            discountAmount: undefined,
-                            netCaseAmount: undefined,
+                            discountAmount: 0,
+                            netCaseAmount: originalAmount,
                             medicalTypeId: item.medicalTypeId,
                             nonCoveredAmount: undefined,
                             nonCoveredReasonId: undefined,
@@ -231,9 +233,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                             standardMedicalExpenseId: matched.standardMedicalExpenseId ?? undefined,
                             quantity: matched.maxQuantity ?? undefined,
                             perUnit: matched.pricePerUnit ?? undefined,
-                            originalAmount: values.transferAmount ?? undefined,
-                            discountAmount: undefined,
-                            netCaseAmount: undefined,
+                            originalAmount: values.transferAmount ?? 0,
+                            discountAmount: 0,
+                            netCaseAmount: values.transferAmount ?? 0,
                             medicalTypeId: matched.medicalTypeId ?? undefined,
                             nonCoveredAmount: undefined,
                             nonCoveredReasonId: undefined,
@@ -241,8 +243,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     ];
                 }
             }
-            console.log("caseItems", caseItems);
-            console.log("organLossItems", organLossItems);
             dispatch(setCaseItems(caseItems));
 
             dispatch(
@@ -415,9 +415,15 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         );
     }, [formik.values.incidentTypeId]);
 
+    const prevIncidentTypeId = useRef(formik.values.incidentTypeId);
+
     useEffect(() => {
         if (isFirstRenderCoverage.current) {
             isFirstRenderCoverage.current = false;
+            return;
+        }
+        if (prevIncidentTypeId.current !== formik.values.incidentTypeId) {
+            prevIncidentTypeId.current = formik.values.incidentTypeId;
             return;
         }
         if (!formik.values.coverageTypeId) return;
@@ -439,7 +445,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             ? incidentTypeMapping?.data?.find((i) => i.coverageTypeId === 5 && i.incidentTypeId === 2)
             : undefined;
 
-        // ➕ reset + auto-select ในรอบเดียว ไม่แยกกัน ไม่มี race
         formik.setValues(
             {
                 ...formik.values,
@@ -490,6 +495,12 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));
         }
     }, [isContinuous, oldClaim?.incidentDate]);
+
+    const maxTransferAmount = useMemo(() => {
+        const data = customerBenefit?.data ?? [];
+        return data.length > 0 ? data[data.length - 1].maxPrice ?? 0 : 0;
+    }, [customerBenefit?.data]);
+
     const isIncidentDateDisabled = isContinuous;
     return {
         formik,
@@ -505,6 +516,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         incidentTypeLoading,
         incidentTypeMappingLoading,
         customerBenefitLoading,
+        maxTransferAmount,
         ...ocr,
     };
 };

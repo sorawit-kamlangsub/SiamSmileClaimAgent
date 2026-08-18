@@ -11,6 +11,7 @@ interface Props {
     isLoading: boolean;
     planCode: string | undefined;
     benefitAmounts: Record<number, string>;
+    medicalTypeId: number | undefined;
     onBenefitAmountsChange: (value: Record<number, string>) => void;
     onTransferAmountChange: (value: number) => void;
     debounceMs?: number;
@@ -65,26 +66,54 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     isLoading,
     planCode,
     benefitAmounts,
+    medicalTypeId,
     onBenefitAmountsChange,
     onTransferAmountChange,
     debounceMs = 300,
 }) => {
     const [localAmounts, setLocalAmounts] = useState(benefitAmounts);
+    const [amountErrors, setAmountErrors] = useState<Record<number, string>>({});
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
     useEffect(() => {
         setLocalAmounts(benefitAmounts);
     }, [benefitAmounts]);
+    useEffect(() => {
+        setLocalAmounts(benefitAmounts);
+    }, [benefitAmounts]);
+
+    // reset ทุกครั้งที่เปลี่ยนประเภทการเบิก (medicalTypeId)
+    useEffect(() => {
+        setLocalAmounts({});
+        setAmountErrors({});
+        onBenefitAmountsChange({});
+        onTransferAmountChange(0);
+        if (debounceRef.current) clearTimeout(debounceRef.current);
+    }, [medicalTypeId]);
 
     const total = useMemo(
         () => Object.values(localAmounts).reduce((sum, v) => sum + (Number(v) || 0), 0),
         [localAmounts]
     );
 
-    const handleAmountChange = (benefitId: number, value: string) => {
+    const handleAmountChange = (benefitId: number, value: string, maxPrice?: number) => {
         const sanitized = sanitizeAmountInput(value);
         const next = { ...localAmounts, [benefitId]: sanitized };
         setLocalAmounts(next);
+
+        // เช็ค error แบบ real-time แต่ไม่บล็อกการพิมพ์
+        const numValue = Number(sanitized) || 0;
+        if (maxPrice != null && numValue > maxPrice) {
+            setAmountErrors((prev) => ({
+                ...prev,
+                [benefitId]: `ไม่เกิน ${numberWithCommas(maxPrice.toString(), 0)} บาท`,
+            }));
+        } else {
+            setAmountErrors((prev) => {
+                const { [benefitId]: _, ...rest } = prev;
+                return rest;
+            });
+        }
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
@@ -106,6 +135,7 @@ const CoverageAndTransferBox: React.FC<Props> = ({
             const nextTotal = Object.values(next).reduce((sum, v) => sum + (Number(v) || 0), 0);
             onTransferAmountChange(nextTotal);
         }
+        // ไม่ clamp ค่า ปล่อยให้ error message เตือนไว้เฉยๆ user ต้องแก้เอง
     };
 
     useEffect(() => {
@@ -251,9 +281,12 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                             placeholder={item.benefitName}
                             value={item.benefitId != null ? localAmounts[item.benefitId] ?? "" : ""}
                             onChange={(e) =>
-                                item.benefitId != null && handleAmountChange(item.benefitId, e.target.value)
+                                item.benefitId != null &&
+                                handleAmountChange(item.benefitId, e.target.value, item.maxPrice)
                             }
                             onBlur={() => item.benefitId != null && handleAmountBlur(item.benefitId)}
+                            error={item.benefitId != null && !!amountErrors[item.benefitId]}
+                            helperText={item.benefitId != null ? amountErrors[item.benefitId] : undefined}
                             inputProps={{
                                 inputMode: "decimal",
                                 style: { textAlign: "right" },
