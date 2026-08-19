@@ -29,14 +29,6 @@ import {
 } from "../../../api/coreClaimApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
 
-/**
- * ── Local (internal) types ──
- * API จริง (CreateCoreClaimV2DtoRequest) ไม่มี temp id แล้ว เพราะโครงสร้างเป็น nested
- * claims → cases → items/registrations/... อยู่แล้ว แต่ tmpCoreClaim ในสเตตนี้ยังต้องใช้
- * tempClaimId/tempCaseId ผูกคู่ claim/case กันเอง (multi-insured stacking, editingItemId,
- * AddInsuredModal ฯลฯ) จึงคง temp id ไว้เป็น type ภายในชุดนี้ แล้วค่อย strip ทิ้ง + rename field
- * เป็น V2 จริงตอนสร้าง payload ใน useCreateClaimPA.ts (ดู mapLocalCoreClaimToV2Request)
- */
 export type LocalCaseItem = CaseItemV2Request & { tempCaseId?: string; tempCaseItemId?: string };
 export type LocalCaseRegistration = CaseRegistrationV2Request & { tempCaseId?: string };
 export type LocalCaseAssessment = CaseAssessmentV2Request & { tempCaseId?: string };
@@ -67,7 +59,6 @@ export type LocalCaseEntry = Omit<
 > & {
     tempCaseId: string;
     tempClaimId: string;
-    // แทนที่ createCasePayable เดิม เพราะ V2 ย้าย payable ไปแนบใต้ beneficiary.payables แล้ว
     payableCategoryId?: number;
     createCaseItem: LocalCaseItem[];
     createCaseRegistration: LocalCaseRegistration[];
@@ -165,7 +156,7 @@ export interface ClaimPAFormValues {
     remark: string | undefined;
     ocrDocument: CaseDocumentDetailV2Request[] | undefined;
     extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (ุ6 = ภัยสาธารณะ, 7 = ความรับผิดสถานศึกษา)
-    deathBenefitAmounts: Record<number, string>; // จำนวนเงินที่กรอกต่อ benefit (key = standardMedicalExpenseId — benefitId ไม่ unique พอ เช่น MC/Murder ใช้ benefitId ร่วมกัน)
+    deathBenefitAmounts: Record<number, number | string>;
 }
 
 export type CreateCoreClaimDto = LocalCoreClaim;

@@ -1,90 +1,25 @@
 import { useAppSelector } from "../../../../../../redux";
 import { useCreateCoreClaim } from "../../../../../api/coreClaimApi";
 import {
-    BeneficiaryV2Request,
-    CaseAssessmentV2Request,
-    CaseContactV2Request,
-    CaseDeathV2Request,
-    CaseDisabilityV2Request,
     CaseDocumentDetailV2Request,
-    CaseItemV2Request,
-    CasePayableV2Request,
-    CaseRegistrationV2Request,
-    CaseServicePersonV2Request,
     CaseV2Request,
     ClaimV2Request,
     CreateCoreClaimDtoResponseServiceResponse,
     CreateCoreClaimV2DtoRequest,
     GetCustomerBenefitDetailHalfDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
-import { claimPASelector } from "../../../store/claimPASlice";
+import {
+    claimPASelector,
+    LocalBeneficiary,
+    LocalCaseDisability,
+    LocalCaseEntry,
+    LocalCaseItem,
+    LocalClaimEntry,
+    LocalCoreClaim,
+} from "../../../store/claimPASlice";
 import { BeneficiaryForm, ClaimBankAccount, ContactInfo } from "../../../store/claimPHSlice";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
-
-/**
- * ── Local (internal) types ──
- * API V2 (CreateCoreClaimV2DtoRequest) ตัด temp id ทุกตัวออกหมดแล้ว เพราะโครงสร้างเป็น
- * nested claims → cases → items/registrations/... อยู่แล้ว ไม่ต้องมี id ผูกคู่กันเหมือนโครงสร้างเดิม
- * ที่เป็น flat array + tempClaimId/tempCaseId
- *
- * แต่ฝั่ง Redux (multi-insured stacking, editingItemId, AddInsuredModal ฯลฯ) ยังต้องใช้ temp id
- * ผูกคู่ claim/case กันอยู่ภายใน จึงคง temp id ไว้เป็น "Local*" type สำหรับ state ภายใน
- * แล้วค่อย strip ทิ้ง + rename field ตอนแปลงเป็น payload จริงใน mapLocalCoreClaimToV2Request
- */
-export type LocalCaseItem = CaseItemV2Request & { tempCaseId?: string; tempCaseItemId?: string };
-export type LocalCaseRegistration = CaseRegistrationV2Request & { tempCaseId?: string };
-export type LocalCaseAssessment = CaseAssessmentV2Request & { tempCaseId?: string };
-export type LocalCaseDeath = CaseDeathV2Request & { tempCaseId?: string };
-export type LocalCaseDisability = CaseDisabilityV2Request & { tempCaseId?: string };
-// NOTE: documentSubTypeId ยังคงชื่อเดิม, caseDocumentDetail เก็บ any[] ไว้ก่อน (ดู mapCaseEntryToV2)
-// ต้องเทียบ shape จริงของ ocr.ocrDocumentPayload() กับ CaseDocumentDetailV2Request ก่อนขึ้นโปรดักชัน
-export type LocalCaseDocument = {
-    tempCaseId?: string;
-    tempCaseDocumentId?: string;
-    documentSubTypeId?: number;
-    caseDocumentDetail?: any[];
-};
-export type LocalCaseContact = CaseContactV2Request & { tempCaseId?: string };
-export type LocalCaseServicePerson = CaseServicePersonV2Request & { tempCaseId?: string };
-export type LocalBeneficiary = Omit<BeneficiaryV2Request, "payables"> & { tempClaimId?: string; tempCaseId?: string };
-
-export type LocalCaseEntry = Omit<
-    CaseV2Request,
-    | "items"
-    | "registrations"
-    | "assessments"
-    | "deaths"
-    | "disabilities"
-    | "documents"
-    | "contacts"
-    | "servicePersons"
-    | "beneficiaries"
-> & {
-    tempCaseId: string;
-    tempClaimId: string;
-    // แทนที่ createCasePayable เดิม เพราะ V2 ย้าย payable ไปแนบใต้ beneficiary.payables แล้ว
-    // (ไม่มีที่เก็บ payableCategoryId ระดับ case ตรง ๆ อีกต่อไป)
-    payableCategoryId?: number;
-    createCaseItem: LocalCaseItem[];
-    createCaseRegistration: LocalCaseRegistration[];
-    createCaseAssessment: LocalCaseAssessment[];
-    createCaseDeath: LocalCaseDeath[];
-    createCaseDisability: LocalCaseDisability[];
-    createCaseDocument: LocalCaseDocument[];
-    createCaseContact: LocalCaseContact[];
-    createCaseServicePerson: LocalCaseServicePerson[];
-    createBeneficiary: LocalBeneficiary[];
-};
-
-export type LocalClaimEntry = Omit<ClaimV2Request, "cases"> & {
-    tempClaimId: string;
-    createCase?: LocalCaseEntry[];
-};
-
-export type LocalCoreClaim = Omit<CreateCoreClaimV2DtoRequest, "claims" | "requestId"> & {
-    createClaim?: LocalClaimEntry[];
-};
 
 const generateRequestId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -159,7 +94,6 @@ export const mapBeneficiariesToRequest = (
         tempCaseId,
         policyBeneficiaryId: undefined,
         titleId: b.titleId?.toString(),
-        // BeneficiaryV2Request.firstName/lastName เป็น required แล้ว (เดิม optional) จึง fallback เป็น "" กันพัง
         firstName: b.firstName ?? "",
         lastName: b.lastName ?? "",
         idCard: b.citizenId,
@@ -197,7 +131,6 @@ export const mapBankAccountToBeneficiary = (
           ]
         : [];
 
-// ── แปลง Local (มี temp id) → CaseV2Request จริงที่จะส่ง API ──
 const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
     const {
         tempCaseId,
@@ -215,8 +148,6 @@ const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
         ...rest
     } = caseEntry;
 
-    const payables: CasePayableV2Request[] = payableCategoryId != null ? [{ payableCategoryId }] : [];
-
     return {
         ...rest,
         items: createCaseItem.map(({ tempCaseId: _t1, tempCaseItemId: _t2, ...item }) => item),
@@ -224,7 +155,6 @@ const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
         assessments: createCaseAssessment.map(({ tempCaseId: _t, ...a }) => a),
         deaths: createCaseDeath.map(({ tempCaseId: _t, ...d }) => d),
         disabilities: createCaseDisability.map(({ tempCaseId: _t, ...d }) => d),
-        // TODO: ตรวจ shape จริงของ ocr.ocrDocumentPayload() ให้ตรงกับ CaseDocumentDetailV2Request ก่อนใช้งานจริง
         documents: createCaseDocument.map(({ documentSubTypeId, caseDocumentDetail }) => ({
             documentSubTypeId,
             details: (caseDocumentDetail ?? []) as unknown as CaseDocumentDetailV2Request[],
@@ -235,7 +165,7 @@ const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
             ...b,
             firstName: b.firstName ?? "",
             lastName: b.lastName ?? "",
-            payables,
+            payables: payableCategoryId != null ? [{ payableCategoryId }] : [],
         })),
     };
 };
@@ -255,8 +185,6 @@ export const mapLocalCoreClaimToV2Request = (
     requestId,
     claimSourceId: local.claimSourceId,
     productTypeId: local.productTypeId,
-    // createdByUserId ของเดิม (userProfile?.userId) ไม่มี field รองรับใน V2 แล้ว — ถ้า BE ยังต้องใช้ค่านี้
-    // ต้องเช็คกับทีม BE ว่าย้ายไปอยู่ field ไหน (ตอนนี้ตัดทิ้งไปตามสเปกใหม่)
     createdByUserCode: local.createdByUserCode,
     createdByUserName: local.createdByUserName,
     claims: (local.createClaim ?? []).map(mapClaimEntryToV2),

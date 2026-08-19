@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Backdrop,
     Box,
@@ -38,6 +38,7 @@ import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDr
 import DeathClaimAmountCardPA from "./DeathClaimAmountCardPA";
 import OrganLossSelector from "../OrganLossSelector";
 import { claimPASelector, DeathExtraCoverageId, setOrganLossItems } from "../../../store/claimPASlice";
+import type { ClaimPAFormValues } from "../../../store/claimPASlice";
 import { claimStepBoxSx } from "../ClaimPH/ClaimFormSection";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
@@ -153,6 +154,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    const deathBenefits = useMemo(
+        () => (customerBenefit?.data ?? []).filter((b) => b.coverageTypeId === CoverageType.Death),
+        [customerBenefit?.data]
+    );
     const maxPrice = currentBenefit?.maxPrice;
     const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
@@ -213,6 +218,13 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         formik.resetForm();
         resetOcr();
     }, [isAddingAdditionalInsured]);
+
+    const setFieldValueRef = useRef(formik.setFieldValue);
+    setFieldValueRef.current = formik.setFieldValue;
+
+    const handleAttachedDocumentsChange = useCallback((docs: ClaimPAFormValues["ocrDocument"]) => {
+        setFieldValueRef.current("ocrDocument", docs, false);
+    }, []);
 
     return (
         <>
@@ -703,9 +715,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     {isDeath && formik.values.causeOfIncidentId && (
                         <Box ref={registerFieldRef("transferAmount")}>
                             <DeathClaimAmountCardPA
-                                benefits={(customerBenefit?.data ?? []).filter(
-                                    (b) => b.coverageTypeId === CoverageType.Death
-                                )}
+                                benefits={deathBenefits}
                                 isLoading={customerBenefitLoading}
                                 extraCoverageIds={formik.values.extraCoverageIds}
                                 formik={formik}
@@ -741,7 +751,12 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                 </Box>
             )}
             {(isDeath || isDisability) && (
-                <DocumentScanTable productId={26} documentTypeId={15} aplicationCode={insured?.policyCode} />
+                <DocumentScanTable
+                    productId={26}
+                    documentTypeId={15}
+                    aplicationCode={insured?.policyCode}
+                    onAttachedDocumentsChange={handleAttachedDocumentsChange}
+                />
             )}
 
             <ConfirmExcessLimitTransferDialog

@@ -173,9 +173,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 return;
             }
 
-            const ocrDocument = !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds);
+            const ocrDocument = isMedical
+                ? ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds)
+                : values.ocrDocument;
 
-            // ── โหมดแก้ไข: มี editingItemId และหาเจอใน claimItems ──
             const editingItem = editingItemId ? claimItems.find((c) => c.id === editingItemId) : undefined;
             const isEditing = !!editingItem;
 
@@ -292,7 +293,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     tempCaseId,
                     tempCaseDocumentId: generateTempId(),
                     documentSubTypeId: 220,
-                    caseDocumentDetail: isMedical ? (ocrDocument as any[]) ?? [] : undefined,
+                    caseDocumentDetail: (ocrDocument as any[]) ?? [],
                 },
             ];
 
@@ -310,8 +311,6 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 },
             ];
 
-            // V2 ไม่มี createCasePayable ระดับ case แล้ว — payableCategoryId ถูกย้ายไปแนบใต้
-            // beneficiary.payables แทน (ดู mapCaseEntryToV2 ใน useCreateClaimPA.ts)
             const payableCategoryId = isMedicalOnly ? 2 : isCompensate ? 3 : isDisability ? 5 : 6;
 
             const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
