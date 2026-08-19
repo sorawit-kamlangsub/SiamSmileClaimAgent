@@ -69,9 +69,11 @@ const DeathClaimAmountCardPA = ({ benefits, isLoading, extraCoverageIds, formik 
 
             const fieldName = `deathBenefitAmounts.${b.standardMedicalExpenseId}`;
             const amount = Number(amounts[b.standardMedicalExpenseId]) || 0;
-            const maxPrice = b.maxPrice ?? 0;
+            const maxPrice = b.maxPrice == null ? undefined : Number(b.maxPrice);
             const nextError =
-                amount > maxPrice
+                amount <= 0
+                    ? "กรุณากรอกจำนวนเงินมากกว่า 0 บาท"
+                    : maxPrice != null && amount > maxPrice
                     ? `จำนวนเงินต้องไม่เกินวงเงินสูงสุด ${maxPrice.toLocaleString("th-TH")} บาท`
                     : undefined;
 

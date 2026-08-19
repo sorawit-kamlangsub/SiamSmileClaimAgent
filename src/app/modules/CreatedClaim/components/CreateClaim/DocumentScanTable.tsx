@@ -225,11 +225,32 @@ type FileCountProps = {
 const FileCount = ({ docData, onFileCountChange }: FileCountProps) => {
     const dispatch = useAppDispatch();
     const { documentId } = docData;
-    const { data: documentData } = useGetDocumentById(documentId ?? "");
+    const { data: documentData, refetch } = useGetDocumentById(documentId ?? "");
 
     useEffect(() => {
         dispatch(setDocumentDetailById({ ...docData, docDetail: documentData?.data ?? {} }));
     }, [documentData]);
+
+    useEffect(() => {
+        if (!documentId) return;
+
+        const refreshDocument = () => {
+            if (document.visibilityState === "visible") {
+                void refetch();
+            }
+        };
+
+        // รองรับกรณีเปิดหน้าสแกนเอกสารแล้วกลับมาหน้านี้ โดย query key เดิมไม่เปลี่ยน
+        window.addEventListener("focus", refreshDocument);
+        window.addEventListener("pageshow", refreshDocument);
+        document.addEventListener("visibilitychange", refreshDocument);
+
+        return () => {
+            window.removeEventListener("focus", refreshDocument);
+            window.removeEventListener("pageshow", refreshDocument);
+            document.removeEventListener("visibilitychange", refreshDocument);
+        };
+    }, [documentId, refetch]);
 
     const fileCount = documentData?.data?.fileCount ?? 0;
 

@@ -1,40 +1,23 @@
 import React, { useState } from "react";
-import {
-    Avatar,
-    Box,
-    Button,
-    Card,
-    CardContent,
-    Grid,
-    IconButton,
-    LinearProgress,
-    Radio,
-    RadioGroup,
-    Typography,
-} from "@mui/material";
+import { Box, Button, Grid, LinearProgress, RadioGroup, Typography } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
 import { useNavigate } from "react-router-dom";
 import {
     BeneficiaryForm,
-    ClaimBankAccount,
-    ContactInfo,
     removeBankAccount,
     removeContact,
     resetState,
     selectBankAccount,
     selectContact,
 } from "../../../store/claimPHSlice";
-import { setBankLogo } from "../../../../../functionHelpers";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import AddBankAccountModal from "../../../components/CreateClaim/AddBankAccountModal";
 import AddContactModal from "../../../components/CreateClaim/AddContactModal";
-import CloseIcon from "@mui/icons-material/Close";
 import ConfirmTransferPHModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferPHModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import PermPhoneMsgIcon from "@mui/icons-material/PermPhoneMsg";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
 import { useCreateClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateClaimPH";
@@ -43,165 +26,8 @@ import { swalError } from "../../../../_common";
 import { useBeneficiaryPH } from "../../../hooks/CreateClaim/ClaimPH/useBeneficiaryPH";
 import BeneficiarySectionPH from "../../../components/CreateClaim/ClaimPH/BeneficiarySectionPH";
 import { CreateCoreClaimDtoResponseServiceResponse } from "../../../../../api/coreClaimApi.client";
-
-// ── BankAccountCard ───────────────────────────────────────────────────────────
-interface BankCardProps {
-    bank: ClaimBankAccount;
-    selected: boolean;
-    onSelect: () => void;
-    onDelete?: () => void;
-}
-
-export const BankAccountCard: React.FC<BankCardProps> = ({ bank, selected, onSelect, onDelete }) => {
-    const logoSrc = setBankLogo(bank.bankId);
-    return (
-        <Card
-            variant="outlined"
-            onClick={onSelect}
-            sx={{
-                mb: 1,
-                cursor: "pointer",
-                borderColor: selected ? "primary.main" : "divider",
-                borderWidth: selected ? 2 : 1,
-                transition: "border-color 0.2s",
-                p: 1,
-                ml: { sm: 2 },
-                maxWidth: { lg: 450 },
-                minHeight: 110,
-                width: "100%",
-                position: "relative",
-            }}
-        >
-            {onDelete && (
-                <IconButton
-                    size="small"
-                    onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete();
-                    }}
-                    sx={{
-                        position: "absolute",
-                        top: 4,
-                        right: 4,
-                        width: 18,
-                        height: 18,
-                        color: "text.secondary",
-                        p: 1.7,
-                    }}
-                >
-                    <CloseIcon sx={{ fontSize: 20, fontWeight: "bold" }} />
-                </IconButton>
-            )}
-            <CardContent sx={{ py: 0.5, px: 1, "&:last-child": { pb: 0.5 }, pr: { xs: 1, sm: 5 } }}>
-                <Box display="flex" alignItems="center">
-                    <Box display="flex" alignItems="center" gap={2}>
-                        <Radio
-                            size="small"
-                            checked={selected}
-                            onChange={onSelect}
-                            onClick={(e) => e.stopPropagation()}
-                        />
-                        <Avatar
-                            src={logoSrc ?? undefined}
-                            variant="circular"
-                            sx={{ width: 70, height: 70, bgcolor: logoSrc ? "transparent" : "#e3f2fd", flexShrink: 0 }}
-                        >
-                            {!logoSrc && (
-                                <Typography variant="caption" color="primary" fontWeight={700}>
-                                    {bank.bankName?.slice(0, 2)}
-                                </Typography>
-                            )}
-                        </Avatar>
-                        <Box ml={1}>
-                            <Typography variant="body2" fontWeight={700}>
-                                {bank.bankAccountRelationTypeName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {bank.bankName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {bank.bankAccountNo}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                {bank.bankAccountName}
-                            </Typography>
-                        </Box>
-                    </Box>
-                </Box>
-            </CardContent>
-        </Card>
-    );
-};
-
-// ── ContactCard ───────────────────────────────────────────────────────────────
-interface ContactCardProps {
-    contact: ContactInfo;
-    selected: boolean;
-    onSelect: () => void;
-    onDelete?: () => void;
-}
-
-export const ContactCard: React.FC<ContactCardProps> = ({ contact, selected, onSelect, onDelete }) => (
-    <Card
-        variant="outlined"
-        onClick={onSelect}
-        sx={{
-            mb: 1,
-            cursor: "pointer",
-            borderColor: selected ? "primary.main" : "divider",
-            borderWidth: selected ? 2 : 1,
-            transition: "border-color 0.2s",
-            maxWidth: { lg: 450 },
-            minHeight: 110,
-            width: "100%",
-            p: 1,
-            position: "relative",
-            ml: { sm: 2 },
-        }}
-    >
-        {onDelete && (
-            <IconButton
-                size="small"
-                onClick={(e) => {
-                    e.stopPropagation();
-                    onDelete();
-                }}
-                sx={{
-                    position: "absolute",
-                    top: 4,
-                    right: 4,
-                    width: 18,
-                    height: 18,
-                    color: "text.secondary",
-                    p: 1.7,
-                }}
-            >
-                <CloseIcon sx={{ fontSize: 20, fontWeight: "bold" }} />
-            </IconButton>
-        )}
-        <CardContent sx={{ py: 1, px: 1, "&:last-child": { pb: 0.5 }, pr: { xs: 1, sm: 5 } }}>
-            <Box display="flex" alignItems="center">
-                <Box display="flex" alignItems="center" gap={2}>
-                    <Radio size="small" checked={selected} onChange={onSelect} onClick={(e) => e.stopPropagation()} />
-                    <Avatar sx={{ width: 70, height: 70, bgcolor: "success.main", flexShrink: 0 }} variant="circular">
-                        <PermPhoneMsgIcon sx={{ width: 42, height: 42 }} />
-                    </Avatar>
-                    <Box ml={1}>
-                        <Typography variant="body2" fontWeight={700}>
-                            {contact.contactPersonTypeName}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {contact.contactPhoneNo}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary">
-                            {contact.contactName}
-                        </Typography>
-                    </Box>
-                </Box>
-            </Box>
-        </CardContent>
-    </Card>
-);
+import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
+import { ContactCard } from "../../../components/CreateClaim/ContactCard";
 
 const ClaimPHSummaryPage: React.FC = () => {
     const navigate = useNavigate();

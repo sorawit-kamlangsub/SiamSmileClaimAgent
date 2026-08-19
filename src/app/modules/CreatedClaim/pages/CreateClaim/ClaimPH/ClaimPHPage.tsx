@@ -25,7 +25,7 @@ const ClaimPHPage: React.FC = () => {
                 <Grid container spacing={2} mt={1.5}>
                     {/* ข้อมูลผู้เอาประกัน | ประวัติการเคลม */}
                     <Grid item xs={12} md={4}>
-                        <InsuredInfoCardPH data={claimInfo} onEdit={() => navigate("/monitor-claim")} />
+                        <InsuredInfoCardPH data={claimInfo} />
                     </Grid>
                     <Grid item xs={12} md={8}>
                         <ClaimHistoryCard appId={applicationId} />

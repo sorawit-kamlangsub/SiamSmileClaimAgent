@@ -3745,8 +3745,8 @@ export interface CalculateCaseExpense {
 
 export interface CaseAssessmentV2Request {
     isDocumentComplete?: boolean;
-    documentReceivedDate?: dayjs.Dayjs;
-    documentCompleteDate?: dayjs.Dayjs;
+    documentReceivedDate?: dayjs.Dayjs | undefined;
+    documentCompleteDate?: dayjs.Dayjs | undefined;
     isFraudSuspect?: boolean;
     documentReceivedByUserId?: number | undefined;
     documentReceivedByUserCode?: string | undefined;
@@ -3770,6 +3770,7 @@ export interface CaseDisabilityV2Request {
     disabilityTypeId?: number | undefined;
     disabilityLevel?: number | undefined;
     disabilityPercent?: number | undefined;
+    causeOfIncidentId?: number | undefined;
 }
 
 export interface CaseDocumentDetailV2Request {

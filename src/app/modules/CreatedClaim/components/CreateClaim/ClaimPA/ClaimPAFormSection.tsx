@@ -108,8 +108,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     } = useClaimPAForm({ onNext });
 
     const { values, setFieldValue } = formik;
+    const isDisability = values.coverageTypeId === CoverageType.Disability;
     const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
-        values.coverageTypeId
+        isDisability ? CoverageType.Disability : undefined
     );
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -127,7 +128,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
 
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
-    const isDisability = values.coverageTypeId === CoverageType.Disability;
     const isDeath = values.coverageTypeId === CoverageType.Death;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
     const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD;
@@ -154,6 +154,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    const disabilityBenefit = customerBenefit?.data?.find((item) => item.coverageTypeId === CoverageType.Disability);
     const deathBenefits = useMemo(
         () => (customerBenefit?.data ?? []).filter((b) => b.coverageTypeId === CoverageType.Death),
         [customerBenefit?.data]
@@ -190,13 +191,37 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
 
     const focusFirstError = (errs: Record<string, unknown>) => {
         const firstErrorField = FIELD_ORDER.find((name) => !!errs[name]);
-        if (firstErrorField) focusField(firstErrorField);
+        if (firstErrorField) {
+            focusField(firstErrorField);
+            return;
+        }
+
+        if (errs.deathBenefitAmounts) focusField("transferAmount");
     };
 
     const handleSubmit = async () => {
         const errs = await formik.validateForm();
         if (Object.keys(errs).length > 0) {
-            await formik.setTouched(Object.keys(errs).reduce((acc, key) => ({ ...acc, [key]: true }), {}));
+            const touched = Object.keys(errs).reduce(
+                (acc, key) => {
+                    const fieldError = errs[key as keyof typeof errs];
+
+                    if (key === "deathBenefitAmounts" && fieldError && typeof fieldError === "object") {
+                        acc[key] = Object.keys(fieldError).reduce(
+                            (nestedAcc, nestedKey) => ({ ...nestedAcc, [nestedKey]: true }),
+                            {}
+                        );
+                    } else {
+                        acc[key] = true;
+                    }
+
+                    return acc;
+                },
+                {} as Record<string, unknown>
+            ) as Parameters<typeof formik.setTouched>[0];
+
+            // validateForm() ตรวจไปแล้ว ไม่ควร validate ซ้ำจาก setTouched เพราะอาจล้าง nested error
+            await formik.setTouched(touched, false);
             focusFirstError(errs as Record<string, unknown>);
             return;
         }
@@ -226,7 +251,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         setFieldValueRef.current("ocrDocument", docs, false);
     }, []);
 
-                                console.log("🚀 ~ ClaimPAFormSection ~ insured?.customerId:", insured?.customerId)
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
@@ -644,6 +668,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
                                 onChange={(items) => dispatch(setOrganLossItems(items))}
                                 customerId={insured?.customerId}
+                                maxTransferAmount={disabilityBenefit?.maxPrice}
                             />
                         </Box>
                     )}
@@ -785,7 +810,11 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     variant="contained"
                     color="primary"
                     size="medium"
-                    disabled={formik.isSubmitting || (requiresOcrValidation && (!isOcrDocsValid || isOcrLoading))}
+                    disabled={
+                        formik.isSubmitting ||
+                        customerBenefitLoading ||
+                        (requiresOcrValidation && (!isOcrDocsValid || isOcrLoading))
+                    }
                     onClick={handleSubmit}
                 >
                     ถัดไป
