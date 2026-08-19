@@ -2,6 +2,7 @@ import { Box, TableCell, TableRow } from "@mui/material";
 import { useState } from "react";
 import { PaginationSortableDto, StandardDataTable } from "../../_common";
 import useBankStatusCheckDataTableHook from "../hooks/BankStatusCheckDataTableHook";
+import TransactionStatusDataTable from "./TransactionStatusDataTable";
 
 const renderExpandableRow = (rowData: any, _rowMeta: any) => {
     const colSpan = rowData.length + 1;
@@ -10,6 +11,7 @@ const renderExpandableRow = (rowData: any, _rowMeta: any) => {
         <TableRow sx={{ backgroundColor: "#F5F8FC" }}>
             <TableCell colSpan={colSpan}>
                 <h3>รายละเอียด</h3>
+                <TransactionStatusDataTable transactionId="1" />
             </TableCell>
         </TableRow>
     );
@@ -36,6 +38,7 @@ const BankStatusCheckDataTable = () => {
                     title=""
                     data={dataMock ?? []}
                     columns={columns}
+                    color="primary"
                     paginated={paginated}
                     setPaginated={setPaginated}
                     options={{

@@ -33,6 +33,7 @@ const ManageTransferRepayDataTable = () => {
             >
                 <StandardDataTable
                     name="payTransferHospitalClaim"
+                    color="primary"
                     title=""
                     data={dataMock ?? []}
                     columns={columns}
