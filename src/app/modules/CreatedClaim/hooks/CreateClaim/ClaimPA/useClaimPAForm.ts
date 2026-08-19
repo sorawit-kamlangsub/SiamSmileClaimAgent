@@ -28,11 +28,11 @@ import {
     LocalClaimEntry,
     setClaimForm,
     setPendingInsured,
-    setTmpCaseItem,
     setTmpClaimItem,
     setTmpCoreClaimHeader,
     updateClaimItem,
     updateTmpClaimItem,
+    updateTmpCaseItem,
 } from "../../../store/claimPASlice";
 import {
     buildUniformBenefitAmountMap,
@@ -40,7 +40,11 @@ import {
     mapBenefitToCaseItems,
     mapOrganLossToDisabilityRequests,
 } from "./useCreateClaimPA";
-import { filterSelectedDeathBenefits } from "../../../../../deathBenefitHelpers";
+import {
+    classifyDeathBenefit,
+    filterSelectedDeathBenefits,
+    getDeathMainBenefit,
+} from "../../../../../deathBenefitHelpers";
 
 interface Options {
     onNext: () => void;
@@ -142,8 +146,61 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     if (!values.hospitalId) errors.hospitalId = req;
                 }
             }
+            // ── ตรวจความคุ้มครองตามวันที่เกิดเหตุ ──
+            const hasBenefitQueryParams = Boolean(
+                values.incidentTypeId &&
+                    values.coverageTypeId &&
+                    values.incidentDate &&
+                    (isMedical ? values.medicalTypeId : isCause ? values.causeOfIncidentId : true)
+            );
+            if (hasBenefitQueryParams && !customerBenefitLoading && (customerBenefit?.data?.length ?? 0) === 0) {
+                errors.incidentDate = "ไม่มีความคุ้มครองในวันที่เกิดเหตุ";
+            }
+
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
+
+            if (isDeath) {
+                const deathBenefits = (customerBenefit?.data ?? []).filter(
+                    (benefit) => benefit.coverageTypeId === CoverageType.Death
+                );
+                const mainBenefit = getDeathMainBenefit(deathBenefits);
+                const visibleBenefits = mainBenefit
+                    ? [
+                          mainBenefit,
+                          ...deathBenefits.filter((benefit) => {
+                              const category = classifyDeathBenefit(benefit);
+                              return (
+                                  category !== undefined &&
+                                  category !== "main" &&
+                                  values.extraCoverageIds.includes(category)
+                              );
+                          }),
+                      ]
+                    : [];
+                const deathBenefitErrors: FormikErrors<ClaimPAFormValues["deathBenefitAmounts"]> = {};
+
+                visibleBenefits.forEach((benefit) => {
+                    const expenseId = benefit.standardMedicalExpenseId;
+                    if (expenseId == null) return;
+
+                    const amount = amountNumber(values.deathBenefitAmounts?.[expenseId]);
+                    const maxPrice = benefit.maxPrice == null ? undefined : Number(benefit.maxPrice);
+
+                    if (amount <= 0) {
+                        deathBenefitErrors[expenseId] = "กรุณากรอกจำนวนเงินมากกว่า 0 บาท";
+                    } else if (maxPrice != null && amount > maxPrice) {
+                        deathBenefitErrors[expenseId] = `จำนวนเงินต้องไม่เกินวงเงินสูงสุด ${maxPrice.toLocaleString(
+                            "th-TH"
+                        )} บาท`;
+                    }
+                });
+
+                if (Object.keys(deathBenefitErrors).length > 0) {
+                    errors.deathBenefitAmounts = deathBenefitErrors;
+                }
+            }
+
             return errors;
         },
 
@@ -185,13 +242,13 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             const customerName = isEditing ? editingItem!.customerName : effectiveInsured?.customerName;
             const productId = isEditing ? editingItem!.productId : effectiveInsured?.productId;
 
-            const stubClaim = !isEditing
-                ? tmpCoreClaim.createClaim?.find(
-                      (c) => c.applicationId === applicationId && c.customerId === customerId
-                  )
+            const stubTempClaimId = !isEditing ? pendingInsured?.tempClaimId : undefined;
+            const stubClaim = stubTempClaimId
+                ? tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === stubTempClaimId)
                 : undefined;
 
-            const tempClaimId = editingItem?.tempClaimId ?? stubClaim?.tempClaimId ?? generateTempId();
+            const tempClaimId =
+                editingItem?.tempClaimId ?? stubClaim?.tempClaimId ?? stubTempClaimId ?? generateTempId();
             const tempCaseId = editingItem?.tempCaseId ?? generateTempId();
 
             const claimItem: ClaimInsuredItem = {
@@ -285,7 +342,11 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 : [];
 
             const createCaseDisability: LocalCaseDisability[] = isDisability
-                ? mapOrganLossToDisabilityRequests(organLossItems).map((item) => ({ ...item, tempCaseId }))
+                ? mapOrganLossToDisabilityRequests(organLossItems).map((item) => ({
+                      ...item,
+                      tempCaseId,
+                      causeOfIncidentId: values.causeOfIncidentId,
+                  }))
                 : [];
 
             const createCaseDocument: LocalCaseDocument[] = [
@@ -377,7 +438,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 createCaseDeath,
                 createCaseDisability,
                 createCaseDocument,
-                createCaseContact: [],
+                createCaseContact: isDeath || isDisability ? undefined : [],
                 createCaseServicePerson,
                 createBeneficiary,
                 payableCategoryId,
@@ -388,7 +449,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             } else {
                 dispatch(setTmpClaimItem([claimEntry]));
             }
-            dispatch(setTmpCaseItem({ tempClaimId, cases: [caseEntry] }));
+
+            dispatch(updateTmpCaseItem({ tempClaimId, case: caseEntry }));
 
             onNext();
         },

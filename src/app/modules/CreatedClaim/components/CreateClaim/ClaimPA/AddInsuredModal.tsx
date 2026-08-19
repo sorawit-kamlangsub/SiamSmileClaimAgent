@@ -11,6 +11,8 @@ import {
     Grid,
     IconButton,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -27,6 +29,7 @@ import {
     claimPASelector,
     LocalClaimEntry,
     resetClaimForm,
+    setEditingItemId,
     setPendingInsured,
     setTmpClaimItem,
 } from "../../../store/claimPASlice";
@@ -108,6 +111,8 @@ const searchTypeData = [
 ];
 
 const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { insured } = useAppSelector(claimPASelector);
@@ -171,6 +176,10 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     const handleAddClaim = () => {
         if (!selectedInsured) return;
 
+        const tempClaimId = generateTempId();
+
+        dispatch(setEditingItemId(null));
+
         dispatch(
             setPendingInsured({
                 customerId: selectedInsured.id,
@@ -183,11 +192,12 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                 customerCode: selectedInsured.customerCode,
                 productId: selectedInsured.productId,
                 productCategoryCode: selectedInsured.productCategoryCode,
+                tempClaimId,
             } as any)
         );
 
         const stubClaim: LocalClaimEntry = {
-            tempClaimId: generateTempId(),
+            tempClaimId,
             applicationId: selectedInsured.appId,
             policyNo: undefined,
             certificateNo: undefined,
@@ -337,7 +347,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     ];
 
     return (
-        <Dialog open={open} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <Dialog open={open} fullScreen={fullScreen} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between" flexWrap="nowrap">
                     <Box display="flex" alignItems="flex-start" gap={1.5}>
@@ -478,7 +488,6 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                                     {selectedInsured.productLabel}
                                 </Typography>
                             </Grid>
-                            {/* ไม่ว่า API จริงจะส่งมากี่ field ก็ผ่าน .map() เดียวตรงนี้ */}
                             {selectedInsured.extraDetails?.map((detail, dIdx) => (
                                 <Grid item xs={6} sm={3} key={dIdx}>
                                     <Typography variant="body2" color="text.secondary" mb={0.5}>

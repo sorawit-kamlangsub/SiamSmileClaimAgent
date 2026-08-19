@@ -26,7 +26,6 @@ import SchoolInfoSection from "../../../components/CreateClaim/ClaimPA/SchoolInf
 import AddInsuredModal from "../../../components/CreateClaim/ClaimPA/AddInsuredModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
-import { BankAccountCard, ContactCard } from "../ClaimPH/ClaimPHSummaryPage";
 import { useCreateClaimPA } from "../../../hooks/CreateClaim/ClaimPA/useCreateClaimPA";
 import Swal from "sweetalert2";
 import { swalError } from "../../../../_common";
@@ -36,12 +35,16 @@ import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/Benefi
 import { CoverageType } from "../../../../../functionHelpers";
 import { CreateCoreClaimDtoResponseServiceResponse } from "../../../../../api/coreClaimApi.client";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
+import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
+import { ContactCard } from "../../../components/CreateClaim/ContactCard";
 
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { appId, refId } = useParams();
-    const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim } = useAppSelector((s) => s.claimpa);
+    const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim, editingItemId } = useAppSelector(
+        (s) => s.claimpa
+    );
     const { createClaimPA, confirmPayment, isLoading } = useCreateClaimPA();
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
@@ -76,9 +79,12 @@ const ClaimPASummaryPage: React.FC = () => {
     };
 
     const handleBack = () => {
-        const lastItem = claimItems[claimItems.length - 1];
-        if (lastItem) {
-            dispatch(setEditingItemId(lastItem.id));
+        const itemToEdit =
+            (editingItemId && claimItems.find((item) => item.id === editingItemId)) ??
+            claimItems[claimItems.length - 1];
+
+        if (itemToEdit) {
+            dispatch(setEditingItemId(itemToEdit.id));
         }
         navigate(-1);
     };

@@ -66,7 +66,7 @@ export type LocalCaseEntry = Omit<
     createCaseDeath: LocalCaseDeath[];
     createCaseDisability: LocalCaseDisability[];
     createCaseDocument: LocalCaseDocument[];
-    createCaseContact: LocalCaseContact[];
+    createCaseContact?: LocalCaseContact[];
     createCaseServicePerson: LocalCaseServicePerson[];
     createBeneficiary: LocalBeneficiary[];
 };
@@ -86,6 +86,8 @@ export interface SchoolInfo {
     teacherName: string;
     teacherPhone: string;
 }
+
+export type PendingInsured = GetCustomerDetailByIdDtoResponse & { tempClaimId?: string };
 
 export interface ClaimInsuredItem {
     id: string;
@@ -165,7 +167,7 @@ interface ClaimPAState {
     isContinuous: boolean;
     oldClaim: GetClaimHistoryDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
-    pendingInsured: GetCustomerDetailByIdDtoResponse | undefined;
+    pendingInsured: PendingInsured | undefined;
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
     claimItems: ClaimInsuredItem[]; // รายการผู้เอาประกันในตาราง
@@ -255,7 +257,7 @@ const claimPASlice = createSlice({
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
-        setPendingInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
+        setPendingInsured(state, action: PayloadAction<PendingInsured | undefined>) {
             state.pendingInsured = action.payload;
         },
         setSchool(state, action: PayloadAction<SchoolInfo | null>) {
@@ -320,12 +322,8 @@ const claimPASlice = createSlice({
             const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
             if (!claim) return;
 
-            const idx = claim.createCase?.findIndex((c) => c.tempCaseId === action.payload.case.tempCaseId);
-            if (idx === undefined || idx === -1 || !claim.createCase) {
-                claim.createCase = [...(claim.createCase ?? []), action.payload.case];
-                return;
-            }
-            claim.createCase[idx] = action.payload.case;
+            // 1 claim ต่อ 1 case
+            claim.createCase = [action.payload.case];
         },
 
         removeTmpClaim(

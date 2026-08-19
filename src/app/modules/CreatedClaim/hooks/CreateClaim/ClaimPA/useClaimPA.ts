@@ -37,7 +37,7 @@ export const useClaimPA = () => {
         if (!claimInfoQuery.data?.data) return;
 
         if (pendingInsured) {
-            dispatch(setPendingInsured(claimInfoQuery.data.data));
+            dispatch(setPendingInsured({ ...claimInfoQuery.data.data, tempClaimId: pendingInsured.tempClaimId }));
         } else {
             const schoolInfo: SchoolInfo = {
                 appId: claimInfoQuery.data.data.policyCode ?? "",

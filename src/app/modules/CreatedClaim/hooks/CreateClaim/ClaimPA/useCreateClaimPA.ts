@@ -20,6 +20,7 @@ import {
 import { BeneficiaryForm, ClaimBankAccount, ContactInfo } from "../../../store/claimPHSlice";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
+import { CoverageType } from "../../../../../functionHelpers";
 
 const generateRequestId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -159,7 +160,7 @@ const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
             documentSubTypeId,
             details: (caseDocumentDetail ?? []) as unknown as CaseDocumentDetailV2Request[],
         })),
-        contacts: createCaseContact.map(({ tempCaseId: _t, ...c }) => c),
+        ...(createCaseContact ? { contacts: createCaseContact.map(({ tempCaseId: _t, ...c }) => c) } : {}),
         servicePersons: createCaseServicePerson.map(({ tempCaseId: _t, ...s }) => s),
         beneficiaries: createBeneficiary.map(({ tempClaimId: _t1, tempCaseId: _t2, ...b }) => ({
             ...b,
@@ -210,14 +211,17 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
             ...claim,
             createCase: (claim.createCase ?? []).map((c) => ({
                 ...c,
-                createCaseContact: [
-                    {
-                        tempCaseId: c.tempCaseId,
-                        contactPersonTypeId: selectedContact?.contactPersonTypeId,
-                        contactPersonName: selectedContact?.contactName,
-                        contactPhoneNo: selectedContact?.contactPhoneNo,
-                    },
-                ],
+                createCaseContact:
+                    c.coverageTypeId === CoverageType.Death || c.coverageTypeId === CoverageType.Disability
+                        ? undefined
+                        : [
+                              {
+                                  tempCaseId: c.tempCaseId,
+                                  contactPersonTypeId: selectedContact?.contactPersonTypeId,
+                                  contactPersonName: selectedContact?.contactName,
+                                  contactPhoneNo: selectedContact?.contactPhoneNo,
+                              },
+                          ],
                 createBeneficiary:
                     beneficiaryList.length > 0
                         ? mapBeneficiariesToRequest(beneficiaryList, claim.tempClaimId, c.tempCaseId)

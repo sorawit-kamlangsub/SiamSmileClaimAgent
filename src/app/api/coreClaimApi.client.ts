@@ -3950,8 +3950,8 @@ export interface CalculateCaseExpense {
 
 export interface CaseAssessmentV2Request {
     isDocumentComplete?: boolean;
-    documentReceivedDate?: dayjs.Dayjs;
-    documentCompleteDate?: dayjs.Dayjs;
+    documentReceivedDate?: dayjs.Dayjs | undefined;
+    documentCompleteDate?: dayjs.Dayjs | undefined;
     isFraudSuspect?: boolean;
     documentReceivedByUserId?: number | undefined;
     documentReceivedByUserCode?: string | undefined;
@@ -3967,6 +3967,7 @@ export interface CaseContactV2Request {
 export interface CaseDeathV2Request {
     causeOfIncidentId?: number | undefined;
     deathDate?: dayjs.Dayjs;
+    deathTime?: TimeSpan;
 }
 
 export interface CaseDisabilityV2Request {
@@ -3974,6 +3975,7 @@ export interface CaseDisabilityV2Request {
     disabilityTypeId?: number | undefined;
     disabilityLevel?: number | undefined;
     disabilityPercent?: number | undefined;
+    causeOfIncidentId?: number | undefined;
 }
 
 export interface CaseDocumentDetailV2Request {
@@ -4036,8 +4038,11 @@ export interface CaseServicePersonV2Request {
 export interface CaseV2Request {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
+    occurrenceTime?: TimeSpan;
     admissionDate?: dayjs.Dayjs | undefined;
+    admissionTime?: TimeSpan;
     dischargeDate?: dayjs.Dayjs | undefined;
+    dischargeTime?: TimeSpan;
     caseAmount?: number;
     latestApprovedAmount?: number;
     latestNonCoveredAmount?: number;
@@ -4054,6 +4059,8 @@ export interface CaseV2Request {
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
     medicalTypeId?: number | undefined;
+    insuranceDiscountAmount?: number | undefined;
+    customerDiscountAmount?: number | undefined;
     items?: CaseItemV2Request[] | undefined;
     registrations?: CaseRegistrationV2Request[] | undefined;
     assessments?: CaseAssessmentV2Request[] | undefined;
@@ -4089,6 +4096,7 @@ export interface ClaimV2Request {
     customerName: string;
     incidentTypeId?: number | undefined;
     incidentDate?: dayjs.Dayjs;
+    incidentTime?: TimeSpan;
     accidentPlace?: string | undefined;
     accidentDescription?: string | undefined;
     cases: CaseV2Request[];
@@ -4319,7 +4327,7 @@ export interface GetCaseByClaimIdDtoResponse {
     icD10Detail?: string | undefined;
     medicalTypeCode?: string | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
-    paymentStatusId?: number;
+    paymentStatusId?: number | undefined;
     paymentStatusName?: string | undefined;
     coverageTypeId?: number | undefined;
     coverageTypeName?: string | undefined;
@@ -5299,6 +5307,20 @@ export interface StandardMedicalExpenseCategoryDtoResponseListServiceResponse {
     currentPage?: number | undefined;
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
+}
+
+export interface TimeSpan {
+    ticks?: number;
+    readonly days?: number;
+    readonly hours?: number;
+    readonly milliseconds?: number;
+    readonly minutes?: number;
+    readonly seconds?: number;
+    readonly totalDays?: number;
+    readonly totalHours?: number;
+    readonly totalMilliseconds?: number;
+    readonly totalMinutes?: number;
+    readonly totalSeconds?: number;
 }
 
 export class ApiException extends Error {
