@@ -23,7 +23,13 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { claimPASelector, resetClaimForm, setPendingInsured, setTmpClaimItem } from "../../../store/claimPASlice";
+import {
+    claimPASelector,
+    LocalClaimEntry,
+    resetClaimForm,
+    setPendingInsured,
+    setTmpClaimItem,
+} from "../../../store/claimPASlice";
 import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../../functionHelpers";
 import { FormikDropdown, FormikTextField, StandardDataTable } from "../../../../_common";
 import { useFormik } from "formik";
@@ -31,7 +37,7 @@ import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import { PaginationSortableDto } from "../../../../_common/types";
 import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../../../api/coreClaimApi";
-import { ClaimCreateRequest, GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 import { generateTempId } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 
@@ -180,7 +186,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
             } as any)
         );
 
-        const stubClaim: ClaimCreateRequest = {
+        const stubClaim: LocalClaimEntry = {
             tempClaimId: generateTempId(),
             applicationId: selectedInsured.appId,
             policyNo: undefined,

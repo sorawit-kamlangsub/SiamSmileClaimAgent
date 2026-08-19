@@ -226,6 +226,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         setFieldValueRef.current("ocrDocument", docs, false);
     }, []);
 
+                                console.log("🚀 ~ ClaimPAFormSection ~ insured?.customerId:", insured?.customerId)
     return (
         <>
             <Backdrop open={formik.isSubmitting} sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.modal + 1 }}>
