@@ -60,7 +60,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (value, tableMeta) => {
                     const item = caseData?.data?.[tableMeta.rowIndex];
-                    const statusId = item?.payableStatusId;
+                    const statusId = item?.paymentStatusId;
 
                     const statusStyleMap: Record<number, { bg: string; color: string }> = {
                         2: { bg: "#e3f2fd", color: "#1565c0" }, // Open

@@ -1,7 +1,7 @@
 import React, { useMemo } from "react";
 import { Box, Avatar, Typography, Chip, useTheme, useMediaQuery, useScrollTrigger } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import VerifiedIcon from '@mui/icons-material/Verified';
+import VerifiedIcon from "@mui/icons-material/Verified";
 import SchoolIcon from "@mui/icons-material/School";
 import { GetCustomerDetailByIdDtoResponse } from "../../../../api/coreClaimApi.client";
 
@@ -44,6 +44,10 @@ const ClaimStickyHeader: React.FC<Props> = ({ data }) => {
                 bgcolor: "#eaf2fe",
                 border: "1px solid",
                 borderColor: "primary.light",
+                boxShadow: "0 2px 8px rgba(25,118,210,0.08)",
+                display: "flex",
+                alignItems: "center",
+                gap: { xs: 1.5, sm: 2 },
                 position: "sticky",
                 top: appBarHeight,
                 transition: "top 0.2s ease",
@@ -84,7 +88,18 @@ const ClaimStickyHeader: React.FC<Props> = ({ data }) => {
                 </Typography>
 
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, flexWrap: "wrap", rowGap: 1 }}>
-                    <Chip label={`ผลิตภัณฑ์ ${data?.productTypeName ?? "-"}`} size="small" sx={chipSx} />
+                    <Chip
+                        label={
+                            <>
+                                <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                                    ผลิตภัณฑ์{" "}
+                                </Box>
+                                {data?.productTypeName ?? "-"}
+                            </>
+                        }
+                        size="small"
+                        sx={chipSx}
+                    />
                     <Chip
                         label={
                             <span>

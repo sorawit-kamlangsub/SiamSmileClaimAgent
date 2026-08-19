@@ -2,8 +2,8 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
-    CaseDocumentDetailCreateRequest,
-    CaseItemCreateRequest,
+    CaseDocumentDetailV2Request,
+    CaseItemV2Request,
     GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
@@ -112,7 +112,7 @@ export interface ClaimFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
+    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
 }
 
 export type ClaimBankAccount = GetCustomerBankAccountDtoResponse & {
@@ -135,7 +135,7 @@ interface ClaimPHState {
     isEnabled: boolean;
     organLossItems: OrganLossItem[];
     beneficiaries: BeneficiaryForm[];
-    caseItems: CaseItemCreateRequest[];
+    caseItems: CaseItemV2Request[];
     documentScanList: GetDocumentSubTypeDtoResponse[];
 }
 const defaultForm: ClaimFormValues = {
@@ -344,7 +344,7 @@ const claimPHSlice = createSlice({
             });
         },
 
-        setCaseItems(state, action: PayloadAction<CaseItemCreateRequest[]>) {
+        setCaseItems(state, action: PayloadAction<CaseItemV2Request[]>) {
             state.caseItems = action.payload;
         },
 

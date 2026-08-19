@@ -21,7 +21,7 @@ import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber, FingerKey } from "../organLoss.types";
 import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
-import { CaseItemCreateRequest } from "../../../../../api/coreClaimApi.client";
+import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 interface Options {
     onNext: () => void;
 }
@@ -165,7 +165,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             }
 
             const items = customerBenefit?.data ?? [];
-            let caseItems: CaseItemCreateRequest[] = [];
+            let caseItems: CaseItemV2Request[] = [];
 
             if (isDisability) {
                 const benefitItem = customerBenefit?.data?.[0];
@@ -187,8 +187,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                         totalAmount = amountNumber(organ.amount);
                     }
                     caseItems.push({
-                        tempCaseItemId: undefined,
-                        tempCaseId: undefined,
                         inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
                         standardMedicalExpenseId: benefitItem?.standardMedicalExpenseId ?? 0,
                         quantity: benefitItem?.maxQuantity ?? 1,
@@ -227,8 +225,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 if (matched) {
                     caseItems = [
                         {
-                            tempCaseItemId: undefined,
-                            tempCaseId: undefined,
                             inputToStandardMappingId: matched.inputToStandardMappingId ?? undefined,
                             standardMedicalExpenseId: matched.standardMedicalExpenseId ?? undefined,
                             quantity: matched.maxQuantity ?? undefined,

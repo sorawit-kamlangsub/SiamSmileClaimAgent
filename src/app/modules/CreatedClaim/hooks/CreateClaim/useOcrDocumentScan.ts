@@ -5,7 +5,7 @@ import {
     OcrDocumentScanResult,
     RequiredDocsConfig,
 } from "../../components/CreateClaim/OcrDocumentScanSection";
-import { CaseDocumentDetailCreateRequest } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentDetailV2Request } from "../../../../api/coreClaimApi.client";
 import dayjs from "dayjs";
 
 const COVERAGE_TYPE_DOCS_MAP: Record<number, RequiredDocsConfig> = {
@@ -18,8 +18,8 @@ const NO_REQUIRED_DOCS: RequiredDocsConfig = { idCard: false, receipt: false, me
 const ocrDocumentPayload = (
     ocrResult: OcrDocumentScanResult,
     documentIds: DocStorageDocumentIds
-): CaseDocumentDetailCreateRequest[] => {
-    const list: CaseDocumentDetailCreateRequest[] = [];
+): CaseDocumentDetailV2Request[] => {
+    const list: CaseDocumentDetailV2Request[] = [];
     if (ocrResult.idCard) {
         list.push({
             documentId: documentIds[OCR_DOCUMENT_TYPE_ID.idCard],
