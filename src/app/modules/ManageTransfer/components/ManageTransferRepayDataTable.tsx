@@ -2,6 +2,7 @@ import { Box, TableCell, TableRow } from "@mui/material";
 import { PaginationSortableDto, StandardDataTable } from "../../_common";
 import { useState } from "react";
 import useTransferRepayDataTableHook from "../hooks/TransferRepayDataTableHook";
+import TransactionStatusDataTable from "../../BankStatus/components/TransactionStatusDataTable";
 
 const renderExpandableRow = (rowData: any, _rowMeta: any) => {
     const colSpan = rowData.length + 1;
@@ -10,6 +11,7 @@ const renderExpandableRow = (rowData: any, _rowMeta: any) => {
         <TableRow sx={{ backgroundColor: "#F5F8FC" }}>
             <TableCell colSpan={colSpan}>
                 <h3>รายละเอียด</h3>
+                <TransactionStatusDataTable transactionId="1" />
             </TableCell>
         </TableRow>
     );
