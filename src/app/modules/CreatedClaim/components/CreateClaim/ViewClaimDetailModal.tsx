@@ -156,7 +156,7 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoad
                                                 <AccessTimeIcon sx={{ fontSize: 14, color: "#ed6c02 !important" }} />
                                             )
                                         }
-                                        label={item?.paymentStatusName}
+                                        label={item?.paymentStatusName ?? "รอพิจารณา"}
                                         sx={{
                                             bgcolor: transferred ? "#e6f4ea" : "#fdf1e6",
                                             color: transferred ? "#2e7d32" : "#ed6c02",

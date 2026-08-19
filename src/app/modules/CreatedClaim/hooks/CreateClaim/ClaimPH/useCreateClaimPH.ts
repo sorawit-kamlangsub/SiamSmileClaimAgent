@@ -41,6 +41,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                             disabilityTypeId: undefined,
                             disabilityLevel: undefined,
                             disabilityPercent: undefined,
+                            causeOfIncidentId: form.causeOfIncidentId,
                         });
                     }
                 }
@@ -50,6 +51,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     disabilityTypeId: organ.bodyPartId === 67 ? 3 : organ.bodyPartId === 68 ? 2 : undefined, // 2=ถาวร 3=ชั่วคราว
                     disabilityLevel: undefined,
                     disabilityPercent: undefined,
+                    causeOfIncidentId: form.causeOfIncidentId,
                 });
             }
         }
