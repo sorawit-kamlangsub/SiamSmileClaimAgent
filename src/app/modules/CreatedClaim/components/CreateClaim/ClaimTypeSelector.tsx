@@ -29,15 +29,7 @@ const ClaimTypeSelector: React.FC<Props> = ({ formik, options, idFieldName, name
     };
 
     return (
-        // <Box
-        //     sx={{
-        //         border: hasError ? "1px solid" : undefined,
-        //         borderColor: hasError ? "error.main" : undefined,
-        //         borderRadius: 2,
-        //         p: hasError ? 1 : 0,
-        //     }}
-        // >
-        <Box>
+        <Box data-field-name={idFieldName}>
             {isLoading ? (
                 <Grid container spacing={2}>
                     {Array.from({ length: 4 }).map((_, i) => (
@@ -55,7 +47,8 @@ const ClaimTypeSelector: React.FC<Props> = ({ formik, options, idFieldName, name
                                 <Card
                                     variant="outlined"
                                     sx={{
-                                        borderColor: isSelected ? "#02579B" : "divider",
+                                        border: hasError ? "1px solid" : undefined,
+                                        borderColor: isSelected ? "#02579B" : hasError ? "error.main" : "divider",
                                         background: isSelected
                                             ? "linear-gradient(90deg, #ffffff 0%, #f8fbff 35%, #eef7ff 100%)"
                                             : "transparent",
@@ -93,19 +86,6 @@ const ClaimTypeSelector: React.FC<Props> = ({ formik, options, idFieldName, name
             )}
             {/* Cards */}
 
-            {/* {isLoading ? (
-                <Grid container spacing={2}>
-                    {Array.from({ length: 4 }).map((_, i) => (
-                        <Grid item xs={12} sm={6} md={3} key={i}>
-                            <Skeleton variant="rounded" height={80} />
-                        </Grid>
-                    ))}
-                </Grid>
-            ) : (
-                <Grid container spacing={2}>
-                    {options.map((item) => ( ... ))}
-                </Grid>
-            )}    */}
             {hasError && (
                 <Typography color="error" variant="caption" sx={{ display: "block", mt: 0.5, ml: 1.5 }}>
                     {String(error)}

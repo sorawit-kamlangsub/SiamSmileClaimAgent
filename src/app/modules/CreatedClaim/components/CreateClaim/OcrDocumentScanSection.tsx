@@ -924,8 +924,9 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         if (!formik.values.transferAmount) {
             formik.setFieldTouched("transferAmount", true);
             formik.setFieldError("transferAmount", "กรุณากรอกข้อมูลให้ครบถ้วน");
-            swalError("ไม่สามารถอัปโหลดได้", "กรุณากรอกจำนวนเงิน");
-            focusToFirstError(formik.errors);
+            swalError("ไม่สามารถอัปโหลดได้", "กรุณากรอกจำนวนเงิน").then(() => {
+                focusToFirstError(formik.errors);
+            });
             return;
         }
 

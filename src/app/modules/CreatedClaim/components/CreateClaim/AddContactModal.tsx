@@ -19,14 +19,15 @@ import PersonIcon from "@mui/icons-material/Person";
 import PhoneIcon from "@mui/icons-material/Phone";
 import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
-import { useAppDispatch } from "../../../../../../redux";
-import { addContact } from "../../../store/claimPHSlice";
-import { FormikTextField, FormikTextMaskPhone } from "../../../../_common";
-import ContactPersonTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ContactPersonTypeDropDown";
+import { useAppDispatch } from "../../../../../redux";
+import { addContact, ContactInfo } from "../../store/claimPHSlice";
+import { FormikTextField, FormikTextMaskPhone } from "../../../_common";
+import ContactPersonTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/ContactPersonTypeDropDown";
 
 interface Props {
     open: boolean;
     onClose: () => void;
+    onAdd?: (contact: ContactInfo) => void;
 }
 
 // ─── id ของ "อื่นๆ" ตาม API ──────────────────────────────────────────────────
@@ -57,7 +58,7 @@ const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </Avatar>
 );
 
-const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
+const AddContactModal: React.FC<Props> = ({ open, onClose, onAdd }) => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -80,20 +81,22 @@ const AddContactModal: React.FC<Props> = ({ open, onClose }) => {
             return e;
         },
         onSubmit: (values, { resetForm }) => {
-            dispatch(
-                addContact({
-                    id: Date.now().toString(),
-                    // ถ้าเลือก "อื่นๆ" ใช้ข้อความที่กรอก ไม่งั้นใช้ชื่อจาก API
-                    contactPersonTypeId: values.relationship ?? 0,
-                    contactPersonTypeName:
-                        values.relationship === OTHER_CONTACT_TYPE_ID
-                            ? values.otherNote
-                            : values.relationship_selectedText,
-                    contactPhoneNo: values.phone,
-                    contactName: values.name,
-                    isDefault: false,
-                })
-            );
+            const contact: ContactInfo = {
+                id: `manual-${Date.now()}`,
+                contactPersonTypeId: values.relationship ?? 0,
+                contactPersonTypeName:
+                    values.relationship === OTHER_CONTACT_TYPE_ID ? values.otherNote : values.relationship_selectedText,
+                contactPhoneNo: values.phone,
+                contactName: values.name,
+                isDefault: false,
+            };
+
+            if (onAdd) {
+                onAdd(contact);
+            } else {
+                dispatch(addContact(contact));
+            }
+
             resetForm();
             onClose();
         },

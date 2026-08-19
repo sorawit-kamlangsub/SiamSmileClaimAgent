@@ -13,8 +13,14 @@ interface Props {
 }
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) => (
-    <Box display="flex" alignItems="center" gap={1} py={0.5}>
-        <Typography variant="body2" color="text.secondary" minWidth={180}>
+    <Box
+        display="flex"
+        flexDirection={{ xs: "column", sm: "row" }}
+        alignItems={{ xs: "flex-start", sm: "center" }}
+        gap={{ xs: 0.25, sm: 1 }}
+        py={0.5}
+    >
+        <Typography variant="body2" color="text.secondary" minWidth={{ sm: 180 }}>
             {label} :
         </Typography>
         <Typography variant="body2" fontWeight={600} color={"primary.main"}>

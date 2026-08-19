@@ -23,7 +23,7 @@ export const useMonitorToolbarForm = () => {
 
     const defaultValues: checkeligibleMonitorSearchValuesType = {
         searchTypeId: 2,
-        searchDetail: undefined,
+        searchDetail: "",
         dateHappen: undefined,
         schoolId: undefined,
         provinceId: undefined,

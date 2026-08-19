@@ -1,101 +1,102 @@
-import { useEffect, useMemo, useState } from "react";
-import { Box, Stack, Typography, TextField } from "@mui/material";
+import { useEffect, useMemo } from "react";
+import { Box, Skeleton, Stack, Typography, Paper } from "@mui/material";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import { ClaimPAFormValues } from "../../../store/claimPASlice";
-import { FormikProps } from "formik";
-
-type CoverageItem = {
-    id: string;
-    type: "main" | "extra";
-    title: string;
-    description: string;
-    maxAmount?: number;
-    helperText?: string;
-    businessId?: number; // id ทางธุรกิจของความคุ้มครองเพิ่มเติม (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
-};
+import { ClaimPAFormValues, DeathExtraCoverageId } from "../../../store/claimPASlice";
+import { FormikProps, getIn } from "formik";
+import { GetCustomerBenefitDetailHalfDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { classifyDeathBenefit, getDeathMainBenefit } from "../../../../../deathBenefitHelpers";
+import { FormikTextNumber } from "../../../../_common";
 
 type Props = {
-    causeOfIncidentName?: string;
-    mainMaxAmount: number;
-    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่ถูกเลือก (checkbox) จากฟอร์ม
+    benefits: GetCustomerBenefitDetailHalfDtoResponse[];
+    isLoading?: boolean;
+    extraCoverageIds: number[];
     formik: FormikProps<ClaimPAFormValues>;
 };
 
-const coverageItems: CoverageItem[] = [
-    {
-        id: "main",
-        type: "main",
-        title: "ความคุ้มครองหลัก",
-        description: "เสียชีวิตเนื่องจากอุบัติเหตุทั่วไป",
-        maxAmount: 100000,
-    },
-    {
-        id: "public-disaster",
-        type: "extra",
-        title: "ความคุ้มครองเพิ่มเติม",
-        description: "เสียชีวิต จากภัยสาธารณะ อีก 1 เท่าของทุนประกันภัย",
-        helperText: "กรอกเฉพาะยอดเพิ่มเติมภัยสาธารณะ",
-        businessId: 7,
-    },
-    {
-        id: "student-liability",
-        type: "extra",
-        title: "ความคุ้มครองเพิ่มเติม",
-        description: "ประกันความรับผิดชอบของสถานศึกษา (นักเรียน) เพิ่ม 1 เท่า สูงสุดไม่เกิน 10 เท่าของทุนประกัน",
-        helperText: "กรอกเฉพาะยอดเพิ่มเติมความรับผิดสถานศึกษา",
-        businessId: 8,
-    },
-];
+const EXTRA_HELPER_TEXT: Partial<Record<DeathExtraCoverageId, string>> = {
+    [DeathExtraCoverageId.PublicDisaster]: "กรอกเฉพาะยอดเพิ่มเติมภัยสาธารณะ",
+    [DeathExtraCoverageId.SchoolLiability]: "กรอกเฉพาะยอดเพิ่มเติมความรับผิดสถานศึกษา",
+};
 
-const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCoverageIds, formik }: Props) => {
-    const [amounts, setAmounts] = useState<Record<string, number>>({
-        main: 0,
-        "public-disaster": 0,
-        "student-liability": 0,
-    });
+const DeathClaimAmountCardPA = ({ benefits, isLoading, extraCoverageIds, formik }: Props) => {
+    const mainBenefit = useMemo(() => getDeathMainBenefit(benefits), [benefits]);
 
-    const items = coverageItems.map((item) =>
-        item.id === "main"
-            ? {
-                  ...item,
-                  description: `เสียชีวิตเนื่องจาก${causeOfIncidentName ?? "-"}`,
-                  maxAmount: mainMaxAmount,
-              }
-            : item
+    const extraBenefits = useMemo(
+        () =>
+            benefits.filter((b) => {
+                const category = classifyDeathBenefit(b);
+                return category !== undefined && category !== "main" && extraCoverageIds.includes(category);
+            }),
+        [benefits, extraCoverageIds]
     );
 
-    // แสดงเฉพาะ main กับ extra ที่ถูกติ๊กเลือกไว้เท่านั้น (ที่เหลือตามการ check ของ checkbox)
-    const visibleItems = items.filter(
-        (item) => item.type === "main" || extraCoverageIds.includes(item.businessId ?? -1)
+    const visibleBenefits = useMemo(
+        () => (mainBenefit ? [mainBenefit, ...extraBenefits] : []),
+        [mainBenefit, extraBenefits]
     );
 
-    const transferAmount = useMemo(() => {
-        return visibleItems.reduce((sum, item) => sum + (amounts[item.id] ?? 0), 0);
-    }, [amounts, visibleItems]);
+    const amounts = formik.values.deathBenefitAmounts ?? {};
+
+    const transferAmount = useMemo(
+        () => visibleBenefits.reduce((sum, b) => sum + (Number(amounts[b.standardMedicalExpenseId ?? -1]) || 0), 0),
+        [amounts, visibleBenefits]
+    );
+
+    const mainMaxAmount = mainBenefit?.maxPrice ?? 0;
 
     useEffect(() => {
-        formik.setFieldValue("transferAmount", transferAmount, false);
-        if (transferAmount > mainMaxAmount) {
-            formik.setFieldError(
-                "transferAmount",
-                `จำนวนเงินที่ต้องการโอนต้องไม่เกิน ${mainMaxAmount.toLocaleString("th-TH")} บาท`
-            );
-        } else {
-            formik.setFieldError("transferAmount", undefined);
+        if (formik.values.transferAmount !== transferAmount) {
+            formik.setFieldValue("transferAmount", transferAmount, false);
         }
-    }, [transferAmount, mainMaxAmount]);
 
-    const handleAmountChange = (id: string, value: string) => {
-        const numericValue = Number(value.replace(/,/g, "")) || 0;
+        const nextTransferError =
+            transferAmount > mainMaxAmount
+                ? `จำนวนเงินที่ต้องการโอนต้องไม่เกิน ${mainMaxAmount.toLocaleString("th-TH")} บาท`
+                : undefined;
 
-        setAmounts((prev) => ({
-            ...prev,
-            [id]: numericValue,
-        }));
-    };
+        if (getIn(formik.errors, "transferAmount") !== nextTransferError) {
+            formik.setFieldError("transferAmount", nextTransferError);
+        }
+    }, [transferAmount, mainMaxAmount, formik.values.transferAmount, formik.errors]);
+
+    useEffect(() => {
+        visibleBenefits.forEach((b) => {
+            if (b.standardMedicalExpenseId == null) return;
+
+            const fieldName = `deathBenefitAmounts.${b.standardMedicalExpenseId}`;
+            const amount = Number(amounts[b.standardMedicalExpenseId]) || 0;
+            const maxPrice = b.maxPrice ?? 0;
+            const nextError =
+                amount > maxPrice
+                    ? `จำนวนเงินต้องไม่เกินวงเงินสูงสุด ${maxPrice.toLocaleString("th-TH")} บาท`
+                    : undefined;
+
+            if (getIn(formik.errors, fieldName) !== nextError) {
+                formik.setFieldError(fieldName, nextError);
+            }
+        });
+    }, [amounts, visibleBenefits, formik.errors]);
+
+    if (isLoading) {
+        return (
+            <Stack spacing={2.5} mt={2} direction={{ xs: "column", md: "row" }}>
+                <Skeleton variant="rounded" width="100%" height={430} />
+                <Skeleton variant="rounded" width="100%" height={430} />
+            </Stack>
+        );
+    }
+
+    if (!mainBenefit) {
+        return (
+            <Paper variant="outlined" sx={{ p: 3, mt: 2, textAlign: "center", color: "text.secondary" }}>
+                ไม่พบข้อมูลความคุ้มครองเสียชีวิตสำหรับกรมธรรม์นี้
+            </Paper>
+        );
+    }
 
     return (
         <Stack spacing={3} mt={2}>
@@ -109,12 +110,12 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
                     gap: 2.5,
                 }}
             >
-                {visibleItems.map((item) => (
+                {visibleBenefits.map((benefit) => (
                     <TransferAmountCard
-                        key={item.id}
-                        item={item}
-                        value={amounts[item.id] ?? 0}
-                        onAmountChange={handleAmountChange}
+                        key={benefit.standardMedicalExpenseId}
+                        benefit={benefit}
+                        isMain={benefit.standardMedicalExpenseId === mainBenefit.standardMedicalExpenseId}
+                        formik={formik}
                     />
                 ))}
             </Box>
@@ -125,21 +126,23 @@ const DeathClaimAmountCardPA = ({ causeOfIncidentName, mainMaxAmount, extraCover
 };
 
 const TransferAmountCard = ({
-    item,
-    value,
-    onAmountChange,
+    benefit,
+    isMain,
+    formik,
 }: {
-    item: CoverageItem;
-    value: number;
-    onAmountChange: (id: string, value: string) => void;
+    benefit: GetCustomerBenefitDetailHalfDtoResponse;
+    isMain: boolean;
+    formik: FormikProps<ClaimPAFormValues>;
 }) => {
-    const isMain = item.type === "main";
-
     const color = isMain ? "#0076B6" : "#B85F00";
     const borderColor = isMain ? "#A7D7FF" : "#FFA726";
     const sideColor = isMain ? "#0B84C6" : "#F57C00";
     const badgeBg = isMain ? "#E5F5FF" : "#FFF4D8";
     const cardBg = isMain ? "#FBFDFF" : "#FFFDF6";
+    const title = isMain ? "ความคุ้มครองหลัก" : "ความคุ้มครองเพิ่มเติม";
+    const category = classifyDeathBenefit(benefit);
+    const helperText =
+        !isMain && category !== "main" && category !== undefined ? EXTRA_HELPER_TEXT[category] : undefined;
 
     return (
         <Box
@@ -189,7 +192,7 @@ const TransferAmountCard = ({
                                 fontSize: 15,
                             }}
                         >
-                            {item.title}
+                            {title}
                         </Typography>
 
                         <Typography
@@ -201,7 +204,7 @@ const TransferAmountCard = ({
                                 lineHeight: 1.8,
                             }}
                         >
-                            {item.description}
+                            {benefit.benefitName ?? "-"}
                         </Typography>
                     </Box>
                 </Stack>
@@ -245,24 +248,21 @@ const TransferAmountCard = ({
                                 fontSize: 16,
                             }}
                         >
-                            วงเงินสูงสุด {(item.maxAmount ?? 0).toLocaleString("th-TH")} บาท
+                            วงเงินสูงสุด {(benefit.maxPrice ?? 0).toLocaleString("th-TH")} บาท
                         </Typography>
                     </Stack>
                 </Box>
 
                 <Stack spacing={1} sx={{ mt: "auto" }}>
-                    <Typography sx={{ fontSize: 13, color: "#1F2A44" }}>จำนวนเงินที่ต้องการโอน</Typography>
+                    {/* <Typography sx={{ fontSize: 13, color: "#1F2A44" }}>จำนวนเงินที่ต้องการโอน</Typography> */}
 
-                    <TextField
-                        fullWidth
-                        name={`${item.id}Amount`}
-                        value={value || ""}
-                        onChange={(e) => onAmountChange(item.id, e.target.value)}
+                    <FormikTextNumber
+                        name={`deathBenefitAmounts.${benefit.standardMedicalExpenseId}`}
+                        label="จำนวนเงินที่ต้องการโอน"
+                        formik={formik}
+                        decimalScale={2}
+                        thousandSeparator
                         placeholder="จำนวนเงินที่ต้องการโอน"
-                        size="medium"
-                        inputProps={{
-                            inputMode: "numeric",
-                        }}
                         sx={{
                             "& .MuiOutlinedInput-root": {
                                 height: 66,
@@ -276,8 +276,8 @@ const TransferAmountCard = ({
                         }}
                     />
 
-                    {!isMain && item.helperText && (
-                        <Typography sx={{ fontSize: 11, color: "#7890B2" }}>{item.helperText}</Typography>
+                    {!isMain && helperText && (
+                        <Typography sx={{ fontSize: 11, color: "#7890B2" }}>{helperText}</Typography>
                     )}
                 </Stack>
             </Stack>
@@ -292,33 +292,73 @@ const SummaryTotalCard = ({ totalAmount }: { totalAmount: number }) => {
                 border: "1px solid #A7D7FF",
                 borderRadius: 3,
                 bgcolor: "#F8FCFF",
-                p: 2.5,
+                p: { xs: 1.75, sm: 2.5 },
+                overflow: { xs: "hidden", sm: "visible" },
             }}
         >
-            <Stack direction="row" alignItems="center" spacing={2}>
-                <Box
+            <Stack
+                direction={{ xs: "column", sm: "row" }}
+                alignItems={{ xs: "stretch", sm: "center" }}
+                spacing={{ xs: 1.5, sm: 2 }}
+            >
+                <Stack direction="row" alignItems="center" spacing={{ xs: 1.25, sm: 2 }} sx={{ flex: 1, minWidth: 0 }}>
+                    <Box
+                        sx={{
+                            width: { xs: 46, sm: 56 },
+                            height: { xs: 46, sm: 56 },
+                            flexShrink: 0,
+                            bgcolor: "#DDF2FF",
+                            borderRadius: 2,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <ReceiptLongIcon sx={{ color: "#0076B6", fontSize: { xs: 25, sm: 30 } }} />
+                    </Box>
+
+                    <Box sx={{ minWidth: 0 }}>
+                        <Typography
+                            sx={{
+                                fontWeight: 700,
+                                color: "#1F2A44",
+                                fontSize: { xs: 14, sm: 16 },
+                                lineHeight: { xs: 1.35, sm: 1.5 },
+                            }}
+                        >
+                            ยอดเงินรวมทั้งหมด
+                        </Typography>
+                        <Typography
+                            sx={{
+                                mt: 0.5,
+                                fontSize: { xs: 11, sm: 12 },
+                                lineHeight: { xs: 1.4, sm: 1.43 },
+                                color: "#7890B2",
+                                whiteSpace: { xs: "normal", sm: "normal" },
+                            }}
+                        >
+                            รวมยอดเสียชีวิตหลัก + ยอดเพิ่มเติมอัตโนมัติ
+                        </Typography>
+                    </Box>
+                </Stack>
+
+                <Typography
                     sx={{
-                        width: 56,
-                        height: 56,
-                        bgcolor: "#DDF2FF",
-                        borderRadius: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
+                        width: { xs: "100%", sm: "auto" },
+                        minWidth: { sm: 150 },
+                        pt: { xs: 1.25, sm: 0 },
+                        borderTop: { xs: "1px solid #D8ECFA", sm: "none" },
+                        fontSize: { xs: 16, sm: 18 },
+                        color: "#0076B6",
+                        fontWeight: 700,
+                        lineHeight: 1.3,
+                        textAlign: { xs: "left", sm: "right" },
+                        whiteSpace: "nowrap",
                     }}
                 >
-                    <ReceiptLongIcon sx={{ color: "#0076B6", fontSize: 30 }} />
-                </Box>
-
-                <Box sx={{ flex: 1 }}>
-                    <Typography sx={{ fontWeight: 700, color: "#1F2A44" }}>ยอดเงินรวมทั้งหมด</Typography>
-                    <Typography sx={{ mt: 0.5, fontSize: 12, color: "#7890B2" }}>
-                        รวมยอดเสียชีวิตหลัก + ยอดเพิ่มเติมอัตโนมัติ
-                    </Typography>
-                </Box>
-
-                <Typography sx={{ fontSize: 18, color: "#0076B6", fontWeight: 700, minWidth: 150, textAlign: "right" }}>
-                    THB{" "}
+                    <Box component="span" sx={{ fontSize: { xs: 12, sm: 18 }, mr: 0.5 }}>
+                        THB
+                    </Box>
                     {totalAmount.toLocaleString("th-TH", {
                         minimumFractionDigits: 2,
                         maximumFractionDigits: 2,

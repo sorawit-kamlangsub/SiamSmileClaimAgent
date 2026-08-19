@@ -2,28 +2,30 @@ import dayjs from "dayjs";
 import { useAppSelector } from "../../../../../../redux";
 import { useCreateCoreClaim } from "../../../../../api/coreClaimApi";
 import {
-    CaseDisabilityCreateRequest,
-    CreateCoreClaimDtoRequest,
+    CaseDisabilityV2Request,
     CreateCoreClaimDtoResponseServiceResponse,
+    CreateCoreClaimV2DtoRequest,
 } from "../../../../../api/coreClaimApi.client";
 import { useAuth } from "../../../../_auth";
 import { BeneficiaryForm, claimPHSelector } from "./../../../store/claimPHSlice";
-import { CoverageType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType } from "../../../../../functionHelpers";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
-import { getEncryptText, useCreateTransfer } from "../../../../../api/claimFundApi";
+import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
 export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
-    const { form, bankAccounts, contacts, insured, organLossItems } = useAppSelector(claimPHSelector);
+    const { form, bankAccounts, contacts, insured, organLossItems, caseItems, documentScanList } =
+        useAppSelector(claimPHSelector);
     const isMedicalAll =
         form.coverageTypeId === CoverageType.Medical || form.coverageTypeId === CoverageType.Compensate;
     const isMedical = form.coverageTypeId === CoverageType.Medical;
+    const isIPD = form.medicalTypeId === MedicalType.IPD || form.medicalTypeId === MedicalType.DayCaseSurgery;
     const isCompensate = form.coverageTypeId === CoverageType.Compensate;
     const isDisability = form.coverageTypeId === CoverageType.Disability;
     const isDeath = form.coverageTypeId === CoverageType.Death;
     const selectedContact = contacts.find((contact) => contact.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((account) => account.isDefault) ?? bankAccounts[0];
-    const mapOrganLossToDisabilityRequests = (organLossItems: OrganLossItem[]): CaseDisabilityCreateRequest[] => {
-        const requests: CaseDisabilityCreateRequest[] = [];
+    const mapOrganLossToDisabilityRequests = (organLossItems: OrganLossItem[]): CaseDisabilityV2Request[] => {
+        const requests: CaseDisabilityV2Request[] = [];
 
         for (const organ of organLossItems) {
             if (organ.fingers) {
@@ -59,27 +61,28 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
         (message) => onError?.(message)
     );
 
-    const { mutateAsync: createTransferAsync } = useCreateTransfer(
+    const { mutateAsync: createPaymentAsync } = useCreatePayment(
         () => {},
         (message) => onError?.(message)
     );
-    const buildPayload = (beneficiaryList: BeneficiaryForm[]): CreateCoreClaimDtoRequest => {
+    const buildPayload = (beneficiaryList: BeneficiaryForm[]): CreateCoreClaimV2DtoRequest => {
+        const payableCategoryId = isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6;
+
         return {
+            requestId: crypto.randomUUID(),
             claimSourceId: 2, // ClaimAgent
             productTypeId: 6,
-            createdByUserId: userProfile?.userId,
             createdByUserCode: userProfile?.employeeCode,
             createdByUserName: userProfile?.fullName,
 
-            createClaim: [
+            claims: [
                 {
-                    tempClaimId: undefined, // gen guid ถ้า backend ต้องการ map กับ case
-                    applicationId: insured?.policyCode,
+                    applicationId: insured?.policyCode ?? "-",
                     policyNo: insured?.policyNo ?? undefined,
                     certificateNo: insured?.certificateNo ?? undefined,
 
-                    customerId: insured?.customerId,
-                    customerName: insured?.customerName,
+                    customerId: insured?.customerId ?? 0,
+                    customerName: insured?.customerName ?? "-",
 
                     incidentTypeId: form.incidentTypeId,
                     incidentDate: form.incidentDate,
@@ -87,12 +90,12 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     accidentPlace: form.accidentPlace,
                     accidentDescription: undefined,
 
-                    createCase: [
+                    cases: [
                         {
                             coverageTypeId: form.coverageTypeId,
                             occurrenceDate: form.incidentDate,
-                            admissionDate: form.admissionDate,
-                            dischargeDate: form.dischargeDate,
+                            admissionDate: isMedicalAll ? form.admissionDate : undefined,
+                            dischargeDate: isIPD ? form.dischargeDate : undefined,
 
                             caseAmount: form.transferAmount,
                             latestApprovedAmount: 0,
@@ -116,25 +119,26 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                             medicalTypeId: form.medicalTypeId,
 
-                            createCaseItem: [],
+                            items: caseItems,
 
-                            createCaseRegistration: [
+                            registrations: [
                                 {
-                                    notificationDate: form.notificationDate,
+                                    notificationDate: isDeath || isDisability ? form.notificationDate : dayjs(),
                                     notifyBy: userProfile?.fullName,
                                     initialCoverageTypeId: form.coverageTypeId,
                                     initialCaseAmount: form.transferAmount,
-                                    initialCaseSourceId: 2, // Reimbursement
+                                    initialCaseSourceId: 2,
                                     preAuthId: undefined,
                                     initialMedicalTypeId: form.medicalTypeId,
                                 },
                             ],
 
-                            createCaseAssessment: [
+                            assessments: [
                                 {
                                     isDocumentComplete: isDeath || isDisability ? true : false,
                                     documentReceivedDate: dayjs(),
-                                    documentCompleteDate: form.documentCompleteDate,
+                                    documentCompleteDate:
+                                        isDeath || isDisability ? form.documentCompleteDate : undefined,
                                     isFraudSuspect: false,
                                     documentReceivedByUserId: form.documentRecipientTypeId,
                                     documentReceivedByUserCode: undefined,
@@ -142,7 +146,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                                 },
                             ],
 
-                            createCaseDeath: isDeath
+                            deaths: isDeath
                                 ? [
                                       {
                                           causeOfIncidentId: form.causeOfIncidentId,
@@ -151,28 +155,37 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                                   ]
                                 : [],
 
-                            createCaseDisability: isDisability ? mapOrganLossToDisabilityRequests(organLossItems) : [],
-                            createCaseDocument: [
+                            disabilities: isDisability ? mapOrganLossToDisabilityRequests(organLossItems) : [],
+
+                            documents: [
                                 {
                                     documentSubTypeId: 220,
-                                    caseDocumentDetail: isMedicalAll ? form.ocrDocument : undefined,
+                                    details: isMedicalAll
+                                        ? form.ocrDocument
+                                        : documentScanList.map((d) => ({
+                                              documentId: d.documentId,
+                                              documentNo: d.documentCode,
+                                          })),
                                 },
                             ],
 
-                            createCaseContact: [
-                                {
-                                    contactPersonTypeId: selectedContact?.contactPersonTypeId,
-                                    contactPersonName: selectedContact?.contactName,
-                                    contactPhoneNo: selectedContact?.contactPhoneNo,
-                                },
-                            ],
+                            contacts:
+                                isDeath || isDisability
+                                    ? []
+                                    : [
+                                          {
+                                              contactPersonTypeId: selectedContact?.contactPersonTypeId,
+                                              contactPersonName: selectedContact?.contactName,
+                                              contactPhoneNo: selectedContact?.contactPhoneNo,
+                                          },
+                                      ],
 
-                            createCaseServicePerson: [
+                            servicePersons: [
                                 {
-                                    servicePersonByUserId: form.serviceProviderId,
+                                    servicePersonByUserId: form.serviceProviderId ?? 0,
                                     servicePersonByUserCode: form.serviceProviderCode,
                                     servicePersonByUserName: form.serviceProviderName,
-                                    zebraId: form.zebraId,
+                                    zebraId: form.zebraId ?? 0,
                                     zebraCode: form.zebraCode ?? undefined,
                                     zebraNo: form.zebraNo ?? undefined,
                                     employeeCode: form.employeeCode ?? undefined,
@@ -180,21 +193,22 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                                 },
                             ],
 
-                            createBeneficiary:
+                            beneficiaries:
                                 beneficiaryList.length > 0
                                     ? beneficiaryList.map((beneficiary) => ({
                                           policyBeneficiaryId: undefined,
                                           titleId: beneficiary.titleId?.toString(),
-                                          firstName: beneficiary.firstName,
-                                          lastName: beneficiary.lastName,
+                                          firstName: beneficiary.firstName ?? "-",
+                                          lastName: beneficiary.lastName ?? "-",
                                           idCard: beneficiary.citizenId,
                                           phoneNo: beneficiary.phoneNumber,
                                           relationId: beneficiary.relationTypeId,
                                           bankAccountRelationTypeId: undefined,
-                                          bankId: beneficiary.bankId,
+                                          bankId: beneficiary.bankId ?? 0,
                                           bankAccountNo: beneficiary.bankAccountNo,
                                           bankAccountName: beneficiary.bankAccountName,
                                           payoutAmount: beneficiary.amount,
+                                          payables: [{ payableCategoryId }],
                                       }))
                                     : selectedAccount
                                     ? [
@@ -207,35 +221,29 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                                               phoneNo: selectedContact?.contactPhoneNo,
                                               relationId: undefined,
                                               bankAccountRelationTypeId: selectedAccount.bankAccountRelationTypeId,
-                                              bankId: selectedAccount.bankId,
+                                              bankId: selectedAccount.bankId ?? 0,
                                               bankAccountNo: selectedAccount.bankAccountNo,
                                               bankAccountName: selectedAccount.bankAccountName,
                                               payoutAmount: form.transferAmount,
+                                              payables: [{ payableCategoryId }],
                                           },
                                       ]
                                     : [],
-
-                            createCasePayable: [
-                                {
-                                    payableCategoryId: isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6,
-                                },
-                            ],
                         },
                     ],
                 },
             ],
         };
     };
-    const buildTransferPayload = async (
+    const buildPaymentPayload = async (
         claimResponse: CreateCoreClaimDtoResponseServiceResponse,
         beneficiaryList: BeneficiaryForm[]
     ): Promise<any[]> => {
         const responseList = claimResponse?.data?.responseList ?? [];
-
+        const item = responseList[0];
         if (beneficiaryList.length > 0) {
             const payloads = await Promise.all(
                 beneficiaryList.map(async (beneficiary, index) => {
-                    const item = responseList[index];
                     const encryptResult = await getEncryptText(
                         beneficiary.bankAccountNo ?? "",
                         beneficiary.phoneNumber?.replace(/-/g, "").trim() ?? "",
@@ -243,28 +251,23 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     );
 
                     return {
-                        totalNetPaidAmount: beneficiary.amount,
+                        casePayableId: item?.casePayableId?.[index],
+                        grossPaidAmount: 0,
+                        withHoldingTaxAmount: 0,
+                        netPaidAmount: beneficiary.amount ?? 0,
                         receivingBankId: beneficiary.bankId,
                         receivingBankAccountNo: encryptResult.accountNoResult,
-                        receivingBankName: beneficiary.bankName,
+                        receivingBankName: beneficiary.bankId_selectedText,
                         receivingAccountName: encryptResult.bankAccountNameResult,
-                        receivingPhoneNumber: encryptResult.phoneNumberResult,
-                        referentTransactionId: item?.casePayableId,
-                        claimPayListHeaderCreateDetailDTO: [
-                            {
-                                payListDetailCode: item?.claimNo,
-                                amount: beneficiary.amount,
-                                refDetail01: item?.caseId,
-                                refDetail02: item?.caseNo,
-                            },
-                        ],
+                        phoneNumber: encryptResult.phoneNumberResult,
+                        claimCase: item?.caseNo,
+                        claimNo: item?.claimNo,
+                        payeeTypeId: 4, //beneficiary
                     };
                 })
             );
             return payloads;
         }
-
-        const firstItem = responseList[0];
 
         if (selectedAccount) {
             const encryptResult = await getEncryptText(
@@ -275,21 +278,18 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
             return [
                 {
-                    totalNetPaidAmount: form.transferAmount ?? 0,
+                    casePayableId: item?.casePayableId?.[0],
+                    grossPaidAmount: 0,
+                    withHoldingTaxAmount: 0,
+                    netPaidAmount: form.transferAmount ?? 0,
                     receivingBankId: selectedAccount.bankId,
                     receivingBankAccountNo: encryptResult.accountNoResult,
                     receivingBankName: selectedAccount.bankName,
                     receivingAccountName: encryptResult.bankAccountNameResult,
-                    receivingPhoneNumber: encryptResult.phoneNumberResult,
-                    referentTransactionId: firstItem?.casePayableId,
-                    claimPayListHeaderCreateDetailDTO: [
-                        {
-                            payListDetailCode: firstItem?.claimNo,
-                            amount: form.transferAmount,
-                            refDetail01: firstItem?.caseId,
-                            refDetail02: firstItem?.caseNo,
-                        },
-                    ],
+                    phoneNumber: encryptResult.phoneNumberResult,
+                    claimCase: item?.caseNo,
+                    claimNo: item?.claimNo,
+                    payeeTypeId: 2, //Customer
                 },
             ];
         }
@@ -302,26 +302,28 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
         const claimResponse = await mutation.mutateAsync(payload);
         if (!claimResponse?.data?.isResult) {
             onError?.(claimResponse?.data?.msg || "สร้างเคลมไม่สำเร็จ");
-            return claimResponse;
         }
+        return { claimResponse, beneficiaryList: list };
+    };
+
+    const confirmPayment = async (
+        claimResponse: CreateCoreClaimDtoResponseServiceResponse,
+        beneficiaryList: BeneficiaryForm[]
+    ) => {
         try {
-            const transferPayloadList = await buildTransferPayload(claimResponse, list);
-            const transferResponses = [];
-
-            for (const transferPayload of transferPayloadList) {
-                const res = await createTransferAsync(transferPayload);
-                transferResponses.push(res);
-            }
-
+            const paymentPayloadList = await buildPaymentPayload(claimResponse, beneficiaryList);
+            const paymentResponses = paymentPayloadList.length > 0 ? await createPaymentAsync(paymentPayloadList) : [];
             onSuccess?.();
-            return { ...claimResponse, transferResponses };
+            return { ...claimResponse, paymentResponses };
         } catch (err: any) {
             onError?.(err?.message || "สร้างเคลมสำเร็จ แต่โอนเงินไม่สำเร็จ");
             return claimResponse;
         }
     };
+
     return {
         createClaimPH,
+        confirmPayment,
         isLoading: mutation.isLoading,
     };
 };

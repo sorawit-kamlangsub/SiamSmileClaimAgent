@@ -17,7 +17,7 @@ const LayoutContentContainer = styled("div")(({ theme }) => ({
     flexGrow: 1,
     padding: theme.spacing(3),
     paddingTop: `calc(${theme.spacing(3)} + 96px)`,
-    overflowX: "hidden",
+    minWidth: 0, // กัน flex item ดันความกว้างเกิน แทน overflowX: hidden
 }));
 
 const ScrollTopDiv = styled("div")(({ theme }) => ({

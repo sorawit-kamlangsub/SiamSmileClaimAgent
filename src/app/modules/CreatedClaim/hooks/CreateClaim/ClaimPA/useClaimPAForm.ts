@@ -9,7 +9,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { claimPHSelector, DeathPlaceType, setEnabled, SymptomType } from "../../../store/claimPHSlice";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import dayjs from "dayjs";
-import { useGetCustomerBenefitDetailSearch } from "../../../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
 import { CoverageType, MedicalType } from "../../../../../functionHelpers";
@@ -18,30 +18,35 @@ import {
     ClaimInsuredItem,
     ClaimPAFormValues,
     claimPASelector,
+    LocalCaseAssessment,
+    LocalCaseDeath,
+    LocalCaseDisability,
+    LocalCaseDocument,
+    LocalCaseEntry,
+    LocalCaseRegistration,
+    LocalCaseServicePerson,
+    LocalClaimEntry,
     setClaimForm,
     setPendingInsured,
     setTmpCaseItem,
     setTmpClaimItem,
     setTmpCoreClaimHeader,
     updateClaimItem,
+    updateTmpClaimItem,
 } from "../../../store/claimPASlice";
 import {
-    ClaimCreateRequest,
-    CaseCreateRequest,
-    CaseRegistrationCreateRequest,
-    CaseAssessmentCreateRequest,
-    CaseDeathCreateRequest,
-    CaseDisabilityCreateRequest,
-    CaseDocumentCreateRequest,
-    CaseServicePersonCreateRequest,
-    CasePayableCreateRequest,
-} from "../../../../../api/coreClaimApi.client";
+    buildUniformBenefitAmountMap,
+    mapBankAccountToBeneficiary,
+    mapBenefitToCaseItems,
+    mapOrganLossToDisabilityRequests,
+} from "./useCreateClaimPA";
+import { filterSelectedDeathBenefits } from "../../../../../deathBenefitHelpers";
 
 interface Options {
     onNext: () => void;
 }
 
-const generateTempId = () =>
+export const generateTempId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
         ? crypto.randomUUID()
         : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
@@ -59,6 +64,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         claimItems,
         editingItemId,
         tmpCoreClaim,
+        bankAccounts,
+        contacts,
     } = useAppSelector(claimPASelector);
 
     const effectiveInsured = pendingInsured ?? insured;
@@ -141,12 +148,14 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         },
 
         onSubmit: (values, { setSubmitting }) => {
-            const isDisability = values.coverageTypeId === CoverageType.Disability;
-            const isDeath = values.coverageTypeId === CoverageType.Death;
             const isMedical =
                 values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
             const isMedicalOnly = values.coverageTypeId === CoverageType.Medical;
             const isCompensate = values.coverageTypeId === CoverageType.Compensate;
+            const isDisability = values.coverageTypeId === CoverageType.Disability;
+            const isDeath = values.coverageTypeId === CoverageType.Death;
+            const isIPD =
+                values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
 
             const hasError = docData.some((docById) => {
                 if (docById.documentId && documentDetailById[docById.documentId] && (isDeath || isDisability)) {
@@ -164,19 +173,26 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 return;
             }
 
-            const ocrDocument = !isMedical ? undefined : ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds);
+            const ocrDocument = isMedical
+                ? ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds)
+                : values.ocrDocument;
 
-            // ── โหมดแก้ไข: มี editingItemId และหาเจอใน claimItems ──
             const editingItem = editingItemId ? claimItems.find((c) => c.id === editingItemId) : undefined;
             const isEditing = !!editingItem;
-
-            const tempClaimId = editingItem?.tempClaimId ?? generateTempId();
-            const tempCaseId = editingItem?.tempCaseId ?? generateTempId();
 
             const applicationId = isEditing ? editingItem!.applicationId : effectiveInsured?.policyCode;
             const customerId = isEditing ? editingItem!.customerId : effectiveInsured?.customerId;
             const customerName = isEditing ? editingItem!.customerName : effectiveInsured?.customerName;
             const productId = isEditing ? editingItem!.productId : effectiveInsured?.productId;
+
+            const stubClaim = !isEditing
+                ? tmpCoreClaim.createClaim?.find(
+                      (c) => c.applicationId === applicationId && c.customerId === customerId
+                  )
+                : undefined;
+
+            const tempClaimId = editingItem?.tempClaimId ?? stubClaim?.tempClaimId ?? generateTempId();
+            const tempCaseId = editingItem?.tempCaseId ?? generateTempId();
 
             const claimItem: ClaimInsuredItem = {
                 id: editingItem?.id ?? `${Date.now()}`,
@@ -217,7 +233,6 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     setTmpCoreClaimHeader({
                         claimSourceId: 2,
                         productTypeId: 26,
-                        createdByUserId: userProfile?.userId,
                         createdByUserCode: userProfile?.employeeCode,
                         createdByUserName: userProfile?.fullName,
                         createClaim: tmpCoreClaim.createClaim ?? [],
@@ -225,40 +240,39 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 );
             }
 
-            // ── claim entry ──
-            const claimEntry: ClaimCreateRequest = {
+            const claimEntry: LocalClaimEntry = {
                 tempClaimId,
-                applicationId: effectiveInsured?.policyCode,
+                applicationId: applicationId ?? "",
                 policyNo: undefined,
                 certificateNo: undefined,
-                customerId: effectiveInsured?.customerId,
-                customerName: effectiveInsured?.customerName,
+                customerId,
+                customerName: customerName ?? "",
                 incidentTypeId: values.incidentTypeId,
                 incidentDate: values.incidentDate,
-                accidentPlace: values.accidentPlace,
+                accidentPlace:
+                    isDeath && values.deathPlaceType === DeathPlaceType.Other ? values.accidentPlace : undefined,
                 accidentDescription: undefined,
             };
 
-            // ── case entry ──
-            const createCaseRegistration: CaseRegistrationCreateRequest[] = [
+            const createCaseRegistration: LocalCaseRegistration[] = [
                 {
                     tempCaseId,
-                    notificationDate: values.notificationDate,
+                    notificationDate: isDeath || isDisability ? values.notificationDate : undefined,
                     notifyBy: userProfile?.fullName,
                     initialCoverageTypeId: values.coverageTypeId,
                     initialCaseAmount: values.transferAmount ?? 0,
                     initialCaseSourceId: 2,
                     preAuthId: undefined,
-                    initialMedicalTypeId: values.medicalTypeId,
+                    initialMedicalTypeId: isMedical ? values.medicalTypeId : undefined,
                 },
             ];
 
-            const createCaseAssessment: CaseAssessmentCreateRequest[] = [
+            const createCaseAssessment: LocalCaseAssessment[] = [
                 {
                     tempCaseId,
-                    isDocumentComplete: false,
+                    isDocumentComplete: isDeath || isDisability, // เหมือน PH: true เฉพาะ Death/Disability
                     documentReceivedDate: dayjs(),
-                    documentCompleteDate: values.documentCompleteDate,
+                    documentCompleteDate: isDeath || isDisability ? values.documentCompleteDate : undefined,
                     isFraudSuspect: false,
                     documentReceivedByUserId: values.documentRecipientTypeId,
                     documentReceivedByUserCode: undefined,
@@ -266,61 +280,24 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 },
             ];
 
-            const createCaseDeath: CaseDeathCreateRequest[] = [
-                {
-                    tempCaseId,
-                    causeOfIncidentId: values.causeOfIncidentId,
-                    deathDate: isDeath ? values.deathDate : undefined,
-                },
-            ];
+            const createCaseDeath: LocalCaseDeath[] = isDeath
+                ? [{ tempCaseId, causeOfIncidentId: values.causeOfIncidentId, deathDate: values.deathDate }]
+                : [];
 
-            const createCaseDisability: CaseDisabilityCreateRequest[] = [
-                {
-                    tempCaseId,
-                    bodyPartId: undefined,
-                    disabilityTypeId: undefined,
-                    disabilityLevel: undefined,
-                    disabilityPercent: undefined,
-                },
-            ];
+            const createCaseDisability: LocalCaseDisability[] = isDisability
+                ? mapOrganLossToDisabilityRequests(organLossItems).map((item) => ({ ...item, tempCaseId }))
+                : [];
 
-            // TODO: caseDocumentDetail ยังต้อง map field ให้ตรงกับ type จริงของ createCaseDocument
-            const createCaseDocument: CaseDocumentCreateRequest[] = [
+            const createCaseDocument: LocalCaseDocument[] = [
                 {
                     tempCaseId,
                     tempCaseDocumentId: generateTempId(),
                     documentSubTypeId: 220,
-                    caseDocumentDetail: isMedical ? (ocrDocument as any[]) ?? [] : [],
+                    caseDocumentDetail: (ocrDocument as any[]) ?? [],
                 },
             ];
 
-            // const createCaseAdjudication: CaseAdjudicationCreateRequest[] = [
-            //     {
-            //         tempCaseId,
-            //         decisionId: 3,
-            //         decisionDate: dayjs(),
-            //         approvedAdmissionDate: dayjs(),
-            //         approvedDischargeDate: dayjs(),
-            //         coveredAmount: 0,
-            //         nonCoveredAmount: 0,
-            //         compensateAmount: 0,
-            //         approvedMedicalAmount: 0,
-            //         approvedCompensateAmount: 0,
-            //         patientPayAmount: 0,
-            //         isExgratia: false,
-            //         exgratiaAmount: 0,
-            //         deductibleAmount: 0,
-            //         coPayAmount: 0,
-            //         coInsuranceAmount: 0,
-            //         rejectReasonId: undefined,
-            //         rejectDate: dayjs(),
-            //         isLatest: true,
-            //         approvedIPDDayCount: 0,
-            //         approvedICUDayCount: 0,
-            //     },
-            // ];
-
-            const createCaseServicePerson: CaseServicePersonCreateRequest[] = [
+            const createCaseServicePerson: LocalCaseServicePerson[] = [
                 {
                     tempCaseId,
                     servicePersonByUserId: values.serviceProviderId,
@@ -334,53 +311,84 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 },
             ];
 
-            const createCasePayable: CasePayableCreateRequest[] = [
-                {
-                    tempCaseId,
-                    payableCategoryId: isMedicalOnly ? 2 : isCompensate ? 3 : isDisability ? 5 : 6,
-                },
-            ];
+            const payableCategoryId = isMedicalOnly ? 2 : isCompensate ? 3 : isDisability ? 5 : 6;
 
-            const caseEntry: CaseCreateRequest = {
+            const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
+            const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
+            const createBeneficiary =
+                !isDeath && !isDisability
+                    ? mapBankAccountToBeneficiary(
+                          selectedAccount,
+                          selectedContact,
+                          values.transferAmount ?? 0,
+                          tempClaimId,
+                          tempCaseId
+                      )
+                    : [];
+
+            const filteredBenefits = isDeath
+                ? filterSelectedDeathBenefits(customerBenefit?.data, values.extraCoverageIds)
+                : customerBenefit?.data ?? [];
+
+            const amountByStandardMedicalExpenseId = isDeath
+                ? Object.fromEntries(
+                      Object.entries(values.deathBenefitAmounts ?? {}).map(([standardMedicalExpenseId, amount]) => [
+                          Number(standardMedicalExpenseId),
+                          Number(amount) || 0,
+                      ])
+                  )
+                : buildUniformBenefitAmountMap(filteredBenefits, values.transferAmount ?? 0);
+
+            const createCaseItem = mapBenefitToCaseItems(filteredBenefits, amountByStandardMedicalExpenseId);
+
+            const caseEntry: LocalCaseEntry = {
                 tempCaseId,
                 tempClaimId,
                 coverageTypeId: values.coverageTypeId,
                 occurrenceDate: values.incidentDate,
-                admissionDate: values.admissionDate,
-                dischargeDate: values.dischargeDate,
+                admissionDate: isMedical ? values.admissionDate : undefined,
+                dischargeDate: isIPD ? values.dischargeDate : undefined,
                 caseAmount: values.transferAmount ?? 0,
                 latestApprovedAmount: 0,
                 latestNonCoveredAmount: 0,
                 latestPatientPayAmount: 0,
                 isCaseDisability: isDisability,
-                hospitalId: values.hospitalId,
+                hospitalId:
+                    (isDeath && values.deathPlaceType === DeathPlaceType.Hospital) || isDisability
+                        ? values.hospitalId
+                        : undefined,
                 hn: undefined,
                 an: undefined,
                 vn: undefined,
-                chiefComplaintId: values.chiefComplaintId,
-                chiefComplaintCustom: values.remark,
-                productId: effectiveInsured?.productId,
-                icD10_1stId: values.diagnoses[0]?.icd10Id,
-                icD10_2ndId: values.diagnoses[1]?.icd10Id,
-                icD10_3rdId: values.diagnoses[2]?.icd10Id,
-                medicalTypeId: values.medicalTypeId,
-                createCaseItem: [],
+                chiefComplaintId:
+                    values.symptomType === SymptomType.ChiefComplaint || isDeath || isDisability
+                        ? values.chiefComplaintId
+                        : undefined,
+                chiefComplaintCustom:
+                    values.symptomType === SymptomType.Other || isDeath || isDisability ? values.remark : undefined,
+                productId,
+                icD10_1stId: isDeath || isDisability ? values.diagnoses[0]?.icd10Id : undefined,
+                icD10_2ndId: isDeath || isDisability ? values.diagnoses[1]?.icd10Id : undefined,
+                icD10_3rdId: isDeath || isDisability ? values.diagnoses[2]?.icd10Id : undefined,
+                medicalTypeId: isMedical ? values.medicalTypeId : undefined,
+                createCaseItem,
                 createCaseRegistration,
                 createCaseAssessment,
                 createCaseDeath,
                 createCaseDisability,
                 createCaseDocument,
-                // createCaseAdjudication,
-                createCaseContact: [], // เติมตอน submit จริงใน useCreateClaimPA (ต้องรอ selectedContact)
+                createCaseContact: [],
                 createCaseServicePerson,
-                createBeneficiary: [], // ยังไม่มีตอนนี้ รอ step beneficiary แล้วค่อย merge ตอนยิง API จริง
-                createCasePayable,
+                createBeneficiary,
+                payableCategoryId,
             };
 
-            dispatch(setTmpClaimItem([claimEntry]));
-            console.log("🚀 ~ useClaimPAForm ~ claimEntry:", claimEntry);
+            if (isEditing || stubClaim) {
+                dispatch(updateTmpClaimItem(claimEntry));
+            } else {
+                dispatch(setTmpClaimItem([claimEntry]));
+            }
             dispatch(setTmpCaseItem({ tempClaimId, cases: [caseEntry] }));
-            console.log("🚀 ~ useClaimPAForm ~ caseEntry:", caseEntry);
 
             onNext();
         },
@@ -443,16 +451,25 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 ])
         ).values(),
     ];
-    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailSearch(
+
+    const isDisability = formik.values.coverageTypeId === CoverageType.Disability;
+    const isDeath = formik.values.coverageTypeId === CoverageType.Death;
+    const formattype = isDisability ? 3 : isDeath ? 4 : 7;
+
+    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         effectiveInsured?.policyCode,
-        0,
+        undefined,
         formik.values.incidentDate,
         false,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
-        formik.values.medicalTypeId,
-        formik.values.causeOfIncidentId
+        formik.values.medicalTypeId ?? 0,
+        formik.values.causeOfIncidentId,
+        formattype,
+        "8901",
+        effectiveInsured?.customerCode
     );
+
     const isFirstRenderIncident = useRef(true);
     const isFirstRenderCoverage = useRef(true);
 
@@ -485,6 +502,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                deathBenefitAmounts: {},
                 symptomType: 1,
                 deathPlaceType: 1,
                 hospitalId: undefined,
@@ -524,6 +542,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                deathBenefitAmounts: {},
                 symptomType: 1,
                 deathPlaceType: 1,
                 hospitalId: undefined,
@@ -542,7 +561,6 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             false
         );
 
-        // ถ้า coverageType นี้ไม่ต้องบังคับเอกสารเลย ให้ valid ทันที
         if (!ocr.shouldShowOcrDocumentScan(formik.values.coverageTypeId)) {
             ocr.setIsOcrDocsValid(true);
         }

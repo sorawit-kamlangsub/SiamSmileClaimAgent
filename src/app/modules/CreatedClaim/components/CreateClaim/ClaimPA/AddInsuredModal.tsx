@@ -23,7 +23,13 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { claimPASelector, resetClaimForm, setPendingInsured } from "../../../store/claimPASlice";
+import {
+    claimPASelector,
+    LocalClaimEntry,
+    resetClaimForm,
+    setPendingInsured,
+    setTmpClaimItem,
+} from "../../../store/claimPASlice";
 import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../../functionHelpers";
 import { FormikDropdown, FormikTextField, StandardDataTable } from "../../../../_common";
 import { useFormik } from "formik";
@@ -33,6 +39,7 @@ import { PaginationSortableDto } from "../../../../_common/types";
 import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../../../api/coreClaimApi";
 import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import { generateTempId } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 
 interface InsuredDetailItem {
     label: string;
@@ -40,19 +47,20 @@ interface InsuredDetailItem {
 }
 
 interface SearchResult {
-    id: number; // ใช้เป็น customerId ตอนสร้างเคลม
-    appId: string; // = policyCode ของผู้เอาประกันรายนี้ (ใช้เป็น applicationId ตอนสร้างเคลมด้วย)
+    id: number;
+    appId: string;
     customerName: string;
     idCardNo: string;
-    insuredType: string; // productCategoryName
-    plan: string; // productName
+    insuredType: string;
+    plan: string;
     startCoverDate?: dayjs.Dayjs;
     endCoverDate?: dayjs.Dayjs;
-    // ── ข้อมูลหลัก (แสดงตลอดหลังเลือกแล้ว) ──
     coverageStatus: string;
     productLabel: string;
-    // ── ข้อมูลเพิ่มเติม (ไม่จำกัดจำนวน ไม่ผูกกับ field ตายตัว) ──
     extraDetails?: InsuredDetailItem[];
+    customerCode?: string; // เพิ่ม
+    productId?: number; // เพิ่ม
+    productCategoryCode?: string; // เพิ่ม
 }
 
 interface Props {
@@ -81,6 +89,9 @@ const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): Searc
         coverageStatus: mapCoverageStatus(dto.appStatusId),
         productLabel: [dto.productTypeName, dto.productCategoryName].filter(Boolean).join(" ") || "-",
         extraDetails,
+        customerCode: dto.customerCode,
+        productId: dto.productId,
+        productCategoryCode: dto.productCategoryCode,
     };
 };
 
@@ -169,8 +180,26 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                 cardDetail: selectedInsured.idCardNo,
                 productName: selectedInsured.plan,
                 productCategoryName: selectedInsured.insuredType,
+                customerCode: selectedInsured.customerCode,
+                productId: selectedInsured.productId,
+                productCategoryCode: selectedInsured.productCategoryCode,
             } as any)
         );
+
+        const stubClaim: LocalClaimEntry = {
+            tempClaimId: generateTempId(),
+            applicationId: selectedInsured.appId,
+            policyNo: undefined,
+            certificateNo: undefined,
+            customerId: selectedInsured.id,
+            customerName: selectedInsured.customerName,
+            incidentTypeId: undefined,
+            incidentDate: undefined,
+            accidentPlace: undefined,
+            accidentDescription: undefined,
+        };
+        dispatch(setTmpClaimItem([stubClaim]));
+
         dispatch(resetClaimForm());
 
         navigate(-1);

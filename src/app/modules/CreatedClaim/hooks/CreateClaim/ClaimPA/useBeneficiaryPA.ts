@@ -15,6 +15,13 @@ export const useBeneficiaryPA = (onValidSubmit: (beneficiaries: BeneficiaryForm[
     const { form, insured } = useAppSelector(claimPASelector);
     const beneficiaryQuery = useGetBeneficiary(insured?.policyCode);
     const claimAmount = Number(form.transferAmount ?? 0);
+    const insuredCitizenIds = useAppSelector((state) =>
+        new Set(
+            (state.claimpa.claimItems ?? [])
+                .map((item) => item.idCard?.replace(/[^\d]/g, "").trim())
+                .filter((id): id is string => !!id)
+        )
+    );
     const formik = useFormik<BeneficiaryFormikValues>({
         initialValues: {
             beneficiaries,
@@ -29,17 +36,22 @@ export const useBeneficiaryPA = (onValidSubmit: (beneficiaries: BeneficiaryForm[
                 const itemErrors: Partial<Record<keyof BeneficiaryForm, string>> = {};
 
                 if (!item.relationTypeId) itemErrors.relationTypeId = req;
-                if (!item.citizenId) itemErrors.citizenId = req;
-                else if (!validateThaiCitizenID(item.citizenId ?? ""))
+                const citizenId = item.citizenId?.trim() ?? "";
+                if (!citizenId) itemErrors.citizenId = req;
+                else if (!validateThaiCitizenID(citizenId))
                     itemErrors.citizenId = "กรอกได้เฉพาะตัวเลข 13 หลัก";
+                else if (insuredCitizenIds.has(citizenId))
+                    itemErrors.citizenId = "เลขบัตรประชาชนต้องไม่ซ้ำกับผู้เอาประกัน";
                 if (!item.titleId) itemErrors.titleId = req;
                 if (!item.firstName?.trim()) itemErrors.firstName = req;
                 if (!item.lastName?.trim()) itemErrors.lastName = req;
-                if (!item.phoneNumber?.trim()) itemErrors.phoneNumber = req;
-                else if (!validatePhoneNumber(item.phoneNumber)) itemErrors.phoneNumber = "กรอกได้เฉพาะตัวเลข 10 หลัก";
+                const phoneNumber = item.phoneNumber?.trim() ?? "";
+                if (!phoneNumber) itemErrors.phoneNumber = req;
+                else if (!validatePhoneNumber(phoneNumber)) itemErrors.phoneNumber = "กรอกได้เฉพาะตัวเลข 10 หลัก";
                 if (!item.bankId) itemErrors.bankId = req;
-                if (!item.bankAccountNo?.trim()) itemErrors.bankAccountNo = req;
-                else if (!validateBankAccountNo(item.bankAccountNo))
+                const bankAccountNo = item.bankAccountNo?.trim() ?? "";
+                if (!bankAccountNo) itemErrors.bankAccountNo = req;
+                else if (!validateBankAccountNo(bankAccountNo))
                     itemErrors.bankAccountNo = "กรอกได้เฉพาะตัวเลขตั้งแต่ 10-15 หลัก";
                 if (!item.bankAccountName?.trim()) itemErrors.bankAccountName = req;
                 if (!item.amount) itemErrors.amount = req;
