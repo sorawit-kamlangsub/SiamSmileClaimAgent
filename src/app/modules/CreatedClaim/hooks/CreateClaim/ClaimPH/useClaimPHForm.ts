@@ -189,7 +189,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     caseItems.push({
                         inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
                         standardMedicalExpenseId: benefitItem?.standardMedicalExpenseId ?? 0,
-                        quantity: benefitItem?.maxQuantity ?? 1,
+                        quantity: 1,
                         perUnit: benefitItem?.pricePerUnit ?? 0,
                         originalAmount: totalAmount,
                         discountAmount: 0,
@@ -209,7 +209,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                             tempCaseId: undefined,
                             inputToStandardMappingId: item.inputToStandardMappingId ?? undefined,
                             standardMedicalExpenseId: item.standardMedicalExpenseId ?? undefined,
-                            quantity: item.maxQuantity ?? undefined,
+                            quantity: 1,
                             perUnit: item.pricePerUnit ?? undefined,
                             originalAmount: originalAmount,
                             discountAmount: 0,
@@ -227,7 +227,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                         {
                             inputToStandardMappingId: matched.inputToStandardMappingId ?? undefined,
                             standardMedicalExpenseId: matched.standardMedicalExpenseId ?? undefined,
-                            quantity: matched.maxQuantity ?? undefined,
+                            quantity: 1,
                             perUnit: matched.pricePerUnit ?? undefined,
                             originalAmount: values.transferAmount ?? 0,
                             discountAmount: 0,
