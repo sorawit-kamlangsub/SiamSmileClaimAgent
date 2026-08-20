@@ -19,12 +19,12 @@ import GroupIcon from "@mui/icons-material/Group";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import PersonIcon from "@mui/icons-material/Person";
 import { useFormik } from "formik";
-import { useAppDispatch } from "../../../../../../redux";
-import { addBankAccount as addBankAccountPH } from "../../../store/claimPHSlice";
-import { FormikTextField } from "../../../../_common";
-import BankAccountRelationTypeDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/BankAccountRelationTypeDropDown";
-import BankAutocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/BankAutocomplete";
-import { addBankAccount as addBankAccountPA } from "../../../store/claimPASlice";
+import { useAppDispatch } from "../../../../../redux";
+import { addBankAccount as addBankAccountPH } from "../../store/claimPHSlice";
+import { FormikTextField } from "../../../_common";
+import BankAccountRelationTypeDropDown from "../../../_common/components/ClaimAgent/CustomDropdown/BankAccountRelationTypeDropDown";
+import BankAutocomplete from "../../../_common/components/ClaimAgent/CustomDropdown/BankAutocomplete";
+import { addBankAccount as addBankAccountPA } from "../../store/claimPASlice";
 
 interface Props {
     open: boolean;
@@ -83,7 +83,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose, productTypeId }) 
         },
         onSubmit: (values, { resetForm }) => {
             const bankAccountPayload = {
-                id: Date.now().toString(),
+                id: `manual-${Date.now()}`,
                 bankAccountRelationTypeId: values.relationship ?? 0,
                 bankAccountRelationTypeName: values.relationship_selectedText,
                 bankId: Number(values.bankId),

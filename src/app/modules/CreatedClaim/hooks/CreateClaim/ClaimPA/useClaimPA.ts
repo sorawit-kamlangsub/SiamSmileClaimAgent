@@ -1,63 +1,70 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useAppDispatch } from "../../../../../../redux";
+import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import {
     useGetContactPerson,
     useGetCustomerBankAccount,
     useGetCustomerDetailById,
 } from "../../../../../api/coreClaimApi";
-// import { useGetBeneficiary } from "../../../../../api/coreClaimMastersApi";
 import {
     SchoolInfo,
+    claimPASelector,
     setBankAccounts,
-    // setBeneficiaries,
     setContacts,
     setInsured,
+    setPendingInsured,
     setSchool,
 } from "../../../store/claimPASlice";
-// import { BeneficiaryForm } from "../../../store/claimPHSlice";
 
 export const useClaimPA = () => {
     const dispatch = useAppDispatch();
-
     const { appId, refId } = useParams();
+    const { pendingInsured } = useAppSelector(claimPASelector);
 
     const customerId = refId ? parseInt(atob(refId)) : undefined;
     const applicationId = appId ? atob(appId) : undefined;
 
-    const claimInfoQuery = useGetCustomerDetailById(customerId as number);
-    const bankAccountQuery = useGetCustomerBankAccount(applicationId);
+    const activeCustomerId = pendingInsured?.customerId ?? customerId;
+    const activeApplicationId = pendingInsured?.policyCode ?? applicationId;
+
+    const claimInfoQuery = useGetCustomerDetailById(activeCustomerId as number);
+    const bankAccountQuery = useGetCustomerBankAccount(applicationId); // บัญชี/เบอร์ผูกกับเคสหลัก ไม่เปลี่ยนตามคนที่เพิ่ม
     const contactQuery = useGetContactPerson(applicationId ?? "", 26);
 
     const isLoading = claimInfoQuery.isLoading || bankAccountQuery.isLoading || contactQuery.isLoading;
 
     useEffect(() => {
         if (!claimInfoQuery.data?.data) return;
-        const schoolInfo: SchoolInfo = {
-            appId: claimInfoQuery.data.data.policyCode ?? "",
-            schoolName: claimInfoQuery.data.data.schoolName ?? "",
-            teacherName: claimInfoQuery.data.data.contactName ?? "",
-            teacherPhone: claimInfoQuery.data.data.contactPhoneNo ?? "",
-        };
-        dispatch(setSchool(schoolInfo));
-        dispatch(setInsured(claimInfoQuery.data.data));
-    }, [dispatch, claimInfoQuery.data]);
+
+        if (pendingInsured) {
+            dispatch(setPendingInsured({ ...claimInfoQuery.data.data, tempClaimId: pendingInsured.tempClaimId }));
+        } else {
+            const schoolInfo: SchoolInfo = {
+                appId: claimInfoQuery.data.data.policyCode ?? "",
+                schoolName: claimInfoQuery.data.data.schoolName ?? "",
+                teacherName: claimInfoQuery.data.data.contactName ?? "",
+                teacherPhone: claimInfoQuery.data.data.contactPhoneNo ?? "",
+            };
+            dispatch(setSchool(schoolInfo));
+            dispatch(setInsured(claimInfoQuery.data.data));
+        }
+    }, [dispatch, claimInfoQuery.data, pendingInsured?.customerId]);
 
     useEffect(() => {
         if (!bankAccountQuery.data?.data) return;
         dispatch(setBankAccounts(bankAccountQuery.data.data));
-    }, [dispatch, bankAccountQuery.data]);
+    }, [bankAccountQuery.data]);
 
     useEffect(() => {
         if (!contactQuery.data?.data) return;
         dispatch(setContacts(contactQuery.data.data));
-    }, [dispatch, contactQuery.data]);
+    }, [contactQuery.data]);
 
     return {
         appId,
         refId,
-        applicationId,
-        customerId,
+        applicationId: activeApplicationId,
+        customerId: activeCustomerId,
         claimInfo: claimInfoQuery.data?.data,
         isLoading,
     };

@@ -11,6 +11,8 @@ import {
     Stack,
     Pagination,
     Avatar,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import HistoryIcon from "@mui/icons-material/History";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -39,8 +41,10 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
     paginated,
     setPaginated,
 }) => {
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth fullScreen={fullScreen}>
             <DialogTitle sx={{ pb: 1 }}>
                 <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
                     <Box display="flex" alignItems="center" gap={1}>

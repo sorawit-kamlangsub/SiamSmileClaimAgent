@@ -2,15 +2,15 @@ import { MUIDataTableColumn } from "mui-datatables";
 import { Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useGetDocumentType } from "../../../../api/coreClaimApi";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../functionHelpers";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import { StandardDataTable } from "../../../_common";
-import { claimPHSelector, setDocumentDetailById } from "../../store/claimPHSlice";
+import { claimPHSelector, setDocument, setDocumentDetailById } from "../../store/claimPHSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { DOC_STORAGE_URL } from "../../../../../Const";
-import { GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentDetailV2Request, GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDocumentById } from "../../../../api/docstorageApi";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
@@ -19,10 +19,18 @@ type DocumentScanTableProps = {
     productId?: number | undefined;
     aplicationCode?: string | undefined;
     documentTypeId?: number | undefined;
+    onAttachedDocumentsChange?: (docs: CaseDocumentDetailV2Request[]) => void;
 };
 
-const DocumentScanTable = ({ aplicationCode, documentTypeId }: DocumentScanTableProps) => {
+const DocumentScanTable = ({ aplicationCode, documentTypeId, onAttachedDocumentsChange }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
+    const dispatch = useAppDispatch();
+    const [fileCountByDocId, setFileCountByDocId] = useState<Record<string, number>>({});
+
+    const handleFileCountChange = useCallback((documentId: string, fileCount: number) => {
+        setFileCountByDocId((prev) => (prev[documentId] === fileCount ? prev : { ...prev, [documentId]: fileCount }));
+    }, []);
+
     const documentSubType = (): number => {
         if (documentTypeId === 15) {
             //เอกสารประกอบการพิจารณาเคลม
@@ -40,6 +48,25 @@ const DocumentScanTable = ({ aplicationCode, documentTypeId }: DocumentScanTable
         isEnabled
     );
     const enrichedData = data?.data || [];
+
+    useEffect(() => {
+        if (enrichedData.length > 0) {
+            dispatch(setDocument(enrichedData));
+        }
+    }, [data]);
+
+    useEffect(() => {
+        if (!onAttachedDocumentsChange) return;
+
+        const attachedDocs: CaseDocumentDetailV2Request[] = enrichedData
+            .filter((d) => (fileCountByDocId[d.documentId ?? ""] ?? 0) > 0)
+            .map((d) => ({
+                documentId: d.documentId,
+                documentNo: d.documentCode,
+            }));
+
+        onAttachedDocumentsChange(attachedDocs);
+    }, [fileCountByDocId, enrichedData]);
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -111,7 +138,7 @@ const DocumentScanTable = ({ aplicationCode, documentTypeId }: DocumentScanTable
                 customBodyRender: (_value, tableMeta) => {
                     const docData = data?.data?.[tableMeta.rowIndex] || {};
 
-                    return <FileCount docData={docData} />;
+                    return <FileCount docData={docData} onFileCountChange={handleFileCountChange} />;
                 },
             },
         },
@@ -192,17 +219,44 @@ export default DocumentScanTable;
 
 type FileCountProps = {
     docData: GetDocumentSubTypeDtoResponse;
+    onFileCountChange?: (documentId: string, fileCount: number) => void;
 };
 
-const FileCount = ({ docData }: FileCountProps) => {
+const FileCount = ({ docData, onFileCountChange }: FileCountProps) => {
     const dispatch = useAppDispatch();
     const { documentId } = docData;
-    const { data: documentData } = useGetDocumentById(documentId ?? "");
+    const { data: documentData, refetch } = useGetDocumentById(documentId ?? "");
 
     useEffect(() => {
         dispatch(setDocumentDetailById({ ...docData, docDetail: documentData?.data ?? {} }));
     }, [documentData]);
 
+    useEffect(() => {
+        if (!documentId) return;
+
+        const refreshDocument = () => {
+            if (document.visibilityState === "visible") {
+                void refetch();
+            }
+        };
+
+        // รองรับกรณีเปิดหน้าสแกนเอกสารแล้วกลับมาหน้านี้ โดย query key เดิมไม่เปลี่ยน
+        window.addEventListener("focus", refreshDocument);
+        window.addEventListener("pageshow", refreshDocument);
+        document.addEventListener("visibilitychange", refreshDocument);
+
+        return () => {
+            window.removeEventListener("focus", refreshDocument);
+            window.removeEventListener("pageshow", refreshDocument);
+            document.removeEventListener("visibilitychange", refreshDocument);
+        };
+    }, [documentId, refetch]);
+
     const fileCount = documentData?.data?.fileCount ?? 0;
+
+    useEffect(() => {
+        if (documentId) onFileCountChange?.(documentId, fileCount);
+    }, [documentId, fileCount]);
+
     return <>{fileCount}</>;
 };

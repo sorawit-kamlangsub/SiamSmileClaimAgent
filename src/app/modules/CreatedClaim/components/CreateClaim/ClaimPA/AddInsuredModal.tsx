@@ -11,6 +11,8 @@ import {
     Grid,
     IconButton,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
@@ -23,7 +25,14 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
-import { claimPASelector, resetClaimForm, setPendingInsured } from "../../../store/claimPASlice";
+import {
+    claimPASelector,
+    LocalClaimEntry,
+    resetClaimForm,
+    setEditingItemId,
+    setPendingInsured,
+    setTmpClaimItem,
+} from "../../../store/claimPASlice";
 import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../../functionHelpers";
 import { FormikDropdown, FormikTextField, StandardDataTable } from "../../../../_common";
 import { useFormik } from "formik";
@@ -33,6 +42,7 @@ import { PaginationSortableDto } from "../../../../_common/types";
 import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../../../api/coreClaimApi";
 import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import { generateTempId } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 
 interface InsuredDetailItem {
     label: string;
@@ -40,19 +50,20 @@ interface InsuredDetailItem {
 }
 
 interface SearchResult {
-    id: number; // ใช้เป็น customerId ตอนสร้างเคลม
-    appId: string; // = policyCode ของผู้เอาประกันรายนี้ (ใช้เป็น applicationId ตอนสร้างเคลมด้วย)
+    id: number;
+    appId: string;
     customerName: string;
     idCardNo: string;
-    insuredType: string; // productCategoryName
-    plan: string; // productName
+    insuredType: string;
+    plan: string;
     startCoverDate?: dayjs.Dayjs;
     endCoverDate?: dayjs.Dayjs;
-    // ── ข้อมูลหลัก (แสดงตลอดหลังเลือกแล้ว) ──
     coverageStatus: string;
     productLabel: string;
-    // ── ข้อมูลเพิ่มเติม (ไม่จำกัดจำนวน ไม่ผูกกับ field ตายตัว) ──
     extraDetails?: InsuredDetailItem[];
+    customerCode?: string; // เพิ่ม
+    productId?: number; // เพิ่ม
+    productCategoryCode?: string; // เพิ่ม
 }
 
 interface Props {
@@ -81,6 +92,9 @@ const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): Searc
         coverageStatus: mapCoverageStatus(dto.appStatusId),
         productLabel: [dto.productTypeName, dto.productCategoryName].filter(Boolean).join(" ") || "-",
         extraDetails,
+        customerCode: dto.customerCode,
+        productId: dto.productId,
+        productCategoryCode: dto.productCategoryCode,
     };
 };
 
@@ -97,6 +111,8 @@ const searchTypeData = [
 ];
 
 const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
     const { insured } = useAppSelector(claimPASelector);
@@ -160,6 +176,10 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     const handleAddClaim = () => {
         if (!selectedInsured) return;
 
+        const tempClaimId = generateTempId();
+
+        dispatch(setEditingItemId(null));
+
         dispatch(
             setPendingInsured({
                 customerId: selectedInsured.id,
@@ -169,8 +189,27 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                 cardDetail: selectedInsured.idCardNo,
                 productName: selectedInsured.plan,
                 productCategoryName: selectedInsured.insuredType,
+                customerCode: selectedInsured.customerCode,
+                productId: selectedInsured.productId,
+                productCategoryCode: selectedInsured.productCategoryCode,
+                tempClaimId,
             } as any)
         );
+
+        const stubClaim: LocalClaimEntry = {
+            tempClaimId,
+            applicationId: selectedInsured.appId,
+            policyNo: undefined,
+            certificateNo: undefined,
+            customerId: selectedInsured.id,
+            customerName: selectedInsured.customerName,
+            incidentTypeId: undefined,
+            incidentDate: undefined,
+            accidentPlace: undefined,
+            accidentDescription: undefined,
+        };
+        dispatch(setTmpClaimItem([stubClaim]));
+
         dispatch(resetClaimForm());
 
         navigate(-1);
@@ -308,7 +347,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     ];
 
     return (
-        <Dialog open={open} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <Dialog open={open} fullScreen={fullScreen} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between" flexWrap="nowrap">
                     <Box display="flex" alignItems="flex-start" gap={1.5}>
@@ -449,7 +488,6 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                                     {selectedInsured.productLabel}
                                 </Typography>
                             </Grid>
-                            {/* ไม่ว่า API จริงจะส่งมากี่ field ก็ผ่าน .map() เดียวตรงนี้ */}
                             {selectedInsured.extraDetails?.map((detail, dIdx) => (
                                 <Grid item xs={6} sm={3} key={dIdx}>
                                     <Typography variant="body2" color="text.secondary" mb={0.5}>

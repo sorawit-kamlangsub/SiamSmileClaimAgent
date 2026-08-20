@@ -1,6 +1,10 @@
 import { useFormik, FormikErrors } from "formik";
 import { useAppDispatch } from "../../../../../redux";
-import { checkeligibleMonitorSearchValuesType, setSearchcheckeligibleMonitor } from "../../store/monitorSlice";
+import {
+    checkeligibleMonitorSearchValuesType,
+    resetMonitor,
+    setSearchcheckeligibleMonitor,
+} from "../../store/monitorSlice";
 
 const SEARCH_TYPE_RULES: Record<number, (val: string) => boolean> = {
     1: (v) => /^[a-zA-Z0-9-]+$/.test(v), // ApplicationID
@@ -23,7 +27,7 @@ export const useMonitorToolbarForm = () => {
 
     const defaultValues: checkeligibleMonitorSearchValuesType = {
         searchTypeId: 2,
-        searchDetail: undefined,
+        searchDetail: "",
         dateHappen: undefined,
         schoolId: undefined,
         provinceId: undefined,
@@ -76,7 +80,7 @@ export const useMonitorToolbarForm = () => {
 
     const handleClear = () => {
         formik.resetForm();
-        dispatch(setSearchcheckeligibleMonitor(defaultValues));
+        dispatch(resetMonitor());
     };
 
     return { formik, handleClear };

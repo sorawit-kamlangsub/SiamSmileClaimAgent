@@ -21,12 +21,18 @@ const ChipSelector: React.FC<Props> = ({ formik, idFieldName, nameFieldName, opt
     const hasError = !!touched && !!error;
 
     const handleSelect = (item: ChipOption) => {
-        formik.setFieldValue(idFieldName, item.id, true);
-        formik.setFieldValue(nameFieldName, item.name, true);
+        formik.setValues(
+            {
+                ...formik.values,
+                [idFieldName]: item.id,
+                [nameFieldName]: item.name,
+            },
+            true
+        );
     };
 
     return (
-        <Box>
+        <Box data-field-name={idFieldName}>
             {/* Chips */}
             <Box display="flex" gap={1} flexWrap="wrap">
                 {isLoading ? (
@@ -48,7 +54,8 @@ const ChipSelector: React.FC<Props> = ({ formik, idFieldName, nameFieldName, opt
                                     fontWeight: isSelected ? 700 : 400,
                                     backgroundColor: isSelected ? "#02579B" : "transparent",
                                     color: isSelected ? "white" : "text.primary",
-                                    borderColor: isSelected ? "#02579B" : "divider",
+                                    border: hasError ? "1px solid" : undefined,
+                                    borderColor: isSelected ? "#02579B" : hasError ? "error.main" : "divider",
                                     fontSize: 14,
                                     px: 1,
                                     "&:hover": {

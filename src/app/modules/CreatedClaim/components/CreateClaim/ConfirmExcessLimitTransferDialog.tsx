@@ -10,6 +10,8 @@ import {
     TextField,
     Typography,
     Divider,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import { NumericFormat } from "react-number-format";
 // import CloseIcon from "@mui/icons-material/Close";
@@ -96,6 +98,8 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
     requestedAmount,
     maxEligibleAmount,
 }) => {
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const excessAmount = Math.max(requestedAmount - maxEligibleAmount, 0);
 
     const [withdrawableAmount, setWithdrawableAmount] = useState<number>(maxEligibleAmount);
@@ -123,7 +127,14 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <Dialog
+            open={open}
+            fullScreen={fullScreen}
+            onClose={onClose}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3 } }}
+        >
             <DialogContent>
                 {/* ── ข้อมูลผู้เอาประกัน (อยู่ในกล่องเดียวกับ dialog) ── */}
                 <Box

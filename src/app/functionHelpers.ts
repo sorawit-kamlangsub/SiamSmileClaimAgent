@@ -438,3 +438,13 @@ export enum MedicalType {
     HM = 5,
     DayCaseSurgery = 6,
 }
+
+export enum CauseOfIncident {
+    Illness = 2, // โรคทั่วไป
+    Accident = 3, // อุบัติเหตุทั่วไป
+    Motorcycle = 4, // ขับขี่/โดยสารจักรยานยนต์
+    Murder = 5, // ฆาตกรรม
+    PublicDisaster = 7, // ภัยสาธารณะ
+    SchoolLiability = 8, // รับผิดสถานศึกษา
+}
+

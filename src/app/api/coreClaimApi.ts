@@ -3,8 +3,8 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
-    CreateCoreClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
+    CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
 } from "./coreClaimApi.client";
@@ -131,7 +131,7 @@ export const useCreateCoreClaim = (
     onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string, type: number) => void
 ) => {
-    return useMutation((body: CreateCoreClaimDtoRequest) => coreClaimClient.createCoreClaim(body), {
+    return useMutation((body?: CreateCoreClaimV2DtoRequest | undefined) => coreClaimClient.createCoreClaim(body), {
         onSuccess: (response) => {
             if (!response.isSuccess)
                 onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error", 1);
@@ -284,7 +284,9 @@ export const useGetCustomerBenefitDetailHalf = (
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    formatTypeId?: number | undefined
+    formatTypeId?: number | undefined,
+    cusTomerTypeCode?: string | undefined,
+    customerCode?: string | undefined
 ) => {
     return useQuery(
         [
@@ -298,6 +300,8 @@ export const useGetCustomerBenefitDetailHalf = (
             medicalTypeId,
             causeOfIncidentId,
             formatTypeId,
+            cusTomerTypeCode,
+            customerCode,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailHalf(
@@ -309,10 +313,18 @@ export const useGetCustomerBenefitDetailHalf = (
                 coverageTypeId,
                 medicalTypeId,
                 causeOfIncidentId,
-                formatTypeId
+                formatTypeId,
+                cusTomerTypeCode,
+                customerCode
             ),
         {
-            enabled: !!policyCode,
+            enabled:
+                !!policyCode &&
+                !!incidentDate &&
+                !!incidentTypeId &&
+                !!coverageTypeId &&
+                (coverageTypeId === 2 || coverageTypeId === 3 ? !!medicalTypeId : true) &&
+                (coverageTypeId === 4 || coverageTypeId === 5 ? !!causeOfIncidentId : true),
             refetchOnWindowFocus: false,
         }
     );

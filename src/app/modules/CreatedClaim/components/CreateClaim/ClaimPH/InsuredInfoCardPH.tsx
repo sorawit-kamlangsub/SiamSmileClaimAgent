@@ -1,6 +1,5 @@
 import React from "react";
-import { Box, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import { Box, Link, Typography } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { formatDateString } from "../../../../../functionHelpers";
@@ -9,7 +8,6 @@ import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimAp
 
 interface Props {
     data?: GetCustomerDetailByIdDtoResponse;
-    onEdit: () => void;
 }
 
 const PH_DETAIL_URL = "https://sssph.siamsmile.co.th/Modules/PH/frmPHDetail";
@@ -57,27 +55,9 @@ const Row = ({
     </Box>
 );
 
-const InsuredInfoCardPH: React.FC<Props> = ({ data, onEdit }) => (
+const InsuredInfoCardPH: React.FC<Props> = ({ data }) => (
     <CustomBox sx={{ minHeight: "98.5%" }}>
-        <HeadingWithColor
-            text="ข้อมูลผู้เอาประกัน"
-            color="blue"
-            icon={<AccountCircleIcon sx={{ fontSize: 27 }} />}
-            button={
-                <Tooltip
-                    title="แก้ไขผู้เอาประกัน"
-                    arrow
-                    placement="top"
-                    TransitionComponent={Zoom}
-                    enterDelay={100}
-                    leaveDelay={50}
-                >
-                    <IconButton size="small" onClick={onEdit} color="primary">
-                        <EditIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-            }
-        />
+        <HeadingWithColor text="ข้อมูลผู้เอาประกัน" color="blue" icon={<AccountCircleIcon sx={{ fontSize: 27 }} />} />
         <Box px={2} pb={1}>
             <Row
                 label="Application ID"

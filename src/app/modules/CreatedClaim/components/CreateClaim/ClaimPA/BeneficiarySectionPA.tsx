@@ -19,7 +19,23 @@ const BeneficiarySectionPA: React.FC<BeneficiarySectionPAProps> = ({ formik }) =
     const totalAmount = beneficiary.reduce((sum, item) => sum + (item.amount ?? 0), 0);
     const claimAmount = Number(form.transferAmount ?? 0);
     const isAmountMismatch = totalAmount !== claimAmount;
-    const handleChange = (index: number, changes: Partial<BeneficiaryForm>) => {
+    const DIGIT_ONLY_FIELDS = new Set<keyof BeneficiaryForm>(["citizenId", "phoneNumber", "bankAccountNo"]);
+
+    const sanitizeChanges = (changes: Partial<BeneficiaryForm>): Partial<BeneficiaryForm> => {
+        const sanitized: Partial<BeneficiaryForm> = { ...changes };
+        Object.keys(sanitized).forEach((key) => {
+            const field = key as keyof BeneficiaryForm;
+            const value = sanitized[field];
+            if (DIGIT_ONLY_FIELDS.has(field) && typeof value === "string") {
+                (sanitized as any)[field] = value.replace(/[^\d]/g, "");
+            }
+        });
+        return sanitized;
+    };
+
+    const handleChange = (index: number, rawChanges: Partial<BeneficiaryForm>) => {
+        const changes = sanitizeChanges(rawChanges);
+
         // Redux update
         dispatch(updateBeneficiary({ index, changes }));
 

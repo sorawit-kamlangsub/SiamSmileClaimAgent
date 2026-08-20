@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Avatar, Box, Button, Grid, IconButton, Stack, Tooltip, Typography, Zoom } from "@mui/material";
 import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
 import PersonAddIcon from "@mui/icons-material/PersonAdd";
@@ -14,92 +14,146 @@ interface Props {
     onDelete: (id: string) => void;
     onAddInsured: () => void;
     disableAddInsured?: boolean;
+    disableAddInsuredReason?: string;
 }
 
-const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, disableAddInsured }) => {
+const ClaimSummaryPAInfo: React.FC<Props> = ({
+    data,
+    onDelete,
+    onAddInsured,
+    disableAddInsured,
+    disableAddInsuredReason,
+}) => {
+    const listRef = useRef<HTMLDivElement>(null);
+
+    const LG_VISIBLE_ROWS = 4;
+    const showLgVerticalScroll = data.length > LG_VISIBLE_ROWS;
+    const LG_ROW_HEIGHT = 96;
+    const LG_GAP = 16;
+    const lgMaxHeight = LG_VISIBLE_ROWS * LG_ROW_HEIGHT + (LG_VISIBLE_ROWS - 1) * LG_GAP;
+    const handleWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+        const el = listRef.current;
+        if (!el) return;
+        const canScrollY = el.scrollHeight > el.clientHeight;
+        if (!canScrollY) return;
+        el.scrollTop += e.deltaY;
+    };
+
     return (
         <>
             <HeadingWithColor text="ข้อมูลเคลม" color="blue" />
 
-            <Stack spacing={2}>
+            <Box
+                ref={listRef}
+                onWheel={handleWheel}
+                sx={{
+                    display: "grid",
+                    gridTemplateColumns: {
+                        xs: "1fr",
+                        sm: "repeat(2, 1fr)",
+                        md: "repeat(3, 1fr)",
+                        lg: "1fr",
+                    },
+                    gap: 2,
+                    maxHeight: { xs: 520, sm: 560, md: 600, lg: showLgVerticalScroll ? lgMaxHeight : "none" },
+                    overflowY: { xs: "auto", sm: "auto", md: "auto", lg: showLgVerticalScroll ? "auto" : "hidden" },
+                    overflowX: { xs: "hidden", lg: "auto" },
+                    scrollbarGutter: "stable",
+                    pr: { xs: 0.5, lg: 0 },
+                    pb: { lg: 1.5 },
+                    "&::-webkit-scrollbar": {
+                        width: 8,
+                        height: 8,
+                    },
+                    "&::-webkit-scrollbar-thumb": {
+                        backgroundColor: "#B9D6EA",
+                        borderRadius: 4,
+                    },
+                    "&::-webkit-scrollbar-track": {
+                        backgroundColor: "transparent",
+                    },
+                }}
+            >
                 {data.map((item, index) => (
                     <Box
                         key={item.id}
                         sx={{
                             display: "grid",
-                            gridTemplateColumns: {
-                                xs: "1fr",
-                                sm: "56px 1fr",
-                                md: "72px 1fr 220px 220px 96px",
-                            },
-                            alignItems: { xs: "flex-start", md: "center" },
-                            gap: { xs: 1.5, md: 2 },
+                            gap: { xs: 1.5, lg: 2 },
                             border: "1px solid #E3EDF7",
                             borderRadius: 2,
                             bgcolor: "#fff",
-                            p: { xs: 2, md: 3 },
+                            p: { xs: 2, md: 2.5, lg: 3 },
                             boxShadow: "0 4px 14px rgba(15, 23, 42, 0.08)",
+                            gridTemplateColumns: { xs: "auto 1fr", lg: "72px 1fr 220px 220px 96px" },
+                            minWidth: { lg: 960 },
+                            gridTemplateAreas: {
+                                xs: `
+                                    "avatar header"
+                                    "claim claim"
+                                    "idcard idcard"
+                                    "date date"
+                                    "amount amount"
+                                    "actions actions"
+                                `,
+                                lg: `
+                                    "avatar header date amount actions"
+                                    "avatar claim date amount actions"
+                                    "avatar idcard date amount actions"
+                                `,
+                            },
+                            alignItems: "center",
                         }}
                     >
                         <Avatar
                             sx={{
-                                width: 58,
-                                height: 58,
+                                gridArea: "avatar",
+                                width: { xs: 50, lg: 58 },
+                                height: { xs: 50, lg: 58 },
                                 bgcolor: "#D8EEFF",
                                 color: "#005B96",
                                 fontWeight: 700,
+                                flexShrink: 0,
+                                alignSelf: { xs: "center", lg: "center" },
                             }}
                         >
                             {item.seq ?? index + 1}
                         </Avatar>
 
-                        <Box sx={{ minWidth: 0 }}>
-                            <Stack direction="row" alignItems="center" spacing={1}>
-                                <Typography sx={{ fontWeight: 700, color: "#007AC1", fontSize: 19 }}>
-                                    {item.customerName}
-                                </Typography>
-                            </Stack>
+                        <Typography
+                            sx={{
+                                gridArea: "header",
+                                fontWeight: 700,
+                                color: "#007AC1",
+                                fontSize: { xs: 18, lg: 19 },
+                                alignSelf: "center",
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                            }}
+                        >
+                            {item.customerName}
+                        </Typography>
 
-                            <Typography sx={{ mt: 1, fontSize: 14 }} color="text.secondary">
+                        <Box sx={{ gridArea: "claim", minWidth: 0 }}>
+                            <Typography sx={{ fontSize: 14 }} color="text.secondary">
                                 ลักษณะการเคลม :
                             </Typography>
                             <Typography sx={{ mt: 0.5, fontWeight: "bold", color: "#007AC1", whiteSpace: "pre-wrap" }}>
                                 {item.claimStyle}
                             </Typography>
-                            <Stack
-                                direction={{ xs: "column", sm: "row" }}
-                                spacing={{ xs: 0.5, sm: 2 }}
-                                flexWrap="wrap"
-                                sx={{ mt: 1, rowGap: 0.5 }}
-                            >
-                                <Typography color="text.secondary" sx={{ fontSize: 14 }}>
-                                    เลขบัตรประชาชน :{" "}
-                                    <Typography component="span" fontWeight="bold" color="#007AC1">
-                                        {item.idCard ?? "-"}
-                                    </Typography>
-                                </Typography>
-                                {/* <Typography color="text.secondary" fontSize={{ xs: 13, md: 14 }}>
-                                    วันที่เข้า รพ. :{" "}
-                                    <Typography component="span" fontWeight="bold" color="#007AC1" fontSize="inherit">
-                                        {item.admissionDate
-                                            ? formatDateString(item.admissionDate.toString(), "DD/MM/BBBB")
-                                            : "-"}
-                                    </Typography>
-                                </Typography>
-                                <Typography color="text.secondary" fontSize={{ xs: 13, md: 14 }}>
-                                    วันที่ออก รพ. :{" "}
-                                    <Typography component="span" fontWeight="bold" color="#007AC1" fontSize="inherit">
-                                        {item.dischargeDate
-                                            ? formatDateString(item.dischargeDate.toString(), "DD/MM/BBBB")
-                                            : "-"}
-                                    </Typography>
-                                </Typography> */}
-                            </Stack>
                         </Box>
 
-                        <Stack direction="row" alignItems="center" spacing={1.5}>
-                            <CalendarMonthIcon sx={{ color: "#0076B6", fontSize: 30 }} />
-                            <Box>
+                        <Typography sx={{ gridArea: "idcard", fontSize: 14 }} color="text.secondary">
+                            เลขบัตรประชาชน :{" "}
+                            <Typography component="span" fontWeight="bold" color="#007AC1">
+                                {item.idCard ?? "-"}
+                            </Typography>
+                        </Typography>
+
+                        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ gridArea: "date" }}>
+                            <CalendarMonthIcon sx={{ color: "#0076B6", fontSize: 28, flexShrink: 0 }} />
+                            <Box sx={{ minWidth: 0 }}>
                                 <Typography color="text.secondary" sx={{ fontSize: 14 }}>
                                     วันที่เกิดเหตุ :
                                 </Typography>
@@ -111,9 +165,9 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, dis
                             </Box>
                         </Stack>
 
-                        <Stack direction="row" alignItems="center" spacing={1.5}>
-                            <PaymentsIcon sx={{ color: "#0076B6", fontSize: 30 }} />
-                            <Box>
+                        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ gridArea: "amount" }}>
+                            <PaymentsIcon sx={{ color: "#0076B6", fontSize: 28, flexShrink: 0 }} />
+                            <Box sx={{ minWidth: 0 }}>
                                 <Typography color="text.secondary" sx={{ fontSize: 14 }}>
                                     จำนวนเงิน :
                                 </Typography>
@@ -126,25 +180,12 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, dis
                             </Box>
                         </Stack>
 
-                        <Stack direction="row" justifyContent={{ xs: "flex-start", md: "flex-end" }} spacing={1}>
-                            {/* <Tooltip title="แก้ไขรายการ" arrow TransitionComponent={Zoom} placement="top">
-                                <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                        onAddInsured();
-                                    }}
-                                    sx={{
-                                        width: 42,
-                                        height: 42,
-                                        bgcolor: "#FFF1BE",
-                                        color: "#9A6A00",
-                                        "&:hover": { bgcolor: "#FFE59A" },
-                                    }}
-                                >
-                                    <PersonAddIcon />
-                                </IconButton>
-                            </Tooltip> */}
-
+                        <Stack
+                            direction="row"
+                            justifyContent={{ xs: "flex-end", lg: "flex-end" }}
+                            spacing={1}
+                            sx={{ gridArea: "actions" }}
+                        >
                             <Tooltip title="ลบรายการ" arrow TransitionComponent={Zoom} placement="top">
                                 <IconButton
                                     size="small"
@@ -163,18 +204,28 @@ const ClaimSummaryPAInfo: React.FC<Props> = ({ data, onDelete, onAddInsured, dis
                         </Stack>
                     </Box>
                 ))}
-            </Stack>
+            </Box>
+
             <Grid container justifyContent="flex-end" sx={{ mt: 2 }}>
-                <Button
-                    variant="outlined"
-                    sx={{ height: 32 }}
-                    color="primary"
-                    onClick={() => onAddInsured()}
-                    startIcon={<PersonAddIcon />}
-                    disabled={disableAddInsured}
+                <Tooltip
+                    title={disableAddInsured ? disableAddInsuredReason ?? "" : ""}
+                    arrow
+                    TransitionComponent={Zoom}
+                    placement="top"
                 >
-                    เพิ่มรายการ
-                </Button>
+                    <span>
+                        <Button
+                            variant="outlined"
+                            sx={{ height: 32 }}
+                            color="primary"
+                            onClick={() => onAddInsured()}
+                            startIcon={<PersonAddIcon />}
+                            disabled={disableAddInsured}
+                        >
+                            เพิ่มรายการ
+                        </Button>
+                    </span>
+                </Tooltip>
             </Grid>
         </>
     );
