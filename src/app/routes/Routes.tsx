@@ -19,6 +19,7 @@ import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
 import ManageTransferPage from "../modules/ManageClaimFund/pages/ManageTransferPage.tsx";
 import RepayPage from "../modules/ManageTransfer/pages/RepayPage.tsx";
 import BankStatusCheck from "../modules/BankStatus/pages/BankStatusCheck.tsx";
+import IncreaseLimitTransfer from "../modules/IncreaseLimitTransfer/page/IncreaseLimitTransfer.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -164,6 +165,12 @@ const Routes: RouteMapType[] = [
     /**
      * จัดการเงินเคลม
      */
+    {
+        path: "/manage/increase-limit-transfer",
+        title: "ขยายวงเงิน",
+        permissions: [],
+        element: <IncreaseLimitTransfer />,
+    },
     {
         path: "/manage/transfer/repay",
         title: "แก้ไขการโอนเงิน",

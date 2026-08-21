@@ -12,7 +12,6 @@ export const useGetCurrentSettingHistory = () => {
 
 const getCurrentSettingData = () => {
     const url = `${claimFundAPI_URL}/Setting/GetCurrentSetting`;
-
     return axios
         .get(url)
         .then((res) => {
