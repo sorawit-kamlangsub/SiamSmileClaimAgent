@@ -1,44 +1,19 @@
 import { MUIDataTableColumn } from "mui-datatables";
+import { useGetInquiryDetailMonitors } from "../bankStatusCheckAPI";
+import dayjs from "dayjs";
 
-const useTransactionStatusDataTableHook = () => {
-    const dataMock = [
-        {
-            claimPayTransactionCode: "CT690400139",
-            createdDate: "11/10/2569 12:24:23",
-            bankService: "BBL",
-            status: "Fail",
-            responseCode: "W003",
-            responseMessage: "ปัญหาจากระบบ",
-        },
-        {
-            claimPayTransactionCode: "CT690400140",
-            createdDate: "11/10/2569 13:02:11",
-            bankService: "KTB",
-            status: "Success",
-            responseCode: "S000",
-            responseMessage: "ทำรายการสำเร็จ",
-        },
-        {
-            claimPayTransactionCode: "CT690400141",
-            createdDate: "11/10/2569 13:45:57",
-            bankService: "SCB",
-            status: "Pending",
-            responseCode: "P001",
-            responseMessage: "รอผลการโอนเงินจากธนาคาร",
-        },
-        {
-            claimPayTransactionCode: "CT690400142",
-            createdDate: "11/10/2569 14:10:32",
-            bankService: "KBANK",
-            status: "Fail",
-            responseCode: "E404",
-            responseMessage: "ไม่พบเลขที่บัญชีปลายทาง",
-        },
-    ];
+type TransactionStatusDataTableProp = {
+    transactionId: string;
+};
+
+const useTransactionStatusDataTableHook = ({ transactionId }: TransactionStatusDataTableProp) => {
+    const { data: getInquiryDetailData, isLoading: getInquiryDetailIsLoading } = useGetInquiryDetailMonitors({
+        payTransferTransactionId: transactionId,
+    });
 
     const columns: MUIDataTableColumn[] = [
         {
-            name: "claimPayTransactionCode",
+            name: "transRefNo",
             label: "ClaimPayTransactionCode",
             options: {
                 filter: false,
@@ -51,10 +26,16 @@ const useTransactionStatusDataTableHook = () => {
             options: {
                 filter: false,
                 sort: false,
+                customBodyRenderLite: (rowIndex) => {
+                    const formatDate = getInquiryDetailData?.data?.[rowIndex]?.createdDate
+                        ? dayjs().format("DD/MM/YYYY HH:mm:ss")
+                        : "-";
+                    return formatDate;
+                },
             },
         },
         {
-            name: "bankService",
+            name: "payerBankName",
             label: "BankService",
             options: {
                 filter: false,
@@ -62,7 +43,7 @@ const useTransactionStatusDataTableHook = () => {
             },
         },
         {
-            name: "responseCode",
+            name: "statusBank",
             label: "ResponseCode",
             options: {
                 filter: false,
@@ -70,7 +51,7 @@ const useTransactionStatusDataTableHook = () => {
             },
         },
         {
-            name: "responseMessage",
+            name: "descriptionTH",
             label: "ResponseMessage",
             options: {
                 filter: false,
@@ -79,7 +60,7 @@ const useTransactionStatusDataTableHook = () => {
         },
     ];
 
-    return { dataMock, columns };
+    return { getInquiryDetailData, getInquiryDetailIsLoading, columns };
 };
 
 export default useTransactionStatusDataTableHook;

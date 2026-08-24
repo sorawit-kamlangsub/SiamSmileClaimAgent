@@ -1,28 +1,30 @@
-import { Box, TableCell, TableRow } from "@mui/material";
-import { useState } from "react";
-import { PaginationSortableDto, StandardDataTable } from "../../_common";
+import { Backdrop, Box, CircularProgress, TableCell, TableRow } from "@mui/material";
+import { StandardDataTable } from "../../_common";
 import useBankStatusCheckDataTableHook from "../hooks/BankStatusCheckDataTableHook";
 import TransactionStatusDataTable from "./TransactionStatusDataTable";
 
-const renderExpandableRow = (rowData: any, _rowMeta: any) => {
-    const colSpan = rowData.length + 1;
-
-    return (
-        <TableRow sx={{ backgroundColor: "#F5F8FC" }}>
-            <TableCell colSpan={colSpan}>
-                <h3>รายละเอียด</h3>
-                <TransactionStatusDataTable transactionId="1" />
-            </TableCell>
-        </TableRow>
-    );
-};
-
 const BankStatusCheckDataTable = () => {
-    const { columns, dataMock } = useBankStatusCheckDataTableHook();
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 5,
-    });
+    const {
+        columns,
+        getInquiryMonitorsData,
+        getInquiryMonitorsIsLoading,
+        paginated,
+        setPaginated,
+        sentToBankIsLoading,
+    } = useBankStatusCheckDataTableHook();
+
+    const renderExpandableRow = (rowData: any, rowMeta: any) => {
+        const transactionId = getInquiryMonitorsData?.data?.[rowMeta.dataIndex]?.payTransferTransactionId;
+
+        return (
+            <TableRow sx={{ backgroundColor: "#F5F8FC" }}>
+                <TableCell colSpan={rowData.length + 1}>
+                    <h3>รายละเอียด</h3>
+                    {transactionId && <TransactionStatusDataTable transactionId={transactionId} />}
+                </TableCell>
+            </TableRow>
+        );
+    };
 
     return (
         <>
@@ -36,8 +38,9 @@ const BankStatusCheckDataTable = () => {
                 <StandardDataTable
                     name="payTransferHospitalClaim"
                     title=""
-                    data={dataMock ?? []}
+                    data={getInquiryMonitorsData?.data ?? []}
                     columns={columns}
+                    isLoading={getInquiryMonitorsIsLoading}
                     color="primary"
                     paginated={paginated}
                     setPaginated={setPaginated}
@@ -45,9 +48,13 @@ const BankStatusCheckDataTable = () => {
                         expandableRows: true,
                         expandableRowsHeader: false,
                         expandableRowsOnClick: false,
-                        renderExpandableRow: renderExpandableRow,
+                        renderExpandableRow,
+                        onRowExpansionChange: () => {},
                     }}
                 />
+                <Backdrop open={sentToBankIsLoading} style={{ zIndex: 9999 }}>
+                    <CircularProgress color="inherit" />
+                </Backdrop>
             </Box>
         </>
     );

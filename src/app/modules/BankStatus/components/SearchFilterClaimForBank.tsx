@@ -25,6 +25,7 @@ const SearchFilterClaimForBank = () => {
                                 color="primary"
                                 startIcon={<SearchIcon />}
                                 sx={{ width: "50%" }}
+                                onClick={() => formik.handleSubmit()}
                             >
                                 ค้นหา
                             </Button>

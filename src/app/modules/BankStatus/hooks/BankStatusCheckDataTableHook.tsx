@@ -2,72 +2,44 @@ import { Box, IconButton } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import SendIcon from "@mui/icons-material/Send";
 import { numberWithCommas } from "../../../functionHelpers";
+import { useState } from "react";
+import { useAppSelector } from "../../../../redux";
+import { useGetInquiryMonitors, useSentToBank } from "../bankStatusCheckAPI";
+import { PaginationSortableDto, swalConfirm, swalError, swalSuccess } from "../../_common";
+import dayjs from "dayjs";
 
 const useBankStatusCheckDataTableHook = () => {
-    const dataMock = [
-        {
-            claimNo: "CL6907000001",
-            createdDate: "01/07/2569",
-            accountNo: "1234567890",
-            accountName: "นายสมชาย ใจดี",
-            bank: "กรุงไทย",
-            amount: 3200.0,
-            transferStatus: "โอนสำเร็จ",
-        },
-        {
-            claimNo: "CL6907000002",
-            createdDate: "02/07/2569",
-            accountNo: "2345678901",
-            accountName: "นางสาวนวพร ก้องเกียรติสกุล",
-            bank: "กสิกรไทย",
-            amount: 1500.5,
-            transferStatus: "รอโอน",
-        },
-        {
-            claimNo: "CL6907000003",
-            createdDate: "03/07/2569",
-            accountNo: "3456789012",
-            accountName: "นายอนุชา พงษ์ไพบูลย์",
-            bank: "ไทยพาณิชย์",
-            amount: 640.0,
-            transferStatus: "โอนสำเร็จ",
-        },
-        {
-            claimNo: "CL6907000004",
-            createdDate: "04/07/2569",
-            accountNo: "4567890123",
-            accountName: "นางสาวพิมพ์ชนก เจริญสุข",
-            bank: "กรุงเทพ",
-            amount: 4800.75,
-            transferStatus: "โอนไม่สำเร็จ",
-        },
-        {
-            claimNo: "CL6907000005",
-            createdDate: "05/07/2569",
-            accountNo: "5678901234",
-            accountName: "นายกิตติศักดิ์ ภาณุกิจไพบูลย์",
-            bank: "กรุงไทย",
-            amount: 2100.0,
-            transferStatus: "รอโอน",
-        },
-        {
-            claimNo: "CL6907000006",
-            createdDate: "06/07/2569",
-            accountNo: "6789012345",
-            accountName: "นางวิภาดา แสงทอง",
-            bank: "ทหารไทยธนชาต",
-            amount: 950.25,
-            transferStatus: "ยกเลิก",
-        },
-    ];
+    const { searchBankStatusCheck } = useAppSelector((state) => state.bankStatusCheck);
+    const [paginated, setPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 5,
+    });
+    const { data: getInquiryMonitorsData, isLoading: getInquiryMonitorsIsLoading } = useGetInquiryMonitors({
+        searchDetail: searchBankStatusCheck.searchDetail,
+        page: paginated.page,
+        recordsPerPage: paginated.recordsPerPage,
+    });
+
+    const handleSuccess = () => {
+        swalSuccess("แจ้งเตือน", "ทำรายการสำเร็จ");
+    };
+
+    const handleError = (err: string) => {
+        swalError("แจ้งเตือน", err);
+    };
+
+    const { mutate: sentToBankMutate, isLoading: sentToBankIsLoading } = useSentToBank(handleSuccess, handleError);
 
     const columns: MUIDataTableColumn[] = [
         {
-            name: "claimNo",
+            name: "paymentCode",
             label: "เลขที่ CL",
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return getInquiryMonitorsData?.data?.[rowIndex]?.paymentCode ?? "-";
+                },
             },
         },
         {
@@ -76,40 +48,59 @@ const useBankStatusCheckDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    const formatDate = getInquiryMonitorsData?.data?.[rowIndex]?.createdDate
+                        ? dayjs(getInquiryMonitorsData?.data?.[rowIndex]?.createdDate).format("DD/MM/YYYY HH:mm:ss")
+                        : "-";
+                    return formatDate;
+                },
             },
         },
         {
-            name: "accountNo",
+            name: "toAccountNo",
             label: "เลขที่บัญชี",
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return getInquiryMonitorsData?.data?.[rowIndex]?.toAccountNo ?? "-";
+                },
             },
         },
         {
-            name: "accountName",
+            name: "toAccountName",
             label: "ชื่อบัญชี",
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return getInquiryMonitorsData?.data?.[rowIndex]?.toAccountName ?? "-";
+                },
             },
         },
         {
-            name: "bank",
+            name: "toBank",
             label: "ธนาคาร",
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return getInquiryMonitorsData?.data?.[rowIndex]?.toBank ?? "-";
+                },
             },
         },
         {
-            name: "amount",
+            name: "totalNetPaidAmount",
             label: "จำนวนเงิน",
             options: {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
-                    return <Box sx={{ textAlign: "end" }}>{numberWithCommas(dataMock?.[rowIndex]?.amount ?? 0)}</Box>;
+                    return (
+                        <Box sx={{ textAlign: "end" }}>
+                            {numberWithCommas(getInquiryMonitorsData?.data?.[rowIndex]?.totalNetPaidAmount ?? 0)}
+                        </Box>
+                    );
                 },
             },
         },
@@ -119,6 +110,15 @@ const useBankStatusCheckDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return (
+                        <Box
+                            sx={{ borderRadius: 3, color: "#BF360C", bgcolor: "#FCE8E6", textAlign: "center", p: 0.2 }}
+                        >
+                            {getInquiryMonitorsData?.data?.[rowIndex]?.transferStatusName ?? "-"}
+                        </Box>
+                    );
+                },
             },
         },
         {
@@ -129,7 +129,29 @@ const useBankStatusCheckDataTableHook = () => {
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
                     return (
-                        <IconButton sx={{ backgroundColor: "#00569D", color: "#FFFFFF", scale: -0.8 }}>
+                        <IconButton
+                            sx={{
+                                backgroundColor: "#00569D",
+                                color: "#FFFFFF",
+                                scale: -0.8,
+                                "&:hover": {
+                                    backgroundColor: "#014074",
+                                    color: "#FFFFFF",
+                                },
+                            }}
+                            onClick={() => {
+                                swalConfirm(
+                                    "ยืนยันทำรายการ",
+                                    "ยืนยันการทำรายการเพื่อสอบถามรายการโอนกับทางธนาคารใช่หรือไม่"
+                                ).then((res) => {
+                                    if (res.isConfirmed) {
+                                        sentToBankMutate({
+                                            refCode: getInquiryMonitorsData?.data?.[rowIndex]?.payListHeaderId,
+                                        });
+                                    }
+                                });
+                            }}
+                        >
                             <SendIcon sx={{ transform: "scaleX(-1) scale(0.8)" }} />
                         </IconButton>
                     );
@@ -137,7 +159,14 @@ const useBankStatusCheckDataTableHook = () => {
             },
         },
     ];
-    return { columns, dataMock };
+    return {
+        columns,
+        getInquiryMonitorsData,
+        getInquiryMonitorsIsLoading,
+        paginated,
+        setPaginated,
+        sentToBankIsLoading,
+    };
 };
 
 export default useBankStatusCheckDataTableHook;
