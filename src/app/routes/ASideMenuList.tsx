@@ -71,8 +71,8 @@ export const ASideMenuList = () => {
                  * จัดการเงินเคลม
                  */}
                 <ParentMenu icon={<AccountBalanceWalletIcon />} text="จัดการเงินเคลม" permissions={[]}>
-                    <MenuItem path="/" icon={<AddCardIcon />} text="โอนเพิ่ม" />
-                    <MenuItem path="/" icon={<PriceCheckIcon />} text="คืนเงิน" />
+                    <MenuItem path="/manage/adjust-transfer" icon={<AddCardIcon />} text="โอนเพิ่ม" />
+                    <MenuItem path="/manage/refund" icon={<PriceCheckIcon />} text="คืนเงิน" />
                     <MenuItem path="/manage/refund-approve" icon={<PersonIcon />} text="อนุมัติคืนเงิน" />
                     <MenuItem path="/manage/increase-limit-transfer" icon={<TrendingUpIcon />} text="ขยายวงเงิน" />
                     <MenuItem path="/manage/transfer/repay" icon={<ReceiptLongOutlinedIcon />} text="แก้ไขการโอนเงิน" />
