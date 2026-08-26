@@ -68,14 +68,14 @@ export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) =
         setUser(user);
         setUserProfile(userProfile);
 
-        axios.interceptors.request.use((config) => {
-            if (user.access_token) {
-                config.headers.Authorization = `Bearer ${user.access_token}`;
-                config.headers["Access-Control-Allow-Origin"] = "*";
-            }
+        // axios.interceptors.request.use((config) => {
+        //     if (user.access_token) {
+        //         config.headers.Authorization = `Bearer ${user.access_token}`;
+        //         config.headers["Access-Control-Allow-Origin"] = "*";
+        //     }
 
-            return config;
-        });
+        //     return config;
+        // });
     }, []);
 
     const setLogout = useCallback(() => {
@@ -173,7 +173,24 @@ export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) =
         };
 
         processGetUser();
-    }, [oidcUserManager, setLogin, setLogout, signinSilentThenRedirect]);
+    }, [oidcUserManager, setLogin, setLogout, signinSilentThenRedirect, isPublicPath]);
+
+    useEffect(() => {
+        const interceptorId = axios.interceptors.request.use(async (config) => {
+            const currentUser = await oidcUserManager.getUser();
+
+            if (currentUser?.access_token) {
+                config.headers = config.headers ?? {};
+                config.headers.Authorization = `Bearer ${currentUser.access_token}`;
+            }
+
+            return config;
+        });
+
+        return () => {
+            axios.interceptors.request.eject(interceptorId);
+        };
+    }, [oidcUserManager]);
 
     return (
         <AuthContext.Provider
