@@ -3,7 +3,6 @@ import { Box, Chip, CircularProgress, IconButton, Pagination, Paper, Stack, Tool
 import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
 import HistoryIcon from "@mui/icons-material/History";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
 import NoteAddOutlinedIcon from "@mui/icons-material/NoteAddOutlined";
 import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
@@ -16,7 +15,6 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import AddCardOutlinedIcon from "@mui/icons-material/AddCardOutlined";
 import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import AssignmentReturnedOutlinedIcon from "@mui/icons-material/AssignmentReturnedOutlined";
-import CreateIcon from "@mui/icons-material/Create";
 import useClaimTransactionHook from "../../../hooks/ClaimConsiderDetail/ClaimTransactionHook";
 import { formatDateString, numberWithCommas } from "../../../../../functionHelpers";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";

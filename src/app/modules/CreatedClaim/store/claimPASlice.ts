@@ -207,7 +207,7 @@ const defaultForm: ClaimPAFormValues = {
     notificationDate: dayjs(),
     transferAmount: 0,
     symptomType: 1,
-    deathPlaceType: 1,
+    deathPlaceType: 2,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [

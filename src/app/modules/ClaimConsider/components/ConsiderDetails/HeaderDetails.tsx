@@ -1,6 +1,5 @@
 import { Grid, Paper, Tab, Tabs, Skeleton } from "@mui/material";
 import HeaderCardCustomerDetails from "./HeaderDetailCards/HeaderCardCustomerDetails";
-import { useNavigate } from "react-router-dom";
 import ClaimDetail from "./HeaderDetailCards/ClaimDetail";
 import { useState } from "react";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -34,7 +33,6 @@ const HeaderDetails = ({
         setTabValue(newValue);
     };
 
-    const navigate = useNavigate();
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
     const isHeaderLoading = detailDataLoading || customerDetailLoading;
