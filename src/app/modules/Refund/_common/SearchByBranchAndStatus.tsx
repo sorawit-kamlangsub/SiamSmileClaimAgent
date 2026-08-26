@@ -1,5 +1,6 @@
-import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
+import { Box, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
+import { FormikDropdown } from "../../_common";
 
 export interface SelectOption {
     value: string | number;
@@ -12,8 +13,6 @@ export interface BranchStatusFilterValues {
 }
 
 export interface SearchByBranchAndStatusProps {
-    branchOptions: SelectOption[];
-    statusOptions: SelectOption[];
     initialValues?: Partial<BranchStatusFilterValues>;
     buttonIcon: React.ReactNode;
     buttonText: string;
@@ -26,8 +25,6 @@ const defaultValues: BranchStatusFilterValues = {
 };
 
 const SearchByBranchAndStatus = ({
-    branchOptions,
-    statusOptions,
     initialValues,
     buttonIcon,
     buttonText,
@@ -39,7 +36,6 @@ const SearchByBranchAndStatus = ({
             onButtonClick(values);
         },
     });
-    const fieldLabelSx = { fontSize: "0.8rem", color: "#78909C", marginBottom: "4px" };
 
     return (
         <Box
@@ -52,41 +48,29 @@ const SearchByBranchAndStatus = ({
                 backgroundColor: "#FFFFFF",
             }}
         >
-            <Grid container spacing={2} alignItems="flex-end">
+            <Grid container spacing={2} alignItems="center">
                 <Grid item xs={12} sm={4} md={3}>
-                    <Typography sx={fieldLabelSx}>สาขา</Typography>
-                    <TextField
-                        select
-                        fullWidth
-                        size="small"
+                    <FormikDropdown
                         name="branch"
-                        value={formik.values.branch}
-                        onChange={formik.handleChange}
-                    >
-                        {branchOptions.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
+                        formik={formik}
+                        label="สาขา"
+                        fullWidth
+                        data={[]}
+                        displayFieldName="label"
+                        valueFieldName="value"
+                    />
                 </Grid>
 
                 <Grid item xs={12} sm={4} md={3}>
-                    <Typography sx={fieldLabelSx}>สถานะ</Typography>
-                    <TextField
-                        select
-                        fullWidth
-                        size="small"
+                    <FormikDropdown
                         name="status"
-                        value={formik.values.status}
-                        onChange={formik.handleChange}
-                    >
-                        {statusOptions.map((option) => (
-                            <MenuItem key={option.value} value={option.value}>
-                                {option.label}
-                            </MenuItem>
-                        ))}
-                    </TextField>
+                        formik={formik}
+                        label="สถานะ"
+                        fullWidth
+                        data={[]}
+                        displayFieldName="label"
+                        valueFieldName="value"
+                    />
                 </Grid>
 
                 <Grid item xs={12} sm={4} md={2}>
