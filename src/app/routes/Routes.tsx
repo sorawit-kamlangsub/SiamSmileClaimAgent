@@ -16,6 +16,8 @@ import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
+import ConsiderMonitorPage from "../modules/ClaimConsider/pages/ConsiderMonitorPage.tsx";
+import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -154,6 +156,25 @@ const Routes: RouteMapType[] = [
                 element: <ExtraPaymentPage />,
                 permissions: [],
                 condition: "AND",
+            },
+        ],
+    },
+
+    {
+        path: "/consider/monitor",
+        title: "พิจารณาเคลม - เคลมลูกค้า",
+        element: <Outlet />,
+        children: [
+            {
+                path: "customers",
+                title: "เคลมลูกค้า",
+                element: <ConsiderMonitorPage />,
+                index: true,
+            },
+            {
+                path: "customers/:id",
+                title: "บันทึกข้อมูลเคลม - เคลมลูกค้า",
+                element: <ConsiderDetailPage />,
             },
         ],
     },

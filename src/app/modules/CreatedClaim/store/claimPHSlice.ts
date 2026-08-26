@@ -19,9 +19,9 @@ export enum SymptomType {
 }
 
 export enum DeathPlaceType {
-    Home = 1,
-    Hospital = 2,
-    Other = 3,
+    Home = 2,
+    Hospital = 3,
+    Other = 4,
 }
 
 export interface DiagnosisModel {
@@ -166,7 +166,7 @@ const defaultForm: ClaimFormValues = {
     transferAmount: 0,
     benefitAmounts: {},
     symptomType: 1,
-    deathPlaceType: 1,
+    deathPlaceType: 2,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [

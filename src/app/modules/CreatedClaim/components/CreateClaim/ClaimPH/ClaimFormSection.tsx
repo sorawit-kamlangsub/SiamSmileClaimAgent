@@ -42,7 +42,7 @@ import { useNavigate } from "react-router-dom";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
 
-const EMPTY_STATE_SX = {
+export const EMPTY_STATE_SX = {
     p: 2,
     textAlign: "center",
     borderStyle: "dashed",
