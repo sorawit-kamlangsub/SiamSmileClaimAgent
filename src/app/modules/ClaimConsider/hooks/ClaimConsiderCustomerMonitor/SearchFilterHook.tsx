@@ -48,7 +48,7 @@ const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
     };
     const formik = useFormik<SearchFilterType>({
         initialValues: defaultValues,
-        validate: (values) => {
+        validate: () => {
             const errors: FormikErrors<SearchFilterType> = {};
             return errors;
         },

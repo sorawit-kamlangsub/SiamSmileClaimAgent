@@ -33,10 +33,10 @@ const RecordClaimData = () => {
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
-    const isManualIPD =
-        values.coverageTypeId === CoverageType.Medical &&
-        (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
-    const isOPD = values.medicalTypeId === MedicalType.OPD;
+    // const isManualIPD =
+    //     values.coverageTypeId === CoverageType.Medical &&
+    //     (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
+    // const isOPD = values.medicalTypeId === MedicalType.OPD;
     const MEDICAL_TYPE_LABEL_BY_CONDITION: Record<string, string> = {
         death: "สาเหตุการเสียชีวิต",
         medical: "ประเภทการรักษา",
