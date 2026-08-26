@@ -20,6 +20,7 @@ import ManageTransferPage from "../modules/ManageClaimFund/pages/ManageTransferP
 import RepayPage from "../modules/ManageTransfer/pages/RepayPage.tsx";
 import BankStatusCheck from "../modules/BankStatus/pages/BankStatusCheck.tsx";
 import IncreaseLimitTransfer from "../modules/IncreaseLimitTransfer/page/IncreaseLimitTransfer.tsx";
+import RefundApprovePage from "../modules/RefundApprove/pages/RefundApprovePage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -165,6 +166,12 @@ const Routes: RouteMapType[] = [
     /**
      * จัดการเงินเคลม
      */
+    {
+        path: "/manage/refund-approve",
+        title: "อนุมัติคืนเงิน",
+        permissions: [],
+        element: <RefundApprovePage />,
+    },
     {
         path: "/manage/increase-limit-transfer",
         title: "ขยายวงเงิน",

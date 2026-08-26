@@ -113,8 +113,18 @@ const useBankStatusCheckDataTableHook = () => {
                 customBodyRenderLite: (rowIndex) => {
                     return (
                         <Box
-                            sx={{ borderRadius: 3, color: "#BF360C", bgcolor: "#FCE8E6", textAlign: "center", p: 0.2 }}
+                            sx={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                borderRadius: 3,
+                                color: "#BF360C",
+                                bgcolor: "#FCE8E6",
+                                justifyItems: "center",
+                                gap: "4px",
+                                padding: "3px 12px",
+                            }}
                         >
+                            <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: "#BF360C" }} />
                             {getInquiryMonitorsData?.data?.[rowIndex]?.transferStatusName ?? "-"}
                         </Box>
                     );
