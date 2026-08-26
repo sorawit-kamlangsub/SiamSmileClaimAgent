@@ -16,11 +16,15 @@ import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
+
 import ManageTransferPage from "../modules/ManageClaimFund/pages/ManageTransferPage.tsx";
 import RepayPage from "../modules/ManageTransfer/pages/RepayPage.tsx";
 import BankStatusCheck from "../modules/BankStatus/pages/BankStatusCheck.tsx";
 import IncreaseLimitTransfer from "../modules/IncreaseLimitTransfer/page/IncreaseLimitTransfer.tsx";
 import RefundApprovePage from "../modules/RefundApprove/pages/RefundApprovePage.tsx";
+
+import ConsiderMonitorPage from "../modules/ClaimConsider/pages/ConsiderMonitorPage.tsx";
+import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -195,6 +199,24 @@ const Routes: RouteMapType[] = [
         title: "ตั้งค่าการโอนเงิน",
         permissions: [],
         element: <ManageTransferPage />,
+    },
+    {
+        path: "/consider/monitor",
+        title: "พิจารณาเคลม - เคลมลูกค้า",
+        element: <Outlet />,
+        children: [
+            {
+                path: "customers",
+                title: "เคลมลูกค้า",
+                element: <ConsiderMonitorPage />,
+                index: true,
+            },
+            {
+                path: "customers/:id",
+                title: "บันทึกข้อมูลเคลม - เคลมลูกค้า",
+                element: <ConsiderDetailPage />,
+            },
+        ],
     },
 ];
 

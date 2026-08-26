@@ -30,6 +30,10 @@ const getDisabilityLossPartQueryKey = ["getDisabilityLossPart"];
 const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPart"];
 const getPaymentStatusQueryKey = ["getPaymentStatus"];
 const getBranchQueryKey = ["getBranch"];
+const getDeductionSourceQueryKey = ["getDeductionSource"];
+const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
+const getDecisionQueryKey = ["getDecision"];
+const getDecisionReasonQueryKey = ["getDecisionReason"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -400,6 +404,43 @@ export const useGetPaymentStatus = (paymentStatusId?: number | undefined) => {
         [getPaymentStatusQueryKey, paymentStatusId],
         () => coreClaimMastersClient.getPaymentStatus(paymentStatusId),
         {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeductionSource = (deductionSourceId?: number | undefined) => {
+    return useQuery(
+        [getDeductionSourceQueryKey, deductionSourceId],
+        () => coreClaimMastersClient.getDeductionSource(deductionSourceId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetEmployeeClaimPaymentLimit = (userId: number) => {
+    return useQuery(
+        [getEmployeeClaimPaymentLimitQueryKey, userId],
+        () => coreClaimMastersClient.employeePaymentLimit(userId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDecision = (decisionId?: number | undefined) => {
+    return useQuery([getDecisionQueryKey, decisionId], () => coreClaimMastersClient.getDecision(decisionId), {
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionTypeId?: number | undefined) => {
+    return useQuery(
+        [getDecisionReasonQueryKey, decisionReasonId, decisionTypeId],
+        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionTypeId),
+        {
+            enabled: !!decisionTypeId,
             refetchOnWindowFocus: false,
         }
     );

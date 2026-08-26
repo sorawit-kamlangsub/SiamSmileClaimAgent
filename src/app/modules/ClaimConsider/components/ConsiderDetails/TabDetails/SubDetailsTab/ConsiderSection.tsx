@@ -1,0 +1,244 @@
+import { useRef, useState } from "react";
+import type { ReactNode } from "react";
+import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
+import HourglassTopIcon from "@mui/icons-material/HourglassTop";
+import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
+import BlockIcon from "@mui/icons-material/Block";
+import CancelIcon from "@mui/icons-material/Cancel";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
+
+import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
+import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
+import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
+import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+
+type ConsiderType = "pendingDocument" | "revision" | "rejected" | "cancelled";
+
+type StatusOption = {
+    value: ConsiderType;
+    decisionId: number;
+    label: string;
+    icon: ReactNode;
+    color: string;
+    softColor: string;
+    reasonLabel: string;
+    detailLabel: string;
+    detailPlaceholder: string;
+    subheaderLabel: string;
+    requiresAttachment?: boolean;
+};
+
+const statusOptions: StatusOption[] = [
+    {
+        value: "pendingDocument",
+        decisionId: 3,
+        label: "รอเอกสาร",
+        icon: <HourglassTopIcon fontSize="small" />,
+        color: "#A87808",
+        softColor: "#FFF8E8",
+        reasonLabel: "สาเหตุที่ขอเอกสาร",
+        detailLabel: "รายละเอียดเอกสารที่ต้องการ",
+        detailPlaceholder: "ระบุเอกสารหรือข้อมูลที่ต้องการเพิ่มเติม",
+        subheaderLabel: "ขอเอกสารเพิ่มเติม",
+    },
+    {
+        value: "revision",
+        decisionId: 4,
+        label: "รอแก้ไข",
+        icon: <FormatListBulletedIcon fontSize="small" />,
+        color: "#806033",
+        softColor: "#FAF7F2",
+        reasonLabel: "สาเหตุที่ขอแก้ไข",
+        detailLabel: "รายละเอียดการแก้ไข",
+        detailPlaceholder: "ระบุข้อมูลหรือรายการที่ต้องการให้แก้ไข",
+        subheaderLabel: "ขอแก้ไขข้อมูล",
+    },
+    {
+        value: "rejected",
+        decisionId: 6,
+        label: "ปฏิเสธ",
+        icon: <BlockIcon fontSize="small" />,
+        color: "#D76451",
+        softColor: "#FFF4F1",
+        reasonLabel: "สาเหตุการปฏิเสธ",
+        detailLabel: "รายละเอียดการปฏิเสธ",
+        detailPlaceholder: "ระบุเหตุผลประกอบการปฏิเสธ",
+        subheaderLabel: "ปิดผลเป็นปฏิเสธ",
+        requiresAttachment: true,
+    },
+    {
+        value: "cancelled",
+        decisionId: 5,
+        label: "ยกเลิก",
+        icon: <CancelIcon fontSize="small" />,
+        color: "#D92D2D",
+        softColor: "#FFF4F4",
+        reasonLabel: "สาเหตุการยกเลิก",
+        detailLabel: "รายละเอียดการยกเลิก",
+        detailPlaceholder: "ระบุเหตุผลประกอบการยกเลิก",
+        subheaderLabel: "ยกเลิกรายการเคลม",
+    },
+];
+
+type ConsiderSectionProps = {
+    productId?: number | undefined;
+    aplicationCode?: string | undefined;
+};
+
+const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) => {
+    const { formik, decisionReason, decisionReasonLoading } = useConsiderDetailHook();
+    const [detail, setDetail] = useState("");
+    const formRef = useRef<HTMLDivElement>(null);
+
+    const selectedStatus = statusOptions.find((status) => status.decisionId === formik.values.considerResult);
+    const selectStatus = (status: StatusOption) => {
+        formik.setFieldValue("considerResult", status.decisionId, false);
+        formik.setFieldValue("decisionReasonId", undefined, false);
+        formik.setFieldValue("decisionReasonDetail", "", false);
+
+        window.setTimeout(() => {
+            formRef.current?.scrollIntoView({
+                behavior: "smooth",
+                block: "nearest",
+            });
+        }, 0);
+    };
+
+    return (
+        <CustomPaper>
+            <HeadingWithColor icon={<FactCheckIcon sx={{ fontSize: 27 }} />} text="ผลการพิจารณา" color="blue" />
+
+            <Box aria-label="เลือกผลการพิจารณา" role="radiogroup" sx={{ mt: 2.5 }}>
+                <Grid container spacing={{ xs: 1.25, sm: 2 }}>
+                    {statusOptions.map((status) => {
+                        const isSelected = status.decisionId === formik.values.considerResult;
+
+                        return (
+                            <Grid item xs={6} lg={3} key={status.value}>
+                                <Button
+                                    fullWidth
+                                    aria-checked={isSelected}
+                                    color="inherit"
+                                    role="radio"
+                                    startIcon={status.icon}
+                                    variant={isSelected ? "contained" : "outlined"}
+                                    onClick={() => selectStatus(status)}
+                                    sx={{
+                                        minHeight: { xs: 48, sm: 54 },
+                                        borderColor: status.color,
+                                        borderRadius: 3,
+                                        color: isSelected ? "#fff" : status.color,
+                                        bgcolor: isSelected ? status.color : "#fff",
+                                        fontSize: { xs: 14, sm: 16 },
+                                        fontWeight: 600,
+                                        whiteSpace: "nowrap",
+                                        "&:hover": {
+                                            borderColor: status.color,
+                                            bgcolor: isSelected ? status.color : status.softColor,
+                                        },
+                                        "&:focus-visible": {
+                                            outline: `3px solid ${status.color}55`,
+                                            outlineOffset: 2,
+                                        },
+                                    }}
+                                >
+                                    {status.label}
+                                </Button>
+                            </Grid>
+                        );
+                    })}
+                </Grid>
+            </Box>
+
+            {selectedStatus && (
+                <Box
+                    ref={formRef}
+                    sx={{
+                        mt: { xs: 2, md: 3 },
+                        overflow: "hidden",
+                        border: `1px solid ${selectedStatus.color}33`,
+                        borderRadius: 2,
+                        bgcolor: "#fff",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "flex-start",
+                            gap: 1.25,
+                            px: { xs: 2, sm: 3 },
+                            py: 1.75,
+                            color: selectedStatus.color,
+                            bgcolor: selectedStatus.softColor,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignSelf: "center",
+                                "& svg": {
+                                    fontSize: { xs: 24, sm: 28 },
+                                },
+                            }}
+                        >
+                            {selectedStatus.icon}
+                        </Box>
+                        <Box>
+                            <Typography fontWeight={600}>{selectedStatus.label}</Typography>
+                            <Typography
+                                sx={{
+                                    mt: 0.25,
+                                    color: "text.secondary",
+                                    fontSize: { xs: 12, sm: 13 },
+                                    lineHeight: 1.35,
+                                }}
+                            >
+                                {selectedStatus.subheaderLabel}
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    <Box sx={{ p: { xs: 2, sm: 3 } }}>
+                        <TextField
+                            select
+                            required
+                            fullWidth
+                            label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
+                            value={formik.values.decisionReasonId || ""}
+                            onChange={(event) => formik.setFieldValue("decisionReasonId", Number(event.target.value))}
+                        >
+                            {(decisionReason?.data ?? []).map((item) => (
+                                <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
+                                    {item.decisionReasonName}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+
+                        <TextField
+                            required
+                            fullWidth
+                            multiline
+                            minRows={4}
+                            label={selectedStatus.detailLabel}
+                            placeholder={selectedStatus.detailPlaceholder}
+                            value={detail}
+                            onChange={(event) => setDetail(event.target.value)}
+                            sx={{ mt: 2 }}
+                        />
+
+                        {selectedStatus.requiresAttachment && (
+                            <DocumentScanTable
+                                productId={productId}
+                                documentTypeId={15}
+                                aplicationCode={aplicationCode ?? ""}
+                                rejectClaim
+                            />
+                        )}
+                    </Box>
+                </Box>
+            )}
+        </CustomPaper>
+    );
+};
+
+export default ConsiderSection;

@@ -2,11 +2,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
-    CaseDocumentDetailCreateRequest,
+    CaseDocumentDetailV2Request,
+    CaseItemV2Request,
     GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
+    GetDocumentSubTypeDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { DocumentByIdResponseDto } from "../../../api/docstorageApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
@@ -17,9 +19,9 @@ export enum SymptomType {
 }
 
 export enum DeathPlaceType {
-    Home = 1,
-    Hospital = 2,
-    Other = 3,
+    Home = 2,
+    Hospital = 3,
+    Other = 4,
 }
 
 export interface DiagnosisModel {
@@ -57,7 +59,7 @@ export interface BeneficiaryForm {
 
     citizenId?: string;
     bankId?: number;
-    bankName?: string;
+    bankId_selectedText?: string;
     bankAccountNo?: string;
     bankAccountName?: string;
 
@@ -110,7 +112,7 @@ export interface ClaimFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
+    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
 }
 
 export type ClaimBankAccount = GetCustomerBankAccountDtoResponse & {
@@ -133,6 +135,8 @@ interface ClaimPHState {
     isEnabled: boolean;
     organLossItems: OrganLossItem[];
     beneficiaries: BeneficiaryForm[];
+    caseItems: CaseItemV2Request[];
+    documentScanList: GetDocumentSubTypeDtoResponse[];
 }
 const defaultForm: ClaimFormValues = {
     documentRecipientTypeId: 2,
@@ -162,7 +166,7 @@ const defaultForm: ClaimFormValues = {
     transferAmount: 0,
     benefitAmounts: {},
     symptomType: 1,
-    deathPlaceType: 1,
+    deathPlaceType: 2,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [
@@ -194,6 +198,8 @@ const initialState: ClaimPHState = {
     documentDetailById: {},
     organLossItems: [],
     beneficiaries: [],
+    caseItems: [],
+    documentScanList: [],
 };
 
 const claimPHSlice = createSlice({
@@ -296,6 +302,9 @@ const claimPHSlice = createSlice({
         setDocumentDetailById: (state, action: PayloadAction<DocumentDetailDto>) => {
             state.documentDetailById[action.payload.documentId ?? ""] = action.payload;
         },
+        setDocument: (state, action: PayloadAction<GetDocumentSubTypeDtoResponse[]>) => {
+            state.documentScanList = action.payload;
+        },
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;
         },
@@ -335,6 +344,10 @@ const claimPHSlice = createSlice({
             });
         },
 
+        setCaseItems(state, action: PayloadAction<CaseItemV2Request[]>) {
+            state.caseItems = action.payload;
+        },
+
         resetState: () => initialState,
     },
 });
@@ -356,11 +369,13 @@ export const {
     setInsured,
     setEnabled,
     setDocumentDetailById,
+    setDocument,
     setOrganLossItems,
     setBeneficiaries,
     updateBeneficiary,
     addBeneficiary,
     removeBeneficiary,
+    setCaseItems,
     resetState,
 } = claimPHSlice.actions;
 

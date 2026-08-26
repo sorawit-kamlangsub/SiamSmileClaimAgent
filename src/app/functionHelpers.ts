@@ -418,6 +418,42 @@ export const colorMapPaymentStatus: Record<number, "#11734B" | "#a56e07" | "#B32
     4: "#B32615", // Cancelled
     5: "#B32615", // Failed
 };
+
+//AppStatus
+export const backgroundColorMapAppStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    2: "#D4EDBC", // ปกติ
+    3: "#FFF1CD", // มีกำหนดยกเลิก
+    4: "#FFCFC9", // ยกเลิก
+    5: "#FFCFC9", // ยกเลิกก่อน DCR
+};
+
+export const colorMapPaymentAppStatus: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
+    2: "#11734B", // ปกติ
+    3: "#a56e07", // มีกำหนดยกเลิก
+    4: "#B32615", // ยกเลิก
+    5: "#B32615", // ยกเลิกก่อน DCR
+};
+
+//AppStatus
+export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9"> = {
+    2: "#FFF1CD", // รอพิจารณา
+    3: "#FFF1CD", // รอเอกสาร
+    4: "#FFF1CD", // รอแก้ไข
+    5: "#FFCFC9", // ปฏิเสธ
+    6: "#FFCFC9", // ยกเลิก
+    7: "#FFF1CD", // อยู่ระหว่างดำเนินการ
+    8: "#FFF1CD", // รอตรวจสอบการแก้ไข
+};
+
+export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615"> = {
+    2: "#a56e07", // รอพิจารณา
+    3: "#a56e07", // รอเอกสาร
+    4: "#a56e07", // รอแก้ไข
+    5: "#B32615", // ปฏิเสธ
+    6: "#B32615", // ยกเลิก
+    7: "#a56e07", // อยู่ระหว่างดำเนินการ
+    8: "#a56e07", // รอตรวจสอบการแก้ไข
+};
 export enum IncidentType {
     Illness = 2,
     Accident = 3,
@@ -438,3 +474,31 @@ export enum MedicalType {
     HM = 5,
     DayCaseSurgery = 6,
 }
+
+export enum CauseOfIncident {
+    Illness = 2, // โรคทั่วไป
+    Accident = 3, // อุบัติเหตุทั่วไป
+    Motorcycle = 4, // ขับขี่/โดยสารจักรยานยนต์
+    Murder = 5, // ฆาตกรรม
+    PublicDisaster = 7, // ภัยสาธารณะ
+    SchoolLiability = 8, // รับผิดสถานศึกษา
+}
+
+export const calculatePolicyAgeText = (coverageFrom?: string): string => {
+    if (!coverageFrom) return "-";
+
+    const start = dayjs(coverageFrom);
+    const end = dayjs(); // วันปัจจุบัน
+
+    if (!start.isValid() || end.isBefore(start)) return "-";
+
+    const years = end.diff(start, "year");
+    const afterYears = start.add(years, "year");
+
+    const months = end.diff(afterYears, "month");
+    const afterMonths = afterYears.add(months, "month");
+
+    const days = end.diff(afterMonths, "day");
+
+    return `${years} ปี ${months} เดือน ${days} วัน`;
+};

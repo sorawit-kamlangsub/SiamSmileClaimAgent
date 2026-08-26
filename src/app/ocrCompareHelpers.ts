@@ -63,9 +63,7 @@ export const focusToFirstError = (errors: any) => {
     };
     const firstErrorKey = findFirstKey(errors);
     if (firstErrorKey) {
-        const el = document.querySelector(`[name="${firstErrorKey}"]`) as HTMLElement | null;
-        if (el && typeof el.focus === "function") {
-            el.focus();
-        }
+        const el = document.querySelector(`[data-field-name="${firstErrorKey}"]`);
+        el?.scrollIntoView({ behavior: "smooth", block: "center" });
     }
 };

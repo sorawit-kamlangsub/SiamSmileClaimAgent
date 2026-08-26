@@ -10,10 +10,18 @@ import {
     SymptomType,
 } from "./claimPHSlice";
 import {
-    CaseCreateRequest,
-    CaseDocumentDetailCreateRequest,
-    ClaimCreateRequest,
-    CreateCoreClaimDtoRequest,
+    BeneficiaryV2Request,
+    CaseAssessmentV2Request,
+    CaseContactV2Request,
+    CaseDeathV2Request,
+    CaseDisabilityV2Request,
+    CaseDocumentDetailV2Request,
+    CaseItemV2Request,
+    CaseRegistrationV2Request,
+    CaseServicePersonV2Request,
+    CaseV2Request,
+    ClaimV2Request,
+    CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
@@ -21,12 +29,65 @@ import {
 } from "../../../api/coreClaimApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
 
+export type LocalCaseItem = CaseItemV2Request & { tempCaseId?: string; tempCaseItemId?: string };
+export type LocalCaseRegistration = CaseRegistrationV2Request & { tempCaseId?: string };
+export type LocalCaseAssessment = CaseAssessmentV2Request & { tempCaseId?: string };
+export type LocalCaseDeath = CaseDeathV2Request & { tempCaseId?: string };
+export type LocalCaseDisability = CaseDisabilityV2Request & { tempCaseId?: string };
+
+export type LocalCaseDocument = {
+    tempCaseId?: string;
+    tempCaseDocumentId?: string;
+    documentSubTypeId?: number;
+    caseDocumentDetail?: any[];
+};
+export type LocalCaseContact = CaseContactV2Request & { tempCaseId?: string };
+export type LocalCaseServicePerson = CaseServicePersonV2Request & { tempCaseId?: string };
+export type LocalBeneficiary = Omit<BeneficiaryV2Request, "payables"> & { tempClaimId?: string; tempCaseId?: string };
+
+export type LocalCaseEntry = Omit<
+    CaseV2Request,
+    | "items"
+    | "registrations"
+    | "assessments"
+    | "deaths"
+    | "disabilities"
+    | "documents"
+    | "contacts"
+    | "servicePersons"
+    | "beneficiaries"
+> & {
+    tempCaseId: string;
+    tempClaimId: string;
+    payableCategoryId?: number;
+    createCaseItem: LocalCaseItem[];
+    createCaseRegistration: LocalCaseRegistration[];
+    createCaseAssessment: LocalCaseAssessment[];
+    createCaseDeath: LocalCaseDeath[];
+    createCaseDisability: LocalCaseDisability[];
+    createCaseDocument: LocalCaseDocument[];
+    createCaseContact?: LocalCaseContact[];
+    createCaseServicePerson: LocalCaseServicePerson[];
+    createBeneficiary: LocalBeneficiary[];
+};
+
+export type LocalClaimEntry = Omit<ClaimV2Request, "cases"> & {
+    tempClaimId: string;
+    createCase?: LocalCaseEntry[];
+};
+
+export type LocalCoreClaim = Omit<CreateCoreClaimV2DtoRequest, "claims" | "requestId"> & {
+    createClaim?: LocalClaimEntry[];
+};
+
 export interface SchoolInfo {
     appId: string;
     schoolName: string;
     teacherName: string;
     teacherPhone: string;
 }
+
+export type PendingInsured = GetCustomerDetailByIdDtoResponse & { tempClaimId?: string };
 
 export interface ClaimInsuredItem {
     id: string;
@@ -41,19 +102,17 @@ export interface ClaimInsuredItem {
     applicationId?: string;
     customerId?: number;
     productId?: number;
-
-    // ── ผูกกับ createClaim/createCase ใน tmpCoreClaim เพื่อรู้ว่าจะ update/remove ตัวไหน ──
-    // ไม่ต้องเป็น crypto-grade guid เพราะไม่ได้ใช้ตัดสินอะไรเรื่อง security แค่ใช้เป็น key จับคู่/ส่งไป API
     tempClaimId: string;
     tempCaseId: string;
     formValues: ClaimPAFormValues;
 }
 
-// ความคุ้มครองเพิ่มเติมสำหรับกรณีเสียชีวิต (เลือกได้มากกว่า 1 อย่าง)
 export enum DeathExtraCoverageId {
-    PublicDisaster = 7, // ภัยสาธารณะ
-    SchoolLiability = 8, // ความรับผิดสถานศึกษา
+    PublicDisaster = 6, // ภัยสาธารณะ
+    SchoolLiability = 7, // รับผิดสถานศึกษา
 }
+
+export const MAX_INSURED_PER_CLAIM = 15;
 
 export interface ClaimPAFormValues {
     // ผู้รับเอกสาร
@@ -97,17 +156,18 @@ export interface ClaimPAFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailCreateRequest[] | undefined;
-    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (7 = ภัยสาธารณะ, 8 = ความรับผิดสถานศึกษา)
+    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
+    extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (ุ6 = ภัยสาธารณะ, 7 = ความรับผิดสถานศึกษา)
+    deathBenefitAmounts: Record<number, number | string>;
 }
 
-export interface CreateCoreClaimDto extends CreateCoreClaimDtoRequest {}
+export type CreateCoreClaimDto = LocalCoreClaim;
 
 interface ClaimPAState {
     isContinuous: boolean;
     oldClaim: GetClaimHistoryDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
-    pendingInsured: GetCustomerDetailByIdDtoResponse | undefined;
+    pendingInsured: PendingInsured | undefined;
     school: SchoolInfo | null;
     form: ClaimPAFormValues;
     claimItems: ClaimInsuredItem[]; // รายการผู้เอาประกันในตาราง
@@ -117,7 +177,7 @@ interface ClaimPAState {
     beneficiaries: BeneficiaryForm[];
     organLossItems: OrganLossItem[];
 
-    tmpCoreClaim: CreateCoreClaimDtoRequest;
+    tmpCoreClaim: LocalCoreClaim;
 }
 
 const defaultForm: ClaimPAFormValues = {
@@ -147,7 +207,7 @@ const defaultForm: ClaimPAFormValues = {
     notificationDate: dayjs(),
     transferAmount: 0,
     symptomType: 1,
-    deathPlaceType: 1,
+    deathPlaceType: 2,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [
@@ -162,6 +222,7 @@ const defaultForm: ClaimPAFormValues = {
     remark: undefined,
     ocrDocument: [],
     extraCoverageIds: [],
+    deathBenefitAmounts: {},
 };
 
 const initialState: ClaimPAState = {
@@ -196,7 +257,7 @@ const claimPASlice = createSlice({
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
             state.insured = action.payload;
         },
-        setPendingInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {
+        setPendingInsured(state, action: PayloadAction<PendingInsured | undefined>) {
             state.pendingInsured = action.payload;
         },
         setSchool(state, action: PayloadAction<SchoolInfo | null>) {
@@ -224,13 +285,13 @@ const claimPASlice = createSlice({
         },
 
         //credate claim
-        setTmpCoreClaimHeader(state, action: PayloadAction<CreateCoreClaimDtoRequest>) {
+        setTmpCoreClaimHeader(state, action: PayloadAction<LocalCoreClaim>) {
             state.tmpCoreClaim = {
                 ...action.payload,
                 createClaim: action.payload.createClaim ?? [],
             };
         },
-        setTmpClaimItem(state, action: PayloadAction<ClaimCreateRequest[]>) {
+        setTmpClaimItem(state, action: PayloadAction<LocalClaimEntry[]>) {
             state.tmpCoreClaim.createClaim = [...(state.tmpCoreClaim.createClaim ?? []), ...action.payload];
         },
 
@@ -238,7 +299,7 @@ const claimPASlice = createSlice({
             state,
             action: PayloadAction<{
                 tempClaimId: string;
-                cases: CaseCreateRequest[];
+                cases: LocalCaseEntry[];
             }>
         ) {
             const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
@@ -248,26 +309,21 @@ const claimPASlice = createSlice({
             claim.createCase = [...(claim.createCase ?? []), ...action.payload.cases];
         },
 
-        updateTmpClaimItem(state, action: PayloadAction<ClaimCreateRequest>) {
+        updateTmpClaimItem(state, action: PayloadAction<LocalClaimEntry>) {
             const idx = state.tmpCoreClaim.createClaim?.findIndex((c) => c.tempClaimId === action.payload.tempClaimId);
             if (idx === undefined || idx === -1 || !state.tmpCoreClaim.createClaim) return;
-            // payload ไม่มี createCase (แยก set กันคนละ action) เก็บของเดิมไว้
             state.tmpCoreClaim.createClaim[idx] = {
                 ...action.payload,
                 createCase: state.tmpCoreClaim.createClaim[idx].createCase,
             };
         },
 
-        updateTmpCaseItem(state, action: PayloadAction<{ tempClaimId: string; case: CaseCreateRequest }>) {
+        updateTmpCaseItem(state, action: PayloadAction<{ tempClaimId: string; case: LocalCaseEntry }>) {
             const claim = state.tmpCoreClaim.createClaim?.find((c) => c.tempClaimId === action.payload.tempClaimId);
             if (!claim) return;
 
-            const idx = claim.createCase?.findIndex((c) => c.tempCaseId === action.payload.case.tempCaseId);
-            if (idx === undefined || idx === -1 || !claim.createCase) {
-                claim.createCase = [...(claim.createCase ?? []), action.payload.case];
-                return;
-            }
-            claim.createCase[idx] = action.payload.case;
+            // 1 claim ต่อ 1 case
+            claim.createCase = [action.payload.case];
         },
 
         removeTmpClaim(
@@ -278,12 +334,19 @@ const claimPASlice = createSlice({
                 state.tmpCoreClaim.createClaim?.filter((x) => x.tempClaimId !== action.payload) ?? [];
         },
 
-        // ── BankAccounts (เหมือน PH) ──
         setBankAccounts(state, action: PayloadAction<GetCustomerBankAccountDtoResponse[]>) {
-            state.bankAccounts = action.payload.map((item, index) => ({
+            const manualAccounts = state.bankAccounts.filter((b) => b.id.startsWith("manual-"));
+            const apiAccounts = action.payload.map((item, index) => ({
                 ...item,
                 id: String(item.indexId ?? index),
-                isDefault: index === 0,
+                isDefault: false,
+            }));
+            const merged = [...apiAccounts, ...manualAccounts];
+            const prevDefaultId = state.bankAccounts.find((b) => b.isDefault)?.id;
+            const defaultStillExists = merged.some((b) => b.id === prevDefaultId);
+            state.bankAccounts = merged.map((b, index) => ({
+                ...b,
+                isDefault: defaultStillExists ? b.id === prevDefaultId : index === 0,
             }));
         },
         selectBankAccount(state, action: PayloadAction<string>) {
@@ -304,10 +367,18 @@ const claimPASlice = createSlice({
             });
         },
         setContacts(state, action: PayloadAction<GetContactPersonDtoResponse[]>) {
-            state.contacts = action.payload.map((item, index) => ({
+            const manualContacts = state.contacts.filter((c) => c.id.startsWith("manual-"));
+            const apiContacts = action.payload.map((item, index) => ({
                 ...item,
                 id: String(item.indexId ?? index),
-                isDefault: index === 0,
+                isDefault: false,
+            }));
+            const merged = [...apiContacts, ...manualContacts];
+            const prevDefaultId = state.contacts.find((c) => c.isDefault)?.id;
+            const defaultStillExists = merged.some((c) => c.id === prevDefaultId);
+            state.contacts = merged.map((c, index) => ({
+                ...c,
+                isDefault: defaultStillExists ? c.id === prevDefaultId : index === 0,
             }));
         },
         selectContact(state, action: PayloadAction<string>) {

@@ -1,6 +1,5 @@
 import React from "react";
-import { Box, Grid, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/material";
-import EditIcon from "@mui/icons-material/Edit";
+import { Box, Grid, Link, Typography } from "@mui/material";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { CustomTypographyWithOutGrid } from "../../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
@@ -14,12 +13,11 @@ interface SummaryRow {
 
 interface Props {
     data: SummaryRow[];
-    onEdit: () => void;
 }
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const ClaimSummaryPHTable: React.FC<Props> = ({ data, onEdit }) => {
+const ClaimSummaryPHTable: React.FC<Props> = ({ data }) => {
     // const totalClaimAmount = data.reduce((sum, row) => sum + Number(row.claimAmount), 0);
 
     return (
@@ -48,29 +46,6 @@ const ClaimSummaryPHTable: React.FC<Props> = ({ data, onEdit }) => {
                                     <Typography fontWeight={700} fontSize={15} color="primary.main">
                                         {row.customerName}
                                     </Typography>
-                                    <Tooltip
-                                        title="แก้ไขรายละเอียด"
-                                        arrow
-                                        placement="top"
-                                        TransitionComponent={Zoom}
-                                        enterDelay={100}
-                                        leaveDelay={50}
-                                    >
-                                        <IconButton
-                                            size="medium"
-                                            onClick={onEdit}
-                                            sx={{
-                                                bgcolor: "#fdf6e3",
-                                                color: "#c8a415",
-                                                p: 0.4,
-                                                ml: 0.5,
-                                                border: "1px solid #fff2c2",
-                                            }}
-                                            disabled
-                                        >
-                                            <EditIcon sx={{ fontSize: 19 }} />
-                                        </IconButton>
-                                    </Tooltip>
                                 </Box>
                             }
                         />

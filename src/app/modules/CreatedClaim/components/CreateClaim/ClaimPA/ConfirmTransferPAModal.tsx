@@ -10,6 +10,8 @@ import {
     Grid,
     IconButton,
     Typography,
+    useMediaQuery,
+    useTheme,
 } from "@mui/material";
 import CommentIcon from "@mui/icons-material/Comment";
 import CloseIcon from "@mui/icons-material/Close";
@@ -20,17 +22,20 @@ interface Props {
     open: boolean;
     onClose: () => void;
     onConfirm: () => void;
+    isLoading?: boolean | undefined;
 }
 
-const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
+const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm, isLoading }) => {
     const { bankAccounts, contacts, claimItems, school } = useAppSelector((s) => s.claimpa);
     const defaultBank = bankAccounts.find((b) => b.isDefault);
     const defaultContact = contacts.find((c) => c.isDefault);
     const logoSrc = setBankLogo(defaultBank?.bankId);
     const totalAmount = claimItems.reduce((sum, i) => sum + i.claimAmount, 0);
+    const theme = useTheme();
+    const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     return (
-        <Dialog open={open} maxWidth="sm" fullWidth>
+        <Dialog open={open} maxWidth="sm" fullScreen={fullScreen} fullWidth>
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between">
                     <Box display="flex" alignItems="center" gap={1}>
@@ -188,6 +193,7 @@ const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm }) =
                             fullWidth
                             size="medium"
                             onClick={() => onConfirm()}
+                            disabled={isLoading}
                             sx={{ mt: 1 }}
                         >
                             ยืนยันแจ้งโอนเงิน

@@ -5,7 +5,7 @@ import { useAppDispatch, useAppSelector } from "../../redux";
 import { MenuItem, ParentMenu, selectLayout, setDrawerOpen } from "../layout";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import AddCommentIcon from "@mui/icons-material/AddComment";
-// import MonitorIcon from "@mui/icons-material/Monitor";
+import MonitorIcon from "@mui/icons-material/Monitor";
 import CalculateIcon from "@mui/icons-material/Calculate";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import AddCardIcon from "@mui/icons-material/AddCard";
@@ -62,6 +62,7 @@ export const ASideMenuList = () => {
                 </ParentMenu>
                 {/* <MenuItem path="/monitor-claim" icon={<AddCommentIcon />} text="แจ้งเคลม" permissions={[]} /> */}
                 <MenuItem path="/claim-simulation" icon={<CalculateIcon />} text="คำนวณวงเงินเคลม" permissions={[]} />
+
                 {/* <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/test-permission" icon="home" text="Test Permission" />
                 </ParentMenu> */}
@@ -78,6 +79,15 @@ export const ASideMenuList = () => {
                     <MenuItem path="/manage/bank/status" icon={<AccountBalanceIcon />} text="สอบถามธนาคาร" />
                     <MenuItem path="/manage/setting/transfer" icon={<SettingsIcon />} text="ตั้งค่าการโอนเงิน" />
                 </ParentMenu>
+
+                <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
+                    <MenuItem path="/consider/monitor" icon="person" text="เคลมลูกค้า" />
+                </ParentMenu>
+                {/* <ParentMenu icon={<PaymentsIcon />} text="จัดการเงินเคลม" permissions={[]}>
+                    <MenuItem path="/payment-monitor" icon={<AddCardIcon />} text="โอนเพิ่ม" />
+                    <MenuItem path="/test-permission" icon={<ManageSearchIcon />} text="ค้นหาการแจ้งเคลม" />
+                    <MenuItem path="/test-permission" icon={<AccountBalanceWalletIcon />} text="ติดตามการโอนเงิน" />
+                </ParentMenu> */}
             </ASideMenuListContainer>
         </ASideMenuListDrawer>
     );
