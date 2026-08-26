@@ -127,7 +127,7 @@ const useTransferRepayDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (rowIndex) => {
+                customBodyRenderLite: (_rowIndex) => {
                     return (
                         <IconButton sx={{ backgroundColor: "#00569D", color: "#FFFFFF", scale: -0.8 }}>
                             <RefreshIcon />

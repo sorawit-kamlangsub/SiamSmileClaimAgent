@@ -20,7 +20,7 @@ const defaultValues: ClaimSearchFilterValues = {
 const ClaimSearchFilterFormHook = () => {
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: defaultValues,
-        onSubmit: (values) => {},
+        onSubmit: (_values) => {},
     });
     return { formik };
 };
