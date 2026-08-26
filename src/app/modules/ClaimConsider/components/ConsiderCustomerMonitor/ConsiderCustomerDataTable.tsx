@@ -1,15 +1,21 @@
 import { StandardDataTable } from "../../../_common";
 import useDataTableConsiderCustomerHook from "../../hooks/ClaimConsiderCustomerMonitor/DataTableConsiderCustomer";
+import { AppliedFilter } from "../../hooks/ClaimConsiderCustomerMonitor/SearchFilterHook";
 
-const ConsiderCustomerDataTable = () => {
-    const { column, mockData } = useDataTableConsiderCustomerHook();
+const ConsiderCustomerDataTable = ({ appliedFilter }: { appliedFilter: AppliedFilter }) => {
+    const { column, claimTransactionData, claimTransactionDataLoading, setPaginated, pagination } =
+        useDataTableConsiderCustomerHook(appliedFilter);
     return (
         <>
             <StandardDataTable
                 name="dataTableConsiderCustomer"
                 columns={column ?? []}
-                data={mockData ?? []}
+                data={claimTransactionData?.data ?? []}
+                isLoading={claimTransactionDataLoading}
                 color="primary"
+                setPaginated={setPaginated}
+                paginated={pagination}
+                columnHeaderAlign="center"
             />
         </>
     );

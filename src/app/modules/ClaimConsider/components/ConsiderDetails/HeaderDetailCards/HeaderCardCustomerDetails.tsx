@@ -2,6 +2,7 @@ import { Box, Grid, Typography } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import ShieldIcon from "@mui/icons-material/Shield";
+import { backgroundColorMapAppStatus, colorMapPaymentAppStatus } from "../../../../../functionHelpers";
 
 type InfoChipProps = {
     label: string;
@@ -29,6 +30,7 @@ export type PolicyHolderInfoBannerProps = {
     onApplicationIdClick?: () => void;
     phoneNumber: string;
     appStatus: string;
+    appStatusId?: number;
     policyAgeText: string;
     coverageStartDate: string;
     coverageEndDate?: string;
@@ -42,11 +44,15 @@ const HeaderCardCustomerDetails = ({
     onApplicationIdClick,
     phoneNumber = "",
     appStatus = "",
+    appStatusId,
     policyAgeText = "",
     coverageStartDate = "",
     coverageEndDate = "",
     productDetail: planNo = "",
 }: PolicyHolderInfoBannerProps) => {
+    const appStatusBgColor = appStatusId ? backgroundColorMapAppStatus[appStatusId] : undefined;
+    const appStatusTextColor = appStatusId ? colorMapPaymentAppStatus[appStatusId] : undefined;
+
     return (
         <>
             <Box
@@ -138,8 +144,8 @@ const HeaderCardCustomerDetails = ({
                                         <Box
                                             component="span"
                                             sx={{
-                                                backgroundColor: "#D9F7C4",
-                                                color: "#2E7D32",
+                                                backgroundColor: appStatusBgColor ?? "#D9F7C4",
+                                                color: appStatusTextColor ?? "#2E7D32",
                                                 borderRadius: "10px",
                                                 padding: "1px 12px",
                                                 fontSize: "0.85rem",

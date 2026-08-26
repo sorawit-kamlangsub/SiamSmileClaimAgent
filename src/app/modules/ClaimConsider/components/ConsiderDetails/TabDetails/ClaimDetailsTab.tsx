@@ -1,22 +1,26 @@
 import { useState } from "react";
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Grid } from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import SaveIcon from "@mui/icons-material/Save";
+import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
+import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import ConsiderSection from "./SubDetailsTab/ConsiderSection";
 
-const ClaimDetailsTab = () => {
+type ClaimDetailsTabProps = {
+    customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
+};
+const ClaimDetailsTab = ({ customerDetail }: ClaimDetailsTabProps) => {
     const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
     const [activeStep, setActiveStep] = useState(0);
-    // Furthest step the user has unlocked by successfully completing the
-    // one before it — drives which step headers are clickable.
     const [furthestStep, setFurthestStep] = useState(0);
 
     const isLastStep = activeStep === steps.length - 1;
 
     const handleNext = () => {
-        // TODO: run this step's formik validation / submit before advancing.
-        // e.g. const errors = await formik.validateForm();
-        //      if (Object.keys(errors).length > 0) return;
-
         const next = Math.min(activeStep + 1, steps.length - 1);
         setActiveStep(next);
         setFurthestStep((prev) => Math.max(prev, next));
@@ -24,6 +28,10 @@ const ClaimDetailsTab = () => {
 
     const handleBack = () => {
         setActiveStep((prev) => Math.max(prev - 1, 0));
+    };
+
+    const handleSaveDraft = () => {
+        // TODO: บันทึกแบบร่าง (ไม่ validate เต็มรูปแบบ)
     };
 
     const handleFinish = () => {
@@ -45,46 +53,66 @@ const ClaimDetailsTab = () => {
                         <div>
                             <Grid container spacing={2}>
                                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                                    <Box
-                                        sx={{
-                                            backgroundColor: "#EAF4FC",
-                                            borderLeft: "4px solid #1565C0",
-                                            borderRadius: "4px",
-                                            padding: "12px 16px",
-                                            p: 1,
-                                        }}
-                                    >
-                                        <Typography variant="h6" sx={{ fontWeight: "bold" }}>
-                                            บันทึกข้อมูลเคลม
-                                        </Typography>
-                                    </Box>
+                                    <RecordClaimData />
                                 </Grid>
                                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                                    <RecordClaimData />
+                                    <DocumentScanTable
+                                        productId={customerDetail?.productTypeId}
+                                        documentTypeId={15}
+                                        aplicationCode={customerDetail?.policyCode ?? ""}
+                                    />
                                 </Grid>
                             </Grid>
                         </div>
                     )}
                     {activeStep === 1 && <div>{/* ฟอร์มรายละเอียดค่าใช้จ่าย */}</div>}
                     {activeStep === 2 && <div>{/* สรุปรายการเคลม */}</div>}
+                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                        <ConsiderSection
+                            productId={customerDetail?.productTypeId}
+                            aplicationCode={customerDetail?.policyCode ?? ""}
+                        />
+                    </Grid>
                 </Box>
 
-                <Grid container justifyContent="space-between" sx={{ marginTop: "24px" }}>
+                <Grid container justifyContent="space-between" alignItems="center">
                     <Grid item>
-                        <Button variant="outlined" onClick={handleBack} disabled={activeStep === 0}>
-                            ย้อนกลับ
+                        <Button
+                            variant="outlined"
+                            startIcon={<ArrowBackIcon />}
+                            onClick={handleBack}
+                            disabled={activeStep === 0}
+                        >
+                            กลับ
                         </Button>
                     </Grid>
+
                     <Grid item>
-                        {isLastStep ? (
-                            <Button variant="contained" onClick={handleFinish}>
-                                ยืนยัน
+                        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                            <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
+                                บันทึกแบบร่าง
                             </Button>
-                        ) : (
-                            <Button variant="contained" onClick={handleNext}>
-                                ถัดไป
-                            </Button>
-                        )}
+
+                            {!isLastStep && (
+                                <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
+                                    ถัดไป
+                                </Button>
+                            )}
+
+                            {isLastStep && (
+                                <Button
+                                    variant="contained"
+                                    startIcon={<SaveIcon />}
+                                    onClick={handleFinish}
+                                    sx={{
+                                        bgcolor: "#2E7D32",
+                                        "&:hover": { bgcolor: "#1B5E20" },
+                                    }}
+                                >
+                                    ยืนยันบันทึกผลพิจารณา
+                                </Button>
+                            )}
+                        </Box>
                     </Grid>
                 </Grid>
             </Box>

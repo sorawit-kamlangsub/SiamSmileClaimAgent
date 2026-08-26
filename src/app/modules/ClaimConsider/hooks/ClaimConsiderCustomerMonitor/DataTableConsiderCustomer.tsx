@@ -1,138 +1,138 @@
-import { IconButton, Tooltip, Grid } from "@mui/material";
+import { IconButton, Tooltip, Grid, Chip } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
+import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
+import React, { useEffect, useMemo } from "react";
+import { useGetClaimTransactionMonitor } from "../../../../api/coreClaimApi";
+import { AppliedFilter } from "./SearchFilterHook";
+import {
+    backgroundColorMapClaimTransactionType,
+    cellAlignOptions,
+    colorMapClaimTransactionType,
+    formatDateString,
+} from "../../../../functionHelpers";
 
-const useDataTableConsiderCustomerHook = () => {
+const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
-    const mockData = [
-        {
-            transferDate: "2026-08-01",
-            claimCode: "CLM-2026-0001",
-            schoolName: "โรงเรียนสาธิตมหาวิทยาลัยเกษตรศาสตร์",
-            customerName: "นายสมชาย ใจดี",
-            idCard: "1103700123456",
-            amount: 15000,
-            statusName: "โอนเงินสำเร็จ",
-        },
-        {
-            transferDate: "2026-08-02",
-            claimCode: "CLM-2026-0002",
-            schoolName: "โรงเรียนสวนกุหลาบวิทยาลัย",
-            customerName: "นางสาวสุดา รักเรียน",
-            idCard: "1103700654321",
-            amount: 25000,
-            statusName: "รอโอนเงิน",
-        },
-        {
-            transferDate: "2026-08-03",
-            claimCode: "CLM-2026-0003",
-            schoolName: "โรงเรียนเทพศิรินทร์",
-            customerName: "นายกิตติพงษ์ มีสุข",
-            idCard: "1103700789123",
-            amount: 18000,
-            statusName: "โอนเงินสำเร็จ",
-        },
-        {
-            transferDate: "2026-08-04",
-            claimCode: "CLM-2026-0004",
-            schoolName: "โรงเรียนกรุงเทพคริสเตียนวิทยาลัย",
-            customerName: "นางสาวพิมพ์ชนก แสงทอง",
-            idCard: "1103700456789",
-            amount: 32000,
-            statusName: "ไม่สำเร็จ",
-        },
-        {
-            transferDate: "2026-08-05",
-            claimCode: "CLM-2026-0005",
-            schoolName: "โรงเรียนอัสสัมชัญ",
-            customerName: "นายธนกร วัฒนชัย",
-            idCard: "1103700234567",
-            amount: 12500,
-            statusName: "กำลังดำเนินการ",
-        },
-        {
-            transferDate: "2026-08-06",
-            claimCode: "CLM-2026-0006",
-            schoolName: "โรงเรียนบดินทรเดชา (สิงห์ สิงหเสนี)",
-            customerName: "นางสาวชลธิชา สุขใจ",
-            idCard: "1103700890123",
-            amount: 45000,
-            statusName: "โอนเงินสำเร็จ",
-        },
-        {
-            transferDate: "2026-08-07",
-            claimCode: "CLM-2026-0007",
-            schoolName: "โรงเรียนหอวัง",
-            customerName: "นายณัฐวุฒิ เจริญสุข",
-            idCard: "1103700345678",
-            amount: 20000,
-            statusName: "รอโอนเงิน",
-        },
-        {
-            transferDate: "2026-08-08",
-            claimCode: "CLM-2026-0008",
-            schoolName: "โรงเรียนเตรียมอุดมศึกษา",
-            customerName: "นางสาวศิริพร ตั้งใจ",
-            idCard: "1103700567890",
-            amount: 27500,
-            statusName: "โอนเงินสำเร็จ",
-        },
-        {
-            transferDate: "2026-08-09",
-            claimCode: "CLM-2026-0009",
-            schoolName: "โรงเรียนสามเสนวิทยาลัย",
-            customerName: "นายพีรพล เกียรติชัย",
-            idCard: "1103700678901",
-            amount: 15500,
-            statusName: "ไม่สำเร็จ",
-        },
-        {
-            transferDate: "2026-08-10",
-            claimCode: "CLM-2026-0010",
-            schoolName: "โรงเรียนราชวินิตบางแก้ว",
-            customerName: "นางสาววราภรณ์ ใจงาม",
-            idCard: "1103700789012",
-            amount: 30000,
-            statusName: "กำลังดำเนินการ",
-        },
-    ];
+    const isProductTypeId_PH = appliedFilter.product?.includes(6);
+    const isProductTypeId_PA = appliedFilter.product?.includes(26);
+    const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 10,
+    });
+
+    useEffect(() => {
+        setPaginated((prev) => ({ ...prev, page: 1 }));
+    }, [appliedFilter]);
+
+    const { data: claimTransactionData, isLoading: claimTransactionDataLoading } = useGetClaimTransactionMonitor(
+        appliedFilter.isSearch,
+        appliedFilter.dateType,
+        appliedFilter.dateFrom,
+        appliedFilter.dateTo,
+        isProductTypeId_PH,
+        isProductTypeId_PA,
+        appliedFilter.statusId,
+        appliedFilter.searchFrom,
+        appliedFilter.searchDetail,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
+    const pagination: PaginationResultDto = useMemo(
+        () => ({
+            totalAmountRecords: claimTransactionData?.totalAmountRecords ?? 0,
+            totalAmountPages: claimTransactionData?.totalAmountPages ?? 0,
+            currentPage: claimTransactionData?.currentPage ?? 0,
+            recordsPerPage: claimTransactionData?.recordsPerPage ?? 0,
+            pageIndex: claimTransactionData?.pageIndex ?? 0,
+        }),
+        [claimTransactionData]
+    );
+
     const column: MUIDataTableColumn[] = [
         {
-            name: "transferDate",
+            name: "paymentDate",
             label: "วันที่โอนเงิน",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => (value ? formatDateString(value?.toString(), "DD/MM/BBBB HH:mm:ss") : "-"),
+            },
         },
         {
-            name: "claimCode",
+            name: "claimNo",
             label: "ClaimCode",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
+            },
         },
         {
             name: "schoolName",
             label: "ชื่อสถานศึกษา",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => (value ? value : "-"),
+            },
         },
         {
             name: "customerName",
             label: "ชื่อ-สกุลผู้เอาประกัน",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => (value ? value : "-"),
+            },
         },
         {
-            name: "idCard",
+            name: "cardDetail",
             label: "เลขบัตรประชาชน",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => (value ? value : "-"),
+            },
         },
         {
-            name: "amount",
+            name: "totalAmount",
             label: "จำนวนเงิน",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
+                customBodyRender: (value) => {
+                    if (value === undefined || value === null) return "0.00";
+                    return value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                },
+            },
         },
         {
-            name: "statusName",
+            name: "claimTransactionTypeName",
             label: "สถานะรายการ",
-            options: { sort: false },
+            options: {
+                ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
+                customBodyRenderLite: (rowIndex) => {
+                    const row = claimTransactionData?.data?.[rowIndex];
+                    const value = row?.claimTransactionTypeName;
+                    if (!value) return "-";
+                    const bgColor = row?.claimTransactionTypeId
+                        ? backgroundColorMapClaimTransactionType[row?.claimTransactionTypeId]
+                        : undefined;
+                    const textColor = row?.claimTransactionTypeId
+                        ? colorMapClaimTransactionType[row?.claimTransactionTypeId]
+                        : undefined;
+                    return (
+                        <Chip
+                            label={value}
+                            size="small"
+                            sx={{
+                                backgroundColor: bgColor,
+                                color: textColor,
+                                fontWeight: 600,
+                                borderRadius: "16px",
+                            }}
+                        />
+                    );
+                },
+            },
         },
         {
             name: "_option",
@@ -146,28 +146,31 @@ const useDataTableConsiderCustomerHook = () => {
                                 <Tooltip title="พิจารณาเคลม">
                                     <IconButton
                                         onClick={() => {
-                                            navigate(`customers/${mockData?.[rowIndex]?.claimCode}`);
+                                            navigate(
+                                                `customers/${btoa(
+                                                    claimTransactionData?.data?.[rowIndex]?.claimId ?? ""
+                                                )}`
+                                            );
                                         }}
                                         sx={{
-                                            backgroundColor: "#FFF263",
+                                            backgroundColor: "#FFF1CD",
                                             ":hover": {
-                                                backgroundColor: "#FBC02D",
+                                                backgroundColor: "#e7cf95",
                                             },
                                         }}
                                     >
-                                        <FactCheckIcon sx={{ color: "#C49000" }}></FactCheckIcon>
+                                        <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title="พิจารณาเคลม">
+                                <Tooltip title="ดูรายละเอียด">
                                     <IconButton
                                         sx={{
-                                            backgroundColor: "#D4EDFF",
-                                            ":hover": {
-                                                backgroundColor: "#0288D1",
-                                            },
+                                            bgcolor: "#E2F2FF",
+                                            "&:hover": { bgcolor: "#d4ecff" },
+                                            borderColor: "#a8d6fc",
                                         }}
                                     >
-                                        <VisibilityIcon sx={{ color: "#002F6C" }}></VisibilityIcon>
+                                        <VisibilityIcon color="primary"></VisibilityIcon>
                                     </IconButton>
                                 </Tooltip>
                             </Grid>
@@ -177,7 +180,7 @@ const useDataTableConsiderCustomerHook = () => {
             },
         },
     ];
-    return { column, mockData };
+    return { column, claimTransactionData, claimTransactionDataLoading, setPaginated, pagination };
 };
 
 export default useDataTableConsiderCustomerHook;

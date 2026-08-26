@@ -393,7 +393,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 notificationDate: dayjs(),
                 transferAmount: 0,
                 symptomType: 1,
-                deathPlaceType: 1,
+                deathPlaceType: 2,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [
@@ -456,7 +456,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 notificationDate: dayjs(),
                 transferAmount: 0,
                 symptomType: 1,
-                deathPlaceType: 1,
+                deathPlaceType: 2,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [{ icd10Id: undefined, icd10Detail: undefined }],

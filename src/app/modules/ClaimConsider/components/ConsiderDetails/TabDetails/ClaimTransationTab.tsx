@@ -1,0 +1,326 @@
+import { Box, Chip, CircularProgress, IconButton, Pagination, Paper, Stack, Tooltip, Typography } from "@mui/material";
+
+import HistoryOutlinedIcon from "@mui/icons-material/HistoryOutlined";
+import HistoryIcon from "@mui/icons-material/History";
+import VisibilityIcon from "@mui/icons-material/Visibility";
+import HelpOutlineIcon from "@mui/icons-material/HelpOutline";
+import NoteAddOutlinedIcon from "@mui/icons-material/NoteAddOutlined";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
+import SmsOutlinedIcon from "@mui/icons-material/SmsOutlined";
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import HourglassEmptyOutlinedIcon from "@mui/icons-material/HourglassEmptyOutlined";
+import TaskAltIcon from "@mui/icons-material/TaskAlt";
+import HighlightOffIcon from "@mui/icons-material/HighlightOff";
+import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
+import AddCardOutlinedIcon from "@mui/icons-material/AddCardOutlined";
+import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
+import AssignmentReturnedOutlinedIcon from "@mui/icons-material/AssignmentReturnedOutlined";
+import CreateIcon from "@mui/icons-material/Create";
+import useClaimTransactionHook from "../../../hooks/ClaimConsiderDetail/ClaimTransactionHook";
+import { formatDateString, numberWithCommas } from "../../../../../functionHelpers";
+import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
+import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
+type TransactionLogVisual = {
+    icon: React.ElementType;
+    bgcolor: string;
+    color: string;
+};
+
+const transactionLogVisualMap: Record<number, TransactionLogVisual> = {
+    1: { icon: NoteAddOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างเคลม
+    2: { icon: FolderOpenOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างเคส
+    3: { icon: SmsOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ส่ง SMS
+    4: { icon: CheckCircleOutlineIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // โอนสำเร็จ
+    5: { icon: ErrorOutlineIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // โอนไม่สำเร็จ
+    6: { icon: HourglassEmptyOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // ระหว่างพิจารณา
+    7: { icon: TaskAltIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // อนุมัติ
+    8: { icon: HighlightOffIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // ปฏิเสธ
+    9: { icon: CancelOutlinedIcon, bgcolor: "#B71C1C", color: "#FFFFFF" }, // ยกเลิก
+    10: { icon: AddCardOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // โอนเพิ่ม
+    11: { icon: ReplayOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // คืนเงิน
+    12: { icon: AssignmentReturnedOutlinedIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // คืนเงินสำเร็จ
+};
+
+const getTransactionVisual = (typeId?: number): TransactionLogVisual => {
+    return transactionLogVisualMap[typeId ?? 0] ?? transactionLogVisualMap[0];
+};
+const getStatus = (status?: string | number) => {
+    switch (status) {
+        case 2:
+            return {
+                sx: {
+                    bgcolor: "#FFF1CD",
+                    color: "#a56e07",
+                },
+            };
+
+        case 3:
+            return {
+                sx: {
+                    bgcolor: "#D4EDBC",
+                    color: "#11734B",
+                },
+            };
+
+        case 4:
+            return {
+                sx: {
+                    bgcolor: "#FFCFC9",
+                    color: "#B32615",
+                },
+            };
+        case 5:
+            return {
+                sx: {
+                    bgcolor: "#FFCFC9",
+                    color: "#B32615",
+                },
+            };
+
+        default:
+            return {
+                sx: {
+                    bgcolor: "#ffff",
+                    color: "#ffff",
+                },
+            };
+    }
+};
+const ClaimTransactionTab = () => {
+    const { transaction, transactionLoading, pagination, setPaginated } = useClaimTransactionHook();
+
+    const transactionList = transaction?.data ?? [];
+
+    if (transactionLoading) {
+        return (
+            <Box display="flex" justifyContent="center" alignItems="center" minHeight={300}>
+                <CircularProgress />
+            </Box>
+        );
+    }
+
+    return (
+        <CustomPaper>
+            <HeadingWithColor icon={<HistoryIcon sx={{ fontSize: 27 }} />} text="ประวัติการทำรายการ" color="blue" />
+
+            {transactionList.length === 0 && (
+                <Box
+                    py={8}
+                    px={2}
+                    textAlign="center"
+                    display="flex"
+                    flexDirection="column"
+                    alignItems="center"
+                    gap={1.5}
+                >
+                    <Box
+                        sx={{
+                            width: 64,
+                            height: 64,
+                            borderRadius: "50%",
+                            bgcolor: "#F0F0F0",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
+                        <HistoryOutlinedIcon sx={{ fontSize: 32, color: "#9E9E9E" }} />
+                    </Box>
+
+                    <Typography variant="subtitle1" fontWeight={600} color="text.primary">
+                        ไม่พบประวัติการทำรายการ
+                    </Typography>
+
+                    <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320 }}>
+                        เมื่อมีการทำรายการเกี่ยวกับเคลมนี้ ประวัติจะแสดงที่นี่
+                    </Typography>
+                </Box>
+            )}
+
+            {/* Timeline */}
+            {transactionList.length > 0 && (
+                <Box
+                    sx={{
+                        px: { xs: 2, md: 3 },
+                        py: 3,
+                    }}
+                >
+                    {transactionList.map((item, index) => {
+                        const isLast = index === transactionList.length - 1;
+                        const status = getStatus(item.paymentStatusId);
+                        const {
+                            icon: TransactionIcon,
+                            bgcolor,
+                            color,
+                        } = getTransactionVisual(item.transactionLogTypeId);
+                        const transactionLogDetail =
+                            item.transactionLogTypeId === 1
+                                ? item.claimNo
+                                : item.transactionLogTypeId === 2
+                                ? item.caseNo
+                                : item.transactionLogTypeId === 4
+                                ? `จำนวนเงิน ${numberWithCommas(item.totalAmount?.toString() ?? "0", 2)} บาท`
+                                : "";
+
+                        return (
+                            <Box
+                                key={item.transactionLogId ?? index}
+                                sx={{
+                                    display: "grid",
+                                    gridTemplateColumns: {
+                                        xs: "48px minmax(0, 1fr)",
+                                        md: "64px minmax(0, 1fr)",
+                                    },
+                                    columnGap: 1,
+                                }}
+                            >
+                                {/* Timeline */}
+                                <Box
+                                    sx={{
+                                        position: "relative",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                    }}
+                                >
+                                    {!isLast && (
+                                        <Box
+                                            sx={{
+                                                position: "absolute",
+                                                top: 48,
+                                                bottom: -24,
+                                                width: 2,
+                                                bgcolor: "divider",
+                                            }}
+                                        />
+                                    )}
+
+                                    <Box
+                                        sx={{
+                                            width: 44,
+                                            height: 44,
+                                            borderRadius: "50%",
+                                            bgcolor: bgcolor,
+                                            color: color,
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            zIndex: 1,
+                                        }}
+                                    >
+                                        <TransactionIcon />
+                                    </Box>
+                                </Box>
+
+                                {/* Content */}
+                                <Paper
+                                    variant="outlined"
+                                    sx={{
+                                        mb: 3,
+                                        p: {
+                                            xs: 1.5,
+                                            md: 2,
+                                        },
+                                        borderRadius: 2,
+                                    }}
+                                >
+                                    <Stack
+                                        direction={{
+                                            xs: "column",
+                                            sm: "row",
+                                        }}
+                                        justifyContent="space-between"
+                                        spacing={1}
+                                    >
+                                        <Box
+                                            sx={{
+                                                flex: 1,
+                                                minWidth: 0,
+                                            }}
+                                        >
+                                            <Typography variant="subtitle1" fontWeight={700}>
+                                                {item.transactionLogTypeName}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                {transactionLogDetail}
+                                            </Typography>
+                                        </Box>
+
+                                        <Stack direction="row" spacing={2} alignItems="center" flexShrink={0}>
+                                            <Chip
+                                                label={item.paymentStatusNameTH}
+                                                size="medium"
+                                                sx={{
+                                                    borderRadius: "16px",
+                                                    fontWeight: 600,
+                                                    ...status.sx,
+                                                }}
+                                            />
+
+                                            <Tooltip title="ดูรายละเอียด">
+                                                <IconButton
+                                                    sx={{
+                                                        bgcolor: "#E2F2FF",
+                                                        "&:hover": { bgcolor: "#d4ecff" },
+                                                        borderColor: "#a8d6fc",
+                                                    }}
+                                                >
+                                                    <VisibilityIcon color="primary"></VisibilityIcon>
+                                                </IconButton>
+                                            </Tooltip>
+                                        </Stack>
+                                    </Stack>
+
+                                    {/* Footer */}
+                                    <Stack
+                                        direction={{
+                                            xs: "column",
+                                            sm: "row",
+                                        }}
+                                        spacing={{
+                                            xs: 0.5,
+                                            sm: 2,
+                                        }}
+                                        sx={{
+                                            mt: 2,
+                                            pt: 1.5,
+                                            borderTop: "1px solid",
+                                            borderColor: "divider",
+                                        }}
+                                    >
+                                        <Typography variant="caption" color="text.secondary">
+                                            {formatDateString(
+                                                item?.createdDate?.toString() ?? "",
+                                                "DD/MM/BBBB HH:mm"
+                                            ) ?? "-"}
+                                        </Typography>
+
+                                        <Typography variant="caption" color="text.secondary">
+                                            {item.employeeName ?? "-"}
+                                        </Typography>
+                                    </Stack>
+                                </Paper>
+                            </Box>
+                        );
+                    })}
+                </Box>
+            )}
+
+            <Box display="flex" justifyContent="center" pb={3}>
+                <Pagination
+                    page={pagination.currentPage}
+                    count={Math.ceil((pagination.totalAmountRecords ?? 1) / (pagination.recordsPerPage ?? 10))}
+                    color="primary"
+                    onChange={(_, page) =>
+                        setPaginated((prev: any) => ({
+                            ...prev,
+                            page,
+                        }))
+                    }
+                />
+            </Box>
+        </CustomPaper>
+    );
+};
+
+export default ClaimTransactionTab;

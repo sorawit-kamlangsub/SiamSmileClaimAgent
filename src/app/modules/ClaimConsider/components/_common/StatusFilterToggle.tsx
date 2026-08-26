@@ -14,6 +14,7 @@ export interface StatusFilterToggleProps<Values> {
     label: string;
     options: StatusFilterOption[];
     onAfterChange?: (value: string | number) => void;
+    disabled?: boolean;
 }
 
 /**
@@ -37,7 +38,14 @@ export interface StatusFilterToggleProps<Values> {
  * />
  */
 
-function StatusFilterToggle<Values>({ formik, name, label, options, onAfterChange }: StatusFilterToggleProps<Values>) {
+function StatusFilterToggle<Values>({
+    formik,
+    name,
+    label,
+    options,
+    onAfterChange,
+    disabled,
+}: StatusFilterToggleProps<Values>) {
     const handleChange = (_event: React.MouseEvent<HTMLElement>, newValue: string | number | null) => {
         if (newValue === null) {
             return;
@@ -80,6 +88,7 @@ function StatusFilterToggle<Values>({ formik, name, label, options, onAfterChang
                 exclusive
                 value={currentValue}
                 onChange={handleChange}
+                disabled={disabled}
                 sx={{ gap: "8px", flexWrap: "nowrap" }}
             >
                 {options.map((option) => (

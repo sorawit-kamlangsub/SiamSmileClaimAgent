@@ -1,5 +1,5 @@
 import { Button, Grid, Icon, Paper } from "@mui/material";
-import useSearchFilterHook from "../../hooks/ClaimConsiderCustomerMonitor/SearchFilterHook";
+import useSearchFilterHook, { SearchFilterType } from "../../hooks/ClaimConsiderCustomerMonitor/SearchFilterHook";
 import { FormikCheckboxGroup, FormikDropdown, FormikTextField } from "../../../_common";
 import {
     defaultDateTypeOptions,
@@ -9,9 +9,22 @@ import {
 } from "../_common/Constant/ConstantValues";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
 import StatusFilterToggle from "../_common/StatusFilterToggle";
+import { FormikProps } from "formik";
+type ConsiderCustomerMonitorFilterProps = {
+    formik: FormikProps<SearchFilterType>;
+    statusOptions: ReturnType<typeof useSearchFilterHook>["statusOptions"];
+    decisionDataLoading: boolean;
+    onSearch: () => void;
+    onClear: () => void;
+};
 
-const ConsiderCustomerMonitorFilter = () => {
-    const { formik } = useSearchFilterHook();
+const ConsiderCustomerMonitorFilter = ({
+    formik,
+    statusOptions,
+    decisionDataLoading,
+    onSearch,
+    onClear,
+}: ConsiderCustomerMonitorFilterProps) => {
     return (
         <>
             <Paper elevation={3} sx={{ p: 2 }}>
@@ -48,13 +61,7 @@ const ConsiderCustomerMonitorFilter = () => {
                         />
                     </Grid>
                     <Grid item xs={6} sm={6} md={2} lg={2} sx={{ display: "flex", alignItems: "center", px: 1 }}>
-                        <Button
-                            variant="contained"
-                            fullWidth
-                            onClick={() => {
-                                formik.handleSubmit;
-                            }}
-                        >
+                        <Button variant="contained" fullWidth onClick={onSearch}>
                             <Icon>search</Icon>
                             &nbsp; ค้นหา
                         </Button>
@@ -63,9 +70,7 @@ const ConsiderCustomerMonitorFilter = () => {
                         <Button
                             variant="outlined"
                             fullWidth
-                            onClick={() => {
-                                formik.resetForm();
-                            }}
+                            onClick={onClear}
                             sx={{
                                 borderColor: "#BF360C",
                                 color: "#870000",
@@ -97,7 +102,8 @@ const ConsiderCustomerMonitorFilter = () => {
                             formik={formik}
                             label="สถานะรายการ"
                             name="statusId"
-                            options={defaultToggleButtonOptions}
+                            options={statusOptions ?? defaultToggleButtonOptions}
+                            disabled={decisionDataLoading}
                         />
                     </Grid>
                 </Grid>

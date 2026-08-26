@@ -33,6 +33,6 @@ export const defaultSearchFromOptions = [
 ];
 
 export const productMultipleSelectData = [
-    { value: 1, label: "PH" },
-    { value: 2, label: "PA" },
+    { value: 6, label: "PH" },
+    { value: 26, label: "PA" },
 ];

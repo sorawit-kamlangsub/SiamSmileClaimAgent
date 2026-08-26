@@ -1,4 +1,4 @@
-import { Grid } from "@mui/material";
+import { Chip, Grid } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import WorkIcon from "@mui/icons-material/Work";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
@@ -7,6 +7,7 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import FlagIcon from "@mui/icons-material/Flag";
 import SyncIcon from "@mui/icons-material/Sync";
 import BadgeIcon from "@mui/icons-material/Badge";
+import { backgroundColorMapClaimStatus, colorMapClaimStatus } from "../../../../../functionHelpers";
 
 type ClaimDetailProps = {
     notificationDate: string | undefined;
@@ -16,7 +17,8 @@ type ClaimDetailProps = {
     claimNo: string | undefined;
     caseNo: string | undefined;
     claimType: string | undefined;
-    statusClaimId: number | undefined;
+    statusClaim: string | undefined;
+    claimStatusId: number | undefined;
 };
 
 const ClaimDetail = ({
@@ -27,8 +29,11 @@ const ClaimDetail = ({
     caseNo,
     claimNo,
     claimType,
-    statusClaimId,
+    statusClaim,
+    claimStatusId,
 }: ClaimDetailProps) => {
+    const bgColor = claimStatusId ? backgroundColorMapClaimStatus[claimStatusId] : undefined;
+    const textColor = claimStatusId ? colorMapClaimStatus[claimStatusId] : undefined;
     const cards = [
         {
             icon: <CalendarMonthIcon />,
@@ -58,17 +63,30 @@ const ClaimDetail = ({
         {
             icon: <BadgeIcon />,
             label: "เลขที่ Case",
-            value: claimNo,
+            value: caseNo,
         },
         {
             icon: <FlagIcon />,
             label: "ประเภทการเคลม",
-            value: claimNo,
+            value: claimType,
         },
         {
             icon: <SyncIcon />,
             label: "สถานะเคลม",
-            value: claimNo,
+            value: statusClaim ? (
+                <Chip
+                    label={statusClaim}
+                    size="small"
+                    sx={{
+                        backgroundColor: bgColor ?? "#EEEEEE",
+                        color: textColor ?? "#616161",
+                        fontWeight: 600,
+                        borderRadius: "16px",
+                    }}
+                />
+            ) : (
+                "-"
+            ),
         },
     ];
     return (
@@ -76,7 +94,11 @@ const ClaimDetail = ({
             <Grid container spacing={1}>
                 {cards.map((item) => (
                     <Grid item xs={6} sm={6} md={3} lg={3} key={item.label}>
-                        <CardClaimInfo icon={item.icon} label={item.label} value={item.value} />
+                        <CardClaimInfo
+                            icon={item.icon}
+                            label={item.label}
+                            value={item.value as string | number | undefined}
+                        />
                     </Grid>
                 ))}
             </Grid>
