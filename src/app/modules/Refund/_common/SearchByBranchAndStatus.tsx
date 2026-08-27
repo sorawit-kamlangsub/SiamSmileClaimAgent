@@ -1,6 +1,7 @@
 import { Box, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { FormikDropdown } from "../../_common";
+import { useGetBranch } from "../../IncreaseLimitTransfer/_common/masterAPI";
 
 export interface SelectOption {
     value: string | number;
@@ -30,6 +31,7 @@ const SearchByBranchAndStatus = ({
     buttonText,
     onButtonClick,
 }: SearchByBranchAndStatusProps) => {
+    const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
     const formik = useFormik<BranchStatusFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -55,9 +57,10 @@ const SearchByBranchAndStatus = ({
                         formik={formik}
                         label="สาขา"
                         fullWidth
-                        data={[]}
-                        displayFieldName="label"
-                        valueFieldName="value"
+                        data={branchData?.data ?? []}
+                        valueFieldName="branchId"
+                        displayFieldName="branchName"
+                        isLoading={branchDataIsLoading}
                     />
                 </Grid>
 

@@ -5,6 +5,7 @@ import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import dayjs, { Dayjs } from "dayjs";
+import { useGetBranch } from "./masterAPI";
 
 const currentDate = dayjs();
 
@@ -32,6 +33,7 @@ const defaultValues: ClaimSearchFilterValues = {
 };
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
+    const { data: branchData, isLoading: branchIsLoading } = useGetBranch();
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -105,10 +107,11 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                         name="branchId"
                         formik={formik}
                         label="สาขา"
-                        data={[]}
-                        valueFieldName=""
-                        displayFieldName=""
+                        data={branchData?.data ?? []}
+                        valueFieldName="branchId"
+                        displayFieldName="branchName"
                         fullWidth
+                        isLoading={branchIsLoading}
                     />
                 </Grid>
 
