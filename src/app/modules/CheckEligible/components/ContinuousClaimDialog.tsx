@@ -20,14 +20,9 @@ import { MUIDataTableColumn } from "mui-datatables";
 import LinearLoading from "../../_common/components/CustomComponent/LinearLoading";
 import { StandardDataTable } from "../../_common";
 import { GetClaimContinueDtoResponse } from "../../../api/coreClaimApi.client";
-import { mockClaimContinueData } from "../store/mockClaimContinue";
 import useContinuousClaimTable from "../hooks/useContinuousClaimTable";
 import { cellAlignOptions, formatDateString, numberWithCommas, smallSizeFooter } from "../../../functionHelpers";
 
-// TODO: ตั้งเป็น false เมื่อ backend endpoint พร้อมใช้งานจริง แล้วลบ import mockClaimContinueData ทิ้งได้เลย
-const USE_MOCK_DATA = true;
-
-// ข้อมูลที่เก็บไว้หลังยืนยันการเลือก (เก็บใน ToolbarFormValues.continuousClaim)
 export type ContinuousClaimSelection = {
     claimId?: string;
     claimNo?: string;
@@ -108,13 +103,13 @@ const ContinuousClaimDialog: React.FC<Props> = ({ open, applicationId, onClose, 
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
-    const { claimContinueData, pagination, claimContinueLoading, setPaginated } = useContinuousClaimTable(
-        USE_MOCK_DATA ? undefined : applicationId
-    );
+    const { claimContinueData, pagination, claimContinueLoading, setPaginated } =
+        useContinuousClaimTable(applicationId);
+
     const [selectedClaimId, setSelectedClaimId] = useState<string | undefined>(undefined);
 
-    const rows: GetClaimContinueDtoResponse[] = USE_MOCK_DATA ? mockClaimContinueData : claimContinueData?.data ?? [];
-    const isLoading = USE_MOCK_DATA ? false : claimContinueLoading;
+    const rows: GetClaimContinueDtoResponse[] = claimContinueData?.data ?? [];
+    const isLoading = claimContinueLoading;
 
     const selectedRow = useMemo(() => rows.find((r) => r.claimId === selectedClaimId), [rows, selectedClaimId]);
 
@@ -134,9 +129,9 @@ const ContinuousClaimDialog: React.FC<Props> = ({ open, applicationId, onClose, 
                             variant="contained"
                             onClick={() => setSelectedClaimId(value)}
                             sx={{
-                                bgcolor: isSelected ? "#6a9bea" : HEADER_BG,
+                                bgcolor: isSelected ? "#0e2c4e" : HEADER_BG,
                                 textTransform: "none",
-                                "&:hover": { bgcolor: isSelected ? "#8cafe7" : "#154a8a" },
+                                "&:hover": { bgcolor: isSelected ? "#0e2c4e" : "#154a8a" },
                             }}
                         >
                             เลือก

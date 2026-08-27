@@ -79,10 +79,11 @@ export const useGetIncidentTypeMapping = (
     incidentTypeId?: number | undefined,
     claimSourceId?: number | undefined,
     productTypeId?: number | undefined,
-    productCategoryCode?: string,
+    productCategoryCode?: string | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    isClaimContinue?: boolean | undefined
 ) => {
     return useQuery(
         [
@@ -94,6 +95,7 @@ export const useGetIncidentTypeMapping = (
             coverageTypeId,
             medicalTypeId,
             causeOfIncidentId,
+            isClaimContinue,
         ],
         () =>
             coreClaimMastersClient.getIncidentTypeMapping(
@@ -103,7 +105,8 @@ export const useGetIncidentTypeMapping = (
                 productCategoryCode,
                 coverageTypeId,
                 medicalTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                isClaimContinue
             ),
         {
             enabled: !!incidentTypeId,

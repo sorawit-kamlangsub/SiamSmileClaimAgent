@@ -26,6 +26,7 @@ const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
 const calculateCaseDisabilityQueryKey = ["calculateCaseDisability"];
 const getCustomerBenefitDetailHalfQueryKey = ["getCustomerBenefitDetailHalf"];
 const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
+const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -89,8 +90,8 @@ export const useGetCustomerDetailById = (id: number | undefined) => {
 
 export const useGetCustomerBenefitDetailSearch = (
     policyCode?: string | undefined,
-    caseTypeId?: number | undefined,
-    dateHappen?: Dayjs | undefined,
+    claimNo?: string | undefined,
+    incidentDate?: Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
@@ -101,8 +102,8 @@ export const useGetCustomerBenefitDetailSearch = (
         [
             getCustomerBenefitDetailSearchQueryKey,
             policyCode,
-            caseTypeId,
-            dateHappen,
+            claimNo,
+            incidentDate,
             isContinue,
             incidentTypeId,
             coverageTypeId,
@@ -112,8 +113,8 @@ export const useGetCustomerBenefitDetailSearch = (
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
                 policyCode,
-                caseTypeId,
-                dateHappen,
+                claimNo,
+                incidentDate,
                 isContinue,
                 incidentTypeId,
                 coverageTypeId,
@@ -362,6 +363,20 @@ export const useGetCustomerSearchByPolicyCode = (
             ),
         {
             enabled: !!policyCode && !!searchIndex && !!searchDetail,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetPolicyBenefitShered = (
+    applicaitonCode?: string | undefined,
+    customerTypeCode?: string | undefined
+) => {
+    return useQuery(
+        [getPolicyBenefitSheredQueryKey, applicaitonCode, customerTypeCode],
+        () => coreClaimClient.getPolicyBenefitShered(applicaitonCode, customerTypeCode),
+        {
+            enabled: !!applicaitonCode && !!customerTypeCode,
             refetchOnWindowFocus: false,
         }
     );

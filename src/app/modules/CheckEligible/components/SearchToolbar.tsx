@@ -20,13 +20,22 @@ import CustomPaper from "../../_common/components/CustomComponent/CustomPaper";
 import ContinuousClaimDialog from "./ContinuousClaimDialog";
 import { setContinuousClaimState } from "../store/checkeligibleSlice";
 import { isProductType, PRODUCT_TYPE_GROUP } from "../../../functionHelpers";
+import PersonalExclusionCard from "./PersonalExclusionCard";
+import PolicyConditionCard from "./PolicyConditionCard";
+import { PersonalExclusionNote } from "../hooks/useCheckEligibleDetail";
+import PolicyConditionExclusionModal from "./PolicyConditionExclusionModal";
+import { Dayjs } from "dayjs";
+import WaitingPeriodStatusBanner from "./WaitingPeriodStatusBanner";
+
+const mockNotes: PersonalExclusionNote[] = [{ id: 1, message: "ติดเงื่อนไข โรคกระเพาะอาหาร" }];
 
 type Props = {
     productTypeId?: number;
     productCategoryCode?: string;
     applicationId?: string;
-    // refId ของ route /claim/{ph|pa}/:appId/:refId คือ customerId ที่ใช้ยิง useGetCustomerDetailById อยู่แล้ว
     customerId?: number;
+    coverageFrom?: Dayjs;
+    coverageTo?: Dayjs;
 };
 
 const CLAIM_CAUSE_ICON_MAP: Record<number, React.ReactNode> = {
@@ -128,7 +137,14 @@ const stepBoxSx = {
     boxShadow: "0 1px 2px rgba(0,0,0,0.04)",
 };
 
-const SearchToolbar: React.FC<Props> = ({ productTypeId, productCategoryCode, applicationId, customerId }) => {
+const SearchToolbar: React.FC<Props> = ({
+    productTypeId,
+    productCategoryCode,
+    applicationId,
+    customerId,
+    coverageFrom,
+    coverageTo,
+}) => {
     const dispatch = useDispatch();
     const { formik } = useCheckEligibleToolbar();
     const {
@@ -150,7 +166,7 @@ const SearchToolbar: React.FC<Props> = ({ productTypeId, productCategoryCode, ap
 
     const showErrors = formik.submitCount > 0;
     const [continuousDialogOpen, setContinuousDialogOpen] = useState(false);
-
+    const [exclusionOpen, setExclusionOpen] = useState(false);
     useEffect(() => {
         if (formik.values.isContinuous) {
             if (!formik.values.continuousClaim) {
@@ -162,7 +178,6 @@ const SearchToolbar: React.FC<Props> = ({ productTypeId, productCategoryCode, ap
             }
             dispatch(setContinuousClaimState({ isContinuous: false, continuousClaim: undefined }));
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [formik.values.isContinuous]);
 
     const handleCloseContinuousDialog = () => {
@@ -186,6 +201,12 @@ const SearchToolbar: React.FC<Props> = ({ productTypeId, productCategoryCode, ap
         if (!claimRoutePrefix || !applicationId || !customerId) return;
         window.open(`/claim/${claimRoutePrefix}/${btoa(applicationId)}/${btoa(customerId.toString())}`, "_blank");
     };
+
+    const handleOpenExclusion = () => {
+        setExclusionOpen(true);
+    };
+
+    const exclusionProductTypeLabel = isProductType(productTypeId, PRODUCT_TYPE_GROUP.PA) ? "PA" : "PH";
 
     return (
         <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -257,6 +278,23 @@ const SearchToolbar: React.FC<Props> = ({ productTypeId, productCategoryCode, ap
                         </Grid>
                     </Grid>
 
+                    <Grid container spacing={2}>
+                        {productTypeId === 6 && (
+                            <Grid item xs={12} sm={6}>
+                                <PersonalExclusionCard notes={mockNotes} />
+                            </Grid>
+                        )}
+                        <Grid item xs={12} sm={6}>
+                            <PolicyConditionCard onOpenExclusion={handleOpenExclusion} />
+                        </Grid>
+                    </Grid>
+                    {productTypeId === 6 && (
+                        <WaitingPeriodStatusBanner
+                            incidentDate={formik.values.incidentDate}
+                            coverageFrom={coverageFrom}
+                            coverageTo={coverageTo}
+                        />
+                    )}
                     {/* 1) เหตุของการเคลม */}
                     <Box sx={stepBoxSx}>
                         <Box display="flex" alignItems="center" gap={1} mb={1.25}>
@@ -390,6 +428,11 @@ const SearchToolbar: React.FC<Props> = ({ productTypeId, productCategoryCode, ap
                     dispatch(setContinuousClaimState({ isContinuous: true, continuousClaim: claim }));
                     setContinuousDialogOpen(false);
                 }}
+            />
+            <PolicyConditionExclusionModal
+                open={exclusionOpen}
+                onClose={() => setExclusionOpen(false)}
+                productTypeLabel={exclusionProductTypeLabel}
             />
         </LocalizationProvider>
     );

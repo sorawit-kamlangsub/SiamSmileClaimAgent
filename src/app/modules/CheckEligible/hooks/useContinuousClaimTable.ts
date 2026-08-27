@@ -5,7 +5,7 @@ import { useGetClaimContinue } from "../../../api/coreClaimApi";
 const useContinuousClaimTable = (applicationId?: string | undefined) => {
     const [paginated, setPaginated] = React.useState<PaginationSortableDto>({
         page: 1,
-        recordsPerPage: 10,
+        recordsPerPage: 5,
     });
 
     const { data: claimContinueData, isLoading: claimContinueLoading } = useGetClaimContinue(
