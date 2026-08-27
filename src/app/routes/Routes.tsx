@@ -16,8 +16,17 @@ import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
+
+import ManageTransferPage from "../modules/ManageClaimFund/pages/ManageTransferPage.tsx";
+import RepayPage from "../modules/ManageTransfer/pages/RepayPage.tsx";
+import BankStatusCheck from "../modules/BankStatus/pages/BankStatusCheck.tsx";
+import IncreaseLimitTransfer from "../modules/IncreaseLimitTransfer/page/IncreaseLimitTransfer.tsx";
+import RefundApprovePage from "../modules/RefundApprove/pages/RefundApprovePage.tsx";
+
 import ConsiderMonitorPage from "../modules/ClaimConsider/pages/ConsiderMonitorPage.tsx";
 import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPage.tsx";
+import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
+import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -160,6 +169,51 @@ const Routes: RouteMapType[] = [
         ],
     },
 
+    /**
+     * จัดการเงินเคลม
+     */
+    {
+        path: "/manage/adjust-transfer",
+        title: "โอนเพิ่ม",
+        permissions: [],
+        element: <AdjustTransferPage />,
+    },
+    {
+        path: "/manage/refund",
+        title: "คืนเงิน",
+        permissions: [],
+        element: <RefundPage />,
+    },
+    {
+        path: "/manage/refund-approve",
+        title: "อนุมัติคืนเงิน",
+        permissions: [],
+        element: <RefundApprovePage />,
+    },
+    {
+        path: "/manage/increase-limit-transfer",
+        title: "ขยายวงเงิน",
+        permissions: [],
+        element: <IncreaseLimitTransfer />,
+    },
+    {
+        path: "/manage/transfer/repay",
+        title: "แก้ไขการโอนเงิน",
+        permissions: [],
+        element: <RepayPage />,
+    },
+    {
+        path: "/manage/bank/status",
+        title: "สอบถามธนาคาร",
+        permissions: [],
+        element: <BankStatusCheck />,
+    },
+    {
+        path: "/manage/setting/transfer",
+        title: "ตั้งค่าการโอนเงิน",
+        permissions: [],
+        element: <ManageTransferPage />,
+    },
     {
         path: "/consider/monitor",
         title: "พิจารณาเคลม - เคลมลูกค้า",

@@ -25,6 +25,15 @@ dayjs.tz.setDefault("Asia/Bangkok");
 library.add(fas);
 library.add(fab);
 
+const oidcUserManager = new UserManager({
+    ...SSO_CONFIG,
+    loadUserInfo: true,
+    response_type: "code",
+    automaticSilentRenew: true,
+    userStore: new WebStorageStateStore({ store: window.localStorage }),
+    monitorSession: true,
+});
+
 // Create a client
 const queryClient = new QueryClient({
     defaultOptions: {
@@ -35,14 +44,7 @@ const queryClient = new QueryClient({
         },
     },
 });
-const oidcUserManager = new UserManager({
-        ...SSO_CONFIG,
-        loadUserInfo: true,
-        response_type: "code",
-        automaticSilentRenew: true,
-        userStore: new WebStorageStateStore({ store: window.localStorage }),
-        monitorSession: true,
-    });
+
 const AppRoot = () => {
     console.log(
         `%c${VITE_APP_NAME} v${VITE_APP_VERSION}\n` +
@@ -51,8 +53,6 @@ const AppRoot = () => {
         "color: #1976d2; font-size: 24px;",
         "font-size: 14px;"
     );
-
-    
 
     return (
         <AuthProvider oidcUserManager={oidcUserManager}>
