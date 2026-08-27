@@ -2,9 +2,16 @@ import { Avatar, Box, Divider, Grid, Paper, Typography } from "@mui/material";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import ListIcon from "@mui/icons-material/List";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
+import { numberWithCommas } from "../../../functionHelpers";
 
-const HeaderDetailBox = () => {
+type paymentDetails = {
+    paymentDate: Dayjs | undefined;
+    countItem: number | undefined;
+    totalNetPaidAmount: number | undefined;
+};
+
+const HeaderDetailBox = ({ countItem, paymentDate, totalNetPaidAmount }: paymentDetails) => {
     return (
         <Paper elevation={2} sx={{ background: "#F5F9FF", display: "flex", p: 2, borderRadius: 3, boxShadow: 7 }}>
             <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -26,7 +33,9 @@ const HeaderDetailBox = () => {
                                 </Grid>
                                 <Grid item xs={10} sm={10} md={10} lg={10}>
                                     <Typography sx={{ color: "#797b7e" }}>วันที่โอนเงิน:</Typography>
-                                    <Typography>{dayjs().format("DD/MM/YYYY")}</Typography>
+                                    <Typography>
+                                        {paymentDate ? dayjs(paymentDate).format("DD/MM/YYYY") : "-"}
+                                    </Typography>
                                 </Grid>
                             </Grid>
                             <Divider orientation="horizontal" sx={{ mt: 2 }} />
@@ -46,8 +55,8 @@ const HeaderDetailBox = () => {
                                     </Avatar>
                                 </Grid>
                                 <Grid item xs={8} sm={8} md={8} lg={8}>
-                                    <Typography sx={{ color: "#797b7e" }}>วันที่โอนเงิน</Typography>
-                                    <Typography>{dayjs().format("DD/MM/YYYY")}</Typography>
+                                    <Typography sx={{ color: "#797b7e" }}>จำนวนรายการ</Typography>
+                                    <Typography>{countItem ?? 0} รายการ</Typography>
                                 </Grid>
                             </Grid>
                         </Grid>
@@ -76,8 +85,8 @@ const HeaderDetailBox = () => {
                                     </Avatar>
                                 </Grid>
                                 <Grid item xs={8} sm={8} md={8} lg={8}>
-                                    <Typography sx={{ color: "#797b7e" }}>วันที่โอนเงิน</Typography>
-                                    <Typography>{dayjs().format("DD/MM/YYYY")}</Typography>
+                                    <Typography sx={{ color: "#797b7e" }}>จำนวนเงินรวม</Typography>
+                                    <Typography>{numberWithCommas(totalNetPaidAmount ?? 0)} บาท</Typography>
                                 </Grid>
                             </Grid>
                         </Grid>

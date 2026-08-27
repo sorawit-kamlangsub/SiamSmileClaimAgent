@@ -19,10 +19,16 @@ type DocumentScanTableProps = {
     productId?: number | undefined;
     aplicationCode?: string | undefined;
     documentTypeId?: number | undefined;
+    rejectClaim?: boolean;
     onAttachedDocumentsChange?: (docs: CaseDocumentDetailV2Request[]) => void;
 };
 
-const DocumentScanTable = ({ aplicationCode, documentTypeId, onAttachedDocumentsChange }: DocumentScanTableProps) => {
+const DocumentScanTable = ({
+    aplicationCode,
+    documentTypeId,
+    rejectClaim,
+    onAttachedDocumentsChange,
+}: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
     const dispatch = useAppDispatch();
     const [fileCountByDocId, setFileCountByDocId] = useState<Record<string, number>>({});
@@ -32,9 +38,11 @@ const DocumentScanTable = ({ aplicationCode, documentTypeId, onAttachedDocuments
     }, []);
 
     const documentSubType = (): number => {
-        if (documentTypeId === 15) {
+        if (documentTypeId === 15 && !rejectClaim) {
             //เอกสารประกอบการพิจารณาเคลม
             return 220;
+        } else if (documentTypeId === 15 && rejectClaim) {
+            return 338;
         }
         return 0;
     };
@@ -75,7 +83,7 @@ const DocumentScanTable = ({ aplicationCode, documentTypeId, onAttachedDocuments
             options: {
                 filter: false,
                 sort: false,
-                //display: documentTypeId === 4 ? false : true,
+                display: rejectClaim ? false : true,
                 ...cellAlignOptions({ align: "center" }),
             },
         },
@@ -172,8 +180,12 @@ const DocumentScanTable = ({ aplicationCode, documentTypeId, onAttachedDocuments
     return (
         <>
             {documentTypeId === 15 ? (
-                <CustomPaper>
-                    <HeadingWithColor text="สแกนเอกสาร" color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
+                <CustomPaper sx={{ mt: 1 }}>
+                    <HeadingWithColor
+                        text={rejectClaim ? "เอกสารประกอบการปฏิเสธ" : "สแกนเอกสาร"}
+                        color="blue"
+                        icon={<AttachFileIcon sx={{ fontSize: 27 }} />}
+                    />
                     {isLoading ? (
                         <LinearProgress sx={{ height: "5px" }} />
                     ) : (

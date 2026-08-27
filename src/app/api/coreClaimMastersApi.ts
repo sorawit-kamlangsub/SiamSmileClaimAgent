@@ -32,6 +32,8 @@ const getPaymentStatusQueryKey = ["getPaymentStatus"];
 const getBranchQueryKey = ["getBranch"];
 const getDeductionSourceQueryKey = ["getDeductionSource"];
 const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
+const getDecisionQueryKey = ["getDecision"];
+const getDecisionReasonQueryKey = ["getDecisionReason"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -425,6 +427,23 @@ export const useGetEmployeeClaimPaymentLimit = (userId: number) => {
         [getEmployeeClaimPaymentLimitQueryKey, userId],
         () => coreClaimMastersClient.employeePaymentLimit(userId),
         {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDecision = (decisionId?: number | undefined) => {
+    return useQuery([getDecisionQueryKey, decisionId], () => coreClaimMastersClient.getDecision(decisionId), {
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionTypeId?: number | undefined) => {
+    return useQuery(
+        [getDecisionReasonQueryKey, decisionReasonId, decisionTypeId],
+        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionTypeId),
+        {
+            enabled: !!decisionTypeId,
             refetchOnWindowFocus: false,
         }
     );

@@ -338,7 +338,15 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             ];
 
             const createCaseDeath: LocalCaseDeath[] = isDeath
-                ? [{ tempCaseId, causeOfIncidentId: values.causeOfIncidentId, deathDate: values.deathDate }]
+                ? [
+                      {
+                          tempCaseId,
+                          causeOfIncidentId: values.causeOfIncidentId,
+                          deathDate: values.deathDate,
+                          placeOfDeathId: values.deathPlaceType,
+                          placeOfDeathDetail: values.accidentPlace,
+                      },
+                  ]
                 : [];
 
             const createCaseDisability: LocalCaseDisability[] = isDisability
@@ -566,7 +574,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 transferAmount: 0,
                 deathBenefitAmounts: {},
                 symptomType: 1,
-                deathPlaceType: 1,
+                deathPlaceType: 2,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [
@@ -606,7 +614,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 transferAmount: 0,
                 deathBenefitAmounts: {},
                 symptomType: 1,
-                deathPlaceType: 1,
+                deathPlaceType: 2,
                 hospitalId: undefined,
                 hospitalName: undefined,
                 diagnoses: [

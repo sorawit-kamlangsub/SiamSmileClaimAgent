@@ -153,6 +153,8 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                                       {
                                           causeOfIncidentId: form.causeOfIncidentId,
                                           deathDate: form.deathDate,
+                                          placeOfDeathId: form.deathPlaceType,
+                                          placeOfDeathDetail: form.accidentPlace,
                                       },
                                   ]
                                 : [],
