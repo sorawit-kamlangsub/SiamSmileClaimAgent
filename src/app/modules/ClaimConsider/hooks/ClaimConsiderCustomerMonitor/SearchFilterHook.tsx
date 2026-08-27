@@ -41,7 +41,7 @@ const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
         dateType: 1,
         dateFrom: currentDate,
         dateTo: currentDate,
-        product: [],
+        product: [6, 26],
         searchFrom: undefined,
         searchDetail: "",
         statusId: 0,

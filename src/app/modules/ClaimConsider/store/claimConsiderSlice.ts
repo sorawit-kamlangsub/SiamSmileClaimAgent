@@ -1,10 +1,23 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { RootState } from "../../../../redux";
 
 export interface DiagnosisModel {
     icd10Id?: number;
     icd10Detail?: string;
+}
+export interface OcrReceiptRequest {
+    documentId?: string;
+    documentNo?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
 }
 export interface ClaimConsiderValues {
     //เหตุของการเคลม
@@ -42,6 +55,7 @@ export interface ClaimConsiderValues {
     considerResult: number | undefined;
     decisionReasonId: number | undefined;
     decisionReasonDetail: string | undefined;
+    ocrReceiptDocument: OcrReceiptRequest[] | undefined;
 }
 
 interface ClaimConsiderState {
@@ -83,6 +97,7 @@ const defaultForm: ClaimConsiderValues = {
     considerResult: undefined,
     decisionReasonId: undefined,
     decisionReasonDetail: undefined,
+    ocrReceiptDocument: undefined,
 };
 const initialState: ClaimConsiderState = {
     form: defaultForm,

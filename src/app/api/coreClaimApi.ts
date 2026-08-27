@@ -30,6 +30,7 @@ const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getClaimTransactionMonitorQueryKey = ["getClaimTransactionMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
+const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -93,7 +94,7 @@ export const useGetCustomerDetailById = (id: number | undefined) => {
 
 export const useGetCustomerBenefitDetailSearch = (
     policyCode?: string | undefined,
-    caseTypeId?: number | undefined,
+    claimNo?: string | undefined,
     dateHappen?: Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
@@ -105,7 +106,7 @@ export const useGetCustomerBenefitDetailSearch = (
         [
             getCustomerBenefitDetailSearchQueryKey,
             policyCode,
-            caseTypeId,
+            claimNo,
             dateHappen,
             isContinue,
             incidentTypeId,
@@ -116,7 +117,7 @@ export const useGetCustomerBenefitDetailSearch = (
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
                 policyCode,
-                caseTypeId,
+                claimNo,
                 dateHappen,
                 isContinue,
                 incidentTypeId,
@@ -467,6 +468,22 @@ export const useGetClaimTransactionLog = (
             ),
         {
             enabled: !!claimId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetPolicyBenefit = (
+    productTypeId: number,
+    applicationCode?: string | undefined,
+    productId?: number | undefined,
+    customerTypeCode?: string | undefined
+) => {
+    return useQuery(
+        [getPolicyBenefitQueryKey, productTypeId, applicationCode, productId, customerTypeCode],
+        () => coreClaimClient.getPolicyBenefit(productTypeId, applicationCode, productId, customerTypeCode),
+        {
+            enabled: !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );

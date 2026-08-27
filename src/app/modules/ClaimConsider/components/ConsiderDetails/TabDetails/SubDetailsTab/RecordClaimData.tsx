@@ -37,19 +37,6 @@ const RecordClaimData = () => {
     //     values.coverageTypeId === CoverageType.Medical &&
     //     (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     // const isOPD = values.medicalTypeId === MedicalType.OPD;
-    const MEDICAL_TYPE_LABEL_BY_CONDITION: Record<string, string> = {
-        death: "สาเหตุการเสียชีวิต",
-        medical: "ประเภทการรักษา",
-        disability: "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ",
-        default: "ตัวเลือกเพิ่มเติม",
-    };
-    const medicalTypeLabel = isDeath
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.death
-        : isMedical
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.medical
-        : isDisability
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
-        : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
     const handleStayDaysChange = (field: "ipdDays" | "icuDays", value: number) => {
         formik.setFieldValue(field, value);
 
@@ -98,7 +85,7 @@ const RecordClaimData = () => {
                         </Grid>
                         <Grid item xs={12}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
-                                {medicalTypeLabel}{" "}
+                                {"ประเภทการรักษา"}{" "}
                                 <Typography component="span" color="error">
                                     *
                                 </Typography>

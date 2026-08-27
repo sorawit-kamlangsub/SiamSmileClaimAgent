@@ -278,7 +278,7 @@ export class CoreClaimClient {
     /**
      * API สำหรับ Search Customer Benefit Detail
      * @param policyCode (optional) 
-     * @param caseTypeId (optional) 
+     * @param claimNo (optional) 
      * @param incidentDate (optional) 
      * @param isContinue (optional) 
      * @param incidentTypeId (optional) 
@@ -287,16 +287,16 @@ export class CoreClaimClient {
      * @param causeOfIncidentId (optional) 
      * @return Success
      */
-    getCustomerBenefitDetailSearch(policyCode?: string | undefined, caseTypeId?: number | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
+    getCustomerBenefitDetailSearch(policyCode?: string | undefined, claimNo?: string | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/search?";
         if (policyCode === null)
             throw new Error("The parameter 'policyCode' cannot be null.");
         else if (policyCode !== undefined)
             url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (caseTypeId === null)
-            throw new Error("The parameter 'caseTypeId' cannot be null.");
-        else if (caseTypeId !== undefined)
-            url_ += "caseTypeId=" + encodeURIComponent("" + caseTypeId) + "&";
+        if (claimNo === null)
+            throw new Error("The parameter 'claimNo' cannot be null.");
+        else if (claimNo !== undefined)
+            url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
         if (incidentDate === null)
             throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
@@ -3505,9 +3505,10 @@ export class MastersClient {
      * @param coverageTypeId (optional) 
      * @param medicalTypeId (optional) 
      * @param causeOfIncidentId (optional) 
+     * @param isClaimContinue (optional) 
      * @return Success
      */
-    getIncidentTypeMapping(incidentTypeId?: number | undefined, claimSourceId?: number | undefined, productTypeId?: number | undefined, productCategoryCode?: string | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
+    getIncidentTypeMapping(incidentTypeId?: number | undefined, claimSourceId?: number | undefined, productTypeId?: number | undefined, productCategoryCode?: string | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, isClaimContinue?: boolean | undefined, cancelToken?: CancelToken | undefined): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/incidenttype/mapping?";
         if (incidentTypeId === null)
             throw new Error("The parameter 'incidentTypeId' cannot be null.");
@@ -3537,6 +3538,10 @@ export class MastersClient {
             throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
+        if (isClaimContinue === null)
+            throw new Error("The parameter 'isClaimContinue' cannot be null.");
+        else if (isClaimContinue !== undefined)
+            url_ += "isClaimContinue=" + encodeURIComponent("" + isClaimContinue) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -4049,7 +4054,7 @@ export interface CaseDocumentDetailV2Request {
 }
 
 export interface CaseDocumentSaveClaimEditDraftRequest {
-    documentSubTypeId?: number;
+    documentSubTypeId?: number | undefined;
     caseDocumentDetail?: CaseDocumentDetailSaveClaimEditDraftRequest[] | undefined;
 }
 
@@ -4180,6 +4185,9 @@ export interface CaseV2Request {
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
+    icD10_4thId?: number | undefined;
+    icD10_5thId?: number | undefined;
+    icD10_6thId?: number | undefined;
     medicalTypeId?: number | undefined;
     nplTotalAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
@@ -4797,6 +4805,7 @@ export interface GetCustomerDetailByIdDtoResponse {
     customerId?: number;
     policyCode?: string | undefined;
     customerName?: string | undefined;
+    customerTypeCode?: string | undefined;
     customerTypeName?: string | undefined;
     cardTypeId?: number | undefined;
     cardDetail?: string | undefined;
@@ -5606,7 +5615,6 @@ export interface UpsertClaimDecisionCaseDocumentRequest {
 
 export interface UpsertClaimDecisionCaseItemAdjudicationRequest {
     standardMedicalExpenseId?: number | undefined;
-    caseItemId?: string;
     netCaseAmount?: number;
     eligibleAmount?: number;
     approvedAmount?: number;
@@ -5658,6 +5666,8 @@ export interface UpsertClaimDecisionCaseRequest {
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
     caseItem?: UpsertClaimDecisionCaseItemRequest[] | undefined;
+    caseAssessment?: UpsertClaimDecisionCaseAssessmentRequest;
+    caseAdjudication?: UpsertClaimDecisionCaseAdjudicationRequest;
     caseDeath?: UpsertClaimDecisionCaseDeathRequest[] | undefined;
     caseDisability?: UpsertClaimDecisionCaseDisabilityRequest[] | undefined;
     beneficiary?: UpsertClaimDecisionBeneficiaryRequest[] | undefined;
@@ -5667,15 +5677,12 @@ export interface UpsertClaimDecisionCaseRequest {
 export interface UpsertClaimDecisionDtoRequest {
     claimId?: string;
     caseId?: string;
-    claimTransactionType?: number;
     incidentTypeId?: number;
     incidentDate?: dayjs.Dayjs;
     incidentTime?: TimeSpan;
     accidentPlace?: string | undefined;
     accidentDescription?: string | undefined;
     case?: UpsertClaimDecisionCaseRequest;
-    caseAssessment?: UpsertClaimDecisionCaseAssessmentRequest;
-    caseAdjudication?: UpsertClaimDecisionCaseAdjudicationRequest;
 }
 
 export interface UpsertClaimDecisionDtoResponse {

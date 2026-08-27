@@ -14,6 +14,7 @@ import { useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
+import { CoverageType } from "../../../../functionHelpers";
 
 const useConsiderDetailHook = () => {
     const { id } = useParams();
@@ -52,17 +53,21 @@ const useConsiderDetailHook = () => {
         undefined
     );
 
+    const DEATH_DISABILITY = [CoverageType.Death, CoverageType.Disability];
+
     const coverageType: ClaimTypeOption[] = useMemo(
         () => [
             ...new Map(
-                (incidentTypeMapping?.data ?? []).map((item) => [
-                    item.coverageTypeId,
-                    {
-                        id: item.coverageTypeId ?? 0,
-                        name: item.coverageTypeNameTH ?? "",
-                        icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
-                    },
-                ])
+                (incidentTypeMapping?.data ?? [])
+                    .filter((item) => !DEATH_DISABILITY.includes(item.coverageTypeId ?? 0))
+                    .map((item) => [
+                        item.coverageTypeId,
+                        {
+                            id: item.coverageTypeId ?? 0,
+                            name: item.coverageTypeNameTH ?? "",
+                            icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
+                        },
+                    ])
             ).values(),
         ],
         [incidentTypeMapping]
