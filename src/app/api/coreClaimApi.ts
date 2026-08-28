@@ -7,6 +7,8 @@ import {
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    SaveClaimEditDraftDtoRequest,
+    SaveClaimEditDraftDtoResponeServiceResponse,
 } from "./coreClaimApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
@@ -31,6 +33,7 @@ const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getClaimTransactionMonitorQueryKey = ["getClaimTransactionMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
+const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -484,4 +487,36 @@ export const useGetClaimTransactionLog = (
             refetchOnWindowFocus: false,
         }
     );
+};
+
+export const useGetPolicyBenefit = (
+    productTypeId: number,
+    applicationCode?: string | undefined,
+    productId?: number | undefined,
+    customerTypeCode?: string | undefined
+) => {
+    return useQuery(
+        [getPolicyBenefitQueryKey, productTypeId, applicationCode, productId, customerTypeCode],
+        () => coreClaimClient.getPolicyBenefit(productTypeId, applicationCode, productId, customerTypeCode),
+        {
+            enabled: !!productTypeId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useSaveClaimEditDraft = (
+    onSuccessCallback?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation((body?: SaveClaimEditDraftDtoRequest | undefined) => coreClaimClient.saveClaimEditDraft(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess)
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            else onSuccessCallback?.(response);
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
 };

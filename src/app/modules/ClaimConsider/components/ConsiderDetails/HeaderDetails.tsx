@@ -13,6 +13,7 @@ import ClaimDetailsTab from "./TabDetails/ClaimDetailsTab";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import { calculatePolicyAgeText, formatDateString } from "../../../../functionHelpers";
 import ClaimTransationTab from "./TabDetails/ClaimTransationTab";
+import PolicyBenefitTab from "./TabDetails/PolicyBenefitTab";
 
 type HeaderDetailsProps = {
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
@@ -84,7 +85,7 @@ const HeaderDetails = ({
                             <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mb: 2 }}>
                                 <ClaimDetail
                                     notificationDate={formatDateString(
-                                        detail?.notificationDate?.toString() ?? "",
+                                        detail?.createdDate?.toString() ?? "",
                                         "DD/MM/BBBB HH:mm:ss"
                                     )}
                                     transferDate={formatDateString(
@@ -147,6 +148,9 @@ const HeaderDetails = ({
                         </TabPanel>
                         <TabPanel value="2">
                             <ClaimTransationTab />
+                        </TabPanel>
+                        <TabPanel value="3">
+                            <PolicyBenefitTab />
                         </TabPanel>
                     </Grid>
                 </TabContext>

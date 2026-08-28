@@ -438,12 +438,12 @@ export const useGetDecision = (decisionId?: number | undefined) => {
     });
 };
 
-export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionTypeId?: number | undefined) => {
+export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionId?: number | undefined) => {
     return useQuery(
-        [getDecisionReasonQueryKey, decisionReasonId, decisionTypeId],
-        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionTypeId),
+        [getDecisionReasonQueryKey, decisionReasonId, decisionId],
+        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionId),
         {
-            enabled: !!decisionTypeId,
+            enabled: !!decisionId,
             refetchOnWindowFocus: false,
         }
     );

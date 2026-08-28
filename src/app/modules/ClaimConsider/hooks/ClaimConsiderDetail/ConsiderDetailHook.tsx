@@ -8,13 +8,42 @@ import {
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
-import { claimConsiderSelector, ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, ClaimConsiderValues, setClaimForm } from "../../store/claimConsiderSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
+import { CoverageType } from "../../../../functionHelpers";
+const calculateStayDays = (
+    admissionDate: dayjs.Dayjs | null | undefined,
+    admissionTime: dayjs.Dayjs | null | undefined,
+    dischargeDate: dayjs.Dayjs | null | undefined,
+    dischargeTime: dayjs.Dayjs | null | undefined
+): number => {
+    if (!admissionDate || !admissionTime || !dischargeDate || !dischargeTime) {
+        return 0;
+    }
 
+    const admission = admissionDate.hour(admissionTime.hour()).minute(admissionTime.minute()).second(0).millisecond(0);
+
+    const discharge = dischargeDate.hour(dischargeTime.hour()).minute(dischargeTime.minute()).second(0).millisecond(0);
+
+    const diffMinutes = discharge.diff(admission, "minute");
+
+    if (diffMinutes <= 0) {
+        return 0;
+    }
+
+    const SIX_HOURS = 6 * 60;
+    const FULL_DAY = 24 * 60;
+
+    const fullDays = Math.floor(diffMinutes / FULL_DAY);
+
+    const remainingMinutes = diffMinutes % FULL_DAY;
+
+    return fullDays + (remainingMinutes >= SIX_HOURS ? 1 : 0);
+};
 const useConsiderDetailHook = () => {
     const { id } = useParams();
     const claimId = id ? atob(id) : undefined;
@@ -52,17 +81,21 @@ const useConsiderDetailHook = () => {
         undefined
     );
 
+    const DEATH_DISABILITY = [CoverageType.Death, CoverageType.Disability];
+
     const coverageType: ClaimTypeOption[] = useMemo(
         () => [
             ...new Map(
-                (incidentTypeMapping?.data ?? []).map((item) => [
-                    item.coverageTypeId,
-                    {
-                        id: item.coverageTypeId ?? 0,
-                        name: item.coverageTypeNameTH ?? "",
-                        icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
-                    },
-                ])
+                (incidentTypeMapping?.data ?? [])
+                    .filter((item) => !DEATH_DISABILITY.includes(item.coverageTypeId ?? 0))
+                    .map((item) => [
+                        item.coverageTypeId,
+                        {
+                            id: item.coverageTypeId ?? 0,
+                            name: item.coverageTypeNameTH ?? "",
+                            icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
+                        },
+                    ])
             ).values(),
         ],
         [incidentTypeMapping]
@@ -191,6 +224,27 @@ const useConsiderDetailHook = () => {
         formik.setFieldValue("causeOfIncidentId", undefined, false);
         prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
     }, [formik.values.coverageTypeId]);
+
+    useEffect(() => {
+        const totalDays = calculateStayDays(
+            formik.values.admissionDate,
+            formik.values.admissionTime,
+            formik.values.dischargeDate,
+            formik.values.dischargeTime
+        );
+
+        if (formik.values.totalDays !== totalDays) {
+            formik.setFieldValue("totalDays", totalDays, false);
+        }
+    }, [
+        formik.values.admissionDate,
+        formik.values.admissionTime,
+        formik.values.dischargeDate,
+        formik.values.dischargeTime,
+    ]);
+    useEffect(() => {
+        dispatch(setClaimForm(formik.values));
+    }, [formik.values]);
 
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,

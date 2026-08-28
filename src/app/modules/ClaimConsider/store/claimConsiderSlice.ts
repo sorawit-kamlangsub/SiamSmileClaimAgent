@@ -1,11 +1,41 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { RootState } from "../../../../redux";
 
 export interface DiagnosisModel {
     icd10Id?: number;
     icd10Detail?: string;
 }
+export interface OcrReceiptRequest {
+    documentId?: string;
+    documentNo?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
+}
+
+export interface ClaimExpenseItem {
+    id?: number;
+    standardMedicalExpenseId?: number | undefined;
+    code?: string | undefined;
+    description?: string | undefined;
+    receiptAmount?: number;
+    claimAmount?: number;
+    notCovered?: number;
+    reason?: number | undefined;
+    remark?: string | undefined;
+    discount?: number | undefined;
+    color?: string;
+    disabled: boolean;
+    maximumLimit?: number | undefined;
+}
+
 export interface ClaimConsiderValues {
     //เหตุของการเคลม
     incidentTypeId: number | undefined;
@@ -42,10 +72,12 @@ export interface ClaimConsiderValues {
     considerResult: number | undefined;
     decisionReasonId: number | undefined;
     decisionReasonDetail: string | undefined;
+    ocrReceiptDocument: OcrReceiptRequest[] | undefined;
 }
 
 interface ClaimConsiderState {
     form: ClaimConsiderValues;
+    filledItems: ClaimExpenseItem[];
 }
 const defaultForm: ClaimConsiderValues = {
     incidentTypeId: undefined,
@@ -83,9 +115,11 @@ const defaultForm: ClaimConsiderValues = {
     considerResult: undefined,
     decisionReasonId: undefined,
     decisionReasonDetail: undefined,
+    ocrReceiptDocument: undefined,
 };
 const initialState: ClaimConsiderState = {
     form: defaultForm,
+    filledItems: [],
 };
 
 const claimConsiderSlice = createSlice({
@@ -98,12 +132,28 @@ const claimConsiderSlice = createSlice({
         resetClaimForm(state) {
             state.form = defaultForm;
         },
-
+        setFilledClaimLineItems(state, action: PayloadAction<ClaimExpenseItem[]>) {
+            state.filledItems = action.payload;
+        },
+        updateFilledClaimLineItem(state, action: PayloadAction<ClaimExpenseItem>) {
+            const idx = state.filledItems.findIndex((i) => i.id === action.payload.id);
+            if (idx !== -1) state.filledItems[idx] = action.payload;
+        },
+        removeFilledClaimLineItem(state, action: PayloadAction<number>) {
+            state.filledItems = state.filledItems.filter((i) => i.id !== action.payload);
+        },
         resetState: () => initialState,
     },
 });
 
-export const { setClaimForm, resetClaimForm, resetState } = claimConsiderSlice.actions;
+export const {
+    setClaimForm,
+    resetClaimForm,
+    setFilledClaimLineItems,
+    updateFilledClaimLineItem,
+    removeFilledClaimLineItem,
+    resetState,
+} = claimConsiderSlice.actions;
 
 export const claimConsiderSelector = (state: RootState) => state.claimConsider;
 

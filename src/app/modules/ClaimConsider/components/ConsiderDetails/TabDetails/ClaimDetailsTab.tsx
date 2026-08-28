@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Box, Button, Grid } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
@@ -9,6 +10,7 @@ import RecordClaimData from "./SubDetailsTab/RecordClaimData";
 import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import ConsiderSection from "./SubDetailsTab/ConsiderSection";
+import ExpenseDetails from "./SubDetailsTab/ExpenseDetails";
 
 type ClaimDetailsTabProps = {
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
@@ -66,7 +68,15 @@ const ClaimDetailsTab = ({ customerDetail }: ClaimDetailsTabProps) => {
                             </Grid>
                         </div>
                     )}
-                    {activeStep === 1 && <div>{/* ฟอร์มรายละเอียดค่าใช้จ่าย */}</div>}
+                    {activeStep === 1 && (
+                        <div>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12} sm={12} md={12} lg={12}>
+                                    <ExpenseDetails />
+                                </Grid>
+                            </Grid>
+                        </div>
+                    )}
                     {activeStep === 2 && <div>{/* สรุปรายการเคลม */}</div>}
                     <Grid item xs={12} sm={12} md={12} lg={12}>
                         <ConsiderSection
@@ -90,27 +100,40 @@ const ClaimDetailsTab = ({ customerDetail }: ClaimDetailsTabProps) => {
 
                     <Grid item>
                         <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                            <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
-                                บันทึกแบบร่าง
-                            </Button>
-
                             {!isLastStep && (
-                                <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
-                                    ถัดไป
-                                </Button>
+                                <>
+                                    <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
+                                        บันทึกแบบร่าง
+                                    </Button>
+
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<SaveIcon />}
+                                        onClick={handleFinish}
+                                        sx={{
+                                            bgcolor: "#2E7D32",
+                                            "&:hover": { bgcolor: "#1B5E20" },
+                                        }}
+                                    >
+                                        ยืนยันบันทึกผลพิจารณา
+                                    </Button>
+                                    <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
+                                        ถัดไป
+                                    </Button>
+                                </>
                             )}
 
                             {isLastStep && (
                                 <Button
                                     variant="contained"
-                                    startIcon={<SaveIcon />}
-                                    onClick={handleFinish}
+                                    startIcon={<CheckCircleIcon />}
                                     sx={{
                                         bgcolor: "#2E7D32",
                                         "&:hover": { bgcolor: "#1B5E20" },
                                     }}
+                                    onClick={handleFinish}
                                 >
-                                    ยืนยันบันทึกผลพิจารณา
+                                    อนุมัติ
                                 </Button>
                             )}
                         </Box>
