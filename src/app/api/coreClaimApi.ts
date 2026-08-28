@@ -94,36 +94,36 @@ export const useGetCustomerDetailById = (id: number | undefined) => {
 
 export const useGetCustomerBenefitDetailSearch = (
     policyCode?: string | undefined,
-    claimNo?: string | undefined,
-    incidentDate?: Dayjs | undefined,
+    incidentDate?: dayjs.Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    claimNo?: string | undefined,
+    customerTypeCode?: string | undefined
 ) => {
     return useQuery(
         [
             getCustomerBenefitDetailSearchQueryKey,
             policyCode,
-            claimNo,
             incidentDate,
             isContinue,
             incidentTypeId,
             coverageTypeId,
             medicalTypeId,
-            causeOfIncidentId,
+            claimNo,
+            customerTypeCode,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
                 policyCode,
-                claimNo,
                 incidentDate,
                 isContinue,
                 incidentTypeId,
                 coverageTypeId,
                 medicalTypeId,
-                causeOfIncidentId
+                claimNo,
+                customerTypeCode
             ),
         {
             enabled: !!policyCode,
