@@ -3,10 +3,10 @@
 
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_URL } from "../../../Const";
+import { API_URL as API_CLAIM_FUND_URL } from "../../../Const";
 import { encodeURLWithParams } from "../_common";
 
-const apiURL = `${API_URL}/api`;
+const apiURL = `${API_CLAIM_FUND_URL}/api`;
 
 const getClaimByClaimOrCase = "getClaimByClaimOrCaseKey";
 

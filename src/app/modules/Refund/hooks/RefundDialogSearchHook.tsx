@@ -8,9 +8,9 @@ type RefundClaimSearchType = {
 };
 
 const useRefundDialogSearchHook = () => {
-    const [dataFromSearch, setDataFromSearch] = useState<[]>([]);
+    const [dataFromSearch, setDataFromSearch] = useState<any>([]);
     const handleSuccess = (res: any) => {
-        setDataFromSearch(res?.data);
+        setDataFromSearch(res.data);
     };
     const handleError = (err: string) => {
         swalError("แจ้งเตือน", err);

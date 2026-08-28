@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL, API_URL, APIGW_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL, APIGW_URL } from "../../../Const";
 import { encodeURLWithParams } from "../_common";
 
-const claimFundAPI_URL = `${API_URL}/api`;
+const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 const payTransferGWAPI_URL = `${APIGW_URL}/pay`;
 const getInquiryMonitors = "getInquiryMonitorsKey";
 const getInquiryDetailMonitor = "getInquiryDetailMonitorKey";

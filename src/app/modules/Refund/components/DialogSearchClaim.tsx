@@ -20,7 +20,11 @@ const DialogSearchClaim = () => {
 
     useEffect(() => {
         if (dataFromSearch.length > 0) {
-            if (dataFromSearch.length > 1) {
+            if (
+                dataFromSearch.map((item: any) => {
+                    item.isClaimNo;
+                })
+            ) {
                 console.log(dataFromSearch);
             } else {
                 navigate("/");
