@@ -1,7 +1,6 @@
 import { useAppSelector } from "../../../../../../redux";
 import { useCreateCoreClaim } from "../../../../../api/coreClaimApi";
 import {
-    CaseDocumentDetailV2Request,
     CaseV2Request,
     ClaimV2Request,
     CreateCoreClaimDtoResponseServiceResponse,
@@ -156,10 +155,7 @@ const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
         assessments: createCaseAssessment.map(({ tempCaseId: _t, ...a }) => a),
         deaths: createCaseDeath.map(({ tempCaseId: _t, ...d }) => d),
         disabilities: createCaseDisability.map(({ tempCaseId: _t, ...d }) => d),
-        documents: createCaseDocument.map(({ documentSubTypeId, caseDocumentDetail }) => ({
-            documentSubTypeId,
-            details: (caseDocumentDetail ?? []) as unknown as CaseDocumentDetailV2Request[],
-        })),
+        documents: createCaseDocument.map(({ tempCaseId: _t, tempCaseDocumentId: _t2, ...doc }) => doc),
         ...(createCaseContact ? { contacts: createCaseContact.map(({ tempCaseId: _t, ...c }) => c) } : {}),
         servicePersons: createCaseServicePerson.map(({ tempCaseId: _t, ...s }) => s),
         beneficiaries: createBeneficiary.map(({ tempClaimId: _t1, tempCaseId: _t2, ...b }) => ({

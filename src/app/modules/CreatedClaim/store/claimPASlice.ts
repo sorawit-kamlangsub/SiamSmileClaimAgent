@@ -15,7 +15,7 @@ import {
     CaseContactV2Request,
     CaseDeathV2Request,
     CaseDisabilityV2Request,
-    CaseDocumentDetailV2Request,
+    CaseDocumentV2Request,
     CaseItemV2Request,
     CaseRegistrationV2Request,
     CaseServicePersonV2Request,
@@ -35,12 +35,11 @@ export type LocalCaseAssessment = CaseAssessmentV2Request & { tempCaseId?: strin
 export type LocalCaseDeath = CaseDeathV2Request & { tempCaseId?: string };
 export type LocalCaseDisability = CaseDisabilityV2Request & { tempCaseId?: string };
 
-export type LocalCaseDocument = {
+export type LocalCaseDocument = CaseDocumentV2Request & {
     tempCaseId?: string;
     tempCaseDocumentId?: string;
-    documentSubTypeId?: number;
-    caseDocumentDetail?: any[];
 };
+
 export type LocalCaseContact = CaseContactV2Request & { tempCaseId?: string };
 export type LocalCaseServicePerson = CaseServicePersonV2Request & { tempCaseId?: string };
 export type LocalBeneficiary = Omit<BeneficiaryV2Request, "payables"> & { tempClaimId?: string; tempCaseId?: string };
@@ -156,7 +155,7 @@ export interface ClaimPAFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
+    ocrDocument: CaseDocumentV2Request[] | undefined;
     extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (ุ6 = ภัยสาธารณะ, 7 = ความรับผิดสถานศึกษา)
     deathBenefitAmounts: Record<number, number | string>;
 }

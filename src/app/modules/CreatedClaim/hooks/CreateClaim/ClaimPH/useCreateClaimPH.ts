@@ -161,17 +161,13 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                             disabilities: isDisability ? mapOrganLossToDisabilityRequests(organLossItems) : [],
 
-                            documents: [
-                                {
-                                    documentSubTypeId: 220,
-                                    details: isMedicalAll
-                                        ? form.ocrDocument
-                                        : documentScanList.map((d) => ({
-                                              documentId: d.documentId,
-                                              documentNo: d.documentCode,
-                                          })),
-                                },
-                            ],
+                            documents: isMedicalAll
+                                ? form.ocrDocument ?? []
+                                : documentScanList.map((d) => ({
+                                      documentId: d.documentId,
+                                      documentNo: d.documentCode,
+                                      documentSubTypeId: d.documentSubTypeId,
+                                  })),
 
                             contacts:
                                 isDeath || isDisability
