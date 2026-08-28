@@ -278,25 +278,21 @@ export class CoreClaimClient {
     /**
      * API สำหรับ Search Customer Benefit Detail
      * @param policyCode (optional) 
-     * @param claimNo (optional) 
      * @param incidentDate (optional) 
      * @param isContinue (optional) 
      * @param incidentTypeId (optional) 
      * @param coverageTypeId (optional) 
      * @param medicalTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
+     * @param claimNo (optional) 
+     * @param customerTypeCode (optional) 
      * @return Success
      */
-    getCustomerBenefitDetailSearch(policyCode?: string | undefined, claimNo?: string | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
+    getCustomerBenefitDetailSearch(policyCode?: string | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, claimNo?: string | undefined, customerTypeCode?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/search?";
         if (policyCode === null)
             throw new Error("The parameter 'policyCode' cannot be null.");
         else if (policyCode !== undefined)
             url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (claimNo === null)
-            throw new Error("The parameter 'claimNo' cannot be null.");
-        else if (claimNo !== undefined)
-            url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
         if (incidentDate === null)
             throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
@@ -317,10 +313,14 @@ export class CoreClaimClient {
             throw new Error("The parameter 'medicalTypeId' cannot be null.");
         else if (medicalTypeId !== undefined)
             url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (causeOfIncidentId === null)
-            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
-        else if (causeOfIncidentId !== undefined)
-            url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
+        if (claimNo === null)
+            throw new Error("The parameter 'claimNo' cannot be null.");
+        else if (claimNo !== undefined)
+            url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
+        if (customerTypeCode === null)
+            throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        else if (customerTypeCode !== undefined)
+            url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -3082,19 +3082,19 @@ export class MastersClient {
     /**
      * API สำหรับ Get ข้อมูล DecisionReason (สาเหตุจากผลการพิจารณา)
      * @param decisionReasonId (optional) 
-     * @param decisionTypeId (optional) 
+     * @param decisionId (optional) 
      * @return Success
      */
-    getDecisionReason(decisionReasonId?: number | undefined, decisionTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDecisionReasonDtoResponseListServiceResponse> {
+    getDecisionReason(decisionReasonId?: number | undefined, decisionId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDecisionReasonDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/claim/decision/reason?";
         if (decisionReasonId === null)
             throw new Error("The parameter 'decisionReasonId' cannot be null.");
         else if (decisionReasonId !== undefined)
             url_ += "decisionReasonId=" + encodeURIComponent("" + decisionReasonId) + "&";
-        if (decisionTypeId === null)
-            throw new Error("The parameter 'decisionTypeId' cannot be null.");
-        else if (decisionTypeId !== undefined)
-            url_ += "decisionTypeId=" + encodeURIComponent("" + decisionTypeId) + "&";
+        if (decisionId === null)
+            throw new Error("The parameter 'decisionId' cannot be null.");
+        else if (decisionId !== undefined)
+            url_ += "decisionId=" + encodeURIComponent("" + decisionId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -4026,8 +4026,7 @@ export interface CaseDisabilityV2Request {
 }
 
 export interface CaseDocumentDetailSaveClaimEditDraftRequest {
-    documentId?: string;
-    documentNo?: string | undefined;
+    caseDocumentDetailId?: string;
     firstName?: string | undefined;
     lastName?: string | undefined;
     fullName?: string | undefined;
@@ -4040,8 +4039,6 @@ export interface CaseDocumentDetailSaveClaimEditDraftRequest {
 }
 
 export interface CaseDocumentDetailV2Request {
-    documentId?: string;
-    documentNo?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     fullName?: string | undefined;
@@ -4054,18 +4051,24 @@ export interface CaseDocumentDetailV2Request {
 }
 
 export interface CaseDocumentSaveClaimEditDraftRequest {
+    caseDocumentId?: string;
+    documentId?: string;
+    documentNo?: string | undefined;
     documentSubTypeId?: number | undefined;
     caseDocumentDetail?: CaseDocumentDetailSaveClaimEditDraftRequest[] | undefined;
 }
 
 export interface CaseDocumentV2Request {
+    documentId?: string;
+    documentNo?: string | undefined;
     documentSubTypeId?: number;
     details?: CaseDocumentDetailV2Request[] | undefined;
 }
 
 export interface CaseItemAdjudicationSaveClaimEditDraftRequest {
+    caseItemAdjusication?: string | undefined;
     standardMedicalExpenseId?: number | undefined;
-    caseItemId?: string;
+    caseItemId?: string | undefined;
     netCaseAmount?: number;
     eligibleAmount?: number;
     approvedAmount?: number;
@@ -4074,6 +4077,7 @@ export interface CaseItemAdjudicationSaveClaimEditDraftRequest {
 }
 
 export interface CaseItemSaveClaimEditDraftRequest {
+    caseItemId?: string | undefined;
     inputToStandardMappingId?: number;
     standardMedicalExpenseId?: number;
     quantity?: number;
@@ -4083,7 +4087,7 @@ export interface CaseItemSaveClaimEditDraftRequest {
     netCaseAmount?: number;
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
-    nonCoveredReasonId?: number;
+    nonCoveredReasonId?: number | undefined;
     nplAmount?: number | undefined;
 }
 
@@ -4145,6 +4149,8 @@ export interface CaseSaveClaimEditDraftRequest {
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
     caseItem?: CaseItemSaveClaimEditDraftRequest[] | undefined;
+    caseAssessment?: CaseAssessmentSaveClaimEditDraftRequest;
+    caseAdjudication?: CaseAdjudicationSaveClaimEditDraftRequest;
     caseDeath?: CaseDeathSaveClaimEditDraftRequest[] | undefined;
     caseDisability?: CaseDisabilitySaveClaimEditDraftRequest[] | undefined;
     beneficiary?: BeneficiarySaveClaimEditDraftRequest[] | undefined;
@@ -5106,7 +5112,7 @@ export interface GetDocumentRecipientTypeDtoResponseListServiceResponse {
 export interface GetDocumentSubTypeDtoRequest {
     documentTypeId: number;
     documentPrefix: string;
-    documentSubTypeIdList: number[];
+    productTypeId: number;
 }
 
 export interface GetDocumentSubTypeDtoResponse {
@@ -5466,8 +5472,6 @@ export interface SaveClaimEditDraftDtoRequest {
     accidentPlace?: string | undefined;
     accidentDescription?: string | undefined;
     case?: CaseSaveClaimEditDraftRequest;
-    caseAssessment?: CaseAssessmentSaveClaimEditDraftRequest;
-    caseAdjudication?: CaseAdjudicationSaveClaimEditDraftRequest;
     claimEditDraft?: ClaimEditDraftSaveClaimEditDraftRequest;
 }
 
@@ -5595,8 +5599,6 @@ export interface UpsertClaimDecisionCaseDisabilityRequest {
 }
 
 export interface UpsertClaimDecisionCaseDocumentDetailRequest {
-    documentId?: string;
-    documentNo?: string | undefined;
     firstName?: string | undefined;
     lastName?: string | undefined;
     fullName?: string | undefined;
@@ -5609,6 +5611,8 @@ export interface UpsertClaimDecisionCaseDocumentDetailRequest {
 }
 
 export interface UpsertClaimDecisionCaseDocumentRequest {
+    documentId?: string;
+    documentNo?: string | undefined;
     documentSubTypeId?: number;
     caseDocumentDetail?: UpsertClaimDecisionCaseDocumentDetailRequest[] | undefined;
 }

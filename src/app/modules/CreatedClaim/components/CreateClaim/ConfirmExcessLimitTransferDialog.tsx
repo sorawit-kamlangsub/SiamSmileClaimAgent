@@ -211,9 +211,6 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                             </Typography>
                         </Box>
                     </Box>
-                    {/* <IconButton size="small" onClick={onClose}>
-                        <CloseIcon fontSize="small" />
-                    </IconButton> */}
                 </Box>
 
                 <Divider sx={{ mb: 2 }} />
@@ -268,6 +265,7 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                             fullWidth
                             error={isWithdrawableOverLimit}
                             helperText={isWithdrawableOverLimit ? "ต้องไม่เกินสิทธิ์เบิกสูงสุด" : " "}
+                            InputProps={{ readOnly: true }}
                         />
                     </Box>
                     <Box flex={1} minWidth={180}>
@@ -293,6 +291,7 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                                 },
                             }}
                             helperText=" "
+                            InputProps={{ readOnly: true }}
                         />
                     </Box>
                 </Box>

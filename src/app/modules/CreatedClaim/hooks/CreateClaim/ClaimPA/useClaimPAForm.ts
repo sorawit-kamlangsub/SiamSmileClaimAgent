@@ -357,14 +357,11 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                   }))
                 : [];
 
-            const createCaseDocument: LocalCaseDocument[] = [
-                {
-                    tempCaseId,
-                    tempCaseDocumentId: generateTempId(),
-                    documentSubTypeId: 220,
-                    caseDocumentDetail: (ocrDocument as any[]) ?? [],
-                },
-            ];
+            const createCaseDocument: LocalCaseDocument[] = (ocrDocument ?? []).map((doc) => ({
+                ...doc,
+                tempCaseId,
+                tempCaseDocumentId: generateTempId(),
+            }));
 
             const createCaseServicePerson: LocalCaseServicePerson[] = [
                 {

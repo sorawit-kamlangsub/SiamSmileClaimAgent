@@ -1,7 +1,6 @@
 import { MUIDataTableColumn } from "mui-datatables";
 import { Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
-
 import { useCallback, useEffect, useState } from "react";
 import { useGetDocumentType } from "../../../../api/coreClaimApi";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../functionHelpers";
@@ -10,23 +9,69 @@ import { StandardDataTable } from "../../../_common";
 import { claimPHSelector, setDocument, setDocumentDetailById } from "../../store/claimPHSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { DOC_STORAGE_URL } from "../../../../../Const";
-import { CaseDocumentDetailV2Request, GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
+import {
+    CaseDocumentV2Request,
+    GetDocumentSubTypeDtoResponse,
+} from "../../../../api/coreClaimApi.client";
 import { useGetDocumentById } from "../../../../api/docstorageApi";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 
+// ประเภทเอกสาร (type)
+// 1  บัตรประชาชน
+// 2  แบบฟอร์ม A
+// 3  แบบฟอร์ม B
+// 4  ใบแจ้งหนี้
+// 5  รายละเอียดใบแจ้งหนี้
+// 6  ผลการตรวจ LAB, EKG, X-ray และอื่นๆ
+// 7  ชุดรวมเอกสาร
+// 8  อื่นๆ
+// 9  ใบแจ้งปฏิเสธสินไหม
+// 10 คู่สัญญาโรงพยาบาล
+// 11 เอกสารประกอบการพิจารณาเคลม
+
+type DocumentTypeKey =
+    | "บัตรประชาชน"
+    | "แบบฟอร์ม A"
+    | "แบบฟอร์ม B"
+    | "ใบแจ้งหนี้"
+    | "รายละเอียดใบแจ้งหนี้"
+    | "ผลการตรวจ LAB, EKG, X-ray และอื่นๆ"
+    | "ชุดรวมเอกสาร"
+    | "อื่นๆ"
+    | "ใบแจ้งปฏิเสธสินไหม"
+    | "คู่สัญญาโรงพยาบาล"
+    | "เอกสารประกอบการพิจารณาเคลม";
+
+export const documentTypeId: Record<DocumentTypeKey, number> = {
+    บัตรประชาชน: 1,
+    "แบบฟอร์ม A": 2,
+    "แบบฟอร์ม B": 3,
+    ใบแจ้งหนี้: 4,
+    รายละเอียดใบแจ้งหนี้: 5,
+    "ผลการตรวจ LAB, EKG, X-ray และอื่นๆ": 6,
+    ชุดรวมเอกสาร: 7,
+    อื่นๆ: 8,
+    ใบแจ้งปฏิเสธสินไหม: 9,
+    คู่สัญญาโรงพยาบาล: 10,
+    เอกสารประกอบการพิจารณาเคลม: 11,
+};
+
 type DocumentScanTableProps = {
-    productId?: number | undefined;
+    productTypeId: number;
     aplicationCode?: string | undefined;
-    documentTypeId?: number | undefined;
+    documentType?: DocumentTypeKey | undefined;
+    Header?: string;
     rejectClaim?: boolean;
-    onAttachedDocumentsChange?: (docs: CaseDocumentDetailV2Request[]) => void;
+    onAttachedDocumentsChange?: (docs: CaseDocumentV2Request[]) => void;
 };
 
 const DocumentScanTable = ({
     aplicationCode,
-    documentTypeId,
+    documentType = "เอกสารประกอบการพิจารณาเคลม",
     rejectClaim,
+    productTypeId,
+    Header,
     onAttachedDocumentsChange,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
@@ -37,21 +82,11 @@ const DocumentScanTable = ({
         setFileCountByDocId((prev) => (prev[documentId] === fileCount ? prev : { ...prev, [documentId]: fileCount }));
     }, []);
 
-    const documentSubType = (): number => {
-        if (documentTypeId === 15 && !rejectClaim) {
-            //เอกสารประกอบการพิจารณาเคลม
-            return 220;
-        } else if (documentTypeId === 15 && rejectClaim) {
-            return 338;
-        }
-        return 0;
-    };
-
     const { data, isLoading } = useGetDocumentType(
         {
-            documentTypeId: documentTypeId ?? 0,
+            documentTypeId: documentTypeId[documentType],
             documentPrefix: "DOC",
-            documentSubTypeIdList: [documentSubType()],
+            productTypeId: productTypeId,
         },
         isEnabled
     );
@@ -66,11 +101,12 @@ const DocumentScanTable = ({
     useEffect(() => {
         if (!onAttachedDocumentsChange) return;
 
-        const attachedDocs: CaseDocumentDetailV2Request[] = enrichedData
+        const attachedDocs: CaseDocumentV2Request[] = enrichedData
             .filter((d) => (fileCountByDocId[d.documentId ?? ""] ?? 0) > 0)
             .map((d) => ({
                 documentId: d.documentId,
                 documentNo: d.documentCode,
+                documentSubTypeId: d.documentSubTypeId,
             }));
 
         onAttachedDocumentsChange(attachedDocs);
@@ -98,7 +134,7 @@ const DocumentScanTable = ({
             options: {
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const { documentId, documentCode } = enrichedData[tableMeta.rowIndex] || {};
+                    const { documentId, documentCode, documentSubTypeId } = enrichedData[tableMeta.rowIndex] || {};
                     const prefixcode =
                         aplicationCode !== undefined &&
                         aplicationCode !== null &&
@@ -120,10 +156,9 @@ const DocumentScanTable = ({
                                     <Button
                                         size="small"
                                         variant="contained"
-                                        sx={{ width: documentTypeId === 4 ? "170px" : "150px" }}
-                                        // fullWidth
+                                        sx={{ width: "170px" }}
                                         onClick={() => {
-                                            const url = `${DOC_STORAGE_URL}/document/scan?documentId=${documentId}&documentCode=${documentCode}&documentSubType=${documentSubType()}&mainIndex=${prefixcode}&searchIndex=${prefixcode}`;
+                                            const url = `${DOC_STORAGE_URL}/document/scan?documentId=${documentId}&documentCode=${documentCode}&documentSubType=${documentSubTypeId}&mainIndex=${prefixcode}&searchIndex=${prefixcode}`;
                                             handleClickLink(url);
                                         }}
                                     >
@@ -179,50 +214,27 @@ const DocumentScanTable = ({
     ];
     return (
         <>
-            {documentTypeId === 15 ? (
-                <CustomPaper sx={{ mt: 1 }}>
-                    <HeadingWithColor
-                        text={rejectClaim ? "เอกสารประกอบการปฏิเสธ" : "สแกนเอกสาร"}
-                        color="blue"
-                        icon={<AttachFileIcon sx={{ fontSize: 27 }} />}
+            <CustomPaper sx={{ mt: 1 }}>
+                {!!Header && (
+                    <HeadingWithColor text={Header} color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
+                )}
+                {isLoading ? (
+                    <LinearProgress sx={{ height: "5px" }} />
+                ) : (
+                    <StandardDataTable
+                        name="scanDocumentTable"
+                        title=""
+                        data={enrichedData}
+                        isLoading={isLoading}
+                        columns={columns}
+                        color="primary"
+                        columnHeaderAlign="center"
+                        displayToolbar={false}
+                        displayFooter={false}
+                        options={defaultOptionStandardDataTable}
                     />
-                    {isLoading ? (
-                        <LinearProgress sx={{ height: "5px" }} />
-                    ) : (
-                        <StandardDataTable
-                            name="scanDocumentTable"
-                            title=""
-                            data={enrichedData}
-                            isLoading={isLoading}
-                            columns={columns}
-                            color="primary"
-                            columnHeaderAlign="center"
-                            displayToolbar={false}
-                            displayFooter={false}
-                            options={defaultOptionStandardDataTable}
-                        />
-                    )}
-                </CustomPaper>
-            ) : (
-                <>
-                    {isLoading ? (
-                        <LinearProgress sx={{ height: "5px" }} />
-                    ) : (
-                        <StandardDataTable
-                            name="scanDocumentTable"
-                            title=""
-                            data={enrichedData}
-                            isLoading={isLoading}
-                            columns={columns}
-                            color="primary"
-                            columnHeaderAlign="center"
-                            displayToolbar={false}
-                            displayFooter={false}
-                            options={defaultOptionStandardDataTable}
-                        />
-                    )}
-                </>
-            )}
+                )}
+            </CustomPaper>
         </>
     );
 };

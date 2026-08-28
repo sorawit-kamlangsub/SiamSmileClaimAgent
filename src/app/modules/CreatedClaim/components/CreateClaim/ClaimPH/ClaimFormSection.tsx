@@ -686,7 +686,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                 </CustomPaper>
             )}
             {(isDeath || isDisability) && (
-                <DocumentScanTable productId={6} documentTypeId={15} aplicationCode={insured?.policyCode} />
+                <DocumentScanTable
+                    productTypeId={6}
+                    aplicationCode={insured?.policyCode}
+                    Header="สแกนเอกสาร"
+                    documentType="เอกสารประกอบการพิจารณาเคลม"
+                />
             )}
 
             <ConfirmExcessLimitTransferDialog

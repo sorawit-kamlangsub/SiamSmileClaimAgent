@@ -228,10 +228,10 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
 
                         {selectedStatus.requiresAttachment && (
                             <DocumentScanTable
-                                productId={productId}
-                                documentTypeId={15}
+                                productTypeId={productId ?? 0}
+                                documentType="ใบแจ้งปฏิเสธสินไหม"
                                 aplicationCode={aplicationCode ?? ""}
-                                rejectClaim
+                                Header="เอกสารประกอบการปฏิเสธ"
                             />
                         )}
                     </Box>

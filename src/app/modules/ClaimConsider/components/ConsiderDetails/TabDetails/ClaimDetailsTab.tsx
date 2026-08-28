@@ -59,9 +59,10 @@ const ClaimDetailsTab = ({ customerDetail }: ClaimDetailsTabProps) => {
                                 </Grid>
                                 <Grid item xs={12} sm={12} md={12} lg={12}>
                                     <DocumentScanTable
-                                        productId={customerDetail?.productTypeId}
-                                        documentTypeId={15}
+                                        productTypeId={customerDetail?.productTypeId ?? 0}
+                                        Header="สแกนเอกสาร"
                                         aplicationCode={customerDetail?.policyCode ?? ""}
+                                        documentType="เอกสารประกอบการพิจารณาเคลม"
                                     />
                                 </Grid>
                             </Grid>

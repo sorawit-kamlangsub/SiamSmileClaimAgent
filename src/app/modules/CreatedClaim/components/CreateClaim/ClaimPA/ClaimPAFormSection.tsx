@@ -778,9 +778,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
             )}
             {(isDeath || isDisability) && (
                 <DocumentScanTable
-                    productId={26}
-                    documentTypeId={15}
                     aplicationCode={insured?.policyCode}
+                    productTypeId={26}
+                    Header="สแกนเอกสาร"
+                    documentType="เอกสารประกอบการพิจารณาเคลม"
                     onAttachedDocumentsChange={handleAttachedDocumentsChange}
                 />
             )}
