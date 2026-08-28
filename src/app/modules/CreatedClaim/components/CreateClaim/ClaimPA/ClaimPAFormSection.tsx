@@ -799,9 +799,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                 }
                 requestedAmount={values.transferAmount ?? 0}
                 maxEligibleAmount={maxPrice ?? 0}
-                onConfirm={async ({ withdrawableAmount }) => {
+                onConfirm={async ({ nplAmount }) => {
                     setIsConfirmExcessOpen(false);
-                    await setFieldValue("transferAmount", withdrawableAmount);
+                    await setFieldValue("nplAmount", nplAmount);
                     formik.submitForm();
                 }}
             />

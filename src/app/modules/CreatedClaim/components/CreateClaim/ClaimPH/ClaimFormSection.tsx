@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
     Backdrop,
     Box,
@@ -122,7 +122,11 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
-    const maxPrice = currentBenefit?.maxPrice;
+    const totalEligibleAmount = useMemo(
+        () => (customerBenefit?.data ?? []).reduce((sum, item) => sum + (item.maxPrice ?? 0), 0),
+        [customerBenefit?.data]
+    );
+    const maxPrice = isManualIPD ? totalEligibleAmount : currentBenefit?.maxPrice;
     const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
     const handleSubmit = async () => {
@@ -704,9 +708,9 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                 appId={insured?.policyCode}
                 requestedAmount={values.transferAmount ?? 0}
                 maxEligibleAmount={maxPrice ?? 0}
-                onConfirm={async ({ withdrawableAmount }) => {
+                onConfirm={async ({ nplAmount }) => {
                     setIsConfirmExcessOpen(false);
-                    await setFieldValue("transferAmount", withdrawableAmount);
+                    await setFieldValue("nplAmount", nplAmount);
                     formik.submitForm();
                 }}
             />

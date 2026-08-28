@@ -244,21 +244,24 @@ const ClaimPASummaryPage: React.FC = () => {
             },
         }).then((result: any) => {
             if (result.isConfirmed) {
-                const paymentCodeResponse = result.value?.data?.paymentCodeResponse ?? [];
-                const itemsHtml = paymentCodeResponse
+                const data = result?.value?.data;
+                const responseList = data?.responseList ?? [];
+                const paymentResponses = result?.value?.paymentResponses;
+                const paymentCodeList = paymentResponses?.data?.paymentCodeResponse ?? [];
+                const itemsHtml = paymentCodeList
                     .map(
                         (item: any, index: number) => `
                 <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
-                    index < paymentCodeResponse.length - 1 ? "12px" : "0"
+                    index < responseList.length - 1 ? "12px" : "0"
                 };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
                     <div style="display:flex;align-items:center;">
                         <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
                         <div>
                             <div style="font-size:12px;color:#888;">รหัสการโอนเงิน :</div>
                             <div style="display:flex;align-items:center;gap:6px;">
-                                <span style="font-size:18px;font-weight:700;color:#2F80ED;">${
-                                    item?.paymentCode ?? "-"
-                                }</span>
+                                <span style="font-size:18px;font-weight:700;color:#2F80ED;">
+                                 ${paymentCodeList[index]?.paymentCode ?? "-"}
+                                </span>
                                 <span
                                     class="material-icons copy-btn"
                                     data-copy="${item?.paymentCode ?? ""}"

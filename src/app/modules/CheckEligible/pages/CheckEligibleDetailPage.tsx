@@ -26,12 +26,13 @@ const CheckEligibleDetailPage: React.FC = () => {
 
     const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailSearch(
         customerDetail?.data?.policyCode,
-        CheckeLigibleDetails.continuousClaim?.claimNo ?? undefined,
         CheckeLigibleDetails.incidentDate ?? undefined,
         CheckeLigibleDetails.isContinuous ?? undefined,
         CheckeLigibleDetails.claimCause,
         CheckeLigibleDetails.coverageType,
-        CheckeLigibleDetails.medicalType
+        CheckeLigibleDetails.medicalType,
+        CheckeLigibleDetails.continuousClaim?.claimNo ?? undefined,
+        customerDetail?.data?.productTypeId === 26 ? customerDetail?.data?.customerTypeCode : undefined
     );
 
     const productId = customerDetail?.data?.productTypeId ?? 0;

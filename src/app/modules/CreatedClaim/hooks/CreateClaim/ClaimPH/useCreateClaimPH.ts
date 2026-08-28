@@ -100,6 +100,8 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                             dischargeDate: isIPD ? form.dischargeDate : undefined,
 
                             caseAmount: form.transferAmount,
+                            nplAmount: form.nplAmount,
+
                             latestApprovedAmount: 0,
                             latestNonCoveredAmount: 0,
                             latestPatientPayAmount: 0,

@@ -72,12 +72,8 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     debounceMs = 300,
 }) => {
     const [localAmounts, setLocalAmounts] = useState(benefitAmounts);
-    const [amountErrors, setAmountErrors] = useState<Record<number, string>>({});
     const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
-    useEffect(() => {
-        setLocalAmounts(benefitAmounts);
-    }, [benefitAmounts]);
     useEffect(() => {
         setLocalAmounts(benefitAmounts);
     }, [benefitAmounts]);
@@ -85,7 +81,6 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     // reset ทุกครั้งที่เปลี่ยนประเภทการเบิก (medicalTypeId)
     useEffect(() => {
         setLocalAmounts({});
-        setAmountErrors({});
         onBenefitAmountsChange({});
         onTransferAmountChange(0);
         if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -96,24 +91,10 @@ const CoverageAndTransferBox: React.FC<Props> = ({
         [localAmounts]
     );
 
-    const handleAmountChange = (benefitId: number, value: string, maxPrice?: number) => {
+    const handleAmountChange = (benefitId: number, value: string) => {
         const sanitized = sanitizeAmountInput(value);
         const next = { ...localAmounts, [benefitId]: sanitized };
         setLocalAmounts(next);
-
-        // เช็ค error แบบ real-time แต่ไม่บล็อกการพิมพ์
-        const numValue = Number(sanitized) || 0;
-        if (maxPrice != null && numValue > maxPrice) {
-            setAmountErrors((prev) => ({
-                ...prev,
-                [benefitId]: `ไม่เกิน ${numberWithCommas(maxPrice.toString(), 0)} บาท`,
-            }));
-        } else {
-            setAmountErrors((prev) => {
-                const { [benefitId]: _, ...rest } = prev;
-                return rest;
-            });
-        }
 
         if (debounceRef.current) clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => {
@@ -122,7 +103,6 @@ const CoverageAndTransferBox: React.FC<Props> = ({
             onTransferAmountChange(nextTotal);
         }, debounceMs);
     };
-
     const handleAmountBlur = (benefitId: number) => {
         const currentValue = localAmounts[benefitId] ?? "";
         const numValue = Number(currentValue) || 0;
@@ -281,12 +261,9 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                             placeholder={item.benefitName}
                             value={item.benefitId != null ? localAmounts[item.benefitId] ?? "" : ""}
                             onChange={(e) =>
-                                item.benefitId != null &&
-                                handleAmountChange(item.benefitId, e.target.value, item.maxPrice)
+                                item.benefitId != null && handleAmountChange(item.benefitId, e.target.value)
                             }
                             onBlur={() => item.benefitId != null && handleAmountBlur(item.benefitId)}
-                            error={item.benefitId != null && !!amountErrors[item.benefitId]}
-                            helperText={item.benefitId != null ? amountErrors[item.benefitId] : undefined}
                             inputProps={{
                                 inputMode: "decimal",
                                 style: { textAlign: "right" },
