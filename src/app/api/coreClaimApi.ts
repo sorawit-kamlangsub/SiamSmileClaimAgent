@@ -7,6 +7,8 @@ import {
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    SaveClaimEditDraftDtoRequest,
+    SaveClaimEditDraftDtoResponeServiceResponse,
 } from "./coreClaimApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
@@ -100,30 +102,30 @@ export const useGetCustomerBenefitDetailSearch = (
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    customerTypeCode?: string | undefined
 ) => {
     return useQuery(
         [
             getCustomerBenefitDetailSearchQueryKey,
             policyCode,
-            claimNo,
             dateHappen,
             isContinue,
             incidentTypeId,
             coverageTypeId,
             medicalTypeId,
-            causeOfIncidentId,
+            claimNo,
+            customerTypeCode,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
                 policyCode,
-                claimNo,
                 dateHappen,
                 isContinue,
                 incidentTypeId,
                 coverageTypeId,
                 medicalTypeId,
-                causeOfIncidentId
+                claimNo,
+                customerTypeCode
             ),
         {
             enabled: !!policyCode,
@@ -487,4 +489,20 @@ export const useGetPolicyBenefit = (
             refetchOnWindowFocus: false,
         }
     );
+};
+
+export const useSaveClaimEditDraft = (
+    onSuccessCallback?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation((body?: SaveClaimEditDraftDtoRequest | undefined) => coreClaimClient.saveClaimEditDraft(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess)
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            else onSuccessCallback?.(response);
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
 };

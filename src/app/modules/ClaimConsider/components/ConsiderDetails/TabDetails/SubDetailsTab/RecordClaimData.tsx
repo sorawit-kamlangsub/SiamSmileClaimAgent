@@ -39,10 +39,6 @@ const RecordClaimData = () => {
     // const isOPD = values.medicalTypeId === MedicalType.OPD;
     const handleStayDaysChange = (field: "ipdDays" | "icuDays", value: number) => {
         formik.setFieldValue(field, value);
-
-        const ipdDays = field === "ipdDays" ? value : formik.values.ipdDays;
-        const icuDays = field === "icuDays" ? value : formik.values.icuDays;
-        formik.setFieldValue("totalDays", ipdDays + icuDays);
     };
     return (
         <>
@@ -203,26 +199,17 @@ const RecordClaimData = () => {
                                 required
                             />
                         </Grid>
-                        {/* <Grid item xs={12} sm={6} md={4}>
-                            <Box data-field-name="deathDate">
-                                <FormikDatePicker
-                                    name="deathDate"
-                                    label="วันที่เสียชีวิต"
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    maxDate={dayjs()}
-                                    required
-                                />
-                            </Box>
-                        </Grid> */}
                         {isIPD && (
                             <Grid item xs={12} lg={12}>
                                 <StayDaysSummary
                                     values={{
                                         ipdDays: formik.values.ipdDays,
                                         icuDays: formik.values.icuDays,
-                                        totalDays: formik.values.totalDays,
                                     }}
+                                    admissionDate={formik.values.admissionDate}
+                                    admissionTime={formik.values.admissionTime}
+                                    dischargeDate={formik.values.dischargeDate}
+                                    dischargeTime={formik.values.dischargeTime}
                                     onChange={handleStayDaysChange}
                                     required={values.medicalTypeId === MedicalType.IPD}
                                 />

@@ -19,6 +19,23 @@ export interface OcrReceiptRequest {
     ocrDocumentTypeId?: number | undefined;
     ocrResult?: string | undefined;
 }
+
+export interface ClaimExpenseItem {
+    id?: number;
+    standardMedicalExpenseId?: number | undefined;
+    code?: string | undefined;
+    description?: string | undefined;
+    receiptAmount?: number;
+    claimAmount?: number;
+    notCovered?: number;
+    reason?: number | undefined;
+    remark?: string | undefined;
+    discount?: number | undefined;
+    color?: string;
+    disabled: boolean;
+    maximumLimit?: number | undefined;
+}
+
 export interface ClaimConsiderValues {
     //เหตุของการเคลม
     incidentTypeId: number | undefined;
@@ -60,6 +77,7 @@ export interface ClaimConsiderValues {
 
 interface ClaimConsiderState {
     form: ClaimConsiderValues;
+    filledItems: ClaimExpenseItem[];
 }
 const defaultForm: ClaimConsiderValues = {
     incidentTypeId: undefined,
@@ -101,6 +119,7 @@ const defaultForm: ClaimConsiderValues = {
 };
 const initialState: ClaimConsiderState = {
     form: defaultForm,
+    filledItems: [],
 };
 
 const claimConsiderSlice = createSlice({
@@ -113,12 +132,28 @@ const claimConsiderSlice = createSlice({
         resetClaimForm(state) {
             state.form = defaultForm;
         },
-
+        setFilledClaimLineItems(state, action: PayloadAction<ClaimExpenseItem[]>) {
+            state.filledItems = action.payload;
+        },
+        updateFilledClaimLineItem(state, action: PayloadAction<ClaimExpenseItem>) {
+            const idx = state.filledItems.findIndex((i) => i.id === action.payload.id);
+            if (idx !== -1) state.filledItems[idx] = action.payload;
+        },
+        removeFilledClaimLineItem(state, action: PayloadAction<number>) {
+            state.filledItems = state.filledItems.filter((i) => i.id !== action.payload);
+        },
         resetState: () => initialState,
     },
 });
 
-export const { setClaimForm, resetClaimForm, resetState } = claimConsiderSlice.actions;
+export const {
+    setClaimForm,
+    resetClaimForm,
+    setFilledClaimLineItems,
+    updateFilledClaimLineItem,
+    removeFilledClaimLineItem,
+    resetState,
+} = claimConsiderSlice.actions;
 
 export const claimConsiderSelector = (state: RootState) => state.claimConsider;
 
