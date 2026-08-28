@@ -1,8 +1,8 @@
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL, API_URL } from "../../../Const";
 
-const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
+const claimFundAPI_URL = `${API_URL}/api`;
 
 const getCurrentSettingHistoryKey = "getCurrentSetting";
 

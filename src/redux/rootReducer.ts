@@ -11,6 +11,8 @@ import extraPaymentSlice from "../app/modules/ExtraPayment/store/extraPaymentSli
 import bankStatusCheckSlice from "../app/modules/BankStatus/store/bankStatusCheckSlice";
 
 import claimConsiderSlice from "../app/modules/ClaimConsider/store/claimConsiderSlice";
+import repaySlice from "../app/modules/ManageTransfer/store/repaySlice";
+import refundSlice from "../app/modules/Refund/store/refundSlice";
 
 export const rootReducer = combineReducers({
     layout: persistReducer(persistConfig, layoutSlice),
@@ -22,4 +24,6 @@ export const rootReducer = combineReducers({
     extraPayment: extraPaymentSlice,
     bankStatusCheck: bankStatusCheckSlice,
     claimConsider: claimConsiderSlice,
+    repay: repaySlice,
+    refund: refundSlice,
 });

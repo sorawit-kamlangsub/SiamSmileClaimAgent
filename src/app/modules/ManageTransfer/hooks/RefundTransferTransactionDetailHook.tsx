@@ -1,13 +1,13 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetInquiryDetailMonitors } from "../bankStatusCheckAPI";
+import { useGetRefundDetailMonitors } from "../repayAPI";
 import dayjs from "dayjs";
 
-type TransactionStatusDataTableProp = {
+type RefundTransferTransactionDetailProp = {
     transactionId: string;
 };
 
-const useTransactionStatusDataTableHook = ({ transactionId }: TransactionStatusDataTableProp) => {
-    const { data: getInquiryDetailData, isLoading: getInquiryDetailIsLoading } = useGetInquiryDetailMonitors({
+const useRefundTransferTransactionDetailHook = ({ transactionId }: RefundTransferTransactionDetailProp) => {
+    const { data: getRefundDetailData, isLoading: getRefundDetailIsLoading } = useGetRefundDetailMonitors({
         payTransferTransactionId: transactionId,
     });
 
@@ -26,8 +26,8 @@ const useTransactionStatusDataTableHook = ({ transactionId }: TransactionStatusD
             options: {
                 filter: false,
                 sort: false,
-                customBodyRenderLite: (rowIndex) => {
-                    const formatDate = getInquiryDetailData?.data?.createdDate
+                customBodyRenderLite: (_rowIndex) => {
+                    const formatDate = getRefundDetailData?.data?.createdDate
                         ? dayjs().format("DD/MM/YYYY HH:mm:ss")
                         : "-";
                     return formatDate;
@@ -59,8 +59,7 @@ const useTransactionStatusDataTableHook = ({ transactionId }: TransactionStatusD
             },
         },
     ];
-
-    return { getInquiryDetailData, getInquiryDetailIsLoading, columns };
+    return { columns, getRefundDetailData, getRefundDetailIsLoading };
 };
 
-export default useTransactionStatusDataTableHook;
+export default useRefundTransferTransactionDetailHook;

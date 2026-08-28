@@ -2,9 +2,15 @@ import { Grid } from "@mui/material";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import SearchByBranchAndStatus from "../_common/SearchByBranchAndStatus";
 import RefundDataTable from "../components/RefundDataTable";
+import DialogSearchClaim from "../components/DialogSearchClaim";
+import { useAppDispatch } from "../../../../redux";
+import { setIsOpenDialog } from "../store/refundSlice";
 
 const RefundPage = () => {
-    const handleSearch = () => {};
+    const dispatch = useAppDispatch();
+    const handleSearch = () => {
+        dispatch(setIsOpenDialog({ isOpen: true }));
+    };
     return (
         <>
             <Grid container spacing={2}>
@@ -19,6 +25,7 @@ const RefundPage = () => {
                     <RefundDataTable />
                 </Grid>
             </Grid>
+            <DialogSearchClaim />
         </>
     );
 };

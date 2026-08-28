@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL, APIGW_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL, API_URL, APIGW_URL } from "../../../Const";
 import { encodeURLWithParams } from "../_common";
 
-const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
+const claimFundAPI_URL = `${API_URL}/api`;
 const payTransferGWAPI_URL = `${APIGW_URL}/pay`;
 const getInquiryMonitors = "getInquiryMonitorsKey";
 const getInquiryDetailMonitor = "getInquiryDetailMonitorKey";
@@ -19,7 +19,7 @@ export const useGetInquiryMonitors = (payload: GetInquiryMonitorsType) => {
 };
 
 const getInquiryMonitorsData = (payload: GetInquiryMonitorsType) => {
-    const url = encodeURLWithParams(`${claimFundAPI_URL}/Setting/InquiryMonitors`, payload);
+    const url = encodeURLWithParams(`${claimFundAPI_URL}/Inquiry/InquiryMonitors`, payload);
     return axios
         .get(url)
         .then((res) => {
@@ -49,7 +49,7 @@ export const useGetInquiryDetailMonitors = (payload: getInquiryMonitorsDetailTyp
 };
 
 const getInquiryMonitorsDetailData = (payload: getInquiryMonitorsDetailType) => {
-    const url = encodeURLWithParams(`${claimFundAPI_URL}/Setting/InquiryDetail`, payload);
+    const url = encodeURLWithParams(`${claimFundAPI_URL}/Inquiry/InquiryDetail`, payload);
     return axios
         .get(url)
         .then((res) => {
