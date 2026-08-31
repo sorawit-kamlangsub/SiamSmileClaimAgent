@@ -19,6 +19,8 @@ import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
+import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
+import SummaryTreatmentCost from "./SubDetailsTab/ExpensesTabs/SummaryTreatmentCost";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
@@ -136,6 +138,22 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     decisionReasonLoading={false}
                                 />
                             </Grid>
+                        </Grid>
+                    ) : activeStep === 1 ? (
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={12} md={12} lg={12}>
+                                <Paper elevation={3} sx={{ borderRadius: 4 }}>
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
+                                            <TreatmentCostTable caseId="1" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={12} md={12} lg={12}>
+                                            <SummaryTreatmentCost  />
+                                        </Grid>
+                                    </Grid>
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={12} sm={12} md={12} lg={12}></Grid>
                         </Grid>
                     ) : (
                         <Paper variant="outlined" sx={EMPTY_STATE_SX}>
