@@ -461,7 +461,7 @@ export const useGetInsuranceCompany = (
     return useQuery(
         [getInsuranceCompanyQueryKey, organizeId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
         () =>
-            coreClaimMastersClient.filter(
+            coreClaimMastersClient.getInsuranceCompany(
                 organizeId,
                 searchDetail,
                 orderingField,
