@@ -24,7 +24,15 @@ import {
  * เป็น Mock UI ตาม Spec ทำเฉพาะ Step 1 : บันทึกข้อมูลเคลม
  * ใช้ Component ร่วมกับหน้าพิจารณาเคลมลูกค้า (/consider/monitor/customers)
  */
-const ConsiderHospitalDetailPage = () => {
+type ConsiderHospitalDetailPageProps = {
+    /**
+     * โหมดดูอย่างเดียว : แสดงข้อมูลชุดเดียวกับหน้าพิจารณา แต่แก้ไขอะไรไม่ได้
+     * ใช้ตอนเปิดจากปุ่มรูปดวงตาในหน้า Monitor
+     */
+    readOnly?: boolean;
+};
+
+const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetailPageProps) => {
     const [tabValue, setTabValue] = useState("1");
     const [searchParams] = useSearchParams();
 
@@ -119,7 +127,7 @@ const ConsiderHospitalDetailPage = () => {
 
                 <Grid item xs={12}>
                     <TabPanel value="1">
-                        <HospitalClaimDetailsTab />
+                        <HospitalClaimDetailsTab readOnly={readOnly} />
                     </TabPanel>
                 </Grid>
             </TabContext>

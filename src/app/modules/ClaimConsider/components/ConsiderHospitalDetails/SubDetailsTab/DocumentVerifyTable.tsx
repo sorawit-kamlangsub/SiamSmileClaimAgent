@@ -36,13 +36,15 @@ type DocumentVerifyTableProps = {
         field: TField,
         value: DocumentCheckRow[TField]
     ) => void;
+    /** โหมดดูอย่างเดียว : แก้ผลการตรวจและหมายเหตุไม่ได้ แต่ยังกดดูเอกสารได้ */
+    readOnly?: boolean;
 };
 
 /** หมายเหตุบังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม */
 const isRemarkRequired = (result: DocumentCheckResult | "") =>
     result === DOCUMENT_CHECK_RESULTS.failed || result === DOCUMENT_CHECK_RESULTS.waiting;
 
-const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
+const DocumentVerifyTable = ({ onChange, readOnly = false }: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
 
@@ -142,6 +144,7 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
                                     key={option.value}
                                     value={option.value}
                                     disableRipple
+                                    disabled={readOnly}
                                     sx={{
                                         px: 2,
                                         py: 0.75,
@@ -183,6 +186,7 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
                         <TextField
                             size="small"
                             fullWidth
+                            disabled={readOnly}
                             value={row.remark}
                             placeholder="ระบุหมายเหตุ"
                             // บังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม

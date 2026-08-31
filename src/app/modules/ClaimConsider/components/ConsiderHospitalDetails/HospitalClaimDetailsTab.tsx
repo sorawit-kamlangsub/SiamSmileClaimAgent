@@ -22,13 +22,21 @@ import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
+type HospitalClaimDetailsTabProps = {
+    /**
+     * โหมดดูอย่างเดียว : แสดงข้อมูลชุดเดียวกับหน้าพิจารณา แต่แก้ไขไม่ได้
+     * และเหลือปุ่มกลับปุ่มเดียว
+     */
+    readOnly?: boolean;
+};
+
 /**
  * Tab "ข้อมูลการเคลม" ของหน้าพิจารณาเคลมโรงพยาบาล (OPD Half)
  *
  * ตอนนี้ทำเฉพาะ Step 1 : บันทึกข้อมูลเคลม (Mock UI)
  * Step 2-3 ยังไม่ได้พัฒนา
  */
-const HospitalClaimDetailsTab = () => {
+const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabProps) => {
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
@@ -66,6 +74,9 @@ const HospitalClaimDetailsTab = () => {
         setActiveStep((prev) => Math.max(prev - 1, 0));
     };
 
+    /** ปิดการโต้ตอบกับส่วนที่เป็นฟอร์มทั้งหมดเมื่ออยู่ในโหมดดูอย่างเดียว */
+    const readOnlySx = readOnly ? { "& > *": { pointerEvents: "none" } } : undefined;
+
     return (
         <FormikProvider value={formik}>
             <Box>
@@ -88,7 +99,7 @@ const HospitalClaimDetailsTab = () => {
                                     />
                                 </Grid>
                             )}
-                            <Grid item xs={12}>
+                            <Grid item xs={12} sx={readOnlySx}>
                                 <ContinuousClaimSection
                                     rows={continuousClaimRows}
                                     open={continuousClaimOpen}
@@ -98,7 +109,7 @@ const HospitalClaimDetailsTab = () => {
                                     onClear={handleClearContinuousClaim}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid item xs={12} sx={readOnlySx}>
                                 <RecordClaimData
                                     incidentType={incidentType}
                                     incidentTypeLoading={false}
@@ -108,16 +119,16 @@ const HospitalClaimDetailsTab = () => {
                                     incidentTypeMappingLoading={false}
                                 />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid item xs={12} sx={readOnlySx}>
                                 <TreatmentInfoSection />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid item xs={12} sx={readOnlySx}>
                                 <AttendingDoctorSection />
                             </Grid>
                             <Grid item xs={12}>
-                                <DocumentVerifyTable onChange={handleDocumentCheckChange} />
+                                <DocumentVerifyTable onChange={handleDocumentCheckChange} readOnly={readOnly} />
                             </Grid>
-                            <Grid item xs={12}>
+                            <Grid item xs={12} sx={readOnlySx}>
                                 <ConsiderSection
                                     productId={6}
                                     aplicationCode={MOCK_HOSPITAL_CLAIM.applicationId}
@@ -145,7 +156,14 @@ const HospitalClaimDetailsTab = () => {
                     </Grid>
 
                     <Grid item>
-                        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                        <Box
+                            sx={{
+                                display: readOnly ? "none" : "flex",
+                                gap: 1.5,
+                                flexWrap: "wrap",
+                                justifyContent: "flex-end",
+                            }}
+                        >
                             <Button
                                 variant="outlined"
                                 startIcon={<SaveAsIcon />}
