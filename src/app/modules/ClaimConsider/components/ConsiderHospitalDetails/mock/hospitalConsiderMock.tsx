@@ -141,6 +141,10 @@ export type ContinuousClaimRow = {
     claimInfo: string;
     diagnosis1: string;
     remainingLimit: number;
+
+    /** เลขที่เคสของเคลมเดิม + สถานะ (ใช้แสดงความต่อเนื่องของการรักษา) */
+    previousCaseNo: string;
+    previousCaseStatus: string;
 };
 
 export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
@@ -149,11 +153,13 @@ export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
         chiefComplaint: "0024 : ไข้ + ปวดท้อง",
         incidentDate: "25/03/2569",
         totalClaimAmount: 2350,
-        totalPaidAmount: 2050,
+        totalPaidAmount: 1800,
         admissionDate: "28/04/2569",
         claimInfo: "เจ็บป่วย / ค่ารักษา / OPD",
-        diagnosis1: "G43.0 : Migraine without aura | ไมเกรนชนิดไม่มีออรา",
-        remainingLimit: 7420,
+        diagnosis1: "A050 : Food-borne staphylococcal intoxication | อาหารเป็นพิษ",
+        remainingLimit: 3200,
+        previousCaseNo: "CC6904000193-01",
+        previousCaseStatus: "อนุมัติแล้ว",
     },
     {
         claimNo: "CL6903000021",
@@ -165,6 +171,8 @@ export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
         claimInfo: "เจ็บป่วย / ค่ารักษา / OPD",
         diagnosis1: "J02.9 : Acute pharyngitis, unspecified | คออักเสบเฉียบพลัน",
         remainingLimit: 8970,
+        previousCaseNo: "CC6903000021-01",
+        previousCaseStatus: "อนุมัติแล้ว",
     },
 ];
 

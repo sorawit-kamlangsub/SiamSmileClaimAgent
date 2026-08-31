@@ -1,17 +1,7 @@
-import {
-    Box,
-    Button,
-    Chip,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    Divider,
-    Grid,
-    IconButton,
-    Typography,
-} from "@mui/material";
+import { Box, Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
-import RepeatIcon from "@mui/icons-material/Repeat";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
+import ArticleIcon from "@mui/icons-material/Article";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useFormikContext } from "formik";
 
@@ -31,6 +21,12 @@ type ContinuousClaimSectionProps = {
     onClear: () => void;
 };
 
+/**
+ * ส่วน "รายละเอียดเคลม" ที่ให้ระบุว่าเคสนี้เป็นเคลมต่อเนื่องหรือไม่
+ *
+ * ติ๊ก Checkbox แล้วเปิด Modal ให้เลือกเคลมเดิม เมื่อเลือกแล้วจะแสดงเป็น Chip
+ * และหน้าจอจะแสดงแถบสรุปเคลมต่อเนื่อง (ContinuousClaimBanner) ด้านบน
+ */
 const ContinuousClaimSection = ({
     rows,
     open,
@@ -96,56 +92,54 @@ const ContinuousClaimSection = ({
 
     return (
         <CustomPaper>
-            <HeadingWithColor icon={<RepeatIcon sx={{ fontSize: 27 }} />} text="เคลมต่อเนื่อง" color="blue" />
+            <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="รายละเอียดเคลม" color="blue" />
 
-            <Box px={2}>
-                <FormikCheckbox
-                    name="isContinuousClaim"
-                    label="รายการนี้เป็นเคลมต่อเนื่อง"
-                    formik={formik}
-                    useFocusError={false}
-                    onChange={(event) => onToggle(event.target.checked)}
-                />
+            <Box px={2} display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+                <Box
+                    sx={{
+                        px: 2,
+                        py: 0.5,
+                        border: "1px solid",
+                        borderColor: "divider",
+                        borderRadius: 2,
+                    }}
+                >
+                    <FormikCheckbox
+                        name="isContinuousClaim"
+                        label="เป็นเคลมต่อเนื่อง"
+                        formik={formik}
+                        useFocusError={false}
+                        onChange={(event) => onToggle(event.target.checked)}
+                    />
+                </Box>
 
                 {selected && (
-                    <Box
-                        sx={{
-                            mt: 1,
-                            p: 2,
-                            border: "1px solid #90CAF9",
-                            borderRadius: 2,
-                            bgcolor: "#F5FAFF",
-                            lineHeight: 1.6,
-                        }}
-                    >
-                        <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
-                            <Typography fontWeight={700} color="#1565C0">
-                                รายการที่เลือก
-                            </Typography>
-                            <Box display="flex" gap={1}>
-                                <Button size="small" variant="outlined" onClick={() => onOpenChange(true)}>
-                                    เปลี่ยนรายการ
-                                </Button>
-                                <Button size="small" color="error" variant="outlined" onClick={onClear}>
-                                    ยกเลิกการเลือก
-                                </Button>
-                            </Box>
-                        </Box>
-
-                        <Divider sx={{ mb: 1.5 }} />
-
-                        <Grid container spacing={1.5}>
-                            <SelectedItem label="เลขที่ CL" value={<Chip size="small" label={selected.claimNo} />} />
-                            <SelectedItem label="วันที่เข้า รพ." value={selected.admissionDate} />
-                            <SelectedItem label="ข้อมูลเคลม" value={selected.claimInfo} />
-                            <SelectedItem label="การวินิจฉัย 1 (Diagnosis 1)" value={selected.diagnosis1} md={8} />
-                            <SelectedItem
-                                label="วงเงินคงเหลือ"
-                                value={numberWithCommas(selected.remainingLimit)}
-                                md={4}
+                    <>
+                        <Tooltip title="เปลี่ยนรายการเคลมเดิม" arrow placement="top">
+                            <Chip
+                                icon={<DescriptionOutlinedIcon />}
+                                label={`${selected.claimNo} | เคลมเดิมวันที่ ${selected.incidentDate}`}
+                                variant="outlined"
+                                onClick={() => onOpenChange(true)}
+                                onDelete={onClear}
+                                sx={{
+                                    height: 46,
+                                    px: 1,
+                                    borderRadius: 2,
+                                    fontSize: 18,
+                                    fontWeight: 700,
+                                    color: "#1565C0",
+                                    borderColor: "divider",
+                                }}
                             />
-                        </Grid>
-                    </Box>
+                        </Tooltip>
+                    </>
+                )}
+
+                {formik.values.isContinuousClaim && !selected && (
+                    <Button variant="outlined" onClick={() => onOpenChange(true)}>
+                        เลือกเคลมต่อเนื่อง
+                    </Button>
                 )}
             </Box>
 
@@ -173,22 +167,5 @@ const ContinuousClaimSection = ({
         </CustomPaper>
     );
 };
-
-type SelectedItemProps = {
-    label: string;
-    value: React.ReactNode;
-    md?: number;
-};
-
-const SelectedItem = ({ label, value, md = 4 }: SelectedItemProps) => (
-    <Grid item xs={12} sm={6} md={md}>
-        <Typography fontSize={12} color="text.secondary" lineHeight={1.4}>
-            {label}
-        </Typography>
-        <Typography fontSize={14} fontWeight={600} lineHeight={1.4}>
-            {value}
-        </Typography>
-    </Grid>
-);
 
 export default ContinuousClaimSection;

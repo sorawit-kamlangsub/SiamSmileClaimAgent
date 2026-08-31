@@ -14,6 +14,7 @@ import { EMPTY_STATE_SX } from "../../../CreatedClaim/components/CreateClaim/Cla
 import { swalSuccess } from "../../../_common/sweetAlert";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import { MOCK_HOSPITAL_CLAIM } from "./mock/hospitalConsiderMock";
+import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
@@ -49,6 +50,11 @@ const HospitalClaimDetailsTab = () => {
         handleDocumentCheckChange,
     } = useHospitalConsiderDetailHook();
 
+    const continuousClaim = formik.values.continuousClaim;
+
+    /** เลขที่เคสของเคลมที่กำลังพิจารณา (เคสปัจจุบันเป็นลำดับที่ 2 ของการรักษาต่อเนื่อง) */
+    const currentCaseNo = `${MOCK_HOSPITAL_CLAIM.caseNo}-02`;
+
     const handleNext = () => {
         const next = Math.min(activeStep + 1, steps.length - 1);
         setActiveStep(next);
@@ -73,6 +79,15 @@ const HospitalClaimDetailsTab = () => {
                 <Box sx={{ marginTop: "20px" }}>
                     {activeStep === 0 ? (
                         <Grid container spacing={2}>
+                            {continuousClaim && (
+                                <Grid item xs={12}>
+                                    <ContinuousClaimBanner
+                                        claim={continuousClaim}
+                                        currentCaseNo={currentCaseNo}
+                                        currentCaseStatus={MOCK_HOSPITAL_CLAIM.claimStatus}
+                                    />
+                                </Grid>
+                            )}
                             <Grid item xs={12}>
                                 <ContinuousClaimSection
                                     rows={continuousClaimRows}
