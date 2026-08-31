@@ -1,16 +1,22 @@
 import { useFormik } from "formik";
 import { swalError } from "../../_common";
 import { useSearchClaimOrCase } from "../refundAPI";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type RefundClaimSearchType = {
     searchDetail: string;
 };
 
-const useRefundDialogSearchHook = () => {
+type UseRefundDialogSearchHookProps = {
+    onSearchSuccess?: (data: any) => void;
+};
+
+const useRefundDialogSearchHook = ({ onSearchSuccess }: UseRefundDialogSearchHookProps) => {
     const [dataFromSearch, setDataFromSearch] = useState<any>([]);
+
     const handleSuccess = (res: any) => {
         setDataFromSearch(res.data);
+        onSearchSuccess?.(res.data);
     };
     const handleError = (err: string) => {
         swalError("แจ้งเตือน", err);

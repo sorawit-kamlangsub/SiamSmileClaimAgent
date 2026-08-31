@@ -9,7 +9,6 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const DialogSearchClaim = () => {
-    const { formik, dataFromSearch } = useRefundDialogSearchHook();
     const { dialogRefund } = useAppSelector((state) => state.refund);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
@@ -18,23 +17,21 @@ const DialogSearchClaim = () => {
         dispatch(setIsOpenDialog({ isOpen: false }));
     };
 
-    useEffect(() => {
-        if (dataFromSearch.length > 0) {
-            if (
-                dataFromSearch.map((item: any) => {
-                    item.isClaimNo;
-                })
-            ) {
-                console.log(dataFromSearch);
-            } else {
-                navigate("/");
-            }
+    const handleSearchSuccess = (data: any[]) => {
+        if (!data || data.length === 0) {
+            return;
         }
 
-        return () => {
-            dispatch(setIsOpenDialog({ isOpen: false }));
-        };
-    }, [dataFromSearch]);
+        const allAreClaimNo = data.every((item) => item.isClaimNo);
+
+        if (allAreClaimNo) {
+            console.log(data);
+        } else {
+            navigate("/");
+        }
+    };
+
+    const { formik, dataFromSearch } = useRefundDialogSearchHook({ onSearchSuccess: handleSearchSuccess });
 
     return (
         <>
