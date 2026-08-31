@@ -1,8 +1,21 @@
-import { Box, Button, IconButton, TextField, ToggleButton, ToggleButtonGroup, Tooltip } from "@mui/material";
+import {
+    Box,
+    Button,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    IconButton,
+    TextField,
+    ToggleButton,
+    ToggleButtonGroup,
+    Tooltip,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Visibility } from "@mui/icons-material";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useFormikContext } from "formik";
+import { useState } from "react";
 
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
@@ -15,6 +28,7 @@ import {
     DocumentCheckRow,
 } from "../mock/hospitalConsiderMock";
 import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
+import DocumentFileViewer from "./DocumentFileViewer";
 
 type DocumentVerifyTableProps = {
     onChange: <TField extends keyof DocumentCheckRow>(
@@ -31,6 +45,10 @@ const isRemarkRequired = (result: DocumentCheckResult | "") =>
 const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
+
+    /** รายการเอกสารที่กำลังเปิดดูไฟล์อยู่ (undefined = ปิดหน้าต่าง) */
+    const [viewingRowIndex, setViewingRowIndex] = useState<number>();
+    const viewingRow = viewingRowIndex === undefined ? undefined : rows[viewingRowIndex];
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -53,9 +71,14 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
             },
         },
         {
-            name: "fileCount",
+            name: "files",
             label: "จำนวนเอกสาร",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
+            options: {
+                filter: false,
+                sort: false,
+                ...cellAlignOptions({ align: "center" }),
+                customBodyRender: (value: DocumentCheckRow["files"]) => value.length,
+            },
         },
         {
             name: "",
@@ -67,11 +90,18 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
                 customBodyRender: (_value, tableMeta) => {
                     const row = rows[tableMeta.rowIndex];
 
+                    const hasFile = row.files.length > 0;
+
                     return (
-                        <Tooltip title="ดูรายละเอียด" arrow placement="top">
+                        <Tooltip title={hasFile ? "ดูรายละเอียด" : "ยังไม่มีเอกสาร"} arrow placement="top">
                             <span>
-                                <IconButton size="small" sx={{ backgroundColor: "#E2F2FF" }} disabled={!row.fileCount}>
-                                    <Visibility color={row.fileCount ? "primary" : "disabled"} />
+                                <IconButton
+                                    size="small"
+                                    sx={{ backgroundColor: "#E2F2FF" }}
+                                    disabled={!hasFile}
+                                    onClick={() => setViewingRowIndex(tableMeta.rowIndex)}
+                                >
+                                    <Visibility color={hasFile ? "primary" : "disabled"} />
                                 </IconButton>
                             </span>
                         </Tooltip>
@@ -191,6 +221,27 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
                     options={defaultOptionStandardDataTable}
                 />
             </Box>
+
+            <Dialog
+                open={viewingRow !== undefined}
+                onClose={() => setViewingRowIndex(undefined)}
+                maxWidth="lg"
+                fullWidth
+            >
+                <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
+                    <Box sx={{ flex: 1, minWidth: 200 }}>{`เอกสาร : ${viewingRow?.documentName ?? ""}`}</Box>
+                    <Button
+                        variant="outlined"
+                        startIcon={<ArrowBackIcon />}
+                        onClick={() => setViewingRowIndex(undefined)}
+                    >
+                        กลับ
+                    </Button>
+                </DialogTitle>
+                <DialogContent dividers>
+                    <DocumentFileViewer key={viewingRow?.documentId} files={viewingRow?.files ?? []} />
+                </DialogContent>
+            </Dialog>
         </CustomPaper>
     );
 };

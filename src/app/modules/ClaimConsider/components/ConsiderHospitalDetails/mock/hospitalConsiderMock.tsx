@@ -191,21 +191,67 @@ export const DOCUMENT_CHECK_RESULT_OPTIONS: { value: DocumentCheckResult; label:
     { value: DOCUMENT_CHECK_RESULTS.waiting, label: "รอเอกสารเพิ่มเติม", color: "#A87808" },
 ];
 
+/** ไฟล์สแกนของเอกสารแต่ละรายการ (ใช้แสดงในหน้าดูรายละเอียดเอกสาร) */
+export type DocumentFile = {
+    fileId: string;
+    fileName: string;
+    fileType: string;
+    fileSize: string;
+    uploadedDate: string;
+    uploadedBy: string;
+};
+
 export type DocumentCheckRow = {
     documentId: string;
     documentName: string;
-    fileCount: number;
+    files: DocumentFile[];
     checkResult: DocumentCheckResult | "";
     remark: string;
 };
 
+const mockFile = (fileId: string, fileName: string, fileType: string, fileSize: string): DocumentFile => ({
+    fileId,
+    fileName,
+    fileType,
+    fileSize,
+    uploadedDate: "17/05/2569 09:38",
+    uploadedBy: "ระบบ SmileConnect",
+});
+
 /** รายการเอกสารที่ต้องใช้ประกอบการพิจารณาเคลม ตาม Spec */
 export const MOCK_DOCUMENT_CHECK_ROWS: DocumentCheckRow[] = [
-    { documentId: "DOC-A", documentName: "แบบฟอร์ม A", fileCount: 2, checkResult: "", remark: "" },
-    { documentId: "DOC-INV", documentName: "ใบแจ้งหนี้", fileCount: 1, checkResult: "", remark: "" },
-    { documentId: "DOC-INV-DETAIL", documentName: "รายละเอียดใบแจ้งหนี้", fileCount: 1, checkResult: "", remark: "" },
-    { documentId: "DOC-LAB", documentName: "ผลการตรวจ LAB / X-ray", fileCount: 0, checkResult: "", remark: "" },
-    { documentId: "DOC-OTHER", documentName: "เอกสารอื่นๆ", fileCount: 0, checkResult: "", remark: "" },
-    { documentId: "DOC-ID-CARD", documentName: "บัตรประชาชน", fileCount: 1, checkResult: "", remark: "" },
-    { documentId: "DOC-BUNDLE", documentName: "ชุดรวมเอกสาร", fileCount: 0, checkResult: "", remark: "" },
+    {
+        documentId: "DOC-A",
+        documentName: "แบบฟอร์ม A",
+        files: [
+            mockFile("F-A-01", "form-a-page1.pdf", "PDF", "412 KB"),
+            mockFile("F-A-02", "form-a-page2.pdf", "PDF", "388 KB"),
+        ],
+        checkResult: "",
+        remark: "",
+    },
+    {
+        documentId: "DOC-INV",
+        documentName: "ใบแจ้งหนี้",
+        files: [mockFile("F-INV-01", "invoice-CL6905000124.pdf", "PDF", "256 KB")],
+        checkResult: "",
+        remark: "",
+    },
+    {
+        documentId: "DOC-INV-DETAIL",
+        documentName: "รายละเอียดใบแจ้งหนี้",
+        files: [mockFile("F-INVD-01", "invoice-detail.jpg", "JPG", "1.2 MB")],
+        checkResult: "",
+        remark: "",
+    },
+    { documentId: "DOC-LAB", documentName: "ผลการตรวจ LAB / X-ray", files: [], checkResult: "", remark: "" },
+    { documentId: "DOC-OTHER", documentName: "เอกสารอื่นๆ", files: [], checkResult: "", remark: "" },
+    {
+        documentId: "DOC-ID-CARD",
+        documentName: "บัตรประชาชน",
+        files: [mockFile("F-ID-01", "id-card.jpg", "JPG", "684 KB")],
+        checkResult: "",
+        remark: "",
+    },
+    { documentId: "DOC-BUNDLE", documentName: "ชุดรวมเอกสาร", files: [], checkResult: "", remark: "" },
 ];
