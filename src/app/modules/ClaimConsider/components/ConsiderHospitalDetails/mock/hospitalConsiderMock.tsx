@@ -31,11 +31,60 @@ export const MOCK_HOSPITAL_CLAIM = {
     claimNo: "CL6905000124",
     caseNo: "CC6905000082",
     claimType: "เคลมโรงพยาบาล",
-    /** ประเภทรายการเคลม : OPD Half, OPD Full, IPD, Day Case Surgery */
-    claimListType: "OPD Half",
     createByUserName: "ระบบ SmileConnect",
     branchName: "สำนักงานใหญ่",
 };
+
+/**
+ * ประเภทรายการเคลมของเคลมโรงพยาบาล
+ *
+ * Step 1 (บันทึกข้อมูลเคลม) ใช้ร่วมกันได้ทุกประเภท
+ * ความต่างอยู่ที่ Step 2 (รายละเอียดค่าใช้จ่าย)
+ */
+export const CLAIM_LIST_TYPES = {
+    opdHalf: "opd-half",
+    opdFull: "opd-full",
+} as const;
+
+export type ClaimListType = (typeof CLAIM_LIST_TYPES)[keyof typeof CLAIM_LIST_TYPES];
+
+export type ClaimListTypeConfig = {
+    /** ชื่อที่ใช้แสดงบนหน้าจอ */
+    label: string;
+    /**
+     * ต้องอัปโหลดใบแจ้งค่ารักษาให้ OCR อ่านหรือไม่
+     *
+     * OPD Half โรงพยาบาลส่งมาแค่ยอดรวม ผู้พิจารณาต้องกรอกรายการค่ารักษาเอง
+     * จึงมี OCR ช่วย ส่วน OPD Full โรงพยาบาลส่งรายการมาครบแล้ว
+     */
+    hasOcrReceipt: boolean;
+    /** แสดง Section รายการค่ารักษา (จากโรงพยาบาล) ที่ดึงจาก SmileConnect */
+    hasHospitalExpenseSummary: boolean;
+    /** ให้เลือกประเภทรายการค่าใช้จ่าย Sim B1 / Sim B2 (Default Sim B2) */
+    hasSimBSelector: boolean;
+    /** จำนวนรายการค่ารักษาสูงสุดที่บันทึกได้ (undefined = ไม่จำกัด) */
+    maxExpenseRows?: number;
+};
+
+export const CLAIM_LIST_TYPE_CONFIG: Record<ClaimListType, ClaimListTypeConfig> = {
+    [CLAIM_LIST_TYPES.opdHalf]: {
+        label: "OPD Half",
+        hasOcrReceipt: true,
+        hasHospitalExpenseSummary: true,
+        hasSimBSelector: false,
+        maxExpenseRows: 1,
+    },
+    [CLAIM_LIST_TYPES.opdFull]: {
+        label: "OPD Full",
+        hasOcrReceipt: false,
+        hasHospitalExpenseSummary: false,
+        hasSimBSelector: true,
+    },
+};
+
+/** แปลงค่าจาก URL (?type=opd-full) เป็นประเภทรายการเคลม */
+export const parseClaimListType = (value: string | null): ClaimListType =>
+    value === CLAIM_LIST_TYPES.opdFull ? CLAIM_LIST_TYPES.opdFull : CLAIM_LIST_TYPES.opdHalf;
 
 /** เหตุของการเคลม (Spec : เจ็บป่วย / อุบัติเหตุ) */
 export const MOCK_INCIDENT_TYPES: ClaimTypeOption[] = [

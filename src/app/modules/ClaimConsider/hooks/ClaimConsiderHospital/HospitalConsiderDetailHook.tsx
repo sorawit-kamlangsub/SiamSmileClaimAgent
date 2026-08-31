@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useFormik } from "formik";
 import dayjs from "dayjs";
 import { CoverageType, IncidentType, MedicalType } from "../../../../functionHelpers";
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
 import {
+    CLAIM_LIST_TYPE_CONFIG,
     ContinuousClaimRow,
     DocumentCheckRow,
     MOCK_CAUSE_OF_INCIDENTS,
@@ -14,6 +16,7 @@ import {
     MOCK_HOSPITAL_CLAIM,
     MOCK_INCIDENT_TYPES,
     MOCK_MEDICAL_TYPES,
+    parseClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
 /**
@@ -97,7 +100,15 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 });
 
 const useHospitalConsiderDetailHook = () => {
+    const [searchParams] = useSearchParams();
     const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
+
+    /**
+     * ประเภทรายการเคลมของเคสนี้ (ตอนนี้อ่านจาก Query String เพราะยังไม่ได้ต่อ API)
+     * ตัวอย่าง : ?type=opd-full
+     */
+    const claimListType = parseClaimListType(searchParams.get("type"));
+    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
 
     const formik = useFormik<HospitalConsiderValues>({
         initialValues: buildInitialValues(),
@@ -144,6 +155,8 @@ const useHospitalConsiderDetailHook = () => {
 
     return {
         formik,
+        claimListType,
+        claimListTypeConfig,
         incidentType: MOCK_INCIDENT_TYPES,
         coverageType: MOCK_COVERAGE_TYPES,
         medicalType: MOCK_MEDICAL_TYPES,

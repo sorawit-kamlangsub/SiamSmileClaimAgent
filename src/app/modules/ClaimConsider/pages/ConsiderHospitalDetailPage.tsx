@@ -7,11 +7,16 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { TabContext, TabPanel } from "@mui/lab";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 import HeaderCardCustomerDetails from "../components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
 import ClaimDetail from "../components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
 import HospitalClaimDetailsTab from "../components/ConsiderHospitalDetails/HospitalClaimDetailsTab";
-import { MOCK_HOSPITAL_CLAIM } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+import {
+    CLAIM_LIST_TYPE_CONFIG,
+    MOCK_HOSPITAL_CLAIM,
+    parseClaimListType,
+} from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
 /**
  * หน้า "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล (OPD Half)"
@@ -21,6 +26,10 @@ import { MOCK_HOSPITAL_CLAIM } from "../components/ConsiderHospitalDetails/mock/
  */
 const ConsiderHospitalDetailPage = () => {
     const [tabValue, setTabValue] = useState("1");
+    const [searchParams] = useSearchParams();
+
+    /** ประเภทรายการเคลม อ่านจาก Query String เช่น ?type=opd-full (Default : OPD Half) */
+    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[parseClaimListType(searchParams.get("type"))];
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => {
         setTabValue(newValue);
@@ -100,7 +109,7 @@ const ConsiderHospitalDetailPage = () => {
                         </Tabs>
 
                         <Chip
-                            label={`ประเภทรายการเคลม : ${MOCK_HOSPITAL_CLAIM.claimListType}`}
+                            label={`ประเภทรายการเคลม : ${claimListTypeConfig.label}`}
                             color="primary"
                             variant="outlined"
                             sx={{ ml: "auto", mr: 1, fontWeight: 700 }}

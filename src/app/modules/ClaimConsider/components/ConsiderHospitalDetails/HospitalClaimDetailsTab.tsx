@@ -34,6 +34,7 @@ const HospitalClaimDetailsTab = () => {
 
     const {
         formik,
+        claimListTypeConfig,
         incidentType,
         coverageType,
         medicalType,
@@ -112,7 +113,7 @@ const HospitalClaimDetailsTab = () => {
                         </Grid>
                     ) : (
                         <Paper variant="outlined" sx={EMPTY_STATE_SX}>
-                            {`${steps[activeStep].label} : อยู่ระหว่างการพัฒนา`}
+                            {`${steps[activeStep].label} (${claimListTypeConfig.label}) : อยู่ระหว่างการพัฒนา`}
                         </Paper>
                     )}
                 </Box>
