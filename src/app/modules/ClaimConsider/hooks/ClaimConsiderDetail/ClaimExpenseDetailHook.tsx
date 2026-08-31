@@ -55,7 +55,7 @@ const useClaimExpenseDetailHook = () => {
         code: string;
         description: string;
         standardMedicalExpenseId?: number;
-        bodyPartId?: number;
+        inputToStandardMappingId?: number;
         maximumLimit?: number;
     } | null>(null);
     const [selectedLeafId, setSelectedLeafId] = useState<number | null>(null);
@@ -87,8 +87,6 @@ const useClaimExpenseDetailHook = () => {
         undefined,
         customerDetailData?.data?.productId
     );
-    console.log("form", form);
-    console.log("customerDetail :", customerDetailData?.data);
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
@@ -103,6 +101,7 @@ const useClaimExpenseDetailHook = () => {
         return raw.map((item, idx) => ({
             id: item.inputToStandardMappingId ?? idx,
             standardMedicalExpenseId: item.standardMedicalExpenseId,
+            inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
             description: item.descriptionTH ?? "",
             receiptAmount: undefined,
@@ -214,14 +213,14 @@ const useClaimExpenseDetailHook = () => {
         description: string,
         id: number,
         standardMedicalExpenseId?: number,
-        bodyPartId?: number,
+        inputToStandardMappingId?: number,
         maximumLimit?: number
     ) => {
         setSelectedItem({
             code,
             description,
             standardMedicalExpenseId,
-            bodyPartId,
+            inputToStandardMappingId,
             maximumLimit,
         });
         setSelectedLeafId(id);
@@ -299,6 +298,7 @@ const useClaimExpenseDetailHook = () => {
         const newItem: ClaimExpenseItem = {
             id: Date.now(),
             standardMedicalExpenseId: selectedItem.standardMedicalExpenseId,
+            inputToStandardMappingId: selectedItem.inputToStandardMappingId,
             code: selectedItem.code,
             description: selectedItem.description,
             receiptAmount: toAmount(pendingReceiptAmount),
@@ -385,7 +385,7 @@ const useClaimExpenseDetailHook = () => {
             desc.join(" "),
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
-            matched.leaf.bodyPartId,
+            matched.leaf.id, //inputToStandardMappingId
             matched.leaf.maximumLimit
         );
     }, [searchText, categories]);

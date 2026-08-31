@@ -9,10 +9,7 @@ import { StandardDataTable } from "../../../_common";
 import { claimPHSelector, setDocument, setDocumentDetailById } from "../../store/claimPHSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { DOC_STORAGE_URL } from "../../../../../Const";
-import {
-    CaseDocumentV2Request,
-    GetDocumentSubTypeDtoResponse,
-} from "../../../../api/coreClaimApi.client";
+import { CaseDocumentV2Request, GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDocumentById } from "../../../../api/docstorageApi";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import AttachFileIcon from "@mui/icons-material/AttachFile";

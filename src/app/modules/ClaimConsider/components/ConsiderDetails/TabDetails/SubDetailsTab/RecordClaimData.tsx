@@ -3,9 +3,9 @@ import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/Conside
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import ArticleIcon from "@mui/icons-material/Article";
-import ClaimTypeSelector from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
+import ClaimTypeSelector, { ClaimTypeOption } from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { CoverageType, MedicalType } from "../../../../../../functionHelpers";
-import ChipSelector from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
+import ChipSelector, { ChipOption } from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import FormikDatePicker from "../../../../../_common/components/CustomFormik/FormikDatePicker";
 import dayjs from "dayjs";
 import HospitalDropdown from "../../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
@@ -15,17 +15,25 @@ import FormikTimePicker from "../../../../../_common/components/CustomFormik/For
 import { FormikTextField } from "../../../../../_common";
 import StayDaysSummary from "./StayDaysSummary";
 import { EMPTY_STATE_SX } from "../../../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
-
-const RecordClaimData = () => {
-    const {
-        formik,
-        incidentTypeLoading,
-        coverageType,
-        causeOfIncident,
-        incidentTypeMappingLoading,
-        incidentType,
-        medicalType,
-    } = useConsiderDetailHook();
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useFormikContext } from "formik";
+type RecordClaimDataProps = {
+    incidentType: ClaimTypeOption[];
+    incidentTypeLoading: boolean;
+    coverageType: ClaimTypeOption[];
+    causeOfIncident: ChipOption[];
+    medicalType: ChipOption[];
+    incidentTypeMappingLoading: boolean;
+};
+const RecordClaimData = ({
+    incidentType,
+    incidentTypeLoading,
+    coverageType,
+    causeOfIncident,
+    medicalType,
+    incidentTypeMappingLoading,
+}: RecordClaimDataProps) => {
+    const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;

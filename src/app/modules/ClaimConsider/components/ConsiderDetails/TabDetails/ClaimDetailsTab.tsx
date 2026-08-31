@@ -7,18 +7,41 @@ import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
-import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
+import {
+    GetClaimDetailConsiderDtoResponse,
+    GetCustomerDetailByIdDtoResponse,
+} from "../../../../../api/coreClaimApi.client";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import ConsiderSection from "./SubDetailsTab/ConsiderSection";
 import ExpenseDetails from "./SubDetailsTab/ExpenseDetails";
+import useClaimDetailActionHook from "../../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
+import useConsiderDetailHook from "../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
+import { FormikProvider } from "formik";
+import ClaimSummary from "./SubDetailsTab/ClaimSummary";
 
 type ClaimDetailsTabProps = {
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
+    detail: GetClaimDetailConsiderDtoResponse | undefined;
 };
-const ClaimDetailsTab = ({ customerDetail }: ClaimDetailsTabProps) => {
+const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
+    const considerDetail = useConsiderDetailHook();
+    const {
+        formik,
+        incidentType,
+        incidentTypeLoading,
+        coverageType,
+        causeOfIncident,
+        medicalType,
+        incidentTypeMappingLoading,
+        decisionReason,
+        decisionReasonLoading,
+        attachedDocuments,
+        setAttachedDocuments,
+    } = considerDetail;
+    const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook(considerDetail);
 
     const isLastStep = activeStep === steps.length - 1;
 
@@ -32,114 +55,129 @@ const ClaimDetailsTab = ({ customerDetail }: ClaimDetailsTabProps) => {
         setActiveStep((prev) => Math.max(prev - 1, 0));
     };
 
-    const handleSaveDraft = () => {
-        // TODO: บันทึกแบบร่าง (ไม่ validate เต็มรูปแบบ)
-    };
-
-    const handleFinish = () => {
-        // TODO: final submit
-    };
-
     return (
         <>
-            <Box>
-                <StepToggleBar
-                    steps={steps}
-                    activeStep={activeStep}
-                    onStepChange={setActiveStep}
-                    isStepClickable={(index) => index <= furthestStep}
-                />
+            <FormikProvider value={formik}>
+                <Box>
+                    <StepToggleBar
+                        steps={steps}
+                        activeStep={activeStep}
+                        onStepChange={setActiveStep}
+                        isStepClickable={(index) => index <= furthestStep}
+                    />
 
-                <Box sx={{ marginTop: "20px" }}>
-                    {activeStep === 0 && (
-                        <div>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={12} md={12} lg={12}>
-                                    <RecordClaimData />
+                    <Box sx={{ marginTop: "20px" }}>
+                        {activeStep === 0 && (
+                            <div>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <RecordClaimData
+                                            incidentType={incidentType}
+                                            incidentTypeLoading={incidentTypeLoading}
+                                            coverageType={coverageType}
+                                            causeOfIncident={causeOfIncident}
+                                            medicalType={medicalType}
+                                            incidentTypeMappingLoading={incidentTypeMappingLoading}
+                                        />
+                                    </Grid>
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <DocumentScanTable
+                                            productTypeId={customerDetail?.productTypeId ?? 0}
+                                            Header="สแกนเอกสาร"
+                                            aplicationCode={customerDetail?.policyCode ?? ""}
+                                            documentType="เอกสารประกอบการพิจารณาเคลม"
+                                            onAttachedDocumentsChange={setAttachedDocuments}
+                                        />
+                                    </Grid>
                                 </Grid>
-                                <Grid item xs={12} sm={12} md={12} lg={12}>
-                                    <DocumentScanTable
-                                        productTypeId={customerDetail?.productTypeId ?? 0}
-                                        Header="สแกนเอกสาร"
-                                        aplicationCode={customerDetail?.policyCode ?? ""}
-                                        documentType="เอกสารประกอบการพิจารณาเคลม"
-                                    />
+                            </div>
+                        )}
+                        {activeStep === 1 && (
+                            <div>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <ExpenseDetails />
+                                    </Grid>
                                 </Grid>
-                            </Grid>
-                        </div>
-                    )}
-                    {activeStep === 1 && (
-                        <div>
-                            <Grid container spacing={2}>
-                                <Grid item xs={12} sm={12} md={12} lg={12}>
-                                    <ExpenseDetails />
+                            </div>
+                        )}
+                        {activeStep === 2 && (
+                            <div>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <ClaimSummary
+                                            attachedDocuments={attachedDocuments}
+                                            createdClaimDate={detail?.createdDate}
+                                        />
+                                    </Grid>
                                 </Grid>
-                            </Grid>
-                        </div>
-                    )}
-                    {activeStep === 2 && <div>{/* สรุปรายการเคลม */}</div>}
-                    <Grid item xs={12} sm={12} md={12} lg={12}>
-                        <ConsiderSection
-                            productId={customerDetail?.productTypeId}
-                            aplicationCode={customerDetail?.policyCode ?? ""}
-                        />
-                    </Grid>
-                </Box>
+                            </div>
+                        )}
+                        <Grid item xs={12} sm={12} md={12} lg={12}>
+                            <ConsiderSection
+                                productId={customerDetail?.productTypeId}
+                                aplicationCode={customerDetail?.policyCode ?? ""}
+                                decisionReason={decisionReason}
+                                decisionReasonLoading={decisionReasonLoading}
+                            />
+                        </Grid>
+                    </Box>
 
-                <Grid container justifyContent="space-between" alignItems="center">
-                    <Grid item>
-                        <Button
-                            variant="outlined"
-                            startIcon={<ArrowBackIcon />}
-                            onClick={handleBack}
-                            disabled={activeStep === 0}
-                        >
-                            กลับ
-                        </Button>
-                    </Grid>
+                    <Grid container justifyContent="space-between" alignItems="center">
+                        <Grid item>
+                            <Button
+                                variant="outlined"
+                                startIcon={<ArrowBackIcon />}
+                                onClick={handleBack}
+                                disabled={activeStep === 0}
+                            >
+                                กลับ
+                            </Button>
+                        </Grid>
 
-                    <Grid item>
-                        <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
-                            {!isLastStep && (
-                                <>
-                                    <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
-                                        บันทึกแบบร่าง
-                                    </Button>
+                        <Grid item>
+                            <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
+                                {!isLastStep && (
+                                    <>
+                                        <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
+                                            บันทึกแบบร่าง
+                                        </Button>
 
+                                        <Button
+                                            variant="contained"
+                                            startIcon={<SaveIcon />}
+                                            onClick={handleConfirmConsider}
+                                            sx={{
+                                                bgcolor: "#2E7D32",
+                                                "&:hover": { bgcolor: "#1B5E20" },
+                                            }}
+                                        >
+                                            ยืนยันบันทึกผลพิจารณา
+                                        </Button>
+                                        <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
+                                            ถัดไป
+                                        </Button>
+                                    </>
+                                )}
+
+                                {isLastStep && (
                                     <Button
                                         variant="contained"
-                                        startIcon={<SaveIcon />}
-                                        onClick={handleFinish}
+                                        startIcon={<CheckCircleIcon />}
                                         sx={{
                                             bgcolor: "#2E7D32",
                                             "&:hover": { bgcolor: "#1B5E20" },
                                         }}
+                                        onClick={handleConfirmConsider}
                                     >
-                                        ยืนยันบันทึกผลพิจารณา
+                                        อนุมัติ
                                     </Button>
-                                    <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
-                                        ถัดไป
-                                    </Button>
-                                </>
-                            )}
-
-                            {isLastStep && (
-                                <Button
-                                    variant="contained"
-                                    startIcon={<CheckCircleIcon />}
-                                    sx={{
-                                        bgcolor: "#2E7D32",
-                                        "&:hover": { bgcolor: "#1B5E20" },
-                                    }}
-                                    onClick={handleFinish}
-                                >
-                                    อนุมัติ
-                                </Button>
-                            )}
-                        </Box>
+                                )}
+                            </Box>
+                        </Grid>
                     </Grid>
-                </Grid>
-            </Box>
+                </Box>
+            </FormikProvider>
         </>
     );
 };

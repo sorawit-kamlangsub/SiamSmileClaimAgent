@@ -6,9 +6,15 @@ export interface DiagnosisModel {
     icd10Id?: number;
     icd10Detail?: string;
 }
-export interface OcrReceiptRequest {
+export interface CaseDocumentConsiderRequest {
+    caseDocumentId?: string;
     documentId?: string;
     documentNo?: string | undefined;
+    documentSubTypeId?: number | undefined;
+    caseDocumentDetail?: OcrReceiptRequest[] | undefined;
+}
+export interface OcrReceiptRequest {
+    caseDocumentDetailId?: string;
     firstName?: string | undefined;
     lastName?: string | undefined;
     fullName?: string | undefined;
@@ -23,6 +29,7 @@ export interface OcrReceiptRequest {
 export interface ClaimExpenseItem {
     id?: number;
     standardMedicalExpenseId?: number | undefined;
+    inputToStandardMappingId?: number | undefined;
     code?: string | undefined;
     description?: string | undefined;
     receiptAmount?: number;
@@ -72,7 +79,7 @@ export interface ClaimConsiderValues {
     considerResult: number | undefined;
     decisionReasonId: number | undefined;
     decisionReasonDetail: string | undefined;
-    ocrReceiptDocument: OcrReceiptRequest[] | undefined;
+    considerDocument: CaseDocumentConsiderRequest[] | undefined;
 }
 
 interface ClaimConsiderState {
@@ -115,7 +122,7 @@ const defaultForm: ClaimConsiderValues = {
     considerResult: undefined,
     decisionReasonId: undefined,
     decisionReasonDetail: undefined,
-    ocrReceiptDocument: undefined,
+    considerDocument: undefined,
 };
 const initialState: ClaimConsiderState = {
     form: defaultForm,

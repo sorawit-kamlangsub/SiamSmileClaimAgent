@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import {
@@ -15,6 +15,7 @@ import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSel
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType } from "../../../../functionHelpers";
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 const calculateStayDays = (
     admissionDate: dayjs.Dayjs | null | undefined,
     admissionTime: dayjs.Dayjs | null | undefined,
@@ -49,6 +50,7 @@ const useConsiderDetailHook = () => {
     const claimId = id ? atob(id) : undefined;
     const dispatch = useAppDispatch();
     const { form } = useAppSelector(claimConsiderSelector);
+    const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "");
     const detail = detailData?.data;
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
@@ -179,7 +181,6 @@ const useConsiderDetailHook = () => {
         formik.setFieldValue("detail", detail.remark, false);
 
         hasSyncedMainRef.current = true;
-        dispatch(setEnabled(true));
     }, [detail, incidentType, coverageType]);
 
     // ---- phase 2: sync medicalType/causeOfIncident (ต้องรอ coverageTypeId ถูก set ไปแล้วจาก phase 1 ก่อน) ----
@@ -243,7 +244,17 @@ const useConsiderDetailHook = () => {
         formik.values.dischargeTime,
     ]);
     useEffect(() => {
+        if (!detail) return;
+        dispatch(setEnabled(true));
+
+        return () => {
+            dispatch(setEnabled(false));
+        };
+    }, [detail]);
+
+    useEffect(() => {
         dispatch(setClaimForm(formik.values));
+        console.log("sync to redux →", formik.values);
     }, [formik.values]);
 
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
@@ -266,6 +277,8 @@ const useConsiderDetailHook = () => {
         incidentTypeLoading,
         decisionReason,
         decisionReasonLoading,
+        attachedDocuments,
+        setAttachedDocuments,
     };
 };
 

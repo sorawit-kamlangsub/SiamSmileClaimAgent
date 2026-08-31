@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import type { ReactNode } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
@@ -9,8 +9,10 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
-import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useFormikContext } from "formik";
+import { GetDecisionReasonDtoResponse } from "../../../../../../api/coreClaimApi.client";
 
 type ConsiderType = "pendingDocument" | "revision" | "rejected" | "cancelled";
 
@@ -83,11 +85,17 @@ const statusOptions: StatusOption[] = [
 type ConsiderSectionProps = {
     productId?: number | undefined;
     aplicationCode?: string | undefined;
+    decisionReason: { data?: GetDecisionReasonDtoResponse[] } | undefined;
+    decisionReasonLoading: boolean;
 };
 
-const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) => {
-    const { formik, decisionReason, decisionReasonLoading } = useConsiderDetailHook();
-    const [detail, setDetail] = useState("");
+const ConsiderSection = ({
+    productId,
+    aplicationCode,
+    decisionReason,
+    decisionReasonLoading,
+}: ConsiderSectionProps) => {
+    const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
 
     const selectedStatus = statusOptions.find((status) => status.decisionId === formik.values.considerResult);
@@ -221,8 +229,8 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
                             minRows={4}
                             label={selectedStatus.detailLabel}
                             placeholder={selectedStatus.detailPlaceholder}
-                            value={detail}
-                            onChange={(event) => setDetail(event.target.value)}
+                            value={formik.values.decisionReasonDetail || ""}
+                            onChange={(event) => formik.setFieldValue("decisionReasonDetail", event.target.value)}
                             sx={{ mt: 2 }}
                         />
 

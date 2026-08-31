@@ -9,6 +9,8 @@ import {
     GetDocumentSubTypeDtoRequest,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
+    UpsertClaimDecisionDtoRequest,
+    UpsertClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
@@ -519,4 +521,22 @@ export const useSaveClaimEditDraft = (
             onErrorCallback?.(error.message);
         },
     });
+};
+export const useUpsertClaimDecision = (
+    onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: UpsertClaimDecisionDtoRequest | undefined) => coreClaimClient.upsertClaimDecision(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
 };

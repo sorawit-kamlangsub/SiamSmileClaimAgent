@@ -300,10 +300,18 @@ const claimPHSlice = createSlice({
             state.isEnabled = action.payload;
         },
         setDocumentDetailById: (state, action: PayloadAction<DocumentDetailDto>) => {
-            state.documentDetailById[action.payload.documentId ?? ""] = action.payload;
+            if (!action.payload.documentId) return;
+            state.documentDetailById[action.payload.documentId] = action.payload;
         },
         setDocument: (state, action: PayloadAction<GetDocumentSubTypeDtoResponse[]>) => {
-            state.documentScanList = action.payload;
+            const incoming = action.payload;
+            const incomingIds = new Set(incoming.map((d) => d.documentId));
+
+            // เก็บของเดิมที่ไม่ได้อยู่ใน incoming batch นี้ไว้ + เอาของใหม่มาแทนที่/เพิ่ม
+            state.documentScanList = [
+                ...state.documentScanList.filter((d) => !incomingIds.has(d.documentId)),
+                ...incoming,
+            ];
         },
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;

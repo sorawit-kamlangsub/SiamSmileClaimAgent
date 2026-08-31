@@ -28,7 +28,6 @@ import { useCreateDocumentToDocStorage, documentCreatedRequest } from "../../../
 import { uploadReceipt } from "../../../../../../api/ocrApi";
 import { compareOcrAmount, compareOcrName } from "../../../../../../ocrCompareHelpers";
 import { swalError } from "../../../../../_common";
-import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 
 export type OcrStatus = "pending" | "matched" | "mismatched" | "amountMatched" | "amountMismatched";
 
@@ -88,7 +87,7 @@ export type OcrReceiptSectionProps = {
 };
 
 const PROJECT_ID = 1;
-const DOC_STORAGE_SUB_TYPE_ID_FALLBACK = 220;
+const DOC_STORAGE_SUB_TYPE_ID_FALLBACK = 530;
 const ACCEPT_IMAGE_PDF = "image/png,image/jpeg,.jpg,.jpeg,.png,.pdf";
 
 const formatBytes = (bytes: number): string => {
