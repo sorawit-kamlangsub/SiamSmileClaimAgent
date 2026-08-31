@@ -232,6 +232,24 @@ const Routes: RouteMapType[] = [
             },
         ],
     },
+    {
+        path: "/consider/hospital-monitor",
+        title: "พิจารณาเคลม - เคลมโรงพยาบาล",
+        element: <Outlet />,
+        children: [
+            {
+                path: "hospital",
+                title: "เคลมลูกค้า",
+                element: <ConsiderMonitorPage />,
+                index: true,
+            },
+            {
+                path: "hospital/:id",
+                title: "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล",
+                element: <ConsiderDetailPage />,
+            },
+        ],
+    },
 ];
 
 export default Routes;
