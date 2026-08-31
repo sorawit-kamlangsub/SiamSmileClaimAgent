@@ -28,6 +28,7 @@ import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPag
 import ConsiderHospitalDetailPage from "../modules/ClaimConsider/pages/ConsiderHospitalDetailPage.tsx";
 import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
 import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
+import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/ConsiderHospitalMonitorPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -240,8 +241,8 @@ const Routes: RouteMapType[] = [
         children: [
             {
                 path: "hospital",
-                title: "เคลมลูกค้า",
-                element: <ConsiderMonitorPage />,
+                title: "เคลมโรงพยาบาล",
+                element: <ConsiderHospitalMonitorPage />,
                 index: true,
             },
             {

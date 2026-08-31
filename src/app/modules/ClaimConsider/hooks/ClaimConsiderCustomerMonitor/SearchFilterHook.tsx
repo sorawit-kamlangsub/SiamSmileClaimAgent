@@ -17,6 +17,7 @@ export type AppliedFilter = Omit<SearchFilterType, "dateFrom" | "dateTo"> & {
     isSearch: boolean;
     dateFrom?: Dayjs;
     dateTo?: Dayjs;
+    path: string;
 };
 
 type UseSearchFilterHookParams = {

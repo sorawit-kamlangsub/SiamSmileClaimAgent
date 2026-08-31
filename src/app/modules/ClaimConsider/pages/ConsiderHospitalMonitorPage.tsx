@@ -10,7 +10,7 @@ import useDashboardHook from "../hooks/ClaimConsiderCustomerMonitor/DashboardHoo
 import { useState } from "react";
 import dayjs from "dayjs";
 
-const ConsiderMonitorPage = () => {
+const ConsiderHospitalMonitorPage = () => {
     const { formik, statusOptions, decisionDataLoading } = useSearchFilterHook();
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
@@ -30,7 +30,7 @@ const ConsiderMonitorPage = () => {
             searchFrom: formik.values.searchFrom,
             searchDetail: formik.values.searchDetail,
             statusId: formik.values.statusId,
-            path: "customers",
+            path: "hospital",
         });
     };
     const handleClear = () => {
@@ -70,4 +70,4 @@ const ConsiderMonitorPage = () => {
     );
 };
 
-export default ConsiderMonitorPage;
+export default ConsiderHospitalMonitorPage;
