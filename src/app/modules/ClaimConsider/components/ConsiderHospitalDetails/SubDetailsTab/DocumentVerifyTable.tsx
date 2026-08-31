@@ -97,17 +97,35 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
                             onChange={(_event, value: DocumentCheckResult | null) =>
                                 onChange(tableMeta.rowIndex, "checkResult", value ?? "")
                             }
+                            sx={{
+                                gap: 1,
+                                // แสดงเป็นปุ่มแยกกัน ไม่ใช่ปุ่มติดกันแบบค่าเริ่มต้นของ ToggleButtonGroup
+                                "& .MuiToggleButtonGroup-grouped": {
+                                    border: "1px solid #DDE3EA",
+                                    borderRadius: "8px !important",
+                                    marginLeft: 0,
+                                },
+                            }}
                         >
                             {DOCUMENT_CHECK_RESULT_OPTIONS.map((option) => (
                                 <ToggleButton
                                     key={option.value}
                                     value={option.value}
+                                    disableRipple
                                     sx={{
+                                        px: 2,
+                                        py: 0.75,
                                         whiteSpace: "nowrap",
-                                        color: option.color,
+                                        textTransform: "none",
+                                        fontSize: 14,
+                                        color: "#5A6B7B",
+                                        bgcolor: "#fff",
+                                        "&:hover": { bgcolor: `${option.color}12` },
                                         "&.Mui-selected": {
                                             color: "#fff",
                                             bgcolor: option.color,
+                                            borderColor: option.color,
+                                            fontWeight: 700,
                                             "&:hover": { bgcolor: option.color },
                                         },
                                     }}
@@ -135,13 +153,20 @@ const DocumentVerifyTable = ({ onChange }: DocumentVerifyTableProps) => {
                         <TextField
                             size="small"
                             fullWidth
-                            required={required}
                             value={row.remark}
-                            placeholder={required ? "ระบุหมายเหตุ" : "-"}
+                            placeholder="ระบุหมายเหตุ"
+                            // บังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม
                             error={required && !row.remark}
-                            helperText={required && !row.remark ? "กรุณากรอกหมายเหตุ" : " "}
                             onChange={(event) => onChange(tableMeta.rowIndex, "remark", event.target.value)}
-                            sx={{ minWidth: 200 }}
+                            sx={{
+                                minWidth: 240,
+                                "& .MuiOutlinedInput-root": {
+                                    bgcolor: "#F4F7FA",
+                                    borderRadius: 2,
+                                    "& fieldset": { borderColor: "#E4EAF0" },
+                                    "&:hover fieldset": { borderColor: "#C9D4DF" },
+                                },
+                            }}
                         />
                     );
                 },
