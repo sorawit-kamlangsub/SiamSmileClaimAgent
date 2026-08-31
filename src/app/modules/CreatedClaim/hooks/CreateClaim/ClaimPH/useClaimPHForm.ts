@@ -133,7 +133,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
-            else if (Number(values.transferAmount) > maxTransferAmount) {
+            else if ((isDeath || isDisability) && Number(values.transferAmount) > maxTransferAmount) {
                 errors.transferAmount = `ไม่เกินวงเงินสูงสุด ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
             return errors;
@@ -392,6 +392,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                nplAmount: undefined,
                 symptomType: 1,
                 deathPlaceType: 2,
                 hospitalId: undefined,
@@ -455,6 +456,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                nplAmount: undefined,
                 symptomType: 1,
                 deathPlaceType: 2,
                 hospitalId: undefined,

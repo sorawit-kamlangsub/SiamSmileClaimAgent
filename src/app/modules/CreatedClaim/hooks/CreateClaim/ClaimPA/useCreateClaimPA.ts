@@ -285,7 +285,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
                 const matchedBank = bankAccounts.find((b) => b.bankId === beneficiary.bankId);
 
                 return {
-                    casePayableId: item?.casePayableId,
+                    casePayableId: item?.casePayableId?.[0],
                     grossPaidAmount: 0,
                     withHoldingTaxAmount: 0,
                     netPaidAmount: beneficiary.payoutAmount ?? 0,

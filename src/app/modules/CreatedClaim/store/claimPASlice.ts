@@ -146,6 +146,7 @@ export interface ClaimPAFormValues {
     notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     transferAmount: number | undefined; //เงินโอน
+    nplAmount: number | undefined; //ยอดจ่ายเกินสิทธิ์ (NPL)
     symptomType: SymptomType | undefined;
     deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
@@ -205,6 +206,7 @@ const defaultForm: ClaimPAFormValues = {
     documentCompleteDate: dayjs(),
     notificationDate: dayjs(),
     transferAmount: 0,
+    nplAmount: undefined,
     symptomType: 1,
     deathPlaceType: 2,
     hospitalId: undefined,

@@ -103,6 +103,7 @@ export interface ClaimFormValues {
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     benefitAmounts: Record<number, string>;
     transferAmount: number | undefined; //เงินโอน
+    nplAmount: number | undefined; //ยอดจ่ายเกินสิทธิ์ (NPL)
     symptomType: SymptomType | undefined;
     deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
@@ -164,6 +165,7 @@ const defaultForm: ClaimFormValues = {
     documentCompleteDate: dayjs(),
     notificationDate: dayjs(),
     transferAmount: 0,
+    nplAmount: undefined,
     benefitAmounts: {},
     symptomType: 1,
     deathPlaceType: 2,
