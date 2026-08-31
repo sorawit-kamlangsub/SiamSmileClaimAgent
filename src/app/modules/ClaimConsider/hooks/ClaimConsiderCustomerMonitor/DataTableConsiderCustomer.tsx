@@ -147,7 +147,7 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
                                     <IconButton
                                         onClick={() => {
                                             navigate(
-                                                `customers/${btoa(
+                                                `${appliedFilter.path}/${btoa(
                                                     claimTransactionData?.data?.[rowIndex]?.claimId ?? ""
                                                 )}`
                                             );
