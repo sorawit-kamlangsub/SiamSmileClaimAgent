@@ -1,4 +1,4 @@
-import { Chip, Grid, Paper, Tab, Tabs } from "@mui/material";
+import { Chip, Grid, Paper, Skeleton, Tab, Tabs } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
@@ -7,21 +7,19 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { TabContext, TabPanel } from "@mui/lab";
 import { useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 import HeaderCardCustomerDetails from "../components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
 import ClaimDetail from "../components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
 import HospitalClaimDetailsTab from "../components/ConsiderHospitalDetails/HospitalClaimDetailsTab";
-import {
-    CLAIM_LIST_TYPE_CONFIG,
-    MOCK_HOSPITAL_CLAIM,
-    parseClaimListType,
-} from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+import { CLAIM_LIST_TYPE_CONFIG, parseClaimListType } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../api/coreClaimApi";
+import { calculatePolicyAgeText, formatDateString } from "../../../functionHelpers";
 
 /**
- * หน้า "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล (OPD Half)"
+ * หน้า "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล (OPD Half / OPD Full)"
  *
- * เป็น Mock UI ตาม Spec ทำเฉพาะ Step 1 : บันทึกข้อมูลเคลม
+ * ทำเฉพาะ Step 1 : บันทึกข้อมูลเคลม โดยดึงข้อมูลจริงจาก GetClaimDetailConsider
  * ใช้ Component ร่วมกับหน้าพิจารณาเคลมลูกค้า (/consider/monitor/customers)
  */
 type ConsiderHospitalDetailPageProps = {
@@ -35,6 +33,18 @@ type ConsiderHospitalDetailPageProps = {
 const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetailPageProps) => {
     const [tabValue, setTabValue] = useState("1");
     const [searchParams] = useSearchParams();
+    const { id } = useParams();
+    const claimId = id ? atob(id) : "";
+
+    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId);
+    const detail = detailData?.data;
+
+    const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
+        detail?.customerId ?? undefined
+    );
+    const customerDetail = customerDetailData?.data;
+
+    const isHeaderLoading = detailDataLoading || customerDetailLoading;
 
     /** ประเภทรายการเคลม อ่านจาก Query String เช่น ?type=opd-full (Default : OPD Half) */
     const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[parseClaimListType(searchParams.get("type"))];
@@ -46,34 +56,64 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
     return (
         <Grid container spacing={2}>
             <TabContext value={tabValue}>
-                <Grid item xs={12} sx={{ mb: 2 }}>
-                    <HeaderCardCustomerDetails
-                        name={MOCK_HOSPITAL_CLAIM.customerName}
-                        idCardNo={MOCK_HOSPITAL_CLAIM.idCardNo}
-                        applicationId={MOCK_HOSPITAL_CLAIM.applicationId}
-                        phoneNumber={MOCK_HOSPITAL_CLAIM.phoneNumber}
-                        appStatus={MOCK_HOSPITAL_CLAIM.appStatus}
-                        appStatusId={MOCK_HOSPITAL_CLAIM.appStatusId}
-                        policyAgeText={MOCK_HOSPITAL_CLAIM.policyAgeText}
-                        coverageStartDate={MOCK_HOSPITAL_CLAIM.coverageStartDate}
-                        coverageEndDate={MOCK_HOSPITAL_CLAIM.coverageEndDate}
-                        productDetail={MOCK_HOSPITAL_CLAIM.productDetail}
-                    />
-                </Grid>
+                {isHeaderLoading ? (
+                    <>
+                        <Grid item xs={12} sx={{ mb: 2 }}>
+                            <Skeleton variant="rounded" height={140} />
+                        </Grid>
+                        <Grid item xs={12} sx={{ mb: 2 }}>
+                            <Skeleton variant="rounded" height={100} />
+                        </Grid>
+                    </>
+                ) : (
+                    <>
+                        <Grid item xs={12} sx={{ mb: 2 }}>
+                            <HeaderCardCustomerDetails
+                                name={customerDetail?.customerName ?? "-"}
+                                idCardNo={
+                                    customerDetail?.cardTypeId === 2 ? customerDetail?.cardDetail ?? "-" : "-"
+                                }
+                                applicationId={customerDetail?.policyCode ?? "-"}
+                                phoneNumber={customerDetail?.mobilePhoneNumber ?? "-"}
+                                appStatus={customerDetail?.appStatus ?? "-"}
+                                appStatusId={customerDetail?.appStatusId ?? 0}
+                                policyAgeText={calculatePolicyAgeText(customerDetail?.coverageFrom?.toString())}
+                                coverageStartDate={
+                                    formatDateString(customerDetail?.coverageFrom?.toString() ?? "", "DD/MM/BBBB") ??
+                                    "-"
+                                }
+                                coverageEndDate={
+                                    formatDateString(customerDetail?.coverageTo?.toString() ?? "", "DD/MM/BBBB") ?? "-"
+                                }
+                                productDetail={
+                                    customerDetail?.productTypeId === 6
+                                        ? customerDetail?.productName ?? "-"
+                                        : customerDetail?.productCategoryName ?? "-"
+                                }
+                            />
+                        </Grid>
 
-                <Grid item xs={12} sx={{ mb: 2 }}>
-                    <ClaimDetail
-                        notificationDate={MOCK_HOSPITAL_CLAIM.notificationDate}
-                        transferDate="-"
-                        employee={MOCK_HOSPITAL_CLAIM.createByUserName}
-                        branch={MOCK_HOSPITAL_CLAIM.branchName}
-                        claimNo={MOCK_HOSPITAL_CLAIM.claimNo}
-                        caseNo={MOCK_HOSPITAL_CLAIM.caseNo}
-                        claimType={MOCK_HOSPITAL_CLAIM.claimType}
-                        statusClaim={MOCK_HOSPITAL_CLAIM.claimStatus}
-                        claimStatusId={MOCK_HOSPITAL_CLAIM.claimStatusId}
-                    />
-                </Grid>
+                        <Grid item xs={12} sx={{ mb: 2 }}>
+                            <ClaimDetail
+                                notificationDate={formatDateString(
+                                    detail?.createdDate?.toString() ?? "",
+                                    "DD/MM/BBBB HH:mm:ss"
+                                )}
+                                transferDate={formatDateString(
+                                    detail?.paymentDate?.toString() ?? "",
+                                    "DD/MM/BBBB HH:mm:ss"
+                                )}
+                                employee={detail?.createByUserName}
+                                branch={customerDetail?.agentBranchName ?? "-"}
+                                claimNo={detail?.claimNo}
+                                caseNo={detail?.caseNo}
+                                claimType={detail?.claimType}
+                                statusClaim={detail?.claimStatusName}
+                                claimStatusId={detail?.claimStatusId}
+                            />
+                        </Grid>
+                    </>
+                )}
 
                 <Grid item xs={12}>
                     <Paper elevation={2} sx={{ p: 1, borderRadius: 4, display: "flex", alignItems: "center", gap: 1 }}>

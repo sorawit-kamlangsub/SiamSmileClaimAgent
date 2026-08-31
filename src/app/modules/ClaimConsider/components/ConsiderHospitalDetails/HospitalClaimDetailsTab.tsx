@@ -45,10 +45,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         formik,
         claimListTypeConfig,
         incidentType,
+        incidentTypeLoading,
         coverageType,
         medicalType,
         causeOfIncident,
+        incidentTypeMappingLoading,
         decisionReason,
+        decisionReasonLoading,
         continuousClaimRows,
         continuousClaimOpen,
         setContinuousClaimOpen,
@@ -112,11 +115,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             <Grid item xs={12} sx={readOnlySx}>
                                 <RecordClaimData
                                     incidentType={incidentType}
-                                    incidentTypeLoading={false}
+                                    incidentTypeLoading={incidentTypeLoading}
                                     coverageType={coverageType}
                                     causeOfIncident={causeOfIncident}
                                     medicalType={medicalType}
-                                    incidentTypeMappingLoading={false}
+                                    incidentTypeMappingLoading={incidentTypeMappingLoading}
                                 />
                             </Grid>
                             <Grid item xs={12} sx={readOnlySx}>
@@ -133,7 +136,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     productId={6}
                                     aplicationCode={MOCK_HOSPITAL_CLAIM.applicationId}
                                     decisionReason={decisionReason}
-                                    decisionReasonLoading={false}
+                                    decisionReasonLoading={decisionReasonLoading}
                                 />
                             </Grid>
                         </Grid>
