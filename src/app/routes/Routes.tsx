@@ -240,10 +240,9 @@ const Routes: RouteMapType[] = [
         element: <Outlet />,
         children: [
             {
-                path: "hospital",
+                index: true,
                 title: "เคลมโรงพยาบาล",
                 element: <ConsiderHospitalMonitorPage />,
-                index: true,
             },
             {
                 path: "hospital/:id",
