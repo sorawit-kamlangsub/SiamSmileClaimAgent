@@ -25,6 +25,7 @@ import RefundApprovePage from "../modules/RefundApprove/pages/RefundApprovePage.
 
 import ConsiderMonitorPage from "../modules/ClaimConsider/pages/ConsiderMonitorPage.tsx";
 import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPage.tsx";
+import ConsiderHospitalDetailPage from "../modules/ClaimConsider/pages/ConsiderHospitalDetailPage.tsx";
 import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
 import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
 
@@ -246,7 +247,7 @@ const Routes: RouteMapType[] = [
             {
                 path: "hospital/:id",
                 title: "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล",
-                element: <ConsiderDetailPage />,
+                element: <ConsiderHospitalDetailPage />,
             },
         ],
     },
