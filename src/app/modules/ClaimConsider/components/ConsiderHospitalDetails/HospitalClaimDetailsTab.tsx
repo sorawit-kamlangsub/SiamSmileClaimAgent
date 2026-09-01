@@ -60,6 +60,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
         handleDocumentCheckChange,
+        documentCheckResultOptions,
     } = useHospitalConsiderDetailHook();
 
     const continuousClaim = formik.values.continuousClaim;
@@ -144,7 +145,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 <AttendingDoctorSection />
                             </Grid>
                             <Grid item xs={12}>
-                                <DocumentVerifyTable onChange={handleDocumentCheckChange} readOnly={readOnly} />
+                                <DocumentVerifyTable
+                                    onChange={handleDocumentCheckChange}
+                                    options={documentCheckResultOptions}
+                                    readOnly={readOnly}
+                                />
                             </Grid>
                             <Grid item xs={12} sx={readOnlySx}>
                                 <ConsiderSection

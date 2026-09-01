@@ -176,20 +176,32 @@ export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
     },
 ];
 
-/** ผลการตรวจเอกสาร (เลือกได้ 1 สถานะต่อรายการ) */
+/**
+ * ผลการตรวจเอกสาร (เลือกได้ 1 สถานะต่อรายการ)
+ *
+ * ค่าที่เก็บคือ documentReviewStatusId จาก /api/Masters/document/review/status
+ * ตัวเลือก + ลำดับ ดึงจาก API ส่วนสีกำหนดฝั่ง FE (API ไม่ได้ส่งสีมา)
+ */
 export const DOCUMENT_CHECK_RESULTS = {
-    passed: "passed",
-    failed: "failed",
-    waiting: "waiting",
+    passed: 2,
+    failed: 3,
+    waiting: 4,
 } as const;
 
-export type DocumentCheckResult = (typeof DOCUMENT_CHECK_RESULTS)[keyof typeof DOCUMENT_CHECK_RESULTS];
+/** ค่าผลการตรวจเอกสาร = documentReviewStatusId */
+export type DocumentCheckResult = number;
 
-export const DOCUMENT_CHECK_RESULT_OPTIONS: { value: DocumentCheckResult; label: string; color: string }[] = [
-    { value: DOCUMENT_CHECK_RESULTS.passed, label: "ผ่าน", color: "#178236" },
-    { value: DOCUMENT_CHECK_RESULTS.failed, label: "ไม่ผ่าน", color: "#B32615" },
-    { value: DOCUMENT_CHECK_RESULTS.waiting, label: "รอเอกสารเพิ่มเติม", color: "#A87808" },
-];
+export type DocumentCheckResultOption = { value: DocumentCheckResult; label: string; color: string };
+
+/** สีประจำผลการตรวจเอกสารแต่ละสถานะ (key = documentReviewStatusId) */
+export const DOCUMENT_CHECK_RESULT_COLORS: Record<number, string> = {
+    [DOCUMENT_CHECK_RESULTS.passed]: "#178236",
+    [DOCUMENT_CHECK_RESULTS.failed]: "#B32615",
+    [DOCUMENT_CHECK_RESULTS.waiting]: "#A87808",
+};
+
+/** สีสำรองเมื่อเจอสถานะที่ยังไม่ได้กำหนดสี */
+export const DOCUMENT_CHECK_RESULT_FALLBACK_COLOR = "#5A6B7B";
 
 /** ไฟล์สแกนของเอกสารแต่ละรายการ (ใช้แสดงในหน้าดูรายละเอียดเอกสาร) */
 export type DocumentFile = {

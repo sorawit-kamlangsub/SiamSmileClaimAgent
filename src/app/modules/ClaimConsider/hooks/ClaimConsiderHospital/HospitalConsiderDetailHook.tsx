@@ -4,7 +4,12 @@ import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
 import { CoverageType } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
-import { useGetDecisionReason, useGetIncidentType, useGetIncidentTypeMapping } from "../../../../api/coreClaimMastersApi";
+import {
+    useGetDecisionReason,
+    useGetDocumentReviewStatus,
+    useGetIncidentType,
+    useGetIncidentTypeMapping,
+} from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
@@ -13,6 +18,9 @@ import {
     CLAIM_LIST_TYPE_CONFIG,
     ContinuousClaimRow,
     DOCUMENT_CHECK_RESULTS,
+    DOCUMENT_CHECK_RESULT_COLORS,
+    DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
+    DocumentCheckResultOption,
     DocumentCheckRow,
     MOCK_CONTINUOUS_CLAIMS,
     MOCK_DOCUMENT_CHECK_ROWS,
@@ -460,6 +468,22 @@ const useHospitalConsiderDetailHook = () => {
         formik.values.considerResult
     );
 
+    /** ตัวเลือกผลการตรวจเอกสาร (ผ่าน / ไม่ผ่าน / รอเอกสารเพิ่มเติม) จาก Master API */
+    const { data: documentReviewStatusRaw, isLoading: documentCheckResultOptionsLoading } = useGetDocumentReviewStatus();
+    const documentCheckResultOptions: DocumentCheckResultOption[] = useMemo(
+        () =>
+            [...(documentReviewStatusRaw?.data ?? [])]
+                .sort((a, b) => (a.indexId ?? 0) - (b.indexId ?? 0))
+                .map((item) => ({
+                    value: item.documentReviewStatusId ?? 0,
+                    label: item.documentReviewStatusName ?? "",
+                    color:
+                        DOCUMENT_CHECK_RESULT_COLORS[item.documentReviewStatusId ?? 0] ??
+                        DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
+                })),
+        [documentReviewStatusRaw]
+    );
+
     return {
         formik,
         validateStep1,
@@ -485,6 +509,8 @@ const useHospitalConsiderDetailHook = () => {
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
         handleDocumentCheckChange,
+        documentCheckResultOptions,
+        documentCheckResultOptionsLoading,
         // ยังไม่มี API : header ใช้ประกอบตอนข้อมูลจริงยังไม่ครบ
         mockHeader: MOCK_HOSPITAL_CLAIM,
     };
