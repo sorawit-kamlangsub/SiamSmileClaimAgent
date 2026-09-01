@@ -2058,6 +2058,105 @@ export class CoreClaimClient {
         }
         return Promise.resolve<SaveClaimEditDraftDtoResponeServiceResponse>(null as any);
     }
+
+    /**
+     * API สำหรับ Get ข้อมูล รายการค่ารักษา(เบื้องต้น) Default จาก CaseItem จากหน้าแจ้งเคลม
+     * @param formatTypeId (optional) 
+     * @param coverageTypeId (optional) 
+     * @param medicalTypeId (optional) 
+     * @param isUseOften (optional) 
+     * @param productTypeId (optional) 
+     * @param causeOfIncidentId (optional) 
+     * @param productId (optional) 
+     * @return Success
+     */
+    getStandardMedicalExpenseByCase(caseId: string, formatTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, isUseOften?: boolean | undefined, productTypeId?: number | undefined, causeOfIncidentId?: number | undefined, productId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/standard-medical-expense/case?";
+        if (caseId === undefined || caseId === null)
+            throw new Error("The parameter 'caseId' must be defined and cannot be null.");
+        else
+            url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (formatTypeId === null)
+            throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined)
+            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (coverageTypeId === null)
+            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        else if (coverageTypeId !== undefined)
+            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
+        if (medicalTypeId === null)
+            throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined)
+            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (isUseOften === null)
+            throw new Error("The parameter 'isUseOften' cannot be null.");
+        else if (isUseOften !== undefined)
+            url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
+        if (productTypeId === null)
+            throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined)
+            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (causeOfIncidentId === null)
+            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        else if (causeOfIncidentId !== undefined)
+            url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
+        if (productId === null)
+            throw new Error("The parameter 'productId' cannot be null.");
+        else if (productId !== undefined)
+            url_ += "productId=" + encodeURIComponent("" + productId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processGetStandardMedicalExpenseByCase(_response);
+        });
+    }
+
+    protected processGetStandardMedicalExpenseByCase(response: AxiosResponse): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse>(null as any);
+    }
 }
 
 export class IClaimClient {
@@ -2999,7 +3098,7 @@ export class MastersClient {
      * @param recordsPerPage (optional) 
      * @return Success
      */
-    filter(organizeId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
+    getInsuranceCompany(organizeId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/insurance/filter?";
         if (organizeId === null)
             throw new Error("The parameter 'organizeId' cannot be null.");
@@ -3043,11 +3142,11 @@ export class MastersClient {
                 throw _error;
             }
         }).then((_response: AxiosResponse) => {
-            return this.processFilter(_response);
+            return this.processGetInsuranceCompany(_response);
         });
     }
 
-    protected processFilter(response: AxiosResponse): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
+    protected processGetInsuranceCompany(response: AxiosResponse): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -5722,6 +5821,45 @@ export interface GetRelationTypeDtoResponse {
 
 export interface GetRelationTypeDtoResponseListServiceResponse {
     data?: GetRelationTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetStandardMedicalExpenseByCaseDtoResponse {
+    inputToStandardMappingId?: number | undefined;
+    formatTypeId?: number | undefined;
+    inputItemCode?: string | undefined;
+    standardMedicalExpenseId?: number | undefined;
+    descriptionEN?: string | undefined;
+    descriptionTH?: string | undefined;
+    maximumLimit?: number | undefined;
+    standardMedicalExpenseCategoryId?: number | undefined;
+    backgroundColorCode?: string | undefined;
+    inputToStandardSubCategoryId?: number | undefined;
+    bodyPartId?: number | undefined;
+    caseItemId?: string | undefined;
+    caseId?: string | undefined;
+    quantity?: number | undefined;
+    perUnit?: number | undefined;
+    originalAmount?: number | undefined;
+    discountAmount?: number | undefined;
+    netCaseAmount?: number | undefined;
+    medicalTypeId?: number | undefined;
+    nonCoveredAmount?: number | undefined;
+    nonCoveredReasonId?: number | undefined;
+    remark?: string | undefined;
+}
+
+export interface GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse {
+    data?: GetStandardMedicalExpenseByCaseDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

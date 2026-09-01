@@ -159,8 +159,15 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
                                         <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
                                     </IconButton>
                                 </Tooltip>
-                                <Tooltip title="ดูรายละเอียด">
+                                <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
+                                        onClick={() => {
+                                            navigate(
+                                                `${appliedFilter.path}/${btoa(
+                                                    claimTransactionData?.data?.[rowIndex]?.claimId ?? ""
+                                                )}/document`
+                                            );
+                                        }}
                                         sx={{
                                             bgcolor: "#E2F2FF",
                                             "&:hover": { bgcolor: "#d4ecff" },
