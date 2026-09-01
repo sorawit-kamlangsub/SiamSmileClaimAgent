@@ -2,7 +2,7 @@ import { Grid } from "@mui/material";
 import CurrencyExchangeIcon from "@mui/icons-material/CurrencyExchange";
 import SearchByBranchAndStatus from "../_common/SearchByBranchAndStatus";
 import RefundDataTable from "../components/RefundDataTable";
-import DialogSearchClaim from "../components/DialogSearchClaim";
+import DialogSearchClaim from "../../DialogSearchByClaimOrCase/components/DialogSearchClaim";
 import { useAppDispatch } from "../../../../redux";
 import { setIsOpenDialog } from "../store/refundSlice";
 
@@ -25,7 +25,7 @@ const RefundPage = () => {
                     <RefundDataTable />
                 </Grid>
             </Grid>
-            <DialogSearchClaim />
+            <DialogSearchClaim navigatePath="refund" buttonText="โอนคืน" />
         </>
     );
 };

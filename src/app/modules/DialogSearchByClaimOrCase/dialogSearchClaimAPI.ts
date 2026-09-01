@@ -2,20 +2,24 @@
 // CLPA690800000075
 
 import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_URL as API_CLAIM_FUND_URL } from "../../../Const";
-import { encodeURLWithParams } from "../_common";
+import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
 const apiURL = `${API_CLAIM_FUND_URL}/api`;
 
 const getClaimByClaimOrCase = "getClaimByClaimOrCaseKey";
+
+interface SearchClaimOrCasePayload extends PaginationSortableDto {
+    searchDetail: string;
+}
 
 export const useSearchClaimOrCase = (
     onSuccessCallBack: (response: any) => void,
     onErrorCallback: (error: string) => void
 ) => {
     const queryClient = useQueryClient();
-    return useMutation((payload: { searchDetail: string }) => searchClaimByClaimOrCase(payload), {
+    return useMutation((payload: SearchClaimOrCasePayload) => searchClaimByClaimOrCase(payload), {
         onSuccess: (response) => {
             if (!response.isSuccess) {
                 onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
@@ -32,7 +36,7 @@ export const useSearchClaimOrCase = (
     });
 };
 
-const searchClaimByClaimOrCase = (payload: { searchDetail: string }) => {
+const searchClaimByClaimOrCase = (payload: SearchClaimOrCasePayload) => {
     const url = encodeURLWithParams(`${apiURL}/Setting/SearchClaimOrCase`, payload);
     return axios
         .get(url)

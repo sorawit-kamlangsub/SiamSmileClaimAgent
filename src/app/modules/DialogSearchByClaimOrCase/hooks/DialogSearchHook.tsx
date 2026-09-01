@@ -1,7 +1,7 @@
 import { useFormik } from "formik";
-import { swalError } from "../../_common";
-import { useSearchClaimOrCase } from "../refundAPI";
-import { useRef, useState } from "react";
+import { PaginationSortableDto, swalError } from "../../_common";
+import { useSearchClaimOrCase } from "../dialogSearchClaimAPI";
+import { useState } from "react";
 
 type RefundClaimSearchType = {
     searchDetail: string;
@@ -11,7 +11,7 @@ type UseRefundDialogSearchHookProps = {
     onSearchSuccess?: (data: any) => void;
 };
 
-const useRefundDialogSearchHook = ({ onSearchSuccess }: UseRefundDialogSearchHookProps) => {
+const useDialogSearchHook = ({ onSearchSuccess }: UseRefundDialogSearchHookProps) => {
     const [dataFromSearch, setDataFromSearch] = useState<any>([]);
 
     const handleSuccess = (res: any) => {
@@ -34,11 +34,11 @@ const useRefundDialogSearchHook = ({ onSearchSuccess }: UseRefundDialogSearchHoo
 
         onSubmit: (value) => {
             if (value.searchDetail) {
-                searchByClaimOrCaseMutate({ searchDetail: value.searchDetail });
+                searchByClaimOrCaseMutate({ searchDetail: value.searchDetail, });
             }
         },
     });
     return { formik, searchByClaimOrCaseIsLoading, dataFromSearch };
 };
 
-export default useRefundDialogSearchHook;
+export default useDialogSearchHook;

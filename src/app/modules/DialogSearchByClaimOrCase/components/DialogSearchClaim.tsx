@@ -2,20 +2,24 @@ import { Box, Button, Dialog, IconButton, Typography } from "@mui/material";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import CloseIcon from "@mui/icons-material/Close";
 import { useAppDispatch, useAppSelector } from "../../../../redux";
-import { setIsOpenDialog } from "../store/refundSlice";
-import useRefundDialogSearchHook from "../hooks/RefundDialogSearchHook";
+import { setIsOpenDialog } from "../../Refund/store/refundSlice";
+import useDialogSearchHook from "../hooks/DialogSearchHook";
 import { FormikTextField } from "../../_common";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 
-const DialogSearchClaim = () => {
+import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import ClaimListByClaimSearchTable from "./ClaimListByClaimSearchTable";
+
+type DialogSearchClaimProps = {
+    navigatePath: string;
+    buttonText: string;
+};
+
+const DialogSearchClaim = ({ navigatePath, buttonText }: DialogSearchClaimProps) => {
     const { dialogRefund } = useAppSelector((state) => state.refund);
+    const [searchResult, setSearchResult] = useState<any>(null);
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-
-    const handleClose = () => {
-        dispatch(setIsOpenDialog({ isOpen: false }));
-    };
 
     const handleSearchSuccess = (data: any[]) => {
         if (!data || data.length === 0) {
@@ -25,13 +29,28 @@ const DialogSearchClaim = () => {
         const allAreClaimNo = data.every((item) => item.isClaimNo);
 
         if (allAreClaimNo) {
-            console.log(data);
+            setSearchResult(data);
         } else {
             navigate("/");
         }
     };
 
-    const { formik, dataFromSearch } = useRefundDialogSearchHook({ onSearchSuccess: handleSearchSuccess });
+    const { formik } = useDialogSearchHook({
+        onSearchSuccess: handleSearchSuccess,
+    });
+
+    const handleClose = () => {
+        dispatch(setIsOpenDialog({ isOpen: false }));
+        setSearchResult(null);
+        formik.resetForm();
+    };
+
+    useEffect(() => {
+        if (!formik.values.searchDetail) setSearchResult(null);
+        return () => {
+            setSearchResult(null);
+        };
+    }, [formik.values.searchDetail]);
 
     return (
         <>
@@ -87,7 +106,7 @@ const DialogSearchClaim = () => {
                         <FormikTextField
                             formik={formik}
                             name="searchDetail"
-                            label="กรุณากรอกเลขท่ CPG / CL"
+                            label="กรุณากรอกเลขที่ CPG / CL"
                             fullWidth
                         />
                         <Button
@@ -107,6 +126,16 @@ const DialogSearchClaim = () => {
                         </Button>
                     </Box>
                 </Box>
+
+                {searchResult && (
+                    <Box sx={{ p: 2 }}>
+                        <ClaimListByClaimSearchTable
+                            claimData={searchResult}
+                            navigatePath={navigatePath}
+                            buttonText={buttonText}
+                        />
+                    </Box>
+                )}
             </Dialog>
         </>
     );
