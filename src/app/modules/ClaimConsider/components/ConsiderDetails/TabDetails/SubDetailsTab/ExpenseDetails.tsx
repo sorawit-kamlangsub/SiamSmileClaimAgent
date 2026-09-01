@@ -3,7 +3,7 @@ import { HeadingWithColor } from "../../../../../_common/components/CustomCompon
 import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
 import OcrReceiptSection from "./OcrReceiptSection";
 
-import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 
