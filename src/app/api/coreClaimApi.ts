@@ -32,10 +32,11 @@ const getCustomerBenefitDetailHalfQueryKey = ["getCustomerBenefitDetailHalf"];
 const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
-const getClaimTransactionMonitorQueryKey = ["getClaimTransactionMonitor"];
+const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
+const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCase"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -405,7 +406,7 @@ export const useGetDashboardCustomerConsider = (
     );
 };
 
-export const useGetClaimTransactionMonitor = (
+export const useGetCustomerClaimAdjudicationMonitor = (
     isSearch?: boolean,
     dateOption?: number | undefined,
     dateFrom?: dayjs.Dayjs | undefined,
@@ -422,7 +423,7 @@ export const useGetClaimTransactionMonitor = (
 ) => {
     return useQuery(
         [
-            getClaimTransactionMonitorQueryKey,
+            getCustomerClaimAdjudicationMonitorQueryKey,
             dateOption,
             dateFrom,
             dateTo,
@@ -437,7 +438,7 @@ export const useGetClaimTransactionMonitor = (
             recordsPerPage,
         ],
         () =>
-            coreClaimClient.getClaimTransactionMonitor(
+            coreClaimClient.getCustomerClaimAdjudicationMonitor(
                 dateOption,
                 dateFrom,
                 dateTo,
@@ -537,6 +538,46 @@ export const useUpsertClaimDecision = (
             onError: (error: Error) => {
                 onErrorCallback?.(error.message);
             },
+        }
+    );
+};
+
+export const useGetStandardMedicalExpenseByCase = (
+    caseId: string,
+    formatTypeId: number | undefined,
+    coverageTypeId: number | undefined,
+    medicalTypeId: number | undefined,
+    isUseOften: boolean,
+    productTypeId: number | undefined,
+    productId: number | undefined,
+    causeOfIncidentId?: number | undefined
+) => {
+    return useQuery(
+        [
+            getStandardMedicalExpenseByCaseQueryKey,
+            caseId,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            isUseOften,
+            productTypeId,
+            productId,
+            causeOfIncidentId,
+        ],
+        () =>
+            coreClaimClient.getStandardMedicalExpenseByCase(
+                caseId,
+                formatTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                isUseOften,
+                productTypeId,
+                productId,
+                causeOfIncidentId
+            ),
+        {
+            enabled: !!caseId,
+            refetchOnWindowFocus: false,
         }
     );
 };

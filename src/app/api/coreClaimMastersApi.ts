@@ -451,7 +451,7 @@ export const useGetDecisionReason = (decisionReasonId?: number | undefined, deci
 };
 
 export const useGetInsuranceCompany = (
-    organizeId: number | undefined,
+    organizeId?: number | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,
@@ -461,7 +461,7 @@ export const useGetInsuranceCompany = (
     return useQuery(
         [getInsuranceCompanyQueryKey, organizeId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
         () =>
-            coreClaimMastersClient.filter(
+            coreClaimMastersClient.getInsuranceCompany(
                 organizeId,
                 searchDetail,
                 orderingField,

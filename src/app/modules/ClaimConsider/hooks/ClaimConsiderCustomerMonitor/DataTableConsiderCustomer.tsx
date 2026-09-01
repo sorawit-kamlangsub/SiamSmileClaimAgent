@@ -5,14 +5,14 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 import React, { useEffect, useMemo } from "react";
-import { useGetClaimTransactionMonitor } from "../../../../api/coreClaimApi";
 import { AppliedFilter } from "./SearchFilterHook";
 import {
-    backgroundColorMapClaimTransactionType,
+    backgroundColorMapDecision,
     cellAlignOptions,
-    colorMapClaimTransactionType,
+    colorMapDecision,
     formatDateString,
 } from "../../../../functionHelpers";
+import { useGetCustomerClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
 
 const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -27,21 +27,22 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
         setPaginated((prev) => ({ ...prev, page: 1 }));
     }, [appliedFilter]);
 
-    const { data: claimTransactionData, isLoading: claimTransactionDataLoading } = useGetClaimTransactionMonitor(
-        appliedFilter.isSearch,
-        appliedFilter.dateType,
-        appliedFilter.dateFrom,
-        appliedFilter.dateTo,
-        isProductTypeId_PH,
-        isProductTypeId_PA,
-        appliedFilter.statusId,
-        appliedFilter.searchFrom,
-        appliedFilter.searchDetail,
-        undefined,
-        undefined,
-        paginated.page,
-        paginated.recordsPerPage
-    );
+    const { data: claimTransactionData, isLoading: claimTransactionDataLoading } =
+        useGetCustomerClaimAdjudicationMonitor(
+            appliedFilter.isSearch,
+            appliedFilter.dateType,
+            appliedFilter.dateFrom,
+            appliedFilter.dateTo,
+            isProductTypeId_PH,
+            isProductTypeId_PA,
+            appliedFilter.statusId,
+            appliedFilter.searchFrom,
+            appliedFilter.searchDetail,
+            undefined,
+            undefined,
+            paginated.page,
+            paginated.recordsPerPage
+        );
     const pagination: PaginationResultDto = useMemo(
         () => ({
             totalAmountRecords: claimTransactionData?.totalAmountRecords ?? 0,
@@ -105,20 +106,16 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             },
         },
         {
-            name: "claimTransactionTypeName",
+            name: "decisionName",
             label: "สถานะรายการ",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRenderLite: (rowIndex) => {
                     const row = claimTransactionData?.data?.[rowIndex];
-                    const value = row?.claimTransactionTypeName;
+                    const value = row?.decisionName;
                     if (!value) return "-";
-                    const bgColor = row?.claimTransactionTypeId
-                        ? backgroundColorMapClaimTransactionType[row?.claimTransactionTypeId]
-                        : undefined;
-                    const textColor = row?.claimTransactionTypeId
-                        ? colorMapClaimTransactionType[row?.claimTransactionTypeId]
-                        : undefined;
+                    const bgColor = row?.decisionId ? backgroundColorMapDecision[row?.decisionId] : undefined;
+                    const textColor = row?.decisionId ? colorMapDecision[row?.decisionId] : undefined;
                     return (
                         <Chip
                             label={value}

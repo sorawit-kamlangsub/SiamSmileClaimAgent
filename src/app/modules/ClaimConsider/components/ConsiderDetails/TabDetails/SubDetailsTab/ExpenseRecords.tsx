@@ -9,7 +9,6 @@ import {
     IconButton,
     InputAdornment,
     MenuItem,
-    Paper,
     Select,
     Stack,
     Table,
@@ -112,18 +111,6 @@ const tableSelectSx = {
     "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: REF.primary },
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: REF.primary, borderWidth: 1.5 },
 };
-
-// mock บริษัทประกัน (ยังไม่มี endpoint จริงสำหรับส่วนนี้ — เชื่อมภายหลังได้เมื่อ backend พร้อม)
-const MOCK_INSURANCE_COMPANIES = [
-    "บริษัท กรุงเทพประกันภัย จำกัด (มหาชน)",
-    "บริษัท คุ้มภัยประกันภัย จำกัด มหาชน",
-    "บริษัท ชับบ์สามัคคีประกันภัย จำกัด (มหาชน)",
-    "บริษัท เมืองไทยประกันภัย จำกัด (มหาชน)",
-    "บริษัท วิริยะประกันภัย จำกัด (มหาชน)",
-    "บริษัท เออร์โกประกันภัย (ประเทศไทย) จำกัด (มหาชน)",
-    "บริษัท เอไอจี ประกันภัย (ประเทศไทย) จำกัด (มหาชน)",
-    "รออนุมัติ",
-];
 
 interface TreeNode {
     id: number;
@@ -324,6 +311,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
         netClaimAmount,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
+        insuranceCompanyOptions,
+        insuranceCompanyLoading,
         filteredCategories,
         isCategoryLoading,
         discountError,
@@ -805,11 +794,13 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                         }}
                                     >
                                         <MenuItem value="">
-                                            <em style={{ color: "#9aa5b1" }}>---เลือกบริษัทประกัน---</em>
+                                            <em style={{ color: "#9aa5b1" }}>
+                                                {insuranceCompanyLoading ? "กำลังโหลด..." : "---เลือกบริษัทประกัน---"}
+                                            </em>
                                         </MenuItem>
-                                        {MOCK_INSURANCE_COMPANIES.map((name) => (
-                                            <MenuItem key={name} value={name} sx={{ fontSize: 14 }}>
-                                                {name}
+                                        {insuranceCompanyOptions.map((name) => (
+                                            <MenuItem key={name.value} value={name.value} sx={{ fontSize: 14 }}>
+                                                {name.label}
                                             </MenuItem>
                                         ))}
                                     </Select>
