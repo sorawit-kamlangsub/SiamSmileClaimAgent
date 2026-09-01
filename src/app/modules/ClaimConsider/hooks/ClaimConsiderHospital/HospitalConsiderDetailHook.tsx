@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { useFormik } from "formik";
+import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
 import { CoverageType } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
@@ -12,6 +12,7 @@ import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
 import {
     CLAIM_LIST_TYPE_CONFIG,
     ContinuousClaimRow,
+    DOCUMENT_CHECK_RESULTS,
     DocumentCheckRow,
     MOCK_CONTINUOUS_CLAIMS,
     MOCK_DOCUMENT_CHECK_ROWS,
@@ -108,6 +109,96 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
 const CLAIM_SOURCE_CONSIDER = 2;
 
+/** decisionId ของผลการพิจารณา "รอแก้ไข" (ต้องกรอกรายละเอียดการรอแก้ไข) */
+const DECISION_REVISION = 4;
+
+/** ลำดับช่องที่ใช้เลื่อนหน้าจอไปยัง error แรกเมื่อกด "ถัดไป" / "ยืนยันบันทึกผลพิจารณา" */
+const FIELD_ERROR_ORDER = [
+    "incidentTypeId",
+    "coverageTypeId",
+    "medicalTypeId",
+    "causeOfIncidentId",
+    "documentCompleteDate",
+    "incidentDate",
+    "admissionDate",
+    "dischargeDate",
+    "hospitalId",
+    "chiefComplaintId",
+    "diagnoses",
+    "hn",
+    "vn",
+    "underlyingDisease",
+    "treatmentMethod",
+    "hasProcedure",
+    "doctorLicenseNo",
+    "doctorName",
+    "documentChecks",
+    "decisionReasonId",
+    "decisionReasonDetail",
+];
+
+/**
+ * Validate ฟอร์ม Step 1 : บันทึกข้อมูลเคลม (เคลมโรงพยาบาล OPD Half / OPD Full)
+ * อ้างอิงชีท "พิจารณาเคลม รพ. OPD Half"
+ */
+const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<HospitalConsiderValues> => {
+    const errors: FormikErrors<HospitalConsiderValues> = {};
+    const req = "กรุณากรอกข้อมูล";
+    const sel = "กรุณาเลือกข้อมูล";
+
+    const isMedical =
+        values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+    const isCause = values.coverageTypeId === CoverageType.Death || values.coverageTypeId === CoverageType.Disability;
+
+    // ── ข้อมูลเคลม ──
+    if (!values.incidentTypeId) errors.incidentTypeId = sel;
+    if (!values.coverageTypeId) errors.coverageTypeId = sel;
+    if (isMedical && !values.medicalTypeId) errors.medicalTypeId = sel;
+    if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = sel;
+
+    if (!values.documentCompleteDate) errors.documentCompleteDate = req;
+    if (!values.incidentDate) errors.incidentDate = req;
+    if (!values.admissionDate) errors.admissionDate = req;
+    if (!values.dischargeDate) errors.dischargeDate = req;
+    if (!values.hospitalId) errors.hospitalId = sel;
+    if (!values.chiefComplaintId) errors.chiefComplaintId = sel;
+
+    if (!values.diagnoses?.[0]?.icd10Id) {
+        errors.diagnoses = [{ icd10Id: sel }];
+    }
+
+    // ── ข้อมูลการเข้ารับการรักษา ──
+    if (!values.hn.trim()) errors.hn = req;
+    if (!values.vn.trim()) errors.vn = req;
+    if (!values.underlyingDisease.trim()) errors.underlyingDisease = req;
+    if (!values.treatmentMethod.trim()) errors.treatmentMethod = req;
+    if (!values.hasProcedure) errors.hasProcedure = sel;
+
+    // ── แพทย์เจ้าของไข้ ──
+    if (!values.doctorLicenseNo.trim()) errors.doctorLicenseNo = req;
+    if (!values.doctorName.trim()) errors.doctorName = req;
+
+    // ── ตรวจสอบเอกสาร : หมายเหตุบังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม ──
+    const hasMissingDocumentRemark = values.documentChecks.some(
+        (row) =>
+            (row.checkResult === DOCUMENT_CHECK_RESULTS.failed || row.checkResult === DOCUMENT_CHECK_RESULTS.waiting) &&
+            !row.remark.trim()
+    );
+    if (hasMissingDocumentRemark) {
+        errors.documentChecks = "กรุณากรอกหมายเหตุของเอกสารที่ผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม";
+    }
+
+    // ── ผลการพิจารณา : ตรวจเมื่อผู้ใช้เลือกผลการพิจารณาแล้ว ──
+    if (values.considerResult) {
+        if (!values.decisionReasonId) errors.decisionReasonId = sel;
+        if (values.considerResult === DECISION_REVISION && !values.decisionReasonDetail?.trim()) {
+            errors.decisionReasonDetail = req;
+        }
+    }
+
+    return errors;
+};
+
 const useHospitalConsiderDetailHook = () => {
     const { id } = useParams();
     const claimId = id ? atob(id) : undefined;
@@ -140,8 +231,39 @@ const useHospitalConsiderDetailHook = () => {
     const formik = useFormik<HospitalConsiderValues>({
         initialValues: buildInitialValues(),
         enableReinitialize: false,
+        validate: validateHospitalConsider,
         onSubmit: () => undefined,
     });
+
+    /**
+     * ตรวจฟอร์ม Step 1 ทั้งหมดก่อนกด "ถัดไป" หรือ "ยืนยันบันทึกผลพิจารณา"
+     * คืน true เมื่อผ่าน, false เมื่อมี error (mark touched + เลื่อนไปช่องแรกที่ผิด)
+     */
+    const validateStep1 = async (): Promise<boolean> => {
+        const errs = await formik.validateForm();
+        const errorKeys = Object.keys(errs);
+        if (errorKeys.length === 0) return true;
+
+        const touched: FormikTouched<HospitalConsiderValues> = {};
+        errorKeys.forEach((key) => {
+            if (key === "diagnoses") {
+                touched.diagnoses = [{ icd10Id: true }];
+            } else {
+                (touched as Record<string, unknown>)[key] = true;
+            }
+        });
+        await formik.setTouched(touched, false);
+
+        const firstErrorField = FIELD_ERROR_ORDER.find((field) => (errs as Record<string, unknown>)[field]);
+        if (firstErrorField) {
+            window.setTimeout(() => {
+                document
+                    .querySelector(`[data-field-name="${firstErrorField}"]`)
+                    ?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }, 100);
+        }
+        return false;
+    };
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
@@ -340,6 +462,7 @@ const useHospitalConsiderDetailHook = () => {
 
     return {
         formik,
+        validateStep1,
         claimListType,
         claimListTypeConfig,
         detailData,

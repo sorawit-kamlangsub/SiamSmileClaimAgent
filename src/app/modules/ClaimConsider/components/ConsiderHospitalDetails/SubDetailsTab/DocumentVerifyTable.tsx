@@ -4,6 +4,7 @@ import {
     Dialog,
     DialogContent,
     DialogTitle,
+    FormHelperText,
     IconButton,
     TextField,
     ToggleButton,
@@ -47,6 +48,11 @@ const isRemarkRequired = (result: DocumentCheckResult | "") =>
 const DocumentVerifyTable = ({ onChange, readOnly = false }: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
+
+    /** error ระดับฟอร์ม : หมายเหตุยังไม่ครบสำหรับเอกสารที่ผล ไม่ผ่าน / รอเอกสารเพิ่มเติม */
+    const { error: documentChecksError, touched: documentChecksTouched } =
+        formik.getFieldMeta<DocumentCheckRow[]>("documentChecks");
+    const showRequiredError = !!documentChecksTouched && typeof documentChecksError === "string";
 
     /** รายการเอกสารที่กำลังเปิดดูไฟล์อยู่ (undefined = ปิดหน้าต่าง) */
     const [viewingRowIndex, setViewingRowIndex] = useState<number>();
@@ -212,7 +218,7 @@ const DocumentVerifyTable = ({ onChange, readOnly = false }: DocumentVerifyTable
         <CustomPaper>
             <HeadingWithColor icon={<FactCheckIcon sx={{ fontSize: 27 }} />} text="ตรวจสอบเอกสาร" color="blue" />
 
-            <Box>
+            <Box data-field-name="documentChecks">
                 <StandardDataTable
                     name="documentVerifyTable"
                     title=""
@@ -224,6 +230,11 @@ const DocumentVerifyTable = ({ onChange, readOnly = false }: DocumentVerifyTable
                     displayFooter={false}
                     options={defaultOptionStandardDataTable}
                 />
+                {showRequiredError && (
+                    <FormHelperText error sx={{ mt: 1, ml: 1.5 }}>
+                        {documentChecksError}
+                    </FormHelperText>
+                )}
             </Box>
 
             <Dialog

@@ -98,6 +98,11 @@ const ConsiderSection = ({
     const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
 
+    const reasonMeta = formik.getFieldMeta<number | undefined>("decisionReasonId");
+    const detailMeta = formik.getFieldMeta<string | undefined>("decisionReasonDetail");
+    const reasonHasError = !!reasonMeta.touched && !!reasonMeta.error;
+    const detailHasError = !!detailMeta.touched && !!detailMeta.error;
+
     const selectedStatus = statusOptions.find((status) => status.decisionId === formik.values.considerResult);
     const selectStatus = (status: StatusOption) => {
         formik.setFieldValue("considerResult", status.decisionId, false);
@@ -207,32 +212,43 @@ const ConsiderSection = ({
                     </Box>
 
                     <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                        <TextField
-                            select
-                            required
-                            fullWidth
-                            label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
-                            value={formik.values.decisionReasonId || ""}
-                            onChange={(event) => formik.setFieldValue("decisionReasonId", Number(event.target.value))}
-                        >
-                            {(decisionReason?.data ?? []).map((item) => (
-                                <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
-                                    {item.decisionReasonName}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                        <Box data-field-name="decisionReasonId">
+                            <TextField
+                                select
+                                required
+                                fullWidth
+                                label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
+                                value={formik.values.decisionReasonId || ""}
+                                onChange={(event) =>
+                                    formik.setFieldValue("decisionReasonId", Number(event.target.value))
+                                }
+                                onBlur={() => formik.setFieldTouched("decisionReasonId", true)}
+                                error={reasonHasError}
+                                helperText={reasonHasError ? reasonMeta.error : undefined}
+                            >
+                                {(decisionReason?.data ?? []).map((item) => (
+                                    <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
+                                        {item.decisionReasonName}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
 
-                        <TextField
-                            required
-                            fullWidth
-                            multiline
-                            minRows={4}
-                            label={selectedStatus.detailLabel}
-                            placeholder={selectedStatus.detailPlaceholder}
-                            value={formik.values.decisionReasonDetail || ""}
-                            onChange={(event) => formik.setFieldValue("decisionReasonDetail", event.target.value)}
-                            sx={{ mt: 2 }}
-                        />
+                        <Box data-field-name="decisionReasonDetail" sx={{ mt: 2 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                multiline
+                                minRows={4}
+                                label={selectedStatus.detailLabel}
+                                placeholder={selectedStatus.detailPlaceholder}
+                                value={formik.values.decisionReasonDetail || ""}
+                                onChange={(event) => formik.setFieldValue("decisionReasonDetail", event.target.value)}
+                                onBlur={() => formik.setFieldTouched("decisionReasonDetail", true)}
+                                error={detailHasError}
+                                helperText={detailHasError ? detailMeta.error : undefined}
+                            />
+                        </Box>
 
                         {selectedStatus.requiresAttachment && (
                             <DocumentScanTable

@@ -43,6 +43,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
     const {
         formik,
+        validateStep1,
         claimListTypeConfig,
         incidentType,
         incidentTypeLoading,
@@ -66,10 +67,24 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     /** เลขที่เคสของเคลมที่กำลังพิจารณา (เคสปัจจุบันเป็นลำดับที่ 2 ของการรักษาต่อเนื่อง) */
     const currentCaseNo = `${MOCK_HOSPITAL_CLAIM.caseNo}-02`;
 
-    const handleNext = () => {
+    const handleNext = async () => {
+        // Step 1 : ต้องผ่าน Validate ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท พิจารณาเคลม รพ. OPD Half)
+        if (activeStep === 0) {
+            const isValid = await validateStep1();
+            if (!isValid) return;
+        }
+
         const next = Math.min(activeStep + 1, steps.length - 1);
         setActiveStep(next);
         setFurthestStep((prev) => Math.max(prev, next));
+    };
+
+    /** ยืนยันบันทึกผลพิจารณา (รอแก้ไข / ปฏิเสธ / ยกเลิก) : ต้องผ่าน Validate Step 1 ทั้งหมดก่อน */
+    const handleConfirmConsiderResult = async () => {
+        const isValid = await validateStep1();
+        if (!isValid) return;
+
+        swalSuccess("บันทึกผลพิจารณาเรียบร้อย", "ข้อมูลนี้เป็น Mock ยังไม่ได้บันทึกลงระบบ");
     };
 
     const handleBack = () => {
@@ -181,9 +196,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 variant="contained"
                                 startIcon={<SaveIcon />}
                                 disabled={!formik.values.considerResult}
-                                onClick={() =>
-                                    swalSuccess("บันทึกผลพิจารณาเรียบร้อย", "ข้อมูลนี้เป็น Mock ยังไม่ได้บันทึกลงระบบ")
-                                }
+                                onClick={handleConfirmConsiderResult}
                                 sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                             >
                                 ยืนยันบันทึกผลพิจารณา
