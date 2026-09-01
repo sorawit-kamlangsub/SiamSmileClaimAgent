@@ -105,19 +105,19 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             },
         },
         {
-            name: "claimTransactionTypeName",
+            name: "decisionName",
             label: "สถานะรายการ",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRenderLite: (rowIndex) => {
                     const row = claimTransactionData?.data?.[rowIndex];
-                    const value = row?.claimTransactionTypeName;
+                    const value = row?.decisionName;
                     if (!value) return "-";
-                    const bgColor = row?.claimTransactionTypeId
-                        ? backgroundColorMapClaimTransactionType[row?.claimTransactionTypeId]
+                    const bgColor = row?.decisionId
+                        ? backgroundColorMapClaimTransactionType[row?.decisionId]
                         : undefined;
-                    const textColor = row?.claimTransactionTypeId
-                        ? colorMapClaimTransactionType[row?.claimTransactionTypeId]
+                    const textColor = row?.decisionId
+                        ? colorMapClaimTransactionType[row?.decisionId]
                         : undefined;
                     return (
                         <Chip

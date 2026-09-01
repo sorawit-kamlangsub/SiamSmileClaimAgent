@@ -437,7 +437,7 @@ export const useGetClaimTransactionMonitor = (
             recordsPerPage,
         ],
         () =>
-            coreClaimClient.getClaimTransactionMonitor(
+            coreClaimClient.getCustomerClaimAdjudicationMonitor(
                 dateOption,
                 dateFrom,
                 dateTo,
