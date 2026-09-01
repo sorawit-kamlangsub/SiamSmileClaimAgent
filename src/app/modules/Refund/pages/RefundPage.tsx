@@ -25,7 +25,7 @@ const RefundPage = () => {
                     <RefundDataTable />
                 </Grid>
             </Grid>
-            <DialogSearchClaim navigatePath="refund" buttonText="โอนคืน" />
+            <DialogSearchClaim buttonText="โอนคืน" />
         </>
     );
 };

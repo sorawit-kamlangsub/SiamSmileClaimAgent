@@ -8,11 +8,10 @@ import { useMemo, useState } from "react";
 
 type ClaimListByClaimSearchProps = {
     claimData: any;
-    navigatePath: string;
     buttonText: string;
 };
 
-const ClaimListByClaimSearchTable = ({ claimData, navigatePath = "", buttonText }: ClaimListByClaimSearchProps) => {
+const ClaimListByClaimSearchTable = ({ claimData, buttonText }: ClaimListByClaimSearchProps) => {
     const navigate = useNavigate();
 
     const [selectedCaseId, setSelectedCaseId] = useState<string | null>(null);
@@ -23,14 +22,13 @@ const ClaimListByClaimSearchTable = ({ claimData, navigatePath = "", buttonText 
 
     const handleSelectCase = (row: ClaimSearchResultRow) => {
         setSelectedCaseId(row.caseId);
-
-        // if (navigatePath) {
-        //     navigate(navigatePath, { state: { case: row } });
-        // }
     };
 
     const handleNavigate = () => {
-        console.log(selectedCaseId);
+        if (selectedCaseId) {
+            navigate(`detail/${selectedCaseId}`);
+        }
+        // console.log(selectedCaseId);
     };
 
     const { columns } = useClaimListByClaimSearchDataTableHook({

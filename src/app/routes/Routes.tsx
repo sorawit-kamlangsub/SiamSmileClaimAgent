@@ -27,6 +27,8 @@ import ConsiderMonitorPage from "../modules/ClaimConsider/pages/ConsiderMonitorP
 import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPage.tsx";
 import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
 import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
+import ManageRefundDetail from "../modules/ManageClaimTransferDetails/pages/ManageRefundDetail.tsx";
+import ManageAdjustDetail from "../modules/ManageClaimTransferDetails/pages/ManageAdjustDetail.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -176,13 +178,43 @@ const Routes: RouteMapType[] = [
         path: "/manage/adjust-transfer",
         title: "โอนเพิ่ม",
         permissions: [],
-        element: <AdjustTransferPage />,
+        element: <Outlet />,
+        children: [
+            {
+                path: "adjust-transfer",
+                title: "โอนเพิ่ม",
+                permissions: [],
+                element: <AdjustTransferPage />,
+                index: true,
+            },
+            {
+                path: "detail/:id",
+                title: "โอนเพิ่ม - รายละเอียด",
+                element: <ManageAdjustDetail />,
+                permissions: [],
+            },
+        ],
     },
     {
         path: "/manage/refund",
         title: "คืนเงิน",
         permissions: [],
-        element: <RefundPage />,
+        element: <Outlet />,
+        children: [
+            {
+                path: "refund",
+                title: "คืนเงิน",
+                permissions: [],
+                element: <RefundPage />,
+                index: true,
+            },
+            {
+                path: "detail/:id",
+                title: "คืนเงิน - รายละเอียด",
+                element: <ManageRefundDetail />,
+                permissions: [],
+            },
+        ],
     },
     {
         path: "/manage/refund-approve",

@@ -11,11 +11,10 @@ import { useEffect, useState } from "react";
 import ClaimListByClaimSearchTable from "./ClaimListByClaimSearchTable";
 
 type DialogSearchClaimProps = {
-    navigatePath: string;
     buttonText: string;
 };
 
-const DialogSearchClaim = ({ navigatePath, buttonText }: DialogSearchClaimProps) => {
+const DialogSearchClaim = ({ buttonText }: DialogSearchClaimProps) => {
     const { dialogRefund } = useAppSelector((state) => state.refund);
     const [searchResult, setSearchResult] = useState<any>(null);
     const dispatch = useAppDispatch();
@@ -31,7 +30,7 @@ const DialogSearchClaim = ({ navigatePath, buttonText }: DialogSearchClaimProps)
         if (allAreClaimNo) {
             setSearchResult(data);
         } else {
-            navigate("/");
+            navigate(`detail/${data?.[0]?.caseId}`);
         }
     };
 
@@ -51,6 +50,12 @@ const DialogSearchClaim = ({ navigatePath, buttonText }: DialogSearchClaimProps)
             setSearchResult(null);
         };
     }, [formik.values.searchDetail]);
+
+    useEffect(() => {
+        return () => {
+            handleClose();
+        };
+    }, []);
 
     return (
         <>
@@ -129,11 +134,7 @@ const DialogSearchClaim = ({ navigatePath, buttonText }: DialogSearchClaimProps)
 
                 {searchResult && (
                     <Box sx={{ p: 2 }}>
-                        <ClaimListByClaimSearchTable
-                            claimData={searchResult}
-                            navigatePath={navigatePath}
-                            buttonText={buttonText}
-                        />
+                        <ClaimListByClaimSearchTable claimData={searchResult} buttonText={buttonText} />
                     </Box>
                 )}
             </Dialog>
