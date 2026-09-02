@@ -5,8 +5,6 @@ import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlin
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
-import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
-import KingBedOutlinedIcon from "@mui/icons-material/KingBedOutlined";
 import { MUIDataTableColumn } from "mui-datatables";
 
 import { StandardDataTable } from "../../../../../_common";
@@ -44,7 +42,6 @@ export type Step3PayoutAccount = {
 };
 
 type ClaimSummaryStep3Props = {
-    days?: { ipdDays: number; icuDays: number; bedDays: number };
     treatmentRows?: Step3TreatmentRow[];
     compensationRows?: Step3CompensationRow[];
     /** ค่าตั้งต้นจาก API คำนวณ (ยังไม่มี endpoint สำหรับหน้าพิจารณา จึง default 0) */
@@ -114,31 +111,15 @@ const SummaryLine = ({
     </>
 );
 
-const DayCard = ({ label, value, color, bg, icon }: { label: string; value: number; color: string; bg: string; icon: React.ReactNode }) => (
-    <Paper variant="outlined" sx={{ p: 2, borderRadius: 2, height: "100%", borderColor: bg, bgcolor: bg, display: "flex", alignItems: "center", gap: 1.5 }}>
-        <Box sx={{ width: 40, height: 40, borderRadius: "50%", bgcolor: "#fff", color, display: "flex", alignItems: "center", justifyContent: "center" }}>
-            {icon}
-        </Box>
-        <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
-                {label}
-            </Typography>
-            <Typography fontWeight={700} fontSize={22} color={color} lineHeight={1.1}>
-                {value} วัน
-            </Typography>
-        </Box>
-    </Paper>
-);
-
 /**
- * Step 3 : สรุปรายการเคลม (เคลมโรงพยาบาล)
+ * Step 3 : สรุปรายการเคลม (เคลมโรงพยาบาล) — ส่วนค่าใช้จ่าย/ค่าชดเชย
  *
  * Layout ย้ายมาจาก ClaimSimulate/ConfirmCalaulateModal — รายการค่ารักษา + ค่าชดเชย +
- * สรุปค่าชดเชย (โอนรวมกับค่ารักษา) + สรุปค่าใช้จ่ายโรงพยาบาล (สิทธิ์ตั้งเบิก / ส่วนเกิน)
+ * สรุปค่าชดเชย (โอนรวมกับค่ารักษา) + สรุปค่าใช้จ่ายโรงพยาบาล
+ * (ส่วน "รายละเอียดเคลม" read-only + ตารางสแกนเอกสาร ใช้ ClaimSummary ต่อด้านบน)
  * ยอดเงินรอ API คำนวณของหน้าพิจารณา ตอนนี้รับผ่าน props (default 0)
  */
 const ClaimSummaryStep3 = ({
-    days,
     treatmentRows = [],
     compensationRows = [],
     summary,
@@ -200,16 +181,6 @@ const ClaimSummaryStep3 = ({
 
     return (
         <Grid container spacing={2.5}>
-            <Grid item xs={12} sm={4}>
-                <DayCard label="IPD" value={days?.ipdDays ?? 0} color="#1A5DA8" bg="#E8F0FB" icon={<HotelOutlinedIcon />} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-                <DayCard label="ICU" value={days?.icuDays ?? 0} color="#FF6467" bg="#FEF2F2" icon={<LocalHospitalOutlinedIcon />} />
-            </Grid>
-            <Grid item xs={12} sm={4}>
-                <DayCard label="วันที่นอน" value={days?.bedDays ?? 0} color="#5EA529" bg="#F7FEE7" icon={<KingBedOutlinedIcon />} />
-            </Grid>
-
             <Grid item xs={12}>
                 <HeadingWithColor text="รายการค่ารักษา" color="blue" icon={<LocalHospitalOutlinedIcon sx={{ fontSize: 18 }} />} />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
@@ -283,11 +254,18 @@ const ClaimSummaryStep3 = ({
             <Grid item xs={12} md={6}>
                 <HeadingWithColor text="สรุปค่าใช้จ่ายโรงพยาบาล" color="blue" icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />} />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
-                    <SummaryLine label="ยอดเบิกรวม" value={fmt(calc.medicalNet)} />
+                    <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
                     <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(calc.medicalCoverPay)} />
                     <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(calc.compensateInclude)} />
                     <SummaryLine label="สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท" value={fmt(calc.medicalPay)} bold color="#1a5da8" bg="#e8f0fb" />
-                    <SummaryLine label="ส่วนเกิน (ลูกค้าจ่าย)" value={fmt(calc.medicalUnpay)} bold color="#FF6467" bg="#FEF2F2" noDivider />
+                    <SummaryLine
+                        label="ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
+                        value={fmt(calc.compensateRemain)}
+                        bold
+                        color="#15803d"
+                        bg="#F7FEE7"
+                        noDivider
+                    />
                 </Paper>
             </Grid>
 

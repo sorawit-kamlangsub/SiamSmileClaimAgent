@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Grid } from "@mui/material";
+import { Box, Button, FormControlLabel, Grid, Paper, Radio, RadioGroup, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
+import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
 import ClaimSummaryStep3 from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { swalError } from "../../../_common";
 import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
@@ -70,9 +71,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         handleClearContinuousClaim,
         handleDocumentCheckChange,
         documentCheckResultOptions,
+        claimListTypeConfig,
         detailData,
         customerDetailData,
     } = useHospitalConsiderDetailHook();
+
+    /** OPD Full : ประเภทรายการค่าใช้จ่าย Sim B1 / Sim B2 (Default Sim B2) */
+    const [simBCategory, setSimBCategory] = useState<"SimB1" | "SimB2">("SimB2");
 
     const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook({
         formik,
@@ -263,33 +268,52 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                         </Grid>
                     ) : activeStep === 1 ? (
                         <Grid container spacing={2}>
+                            {claimListTypeConfig.hasSimBSelector && (
+                                <Grid item xs={12}>
+                                    <Paper variant="outlined" sx={{ borderRadius: 2, p: 2 }}>
+                                        <Typography variant="body2" fontWeight={700} sx={{ mb: 0.5 }}>
+                                            ประเภทรายการค่าใช้จ่าย
+                                        </Typography>
+                                        <RadioGroup
+                                            row
+                                            value={simBCategory}
+                                            onChange={(e) => setSimBCategory(e.target.value as "SimB1" | "SimB2")}
+                                        >
+                                            <FormControlLabel value="SimB1" control={<Radio />} label="Sim B1" />
+                                            <FormControlLabel value="SimB2" control={<Radio />} label="Sim B2" />
+                                        </RadioGroup>
+                                    </Paper>
+                                </Grid>
+                            )}
                             <Grid item xs={12}>
                                 <TreatmentCostTable />
                             </Grid>
                         </Grid>
                     ) : (
-                        <ClaimSummaryStep3
-                            days={{
-                                ipdDays: formik.values.ipdDays ?? 0,
-                                icuDays: formik.values.icuDays ?? 0,
-                                bedDays: formik.values.totalDays ?? 0,
-                            }}
-                            treatmentRows={step3TreatmentRows}
-                            summary={{
-                                medicalNet: totalClaim,
-                                medicalCoverPay: netClaimAmount,
-                                medicalPay: netClaimAmount,
-                                medicalUnpay: totalNotCovered,
-                            }}
-                            allowSeparateCompensation={allowSeparateCompensation}
-                            payoutAccount={{
-                                phone: customerDetail?.mobilePhoneNumber ?? undefined,
-                                accountName: defaultBankAccount?.bankAccountName ?? undefined,
-                                bankName: defaultBankAccount?.bankName ?? undefined,
-                                accountNo: defaultBankAccount?.bankAccountNo ?? undefined,
-                                relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
-                            }}
-                        />
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <ClaimSummary attachedDocuments={[]} createdClaimDate={detail?.createdDate} />
+                            </Grid>
+                            <Grid item xs={12}>
+                                <ClaimSummaryStep3
+                                    treatmentRows={step3TreatmentRows}
+                                    summary={{
+                                        medicalNet: totalClaim,
+                                        medicalCoverPay: netClaimAmount,
+                                        medicalPay: netClaimAmount,
+                                        medicalUnpay: totalNotCovered,
+                                    }}
+                                    allowSeparateCompensation={allowSeparateCompensation}
+                                    payoutAccount={{
+                                        phone: customerDetail?.mobilePhoneNumber ?? undefined,
+                                        accountName: defaultBankAccount?.bankAccountName ?? undefined,
+                                        bankName: defaultBankAccount?.bankName ?? undefined,
+                                        accountNo: defaultBankAccount?.bankAccountNo ?? undefined,
+                                        relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
+                                    }}
+                                />
+                            </Grid>
+                        </Grid>
                     )}
                 </Box>
 
