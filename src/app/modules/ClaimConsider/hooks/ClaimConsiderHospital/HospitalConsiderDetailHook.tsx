@@ -24,7 +24,6 @@ import {
     DocumentCheckRow,
     MOCK_CONTINUOUS_CLAIMS,
     MOCK_DOCUMENT_CHECK_ROWS,
-    MOCK_HOSPITAL_CLAIM,
     parseClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -517,8 +516,6 @@ const useHospitalConsiderDetailHook = () => {
         handleDocumentCheckChange,
         documentCheckResultOptions,
         documentCheckResultOptionsLoading,
-        // ยังไม่มี API : header ใช้ประกอบตอนข้อมูลจริงยังไม่ครบ
-        mockHeader: MOCK_HOSPITAL_CLAIM,
     };
 };
 

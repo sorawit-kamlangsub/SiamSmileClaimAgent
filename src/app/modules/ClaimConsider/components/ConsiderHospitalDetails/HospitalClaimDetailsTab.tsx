@@ -13,7 +13,6 @@ import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/Conside
 import { EMPTY_STATE_SX } from "../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
-import { MOCK_HOSPITAL_CLAIM } from "./mock/hospitalConsiderMock";
 import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
@@ -72,10 +71,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         customerDetailData,
     });
 
+    const detail = detailData?.data;
+    const customerDetail = customerDetailData?.data;
     const continuousClaim = formik.values.continuousClaim;
 
-    /** เลขที่เคสของเคลมที่กำลังพิจารณา (เคสปัจจุบันเป็นลำดับที่ 2 ของการรักษาต่อเนื่อง) */
-    const currentCaseNo = `${MOCK_HOSPITAL_CLAIM.caseNo}-02`;
+    /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
+    const currentCaseNo = detail?.caseNo ?? "";
+    const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
     const handleNext = async () => {
         // Step 1 : ต้องผ่าน Validate ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท พิจารณาเคลม รพ. OPD Half)
@@ -123,7 +125,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     <ContinuousClaimBanner
                                         claim={continuousClaim}
                                         currentCaseNo={currentCaseNo}
-                                        currentCaseStatus={MOCK_HOSPITAL_CLAIM.claimStatus}
+                                        currentCaseStatus={currentCaseStatus}
                                     />
                                 </Grid>
                             )}
@@ -162,8 +164,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             </Grid>
                             <Grid item xs={12} sx={readOnlySx}>
                                 <ConsiderSection
-                                    productId={6}
-                                    aplicationCode={MOCK_HOSPITAL_CLAIM.applicationId}
+                                    productId={customerDetail?.productTypeId}
+                                    aplicationCode={customerDetail?.policyCode ?? ""}
                                     decisionReason={decisionReason}
                                     decisionReasonLoading={decisionReasonLoading}
                                 />
