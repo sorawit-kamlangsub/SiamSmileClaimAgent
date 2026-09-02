@@ -127,7 +127,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                             registrations: [
                                 {
-                                    notificationDate: isDeath || isDisability ? form.notificationDate : dayjs(),
+                                    notificationDate: isDeath || isDisability ? form.notificationDate : undefined,
                                     notifyBy: userProfile?.fullName,
                                     initialCoverageTypeId: form.coverageTypeId,
                                     initialCaseAmount: form.transferAmount,

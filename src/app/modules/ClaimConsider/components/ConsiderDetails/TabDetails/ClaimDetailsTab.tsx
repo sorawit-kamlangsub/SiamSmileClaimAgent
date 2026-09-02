@@ -8,8 +8,6 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
 import {
-    CalculateCaseClaim,
-    CalculateCaseClaimDtoRequest,
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
@@ -36,7 +34,6 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         incidentType,
         incidentTypeLoading,
         coverageType,
-        causeOfIncident,
         medicalType,
         incidentTypeMappingLoading,
         decisionReason,
@@ -73,7 +70,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             incidentType={incidentType}
                                             incidentTypeLoading={incidentTypeLoading}
                                             coverageType={coverageType}
-                                            causeOfIncident={causeOfIncident}
+                                            causeOfIncident={[]}
                                             medicalType={medicalType}
                                             incidentTypeMappingLoading={incidentTypeMappingLoading}
                                         />
@@ -144,7 +141,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                         <Button
                                             variant="contained"
                                             startIcon={<SaveIcon />}
-                                            onClick={handleConfirmConsider}
+                                            onClick={() => handleConfirmConsider()}
                                             sx={{
                                                 bgcolor: "#2E7D32",
                                                 "&:hover": { bgcolor: "#1B5E20" },
@@ -171,7 +168,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             bgcolor: "#2E7D32",
                                             "&:hover": { bgcolor: "#1B5E20" },
                                         }}
-                                        onClick={handleConfirmConsider}
+                                        onClick={() => handleConfirmConsider(2)}
                                     >
                                         อนุมัติ
                                     </Button>

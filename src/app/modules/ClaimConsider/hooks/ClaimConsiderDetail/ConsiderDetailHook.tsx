@@ -16,6 +16,7 @@ import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
+
 const calculateStayDays = (
     admissionDate: dayjs.Dayjs | null | undefined,
     admissionTime: dayjs.Dayjs | null | undefined,
@@ -45,6 +46,7 @@ const calculateStayDays = (
 
     return fullDays + (remainingMinutes >= SIX_HOURS ? 1 : 0);
 };
+
 const useConsiderDetailHook = () => {
     const { id } = useParams();
     const claimId = id ? atob(id) : undefined;
@@ -160,110 +162,156 @@ const useConsiderDetailHook = () => {
         [incidentTypeMapping, formik.values.coverageTypeId]
     );
 
-    const causeOfIncident: ChipOption[] = useMemo(
-        () => [
-            ...new Map(
-                (incidentTypeMapping?.data ?? [])
-                    .filter((item) => item.coverageTypeId === formik.values.coverageTypeId)
-                    .map((item) => [
-                        item.causeOfIncidentId,
-                        { id: item.causeOfIncidentId ?? 0, name: item.causeOfIncidentName ?? "" },
-                    ])
-            ).values(),
-        ],
-        [incidentTypeMapping, formik.values.coverageTypeId]
-    );
-
-    const hasSyncedMainRef = useRef(false); // incidentType, coverageType, time, diagnoses, remark
-    const hasSyncedMedicalRef = useRef(false); // medicalType, causeOfIncident (ต้องรอ coverageTypeId sync ก่อน)
+    const hasSyncedMainRef = useRef(false);
     const prevIncidentTypeIdRef = useRef(formik.values.incidentTypeId);
     const prevCoverageTypeIdRef = useRef(formik.values.coverageTypeId);
 
-    // ---- phase 1: sync incidentType, coverageType, date/time, diagnoses, remark ----
+    // ---- phase 1: sync initial values from detail (ใช้ setValues ครั้งเดียว) ----
     useEffect(() => {
         if (!detail || hasSyncedMainRef.current) return;
         if (incidentType.length === 0 || coverageType.length === 0) return;
+        if (!incidentTypeMapping?.data) return;
 
         const matchedIncident = incidentType.find((item) => item.id === detail.incidentTypeId);
+        const matchedCoverage = coverageType.find((item) => item.id === detail.coverageTypeId);
+
+        const newValues: Partial<ClaimConsiderValues> = {};
+
         if (matchedIncident) {
-            formik.setFieldValue("incidentTypeId", matchedIncident.id, false);
-            formik.setFieldValue("incidentTypeName", matchedIncident.name, false);
+            newValues.incidentTypeId = matchedIncident.id;
+            newValues.incidentTypeName = matchedIncident.name;
             prevIncidentTypeIdRef.current = matchedIncident.id;
         }
-
-        const matchedCoverage = coverageType.find((item) => item.id === detail.coverageTypeId);
         if (matchedCoverage) {
-            formik.setFieldValue("coverageTypeId", matchedCoverage.id, false);
-            formik.setFieldValue("coverageTypeName", matchedCoverage.name, false);
+            newValues.coverageTypeId = matchedCoverage.id;
+            newValues.coverageTypeName = matchedCoverage.name;
             prevCoverageTypeIdRef.current = matchedCoverage.id;
         }
 
+        // ---- คำนวณ medicalTypeId จาก incidentTypeMapping โดยตรง ----
+        const mappingData = incidentTypeMapping.data;
+        let medicalTypeId: number | undefined;
+        let medicalTypeName: string | undefined;
+
+        // 1. ถ้า detail มี medicalTypeId ให้ใช้ค่าจาก mapping ที่ตรงกับ incident+coverage+medical
+        if (detail.medicalTypeId) {
+            const found = mappingData.find(
+                (item) =>
+                    item.medicalTypeId === detail.medicalTypeId &&
+                    item.incidentTypeId === detail.incidentTypeId &&
+                    item.coverageTypeId === detail.coverageTypeId
+            );
+            if (found) {
+                medicalTypeId = found.medicalTypeId;
+                medicalTypeName = found.medicalTypeCode;
+            }
+        }
+
+        // 2. ถ้ายังไม่มี และเข้าเงื่อนไขพิเศษ (incidentType 2/3 + coverageType 3) ให้ใช้ medicalTypeId = 2
+        if (!medicalTypeId && matchedIncident && matchedCoverage) {
+            const isTargetIncident = [2, 3].includes(matchedIncident.id);
+            const isTargetCoverage = matchedCoverage.id === 3;
+            if (isTargetIncident && isTargetCoverage) {
+                const found = mappingData.find(
+                    (item) =>
+                        item.medicalTypeId === 2 &&
+                        item.incidentTypeId === matchedIncident.id &&
+                        item.coverageTypeId === matchedCoverage.id
+                );
+                if (found) {
+                    medicalTypeId = 2;
+                    medicalTypeName = found.medicalTypeCode;
+                }
+            }
+        }
+
+        if (medicalTypeId) {
+            newValues.medicalTypeId = medicalTypeId;
+            newValues.medicalTypeName = medicalTypeName ?? "";
+        }
+
+        // ---- วันที่และข้อมูลอื่นๆ ----
         if (detail.admissionDate) {
-            formik.setFieldValue("admissionDate", dayjs(detail.admissionDate), false);
-            formik.setFieldValue("admissionTime", dayjs(detail.admissionDate), false);
+            newValues.admissionDate = dayjs(detail.admissionDate);
+            newValues.admissionTime = dayjs(detail.admissionDate);
         }
         if (detail.incidentDate) {
-            formik.setFieldValue("incidentDate", dayjs(detail.incidentDate), false);
-            formik.setFieldValue("incidentTime", dayjs(detail.incidentDate), false);
+            newValues.incidentDate = dayjs(detail.incidentDate);
+            newValues.incidentTime = dayjs(detail.incidentDate);
         }
         if (detail.dischargeDate) {
-            formik.setFieldValue("dischargeDate", dayjs(detail.dischargeDate), false);
-            formik.setFieldValue("dischargeTime", dayjs(detail.dischargeDate), false);
+            newValues.dischargeDate = dayjs(detail.dischargeDate);
+            newValues.dischargeTime = dayjs(detail.dischargeDate);
         }
+        if (detail.notificationDate) {
+            newValues.notificationDate = dayjs(detail.notificationDate);
+        }
+        if (detail.documentCompleteDate) {
+            newValues.documentCompleteDate = dayjs(detail.documentCompleteDate);
+        }
+        newValues.hospitalId = detail.hospitalId;
+        newValues.chiefComplaintId = detail.chiefComplaintId;
+        newValues.diagnoses = [
+            { icd10Id: detail.icD10_1stId ?? undefined, icd10Detail: undefined },
+            { icd10Id: detail.icD10_2ndId ?? undefined, icd10Detail: undefined },
+            { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
+        ];
+        newValues.detail = detail.remark;
 
-        formik.setFieldValue(
-            "diagnoses",
-            [
-                { icd10Id: detail.icD10_1stId ?? undefined, icd10Detail: undefined },
-                { icd10Id: detail.icD10_2ndId ?? undefined, icd10Detail: undefined },
-                { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
-            ],
-            false
-        );
-
-        formik.setFieldValue("detail", detail.remark, false);
-
+        // ตั้งค่าทั้งหมดพร้อมกัน
+        formik.setValues((prev) => ({ ...prev, ...newValues }), false);
         hasSyncedMainRef.current = true;
-    }, [detail, incidentType, coverageType]);
+        dispatch(setEnabled(true));
+    }, [detail, incidentType, coverageType, incidentTypeMapping]);
 
-    // ---- phase 2: sync medicalType/causeOfIncident (ต้องรอ coverageTypeId ถูก set ไปแล้วจาก phase 1 ก่อน) ----
+    // ---- cascade reset: จัดการเมื่อ incidentTypeId หรือ coverageTypeId เปลี่ยน ----
     useEffect(() => {
-        if (!detail || !hasSyncedMainRef.current || hasSyncedMedicalRef.current) return;
-        if (medicalType.length === 0 && causeOfIncident.length === 0) return;
+        if (!hasSyncedMainRef.current) return;
 
-        const matchedMedical = medicalType.find((item) => item.id === detail.medicalTypeId);
-        if (matchedMedical) {
-            formik.setFieldValue("medicalTypeId", matchedMedical.id, false);
-            formik.setFieldValue("medicalTypeName", matchedMedical.name, false);
+        const currentIncident = formik.values.incidentTypeId;
+        const currentCoverage = formik.values.coverageTypeId;
+        const prevIncident = prevIncidentTypeIdRef.current;
+        const prevCoverage = prevCoverageTypeIdRef.current;
+
+        // กรณี incidentTypeId เปลี่ยน (และไม่ใช่ undefined)
+        if (currentIncident !== prevIncident && currentIncident !== undefined) {
+            formik.setFieldValue("coverageTypeId", undefined, false);
+            formik.setFieldValue("coverageTypeName", undefined, false);
+            formik.setFieldValue("medicalTypeId", undefined, false);
+            formik.setFieldValue("causeOfIncidentId", undefined, false);
+            prevIncidentTypeIdRef.current = currentIncident;
+            prevCoverageTypeIdRef.current = undefined;
+            return; // coverage ถูก reset แล้ว ยังไม่ต้องตั้ง medical
         }
 
+        // กรณี coverageTypeId เปลี่ยน (และมีค่า)
+        if (currentCoverage !== prevCoverage && currentCoverage !== undefined) {
+            const isTargetIncidentType = [2, 3].includes(currentIncident ?? 0);
+            const isTargetCoverageType = currentCoverage === 3;
+            let medicalId: number | undefined;
+            let medicalName: string = "";
+            if (isTargetIncidentType && isTargetCoverageType) {
+                const matchedMedical = medicalType.find((item) => item.id === 2);
+                medicalId = 2;
+                medicalName = matchedMedical?.name ?? "";
+            } else {
+                // ใช้ค่าเดิมจาก detail ถ้ามี หรือหา medicalType ตัวแรกที่มี
+                const matchedMedicalOther = medicalType.find((item) => detail?.medicalTypeId === item.id);
+                medicalId = matchedMedicalOther?.id;
+                medicalName = matchedMedicalOther?.name ?? "";
+                // ถ้าไม่มี ให้เลือกตัวแรก (ป้องกันกรณีไม่มี)
+                if (!medicalId && medicalType.length > 0) {
+                    medicalId = medicalType[0].id;
+                    medicalName = medicalType[0].name;
+                }
+            }
+            formik.setFieldValue("medicalTypeId", medicalId, false);
+            formik.setFieldValue("medicalTypeName", medicalName, false);
+            prevCoverageTypeIdRef.current = currentCoverage;
+        }
+    }, [formik.values.incidentTypeId, formik.values.coverageTypeId]);
 
-        hasSyncedMedicalRef.current = true;
-    }, [detail, medicalType]);
-
-    // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
-    useEffect(() => {
-        if (!hasSyncedMainRef.current) return;
-        if (prevIncidentTypeIdRef.current === formik.values.incidentTypeId) return;
-
-        formik.setFieldValue("coverageTypeId", undefined, false);
-        formik.setFieldValue("coverageTypeName", undefined, false);
-        formik.setFieldValue("medicalTypeId", undefined, false);
-        formik.setFieldValue("causeOfIncidentId", undefined, false);
-        prevIncidentTypeIdRef.current = formik.values.incidentTypeId;
-        prevCoverageTypeIdRef.current = undefined;
-    }, [formik.values.incidentTypeId]);
-
-    // ---- reset cascade: user เปลี่ยน coverageTypeId เอง ----
-    useEffect(() => {
-        if (!hasSyncedMainRef.current) return;
-        if (prevCoverageTypeIdRef.current === formik.values.coverageTypeId) return;
-
-        formik.setFieldValue("medicalTypeId", undefined, false);
-        formik.setFieldValue("causeOfIncidentId", undefined, false);
-        prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
-    }, [formik.values.coverageTypeId]);
-
+    // ---- คำนวณ totalDays ----
     useEffect(() => {
         const totalDays = calculateStayDays(
             formik.values.admissionDate,
@@ -271,7 +319,6 @@ const useConsiderDetailHook = () => {
             formik.values.dischargeDate,
             formik.values.dischargeTime
         );
-
         if (formik.values.totalDays !== totalDays) {
             formik.setFieldValue("totalDays", totalDays, false);
         }
@@ -281,19 +328,6 @@ const useConsiderDetailHook = () => {
         formik.values.dischargeDate,
         formik.values.dischargeTime,
     ]);
-    useEffect(() => {
-        if (!detail) return;
-        dispatch(setEnabled(true));
-
-        return () => {
-            dispatch(setEnabled(false));
-        };
-    }, [detail]);
-
-    // useEffect(() => {
-    //     dispatch(setClaimForm(formik.values));
-    //     console.log("sync to redux →", formik.values);
-    // }, [formik.values]);
 
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
@@ -307,7 +341,6 @@ const useConsiderDetailHook = () => {
         incidentTypeMapping,
         coverageType,
         medicalType,
-        causeOfIncident,
         detailDataLoading,
         customerDetailLoading,
         incidentTypeMappingLoading,

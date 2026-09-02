@@ -17,7 +17,7 @@ const ConsiderMonitorPage = () => {
         dateFrom: dayjs(),
         dateTo: dayjs(),
         isSearch: true,
-        path: "",
+        path: "customers",
     });
     const { dashboardData, dashboardDataLoading } = useDashboardHook(appliedFilter);
     const handleSearch = () => {

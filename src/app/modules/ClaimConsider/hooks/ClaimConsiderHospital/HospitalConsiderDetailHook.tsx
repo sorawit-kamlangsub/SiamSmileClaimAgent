@@ -2,21 +2,32 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
-import { CoverageType } from "../../../../functionHelpers";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
-import { useGetDecisionReason, useGetIncidentType, useGetIncidentTypeMapping } from "../../../../api/coreClaimMastersApi";
+import { CoverageType, MedicalType, formatDateString } from "../../../../functionHelpers";
+import {
+    useGetClaimContinue,
+    useGetClaimDetailConsider,
+    useGetCustomerDetailById,
+} from "../../../../api/coreClaimApi";
+import {
+    useGetDecisionReason,
+    useGetDocumentReviewStatus,
+    useGetIncidentType,
+    useGetIncidentTypeMapping,
+} from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
 import {
     CLAIM_LIST_TYPE_CONFIG,
+    ClaimListType,
     ContinuousClaimRow,
     DOCUMENT_CHECK_RESULTS,
+    DOCUMENT_CHECK_RESULT_COLORS,
+    DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
+    DocumentCheckResultOption,
     DocumentCheckRow,
-    MOCK_CONTINUOUS_CLAIMS,
-    MOCK_DOCUMENT_CHECK_ROWS,
-    MOCK_HOSPITAL_CLAIM,
+    getDocumentCheckRows,
     parseClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -27,6 +38,14 @@ import {
  * (RecordClaimData, ConsiderSection) แล้วเพิ่ม Field เฉพาะของเคลมโรงพยาบาล
  */
 export interface HospitalConsiderValues extends ClaimConsiderValues {
+    /**
+     * สาเหตุของการเกิดเหตุ
+     * หน้าเคลมลูกค้าตัดฟิลด์นี้ออกจาก ClaimConsiderValues แล้ว แต่เคลมโรงพยาบาลยังใช้
+     * (ความคุ้มครองกลุ่มเสียชีวิต/ทุพพลภาพ) จึงประกาศเองที่นี่
+     */
+    causeOfIncidentId: number | undefined;
+    causeOfIncidentName: string | undefined;
+
     /** เคลมต่อเนื่อง */
     isContinuousClaim: boolean;
     continuousClaim: ContinuousClaimRow | undefined;
@@ -34,6 +53,9 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     /** ข้อมูลการเข้ารับการรักษา */
     hn: string;
     vn: string;
+    /** AN + ข้อบ่งชี้การ Admit : เฉพาะประเภทการรักษา IPD */
+    an: string;
+    admitIndication: string;
     underlyingDisease: string;
     treatmentMethod: string;
     labResult: string;
@@ -55,7 +77,7 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
  * Sync ทับจาก GetClaimDetailConsider ส่วนฟิลด์เฉพาะเคลมโรงพยาบาล (HN/VN/แพทย์/
  * ข้อมูลการรักษา) ฝั่ง BE ยังไม่ส่งมา จึงยังไม่มีค่าเริ่มต้น
  */
-const buildInitialValues = (): HospitalConsiderValues => ({
+const buildInitialValues = (claimListType: ClaimListType): HospitalConsiderValues => ({
     incidentTypeId: undefined,
     incidentTypeName: undefined,
     coverageTypeId: undefined,
@@ -70,10 +92,9 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     admissionTime: undefined,
     dischargeDate: undefined,
     dischargeTime: undefined,
-    documentCompleteDate: undefined,
+    // ชีทระบุ Default = วันที่ปัจจุบัน
+    documentCompleteDate: dayjs(),
     notificationDate: undefined,
-    deathDate: undefined,
-    deathTime: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,
@@ -94,6 +115,8 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 
     hn: "",
     vn: "",
+    an: "",
+    admitIndication: "",
     underlyingDisease: "",
     treatmentMethod: "",
     labResult: "",
@@ -103,7 +126,7 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     doctorLicenseNo: "",
     doctorName: "",
 
-    documentChecks: MOCK_DOCUMENT_CHECK_ROWS,
+    documentChecks: getDocumentCheckRows(claimListType),
 });
 
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
@@ -118,6 +141,7 @@ const FIELD_ERROR_ORDER = [
     "coverageTypeId",
     "medicalTypeId",
     "causeOfIncidentId",
+    "notificationDate",
     "documentCompleteDate",
     "incidentDate",
     "admissionDate",
@@ -125,8 +149,11 @@ const FIELD_ERROR_ORDER = [
     "hospitalId",
     "chiefComplaintId",
     "diagnoses",
+    "ipdDays",
     "hn",
     "vn",
+    "an",
+    "admitIndication",
     "underlyingDisease",
     "treatmentMethod",
     "hasProcedure",
@@ -156,6 +183,7 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     if (isMedical && !values.medicalTypeId) errors.medicalTypeId = sel;
     if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = sel;
 
+    if (!values.notificationDate) errors.notificationDate = req;
     if (!values.documentCompleteDate) errors.documentCompleteDate = req;
     if (!values.incidentDate) errors.incidentDate = req;
     if (!values.admissionDate) errors.admissionDate = req;
@@ -170,6 +198,12 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     // ── ข้อมูลการเข้ารับการรักษา ──
     if (!values.hn.trim()) errors.hn = req;
     if (!values.vn.trim()) errors.vn = req;
+    // AN + ข้อบ่งชี้การ Admit + จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
+    if (values.medicalTypeId === MedicalType.IPD) {
+        if (!values.an.trim()) errors.an = req;
+        if (!values.admitIndication.trim()) errors.admitIndication = req;
+        if (!values.ipdDays || values.ipdDays < 1) errors.ipdDays = req;
+    }
     if (!values.underlyingDisease.trim()) errors.underlyingDisease = req;
     if (!values.treatmentMethod.trim()) errors.treatmentMethod = req;
     if (!values.hasProcedure) errors.hasProcedure = sel;
@@ -220,6 +254,29 @@ const useHospitalConsiderDetailHook = () => {
     );
     const customerDetail = customerDetailData?.data;
 
+    /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม + แถบสรุป) */
+    const { data: claimContinueData, isLoading: continuousClaimRowsLoading } = useGetClaimContinue(
+        customerDetail?.policyCode ?? undefined
+    );
+    const continuousClaimRows: ContinuousClaimRow[] = useMemo(
+        () =>
+            (claimContinueData?.data ?? []).map((item) => ({
+                claimNo: item.claimNo ?? "-",
+                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
+                incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                totalClaimAmount: item.totalCaseAmount ?? 0,
+                totalPaidAmount: item.totalPaidAmount ?? 0,
+                admissionDate: formatDateString(item.admissionDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                claimInfo: item.claimDetail ?? "-",
+                diagnosis1: item.icD10Detail ?? "-",
+                remainingLimit: item.remainAmount ?? 0,
+                // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
+                previousCaseNo: "-",
+                previousCaseStatus: "-",
+            })),
+        [claimContinueData]
+    );
+
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const incidentType: ClaimTypeOption[] =
         incidentTypeRaw?.data?.map((item) => ({
@@ -229,7 +286,7 @@ const useHospitalConsiderDetailHook = () => {
         })) ?? [];
 
     const formik = useFormik<HospitalConsiderValues>({
-        initialValues: buildInitialValues(),
+        initialValues: buildInitialValues(claimListType),
         enableReinitialize: false,
         validate: validateHospitalConsider,
         onSubmit: () => undefined,
@@ -358,6 +415,9 @@ const useHospitalConsiderDetailHook = () => {
             formik.setFieldValue("dischargeDate", dayjs(detail.dischargeDate), false);
             formik.setFieldValue("dischargeTime", dayjs(detail.dischargeDate), false);
         }
+        if (detail.notificationDate) {
+            formik.setFieldValue("notificationDate", dayjs(detail.notificationDate), false);
+        }
 
         formik.setFieldValue("hospitalId", detail.hospitalId ?? undefined, false);
         formik.setFieldValue("chiefComplaintId", detail.chiefComplaintId ?? undefined, false);
@@ -460,6 +520,22 @@ const useHospitalConsiderDetailHook = () => {
         formik.values.considerResult
     );
 
+    /** ตัวเลือกผลการตรวจเอกสาร (ผ่าน / ไม่ผ่าน / รอเอกสารเพิ่มเติม) จาก Master API */
+    const { data: documentReviewStatusRaw, isLoading: documentCheckResultOptionsLoading } = useGetDocumentReviewStatus();
+    const documentCheckResultOptions: DocumentCheckResultOption[] = useMemo(
+        () =>
+            [...(documentReviewStatusRaw?.data ?? [])]
+                .sort((a, b) => (a.indexId ?? 0) - (b.indexId ?? 0))
+                .map((item) => ({
+                    value: item.documentReviewStatusId ?? 0,
+                    label: item.documentReviewStatusName ?? "",
+                    color:
+                        DOCUMENT_CHECK_RESULT_COLORS[item.documentReviewStatusId ?? 0] ??
+                        DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
+                })),
+        [documentReviewStatusRaw]
+    );
+
     return {
         formik,
         validateStep1,
@@ -478,15 +554,16 @@ const useHospitalConsiderDetailHook = () => {
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
-        continuousClaimRows: MOCK_CONTINUOUS_CLAIMS,
+        continuousClaimRows,
+        continuousClaimRowsLoading,
         continuousClaimOpen,
         setContinuousClaimOpen,
         handleToggleContinuousClaim,
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
         handleDocumentCheckChange,
-        // ยังไม่มี API : header ใช้ประกอบตอนข้อมูลจริงยังไม่ครบ
-        mockHeader: MOCK_HOSPITAL_CLAIM,
+        documentCheckResultOptions,
+        documentCheckResultOptionsLoading,
     };
 };
 

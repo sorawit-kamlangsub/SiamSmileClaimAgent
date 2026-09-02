@@ -1,24 +1,12 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import {
-    Box,
-    Checkbox,
-    Divider,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    Paper,
-    Snackbar,
-    Tooltip,
-    Typography,
-    Zoom,
-} from "@mui/material";
+import { Box, Checkbox, Divider, FormControlLabel, Grid, IconButton, Paper, Tooltip, Typography } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import BedIcon from "@mui/icons-material/Bed";
+import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../../_common";
@@ -43,6 +31,12 @@ import { calculateSummary } from "../../../../../ClaimSimulate/components/Confir
 type ClaimSummaryProps = {
     attachedDocuments: CaseDocumentV2Request[];
     createdClaimDate: Dayjs | undefined;
+    /**
+     * แสดงเฉพาะส่วนหัว : รายละเอียดเคลม (read-only) + ตารางสแกนเอกสาร
+     * ใช้ตอนหน้าพิจารณาเคลมโรงพยาบาลที่มี ClaimSummaryStep3 รับผิดชอบส่วนตัวเลข
+     * (รายการค่ารักษา / ค่าชดเชย / สรุป / จำนวนวันนอน) อยู่แล้ว กัน render ซ้ำ
+     */
+    headerOnly?: boolean;
 };
 const formatDate = (date: Dayjs | undefined) => formatDateString(date?.toString(), "DD/MM/BBBB") ?? undefined;
 
@@ -191,7 +185,7 @@ const SummaryLine = ({
         {!noDivider && <Divider />}
     </>
 );
-const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps) => {
+const ClaimSummary = ({ attachedDocuments, createdClaimDate, headerOnly = false }: ClaimSummaryProps) => {
     const { documentScanList, documentDetailById } = useAppSelector(claimPHSelector);
     const { calculateResult } = useAppSelector(claimConsiderSelector);
     const { values } = useFormikContext<ClaimConsiderValues>();
@@ -360,94 +354,96 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                 <CustomDisplayText label="คำวินิจฉัย 3" value={formatDiagnosis(diagnosis3)} xs={12} md={12} />
                 <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
             </Grid>
-            <Box
-                sx={{
-                    mx: 2,
-                    mb: 2,
-                    pt: 2,
-                    borderTop: "1px solid #E0E0E0",
-                }}
-            >
-                {/* Header */}
+            {!headerOnly && (
                 <Box
                     sx={{
-                        display: "flex",
-                        alignItems: "flex-start",
-                        gap: 1,
-                        mb: 1.5,
+                        mx: 2,
+                        mb: 2,
+                        pt: 2,
+                        borderTop: "1px solid #E0E0E0",
                     }}
                 >
-                    {/* Icon */}
+                    {/* Header */}
                     <Box
                         sx={{
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "center",
-                            width: 32,
-                            height: 32,
-                            flexShrink: 0,
-                            borderRadius: 1,
-                            bgcolor: "#E2F2FF",
+                            alignItems: "flex-start",
+                            gap: 1,
+                            mb: 1.5,
                         }}
                     >
-                        <BedIcon
+                        {/* Icon */}
+                        <Box
                             sx={{
-                                fontSize: 20,
-                                color: "#007AC1",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                                width: 32,
+                                height: 32,
+                                flexShrink: 0,
+                                borderRadius: 1,
+                                bgcolor: "#E2F2FF",
                             }}
+                        >
+                            <BedIcon
+                                sx={{
+                                    fontSize: 20,
+                                    color: "#007AC1",
+                                }}
+                            />
+                        </Box>
+
+                        {/* Title */}
+                        <Box>
+                            <Typography
+                                sx={{
+                                    color: "#007AC1",
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                    lineHeight: 1.4,
+                                }}
+                            >
+                                สรุปจำนวนวันนอน
+                            </Typography>
+
+                            <Typography
+                                sx={{
+                                    color: "#667085",
+                                    fontSize: 12,
+                                    lineHeight: 1.4,
+                                    mt: 0.25,
+                                }}
+                            >
+                                IPD
+                            </Typography>
+                        </Box>
+                    </Box>
+
+                    {/* Stay Day Summary */}
+                    <Grid container spacing={1.5}>
+                        <StayDayBox
+                            label="จำนวนวัน IPD"
+                            value={values.ipdDays ?? 0}
+                            borderColor="#D6E8FF"
+                            valueColor="#007AC1"
                         />
-                    </Box>
 
-                    {/* Title */}
-                    <Box>
-                        <Typography
-                            sx={{
-                                color: "#007AC1",
-                                fontWeight: 700,
-                                fontSize: 13,
-                                lineHeight: 1.4,
-                            }}
-                        >
-                            สรุปจำนวนวันนอน
-                        </Typography>
+                        <StayDayBox
+                            label="จำนวนวัน ICU"
+                            value={values.icuDays ?? 0}
+                            borderColor="#FFD9B3"
+                            valueColor="#E53935"
+                        />
 
-                        <Typography
-                            sx={{
-                                color: "#667085",
-                                fontSize: 12,
-                                lineHeight: 1.4,
-                                mt: 0.25,
-                            }}
-                        >
-                            IPD
-                        </Typography>
-                    </Box>
+                        <StayDayBox
+                            label="จำนวนวันนอน"
+                            value={values.totalDays ?? 0}
+                            borderColor="#D0D5DD"
+                            valueColor="#344054"
+                        />
+                    </Grid>
                 </Box>
-
-                {/* Stay Day Summary */}
-                <Grid container spacing={1.5}>
-                    <StayDayBox
-                        label="จำนวนวัน IPD"
-                        value={values.ipdDays ?? 0}
-                        borderColor="#D6E8FF"
-                        valueColor="#007AC1"
-                    />
-
-                    <StayDayBox
-                        label="จำนวนวัน ICU"
-                        value={values.icuDays ?? 0}
-                        borderColor="#FFD9B3"
-                        valueColor="#E53935"
-                    />
-
-                    <StayDayBox
-                        label="จำนวนวันนอน"
-                        value={values.totalDays ?? 0}
-                        borderColor="#D0D5DD"
-                        valueColor="#344054"
-                    />
-                </Grid>
-            </Box>
+            )}
             <StandardDataTable
                 name="claimSummaryDocumentTable"
                 title=""
@@ -460,156 +456,191 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                 displayFooter={false}
                 options={defaultOptionStandardDataTable}
             />
-            <Grid container spacing={2} mt={1}>
-                <Grid item xs={12}>
-                    <HeadingWithColor
-                        text="ค่าชดเชย"
-                        color="blue"
-                        icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 18 }} />}
-                        sx={{ mb: 1 }}
-                    />
-                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                        <StandardDataTable
-                            name="CompensationTable"
-                            title=""
-                            data={compensationTableData}
-                            isLoading={false}
-                            columns={compensationColumns}
-                            color="primary"
-                            columnHeaderAlign="center"
-                            displayToolbar={false}
-                            displayFooter={false}
-                            options={{
-                                ...tableOptions,
-                                setRowProps: (_r, _d, i) => ({
-                                    style:
-                                        i === compensationTableData.length - 1
-                                            ? { backgroundColor: "#3d3d3d" }
-                                            : i % 2 === 0
-                                            ? { backgroundColor: "#ffffff" }
-                                            : { backgroundColor: "#f9f9f9" },
-                                }),
-                            }}
-                            sx={tableSx}
+            {!headerOnly && (
+                <Grid container spacing={2} mt={1}>
+                    <Grid item xs={12}>
+                        <HeadingWithColor
+                            text="รายการค่ารักษา"
+                            color="blue"
+                            icon={<LocalHospitalOutlinedIcon sx={{ fontSize: 18 }} />}
+                            sx={{ mb: 1 }}
                         />
-                    </Paper>
-                </Grid>
-
-                <Grid item xs={12} md={6}>
-                    <HeadingWithColor
-                        text="สรุปค่าชดเชย"
-                        color="blue"
-                        icon={<SummarizeOutlinedIcon sx={{ fontSize: 18 }} />}
-                        sx={{ mb: 1 }}
-                    />
-                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                        <Box px={1.5} py={0.5} bgcolor="#f8f9fa">
-                            <FormControlLabel
-                                control={
-                                    <Checkbox
-                                        size="small"
-                                        checked={mergeOption === "single"}
-                                        onChange={() => setMergeOption("single")}
-                                        color="primary"
-                                    />
-                                }
-                                label={<Typography variant="body2">โอนค่าชดเชยรวมกับค่ารักษา</Typography>}
-                                sx={{ m: 0, display: "flex", py: 0.5 }}
+                        <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+                            <StandardDataTable
+                                name="TreatmentSummaryTable"
+                                title=""
+                                data={treatmentTableData}
+                                isLoading={false}
+                                columns={treatmentColumns}
+                                color="primary"
+                                columnHeaderAlign="center"
+                                displayToolbar={false}
+                                displayFooter={false}
+                                options={{
+                                    ...tableOptions,
+                                    setRowProps: (_r, _d, i) => ({
+                                        style:
+                                            i === treatmentTableData.length - 1
+                                                ? { backgroundColor: "#3d3d3d" }
+                                                : i % 2 === 0
+                                                ? { backgroundColor: "#ffffff" }
+                                                : { backgroundColor: "#f9f9f9" },
+                                    }),
+                                }}
+                                sx={tableSx}
                             />
-                            <Divider />
-                        </Box>
-                        <Divider />
-                        <SummaryLine label="ค่าชดเชยรวม" value={fmt(summary.compensateNet)} />
-                        <SummaryLine
-                            label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
-                            value={fmt(summary.compensateInclude)}
+                        </Paper>
+                    </Grid>
+                    <Grid item xs={12}>
+                        <HeadingWithColor
+                            text="ค่าชดเชย"
+                            color="blue"
+                            icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 18 }} />}
+                            sx={{ mb: 1 }}
                         />
-                        <Box
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            py={0.75}
-                            px={1.5}
-                            sx={{ bgcolor: "#F7FEE7" }}
-                        >
-                            <Typography variant="body2" fontWeight={700} sx={{ color: "#15803d" }}>
-                                ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                fontWeight={700}
-                                minWidth={110}
-                                textAlign="right"
-                                sx={{ color: "#15803d" }}
-                            >
-                                {fmt(summary.compensateRemain)}
-                            </Typography>
-                        </Box>
-                    </Paper>
-                </Grid>
+                        <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+                            <StandardDataTable
+                                name="CompensationTable"
+                                title=""
+                                data={compensationTableData}
+                                isLoading={false}
+                                columns={compensationColumns}
+                                color="primary"
+                                columnHeaderAlign="center"
+                                displayToolbar={false}
+                                displayFooter={false}
+                                options={{
+                                    ...tableOptions,
+                                    setRowProps: (_r, _d, i) => ({
+                                        style:
+                                            i === compensationTableData.length - 1
+                                                ? { backgroundColor: "#3d3d3d" }
+                                                : i % 2 === 0
+                                                ? { backgroundColor: "#ffffff" }
+                                                : { backgroundColor: "#f9f9f9" },
+                                    }),
+                                }}
+                                sx={tableSx}
+                            />
+                        </Paper>
+                    </Grid>
 
-                <Grid item xs={12} md={6}>
-                    <HeadingWithColor
-                        text="สรุปค่าใช้จ่ายโรงพยาบาล"
-                        color="blue"
-                        icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />}
-                        sx={{ mb: 1 }}
-                    />
-                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                        <SummaryLine label="ยอดเบิกรวม" value={fmt(summary.medicalNet)} />
-                        <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
-                        <SummaryLine
-                            label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
-                            value={fmt(summary.compensateInclude)}
+                    <Grid item xs={12} md={6}>
+                        <HeadingWithColor
+                            text="สรุปค่าชดเชย"
+                            color="blue"
+                            icon={<SummarizeOutlinedIcon sx={{ fontSize: 18 }} />}
+                            sx={{ mb: 1 }}
                         />
-                        <Box
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            py={0.75}
-                            px={1.5}
-                            sx={{ bgcolor: "#e8f0fb" }}
-                        >
-                            <Typography variant="body2" fontWeight={700} color="#1a5da8">
-                                สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท
-                            </Typography>
-                            <Box display="flex" alignItems="center" gap={0.5}>
+                        <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+                            <Box px={1.5} py={0.5} bgcolor="#f8f9fa">
+                                <FormControlLabel
+                                    control={
+                                        <Checkbox
+                                            size="small"
+                                            checked={mergeOption === "single"}
+                                            onChange={() => setMergeOption("single")}
+                                            color="primary"
+                                        />
+                                    }
+                                    label={<Typography variant="body2">โอนค่าชดเชยรวมกับค่ารักษา</Typography>}
+                                    sx={{ m: 0, display: "flex", py: 0.5 }}
+                                />
+                                <Divider />
+                            </Box>
+                            <Divider />
+                            <SummaryLine label="ค่าชดเชยรวม" value={fmt(summary.compensateNet)} />
+                            <SummaryLine
+                                label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
+                                value={fmt(summary.compensateInclude)}
+                            />
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                py={0.75}
+                                px={1.5}
+                                sx={{ bgcolor: "#F7FEE7" }}
+                            >
+                                <Typography variant="body2" fontWeight={700} sx={{ color: "#15803d" }}>
+                                    ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)
+                                </Typography>
                                 <Typography
                                     variant="body2"
                                     fontWeight={700}
-                                    color="#1a5da8"
+                                    minWidth={110}
+                                    textAlign="right"
+                                    sx={{ color: "#15803d" }}
+                                >
+                                    {fmt(summary.compensateRemain)}
+                                </Typography>
+                            </Box>
+                        </Paper>
+                    </Grid>
+
+                    <Grid item xs={12} md={6}>
+                        <HeadingWithColor
+                            text="สรุปค่าใช้จ่ายโรงพยาบาล"
+                            color="blue"
+                            icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />}
+                            sx={{ mb: 1 }}
+                        />
+                        <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+                            <SummaryLine label="ยอดเบิกรวม" value={fmt(summary.medicalNet)} />
+                            <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
+                            <SummaryLine
+                                label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
+                                value={fmt(summary.compensateInclude)}
+                            />
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                py={0.75}
+                                px={1.5}
+                                sx={{ bgcolor: "#e8f0fb" }}
+                            >
+                                <Typography variant="body2" fontWeight={700} color="#1a5da8">
+                                    สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท
+                                </Typography>
+                                <Box display="flex" alignItems="center" gap={0.5}>
+                                    <Typography
+                                        variant="body2"
+                                        fontWeight={700}
+                                        color="#1a5da8"
+                                        minWidth={110}
+                                        textAlign="right"
+                                    >
+                                        {fmt(summary.medicalPay)}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                            <Divider />
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                py={0.75}
+                                px={1.5}
+                                sx={{ bgcolor: "#FEF2F2" }}
+                            >
+                                <Typography variant="body2" fontWeight={700} color="#FF6467">
+                                    ส่วนเกิน (ลูกค้าจ่าย)
+                                </Typography>
+                                <Typography
+                                    variant="body2"
+                                    fontWeight={700}
+                                    color="#FF6467"
                                     minWidth={110}
                                     textAlign="right"
                                 >
-                                    {fmt(summary.medicalPay)}
+                                    {fmt(summary.medicalUnpay)}
                                 </Typography>
                             </Box>
-                        </Box>
-                        <Divider />
-                        <Box
-                            display="flex"
-                            justifyContent="space-between"
-                            alignItems="center"
-                            py={0.75}
-                            px={1.5}
-                            sx={{ bgcolor: "#FEF2F2" }}
-                        >
-                            <Typography variant="body2" fontWeight={700} color="#FF6467">
-                                ส่วนเกิน (ลูกค้าจ่าย)
-                            </Typography>
-                            <Typography
-                                variant="body2"
-                                fontWeight={700}
-                                color="#FF6467"
-                                minWidth={110}
-                                textAlign="right"
-                            >
-                                {fmt(summary.medicalUnpay)}
-                            </Typography>
-                        </Box>
-                    </Paper>
+                        </Paper>
+                    </Grid>
                 </Grid>
-            </Grid>
+            )}
         </CustomPaper>
     );
 };
