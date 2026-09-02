@@ -13,6 +13,8 @@ import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordC
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
 import ClaimSummaryStep3 from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { swalError } from "../../../_common";
+import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
+import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
@@ -107,6 +109,20 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const customerDetail = customerDetailData?.data;
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
+
+    /**
+     * "โอนค่าชดเชยรวมกับค่ารักษา" : PA / OPD ทุกผลิตภัณฑ์ = บังคับโอนรวม
+     * เฉพาะ IPD / Day Case ที่ไม่ใช่ PA ผู้ใช้ถึงเลือกโอนแยกได้ (และมีการ์ดบัญชีรับเงินค่าชดเชย)
+     */
+    const allowSeparateCompensation =
+        !isProductType(customerDetail?.productTypeId, PRODUCT_TYPE_GROUP.PA) &&
+        (formik.values.medicalTypeId === MedicalType.IPD ||
+            formik.values.medicalTypeId === MedicalType.DayCaseSurgery);
+
+    const { data: bankAccountData } = useGetCustomerBankAccount(
+        allowSeparateCompensation ? customerDetail?.policyCode : undefined
+    );
+    const defaultBankAccount = bankAccountData?.data?.[0];
 
     /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
     const currentCaseNo = detail?.caseNo ?? "";
@@ -252,6 +268,14 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 medicalCoverPay: netClaimAmount,
                                 medicalPay: netClaimAmount,
                                 medicalUnpay: totalNotCovered,
+                            }}
+                            allowSeparateCompensation={allowSeparateCompensation}
+                            payoutAccount={{
+                                phone: customerDetail?.mobilePhoneNumber ?? undefined,
+                                accountName: defaultBankAccount?.bankAccountName ?? undefined,
+                                bankName: defaultBankAccount?.bankName ?? undefined,
+                                accountNo: defaultBankAccount?.bankAccountNo ?? undefined,
+                                relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
                             }}
                         />
                     )}

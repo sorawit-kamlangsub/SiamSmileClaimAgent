@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
-import { Box, Checkbox, Divider, FormControlLabel, Grid, Paper, Typography } from "@mui/material";
+import { Box, Button, Checkbox, Chip, Divider, FormControlLabel, Grid, Paper, TextField, Typography } from "@mui/material";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
+import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
 import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 import KingBedOutlinedIcon from "@mui/icons-material/KingBedOutlined";
 import { MUIDataTableColumn } from "mui-datatables";
@@ -33,12 +34,29 @@ export type Step3CompensationRow = {
     amount: number;
 };
 
+export type Step3PayoutAccount = {
+    phone?: string;
+    accountName?: string;
+    bankName?: string;
+    accountNo?: string;
+    /** ป้ายความสัมพันธ์ของเจ้าของบัญชี เช่น "ผู้ชำระเบี้ยในระบบ" */
+    relationLabel?: string;
+};
+
 type ClaimSummaryStep3Props = {
     days?: { ipdDays: number; icuDays: number; bedDays: number };
     treatmentRows?: Step3TreatmentRow[];
     compensationRows?: Step3CompensationRow[];
     /** ค่าตั้งต้นจาก API คำนวณ (ยังไม่มี endpoint สำหรับหน้าพิจารณา จึง default 0) */
     summary?: Partial<CompensationSummaryData>;
+    /**
+     * ให้ผู้ใช้เลือก "โอนค่าชดเชยรวมกับค่ารักษา" ได้เอง (IPD / Day Case ที่ไม่ใช่ PA)
+     * false (default) = บังคับโอนรวม : checkbox Checked + Disabled, ค่าชดเชยคงเหลือ = 0, ไม่แสดงบัญชีรับเงินค่าชดเชย
+     * true = ผู้ใช้ติ๊กได้ตาม flow, แสดงบัญชีรับเงินค่าชดเชยเมื่อมีการโอนแยก (คงเหลือ > 0)
+     */
+    allowSeparateCompensation?: boolean;
+    payoutAccount?: Step3PayoutAccount;
+    onEditPayoutAccount?: () => void;
 };
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
@@ -119,8 +137,21 @@ const DayCard = ({ label, value, color, bg, icon }: { label: string; value: numb
  * สรุปค่าชดเชย (โอนรวมกับค่ารักษา) + สรุปค่าใช้จ่ายโรงพยาบาล (สิทธิ์ตั้งเบิก / ส่วนเกิน)
  * ยอดเงินรอ API คำนวณของหน้าพิจารณา ตอนนี้รับผ่าน props (default 0)
  */
-const ClaimSummaryStep3 = ({ days, treatmentRows = [], compensationRows = [], summary }: ClaimSummaryStep3Props) => {
-    const [mergeOption, setMergeOption] = useState<MergeOption>("single");
+const ClaimSummaryStep3 = ({
+    days,
+    treatmentRows = [],
+    compensationRows = [],
+    summary,
+    allowSeparateCompensation = false,
+    payoutAccount,
+    onEditPayoutAccount,
+}: ClaimSummaryStep3Props) => {
+    // ติ๊ก "โอนค่าชดเชยรวมกับค่ารักษา" : default = โอนรวม
+    const [mergeChecked, setMergeChecked] = useState(true);
+
+    // บังคับโอนรวมเมื่อไม่ใช่กรณี IPD / Day Case ที่ไม่ใช่ PA
+    const isMerged = !allowSeparateCompensation || mergeChecked;
+    const mergeOption: MergeOption = isMerged ? "all" : null;
 
     const calc = useMemo(
         () =>
@@ -139,6 +170,9 @@ const ClaimSummaryStep3 = ({ days, treatmentRows = [], compensationRows = [], su
             ),
         [summary, mergeOption]
     );
+
+    // บัญชีรับเงินค่าชดเชย : แสดงเมื่อมีการโอนแยก (คงเหลือ > 0) และเป็นกรณีที่เลือกโอนแยกได้
+    const showPayoutAccount = allowSeparateCompensation && !isMerged && calc.compensateRemain > 0;
 
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
@@ -222,25 +256,13 @@ const ClaimSummaryStep3 = ({ days, treatmentRows = [], compensationRows = [], su
                             control={
                                 <Checkbox
                                     size="small"
-                                    checked={mergeOption === "single"}
-                                    onChange={() => setMergeOption(mergeOption === "single" ? null : "single")}
+                                    checked={isMerged}
+                                    disabled={!allowSeparateCompensation}
+                                    onChange={(e) => setMergeChecked(e.target.checked)}
                                     color="primary"
                                 />
                             }
                             label={<Typography variant="body2">โอนค่าชดเชยรวมกับค่ารักษา</Typography>}
-                            sx={{ m: 0, display: "flex", py: 0.5 }}
-                        />
-                        <Divider />
-                        <FormControlLabel
-                            control={
-                                <Checkbox
-                                    size="small"
-                                    checked={mergeOption === "all"}
-                                    onChange={() => setMergeOption(mergeOption === "all" ? null : "all")}
-                                    color="primary"
-                                />
-                            }
-                            label={<Typography variant="body2">โอนค่าชดเชยรวมกับค่ารักษา (ทั้งหมด)</Typography>}
                             sx={{ m: 0, display: "flex", py: 0.5 }}
                         />
                     </Box>
@@ -268,6 +290,74 @@ const ClaimSummaryStep3 = ({ days, treatmentRows = [], compensationRows = [], su
                     <SummaryLine label="ส่วนเกิน (ลูกค้าจ่าย)" value={fmt(calc.medicalUnpay)} bold color="#FF6467" bg="#FEF2F2" noDivider />
                 </Paper>
             </Grid>
+
+            {/* บัญชีรับเงินค่าชดเชย — โชว์เฉพาะ PH + IPD */}
+            {showPayoutAccount && (
+                <Grid item xs={12}>
+                    <Paper variant="outlined" sx={{ borderRadius: 2, p: 2, borderColor: "#c8e6c9", bgcolor: "#f6fdf8" }}>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5, flexWrap: "wrap" }}>
+                            <AccountBalanceOutlinedIcon sx={{ fontSize: 18, color: "#15803d" }} />
+                            <Typography sx={{ fontWeight: 700, color: "#15803d" }}>บัญชีรับเงินค่าชดเชย</Typography>
+                            {payoutAccount?.relationLabel && (
+                                <Chip label={payoutAccount.relationLabel} size="small" color="primary" variant="outlined" />
+                            )}
+                            <Button
+                                size="small"
+                                variant="outlined"
+                                onClick={onEditPayoutAccount}
+                                sx={{ ml: "auto" }}
+                            >
+                                แก้ไขบัญชี
+                            </Button>
+                        </Box>
+                        <Typography variant="caption" color="text.secondary">
+                            ระบบแสดงข้อมูล Default จากข้อมูลผู้ชำระเบี้ย / ข้อมูลบัญชีที่มีอยู่ สามารถแก้ไขเฉพาะรายการนี้ได้
+                        </Typography>
+                        <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    required
+                                    label="เบอร์โทรศัพท์"
+                                    value={payoutAccount?.phone ?? ""}
+                                    InputProps={{ readOnly: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    required
+                                    label="ชื่อบัญชี"
+                                    value={payoutAccount?.accountName ?? ""}
+                                    InputProps={{ readOnly: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    required
+                                    label="ธนาคาร"
+                                    value={payoutAccount?.bankName ?? ""}
+                                    InputProps={{ readOnly: true }}
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <TextField
+                                    fullWidth
+                                    size="small"
+                                    required
+                                    label="เลขที่บัญชี"
+                                    value={payoutAccount?.accountNo ?? ""}
+                                    InputProps={{ readOnly: true }}
+                                />
+                            </Grid>
+                        </Grid>
+                    </Paper>
+                </Grid>
+            )}
         </Grid>
     );
 };
