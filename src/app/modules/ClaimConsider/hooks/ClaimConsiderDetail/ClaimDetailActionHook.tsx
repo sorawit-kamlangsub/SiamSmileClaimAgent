@@ -37,12 +37,21 @@ import {
  */
 type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConsiderValues> = {
     formik: FormikProps<T>;
+    /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
+    caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
+    /**
+     * ผลการตรวจเอกสารรายรายการ ต่อท้าย case.caseDocument
+     * (เคลมโรงพยาบาล : ตารางตรวจสอบเอกสาร -> documentReviewStatusId) เฉพาะ decision
+     */
+    documentReviews?: UpsertClaimDecisionCaseDocumentRequest[];
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderValues>({
     formik,
     detailData,
     customerDetailData,
+    caseFields,
+    documentReviews,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
     const { filledItems } = useAppSelector(claimConsiderSelector);
@@ -238,9 +247,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             latestNonCoveredAmount: totalNotCovered,
             latestPatientPayAmount: 0, //โรงพยาบาล
             isCaseDisability: false, //ไม่มี
-            hn: undefined, //ไม่มี
-            an: undefined, //ไม่มี
-            vn: undefined, //ไม่มี
+            hn: caseFields?.hn,
+            an: caseFields?.an,
+            vn: caseFields?.vn,
             caseItem: mapCaseItemForDraft(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDraft(),
             caseAdjudication: mapCaseAdjudicationForDraft(),
@@ -405,10 +414,11 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         );
     };
 
-    /** รวมทั้ง 2 แหล่งเป็น array เดียวสำหรับ payload */
-    const mapCaseDocumentForDecision = (): CaseDocumentSaveClaimEditDraftRequest[] => [
+    /** รวมทุกแหล่งเป็น array เดียวสำหรับ payload (รวมผลการตรวจเอกสารของเคลมโรงพยาบาล) */
+    const mapCaseDocumentForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] => [
         ...mapConsiderDocumentForDecision(),
         ...mapDocumentScanListForDecision(),
+        ...(documentReviews ?? []),
     ];
     /** Case: ก้อนกลางของ DTO */
     const mapCaseForDecision = (): UpsertClaimDecisionCaseRequest => {
@@ -434,9 +444,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             latestNonCoveredAmount: totalNotCovered,
             latestPatientPayAmount: 0, //โรงพยาบาล
             isCaseDisability: false, //ไม่มี
-            hn: undefined, //ไม่มี
-            an: undefined, //ไม่มี
-            vn: undefined, //ไม่มี
+            hn: caseFields?.hn,
+            an: caseFields?.an,
+            vn: caseFields?.vn,
             caseItem: mapCaseItemForDecision(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDecision(),
             caseAdjudication: mapCaseAdjudicationForDecision(),

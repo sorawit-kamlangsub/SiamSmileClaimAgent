@@ -22,6 +22,10 @@ import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable"
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
+/** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
+const isGuid = (value: string) =>
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
 type HospitalClaimDetailsTabProps = {
     /**
      * โหมดดูอย่างเดียว : แสดงข้อมูลชุดเดียวกับหน้าพิจารณา แต่แก้ไขไม่ได้
@@ -69,6 +73,20 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         formik,
         detailData,
         customerDetailData,
+        caseFields: {
+            hn: formik.values.hn || undefined,
+            vn: formik.values.vn || undefined,
+        },
+        // ตารางตรวจสอบเอกสาร -> case.caseDocument[].documentReviewStatusId
+        // ส่งเฉพาะแถวที่มี documentId เป็น GUID จริง (ตอนนี้ยังเป็น mock row จึงถูกกรองออกหมด)
+        documentReviews: formik.values.documentChecks
+            .filter((doc) => doc.checkResult !== "" && isGuid(doc.documentId))
+            .map((doc) => ({
+                documentId: doc.documentId,
+                documentNo: doc.documentName,
+                documentReviewStatusId: doc.checkResult || undefined,
+                caseDocumentDetail: [],
+            })),
     });
 
     const detail = detailData?.data;
