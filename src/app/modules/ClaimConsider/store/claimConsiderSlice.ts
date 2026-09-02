@@ -1,6 +1,7 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs, { Dayjs } from "dayjs";
 import { RootState } from "../../../../redux";
+import { CalculateCaseClaimDtoResponse } from "../../../api/coreClaimApi.client";
 
 export interface DiagnosisModel {
     icd10Id?: number;
@@ -87,6 +88,7 @@ export interface ClaimConsiderValues {
 interface ClaimConsiderState {
     form: ClaimConsiderValues;
     filledItems: ClaimExpenseItem[];
+    calculateResult: CalculateCaseClaimDtoResponse | null;
 }
 const defaultForm: ClaimConsiderValues = {
     incidentTypeId: undefined,
@@ -129,6 +131,7 @@ const defaultForm: ClaimConsiderValues = {
 const initialState: ClaimConsiderState = {
     form: defaultForm,
     filledItems: [],
+    calculateResult: null,
 };
 
 const claimConsiderSlice = createSlice({
@@ -151,6 +154,9 @@ const claimConsiderSlice = createSlice({
         removeFilledClaimLineItem(state, action: PayloadAction<number>) {
             state.filledItems = state.filledItems.filter((i) => i.id !== action.payload);
         },
+        setCalculateExpenseResult(state, action: PayloadAction<CalculateCaseClaimDtoResponse | null>) {
+            state.calculateResult = action.payload;
+        },
         resetState: () => initialState,
     },
 });
@@ -161,6 +167,7 @@ export const {
     setFilledClaimLineItems,
     updateFilledClaimLineItem,
     removeFilledClaimLineItem,
+    setCalculateExpenseResult,
     resetState,
 } = claimConsiderSlice.actions;
 
