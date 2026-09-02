@@ -88,7 +88,7 @@ const useClaimExpenseDetailHook = () => {
         6, //simb2
         form.coverageTypeId,
         form.medicalTypeId,
-        true,
+        false,
         customerDetailData?.data?.productTypeId,
         customerDetailData?.data?.productId,
         undefined

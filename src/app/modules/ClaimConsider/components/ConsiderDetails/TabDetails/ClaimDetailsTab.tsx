@@ -8,6 +8,8 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
 import {
+    CalculateCaseClaim,
+    CalculateCaseClaimDtoRequest,
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
@@ -18,6 +20,9 @@ import useClaimDetailActionHook from "../../../hooks/ClaimConsiderDetail/ClaimDe
 import useConsiderDetailHook from "../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import { FormikProvider } from "formik";
 import ClaimSummary from "./SubDetailsTab/ClaimSummary";
+import { useAppSelector } from "../../../../../../redux";
+import { claimConsiderSelector } from "../../../store/claimConsiderSlice";
+import useClaimStepCalculateHook from "../../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 
 type ClaimDetailsTabProps = {
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
@@ -25,8 +30,6 @@ type ClaimDetailsTabProps = {
 };
 const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
-    const [activeStep, setActiveStep] = useState(0);
-    const [furthestStep, setFurthestStep] = useState(0);
     const considerDetail = useConsiderDetailHook();
     const {
         formik,
@@ -42,19 +45,14 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         setAttachedDocuments,
     } = considerDetail;
     const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook(considerDetail);
-
-    const isLastStep = activeStep === steps.length - 1;
-
-    const handleNext = () => {
-        const next = Math.min(activeStep + 1, steps.length - 1);
-        setActiveStep(next);
-        setFurthestStep((prev) => Math.max(prev, next));
-    };
-
-    const handleBack = () => {
-        setActiveStep((prev) => Math.max(prev - 1, 0));
-    };
-
+    const { filledItems } = useAppSelector(claimConsiderSelector);
+    const { activeStep, setActiveStep, furthestStep, isLastStep, isCalculating, handleNext, handleBack } =
+        useClaimStepCalculateHook({
+            formik,
+            customerDetail,
+            filledItems,
+            stepsLength: steps.length,
+        });
     return (
         <>
             <FormikProvider value={formik}>
@@ -154,7 +152,12 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                         >
                                             ยืนยันบันทึกผลพิจารณา
                                         </Button>
-                                        <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
+                                        <Button
+                                            variant="contained"
+                                            endIcon={<ArrowForwardIcon />}
+                                            onClick={handleNext}
+                                            disabled={activeStep === 1 && isCalculating}
+                                        >
                                             ถัดไป
                                         </Button>
                                     </>

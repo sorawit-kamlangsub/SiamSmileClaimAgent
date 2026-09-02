@@ -237,14 +237,9 @@ const useConsiderDetailHook = () => {
             formik.setFieldValue("medicalTypeName", matchedMedical.name, false);
         }
 
-        const matchedCause = causeOfIncident.find((item) => item.id === detail.causeOfIncidentId);
-        if (matchedCause) {
-            formik.setFieldValue("causeOfIncidentId", matchedCause.id, false);
-            formik.setFieldValue("causeOfIncidentName", matchedCause.name, false);
-        }
 
         hasSyncedMedicalRef.current = true;
-    }, [detail, medicalType, causeOfIncident]);
+    }, [detail, medicalType]);
 
     // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
     useEffect(() => {
@@ -295,10 +290,10 @@ const useConsiderDetailHook = () => {
         };
     }, [detail]);
 
-    useEffect(() => {
-        dispatch(setClaimForm(formik.values));
-        console.log("sync to redux →", formik.values);
-    }, [formik.values]);
+    // useEffect(() => {
+    //     dispatch(setClaimForm(formik.values));
+    //     console.log("sync to redux →", formik.values);
+    // }, [formik.values]);
 
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
