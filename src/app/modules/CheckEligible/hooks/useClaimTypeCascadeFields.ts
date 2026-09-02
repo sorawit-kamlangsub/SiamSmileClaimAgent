@@ -25,9 +25,8 @@ export const useClaimTypeCascadeFields = (
     productTypeId?: number,
     productCategoryCode?: string
 ) => {
-    const { claimCause, coverageType } = formik.values;
+    const { claimCause, coverageType, isContinuous } = formik.values;
 
-    // 1) เหตุของการเคลม
     const { data: incidentTypeData, isLoading: isClaimCauseLoading } = useGetIncidentType();
     const claimCauseOptions =
         incidentTypeData?.data
@@ -37,7 +36,6 @@ export const useClaimTypeCascadeFields = (
                 label: item.incidentTypeNameTH ?? "-",
             })) ?? [];
 
-    // 2) ประเภทความคุ้มครอง (mapping ตามเหตุของการเคลม + ประเภทผลิตภัณฑ์)
     const productCategoryCodeParam = isProductType(productTypeId, PRODUCT_TYPE_GROUP.PH)
         ? undefined
         : productCategoryCode;
@@ -46,7 +44,11 @@ export const useClaimTypeCascadeFields = (
         claimCause,
         CLAIM_SOURCE_ID_CHECK_ELIGIBLE,
         productTypeId,
-        productCategoryCodeParam
+        productCategoryCodeParam,
+        undefined,
+        undefined,
+        undefined,
+        isContinuous === false ? undefined : true
     );
     const mappingRows = mappingData?.data ?? [];
 
@@ -55,7 +57,6 @@ export const useClaimTypeCascadeFields = (
         label: row.coverageTypeNameTH ?? "-",
     }));
 
-    // 3) ประเภทการรักษา (หรือสาเหตุของการเกิดเหตุ ถ้าประเภทความคุ้มครองนั้นไม่มี medicalType ให้เลือก)
     const rowsForCoverageType = mappingRows.filter((row) => row.coverageTypeId === coverageType);
 
     const medicalTypeOptions = dedupeByField(rowsForCoverageType, "medicalTypeId").map((row) => ({
@@ -71,7 +72,6 @@ export const useClaimTypeCascadeFields = (
     const isMedicalTypeVisible = medicalTypeOptions.length > 0;
     const isCauseOfIncidentVisible = causeOfIncidentOptions.length > 0;
 
-    // ── handlers: เลือกแล้ว reset ฟิลด์ที่ตามมาทั้งหมด (เหมือน useClaimLineHeader) ──
     const handleSelectClaimCause = (value: number) => {
         formik.setValues({
             ...formik.values,

@@ -31,18 +31,26 @@ import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/Cus
 import { useClaimPAForm } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
 import OcrDocumentScanSection from "../OcrDocumentScanSection";
 import CoverageBox from "../CoverageBox";
-import { DeathPlaceType, SymptomType } from "../../../store/claimPHSlice";
+import { DeathPlaceType, setEnabled, SymptomType } from "../../../store/claimPHSlice";
 import DocumentScanTable from "../DocumentScanTable";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import DeathClaimAmountCardPA from "./DeathClaimAmountCardPA";
+import ContinuedDeathExtraCoverageSection from "./ContinuedDeathExtraCoverageSection";
 import OrganLossSelector from "../OrganLossSelector";
 import { claimPASelector, DeathExtraCoverageId, setOrganLossItems } from "../../../store/claimPASlice";
 import type { ClaimPAFormValues } from "../../../store/claimPASlice";
 import { claimStepBoxSx } from "../ClaimPH/ClaimFormSection";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
-import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
+import {
+    CauseOfIncident,
+    CoverageType,
+    IncidentType,
+    isProductType,
+    MedicalType,
+    PRODUCT_TYPE_GROUP,
+} from "../../../../../functionHelpers";
 import { useNavigate } from "react-router-dom";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
@@ -95,6 +103,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         incidentTypeMappingLoading,
         incidentTypeLoading,
         customerBenefitLoading,
+        isContinuousDeath,
         insured,
         shouldShowOcrDocumentScan,
         isOcrDocsValid,
@@ -114,7 +123,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     );
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
-    const { organLossItems, school, claimItems, editingItemId, tmpCoreClaim } = useAppSelector(claimPASelector);
+    const { organLossItems, school, claimItems, editingItemId, tmpCoreClaim, oldClaim } =
+        useAppSelector(claimPASelector);
 
     const editingTempClaimId = editingItemId ? claimItems.find((c) => c.id === editingItemId)?.tempClaimId : undefined;
     const otherInsuredCount = (tmpCoreClaim.createClaim ?? []).filter(
@@ -129,6 +139,11 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDeath = values.coverageTypeId === CoverageType.Death;
+    // เสียชีวิตจากการเจ็บป่วย (เหตุ = เจ็บป่วย + สาเหตุ = โรคทั่วไป) ไม่มีความคุ้มครองเพิ่มเติม (ภัยสาธารณะ/ความรับผิดสถานศึกษา)
+    const isIllnessDeath =
+        isDeath &&
+        values.incidentTypeId === IncidentType.Illness &&
+        values.causeOfIncidentId === CauseOfIncident.Illness;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
     const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD;
     const isOPD = values.medicalTypeId === MedicalType.OPD;
@@ -160,7 +175,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         [customerBenefit?.data]
     );
     const maxPrice = currentBenefit?.maxPrice;
-    const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
+    const isOverEligibleLimit =
+        !isContinuousDeath && typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
     const fieldRefs = useRef<Partial<Record<FieldRefName, HTMLElement | null>>>({});
 
@@ -220,7 +236,6 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                 {} as Record<string, unknown>
             ) as Parameters<typeof formik.setTouched>[0];
 
-            // validateForm() ตรวจไปแล้ว ไม่ควร validate ซ้ำจาก setTouched เพราะอาจล้าง nested error
             await formik.setTouched(touched, false);
             focusFirstError(errs as Record<string, unknown>);
             return;
@@ -244,6 +259,19 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         resetOcr();
     }, [isAddingAdditionalInsured]);
 
+    useEffect(() => {
+        if (isContinuousDeath) {
+            dispatch(setEnabled(true));
+        }
+    }, [isContinuousDeath, dispatch]);
+
+    // เสียชีวิตจากการเจ็บป่วย: ไม่มีความคุ้มครองเพิ่มเติม เคลียร์ค่าที่อาจเลือกค้างไว้
+    useEffect(() => {
+        if (isIllnessDeath && values.extraCoverageIds.length > 0) {
+            setFieldValue("extraCoverageIds", [], false);
+        }
+    }, [isIllnessDeath]);
+
     const setFieldValueRef = useRef(formik.setFieldValue);
     setFieldValueRef.current = formik.setFieldValue;
 
@@ -257,90 +285,104 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                 <CircularProgress color="inherit" />
             </Backdrop>
 
+            {isContinuousDeath && (
+                <Box mb={2} ref={registerFieldRef("transferAmount")}>
+                    <ContinuedDeathExtraCoverageSection
+                        oldClaim={oldClaim}
+                        benefits={deathBenefits}
+                        isLoading={customerBenefitLoading}
+                        formik={formik}
+                    />
+                </Box>
+            )}
+
             <CustomPaper>
                 <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" onSubmit={formik.handleSubmit} p={2}>
                     <Grid container spacing={2}>
-                        {/* เหตุของการเคลม */}
-                        <Grid item xs={12} ref={registerFieldRef("incidentTypeId")}>
-                            <Typography fontWeight={600} fontSize={16} mb={2}>
-                                เหตุของการเคลม{" "}
-                                <Typography component="span" color="error">
-                                    *
-                                </Typography>
-                            </Typography>
-                            <ClaimTypeSelector
-                                formik={formik}
-                                options={incidentType}
-                                idFieldName="incidentTypeId"
-                                nameFieldName="incidentTypeName"
-                                isLoading={incidentTypeLoading}
-                            />
-                        </Grid>
+                        {!isContinuousDeath && (
+                            <>
+                                {/* เหตุของการเคลม */}
+                                <Grid item xs={12} ref={registerFieldRef("incidentTypeId")}>
+                                    <Typography fontWeight={600} fontSize={16} mb={2}>
+                                        เหตุของการเคลม{" "}
+                                        <Typography component="span" color="error">
+                                            *
+                                        </Typography>
+                                    </Typography>
+                                    <ClaimTypeSelector
+                                        formik={formik}
+                                        options={incidentType}
+                                        idFieldName="incidentTypeId"
+                                        nameFieldName="incidentTypeName"
+                                        isLoading={incidentTypeLoading}
+                                    />
+                                </Grid>
 
-                        {/* ประเภทความคุ้มครอง */}
-                        <Grid item xs={12} ref={registerFieldRef("coverageTypeId")}>
-                            <Typography fontWeight={600} fontSize={16} mb={2}>
-                                ประเภทความคุ้มครอง{" "}
-                                <Typography component="span" color="error">
-                                    *
-                                </Typography>
-                            </Typography>
-                            {values.incidentTypeId ? (
-                                <ClaimTypeSelector
-                                    formik={formik}
-                                    options={coverageTypeOptions}
-                                    idFieldName="coverageTypeId"
-                                    nameFieldName="coverageTypeName"
-                                    isLoading={incidentTypeMappingLoading}
-                                />
-                            ) : (
-                                <Paper variant="outlined" sx={EMPTY_STATE_SX}>
-                                    กรุณาเลือกเหตุของการเคลมก่อน ระบบจะแสดงประเภทความคุ้มครองตามผลิตภัณฑ์ PH
-                                </Paper>
-                            )}
-                        </Grid>
+                                {/* ประเภทความคุ้มครอง */}
+                                <Grid item xs={12} ref={registerFieldRef("coverageTypeId")}>
+                                    <Typography fontWeight={600} fontSize={16} mb={2}>
+                                        ประเภทความคุ้มครอง{" "}
+                                        <Typography component="span" color="error">
+                                            *
+                                        </Typography>
+                                    </Typography>
+                                    {values.incidentTypeId ? (
+                                        <ClaimTypeSelector
+                                            formik={formik}
+                                            options={coverageTypeOptions}
+                                            idFieldName="coverageTypeId"
+                                            nameFieldName="coverageTypeName"
+                                            isLoading={incidentTypeMappingLoading}
+                                        />
+                                    ) : (
+                                        <Paper variant="outlined" sx={EMPTY_STATE_SX}>
+                                            กรุณาเลือกเหตุของการเคลมก่อน ระบบจะแสดงประเภทความคุ้มครองตามผลิตภัณฑ์ PH
+                                        </Paper>
+                                    )}
+                                </Grid>
 
-                        {/* ประเภทการรักษา / สาเหตุ */}
-                        <Grid
-                            item
-                            xs={12}
-                            ref={(el: HTMLDivElement | null) => {
-                                fieldRefs.current.medicalTypeId = el;
-                                fieldRefs.current.causeOfIncidentId = el;
-                            }}
-                        >
-                            <Typography fontWeight={600} fontSize={16} mb={2}>
-                                {medicalTypeLabel}{" "}
-                                <Typography component="span" color="error">
-                                    *
-                                </Typography>
-                            </Typography>
-                            {isMedical ? (
-                                <ChipSelector
-                                    formik={formik}
-                                    idFieldName="medicalTypeId"
-                                    nameFieldName="medicalTypeName"
-                                    options={medicalType}
-                                    isLoading={incidentTypeMappingLoading}
-                                />
-                            ) : isDeath || isDisability ? (
-                                <ChipSelector
-                                    formik={formik}
-                                    idFieldName="causeOfIncidentId"
-                                    nameFieldName="causeOfIncidentName"
-                                    options={causeOfIncident}
-                                    isLoading={incidentTypeMappingLoading}
-                                />
-                            ) : (
-                                <Paper variant="outlined" sx={EMPTY_STATE_SX}>
-                                    กรุณาเลือกประเภทความคุ้มครองก่อน
-                                </Paper>
-                            )}
-                        </Grid>
+                                {/* ประเภทการรักษา / สาเหตุ */}
+                                <Grid
+                                    item
+                                    xs={12}
+                                    ref={(el: HTMLDivElement | null) => {
+                                        fieldRefs.current.medicalTypeId = el;
+                                        fieldRefs.current.causeOfIncidentId = el;
+                                    }}
+                                >
+                                    <Typography fontWeight={600} fontSize={16} mb={2}>
+                                        {medicalTypeLabel}{" "}
+                                        <Typography component="span" color="error">
+                                            *
+                                        </Typography>
+                                    </Typography>
+                                    {isMedical ? (
+                                        <ChipSelector
+                                            formik={formik}
+                                            idFieldName="medicalTypeId"
+                                            nameFieldName="medicalTypeName"
+                                            options={medicalType}
+                                            isLoading={incidentTypeMappingLoading}
+                                        />
+                                    ) : isDeath || isDisability ? (
+                                        <ChipSelector
+                                            formik={formik}
+                                            idFieldName="causeOfIncidentId"
+                                            nameFieldName="causeOfIncidentName"
+                                            options={causeOfIncident}
+                                            isLoading={incidentTypeMappingLoading}
+                                        />
+                                    ) : (
+                                        <Paper variant="outlined" sx={EMPTY_STATE_SX}>
+                                            กรุณาเลือกประเภทความคุ้มครองก่อน
+                                        </Paper>
+                                    )}
+                                </Grid>
+                            </>
+                        )}
 
-                        {/* ความคุ้มครองเพิ่มเติม (ภัยสาธารณะ / ความรับผิดสถานศึกษา) — โชว์ทุกครั้งที่เลือกสาเหตุการเสียชีวิตแล้ว */}
-                        {isDeath && values.causeOfIncidentId && (
+                        {isDeath && !isContinuousDeath && !isIllnessDeath && values.causeOfIncidentId && (
                             <Grid item xs={12}>
                                 <Box
                                     sx={{
@@ -461,6 +503,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 slotProps={{ textField: { size: "small" } }}
                                 maxDate={dayjs()}
                                 required
+                                // disabled={isContinuousDeath}
                             />
                         </Grid>
                         {isMedical && (
@@ -487,19 +530,20 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 />
                             </Grid>
                         )}
-                        {isDeath && (
-                            <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
-                                <FormikDatePicker
-                                    name="deathDate"
-                                    label="วันที่เสียชีวิต"
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    maxDate={dayjs()}
-                                    required
-                                />
-                            </Grid>
-                        )}
-                        {(isDeath || isDisability) && (
+                        {isDeath ||
+                            (isContinuousDeath && (
+                                <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
+                                    <FormikDatePicker
+                                        name="deathDate"
+                                        label="วันที่เสียชีวิต"
+                                        formik={formik}
+                                        slotProps={{ textField: { size: "small" } }}
+                                        maxDate={dayjs()}
+                                        required
+                                    />
+                                </Grid>
+                            ))}
+                        {(isDeath || isDisability || isContinuousDeath) && (
                             <>
                                 <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("notificationDate")}>
                                     <FormikDatePicker
@@ -614,7 +658,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 />
                             </Grid>
                         )}
-                        {(isDeath || isDisability) && (
+                        {(isDeath || isDisability || isContinuousDeath) && (
                             <>
                                 {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
@@ -706,7 +750,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     )}
 
                     {/* จำนวนเงิน */}
-                    {!isDisability && !isDeath && (
+                    {!isDisability && !isDeath && !isContinuousDeath && (
                         <Grid item xs={12} ref={registerFieldRef("transferAmount")}>
                             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
                                 <Grid item xs={12} sm={5.9} md={2.9}>
@@ -738,7 +782,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </Box>
                         </Grid>
                     )}
-                    {isDeath && formik.values.causeOfIncidentId && (
+                    {isDeath && !isContinuousDeath && formik.values.causeOfIncidentId && (
                         <Box ref={registerFieldRef("transferAmount")}>
                             <DeathClaimAmountCardPA
                                 benefits={deathBenefits}
@@ -776,11 +820,12 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     </CustomPaper>
                 </Box>
             )}
-            {(isDeath || isDisability) && (
+            {(isDeath || isDisability || isContinuousDeath) && (
                 <DocumentScanTable
-                    productId={26}
-                    documentTypeId={15}
                     aplicationCode={insured?.policyCode}
+                    productTypeId={26}
+                    Header="สแกนเอกสาร"
+                    documentType="เอกสารประกอบการพิจารณาเคลม"
                     onAttachedDocumentsChange={handleAttachedDocumentsChange}
                 />
             )}
@@ -798,9 +843,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                 }
                 requestedAmount={values.transferAmount ?? 0}
                 maxEligibleAmount={maxPrice ?? 0}
-                onConfirm={async ({ withdrawableAmount }) => {
+                onConfirm={async ({ nplAmount }) => {
                     setIsConfirmExcessOpen(false);
-                    await setFieldValue("transferAmount", withdrawableAmount);
+                    await setFieldValue("nplAmount", nplAmount);
                     formik.submitForm();
                 }}
             />

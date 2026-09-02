@@ -17,6 +17,7 @@ const ConsiderMonitorPage = () => {
         dateFrom: dayjs(),
         dateTo: dayjs(),
         isSearch: true,
+        path: "",
     });
     const { dashboardData, dashboardDataLoading } = useDashboardHook(appliedFilter);
     const handleSearch = () => {
@@ -29,6 +30,7 @@ const ConsiderMonitorPage = () => {
             searchFrom: formik.values.searchFrom,
             searchDetail: formik.values.searchDetail,
             statusId: formik.values.statusId,
+            path: "customers",
         });
     };
     const handleClear = () => {
@@ -42,6 +44,7 @@ const ConsiderMonitorPage = () => {
             searchFrom: undefined,
             searchDetail: "",
             statusId: 0,
+            path: "",
         });
     };
     return (

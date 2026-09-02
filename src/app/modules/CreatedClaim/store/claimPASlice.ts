@@ -15,17 +15,17 @@ import {
     CaseContactV2Request,
     CaseDeathV2Request,
     CaseDisabilityV2Request,
-    CaseDocumentDetailV2Request,
+    CaseDocumentV2Request,
     CaseItemV2Request,
     CaseRegistrationV2Request,
     CaseServicePersonV2Request,
     CaseV2Request,
     ClaimV2Request,
     CreateCoreClaimV2DtoRequest,
-    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
+    GetPreviousClaimDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
 
@@ -35,12 +35,11 @@ export type LocalCaseAssessment = CaseAssessmentV2Request & { tempCaseId?: strin
 export type LocalCaseDeath = CaseDeathV2Request & { tempCaseId?: string };
 export type LocalCaseDisability = CaseDisabilityV2Request & { tempCaseId?: string };
 
-export type LocalCaseDocument = {
+export type LocalCaseDocument = CaseDocumentV2Request & {
     tempCaseId?: string;
     tempCaseDocumentId?: string;
-    documentSubTypeId?: number;
-    caseDocumentDetail?: any[];
 };
+
 export type LocalCaseContact = CaseContactV2Request & { tempCaseId?: string };
 export type LocalCaseServicePerson = CaseServicePersonV2Request & { tempCaseId?: string };
 export type LocalBeneficiary = Omit<BeneficiaryV2Request, "payables"> & { tempClaimId?: string; tempCaseId?: string };
@@ -110,6 +109,7 @@ export interface ClaimInsuredItem {
 export enum DeathExtraCoverageId {
     PublicDisaster = 6, // ภัยสาธารณะ
     SchoolLiability = 7, // รับผิดสถานศึกษา
+    FuneralExpense = 8, // ค่าปลงศพ — TODO: เช็ค id จริงจาก backend
 }
 
 export const MAX_INSURED_PER_CLAIM = 15;
@@ -147,6 +147,7 @@ export interface ClaimPAFormValues {
     notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     transferAmount: number | undefined; //เงินโอน
+    nplAmount: number | undefined; //ยอดจ่ายเกินสิทธิ์ (NPL)
     symptomType: SymptomType | undefined;
     deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
@@ -156,7 +157,7 @@ export interface ClaimPAFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
+    ocrDocument: CaseDocumentV2Request[] | undefined;
     extraCoverageIds: number[]; // ความคุ้มครองเพิ่มเติมที่เลือก (ุ6 = ภัยสาธารณะ, 7 = ความรับผิดสถานศึกษา)
     deathBenefitAmounts: Record<number, number | string>;
 }
@@ -165,7 +166,7 @@ export type CreateCoreClaimDto = LocalCoreClaim;
 
 interface ClaimPAState {
     isContinuous: boolean;
-    oldClaim: GetClaimHistoryDtoResponse | undefined;
+    oldClaim: GetPreviousClaimDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
     pendingInsured: PendingInsured | undefined;
     school: SchoolInfo | null;
@@ -206,6 +207,7 @@ const defaultForm: ClaimPAFormValues = {
     documentCompleteDate: dayjs(),
     notificationDate: dayjs(),
     transferAmount: 0,
+    nplAmount: undefined,
     symptomType: 1,
     deathPlaceType: 2,
     hospitalId: undefined,
@@ -251,7 +253,7 @@ const claimPASlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
+        setOldClaim(state, action: PayloadAction<GetPreviousClaimDtoResponse>) {
             state.oldClaim = action.payload;
         },
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {

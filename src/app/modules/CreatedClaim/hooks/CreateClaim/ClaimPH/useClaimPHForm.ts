@@ -22,6 +22,7 @@ import { swalWarning } from "../../../../_common";
 import { amountNumber, FingerKey } from "../organLoss.types";
 import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
+import { useParams } from "react-router-dom";
 interface Options {
     onNext: () => void;
 }
@@ -29,8 +30,9 @@ interface Options {
 export const useClaimPHForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
-    const { form, isContinuous, oldClaim, insured, documentDetailById, organLossItems } =
-        useAppSelector(claimPHSelector);
+    const { isContinuous: isContinuousParam } = useParams();
+    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const { form, oldClaim, insured, documentDetailById, organLossItems } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const docData = Object.values(documentDetailById);
@@ -133,7 +135,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
-            else if (Number(values.transferAmount) > maxTransferAmount) {
+            else if ((isDeath || isDisability || isIPD) && Number(values.transferAmount) > maxTransferAmount) {
                 errors.transferAmount = `ไม่เกินวงเงินสูงสุด ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
             return errors;
@@ -263,7 +265,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         undefined,
         undefined,
         undefined,
-        undefined
+        undefined,
+        isContinuous === false ? undefined : true
     );
     const coverageType: ClaimTypeOption[] = [
         ...new Map(
@@ -359,7 +362,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         insured?.policyCode,
         0,
         formik.values.incidentDate,
-        isContinuous,
+        isContinuous === false ? undefined : true,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
         formik.values.medicalTypeId ?? 0,
@@ -392,6 +395,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                nplAmount: undefined,
                 symptomType: 1,
                 deathPlaceType: 2,
                 hospitalId: undefined,
@@ -424,7 +428,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         }
         if (!formik.values.coverageTypeId) return;
 
-        // เช็คว่า combo นี้ต้อง auto-select อะไรไหม
         const isMedicalAuto =
             formik.values.coverageTypeId === 3 &&
             (formik.values.incidentTypeId === 2 || formik.values.incidentTypeId === 3);
@@ -455,6 +458,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                nplAmount: undefined,
                 symptomType: 1,
                 deathPlaceType: 2,
                 hospitalId: undefined,

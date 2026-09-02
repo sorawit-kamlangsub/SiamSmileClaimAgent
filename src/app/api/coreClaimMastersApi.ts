@@ -34,6 +34,7 @@ const getDeductionSourceQueryKey = ["getDeductionSource"];
 const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
+const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -81,10 +82,12 @@ export const useGetIncidentTypeMapping = (
     incidentTypeId?: number | undefined,
     claimSourceId?: number | undefined,
     productTypeId?: number | undefined,
-    productCategoryCode?: string,
+    productCategoryCode?: string | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    isClaimContinue?: boolean | undefined,
+    initialClaimId?: string | undefined
 ) => {
     return useQuery(
         [
@@ -96,6 +99,8 @@ export const useGetIncidentTypeMapping = (
             coverageTypeId,
             medicalTypeId,
             causeOfIncidentId,
+            isClaimContinue,
+            initialClaimId,
         ],
         () =>
             coreClaimMastersClient.getIncidentTypeMapping(
@@ -105,7 +110,9 @@ export const useGetIncidentTypeMapping = (
                 productCategoryCode,
                 coverageTypeId,
                 medicalTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                isClaimContinue,
+                initialClaimId
             ),
         {
             enabled: !!incidentTypeId,
@@ -435,12 +442,37 @@ export const useGetDecision = (decisionId?: number | undefined) => {
     });
 };
 
-export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionTypeId?: number | undefined) => {
+export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionId?: number | undefined) => {
     return useQuery(
-        [getDecisionReasonQueryKey, decisionReasonId, decisionTypeId],
-        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionTypeId),
+        [getDecisionReasonQueryKey, decisionReasonId, decisionId],
+        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionId),
         {
-            enabled: !!decisionTypeId,
+            enabled: !!decisionId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetInsuranceCompany = (
+    organizeId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getInsuranceCompanyQueryKey, organizeId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimMastersClient.getInsuranceCompany(
+                organizeId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
             refetchOnWindowFocus: false,
         }
     );

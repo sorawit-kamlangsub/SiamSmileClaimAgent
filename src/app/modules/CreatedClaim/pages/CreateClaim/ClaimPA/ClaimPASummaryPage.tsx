@@ -37,15 +37,20 @@ import { CreateCoreClaimDtoResponseServiceResponse } from "../../../../../api/co
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
 import { ContactCard } from "../../../components/CreateClaim/ContactCard";
+import { useCreateContinuedClaimPA } from "../../../hooks/CreateClaim/ClaimPA/useCreateContinuedClaimPA";
 
 const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { appId, refId } = useParams();
-    const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim, editingItemId } = useAppSelector(
+    const { appId, refId, isContinuous: isContinuousParam, oldClaimId } = useParams();
+    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim, editingItemId, oldClaim } = useAppSelector(
         (s) => s.claimpa
     );
+
     const { createClaimPA, confirmPayment, isLoading } = useCreateClaimPA();
+    const { createClaimPA: createContinuedClaimPA, confirmPayment: confirmContinuedPayment } =
+        useCreateContinuedClaimPA();
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
@@ -62,7 +67,7 @@ const ClaimPASummaryPage: React.FC = () => {
             claimItems.length === 0 || !tmpCoreClaim.createClaim || tmpCoreClaim.createClaim.length === 0;
 
         if (isEmptyState) {
-            navigate(`/claim/pa/${appId}/${refId}`, { replace: true });
+            navigate(`/claim/pa/${appId}/${refId}/${isContinuousParam}/${oldClaimId}`, { replace: true });
         }
     }, []);
 
@@ -102,12 +107,48 @@ const ClaimPASummaryPage: React.FC = () => {
     );
 
     const isMaxInsuredReached = claimItems.length >= MAX_INSURED_PER_CLAIM;
-    const disableAddInsured = hasSingleOnlyCoverage || isMaxInsuredReached;
+    const disableAddInsured = hasSingleOnlyCoverage || isMaxInsuredReached || isContinuous;
     const disableAddInsuredReason = hasSingleOnlyCoverage
         ? "เคลมเสียชีวิต/ทุพพลภาพ รองรับผู้เอาประกันได้เพียงคนเดียวต่อเคลม"
         : isMaxInsuredReached
         ? `เคลมนี้มีผู้เอาประกันครบ ${MAX_INSURED_PER_CLAIM} คนแล้ว`
+        : isContinuous
+        ? "เคลมต่อเนื่องไม่สามารถเพิ่มผู้เอาประกันได้"
         : "";
+
+    const buildContinuedSuccessHtml = (oldClaimNo: string, responseList: any[]) => {
+        const rowsHtml = responseList
+            .map(
+                (item: any, index: number) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;">
+            <div style="flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:#F2994A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;">${
+                index + 1
+            }</div>
+            <span style="font-size:13px;color:#999;white-space:nowrap;">เคสใหม่</span>
+            <span style="color:#DDD;font-size:12px;">•</span>
+            <span style="font-size:13.5px;font-weight:700;color:#F2994A;white-space:nowrap;">${
+                item?.caseNo ?? "-"
+            }</span>
+        </div>
+    `
+            )
+            .join("");
+
+        return `
+        <div style="max-width:360px;margin:0 auto;">
+            <div style="
+                display:flex;align-items:center;justify-content:center;gap:6px;
+                font-size:13px;color:#666;margin-bottom:10px;
+            ">
+                <span>🔗 ต่อเนื่องจาก</span>
+                <span style="font-weight:700;color:#333;">${oldClaimNo || "-"}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;padding:2px;">
+                ${rowsHtml}
+            </div>
+        </div>
+    `;
+    };
 
     const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
@@ -125,7 +166,9 @@ const ClaimPASummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await createClaimPA(freshBeneficiaries);
+                    const res = isContinuous
+                        ? await createContinuedClaimPA(freshBeneficiaries)
+                        : await createClaimPA(freshBeneficiaries);
                     return res;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
@@ -135,8 +178,37 @@ const ClaimPASummaryPage: React.FC = () => {
             const { claimResponse, beneficiaryList } = result?.value ?? {};
             const data = claimResponse?.data;
             const responseList = data?.responseList ?? [];
+            const isSuccess = claimResponse?.isSuccess ?? data?.isResult;
 
-            if (result.isConfirmed && data?.isResult && responseList.length > 0) {
+            if (result.isConfirmed && isSuccess && responseList.length > 0) {
+                if (isContinuous) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "ทำรายการสำเร็จ",
+                        width: 400,
+                        html: `
+                    <div style="color:#888;font-size:13px;margin-top:-8px;margin-bottom:12px;text-align:center;">
+                        เพิ่มเคสต่อเนื่องเข้าเคลมเดิมเรียบร้อย
+                    </div>
+                    ${buildContinuedSuccessHtml(oldClaim?.claimNo ?? "", responseList)}
+                `,
+                        confirmButtonText: isDeathDisability ? "ตกลง" : "โอนเงิน",
+                        showCancelButton: !isDeathDisability,
+                        cancelButtonText: "ปิด",
+                        allowOutsideClick: false,
+                        backdrop: "rgba(0,0,0,0.4)",
+                    }).then((confirmResult) => {
+                        if (!isDeathDisability && confirmResult.isConfirmed) {
+                            setClaimResult(claimResponse);
+                            setClaimBeneficiaries(beneficiaryList ?? []);
+                            setOpenConfirm(true);
+                        } else {
+                            dispatch(resetState());
+                            navigate(`/monitor-claim`);
+                        }
+                    });
+                    return;
+                }
                 const rowsHtml = responseList
                     .map(
                         (item: any, index: number) => `
@@ -236,7 +308,9 @@ const ClaimPASummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await confirmPayment(claimResult, claimBeneficiaries);
+                    const res = isContinuous
+                        ? await confirmContinuedPayment(claimResult, claimBeneficiaries)
+                        : await confirmPayment(claimResult, claimBeneficiaries);
                     return res;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
@@ -244,21 +318,24 @@ const ClaimPASummaryPage: React.FC = () => {
             },
         }).then((result: any) => {
             if (result.isConfirmed) {
-                const paymentCodeResponse = result.value?.data?.paymentCodeResponse ?? [];
-                const itemsHtml = paymentCodeResponse
+                const responseList = result?.value?.data?.responseList ?? [];
+                const paymentResponses = result?.value?.paymentResponses;
+                const paymentCodeList = paymentResponses?.data?.paymentCodeResponse ?? [];
+
+                const itemsHtml = paymentCodeList
                     .map(
                         (item: any, index: number) => `
                 <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
-                    index < paymentCodeResponse.length - 1 ? "12px" : "0"
+                    index < responseList.length - 1 ? "12px" : "0"
                 };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
                     <div style="display:flex;align-items:center;">
                         <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
                         <div>
                             <div style="font-size:12px;color:#888;">รหัสการโอนเงิน :</div>
                             <div style="display:flex;align-items:center;gap:6px;">
-                                <span style="font-size:18px;font-weight:700;color:#2F80ED;">${
-                                    item?.paymentCode ?? "-"
-                                }</span>
+                                <span style="font-size:18px;font-weight:700;color:#2F80ED;">
+                                 ${paymentCodeList[index]?.paymentCode ?? "-"}
+                                </span>
                                 <span
                                     class="material-icons copy-btn"
                                     data-copy="${item?.paymentCode ?? ""}"

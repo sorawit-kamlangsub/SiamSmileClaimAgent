@@ -45,6 +45,7 @@ import {
     filterSelectedDeathBenefits,
     getDeathMainBenefit,
 } from "../../../../../deathBenefitHelpers";
+import { useParams } from "react-router-dom";
 
 interface Options {
     onNext: () => void;
@@ -58,9 +59,10 @@ export const generateTempId = () =>
 export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
+    const { isContinuous: isContinuousParam } = useParams();
+    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
     const {
         form,
-        isContinuous,
         oldClaim,
         insured,
         pendingInsured,
@@ -73,6 +75,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     } = useAppSelector(claimPASelector);
 
     const effectiveInsured = pendingInsured ?? insured;
+
+    // เคลมต่อเนื่องที่เคลมตั้งต้นเป็นประเภทเสียชีวิต — ยอดชีวิตหลักถูกล็อก เปิดให้กรอกเฉพาะความคุ้มครองเพิ่มเติม
+    const isContinuousDeath = isContinuous && oldClaim?.coverageTypeId === CoverageType.Death;
+
     const { documentDetailById } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const docData = Object.values(documentDetailById);
@@ -129,10 +135,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
             // ── อาการ ──
             if (!values.symptomType) errors.symptomType = req;
-            if (values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
+            if (!isContinuousDeath && values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
                 errors.chiefComplaintId = req;
             if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
-            if (isDeath || isDisability) {
+            if ((isDeath || isDisability) && !isContinuousDeath) {
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
                 if (!values.chiefComplaintId) errors.chiefComplaintId = req;
@@ -165,19 +171,23 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     (benefit) => benefit.coverageTypeId === CoverageType.Death
                 );
                 const mainBenefit = getDeathMainBenefit(deathBenefits);
-                const visibleBenefits = mainBenefit
-                    ? [
-                          mainBenefit,
-                          ...deathBenefits.filter((benefit) => {
-                              const category = classifyDeathBenefit(benefit);
-                              return (
-                                  category !== undefined &&
-                                  category !== "main" &&
-                                  values.extraCoverageIds.includes(category)
-                              );
-                          }),
-                      ]
+                const selectedExtraBenefits = deathBenefits.filter((benefit) => {
+                    const category = classifyDeathBenefit(benefit);
+                    return (
+                        category !== undefined && category !== "main" && values.extraCoverageIds.includes(category)
+                    );
+                });
+                // เคลมต่อเนื่อง: ยอดหลักถูกล็อก ตรวจเฉพาะความคุ้มครองเพิ่มเติมที่เลือก
+                const visibleBenefits = isContinuousDeath
+                    ? selectedExtraBenefits
+                    : mainBenefit
+                    ? [mainBenefit, ...selectedExtraBenefits]
                     : [];
+
+                if (isContinuousDeath && continuedDeathExtraBenefits.length > 0 && selectedExtraBenefits.length === 0) {
+                    errors.extraCoverageIds = "กรุณาเลือกความคุ้มครองเพิ่มเติมอย่างน้อย 1 รายการ";
+                }
+
                 const deathBenefitErrors: FormikErrors<ClaimPAFormValues["deathBenefitAmounts"]> = {};
 
                 visibleBenefits.forEach((benefit) => {
@@ -357,14 +367,11 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                   }))
                 : [];
 
-            const createCaseDocument: LocalCaseDocument[] = [
-                {
-                    tempCaseId,
-                    tempCaseDocumentId: generateTempId(),
-                    documentSubTypeId: 220,
-                    caseDocumentDetail: (ocrDocument as any[]) ?? [],
-                },
-            ];
+            const createCaseDocument: LocalCaseDocument[] = (ocrDocument ?? []).map((doc) => ({
+                ...doc,
+                tempCaseId,
+                tempCaseDocumentId: generateTempId(),
+            }));
 
             const createCaseServicePerson: LocalCaseServicePerson[] = [
                 {
@@ -395,7 +402,17 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                       )
                     : [];
 
-            const filteredBenefits = isDeath
+            const filteredBenefits = isContinuousDeath
+                ? // เคลมต่อเนื่อง: บันทึกเฉพาะความคุ้มครองเพิ่มเติมที่เลือก (ไม่รวมยอดชีวิตหลักที่ล็อก/จ่ายแล้ว)
+                  (customerBenefit?.data ?? []).filter((b) => {
+                      const category = classifyDeathBenefit(b);
+                      return (
+                          category !== undefined &&
+                          category !== "main" &&
+                          values.extraCoverageIds.includes(category)
+                      );
+                  })
+                : isDeath
                 ? filterSelectedDeathBenefits(customerBenefit?.data, values.extraCoverageIds)
                 : customerBenefit?.data ?? [];
 
@@ -418,6 +435,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 admissionDate: isMedical ? values.admissionDate : undefined,
                 dischargeDate: isIPD ? values.dischargeDate : undefined,
                 caseAmount: values.transferAmount ?? 0,
+                nplAmount: values.nplAmount || undefined,
                 latestApprovedAmount: 0,
                 latestNonCoveredAmount: 0,
                 latestPatientPayAmount: 0,
@@ -478,7 +496,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         effectiveInsured?.productCategoryCode ?? undefined,
         undefined,
         undefined,
-        undefined
+        undefined,
+        isContinuous == false ? undefined : true
     );
 
     const coverageType: ClaimTypeOption[] = [
@@ -536,12 +555,25 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         formik.values.medicalTypeId ?? 0,
         formik.values.causeOfIncidentId,
         formattype,
-        "8901",
+        effectiveInsured?.customerTypeCode,
         effectiveInsured?.customerCode
+    );
+
+    // ความคุ้มครองเสียชีวิต "เพิ่มเติม" (ไม่รวมยอดหลัก) สำหรับเคลมต่อเนื่อง
+    const continuedDeathExtraBenefits = useMemo(
+        () =>
+            isContinuousDeath
+                ? (customerBenefit?.data ?? []).filter((b) => {
+                      const category = classifyDeathBenefit(b);
+                      return category !== undefined && category !== "main";
+                  })
+                : [],
+        [isContinuousDeath, customerBenefit?.data]
     );
 
     const isFirstRenderIncident = useRef(true);
     const isFirstRenderCoverage = useRef(true);
+    const didPrefillContinuousDeath = useRef(false);
 
     useEffect(() => {
         if (!editingItemId) return;
@@ -555,6 +587,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             isFirstRenderIncident.current = false;
             return;
         }
+        // เคลมต่อเนื่อง (เสียชีวิต) prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuousDeath) return;
         if (!formik.values.incidentTypeId) return;
         formik.setValues(
             {
@@ -572,6 +606,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                nplAmount: undefined,
                 deathBenefitAmounts: {},
                 symptomType: 1,
                 deathPlaceType: 2,
@@ -597,6 +632,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             isFirstRenderCoverage.current = false;
             return;
         }
+        if (isContinuousDeath) return;
         if (!formik.values.coverageTypeId) return;
         formik.setValues(
             {
@@ -612,6 +648,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 documentCompleteDate: dayjs(),
                 notificationDate: dayjs(),
                 transferAmount: 0,
+                nplAmount: undefined,
                 deathBenefitAmounts: {},
                 symptomType: 1,
                 deathPlaceType: 2,
@@ -648,8 +685,9 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     );
 
     useEffect(() => {
+        if (isContinuousDeath) return; // เคลมต่อเนื่อง (เสียชีวิต) คุมยอดเองจากความคุ้มครองเพิ่มเติม
         formik.setFieldValue("transferAmount", totalOrganLossAmount);
-    }, [totalOrganLossAmount]);
+    }, [totalOrganLossAmount, isContinuousDeath]);
 
     useEffect(() => {
         if (isContinuous && oldClaim?.incidentDate) {
@@ -657,10 +695,38 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         }
     }, [isContinuous, oldClaim?.incidentDate]);
 
+    // เคลมต่อเนื่อง (เสียชีวิต): prefill ทุก field ที่ปกติผู้ใช้เลือกในเคสเสียชีวิตแต่ถูกซ่อน/ล็อกไว้ ให้ดึงจากเคลมตั้งต้น (ครั้งเดียว)
+    // เพื่อให้ validate + payload ใช้เส้นทางเดียวกับเคลมเสียชีวิตปกติ
+    useEffect(() => {
+        if (!isContinuousDeath || !oldClaim || didPrefillContinuousDeath.current) return;
+        didPrefillContinuousDeath.current = true;
+        formik.setValues(
+            {
+                ...formik.values,
+                // ประเภทเคลม / สาเหตุ
+                incidentTypeId: oldClaim.incidentTypeId,
+                coverageTypeId: oldClaim.coverageTypeId,
+                coverageTypeName: "เสียชีวิต",
+                causeOfIncidentId: oldClaim.causeOfIncidentId,
+                // วันที่
+                incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
+                deathDate: oldClaim.deathDate ? dayjs(oldClaim.deathDate) : formik.values.deathDate,
+                notificationDate: formik.values.notificationDate ?? dayjs(),
+                documentCompleteDate: formik.values.documentCompleteDate ?? dayjs(),
+                // สถานที่เสียชีวิต — placeOfDeathId ตรงกับ DeathPlaceType (2=บ้าน, 3=สถานพยาบาล, 4=อื่นๆ)
+                deathPlaceType: oldClaim.placeOfDeathId ?? formik.values.deathPlaceType,
+                accidentPlace: oldClaim.placeOfDeathDetail ?? formik.values.accidentPlace,
+            },
+            false
+        );
+        dispatch(setEnabled(true));
+    }, [isContinuousDeath, oldClaim]);
+
     const isIncidentDateDisabled = isContinuous;
     return {
         formik,
         isContinuous,
+        isContinuousDeath,
         isIncidentDateDisabled,
         incidentType,
         coverageType,

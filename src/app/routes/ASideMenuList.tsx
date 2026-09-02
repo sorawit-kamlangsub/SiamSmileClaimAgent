@@ -82,6 +82,7 @@ export const ASideMenuList = () => {
 
                 <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/consider/monitor" icon="person" text="เคลมลูกค้า" />
+                    <MenuItem path="/consider/hospital-monitor" icon="local_hospital" text="เคลมโรงพยาบาล" />
                 </ParentMenu>
                 {/* <ParentMenu icon={<PaymentsIcon />} text="จัดการเงินเคลม" permissions={[]}>
                     <MenuItem path="/payment-monitor" icon={<AddCardIcon />} text="โอนเพิ่ม" />

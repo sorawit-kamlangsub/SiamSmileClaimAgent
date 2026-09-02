@@ -19,6 +19,26 @@ const PASSPORT_CARD_TYPE = 3;
 
 const ICON_COL_WIDTH = 28;
 
+// ── Status color maps (by appStatusId) ────────────────────────────────────────
+// 2: ปกติ, 3: มีกำหนดยกเลิก, 4: ยกเลิก, 5: ยกเลิกก่อน DCR
+
+export const backgroundColorMapAppStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    2: "#D4EDBC", // ปกติ
+    3: "#FFF1CD", // มีกำหนดยกเลิก
+    4: "#FFCFC9", // ยกเลิก
+    5: "#FFCFC9", // ยกเลิกก่อน DCR
+};
+
+export const colorMapAppStatus: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
+    2: "#11734B", // ปกติ
+    3: "#a56e07", // มีกำหนดยกเลิก
+    4: "#B32615", // ยกเลิก
+    5: "#B32615", // ยกเลิกก่อน DCR
+};
+
+const DEFAULT_BG_COLOR = "#FFCFC9";
+const DEFAULT_TEXT_COLOR = "#B32615";
+
 // ── InfoRow ───────────────────────────────────────────────────────────────────
 
 type InfoRowProps = {
@@ -95,23 +115,30 @@ const InfoRow: React.FC<InfoRowProps> = ({ icon, label, value }) => {
 
 // ── StatusBadge ───────────────────────────────────────────────────────────────
 
-const StatusBadge: React.FC<{ status: string; isActive: boolean }> = ({ status, isActive }) => (
-    <span
-        style={{
-            display: "inline-block",
-            padding: "2px 10px",
-            borderRadius: 12,
-            fontSize: 13,
-            fontWeight: 600,
-            whiteSpace: "nowrap",
-            background: isActive ? "#e8f5e9" : "#FFCFC9",
-            color: isActive ? "#2e7d32" : "#B32615",
-            border: `1px solid ${isActive ? "#a5d6a7" : "#ffb7ae"}`,
-        }}
-    >
-        {status}
-    </span>
-);
+const StatusBadge: React.FC<{ status: string; appStatusId?: number }> = ({ status, appStatusId }) => {
+    const bgColor =
+        appStatusId !== undefined ? backgroundColorMapAppStatus[appStatusId] ?? DEFAULT_BG_COLOR : DEFAULT_BG_COLOR;
+    const textColor =
+        appStatusId !== undefined ? colorMapAppStatus[appStatusId] ?? DEFAULT_TEXT_COLOR : DEFAULT_TEXT_COLOR;
+
+    return (
+        <span
+            style={{
+                display: "inline-block",
+                padding: "2px 10px",
+                borderRadius: 12,
+                fontSize: 13,
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+                background: bgColor,
+                color: textColor,
+                border: `1px solid ${textColor}`,
+            }}
+        >
+            {status}
+        </span>
+    );
+};
 
 // ── Main Component ────────────────────────────────────────────────────────────
 
@@ -135,7 +162,7 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
             district: data?.districtName ?? "-",
             province: data?.provinceName ?? "-",
             status: appStatus,
-            isActiveStatus: appStatus === "มีผลคุ้มครอง",
+            appStatusId: data?.appStatusId,
             branch: data?.agentBranchName ?? "-",
             employeeFullName: data?.agentName ?? "-",
             contactFullName: data?.contactName ?? "-",
@@ -165,7 +192,7 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
 
     const statusValue =
         vm.status !== "-" ? (
-            <StatusBadge status={vm.status} isActive={vm.isActiveStatus} />
+            <StatusBadge status={vm.status} appStatusId={vm.appStatusId} />
         ) : (
             <Typography variant="body2" color="text.primary">
                 -

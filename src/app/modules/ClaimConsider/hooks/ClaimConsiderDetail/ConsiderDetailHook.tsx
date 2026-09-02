@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import {
@@ -8,18 +8,49 @@ import {
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
-import { claimConsiderSelector, ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, ClaimConsiderValues, setClaimForm } from "../../store/claimConsiderSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
-import { useFormik } from "formik";
+import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
+import { CoverageType } from "../../../../functionHelpers";
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
+const calculateStayDays = (
+    admissionDate: dayjs.Dayjs | null | undefined,
+    admissionTime: dayjs.Dayjs | null | undefined,
+    dischargeDate: dayjs.Dayjs | null | undefined,
+    dischargeTime: dayjs.Dayjs | null | undefined
+): number => {
+    if (!admissionDate || !admissionTime || !dischargeDate || !dischargeTime) {
+        return 0;
+    }
 
+    const admission = admissionDate.hour(admissionTime.hour()).minute(admissionTime.minute()).second(0).millisecond(0);
+
+    const discharge = dischargeDate.hour(dischargeTime.hour()).minute(dischargeTime.minute()).second(0).millisecond(0);
+
+    const diffMinutes = discharge.diff(admission, "minute");
+
+    if (diffMinutes <= 0) {
+        return 0;
+    }
+
+    const SIX_HOURS = 6 * 60;
+    const FULL_DAY = 24 * 60;
+
+    const fullDays = Math.floor(diffMinutes / FULL_DAY);
+
+    const remainingMinutes = diffMinutes % FULL_DAY;
+
+    return fullDays + (remainingMinutes >= SIX_HOURS ? 1 : 0);
+};
 const useConsiderDetailHook = () => {
     const { id } = useParams();
     const claimId = id ? atob(id) : undefined;
     const dispatch = useAppDispatch();
     const { form } = useAppSelector(claimConsiderSelector);
+    const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "");
     const detail = detailData?.data;
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
@@ -36,7 +67,50 @@ const useConsiderDetailHook = () => {
 
     const formik = useFormik<ClaimConsiderValues>({
         initialValues: { ...form },
-        validate: () => {},
+        validate: (values) => {
+            const errors: FormikErrors<ClaimConsiderValues> = {};
+            const req = "โปรดระบุ";
+            const today = dayjs().endOf("day");
+
+            if (!values.incidentTypeId) errors.incidentTypeId = req;
+            if (!values.coverageTypeId) errors.coverageTypeId = req;
+            if (!values.medicalTypeId) errors.medicalTypeId = req;
+            if (!values.notificationDate) errors.notificationDate = req;
+            if (!values.documentCompleteDate) errors.documentCompleteDate = req;
+            if (!values.incidentDate) {
+                errors.incidentDate = "กรุณาระบุวันที่เกิดเหตุ";
+            } else if (dayjs(values.incidentDate).isAfter(today)) {
+                errors.incidentDate = "วันที่เกิดเหตุต้องไม่เป็นวันที่อนาคต";
+            }
+
+            if (!values.admissionDate) {
+                errors.admissionDate = "กรุณาระบุวันที่เข้าโรงพยาบาล";
+            } else if (dayjs(values.admissionDate).isAfter(today)) {
+                errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่เป็นวันที่อนาคต";
+            } else if (values.incidentDate && dayjs(values.admissionDate).isBefore(values.incidentDate, "day")) {
+                errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่น้อยกว่าวันที่เกิดเหตุ";
+            }
+
+            if (!values.dischargeDate) {
+                errors.dischargeDate = "กรุณาระบุวันที่ออกโรงพยาบาล";
+            } else if (dayjs(values.dischargeDate).isAfter(today)) {
+                errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่เป็นวันที่อนาคต";
+            } else if (values.incidentDate && dayjs(values.dischargeDate).isBefore(values.incidentDate, "day")) {
+                errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
+            } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
+                errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+            }
+            if (!values.chiefComplaintId) errors.chiefComplaintId = req;
+            if (!values.hospitalId) errors.hospitalId = req;
+            if (!values.diagnoses[0]?.icd10Id) {
+                errors.diagnoses = [
+                    {
+                        icd10Id: req,
+                    },
+                ];
+            }
+            return errors;
+        },
         onSubmit: () => {},
     });
 
@@ -52,17 +126,21 @@ const useConsiderDetailHook = () => {
         undefined
     );
 
+    const DEATH_DISABILITY = [CoverageType.Death, CoverageType.Disability];
+
     const coverageType: ClaimTypeOption[] = useMemo(
         () => [
             ...new Map(
-                (incidentTypeMapping?.data ?? []).map((item) => [
-                    item.coverageTypeId,
-                    {
-                        id: item.coverageTypeId ?? 0,
-                        name: item.coverageTypeNameTH ?? "",
-                        icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
-                    },
-                ])
+                (incidentTypeMapping?.data ?? [])
+                    .filter((item) => !DEATH_DISABILITY.includes(item.coverageTypeId ?? 0))
+                    .map((item) => [
+                        item.coverageTypeId,
+                        {
+                            id: item.coverageTypeId ?? 0,
+                            name: item.coverageTypeNameTH ?? "",
+                            icon: COVERAGE_ICON_MAP[item.coverageTypeId ?? 0],
+                        },
+                    ])
             ).values(),
         ],
         [incidentTypeMapping]
@@ -146,7 +224,6 @@ const useConsiderDetailHook = () => {
         formik.setFieldValue("detail", detail.remark, false);
 
         hasSyncedMainRef.current = true;
-        dispatch(setEnabled(true));
     }, [detail, incidentType, coverageType]);
 
     // ---- phase 2: sync medicalType/causeOfIncident (ต้องรอ coverageTypeId ถูก set ไปแล้วจาก phase 1 ก่อน) ----
@@ -160,14 +237,9 @@ const useConsiderDetailHook = () => {
             formik.setFieldValue("medicalTypeName", matchedMedical.name, false);
         }
 
-        const matchedCause = causeOfIncident.find((item) => item.id === detail.causeOfIncidentId);
-        if (matchedCause) {
-            formik.setFieldValue("causeOfIncidentId", matchedCause.id, false);
-            formik.setFieldValue("causeOfIncidentName", matchedCause.name, false);
-        }
 
         hasSyncedMedicalRef.current = true;
-    }, [detail, medicalType, causeOfIncident]);
+    }, [detail, medicalType]);
 
     // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
     useEffect(() => {
@@ -192,6 +264,37 @@ const useConsiderDetailHook = () => {
         prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
     }, [formik.values.coverageTypeId]);
 
+    useEffect(() => {
+        const totalDays = calculateStayDays(
+            formik.values.admissionDate,
+            formik.values.admissionTime,
+            formik.values.dischargeDate,
+            formik.values.dischargeTime
+        );
+
+        if (formik.values.totalDays !== totalDays) {
+            formik.setFieldValue("totalDays", totalDays, false);
+        }
+    }, [
+        formik.values.admissionDate,
+        formik.values.admissionTime,
+        formik.values.dischargeDate,
+        formik.values.dischargeTime,
+    ]);
+    useEffect(() => {
+        if (!detail) return;
+        dispatch(setEnabled(true));
+
+        return () => {
+            dispatch(setEnabled(false));
+        };
+    }, [detail]);
+
+    // useEffect(() => {
+    //     dispatch(setClaimForm(formik.values));
+    //     console.log("sync to redux →", formik.values);
+    // }, [formik.values]);
+
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
         formik.values.considerResult
@@ -212,6 +315,8 @@ const useConsiderDetailHook = () => {
         incidentTypeLoading,
         decisionReason,
         decisionReasonLoading,
+        attachedDocuments,
+        setAttachedDocuments,
     };
 };
 

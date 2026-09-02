@@ -3,10 +3,15 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
+    CreateContinuedClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    SaveClaimEditDraftDtoRequest,
+    SaveClaimEditDraftDtoResponeServiceResponse,
+    UpsertClaimDecisionDtoRequest,
+    UpsertClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
@@ -26,10 +31,14 @@ const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
 const calculateCaseDisabilityQueryKey = ["calculateCaseDisability"];
 const getCustomerBenefitDetailHalfQueryKey = ["getCustomerBenefitDetailHalf"];
 const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
+const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
-const getClaimTransactionMonitorQueryKey = ["getClaimTransactionMonitor"];
+const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
+const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
+const getPreviousClaimQueryKey = ["getPreviousClaim"];
+const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCase"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -93,36 +102,36 @@ export const useGetCustomerDetailById = (id: number | undefined) => {
 
 export const useGetCustomerBenefitDetailSearch = (
     policyCode?: string | undefined,
-    caseTypeId?: number | undefined,
-    dateHappen?: Dayjs | undefined,
+    incidentDate?: dayjs.Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    claimNo?: string | undefined,
+    customerTypeCode?: string | undefined
 ) => {
     return useQuery(
         [
             getCustomerBenefitDetailSearchQueryKey,
             policyCode,
-            caseTypeId,
-            dateHappen,
+            incidentDate,
             isContinue,
             incidentTypeId,
             coverageTypeId,
             medicalTypeId,
-            causeOfIncidentId,
+            claimNo,
+            customerTypeCode,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailSearch(
                 policyCode,
-                caseTypeId,
-                dateHappen,
+                incidentDate,
                 isContinue,
                 incidentTypeId,
                 coverageTypeId,
                 medicalTypeId,
-                causeOfIncidentId
+                claimNo,
+                customerTypeCode
             ),
         {
             enabled: !!policyCode,
@@ -371,6 +380,19 @@ export const useGetCustomerSearchByPolicyCode = (
     );
 };
 
+export const useGetPolicyBenefitShered = (
+    applicaitonCode?: string | undefined,
+    customerTypeCode?: string | undefined
+) => {
+    return useQuery(
+        [getPolicyBenefitSheredQueryKey, applicaitonCode, customerTypeCode],
+        () => coreClaimClient.getPolicyBenefitShered(applicaitonCode, customerTypeCode),
+        {
+            enabled: !!applicaitonCode && !!customerTypeCode,
+        }
+    );
+};
+
 export const useGetDashboardCustomerConsider = (
     dateOption?: number | undefined,
     dateFrom?: dayjs.Dayjs | undefined,
@@ -386,7 +408,7 @@ export const useGetDashboardCustomerConsider = (
     );
 };
 
-export const useGetClaimTransactionMonitor = (
+export const useGetCustomerClaimAdjudicationMonitor = (
     isSearch?: boolean,
     dateOption?: number | undefined,
     dateFrom?: dayjs.Dayjs | undefined,
@@ -403,7 +425,7 @@ export const useGetClaimTransactionMonitor = (
 ) => {
     return useQuery(
         [
-            getClaimTransactionMonitorQueryKey,
+            getCustomerClaimAdjudicationMonitorQueryKey,
             dateOption,
             dateFrom,
             dateTo,
@@ -418,7 +440,7 @@ export const useGetClaimTransactionMonitor = (
             recordsPerPage,
         ],
         () =>
-            coreClaimClient.getClaimTransactionMonitor(
+            coreClaimClient.getCustomerClaimAdjudicationMonitor(
                 dateOption,
                 dateFrom,
                 dateTo,
@@ -467,6 +489,125 @@ export const useGetClaimTransactionLog = (
             ),
         {
             enabled: !!claimId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetPolicyBenefit = (
+    productTypeId: number,
+    applicationCode?: string | undefined,
+    productId?: number | undefined,
+    customerTypeCode?: string | undefined
+) => {
+    return useQuery(
+        [getPolicyBenefitQueryKey, productTypeId, applicationCode, productId, customerTypeCode],
+        () => coreClaimClient.getPolicyBenefit(productTypeId, applicationCode, productId, customerTypeCode),
+        {
+            enabled: !!productTypeId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useSaveClaimEditDraft = (
+    onSuccessCallback?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation((body?: SaveClaimEditDraftDtoRequest | undefined) => coreClaimClient.saveClaimEditDraft(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess)
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            else onSuccessCallback?.(response);
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
+};
+
+//สร้าง claim ต่อเนื่อง
+export const createContinuedClaim = (
+    onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: CreateContinuedClaimDtoRequest | undefined) => coreClaimClient.createContinuedClaim(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+export const useUpsertClaimDecision = (
+    onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: UpsertClaimDecisionDtoRequest | undefined) => coreClaimClient.upsertClaimDecision(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+//api สําหรับ get claim ตั้งต้น detail ของ claim ต่อเนื่อง
+export const useGetPreviousClaim = (claimId: string) => {
+    return useQuery([getPreviousClaimQueryKey, claimId], () => coreClaimClient.getPreviousClaim(claimId), {
+        enabled: !!claimId,
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useGetStandardMedicalExpenseByCase = (
+    caseId: string,
+    formatTypeId: number | undefined,
+    coverageTypeId: number | undefined,
+    medicalTypeId: number | undefined,
+    isUseOften: boolean,
+    productTypeId: number | undefined,
+    productId: number | undefined,
+    causeOfIncidentId?: number | undefined
+) => {
+    return useQuery(
+        [
+            getStandardMedicalExpenseByCaseQueryKey,
+            caseId,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            isUseOften,
+            productTypeId,
+            productId,
+            causeOfIncidentId,
+        ],
+        () =>
+            coreClaimClient.getStandardMedicalExpenseByCase(
+                caseId,
+                formatTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                isUseOften,
+                productTypeId,
+                productId,
+                causeOfIncidentId
+            ),
+        {
+            enabled: !!caseId,
             refetchOnWindowFocus: false,
         }
     );

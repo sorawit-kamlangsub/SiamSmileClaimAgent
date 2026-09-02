@@ -25,8 +25,11 @@ import RefundApprovePage from "../modules/RefundApprove/pages/RefundApprovePage.
 
 import ConsiderMonitorPage from "../modules/ClaimConsider/pages/ConsiderMonitorPage.tsx";
 import ConsiderDetailPage from "../modules/ClaimConsider/pages/ConsiderDetailPage.tsx";
+import ConsiderHospitalDetailPage from "../modules/ClaimConsider/pages/ConsiderHospitalDetailPage.tsx";
+import ConsiderHospitalDocumentPage from "../modules/ClaimConsider/pages/ConsiderHospitalDocumentPage.tsx";
 import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
 import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
+import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/ConsiderHospitalMonitorPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -76,7 +79,7 @@ const Routes: RouteMapType[] = [
         children: [],
     },
     {
-        path: "claim/ph/:appId/:refId",
+        path: "claim/ph/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PH",
         element: <Outlet />,
         permissions: [],
@@ -97,7 +100,7 @@ const Routes: RouteMapType[] = [
         ],
     },
     {
-        path: "claim/pa/:appId/:refId",
+        path: "claim/pa/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PA",
         element: <Outlet />,
         permissions: [],
@@ -229,6 +232,28 @@ const Routes: RouteMapType[] = [
                 path: "customers/:id",
                 title: "บันทึกข้อมูลเคลม - เคลมลูกค้า",
                 element: <ConsiderDetailPage />,
+            },
+        ],
+    },
+    {
+        path: "/consider/hospital-monitor",
+        title: "พิจารณาเคลม - เคลมโรงพยาบาล",
+        element: <Outlet />,
+        children: [
+            {
+                index: true,
+                title: "เคลมโรงพยาบาล",
+                element: <ConsiderHospitalMonitorPage />,
+            },
+            {
+                path: "hospital/:id",
+                title: "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล",
+                element: <ConsiderHospitalDetailPage />,
+            },
+            {
+                path: "hospital/:id/document",
+                title: "ดูรายละเอียดเคลม - เคลมโรงพยาบาล",
+                element: <ConsiderHospitalDocumentPage />,
             },
         ],
     },

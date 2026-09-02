@@ -2,13 +2,13 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
-    CaseDocumentDetailV2Request,
+    CaseDocumentV2Request,
     CaseItemV2Request,
-    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
     GetDocumentSubTypeDtoResponse,
+    GetPreviousClaimDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { DocumentByIdResponseDto } from "../../../api/docstorageApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
@@ -103,6 +103,7 @@ export interface ClaimFormValues {
     deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     benefitAmounts: Record<number, string>;
     transferAmount: number | undefined; //เงินโอน
+    nplAmount: number | undefined; //ยอดจ่ายเกินสิทธิ์ (NPL)
     symptomType: SymptomType | undefined;
     deathPlaceType: DeathPlaceType | undefined;
     hospitalId: number | undefined;
@@ -112,7 +113,7 @@ export interface ClaimFormValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     remark: string | undefined;
-    ocrDocument: CaseDocumentDetailV2Request[] | undefined;
+    ocrDocument: CaseDocumentV2Request[] | undefined;
 }
 
 export type ClaimBankAccount = GetCustomerBankAccountDtoResponse & {
@@ -126,7 +127,7 @@ export type ContactInfo = GetContactPersonDtoResponse & {
 
 interface ClaimPHState {
     isContinuous: boolean;
-    oldClaim: GetClaimHistoryDtoResponse | undefined;
+    oldClaim: GetPreviousClaimDtoResponse | undefined;
     form: ClaimFormValues;
     bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
@@ -164,6 +165,7 @@ const defaultForm: ClaimFormValues = {
     documentCompleteDate: dayjs(),
     notificationDate: dayjs(),
     transferAmount: 0,
+    nplAmount: undefined,
     benefitAmounts: {},
     symptomType: 1,
     deathPlaceType: 2,
@@ -209,7 +211,7 @@ const claimPHSlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
+        setOldClaim(state, action: PayloadAction<GetPreviousClaimDtoResponse>) {
             state.oldClaim = action.payload;
         },
         // toggleOldClaimHidden(state) {
@@ -300,10 +302,18 @@ const claimPHSlice = createSlice({
             state.isEnabled = action.payload;
         },
         setDocumentDetailById: (state, action: PayloadAction<DocumentDetailDto>) => {
-            state.documentDetailById[action.payload.documentId ?? ""] = action.payload;
+            if (!action.payload.documentId) return;
+            state.documentDetailById[action.payload.documentId] = action.payload;
         },
         setDocument: (state, action: PayloadAction<GetDocumentSubTypeDtoResponse[]>) => {
-            state.documentScanList = action.payload;
+            const incoming = action.payload;
+            const incomingIds = new Set(incoming.map((d) => d.documentId));
+
+            // เก็บของเดิมที่ไม่ได้อยู่ใน incoming batch นี้ไว้ + เอาของใหม่มาแทนที่/เพิ่ม
+            state.documentScanList = [
+                ...state.documentScanList.filter((d) => !incomingIds.has(d.documentId)),
+                ...incoming,
+            ];
         },
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;

@@ -3,9 +3,9 @@ import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/Conside
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import ArticleIcon from "@mui/icons-material/Article";
-import ClaimTypeSelector from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
+import ClaimTypeSelector, { ClaimTypeOption } from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { CoverageType, MedicalType } from "../../../../../../functionHelpers";
-import ChipSelector from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
+import ChipSelector, { ChipOption } from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import FormikDatePicker from "../../../../../_common/components/CustomFormik/FormikDatePicker";
 import dayjs from "dayjs";
 import HospitalDropdown from "../../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
@@ -15,17 +15,25 @@ import FormikTimePicker from "../../../../../_common/components/CustomFormik/For
 import { FormikTextField } from "../../../../../_common";
 import StayDaysSummary from "./StayDaysSummary";
 import { EMPTY_STATE_SX } from "../../../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
-
-const RecordClaimData = () => {
-    const {
-        formik,
-        incidentTypeLoading,
-        coverageType,
-        causeOfIncident,
-        incidentTypeMappingLoading,
-        incidentType,
-        medicalType,
-    } = useConsiderDetailHook();
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useFormikContext } from "formik";
+type RecordClaimDataProps = {
+    incidentType: ClaimTypeOption[];
+    incidentTypeLoading: boolean;
+    coverageType: ClaimTypeOption[];
+    causeOfIncident: ChipOption[];
+    medicalType: ChipOption[];
+    incidentTypeMappingLoading: boolean;
+};
+const RecordClaimData = ({
+    incidentType,
+    incidentTypeLoading,
+    coverageType,
+    causeOfIncident,
+    medicalType,
+    incidentTypeMappingLoading,
+}: RecordClaimDataProps) => {
+    const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
@@ -37,25 +45,8 @@ const RecordClaimData = () => {
     //     values.coverageTypeId === CoverageType.Medical &&
     //     (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     // const isOPD = values.medicalTypeId === MedicalType.OPD;
-    const MEDICAL_TYPE_LABEL_BY_CONDITION: Record<string, string> = {
-        death: "สาเหตุการเสียชีวิต",
-        medical: "ประเภทการรักษา",
-        disability: "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ",
-        default: "ตัวเลือกเพิ่มเติม",
-    };
-    const medicalTypeLabel = isDeath
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.death
-        : isMedical
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.medical
-        : isDisability
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
-        : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
     const handleStayDaysChange = (field: "ipdDays" | "icuDays", value: number) => {
         formik.setFieldValue(field, value);
-
-        const ipdDays = field === "ipdDays" ? value : formik.values.ipdDays;
-        const icuDays = field === "icuDays" ? value : formik.values.icuDays;
-        formik.setFieldValue("totalDays", ipdDays + icuDays);
     };
     return (
         <>
@@ -98,7 +89,7 @@ const RecordClaimData = () => {
                         </Grid>
                         <Grid item xs={12}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
-                                {medicalTypeLabel}{" "}
+                                {"ประเภทการรักษา"}{" "}
                                 <Typography component="span" color="error">
                                     *
                                 </Typography>
@@ -216,26 +207,17 @@ const RecordClaimData = () => {
                                 required
                             />
                         </Grid>
-                        {/* <Grid item xs={12} sm={6} md={4}>
-                            <Box data-field-name="deathDate">
-                                <FormikDatePicker
-                                    name="deathDate"
-                                    label="วันที่เสียชีวิต"
-                                    formik={formik}
-                                    slotProps={{ textField: { size: "small" } }}
-                                    maxDate={dayjs()}
-                                    required
-                                />
-                            </Box>
-                        </Grid> */}
                         {isIPD && (
                             <Grid item xs={12} lg={12}>
                                 <StayDaysSummary
                                     values={{
                                         ipdDays: formik.values.ipdDays,
                                         icuDays: formik.values.icuDays,
-                                        totalDays: formik.values.totalDays,
                                     }}
+                                    admissionDate={formik.values.admissionDate}
+                                    admissionTime={formik.values.admissionTime}
+                                    dischargeDate={formik.values.dischargeDate}
+                                    dischargeTime={formik.values.dischargeTime}
                                     onChange={handleStayDaysChange}
                                     required={values.medicalTypeId === MedicalType.IPD}
                                 />
