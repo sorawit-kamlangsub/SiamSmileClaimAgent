@@ -415,7 +415,7 @@ export const useGetCustomerClaimAdjudicationMonitor = (
     dateTo?: dayjs.Dayjs | undefined,
     isProductTypeId_PH?: boolean | undefined,
     isProductTypeId_PA?: boolean | undefined,
-    claimTransactionTypeId?: number | undefined,
+    decisionId?: number | undefined,
     searchOption?: number | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
@@ -431,7 +431,7 @@ export const useGetCustomerClaimAdjudicationMonitor = (
             dateTo,
             isProductTypeId_PH,
             isProductTypeId_PA,
-            claimTransactionTypeId,
+            decisionId,
             searchOption,
             searchDetail,
             orderingField,
@@ -446,7 +446,7 @@ export const useGetCustomerClaimAdjudicationMonitor = (
                 dateTo,
                 isProductTypeId_PH,
                 isProductTypeId_PA,
-                claimTransactionTypeId,
+                decisionId,
                 searchOption,
                 searchDetail,
                 orderingField,
@@ -608,6 +608,59 @@ export const useGetStandardMedicalExpenseByCase = (
             ),
         {
             enabled: !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetHospitalClaimAdjudicationMonitor = (
+    isSearch?: boolean,
+    dateOption?: number | undefined,
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined,
+    isProductTypeId_PH?: boolean | undefined,
+    isProductTypeId_PA?: boolean | undefined,
+    decisionId?: number | undefined,
+    searchOption?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getCustomerClaimAdjudicationMonitorQueryKey,
+            dateOption,
+            dateFrom,
+            dateTo,
+            isProductTypeId_PH,
+            isProductTypeId_PA,
+            decisionId,
+            searchOption,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getHospitalClaimAdjudicationMonitor(
+                dateOption,
+                dateFrom,
+                dateTo,
+                isProductTypeId_PH,
+                isProductTypeId_PA,
+                decisionId,
+                searchOption,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!isSearch,
             refetchOnWindowFocus: false,
         }
     );

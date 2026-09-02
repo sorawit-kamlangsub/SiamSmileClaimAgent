@@ -1,7 +1,6 @@
 import { Grid } from "@mui/material";
 import ConsiderCustomerHeader from "../components/ConsiderCustomerMonitor/ConsiderCustomerHeader";
 import ConsiderCustomerMonitorFilter from "../components/ConsiderCustomerMonitor/ConsiderCustomerMonitorFilter";
-import ConsiderCustomerDataTable from "../components/ConsiderCustomerMonitor/ConsiderCustomerDataTable";
 import useSearchFilterHook, {
     AppliedFilter,
     getDefaultSearchFilter,
@@ -9,6 +8,7 @@ import useSearchFilterHook, {
 import useDashboardHook from "../hooks/ClaimConsiderCustomerMonitor/DashboardHook";
 import { useState } from "react";
 import dayjs from "dayjs";
+import ConsiderHospitalDataTable from "../components/ConsiderCustomerMonitor/ConsiderHospitalMonitor/ConsiderHospitalDataTable";
 
 const ConsiderHospitalMonitorPage = () => {
     const { formik, statusOptions, decisionDataLoading } = useSearchFilterHook();
@@ -17,7 +17,7 @@ const ConsiderHospitalMonitorPage = () => {
         dateFrom: dayjs(),
         dateTo: dayjs(),
         isSearch: true,
-        path: "",
+        path: "hospital",
     });
     const { dashboardData, dashboardDataLoading } = useDashboardHook(appliedFilter);
     const handleSearch = () => {
@@ -60,10 +60,11 @@ const ConsiderHospitalMonitorPage = () => {
                         onSearch={handleSearch}
                         decisionDataLoading={decisionDataLoading}
                         onClear={handleClear}
+                        isHospital
                     />
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} sx={{ py: 2 }}>
-                    <ConsiderCustomerDataTable appliedFilter={appliedFilter} />
+                    <ConsiderHospitalDataTable appliedFilter={appliedFilter} />
                 </Grid>
             </Grid>
         </>

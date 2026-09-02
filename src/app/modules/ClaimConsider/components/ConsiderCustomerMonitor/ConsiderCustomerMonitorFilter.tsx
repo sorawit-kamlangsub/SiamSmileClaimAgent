@@ -1,10 +1,11 @@
+import { useMemo } from "react";
 import { Button, Grid, Icon, Paper } from "@mui/material";
 import useSearchFilterHook, { SearchFilterType } from "../../hooks/ClaimConsiderCustomerMonitor/SearchFilterHook";
 import { FormikCheckboxGroup, FormikDropdown, FormikTextField } from "../../../_common";
 import {
     defaultDateTypeOptions,
-    defaultSearchFromOptions,
     defaultToggleButtonOptions,
+    getSearchFromOptions,
     productMultipleSelectData,
 } from "../_common/Constant/ConstantValues";
 import FormikDatePicker from "../../../_common/components/CustomFormik/FormikDatePicker";
@@ -16,6 +17,7 @@ type ConsiderCustomerMonitorFilterProps = {
     decisionDataLoading: boolean;
     onSearch: () => void;
     onClear: () => void;
+    isHospital?: boolean;
 };
 
 const ConsiderCustomerMonitorFilter = ({
@@ -24,7 +26,10 @@ const ConsiderCustomerMonitorFilter = ({
     decisionDataLoading,
     onSearch,
     onClear,
+    isHospital,
 }: ConsiderCustomerMonitorFilterProps) => {
+    const searchFromOptions = useMemo(() => getSearchFromOptions(isHospital), [isHospital]);
+
     return (
         <>
             <Paper elevation={3} sx={{ p: 2 }}>
@@ -86,7 +91,7 @@ const ConsiderCustomerMonitorFilter = ({
                         <FormikDropdown
                             formik={formik}
                             name="searchFrom"
-                            data={defaultSearchFromOptions ?? []}
+                            data={searchFromOptions}
                             label="ค้นหาจาก"
                             displayFieldName="label"
                             valueFieldName="value"
