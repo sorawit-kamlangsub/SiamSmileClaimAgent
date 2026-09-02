@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { Box, Button, Grid, Paper } from "@mui/material";
+import { Box, Button, Grid } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import { FormikProvider } from "formik";
@@ -10,9 +11,12 @@ import { useNavigate } from "react-router-dom";
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
-import { EMPTY_STATE_SX } from "../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
+import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
+import { swalError } from "../../../_common";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
+import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
@@ -35,10 +39,10 @@ type HospitalClaimDetailsTabProps = {
 };
 
 /**
- * Tab "ข้อมูลการเคลม" ของหน้าพิจารณาเคลมโรงพยาบาล (OPD Half)
+ * Tab "ข้อมูลการเคลม" ของหน้าพิจารณาเคลมโรงพยาบาล (OPD Half / OPD Full)
  *
- * ตอนนี้ทำเฉพาะ Step 1 : บันทึกข้อมูลเคลม (Mock UI)
- * Step 2-3 ยังไม่ได้พัฒนา
+ * Step 1 บันทึกข้อมูลเคลม · Step 2 รายละเอียดค่าใช้จ่าย (OCR + รายการค่ารักษา)
+ * · Step 3 สรุปรายการเคลม + ปุ่มอนุมัติ
  */
 const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabProps) => {
     const navigate = useNavigate();
@@ -48,7 +52,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const {
         formik,
         validateStep1,
-        claimListTypeConfig,
         incidentType,
         incidentTypeLoading,
         coverageType,
@@ -89,9 +92,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             })),
     });
 
+    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook();
+
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
     const continuousClaim = formik.values.continuousClaim;
+    const isLastStep = activeStep === steps.length - 1;
 
     /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
     const currentCaseNo = detail?.caseNo ?? "";
@@ -114,6 +120,33 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         const isValid = await validateStep1();
         if (!isValid) return;
 
+        await handleConfirmConsider();
+    };
+
+    /**
+     * เอกสารที่มีไฟล์แนบทุกรายการต้องมีผลการตรวจเป็น "ผ่าน" ก่อนอนุมัติ
+     * (ชีท : Document Count > 0 และ Document Result ≠ ผ่าน → ไม่สามารถอนุมัติ)
+     */
+    const isDocumentResultAllPassed = () =>
+        !formik.values.documentChecks.some(
+            (doc) => doc.files.length > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
+        );
+
+    /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง */
+    const handleApprove = async () => {
+        const isValid = await validateStep1();
+        if (!isValid) {
+            setActiveStep(0);
+            return;
+        }
+        if (!isDocumentResultAllPassed()) {
+            swalError("ไม่สามารถอนุมัติได้", "กรุณาเลือกผลการตรวจเป็น ผ่าน ให้ครบทุกรายการที่มีเอกสาร");
+            return;
+        }
+        if (hasDiscountError || hasNotCoveredError) {
+            swalError("ไม่สามารถอนุมัติได้", "กรุณาตรวจสอบยอดส่วนลด / ยอดไม่คุ้มครองให้ไม่เกินยอดเบิก");
+            return;
+        }
         await handleConfirmConsider();
     };
 
@@ -191,15 +224,16 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                         </Grid>
                     ) : activeStep === 1 ? (
                         <Grid container spacing={2}>
-                            <Grid item xs={12} sm={12} md={12} lg={12}>
+                            <Grid item xs={12}>
                                 <TreatmentCostTable />
                             </Grid>
-                            <Grid item xs={12} sm={12} md={12} lg={12}></Grid>
                         </Grid>
                     ) : (
-                        <Paper variant="outlined" sx={EMPTY_STATE_SX}>
-                            {`${steps[activeStep].label} (${claimListTypeConfig.label}) : อยู่ระหว่างการพัฒนา`}
-                        </Paper>
+                        <Grid container spacing={2}>
+                            <Grid item xs={12}>
+                                <ClaimSummary attachedDocuments={[]} createdClaimDate={detail?.createdDate} />
+                            </Grid>
+                        </Grid>
                     )}
                 </Box>
 
@@ -227,24 +261,38 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 บันทึกแบบร่าง
                             </Button>
 
-                            <Button
-                                variant="contained"
-                                startIcon={<SaveIcon />}
-                                disabled={!formik.values.considerResult}
-                                onClick={handleConfirmConsiderResult}
-                                sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
-                            >
-                                ยืนยันบันทึกผลพิจารณา
-                            </Button>
+                            {!isLastStep && (
+                                <>
+                                    <Button
+                                        variant="contained"
+                                        startIcon={<SaveIcon />}
+                                        disabled={!formik.values.considerResult}
+                                        onClick={handleConfirmConsiderResult}
+                                        sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
+                                    >
+                                        ยืนยันบันทึกผลพิจารณา
+                                    </Button>
 
-                            <Button
-                                variant="contained"
-                                endIcon={<ArrowForwardIcon />}
-                                onClick={handleNext}
-                                disabled={activeStep === steps.length - 1}
-                            >
-                                ถัดไป
-                            </Button>
+                                    <Button
+                                        variant="contained"
+                                        endIcon={<ArrowForwardIcon />}
+                                        onClick={handleNext}
+                                    >
+                                        ถัดไป
+                                    </Button>
+                                </>
+                            )}
+
+                            {isLastStep && (
+                                <Button
+                                    variant="contained"
+                                    startIcon={<CheckCircleIcon />}
+                                    onClick={handleApprove}
+                                    sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
+                                >
+                                    อนุมัติ
+                                </Button>
+                            )}
                         </Box>
                     </Grid>
                 </Grid>
