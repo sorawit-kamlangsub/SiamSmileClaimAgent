@@ -5771,6 +5771,7 @@ export interface GetDisabilityLossPartDtoResponseListServiceResponse {
 }
 
 export interface GetDocumentByCaseIdDtoResponse {
+    caseDocumentId?: string;
     documentId?: string | undefined;
     documentCode?: string | undefined;
     documentSubTypeId?: number | undefined;
@@ -6093,12 +6094,22 @@ export interface GetPolicyBenefitSheredDtoResponseListServiceResponse {
 
 export interface GetPreviousClaimDtoResponse {
     claimId?: string;
-    claimNo?: string | undefined;
     caseId?: string | undefined;
-    icD10DescriptionTH?: string | undefined;
+    claimNo?: string | undefined;
+    incidentTypeId?: number | undefined;
+    coverageTypeId?: number | undefined;
+    medicalTypeId?: number | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
+    deathDate?: dayjs.Dayjs | undefined;
+    placeOfDeathId?: number | undefined;
+    placeOfDeathDetail?: string | undefined;
+    icD10DescriptionTH?: string | undefined;
+    paymentStatusId?: number | undefined;
+    causeOfIncidentId?: number | undefined;
     totalCaseAmount?: number;
     totalNetPaidAmount?: number;
+    remainingCoverageLimit?: number | undefined;
+    remainingAmountAfterPreviousClaim?: number | undefined;
 }
 
 export interface GetPreviousClaimDtoResponseServiceResponse {
@@ -6449,9 +6460,11 @@ export interface UpsertClaimDecisionCaseDocumentDetailRequest {
 }
 
 export interface UpsertClaimDecisionCaseDocumentRequest {
+    caseDocumentId?: string;
     documentId?: string;
     documentNo?: string | undefined;
     documentSubTypeId?: number;
+    documentReviewStatusId?: number | undefined;
     caseDocumentDetail?: UpsertClaimDecisionCaseDocumentDetailRequest[] | undefined;
 }
 
