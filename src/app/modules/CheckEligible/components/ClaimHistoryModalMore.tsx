@@ -30,7 +30,6 @@ export interface ClaimHistoryItemExtended extends GetClaimHistoryDtoResponse {
     hospitalName?: string;
     uncoveredAmount?: number;
     paymentStatusName?: string;
-    paymentDate?: string;
     remark?: string;
     claimTypeCode?: "Continuous" | "DeathClaim" | "Normal";
     continuousCaseCount?: number;
@@ -101,7 +100,8 @@ const ClaimHistoryModalMore: React.FC<Props> = ({
                                 รายการประวัติการเคลมทั้งหมด
                             </Typography>
                             <Typography fontSize={12} color="#1a5da8">
-                                ทั้งหมด {items[0]?.totalCount ?? items.length} รายการ
+                                ทั้งหมด {paginated.totalAmountRecords || items[0]?.totalCount || items.length}{" "}
+                                รายการ
                             </Typography>
                         </Box>
                     </Box>
@@ -400,7 +400,9 @@ const ClaimHistoryModalMore: React.FC<Props> = ({
                                                 ? `พบเคสต่อเนื่อง ${item.continuousCaseCount} รายการจากทั้งหมด ${
                                                       item.countCase ?? 0
                                                   } เคส`
-                                                : `เคลมประเภท ${badge.label} จำนวน ${item.countCase ?? 0} เคส`}
+                                                : item.claimTypeCode && item.claimTypeCode !== "Normal"
+                                                ? `เคลมประเภท ${badge.label} จำนวน ${item.countCase ?? 0} เคส`
+                                                : `ทั้งหมด ${item.countCase ?? 0} เคส`}
                                         </Typography>
                                     </Box>
 
@@ -452,4 +454,3 @@ const ClaimHistoryModalMore: React.FC<Props> = ({
 };
 
 export default ClaimHistoryModalMore;
-

@@ -16,7 +16,7 @@ import HistoryIcon from "@mui/icons-material/History";
 import ViewClaimDetailModal from "../../CreatedClaim/components/CreateClaim/ViewClaimDetailModal";
 import { useGetCaseByClaimId, useGetClaimHistory } from "../../../api/coreClaimApi";
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
-import ClaimHistoryModalMore from "./ClaimHistoryModalMore";
+import ClaimHistoryModalMore, { ClaimHistoryItemExtended } from "./ClaimHistoryModalMore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -60,6 +60,22 @@ const mapBenefitData = (data: GetCustomerBenefitDetailSearchDtoResponse[]): Bene
         productName: item.productName ?? undefined,
         coverageFrom: item.coverageFrom?.toString(),
         coverageTo: item.coverageTo?.toString(),
+    }));
+};
+
+const resolveClaimTypeCode = (claimType?: string): ClaimHistoryItemExtended["claimTypeCode"] => {
+    const value = (claimType ?? "").toLowerCase();
+    if (value.includes("death") || value.includes("dismember") || value.includes("เสียชีวิต")) return "DeathClaim";
+    if (value.includes("continuous") || value.includes("ต่อเนื่อง")) return "Continuous";
+    return "Normal";
+};
+
+const mapClaimHistoryData = (data: GetClaimHistoryDtoResponse[]): ClaimHistoryItemExtended[] => {
+    return data.map((item) => ({
+        ...item,
+        uncoveredAmount:
+            item.nonCoveredAmount ?? Math.max(0, (item.totalCaseAmount ?? 0) - (item.paidAmount ?? 0)),
+        claimTypeCode: resolveClaimTypeCode(item.claimType),
     }));
 };
 
@@ -210,7 +226,7 @@ const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading, applica
         historyPaginated.page,
         historyPaginated.recordsPerPage
     );
-    const historyItems = claimHistoryData?.data ?? [];
+    const historyItems = mapClaimHistoryData(claimHistoryData?.data ?? []);
 
     const historyPagination: PaginationResultDto = {
         totalAmountRecords: claimHistoryData?.totalAmountRecords ?? 0,
