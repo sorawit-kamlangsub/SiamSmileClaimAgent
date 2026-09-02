@@ -11,7 +11,7 @@ import { useNavigate } from "react-router-dom";
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
-import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
+import ClaimSummaryStep3 from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { swalError } from "../../../_common";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
@@ -92,7 +92,16 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             })),
     });
 
-    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook();
+    const { hasDiscountError, hasNotCoveredError, expenseItems, totalClaim, totalNotCovered, netClaimAmount } =
+        useClaimExpenseDetailHook();
+
+    /** map รายการค่าใช้จ่าย (Step 2) → ตารางรายการค่ารักษาในหน้าสรุป (Step 3) */
+    const step3TreatmentRows = expenseItems.map((item) => ({
+        benefitName: `${item.code ?? ""} ${item.description ?? ""}`.trim() || "-",
+        amountNet: item.claimAmount ?? 0,
+        payAmount: (item.claimAmount ?? 0) - (item.discount ?? 0) - (item.notCovered ?? 0),
+        unPayAmount: item.notCovered ?? 0,
+    }));
 
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
@@ -231,11 +240,20 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             </Grid>
                         </Grid>
                     ) : (
-                        <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                                <ClaimSummary attachedDocuments={[]} createdClaimDate={detail?.createdDate} />
-                            </Grid>
-                        </Grid>
+                        <ClaimSummaryStep3
+                            days={{
+                                ipdDays: formik.values.ipdDays ?? 0,
+                                icuDays: formik.values.icuDays ?? 0,
+                                bedDays: formik.values.totalDays ?? 0,
+                            }}
+                            treatmentRows={step3TreatmentRows}
+                            summary={{
+                                medicalNet: totalClaim,
+                                medicalCoverPay: netClaimAmount,
+                                medicalPay: netClaimAmount,
+                                medicalUnpay: totalNotCovered,
+                            }}
+                        />
                     )}
                 </Box>
 
