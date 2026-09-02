@@ -2,7 +2,7 @@ import { Box, Grid, Paper, TextField, Typography } from "@mui/material";
 import BedIcon from "@mui/icons-material/Bed";
 import MedicalServicesIcon from "@mui/icons-material/MedicalServices";
 import DarkModeIcon from "@mui/icons-material/DarkMode";
-import dayjs, { Dayjs } from "dayjs";
+import { Dayjs } from "dayjs";
 
 type StatCardConfig = {
     key: "ipd" | "icu" | "total";

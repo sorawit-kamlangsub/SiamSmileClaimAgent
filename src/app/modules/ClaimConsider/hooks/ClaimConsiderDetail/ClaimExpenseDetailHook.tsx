@@ -114,7 +114,8 @@ const useClaimExpenseDetailHook = () => {
             claimAmount: item.originalAmount ?? undefined,
             discount: item.discountAmount ?? undefined,
             notCovered: item.nonCoveredAmount ?? undefined,
-            reason: item.nonCoveredReasonId ?? undefined,
+            // API อาจส่ง 0 เมื่อไม่มีสาเหตุ : normalize เป็น undefined กัน payload ส่ง reasonId = 0
+            reason: item.nonCoveredReasonId || undefined,
             remark: item.remark ?? undefined,
             color: item.backgroundColorCode ?? "#FFD6D6",
             disabled: false,

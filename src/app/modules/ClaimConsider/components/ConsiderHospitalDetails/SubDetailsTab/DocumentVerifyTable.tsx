@@ -24,8 +24,8 @@ import { StandardDataTable } from "../../../../_common";
 import { cellAlignOptions, defaultOptionStandardDataTable } from "../../../../../functionHelpers";
 import {
     DOCUMENT_CHECK_RESULTS,
-    DOCUMENT_CHECK_RESULT_OPTIONS,
     DocumentCheckResult,
+    DocumentCheckResultOption,
     DocumentCheckRow,
 } from "../mock/hospitalConsiderMock";
 import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
@@ -37,6 +37,8 @@ type DocumentVerifyTableProps = {
         field: TField,
         value: DocumentCheckRow[TField]
     ) => void;
+    /** ตัวเลือกผลการตรวจเอกสาร จาก Master API (/api/Masters/document/review/status) */
+    options: DocumentCheckResultOption[];
     /** โหมดดูอย่างเดียว : แก้ผลการตรวจและหมายเหตุไม่ได้ แต่ยังกดดูเอกสารได้ */
     readOnly?: boolean;
 };
@@ -45,7 +47,7 @@ type DocumentVerifyTableProps = {
 const isRemarkRequired = (result: DocumentCheckResult | "") =>
     result === DOCUMENT_CHECK_RESULTS.failed || result === DOCUMENT_CHECK_RESULTS.waiting;
 
-const DocumentVerifyTable = ({ onChange, readOnly = false }: DocumentVerifyTableProps) => {
+const DocumentVerifyTable = ({ onChange, options, readOnly = false }: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
 
@@ -145,7 +147,7 @@ const DocumentVerifyTable = ({ onChange, readOnly = false }: DocumentVerifyTable
                                 },
                             }}
                         >
-                            {DOCUMENT_CHECK_RESULT_OPTIONS.map((option) => (
+                            {options.map((option) => (
                                 <ToggleButton
                                     key={option.value}
                                     value={option.value}

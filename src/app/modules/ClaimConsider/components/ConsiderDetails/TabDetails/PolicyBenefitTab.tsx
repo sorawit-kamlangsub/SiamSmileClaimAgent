@@ -92,7 +92,7 @@ const PolicyBenefitTab = () => {
                     color="primary"
                     columnHeaderAlign="center"
                     options={{
-                        customRowRender: (data, dataIndex, rowIndex) => {
+                        customRowRender: (_data, _dataIndex, rowIndex) => {
                             const rawRow: any = rows[rowIndex];
                             const prevRow: any = rows[rowIndex - 1];
                             const showGroupHeader = !prevRow || prevRow.benefitTypeName !== rawRow.benefitTypeName;
