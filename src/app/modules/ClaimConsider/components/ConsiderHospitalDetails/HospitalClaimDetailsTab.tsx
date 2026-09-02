@@ -11,8 +11,8 @@ import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggl
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
 import { EMPTY_STATE_SX } from "../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
-import { swalSuccess } from "../../../_common/sweetAlert";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
+import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import { MOCK_HOSPITAL_CLAIM } from "./mock/hospitalConsiderMock";
 import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
@@ -62,7 +62,15 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         handleClearContinuousClaim,
         handleDocumentCheckChange,
         documentCheckResultOptions,
+        detailData,
+        customerDetailData,
     } = useHospitalConsiderDetailHook();
+
+    const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook({
+        formik,
+        detailData,
+        customerDetailData,
+    });
 
     const continuousClaim = formik.values.continuousClaim;
 
@@ -86,7 +94,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         const isValid = await validateStep1();
         if (!isValid) return;
 
-        swalSuccess("บันทึกผลพิจารณาเรียบร้อย", "ข้อมูลนี้เป็น Mock ยังไม่ได้บันทึกลงระบบ");
+        await handleConfirmConsider();
     };
 
     const handleBack = () => {
@@ -195,13 +203,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 justifyContent: "flex-end",
                             }}
                         >
-                            <Button
-                                variant="outlined"
-                                startIcon={<SaveAsIcon />}
-                                onClick={() =>
-                                    swalSuccess("บันทึกแบบร่างเรียบร้อย", "ข้อมูลนี้เป็น Mock ยังไม่ได้บันทึกลงระบบ")
-                                }
-                            >
+                            <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
                                 บันทึกแบบร่าง
                             </Button>
 

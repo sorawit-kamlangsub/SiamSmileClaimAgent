@@ -19,17 +19,31 @@ import {
     UpsertClaimDecisionCaseDocumentDetailRequest,
     UpsertClaimDecisionCaseRequest,
 } from "../../../../api/coreClaimApi.client";
+import { FormikProps } from "formik";
 import { swalError, swalSuccess } from "../../../_common";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
 import { useAppSelector } from "../../../../../redux";
-import { claimConsiderSelector, ClaimExpenseItem, OcrReceiptRequest } from "../../store/claimConsiderSlice";
-type UseClaimDetailActionHookParams = Pick<
-    ReturnType<typeof useConsiderDetailHook>,
-    "formik" | "detailData" | "customerDetailData"
->;
+import {
+    claimConsiderSelector,
+    ClaimConsiderValues,
+    ClaimExpenseItem,
+    OcrReceiptRequest,
+} from "../../store/claimConsiderSlice";
 
-const useClaimDetailActionHook = ({ formik, detailData, customerDetailData }: UseClaimDetailActionHookParams) => {
+/**
+ * รับ formik ของฟอร์มพิจารณาเคลม ค่าเป็นชนิดใดก็ได้ที่ต่อยอดจาก ClaimConsiderValues
+ * (หน้าเคลมโรงพยาบาลใช้ HospitalConsiderValues ที่ extend มา)
+ */
+type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConsiderValues> = {
+    formik: FormikProps<T>;
+} & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
+
+const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderValues>({
+    formik,
+    detailData,
+    customerDetailData,
+}: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
     const { filledItems } = useAppSelector(claimConsiderSelector);
     const caseItemId = crypto.randomUUID();
