@@ -172,7 +172,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             swalError("ไม่สามารถอนุมัติได้", "กรุณาตรวจสอบยอดส่วนลด / ยอดไม่คุ้มครองให้ไม่เกินยอดเบิก");
             return;
         }
-        await handleConfirmConsider();
+        // ปุ่มอนุมัติ = decisionId 2
+        await handleConfirmConsider(2);
     };
 
     const handleBack = () => {

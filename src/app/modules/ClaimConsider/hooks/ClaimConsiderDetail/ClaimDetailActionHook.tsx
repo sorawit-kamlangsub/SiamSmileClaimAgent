@@ -327,8 +327,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         };
     };
 
-    /** CaseAdjudication: ผลการพิจารณา (อนุมัติ/ปฏิเสธ) */
-    const mapCaseAdjudicationForDecision = (): UpsertClaimDecisionCaseAdjudicationRequest | undefined => {
+    /** CaseAdjudication: ผลการพิจารณา (อนุมัติ/ปฏิเสธ) — ปุ่มอนุมัติส่ง decisionId = 2 ผ่าน override */
+    const mapCaseAdjudicationForDecision = (
+        overrideDecisionId?: number
+    ): UpsertClaimDecisionCaseAdjudicationRequest | undefined => {
         const {
             considerResult,
             decisionReasonId,
@@ -338,18 +340,19 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeDate,
             dischargeTime,
         } = formik.values;
-        if (considerResult === undefined) return undefined;
+        const decisionId = overrideDecisionId ?? considerResult;
+        if (decisionId === undefined) return undefined;
 
         return {
-            decisionId: considerResult,
+            decisionId: decisionId,
             decisionDate: dayjs(),
             decisionReasonId: decisionReasonId,
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: considerResult === 2 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: considerResult === 2 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: considerResult === 2 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: considerResult === 2 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: considerResult === 2 ? formik.values.ipdDays : undefined,
+            approvedAdmissionDate: decisionId === 2 ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: decisionId === 2 ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: decisionId === 2 ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: decisionId === 2 ? asTimeSpan(dischargeTime) : undefined,
+            approvedIPDDayCount: decisionId === 2 ? formik.values.ipdDays : undefined,
             approvedICUDayCount: formik.values.icuDays,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
@@ -362,8 +365,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: considerResult === 6 ? decisionReasonId : undefined,
-            rejectDate: considerResult === 6 ? dayjs() : undefined,
+            rejectReasonId: decisionId === 6 ? decisionReasonId : undefined,
+            rejectDate: decisionId === 6 ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDecision(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -421,7 +424,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         ...(documentReviews ?? []),
     ];
     /** Case: ก้อนกลางของ DTO */
-    const mapCaseForDecision = (): UpsertClaimDecisionCaseRequest => {
+    const mapCaseForDecision = (overrideDecisionId?: number): UpsertClaimDecisionCaseRequest => {
         const { values } = formik;
 
         return {
@@ -449,7 +452,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             vn: caseFields?.vn,
             caseItem: mapCaseItemForDecision(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDecision(),
-            caseAdjudication: mapCaseAdjudicationForDecision(),
+            caseAdjudication: mapCaseAdjudicationForDecision(overrideDecisionId),
             caseDeath: [], //ไม่มี
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
@@ -458,7 +461,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     };
 
     // ---------- Main payload ----------
-    const mapClaimDecisionPayload = (): UpsertClaimDecisionDtoRequest => ({
+    const mapClaimDecisionPayload = (overrideDecisionId?: number): UpsertClaimDecisionDtoRequest => ({
         claimId: detailData?.data?.claimId,
         caseId: detailData?.data?.caseId,
         incidentTypeId: formik.values.incidentTypeId,
@@ -466,11 +469,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         incidentTime: asTimeSpan(formik.values.incidentTime),
         accidentPlace: formik.values.accidentPlace,
         accidentDescription: formik.values.detail,
-        case: mapCaseForDecision(),
+        case: mapCaseForDecision(overrideDecisionId),
     });
 
-    const handleConfirmConsider = async () => {
-        const payload = mapClaimDecisionPayload();
+    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง 2 (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
+    const handleConfirmConsider = async (overrideDecisionId?: number) => {
+        const payload = mapClaimDecisionPayload(overrideDecisionId);
         await saveClaimDecision.mutateAsync(payload);
     };
 
