@@ -2,8 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
-import { CoverageType } from "../../../../functionHelpers";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import { CoverageType, formatDateString } from "../../../../functionHelpers";
+import {
+    useGetClaimContinue,
+    useGetClaimDetailConsider,
+    useGetCustomerDetailById,
+} from "../../../../api/coreClaimApi";
 import {
     useGetDecisionReason,
     useGetDocumentReviewStatus,
@@ -22,7 +26,6 @@ import {
     DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
     DocumentCheckResultOption,
     DocumentCheckRow,
-    MOCK_CONTINUOUS_CLAIMS,
     MOCK_DOCUMENT_CHECK_ROWS,
     parseClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
@@ -235,6 +238,29 @@ const useHospitalConsiderDetailHook = () => {
         detail?.customerId ?? undefined
     );
     const customerDetail = customerDetailData?.data;
+
+    /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม + แถบสรุป) */
+    const { data: claimContinueData, isLoading: continuousClaimRowsLoading } = useGetClaimContinue(
+        customerDetail?.policyCode ?? undefined
+    );
+    const continuousClaimRows: ContinuousClaimRow[] = useMemo(
+        () =>
+            (claimContinueData?.data ?? []).map((item) => ({
+                claimNo: item.claimNo ?? "-",
+                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
+                incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                totalClaimAmount: item.totalCaseAmount ?? 0,
+                totalPaidAmount: item.totalPaidAmount ?? 0,
+                admissionDate: formatDateString(item.admissionDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                claimInfo: item.claimDetail ?? "-",
+                diagnosis1: item.icD10Detail ?? "-",
+                remainingLimit: item.remainAmount ?? 0,
+                // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
+                previousCaseNo: "-",
+                previousCaseStatus: "-",
+            })),
+        [claimContinueData]
+    );
 
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const incidentType: ClaimTypeOption[] =
@@ -513,7 +539,8 @@ const useHospitalConsiderDetailHook = () => {
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
-        continuousClaimRows: MOCK_CONTINUOUS_CLAIMS,
+        continuousClaimRows,
+        continuousClaimRowsLoading,
         continuousClaimOpen,
         setContinuousClaimOpen,
         handleToggleContinuousClaim,
