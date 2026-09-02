@@ -128,11 +128,22 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const currentCaseNo = detail?.caseNo ?? "";
     const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
+    /** เอกสารที่มีไฟล์แนบต้องเลือกผลการตรวจครบก่อนกด "ถัดไป" (ชีท row 104-105) */
+    const isDocumentResultAllSelected = () =>
+        !formik.values.documentChecks.some((doc) => doc.files.length > 0 && doc.checkResult === "");
+
     const handleNext = async () => {
-        // Step 1 : ต้องผ่าน Validate ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท พิจารณาเคลม รพ. OPD Half)
+        // Step 1 : ต้องผ่าน Validate + เลือกผลการตรวจเอกสารครบ ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท)
         if (activeStep === 0) {
             const isValid = await validateStep1();
             if (!isValid) return;
+            if (!isDocumentResultAllSelected()) {
+                swalError(
+                    "ยังดำเนินการต่อไม่ได้",
+                    "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป"
+                );
+                return;
+            }
         }
 
         const next = Math.min(activeStep + 1, steps.length - 1);
