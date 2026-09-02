@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import axios from "axios";
 
 export interface TreatmentCostRow {
@@ -18,10 +18,10 @@ export interface TreatmentCostRow {
 // Adjust base path / endpoint names to match your backend.
 // Following the "POST + descriptive suffix" pattern instead of GET/PUT verbs.
 
-const fetchTreatmentCosts = async (caseId: string): Promise<TreatmentCostRow[]> => {
-    const { data } = await axios.get(`/api/treatment-costs/${caseId}`);
-    return data.rows as TreatmentCostRow[];
-};
+// const fetchTreatmentCosts = async (caseId: string): Promise<TreatmentCostRow[]> => {
+//     const { data } = await axios.get(`/api/treatment-costs/${caseId}`);
+//     return data.rows as TreatmentCostRow[];
+// };
 
 const saveTreatmentCosts = async (params: { caseId: string; rows: TreatmentCostRow[] }): Promise<void> => {
     await axios.post(`/api/treatment-costs/${params.caseId}/save`, {

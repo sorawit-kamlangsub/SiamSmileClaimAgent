@@ -1,5 +1,5 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { Box, Chip, Grid, IconButton, Tooltip, Typography } from "@mui/material";
+import { Box, Grid, IconButton, Tooltip, Typography } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import BedIcon from "@mui/icons-material/Bed";

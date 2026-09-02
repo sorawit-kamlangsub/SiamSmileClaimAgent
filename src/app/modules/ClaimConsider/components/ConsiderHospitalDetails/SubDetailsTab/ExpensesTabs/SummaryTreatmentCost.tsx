@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import {
     Box,
     Paper,
@@ -14,7 +14,6 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import CreditCardIcon from "@mui/icons-material/CreditCard";
 import HighlightRow from "./_common/HighlightRow";
 import SummaryBox from "./_common/SummaryBox";
-import { useAppSelector } from "../../../../../../../redux";
 // TODO: point this at your actual typed-hooks file (same one used by
 // TreatmentCostTable / TreatmentCostsHook) — adjust the relative depth
 // to match where this component lives.

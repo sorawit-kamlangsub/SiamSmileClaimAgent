@@ -35,6 +35,14 @@ import {
  * (RecordClaimData, ConsiderSection) แล้วเพิ่ม Field เฉพาะของเคลมโรงพยาบาล
  */
 export interface HospitalConsiderValues extends ClaimConsiderValues {
+    /**
+     * สาเหตุของการเกิดเหตุ
+     * หน้าเคลมลูกค้าตัดฟิลด์นี้ออกจาก ClaimConsiderValues แล้ว แต่เคลมโรงพยาบาลยังใช้
+     * (ความคุ้มครองกลุ่มเสียชีวิต/ทุพพลภาพ) จึงประกาศเองที่นี่
+     */
+    causeOfIncidentId: number | undefined;
+    causeOfIncidentName: string | undefined;
+
     /** เคลมต่อเนื่อง */
     isContinuousClaim: boolean;
     continuousClaim: ContinuousClaimRow | undefined;
@@ -80,8 +88,6 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     dischargeTime: undefined,
     documentCompleteDate: undefined,
     notificationDate: undefined,
-    deathDate: undefined,
-    deathTime: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,
