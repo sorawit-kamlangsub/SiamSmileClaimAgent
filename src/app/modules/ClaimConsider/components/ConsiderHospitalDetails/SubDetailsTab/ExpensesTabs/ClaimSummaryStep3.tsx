@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Box, Button, Checkbox, Chip, Divider, FormControlLabel, Grid, Paper, TextField, Typography } from "@mui/material";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
+import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 import { MUIDataTableColumn } from "mui-datatables";
 
 import { StandardDataTable } from "../../../../../_common";
@@ -41,6 +42,12 @@ export type Step3PayoutAccount = {
     relationLabel?: string;
 };
 
+export type Step3StayDays = {
+    ipdDays: number;
+    icuDays: number;
+    totalDays: number;
+};
+
 type ClaimSummaryStep3Props = {
     treatmentRows?: Step3TreatmentRow[];
     compensationRows?: Step3CompensationRow[];
@@ -53,7 +60,13 @@ type ClaimSummaryStep3Props = {
      */
     allowSeparateCompensation?: boolean;
     payoutAccount?: Step3PayoutAccount;
-    onEditPayoutAccount?: () => void;
+    /** แจ้ง parent เมื่อผู้ใช้แก้ไขข้อมูลบัญชีรับเงินค่าชดเชย (มีผลเฉพาะรายการนี้) */
+    onPayoutAccountChange?: (next: Step3PayoutAccount) => void;
+    /** จำนวนวันนอน (เฉพาะ IPD) — มีค่าเมื่อประเภทการรักษา = IPD */
+    stayDays?: Step3StayDays;
+    /** ยกสถานะ checkbox "โอนค่าชดเชยรวมกับค่ารักษา" ให้ parent คุม (optional) */
+    mergeChecked?: boolean;
+    onMergeChange?: (checked: boolean) => void;
 };
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
@@ -125,10 +138,33 @@ const ClaimSummaryStep3 = ({
     summary,
     allowSeparateCompensation = false,
     payoutAccount,
-    onEditPayoutAccount,
+    onPayoutAccountChange,
+    stayDays,
+    mergeChecked: mergeCheckedProp,
+    onMergeChange,
 }: ClaimSummaryStep3Props) => {
-    // ติ๊ก "โอนค่าชดเชยรวมกับค่ารักษา" : default = โอนรวม
-    const [mergeChecked, setMergeChecked] = useState(true);
+    // ติ๊ก "โอนค่าชดเชยรวมกับค่ารักษา" : default = โอนรวม (controlled ได้จาก parent)
+    const [mergeCheckedInternal, setMergeCheckedInternal] = useState(true);
+    const mergeChecked = mergeCheckedProp ?? mergeCheckedInternal;
+    const setMergeChecked = (checked: boolean) => {
+        setMergeCheckedInternal(checked);
+        onMergeChange?.(checked);
+    };
+
+    // แก้ไขบัญชีรับเงินค่าชดเชย : เก็บค่าที่แก้ไว้ใน local state (mock — ยังไม่ persist ที่ BE)
+    const [isEditingAccount, setIsEditingAccount] = useState(false);
+    const [accountDraft, setAccountDraft] = useState<Step3PayoutAccount>(payoutAccount ?? {});
+    useEffect(() => {
+        if (!isEditingAccount) setAccountDraft(payoutAccount ?? {});
+    }, [payoutAccount, isEditingAccount]);
+
+    const handleAccountField = (field: keyof Step3PayoutAccount, value: string) => {
+        setAccountDraft((prev) => ({ ...prev, [field]: value }));
+    };
+    const handleToggleEditAccount = () => {
+        if (isEditingAccount) onPayoutAccountChange?.(accountDraft);
+        setIsEditingAccount((prev) => !prev);
+    };
 
     // บังคับโอนรวมเมื่อไม่ใช่กรณี IPD / Day Case ที่ไม่ใช่ PA
     const isMerged = !allowSeparateCompensation || mergeChecked;
@@ -219,6 +255,21 @@ const ClaimSummaryStep3 = ({
                 </Paper>
             </Grid>
 
+            {stayDays && (
+                <Grid item xs={12}>
+                    <HeadingWithColor
+                        text="สรุปจำนวนวันนอน"
+                        color="blue"
+                        icon={<HotelOutlinedIcon sx={{ fontSize: 18 }} />}
+                    />
+                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
+                        <SummaryLine label="จำนวนวัน IPD" value={`${stayDays.ipdDays} วัน`} />
+                        <SummaryLine label="จำนวนวัน ICU" value={`${stayDays.icuDays} วัน`} />
+                        <SummaryLine label="จำนวนวันนอน" value={`${stayDays.totalDays} วัน`} bold noDivider />
+                    </Paper>
+                </Grid>
+            )}
+
             <Grid item xs={12} md={6}>
                 <HeadingWithColor text="สรุปค่าชดเชย" color="blue" icon={<SummarizeOutlinedIcon sx={{ fontSize: 18 }} />} />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
@@ -281,11 +332,11 @@ const ClaimSummaryStep3 = ({
                             )}
                             <Button
                                 size="small"
-                                variant="outlined"
-                                onClick={onEditPayoutAccount}
+                                variant={isEditingAccount ? "contained" : "outlined"}
+                                onClick={handleToggleEditAccount}
                                 sx={{ ml: "auto" }}
                             >
-                                แก้ไขบัญชี
+                                {isEditingAccount ? "เสร็จสิ้น" : "แก้ไขบัญชี"}
                             </Button>
                         </Box>
                         <Typography variant="caption" color="text.secondary">
@@ -298,8 +349,9 @@ const ClaimSummaryStep3 = ({
                                     size="small"
                                     required
                                     label="เบอร์โทรศัพท์"
-                                    value={payoutAccount?.phone ?? ""}
-                                    InputProps={{ readOnly: true }}
+                                    value={accountDraft.phone ?? ""}
+                                    onChange={(e) => handleAccountField("phone", e.target.value)}
+                                    InputProps={{ readOnly: !isEditingAccount }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -308,8 +360,9 @@ const ClaimSummaryStep3 = ({
                                     size="small"
                                     required
                                     label="ชื่อบัญชี"
-                                    value={payoutAccount?.accountName ?? ""}
-                                    InputProps={{ readOnly: true }}
+                                    value={accountDraft.accountName ?? ""}
+                                    onChange={(e) => handleAccountField("accountName", e.target.value)}
+                                    InputProps={{ readOnly: !isEditingAccount }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -318,8 +371,9 @@ const ClaimSummaryStep3 = ({
                                     size="small"
                                     required
                                     label="ธนาคาร"
-                                    value={payoutAccount?.bankName ?? ""}
-                                    InputProps={{ readOnly: true }}
+                                    value={accountDraft.bankName ?? ""}
+                                    onChange={(e) => handleAccountField("bankName", e.target.value)}
+                                    InputProps={{ readOnly: !isEditingAccount }}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -328,8 +382,9 @@ const ClaimSummaryStep3 = ({
                                     size="small"
                                     required
                                     label="เลขที่บัญชี"
-                                    value={payoutAccount?.accountNo ?? ""}
-                                    InputProps={{ readOnly: true }}
+                                    value={accountDraft.accountNo ?? ""}
+                                    onChange={(e) => handleAccountField("accountNo", e.target.value)}
+                                    InputProps={{ readOnly: !isEditingAccount }}
                                 />
                             </Grid>
                         </Grid>

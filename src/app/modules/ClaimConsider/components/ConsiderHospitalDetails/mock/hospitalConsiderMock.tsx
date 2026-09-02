@@ -44,6 +44,7 @@ export const MOCK_HOSPITAL_CLAIM = {
 export const CLAIM_LIST_TYPES = {
     opdHalf: "opd-half",
     opdFull: "opd-full",
+    ipd: "ipd",
 } as const;
 
 export type ClaimListType = (typeof CLAIM_LIST_TYPES)[keyof typeof CLAIM_LIST_TYPES];
@@ -80,11 +81,20 @@ export const CLAIM_LIST_TYPE_CONFIG: Record<ClaimListType, ClaimListTypeConfig> 
         hasHospitalExpenseSummary: false,
         hasSimBSelector: true,
     },
+    [CLAIM_LIST_TYPES.ipd]: {
+        label: "IPD",
+        hasOcrReceipt: false,
+        hasHospitalExpenseSummary: false,
+        hasSimBSelector: true,
+    },
 };
 
 /** แปลงค่าจาก URL (?type=opd-full) เป็นประเภทรายการเคลม */
-export const parseClaimListType = (value: string | null): ClaimListType =>
-    value === CLAIM_LIST_TYPES.opdFull ? CLAIM_LIST_TYPES.opdFull : CLAIM_LIST_TYPES.opdHalf;
+export const parseClaimListType = (value: string | null): ClaimListType => {
+    if (value === CLAIM_LIST_TYPES.opdFull) return CLAIM_LIST_TYPES.opdFull;
+    if (value === CLAIM_LIST_TYPES.ipd) return CLAIM_LIST_TYPES.ipd;
+    return CLAIM_LIST_TYPES.opdHalf;
+};
 
 /** เหตุของการเคลม (Spec : เจ็บป่วย / อุบัติเหตุ) */
 export const MOCK_INCIDENT_TYPES: ClaimTypeOption[] = [
@@ -267,3 +277,21 @@ export const MOCK_DOCUMENT_CHECK_ROWS: DocumentCheckRow[] = [
     },
     { documentId: "DOC-BUNDLE", documentName: "ชุดรวมเอกสาร", files: [], checkResult: "", remark: "" },
 ];
+
+/** แถวเอกสาร "แบบฟอร์ม B" เฉพาะประเภทรายการเคลม IPD (ชีท IPD row 281) */
+const MOCK_DOCUMENT_CHECK_ROW_FORM_B: DocumentCheckRow = {
+    documentId: "DOC-FORM-B",
+    documentName: "แบบฟอร์ม B",
+    files: [],
+    checkResult: "",
+    remark: "",
+};
+
+/**
+ * รายการเอกสารตรวจสอบตามประเภทรายการเคลม
+ * IPD เพิ่ม "แบบฟอร์ม B" ต่อจาก "แบบฟอร์ม A"
+ */
+export const getDocumentCheckRows = (claimListType: ClaimListType): DocumentCheckRow[] => {
+    if (claimListType !== CLAIM_LIST_TYPES.ipd) return MOCK_DOCUMENT_CHECK_ROWS;
+    return [MOCK_DOCUMENT_CHECK_ROWS[0], MOCK_DOCUMENT_CHECK_ROW_FORM_B, ...MOCK_DOCUMENT_CHECK_ROWS.slice(1)];
+};

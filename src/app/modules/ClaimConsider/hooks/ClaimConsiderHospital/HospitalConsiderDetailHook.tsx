@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
-import { CoverageType, formatDateString } from "../../../../functionHelpers";
+import { CoverageType, MedicalType, formatDateString } from "../../../../functionHelpers";
 import {
     useGetClaimContinue,
     useGetClaimDetailConsider,
@@ -20,13 +20,14 @@ import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSel
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
 import {
     CLAIM_LIST_TYPE_CONFIG,
+    ClaimListType,
     ContinuousClaimRow,
     DOCUMENT_CHECK_RESULTS,
     DOCUMENT_CHECK_RESULT_COLORS,
     DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
     DocumentCheckResultOption,
     DocumentCheckRow,
-    MOCK_DOCUMENT_CHECK_ROWS,
+    getDocumentCheckRows,
     parseClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -52,6 +53,9 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     /** ข้อมูลการเข้ารับการรักษา */
     hn: string;
     vn: string;
+    /** AN + ข้อบ่งชี้การ Admit : เฉพาะประเภทการรักษา IPD */
+    an: string;
+    admitIndication: string;
     underlyingDisease: string;
     treatmentMethod: string;
     labResult: string;
@@ -73,7 +77,7 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
  * Sync ทับจาก GetClaimDetailConsider ส่วนฟิลด์เฉพาะเคลมโรงพยาบาล (HN/VN/แพทย์/
  * ข้อมูลการรักษา) ฝั่ง BE ยังไม่ส่งมา จึงยังไม่มีค่าเริ่มต้น
  */
-const buildInitialValues = (): HospitalConsiderValues => ({
+const buildInitialValues = (claimListType: ClaimListType): HospitalConsiderValues => ({
     incidentTypeId: undefined,
     incidentTypeName: undefined,
     coverageTypeId: undefined,
@@ -111,6 +115,8 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 
     hn: "",
     vn: "",
+    an: "",
+    admitIndication: "",
     underlyingDisease: "",
     treatmentMethod: "",
     labResult: "",
@@ -120,7 +126,7 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     doctorLicenseNo: "",
     doctorName: "",
 
-    documentChecks: MOCK_DOCUMENT_CHECK_ROWS,
+    documentChecks: getDocumentCheckRows(claimListType),
 });
 
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
@@ -143,8 +149,11 @@ const FIELD_ERROR_ORDER = [
     "hospitalId",
     "chiefComplaintId",
     "diagnoses",
+    "ipdDays",
     "hn",
     "vn",
+    "an",
+    "admitIndication",
     "underlyingDisease",
     "treatmentMethod",
     "hasProcedure",
@@ -189,6 +198,12 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     // ── ข้อมูลการเข้ารับการรักษา ──
     if (!values.hn.trim()) errors.hn = req;
     if (!values.vn.trim()) errors.vn = req;
+    // AN + ข้อบ่งชี้การ Admit + จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
+    if (values.medicalTypeId === MedicalType.IPD) {
+        if (!values.an.trim()) errors.an = req;
+        if (!values.admitIndication.trim()) errors.admitIndication = req;
+        if (!values.ipdDays || values.ipdDays < 1) errors.ipdDays = req;
+    }
     if (!values.underlyingDisease.trim()) errors.underlyingDisease = req;
     if (!values.treatmentMethod.trim()) errors.treatmentMethod = req;
     if (!values.hasProcedure) errors.hasProcedure = sel;
@@ -271,7 +286,7 @@ const useHospitalConsiderDetailHook = () => {
         })) ?? [];
 
     const formik = useFormik<HospitalConsiderValues>({
-        initialValues: buildInitialValues(),
+        initialValues: buildInitialValues(claimListType),
         enableReinitialize: false,
         validate: validateHospitalConsider,
         onSubmit: () => undefined,
