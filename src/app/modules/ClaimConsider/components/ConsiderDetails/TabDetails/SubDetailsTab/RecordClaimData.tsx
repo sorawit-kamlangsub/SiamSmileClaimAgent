@@ -208,7 +208,7 @@ const RecordClaimData = ({
                             />
                         </Grid>
                         {isIPD && (
-                            <Grid item xs={12} lg={12}>
+                            <Grid item xs={12} lg={12} data-field-name="ipdDays">
                                 <StayDaysSummary
                                     values={{
                                         ipdDays: formik.values.ipdDays,

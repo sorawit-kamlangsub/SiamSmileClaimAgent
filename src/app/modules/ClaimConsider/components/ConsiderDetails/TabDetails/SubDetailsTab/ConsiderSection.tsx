@@ -87,6 +87,11 @@ type ConsiderSectionProps = {
     aplicationCode?: string | undefined;
     decisionReason: { data?: GetDecisionReasonDtoResponse[] } | undefined;
     decisionReasonLoading: boolean;
+    /**
+     * decisionId ของผลการพิจารณาที่ไม่ต้องแสดงปุ่มในหน้านี้
+     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3)
+     */
+    hiddenDecisionIds?: number[];
 };
 
 const ConsiderSection = ({
@@ -94,16 +99,23 @@ const ConsiderSection = ({
     aplicationCode,
     decisionReason,
     decisionReasonLoading,
+    hiddenDecisionIds,
 }: ConsiderSectionProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
+
+    const visibleStatusOptions = statusOptions.filter(
+        (status) => !hiddenDecisionIds?.includes(status.decisionId)
+    );
 
     const reasonMeta = formik.getFieldMeta<number | undefined>("decisionReasonId");
     const detailMeta = formik.getFieldMeta<string | undefined>("decisionReasonDetail");
     const reasonHasError = !!reasonMeta.touched && !!reasonMeta.error;
     const detailHasError = !!detailMeta.touched && !!detailMeta.error;
 
-    const selectedStatus = statusOptions.find((status) => status.decisionId === formik.values.considerResult);
+    const selectedStatus = visibleStatusOptions.find(
+        (status) => status.decisionId === formik.values.considerResult
+    );
     const selectStatus = (status: StatusOption) => {
         formik.setFieldValue("considerResult", status.decisionId, false);
         formik.setFieldValue("decisionReasonId", undefined, false);
@@ -123,11 +135,16 @@ const ConsiderSection = ({
 
             <Box aria-label="เลือกผลการพิจารณา" role="radiogroup" sx={{ mt: 2.5 }}>
                 <Grid container spacing={{ xs: 1.25, sm: 2 }}>
-                    {statusOptions.map((status) => {
+                    {visibleStatusOptions.map((status) => {
                         const isSelected = status.decisionId === formik.values.considerResult;
 
                         return (
-                            <Grid item xs={6} lg={3} key={status.value}>
+                            <Grid
+                                item
+                                xs={6}
+                                lg={Math.max(3, Math.floor(12 / visibleStatusOptions.length))}
+                                key={status.value}
+                            >
                                 <Button
                                     fullWidth
                                     aria-checked={isSelected}
