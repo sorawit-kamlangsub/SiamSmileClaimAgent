@@ -8,7 +8,7 @@ import {
 import { useAppDispatch } from "../../../../../redux";
 import { useCalculateCaseClaim } from "../../../../api/coreClaimApi";
 import { swalError } from "../../../_common";
-import { ClaimExpenseItem, setCalculateExpenseResult, setClaimForm } from "../../store/claimConsiderSlice";
+import { ClaimExpenseItem, setCalculateExpenseResult } from "../../store/claimConsiderSlice";
 
 type UseClaimStepCalculateHookProps = {
     formik: FormikProps<any>;
@@ -80,15 +80,15 @@ const useClaimStepCalculateHook = ({
     };
 
     const handleNext = async () => {
-        dispatch(setClaimForm(formik.values));
-        await handleCalculate();
+        if (activeStep === 1) {
+            await handleCalculate();
+        }
         const next = Math.min(activeStep + 1, stepsLength - 1);
         setActiveStep(next);
         setFurthestStep((prev) => Math.max(prev, next));
     };
 
     const handleBack = () => {
-        dispatch(setClaimForm(formik.values));
         setActiveStep((prev) => Math.max(prev - 1, 0));
     };
 

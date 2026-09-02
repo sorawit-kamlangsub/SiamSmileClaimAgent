@@ -1,24 +1,12 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import {
-    Box,
-    Checkbox,
-    Divider,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    Paper,
-    Snackbar,
-    Tooltip,
-    Typography,
-    Zoom,
-} from "@mui/material";
+import { Box, Checkbox, Divider, FormControlLabel, Grid, IconButton, Paper, Tooltip, Typography } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import BedIcon from "@mui/icons-material/Bed";
+import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../../_common";
@@ -461,6 +449,39 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                 options={defaultOptionStandardDataTable}
             />
             <Grid container spacing={2} mt={1}>
+                <Grid item xs={12}>
+                    <HeadingWithColor
+                        text="รายการค่ารักษา"
+                        color="blue"
+                        icon={<LocalHospitalOutlinedIcon sx={{ fontSize: 18 }} />}
+                        sx={{ mb: 1 }}
+                    />
+                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
+                        <StandardDataTable
+                            name="TreatmentSummaryTable"
+                            title=""
+                            data={treatmentTableData}
+                            isLoading={false}
+                            columns={treatmentColumns}
+                            color="primary"
+                            columnHeaderAlign="center"
+                            displayToolbar={false}
+                            displayFooter={false}
+                            options={{
+                                ...tableOptions,
+                                setRowProps: (_r, _d, i) => ({
+                                    style:
+                                        i === treatmentTableData.length - 1
+                                            ? { backgroundColor: "#3d3d3d" }
+                                            : i % 2 === 0
+                                            ? { backgroundColor: "#ffffff" }
+                                            : { backgroundColor: "#f9f9f9" },
+                                }),
+                            }}
+                            sx={tableSx}
+                        />
+                    </Paper>
+                </Grid>
                 <Grid item xs={12}>
                     <HeadingWithColor
                         text="ค่าชดเชย"

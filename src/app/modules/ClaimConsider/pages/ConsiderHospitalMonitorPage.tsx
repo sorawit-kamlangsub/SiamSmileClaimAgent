@@ -40,7 +40,7 @@ const ConsiderHospitalMonitorPage = () => {
             dateType: 1,
             dateFrom: dayjs(),
             dateTo: dayjs(),
-            product: [],
+            product: [6, 26],
             searchFrom: undefined,
             searchDetail: "",
             statusId: 0,

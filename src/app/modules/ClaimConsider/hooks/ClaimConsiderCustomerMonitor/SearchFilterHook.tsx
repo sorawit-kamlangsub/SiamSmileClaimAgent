@@ -67,7 +67,7 @@ export const getDefaultSearchFilter = (currentDate: Dayjs): SearchFilterType => 
     dateType: 1,
     dateFrom: currentDate,
     dateTo: currentDate,
-    product: [],
+    product: [6, 26],
     searchFrom: undefined,
     searchDetail: "",
     statusId: 0,

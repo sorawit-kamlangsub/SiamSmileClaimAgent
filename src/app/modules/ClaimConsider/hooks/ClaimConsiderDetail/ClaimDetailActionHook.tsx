@@ -238,7 +238,7 @@ const useClaimDetailActionHook = ({ formik, detailData, customerDetailData }: Us
     };
 
     // ---------- Main payload ----------
-    const mapSaveDraftPayload = (): SaveClaimEditDraftDtoRequest => ({
+    const mapSaveDraftPayload: SaveClaimEditDraftDtoRequest = {
         claimId: detailData?.data?.claimId,
         caseId: detailData?.data?.caseId,
         incidentTypeId: formik.values.incidentTypeId,
@@ -252,10 +252,10 @@ const useClaimDetailActionHook = ({ formik, detailData, customerDetailData }: Us
             baseCaseVersion: detailData?.data?.caseVersion ?? 0,
             claimEditDraftStatusId: formik.values.considerResult === 5 ? 3 : 1, // แบบร่าง
         },
-    });
+    };
 
     const handleSaveDraft = async () => {
-        const payload = mapSaveDraftPayload();
+        const payload = mapSaveDraftPayload;
         await saveClaimEditDraft.mutateAsync(payload);
     };
 
