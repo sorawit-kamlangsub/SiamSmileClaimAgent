@@ -3,6 +3,7 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
+    CreateContinuedClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
@@ -34,6 +35,7 @@ const getClaimTransactionMonitorQueryKey = ["getClaimTransactionMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
+const getPreviousClaimQueryKey = ["getPreviousClaim"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -435,7 +437,7 @@ export const useGetClaimTransactionMonitor = (
             recordsPerPage,
         ],
         () =>
-            coreClaimClient.getClaimTransactionMonitor(
+            coreClaimClient.GetCustomerClaimAdjudicationMonitor(
                 dateOption,
                 dateFrom,
                 dateTo,
@@ -518,5 +520,33 @@ export const useSaveClaimEditDraft = (
         onError: (error: Error) => {
             onErrorCallback?.(error.message);
         },
+    });
+};
+
+//สร้าง claim ต่อเนื่อง
+export const createContinuedClaim = (
+    onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: CreateContinuedClaimDtoRequest | undefined) => coreClaimClient.createContinuedClaim(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+//api สําหรับ get claim ตั้งต้น detail ของ claim ต่อเนื่อง
+export const useGetPreviousClaim = (claimId: string) => {
+    return useQuery([getPreviousClaimQueryKey, claimId], () => coreClaimClient.getPreviousClaim(claimId), {
+        enabled: !!claimId,
+        refetchOnWindowFocus: false,
     });
 };
