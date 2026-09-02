@@ -1,5 +1,4 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
-import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import ArticleIcon from "@mui/icons-material/Article";

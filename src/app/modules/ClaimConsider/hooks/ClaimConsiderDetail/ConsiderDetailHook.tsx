@@ -8,7 +8,7 @@ import {
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
-import { claimConsiderSelector, ClaimConsiderValues, setClaimForm } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, ClaimConsiderValues } from "../../store/claimConsiderSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
