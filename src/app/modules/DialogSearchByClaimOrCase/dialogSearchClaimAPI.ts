@@ -1,12 +1,9 @@
-// CC690800000221
-// CLPA690800000075
-
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_URL as API_CLAIM_FUND_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
-const apiURL = `${API_CLAIM_FUND_URL}/api`;
+const apiURL = `${API_CLAIM_FUND_URL}`;
 
 const getClaimByClaimOrCase = "getClaimByClaimOrCaseKey";
 
