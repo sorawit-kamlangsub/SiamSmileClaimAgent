@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
-import { useGetNonCoveredReason, useGetSimB, useGetSimBCategory } from "../../../../api/coreClaimMastersApi";
+import {
+    useGetInsuranceCompany,
+    useGetNonCoveredReason,
+    useGetSimBCategory,
+} from "../../../../api/coreClaimMastersApi";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useFormik } from "formik";
@@ -8,6 +12,7 @@ import { RootState } from "../../../../../redux";
 import { applyMaximumLimit, hasAmountSumError, toAmount } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
 import { ClaimExpenseItem, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
+import { useGetStandardMedicalExpenseByCase } from "../../../../api/coreClaimApi";
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
     data
         .map((cat) => {
@@ -47,7 +52,7 @@ interface ClaimLineFormValues {
 }
 const useClaimExpenseDetailHook = () => {
     const dispatch = useDispatch();
-    const { customerDetailData } = useConsiderDetailHook();
+    const { customerDetailData, detailData } = useConsiderDetailHook();
     const { filledItems, form } = useSelector((s: RootState) => s.claimConsider);
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
@@ -55,7 +60,7 @@ const useClaimExpenseDetailHook = () => {
         code: string;
         description: string;
         standardMedicalExpenseId?: number;
-        bodyPartId?: number;
+        inputToStandardMappingId?: number;
         maximumLimit?: number;
     } | null>(null);
     const [selectedLeafId, setSelectedLeafId] = useState<number | null>(null);
@@ -78,17 +83,16 @@ const useClaimExpenseDetailHook = () => {
     const items = formikClaimLine.values.items;
 
     // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
-    const { data: frequentData, isLoading: isFrequentLoading } = useGetSimB(
+    const { data: frequentData, isLoading: isFrequentLoading } = useGetStandardMedicalExpenseByCase(
+        detailData?.data?.caseId ?? "",
         6, //simb2
         form.coverageTypeId,
         form.medicalTypeId,
-        true,
+        false,
         customerDetailData?.data?.productTypeId,
-        undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId,
+        undefined
     );
-    console.log("form", form);
-    console.log("customerDetail :", customerDetailData?.data);
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
@@ -103,18 +107,20 @@ const useClaimExpenseDetailHook = () => {
         return raw.map((item, idx) => ({
             id: item.inputToStandardMappingId ?? idx,
             standardMedicalExpenseId: item.standardMedicalExpenseId,
+            inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
             description: item.descriptionTH ?? "",
             receiptAmount: undefined,
-            claimAmount: undefined,
-            discount: undefined,
-            notCovered: undefined,
-            reason: undefined,
-            remark: "",
+            claimAmount: item.originalAmount ?? undefined,
+            discount: item.discountAmount ?? undefined,
+            notCovered: item.nonCoveredAmount ?? undefined,
+            reason: item.nonCoveredReasonId ?? undefined,
+            remark: item.remark ?? undefined,
             color: item.backgroundColorCode ?? "#FFD6D6",
             disabled: false,
             bodyPartId: item.bodyPartId,
             maximumLimit: item.maximumLimit,
+            caseItemId: item.caseItemId,
         }));
     }, [frequentData]);
     const categories = useMemo(() => {
@@ -162,6 +168,16 @@ const useClaimExpenseDetailHook = () => {
         return raw.map((r) => ({
             value: r.nonCoveredReasonId,
             label: r.nonCoveredReasonName ?? "-",
+        }));
+    }, [nonCoveredReasonData]);
+
+    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany();
+
+    const insuranceCompanyOptions = useMemo(() => {
+        const raw = insuranceCompany?.data ?? [];
+        return raw.map((r) => ({
+            value: r.organizeId,
+            label: r.organizeName ?? "-",
         }));
     }, [nonCoveredReasonData]);
 
@@ -214,14 +230,14 @@ const useClaimExpenseDetailHook = () => {
         description: string,
         id: number,
         standardMedicalExpenseId?: number,
-        bodyPartId?: number,
+        inputToStandardMappingId?: number,
         maximumLimit?: number
     ) => {
         setSelectedItem({
             code,
             description,
             standardMedicalExpenseId,
-            bodyPartId,
+            inputToStandardMappingId,
             maximumLimit,
         });
         setSelectedLeafId(id);
@@ -299,6 +315,7 @@ const useClaimExpenseDetailHook = () => {
         const newItem: ClaimExpenseItem = {
             id: Date.now(),
             standardMedicalExpenseId: selectedItem.standardMedicalExpenseId,
+            inputToStandardMappingId: selectedItem.inputToStandardMappingId,
             code: selectedItem.code,
             description: selectedItem.description,
             receiptAmount: toAmount(pendingReceiptAmount),
@@ -385,7 +402,7 @@ const useClaimExpenseDetailHook = () => {
             desc.join(" "),
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
-            matched.leaf.bodyPartId,
+            matched.leaf.id, //inputToStandardMappingId
             matched.leaf.maximumLimit
         );
     }, [searchText, categories]);
@@ -432,6 +449,8 @@ const useClaimExpenseDetailHook = () => {
         netClaimAmount,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
+        insuranceCompanyOptions,
+        insuranceCompanyLoading,
         filteredCategories,
         isCategoryLoading,
         handleNext,

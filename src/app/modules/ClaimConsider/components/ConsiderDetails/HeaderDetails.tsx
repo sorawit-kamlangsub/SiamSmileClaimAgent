@@ -144,7 +144,7 @@ const HeaderDetails = ({
 
                     <Grid item xs={12} sm={12} md={12} lg={12}>
                         <TabPanel value="1">
-                            <ClaimDetailsTab customerDetail={customerDetail} />
+                            <ClaimDetailsTab customerDetail={customerDetail} detail={detail} />
                         </TabPanel>
                         <TabPanel value="2">
                             <ClaimTransationTab />

@@ -10,6 +10,8 @@ import {
     GetDocumentSubTypeDtoRequest,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
+    UpsertClaimDecisionDtoRequest,
+    UpsertClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
@@ -31,11 +33,12 @@ const getCustomerBenefitDetailHalfQueryKey = ["getCustomerBenefitDetailHalf"];
 const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
-const getClaimTransactionMonitorQueryKey = ["getClaimTransactionMonitor"];
+const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
 const getPreviousClaimQueryKey = ["getPreviousClaim"];
+const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCase"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -405,7 +408,7 @@ export const useGetDashboardCustomerConsider = (
     );
 };
 
-export const useGetClaimTransactionMonitor = (
+export const useGetCustomerClaimAdjudicationMonitor = (
     isSearch?: boolean,
     dateOption?: number | undefined,
     dateFrom?: dayjs.Dayjs | undefined,
@@ -422,7 +425,7 @@ export const useGetClaimTransactionMonitor = (
 ) => {
     return useQuery(
         [
-            getClaimTransactionMonitorQueryKey,
+            getCustomerClaimAdjudicationMonitorQueryKey,
             dateOption,
             dateFrom,
             dateTo,
@@ -437,7 +440,7 @@ export const useGetClaimTransactionMonitor = (
             recordsPerPage,
         ],
         () =>
-            coreClaimClient.GetCustomerClaimAdjudicationMonitor(
+            coreClaimClient.getCustomerClaimAdjudicationMonitor(
                 dateOption,
                 dateFrom,
                 dateTo,
@@ -543,10 +546,69 @@ export const createContinuedClaim = (
     );
 };
 
+export const useUpsertClaimDecision = (
+    onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: UpsertClaimDecisionDtoRequest | undefined) => coreClaimClient.upsertClaimDecision(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
 //api สําหรับ get claim ตั้งต้น detail ของ claim ต่อเนื่อง
 export const useGetPreviousClaim = (claimId: string) => {
     return useQuery([getPreviousClaimQueryKey, claimId], () => coreClaimClient.getPreviousClaim(claimId), {
         enabled: !!claimId,
         refetchOnWindowFocus: false,
     });
+};
+
+export const useGetStandardMedicalExpenseByCase = (
+    caseId: string,
+    formatTypeId: number | undefined,
+    coverageTypeId: number | undefined,
+    medicalTypeId: number | undefined,
+    isUseOften: boolean,
+    productTypeId: number | undefined,
+    productId: number | undefined,
+    causeOfIncidentId?: number | undefined
+) => {
+    return useQuery(
+        [
+            getStandardMedicalExpenseByCaseQueryKey,
+            caseId,
+            formatTypeId,
+            coverageTypeId,
+            medicalTypeId,
+            isUseOften,
+            productTypeId,
+            productId,
+            causeOfIncidentId,
+        ],
+        () =>
+            coreClaimClient.getStandardMedicalExpenseByCase(
+                caseId,
+                formatTypeId,
+                coverageTypeId,
+                medicalTypeId,
+                isUseOften,
+                productTypeId,
+                productId,
+                causeOfIncidentId
+            ),
+        {
+            enabled: !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };

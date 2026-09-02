@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useRef } from "react";
 import type { ReactNode } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
@@ -9,8 +9,10 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
-import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useFormikContext } from "formik";
+import { GetDecisionReasonDtoResponse } from "../../../../../../api/coreClaimApi.client";
 
 type ConsiderType = "pendingDocument" | "revision" | "rejected" | "cancelled";
 
@@ -83,12 +85,23 @@ const statusOptions: StatusOption[] = [
 type ConsiderSectionProps = {
     productId?: number | undefined;
     aplicationCode?: string | undefined;
+    decisionReason: { data?: GetDecisionReasonDtoResponse[] } | undefined;
+    decisionReasonLoading: boolean;
 };
 
-const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) => {
-    const { formik, decisionReason, decisionReasonLoading } = useConsiderDetailHook();
-    const [detail, setDetail] = useState("");
+const ConsiderSection = ({
+    productId,
+    aplicationCode,
+    decisionReason,
+    decisionReasonLoading,
+}: ConsiderSectionProps) => {
+    const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
+
+    const reasonMeta = formik.getFieldMeta<number | undefined>("decisionReasonId");
+    const detailMeta = formik.getFieldMeta<string | undefined>("decisionReasonDetail");
+    const reasonHasError = !!reasonMeta.touched && !!reasonMeta.error;
+    const detailHasError = !!detailMeta.touched && !!detailMeta.error;
 
     const selectedStatus = statusOptions.find((status) => status.decisionId === formik.values.considerResult);
     const selectStatus = (status: StatusOption) => {
@@ -199,32 +212,43 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
                     </Box>
 
                     <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                        <TextField
-                            select
-                            required
-                            fullWidth
-                            label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
-                            value={formik.values.decisionReasonId || ""}
-                            onChange={(event) => formik.setFieldValue("decisionReasonId", Number(event.target.value))}
-                        >
-                            {(decisionReason?.data ?? []).map((item) => (
-                                <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
-                                    {item.decisionReasonName}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                        <Box data-field-name="decisionReasonId">
+                            <TextField
+                                select
+                                required
+                                fullWidth
+                                label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
+                                value={formik.values.decisionReasonId || ""}
+                                onChange={(event) =>
+                                    formik.setFieldValue("decisionReasonId", Number(event.target.value))
+                                }
+                                onBlur={() => formik.setFieldTouched("decisionReasonId", true)}
+                                error={reasonHasError}
+                                helperText={reasonHasError ? reasonMeta.error : undefined}
+                            >
+                                {(decisionReason?.data ?? []).map((item) => (
+                                    <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
+                                        {item.decisionReasonName}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
 
-                        <TextField
-                            required
-                            fullWidth
-                            multiline
-                            minRows={4}
-                            label={selectedStatus.detailLabel}
-                            placeholder={selectedStatus.detailPlaceholder}
-                            value={detail}
-                            onChange={(event) => setDetail(event.target.value)}
-                            sx={{ mt: 2 }}
-                        />
+                        <Box data-field-name="decisionReasonDetail" sx={{ mt: 2 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                multiline
+                                minRows={4}
+                                label={selectedStatus.detailLabel}
+                                placeholder={selectedStatus.detailPlaceholder}
+                                value={formik.values.decisionReasonDetail || ""}
+                                onChange={(event) => formik.setFieldValue("decisionReasonDetail", event.target.value)}
+                                onBlur={() => formik.setFieldTouched("decisionReasonDetail", true)}
+                                error={detailHasError}
+                                helperText={detailHasError ? detailMeta.error : undefined}
+                            />
+                        </Box>
 
                         {selectedStatus.requiresAttachment && (
                             <DocumentScanTable

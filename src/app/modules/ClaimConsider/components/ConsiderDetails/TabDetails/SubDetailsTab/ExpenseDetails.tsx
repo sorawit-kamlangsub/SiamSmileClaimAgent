@@ -2,7 +2,8 @@ import CustomPaper from "../../../../../_common/components/CustomComponent/Custo
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
 import OcrReceiptSection from "./OcrReceiptSection";
-import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
 import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 
@@ -13,9 +14,7 @@ import { PaymentSummaryCard } from "./PaymentSummaryCard";
 import { Grid } from "@mui/material";
 import { NPL_URL } from "../../../../../../../Const";
 import ExpenseRecords from "./ExpenseRecords";
-import { useNavigate } from "react-router-dom";
 const ExpenseDetails = () => {
-    const navigate = useNavigate();
     const { formik, customerDetailData } = useConsiderDetailHook();
     const nplAmount = 100;
     return (
@@ -32,7 +31,7 @@ const ExpenseDetails = () => {
                 <HeadingWithColor
                     text="สรุปรายการแจ้งโอน"
                     color="blue"
-                    icon={<ReceiptLongIcon sx={{ fontSize: 27 }} />}
+                    icon={<AccountBalanceWalletIcon sx={{ fontSize: 27 }} />}
                 />
                 <Grid container spacing={2}>
                     <Grid item xs={12} sm={6} md={4}>

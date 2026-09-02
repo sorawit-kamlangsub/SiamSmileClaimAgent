@@ -5429,6 +5429,7 @@ export interface GetClaimDetailConsiderDtoResponse {
     incidentDate?: dayjs.Dayjs | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
     dischargeDate?: dayjs.Dayjs | undefined;
+    documentCompleteDate?: dayjs.Dayjs | undefined;
     hospitalId?: number | undefined;
     chiefComplaintId?: number | undefined;
     icD10_1stId?: number | undefined;
@@ -5731,6 +5732,9 @@ export interface GetCustomerDetailByIdDtoResponse {
     academicYear?: number | undefined;
     appStatusId?: number | undefined;
     appStatus?: string | undefined;
+    bankId?: number | undefined;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
 }
 
 export interface GetCustomerDetailByIdDtoResponseServiceResponse {
