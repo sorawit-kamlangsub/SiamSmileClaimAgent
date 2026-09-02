@@ -34,6 +34,7 @@ import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesT
 import { swalError } from "../../../_common";
 import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
 import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
+import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
@@ -185,6 +186,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     );
     const defaultBankAccount = bankAccountData?.data?.[0];
 
+    /** ชื่อธนาคารจาก customerDetail.bankId (จับจาก master bank) */
+    const { data: bankListData } = useGetBank();
+    const customerBankName = customerDetail?.bankId
+        ? bankListData?.data?.find((b) => b.organizeId === customerDetail.bankId)?.organizeName
+        : undefined;
+
     /** ประเภทการรักษา IPD : แสดงการ์ดสรุปจำนวนวันนอน + ช่อง AN / ข้อบ่งชี้การ Admit */
     const isIPD = formik.values.medicalTypeId === MedicalType.IPD;
     const stayDays = isIPD
@@ -195,12 +202,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
           }
         : undefined;
 
-    /** บัญชีรับเงินค่าชดเชย : ใช้ค่าที่ผู้ใช้แก้ไขใน Step 3 ถ้ามี ไม่งั้น default จาก API */
+    /** บัญชีรับเงินค่าชดเชย : ใช้ค่าที่ผู้ใช้แก้ไขใน Step 3 ถ้ามี ไม่งั้น default จาก customerDetail แล้วค่อย fallback API */
     const payoutAccount: Step3PayoutAccount = editedPayoutAccount ?? {
         phone: customerDetail?.mobilePhoneNumber ?? undefined,
-        accountName: defaultBankAccount?.bankAccountName ?? undefined,
-        bankName: defaultBankAccount?.bankName ?? undefined,
-        accountNo: defaultBankAccount?.bankAccountNo ?? undefined,
+        accountName: customerDetail?.bankAccountName ?? defaultBankAccount?.bankAccountName ?? undefined,
+        bankName: customerBankName ?? defaultBankAccount?.bankName ?? undefined,
+        accountNo: customerDetail?.bankAccountNo ?? defaultBankAccount?.bankAccountNo ?? undefined,
         relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
     };
 
