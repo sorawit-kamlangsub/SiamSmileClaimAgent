@@ -40,6 +40,12 @@ import { calculateSummary } from "../../../../../ClaimSimulate/components/Confir
 type ClaimSummaryProps = {
     attachedDocuments: CaseDocumentV2Request[];
     createdClaimDate: Dayjs | undefined;
+    /**
+     * แสดงเฉพาะส่วนหัว : รายละเอียดเคลม (read-only) + ตารางสแกนเอกสาร
+     * ใช้ตอนหน้าพิจารณาเคลมโรงพยาบาลที่มี ClaimSummaryStep3 รับผิดชอบส่วนตัวเลข
+     * (รายการค่ารักษา / ค่าชดเชย / สรุป / จำนวนวันนอน) อยู่แล้ว กัน render ซ้ำ
+     */
+    headerOnly?: boolean;
 };
 const formatDate = (date: Dayjs | undefined) => formatDateString(date?.toString(), "DD/MM/BBBB") ?? undefined;
 
@@ -188,7 +194,7 @@ const SummaryLine = ({
         {!noDivider && <Divider />}
     </>
 );
-const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps) => {
+const ClaimSummary = ({ attachedDocuments, createdClaimDate, headerOnly = false }: ClaimSummaryProps) => {
     const { documentScanList, documentDetailById } = useAppSelector(claimPHSelector);
     const { calculateResult } = useAppSelector(claimConsiderSelector);
     const { values } = useFormikContext<ClaimConsiderValues>();
@@ -357,6 +363,7 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                 <CustomDisplayText label="คำวินิจฉัย 3" value={formatDiagnosis(diagnosis3)} xs={12} md={12} />
                 <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
             </Grid>
+            {!headerOnly && (
             <Box
                 sx={{
                     mx: 2,
@@ -445,6 +452,7 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                     />
                 </Grid>
             </Box>
+            )}
             <StandardDataTable
                 name="claimSummaryDocumentTable"
                 title=""
@@ -457,6 +465,7 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                 displayFooter={false}
                 options={defaultOptionStandardDataTable}
             />
+            {!headerOnly && (
             <Grid container spacing={2} mt={1}>
                 <Grid item xs={12}>
                     <HeadingWithColor
@@ -607,6 +616,7 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                     </Paper>
                 </Grid>
             </Grid>
+            )}
         </CustomPaper>
     );
 };

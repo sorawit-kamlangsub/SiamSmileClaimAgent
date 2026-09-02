@@ -1,5 +1,20 @@
 import { useState } from "react";
-import { Box, Button, FormControlLabel, Grid, Paper, Radio, RadioGroup, Typography } from "@mui/material";
+import {
+    Box,
+    Button,
+    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    Divider,
+    FormControlLabel,
+    Grid,
+    Paper,
+    Radio,
+    RadioGroup,
+    Typography,
+} from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -8,11 +23,14 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
 
+import { useAppDispatch, useAppSelector } from "../../../../../redux";
+import { claimConsiderSelector, setClaimForm } from "../../store/claimConsiderSlice";
+import useClaimStepCalculateHook from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
 import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
-import ClaimSummaryStep3 from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
+import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { swalError } from "../../../_common";
 import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
 import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
@@ -28,6 +46,8 @@ import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
+
+const fmtBaht = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
 /** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
 const isGuid = (value: string) =>
@@ -49,8 +69,11 @@ type HospitalClaimDetailsTabProps = {
  */
 const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabProps) => {
     const navigate = useNavigate();
+    const dispatch = useAppDispatch();
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
+
+    const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
 
     const {
         formik,
@@ -79,6 +102,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     /** OPD Full : ประเภทรายการค่าใช้จ่าย Sim B1 / Sim B2 (Default Sim B2) */
     const [simBCategory, setSimBCategory] = useState<"SimB1" | "SimB2">("SimB2");
 
+    /** Step 3 : "โอนค่าชดเชยรวมกับค่ารักษา" (Default โอนรวม) ยกมาไว้ที่นี่เพื่อคุม flow ปุ่มอนุมัติ */
+    const [mergeCompensation, setMergeCompensation] = useState(true);
+    /** ข้อมูลบัญชีรับเงินค่าชดเชยตามที่ผู้ใช้แก้ไขใน Step 3 (มีผลเฉพาะรายการนี้) */
+    const [editedPayoutAccount, setEditedPayoutAccount] = useState<Step3PayoutAccount>();
+    /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
+    const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+
     const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook({
         formik,
         detailData,
@@ -99,28 +129,54 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             })),
     });
 
-    const { hasDiscountError, hasNotCoveredError, expenseItems, totalClaim, totalNotCovered, netClaimAmount } =
-        useClaimExpenseDetailHook();
-
-    /** map รายการค่าใช้จ่าย (Step 2) → ตารางรายการค่ารักษาในหน้าสรุป (Step 3) */
-    const step3TreatmentRows = expenseItems.map((item) => ({
-        benefitName: `${item.code ?? ""} ${item.description ?? ""}`.trim() || "-",
-        amountNet: item.claimAmount ?? 0,
-        payAmount: (item.claimAmount ?? 0) - (item.discount ?? 0) - (item.notCovered ?? 0),
-        unPayAmount: item.notCovered ?? 0,
-    }));
+    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook();
 
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
 
+    /** Step 2 → Step 3 : เรียก /api/calculate/caseclaim แล้วเก็บผลไว้ที่ Redux (calculateResult) */
+    const { isCalculating, handleCalculate } = useClaimStepCalculateHook({
+        formik,
+        customerDetail,
+        filledItems,
+        stepsLength: steps.length,
+    });
+
+    /** ตารางรายการค่ารักษา (Step 3) : จากผล API calculate ไม่ใช่ผลรวมฝั่ง FE */
+    const step3TreatmentRows = (calculateResult?.medicalExpense ?? []).map((item) => ({
+        benefitName: item.benefitName ?? "-",
+        amountNet: item.net ?? 0,
+        payAmount: item.pay ?? 0,
+        unPayAmount: item.unPay ?? 0,
+    }));
+
+    /** ตารางค่าชดเชย (Step 3) : จากผล API calculate */
+    const step3CompensationRows = (calculateResult?.compensateExpense ?? []).map((item) => ({
+        description: item.benefitName ?? "-",
+        amount: item.pay ?? 0,
+    }));
+
+    /** ยอดสรุป (Step 3) : จากผล API calculate */
+    const step3Summary = {
+        compensateNet: calculateResult?.compensateNet ?? 0,
+        compensateInclude: calculateResult?.compensateInclude ?? 0,
+        compensateRemain: calculateResult?.compensateRemain ?? 0,
+        medicalNet: calculateResult?.medicalNet ?? 0,
+        medicalCoverPay: calculateResult?.medicalCoverPay ?? 0,
+        medicalCompensateInclude: calculateResult?.medicalCompensateInclude ?? 0,
+        medicalPay: calculateResult?.medicalPay ?? 0,
+        medicalUnpay: calculateResult?.medicalUnpay ?? 0,
+    };
+
     /**
-     * "โอนค่าชดเชยรวมกับค่ารักษา" : PA / OPD ทุกผลิตภัณฑ์ = บังคับโอนรวม
-     * เฉพาะ IPD / Day Case ที่ไม่ใช่ PA ผู้ใช้ถึงเลือกโอนแยกได้ (และมีการ์ดบัญชีรับเงินค่าชดเชย)
+     * "โอนค่าชดเชยรวมกับค่ารักษา" : Default บังคับโอนรวม
+     * เลือกโอนแยกได้เฉพาะผลิตภัณฑ์ PH + IPD / Day Case (ชีท IPD row 858 : Enable เฉพาะ PH)
+     * และเมื่อโอนแยกจึงมีการ์ดบัญชีรับเงินค่าชดเชย
      */
     const allowSeparateCompensation =
-        !isProductType(customerDetail?.productTypeId, PRODUCT_TYPE_GROUP.PA) &&
+        isProductType(customerDetail?.productTypeId, PRODUCT_TYPE_GROUP.PH) &&
         (formik.values.medicalTypeId === MedicalType.IPD ||
             formik.values.medicalTypeId === MedicalType.DayCaseSurgery);
 
@@ -128,6 +184,28 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         allowSeparateCompensation ? customerDetail?.policyCode : undefined
     );
     const defaultBankAccount = bankAccountData?.data?.[0];
+
+    /** ประเภทการรักษา IPD : แสดงการ์ดสรุปจำนวนวันนอน + ช่อง AN / ข้อบ่งชี้การ Admit */
+    const isIPD = formik.values.medicalTypeId === MedicalType.IPD;
+    const stayDays = isIPD
+        ? {
+              ipdDays: formik.values.ipdDays,
+              icuDays: formik.values.icuDays,
+              totalDays: (formik.values.ipdDays || 0) + (formik.values.icuDays || 0),
+          }
+        : undefined;
+
+    /** บัญชีรับเงินค่าชดเชย : ใช้ค่าที่ผู้ใช้แก้ไขใน Step 3 ถ้ามี ไม่งั้น default จาก API */
+    const payoutAccount: Step3PayoutAccount = editedPayoutAccount ?? {
+        phone: customerDetail?.mobilePhoneNumber ?? undefined,
+        accountName: defaultBankAccount?.bankAccountName ?? undefined,
+        bankName: defaultBankAccount?.bankName ?? undefined,
+        accountNo: defaultBankAccount?.bankAccountNo ?? undefined,
+        relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
+    };
+
+    /** โอนค่าชดเชยแยก (ไม่ติ๊กโอนรวม) → ต้องยืนยันผ่าน Modal ก่อนอนุมัติ */
+    const isSeparateCompensation = allowSeparateCompensation && !mergeCompensation;
 
     /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
     const currentCaseNo = detail?.caseNo ?? "";
@@ -149,6 +227,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                 );
                 return;
             }
+        }
+
+        // Step 2 → Step 3 : sync ฟอร์มลง Redux แล้วเรียก /api/calculate/caseclaim
+        if (activeStep === 1) {
+            dispatch(setClaimForm(formik.values));
+            await handleCalculate();
         }
 
         const next = Math.min(activeStep + 1, steps.length - 1);
@@ -188,6 +272,24 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             swalError("ไม่สามารถอนุมัติได้", "กรุณาตรวจสอบยอดส่วนลด / ยอดไม่คุ้มครองให้ไม่เกินยอดเบิก");
             return;
         }
+        // ยอดค่าใช้จ่าย / สิทธิ์ / ยอดที่จ่าย ต้องคำนวณเสร็จก่อน (ชีท : ต้องไม่มีรายการค้างสถานะ)
+        if (!calculateResult) {
+            swalError("ไม่สามารถอนุมัติได้", "ระบบยังคำนวณยอดไม่เสร็จ กรุณากลับไป Step 2 แล้วกดถัดไปอีกครั้ง");
+            return;
+        }
+        // ชีท IPD row 972 : เปิด Modal ยืนยันการทำรายการก่อนยิง /decision "เฉพาะ" กรณี UnChecked
+        // โอนค่าชดเชยรวมกับค่ารักษา (โอนค่าชดเชยแยก) ; กรณีอื่นอนุมัติตรง
+        if (isSeparateCompensation) {
+            setConfirmApproveOpen(true);
+            return;
+        }
+        // ปุ่มอนุมัติ = decisionId 2
+        await handleConfirmConsider(2);
+    };
+
+    /** ปุ่ม "ยืนยันการทำรายการ" ใน Modal : ยิง /decision จริง */
+    const handleConfirmApprove = async () => {
+        setConfirmApproveOpen(false);
         // ปุ่มอนุมัติ = decisionId 2
         await handleConfirmConsider(2);
     };
@@ -292,25 +394,23 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                     ) : (
                         <Grid container spacing={2}>
                             <Grid item xs={12}>
-                                <ClaimSummary attachedDocuments={[]} createdClaimDate={detail?.createdDate} />
+                                <ClaimSummary
+                                    attachedDocuments={[]}
+                                    createdClaimDate={detail?.createdDate}
+                                    headerOnly
+                                />
                             </Grid>
                             <Grid item xs={12}>
                                 <ClaimSummaryStep3
                                     treatmentRows={step3TreatmentRows}
-                                    summary={{
-                                        medicalNet: totalClaim,
-                                        medicalCoverPay: netClaimAmount,
-                                        medicalPay: netClaimAmount,
-                                        medicalUnpay: totalNotCovered,
-                                    }}
+                                    compensationRows={step3CompensationRows}
+                                    summary={step3Summary}
                                     allowSeparateCompensation={allowSeparateCompensation}
-                                    payoutAccount={{
-                                        phone: customerDetail?.mobilePhoneNumber ?? undefined,
-                                        accountName: defaultBankAccount?.bankAccountName ?? undefined,
-                                        bankName: defaultBankAccount?.bankName ?? undefined,
-                                        accountNo: defaultBankAccount?.bankAccountNo ?? undefined,
-                                        relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
-                                    }}
+                                    stayDays={stayDays}
+                                    mergeChecked={mergeCompensation}
+                                    onMergeChange={setMergeCompensation}
+                                    payoutAccount={payoutAccount}
+                                    onPayoutAccountChange={setEditedPayoutAccount}
                                 />
                             </Grid>
                         </Grid>
@@ -357,8 +457,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="contained"
                                         endIcon={<ArrowForwardIcon />}
                                         onClick={handleNext}
+                                        disabled={isCalculating}
                                     >
-                                        ถัดไป
+                                        {isCalculating ? "กำลังคำนวณ..." : "ถัดไป"}
                                     </Button>
                                 </>
                             )}
@@ -376,6 +477,92 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                         </Box>
                     </Grid>
                 </Grid>
+
+                {/* Modal ยืนยันการทำรายการ : ก่อนอนุมัติกรณีโอนค่าชดเชยแยก (ชีท IPD row 972-1009) */}
+                <Dialog open={confirmApproveOpen} onClose={() => setConfirmApproveOpen(false)} maxWidth="sm" fullWidth>
+                    <DialogTitle sx={{ fontWeight: 700 }}>ยืนยันการทำรายการ</DialogTitle>
+                    <DialogContent dividers>
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+                            ตรวจสอบผลการอนุมัติเคลมก่อนส่งรายการ กรุณาตรวจสอบยอดตั้งเบิก ยอดค่าชดเชย
+                            และข้อมูลบัญชีรับเงินให้ถูกต้องก่อนยืนยันการทำรายการ
+                        </Typography>
+
+                        <Box display="flex" justifyContent="space-between" py={0.5}>
+                            <Typography variant="body2">สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท</Typography>
+                            <Typography variant="body2" fontWeight={700}>
+                                {fmtBaht(step3Summary.medicalPay)}
+                            </Typography>
+                        </Box>
+                        <Box display="flex" justifyContent="space-between" py={0.5}>
+                            <Typography variant="body2">ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)</Typography>
+                            <Typography variant="body2" fontWeight={700} color="#15803d">
+                                {fmtBaht(step3Summary.compensateRemain)}
+                            </Typography>
+                        </Box>
+
+                        {isSeparateCompensation && step3Summary.compensateRemain > 0 && (
+                            <>
+                                <Divider sx={{ my: 1.5 }} />
+
+                                <Box
+                                    sx={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: 1,
+                                        mb: 0.5,
+                                        flexWrap: "wrap",
+                                    }}
+                                >
+                                    <Typography variant="body2" fontWeight={700}>
+                                        บัญชีรับเงินค่าชดเชย
+                                    </Typography>
+                                    <Chip
+                                        label={payoutAccount.relationLabel ?? "ผู้ชำระเบี้ยในระบบ"}
+                                        size="small"
+                                        color="primary"
+                                        variant="outlined"
+                                    />
+                                </Box>
+                                <Box display="flex" justifyContent="space-between" py={0.25}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ธนาคาร
+                                    </Typography>
+                                    <Typography variant="body2">{payoutAccount.bankName ?? "-"}</Typography>
+                                </Box>
+                                <Box display="flex" justifyContent="space-between" py={0.25}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        เลขที่บัญชี
+                                    </Typography>
+                                    <Typography variant="body2">{payoutAccount.accountNo ?? "-"}</Typography>
+                                </Box>
+                                <Box display="flex" justifyContent="space-between" py={0.25}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        ชื่อบัญชี
+                                    </Typography>
+                                    <Typography variant="body2">{payoutAccount.accountName ?? "-"}</Typography>
+                                </Box>
+                                <Box display="flex" justifyContent="space-between" py={0.25}>
+                                    <Typography variant="body2" color="text.secondary">
+                                        เบอร์โทรศัพท์
+                                    </Typography>
+                                    <Typography variant="body2">{payoutAccount.phone ?? "-"}</Typography>
+                                </Box>
+                            </>
+                        )}
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, py: 2 }}>
+                        <Button variant="outlined" onClick={() => setConfirmApproveOpen(false)}>
+                            ยกเลิก
+                        </Button>
+                        <Button
+                            variant="contained"
+                            onClick={handleConfirmApprove}
+                            sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
+                        >
+                            ยืนยันการทำรายการ
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </FormikProvider>
     );
