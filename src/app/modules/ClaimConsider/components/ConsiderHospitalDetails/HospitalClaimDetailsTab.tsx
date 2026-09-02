@@ -219,6 +219,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     aplicationCode={customerDetail?.policyCode ?? ""}
                                     decisionReason={decisionReason}
                                     decisionReasonLoading={decisionReasonLoading}
+                                    // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3)
+                                    hiddenDecisionIds={[3]}
                                 />
                             </Grid>
                         </Grid>
