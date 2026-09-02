@@ -46,6 +46,12 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     documentReviews?: UpsertClaimDecisionCaseDocumentRequest[];
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
+/**
+ * ค่า fallback ของ nonCoveredReasonId : BE บังคับต้องมี + > 0 ทุก caseItem แม้ไม่มียอดไม่คุ้มครอง
+ * ใช้ id แรกของ Master สาเหตุไม่คุ้มครอง (BE จะ ignore เมื่อ nonCoveredAmount = 0)
+ */
+const DEFAULT_NON_COVERED_REASON_ID = 1;
+
 const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderValues>({
     formik,
     detailData,
@@ -82,8 +88,11 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
     const getNetAmount = (item: ClaimExpenseItem) => (item.claimAmount ?? 0) - (item.discount ?? 0);
     const mapCaseItemForDraft = (): CaseItemSaveClaimEditDraftRequest[] => {
-        return filledItems.map(
-            (item): CaseItemSaveClaimEditDraftRequest => ({
+        return filledItems.map((item): CaseItemSaveClaimEditDraftRequest => {
+            const nonCovered = Number(item.notCovered ?? 0);
+            const reasonId = Number(item.reason ?? 0);
+
+            return {
                 caseItemId: caseItemId,
                 inputToStandardMappingId: item.inputToStandardMappingId,
                 standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
@@ -93,10 +102,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 discountAmount: item.discount ?? 0,
                 netCaseAmount: getNetAmount(item),
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
-                nonCoveredAmount: item.notCovered ?? 0,
-                nonCoveredReasonId: item.reason,
-            })
-        );
+                nonCoveredAmount: nonCovered,
+                nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+            };
+        });
     };
 
     const mapCaseItemAdjudicationForDraft = (): CaseItemAdjudicationSaveClaimEditDraftRequest[] => {
@@ -283,8 +292,11 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     };
 
     const mapCaseItemForDecision = (): UpsertClaimDecisionCaseItemRequest[] => {
-        return filledItems.map(
-            (item): UpsertClaimDecisionCaseItemRequest => ({
+        return filledItems.map((item): UpsertClaimDecisionCaseItemRequest => {
+            const nonCovered = Number(item.notCovered ?? 0);
+            const reasonId = Number(item.reason ?? 0);
+
+            return {
                 inputToStandardMappingId: item.inputToStandardMappingId,
                 standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
                 quantity: 1,
@@ -293,10 +305,11 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 discountAmount: item.discount ?? 0,
                 netCaseAmount: getNetAmount(item),
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
-                nonCoveredAmount: item.notCovered ?? 0,
-                nonCoveredReasonId: item.reason ?? 0,
-            })
-        );
+                nonCoveredAmount: nonCovered,
+                // BE บังคับต้องมี + > 0 ทุกแถว : ใช้สาเหตุจริงถ้ามี ไม่งั้น fallback 1 (BE ignore เมื่อ nonCoveredAmount = 0)
+                nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+            };
+        });
     };
 
     const mapCaseItemAdjudicationForDecision = (): UpsertClaimDecisionCaseItemAdjudicationRequest[] => {
