@@ -44,7 +44,7 @@ const ConsiderMonitorPage = () => {
             searchFrom: undefined,
             searchDetail: "",
             statusId: 0,
-            path: "",
+            path: "customers",
         });
     };
     return (
