@@ -5552,6 +5552,9 @@ export interface GetCustomerDetailByIdDtoResponse {
     academicYear?: number | undefined;
     appStatusId?: number | undefined;
     appStatus?: string | undefined;
+    bankId?: number | undefined;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
 }
 
 export interface GetCustomerDetailByIdDtoResponseServiceResponse {
