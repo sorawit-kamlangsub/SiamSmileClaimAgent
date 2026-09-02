@@ -30,17 +30,19 @@ export interface ClaimExpenseItem {
     id?: number;
     standardMedicalExpenseId?: number | undefined;
     inputToStandardMappingId?: number | undefined;
+    caseItemId?: string | undefined;
     code?: string | undefined;
     description?: string | undefined;
     receiptAmount?: number;
     claimAmount?: number;
+    discount?: number | undefined;
     notCovered?: number;
     reason?: number | undefined;
     remark?: string | undefined;
-    discount?: number | undefined;
     color?: string;
     disabled: boolean;
     maximumLimit?: number | undefined;
+    bodyPartId?: number | undefined;
 }
 
 export interface ClaimConsiderValues {
@@ -53,9 +55,9 @@ export interface ClaimConsiderValues {
     //ประเภทการรักษา
     medicalTypeId: number | undefined;
     medicalTypeName: string | undefined;
-    //สาเหตุการเสียชีวิต/สูญเสียอวัยวะ
-    causeOfIncidentId: number | undefined;
-    causeOfIncidentName: string | undefined;
+    // //สาเหตุการเสียชีวิต/สูญเสียอวัยวะ
+    // causeOfIncidentId: number | undefined;
+    // causeOfIncidentName: string | undefined;
     incidentDate: Dayjs | undefined; //วันที่เกิดเหตุ
     incidentTime: Dayjs | undefined;
     admissionDate: Dayjs | undefined; //วันที่เข้า รพ
@@ -64,8 +66,8 @@ export interface ClaimConsiderValues {
     dischargeTime: Dayjs | undefined;
     documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
     notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
-    deathDate: Dayjs | undefined; //วันที่เสียชีวิต
-    deathTime: Dayjs | undefined;
+    // deathDate: Dayjs | undefined; //วันที่เสียชีวิต
+    // deathTime: Dayjs | undefined;
     ipdDays: number;
     icuDays: number;
     totalDays: number;
@@ -93,16 +95,16 @@ const defaultForm: ClaimConsiderValues = {
     coverageTypeName: undefined,
     medicalTypeId: undefined,
     medicalTypeName: undefined,
-    causeOfIncidentId: undefined,
-    causeOfIncidentName: undefined,
+    // causeOfIncidentId: undefined,
+    // causeOfIncidentName: undefined,
     incidentDate: undefined,
     incidentTime: undefined,
     admissionDate: undefined,
     admissionTime: undefined,
     dischargeDate: undefined,
     dischargeTime: undefined,
-    deathDate: undefined,
-    deathTime: undefined,
+    // deathDate: undefined,
+    // deathTime: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,

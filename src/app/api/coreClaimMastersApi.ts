@@ -463,7 +463,7 @@ export const useGetDecisionReason = (decisionReasonId?: number | undefined, deci
 };
 
 export const useGetInsuranceCompany = (
-    organizeId: number | undefined,
+    organizeId?: number | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,

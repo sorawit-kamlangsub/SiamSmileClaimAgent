@@ -391,17 +391,23 @@ export const colorMapCaseStatus: Record<number, "#11734B" | "#a56e07" | "#B32615
 
 //Decision
 export const backgroundColorMapDecision: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
-    2: "#D4EDBC", // Approve
-    3: "#FFF1CD", // On Pending
-    4: "#FFCFC9", // Cancel
-    5: "#FFCFC9", // Reject
+    2: "#D4EDBC", // อนุมัติ
+    3: "#FFF1CD", // รอเอกสาร
+    4: "#FFF1CD", // รอแก้ไข
+    5: "#FFCFC9", // ยกเลิก
+    6: "#FFCFC9", // ปฏิเสธ
+    7: "#FFF1CD", // รอตรวจสอบการแก้ไข
+    8: "#FFF1CD", // รอพิจารณา
 };
 
 export const colorMapDecision: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
-    2: "#11734B", // Approve
-    3: "#a56e07", // On Pending
-    4: "#B32615", // Cancel
-    5: "#B32615", // Reject
+    2: "#11734B", // อนุมัติ
+    3: "#a56e07", // รอเอกสาร
+    4: "#a56e07", // รอแก้ไข
+    5: "#B32615", // ยกเลิก
+    6: "#B32615", // ปฏิเสธ
+    7: "#a56e07", // รอตรวจสอบการแก้ไข
+    8: "#a56e07", // รอพิจารณา
 };
 
 //PaymentStatus

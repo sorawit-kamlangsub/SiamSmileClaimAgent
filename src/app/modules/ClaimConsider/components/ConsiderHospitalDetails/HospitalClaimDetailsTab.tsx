@@ -19,6 +19,7 @@ import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
+import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
@@ -159,6 +160,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     decisionReasonLoading={decisionReasonLoading}
                                 />
                             </Grid>
+                        </Grid>
+                    ) : activeStep === 1 ? (
+                        <Grid container spacing={2}>
+                            <Grid item xs={12} sm={12} md={12} lg={12}>
+                                <TreatmentCostTable />
+                            </Grid>
+                            <Grid item xs={12} sm={12} md={12} lg={12}></Grid>
                         </Grid>
                     ) : (
                         <Paper variant="outlined" sx={EMPTY_STATE_SX}>

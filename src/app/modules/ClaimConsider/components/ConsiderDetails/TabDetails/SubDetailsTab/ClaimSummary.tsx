@@ -1,7 +1,8 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { Grid, IconButton, Tooltip } from "@mui/material";
+import { Box, Chip, Grid, IconButton, Tooltip, Typography } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
+import BedIcon from "@mui/icons-material/Bed";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../../_common";
@@ -30,7 +31,54 @@ const formatTime = (date: Dayjs | undefined) =>
     date && dayjs(date).isValid() ? dayjs(date).format("HH:mm") : undefined;
 const formatDiagnosis = (d?: { icd10Id?: number; icd10Detail?: string }) =>
     d?.icd10Id !== undefined ? d.icd10Detail ?? "-" : undefined;
+// กล่องสรุปจำนวนวัน 1 กล่อง — สีคาดซ้ายและสีตัวเลขปรับตาม type
 
+type StayDayBoxProps = {
+    label: string;
+    value: number;
+    borderColor: string;
+    valueColor: string;
+};
+
+const StayDayBox = ({ label, value, borderColor, valueColor }: StayDayBoxProps) => (
+    <Grid item xs={12} md={4}>
+        <Box
+            sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                minHeight: 60,
+                px: 1.5,
+                py: 1,
+                border: "1px solid",
+                borderColor,
+                borderRadius: 2,
+                bgcolor: "#fff",
+            }}
+        >
+            <Typography
+                variant="body2"
+                sx={{
+                    color: "#344054",
+                    fontWeight: 500,
+                }}
+            >
+                {label}
+            </Typography>
+
+            <Typography
+                variant="body2"
+                sx={{
+                    fontWeight: 600,
+                    color: valueColor,
+                    whiteSpace: "nowrap",
+                }}
+            >
+                {value} วัน
+            </Typography>
+        </Box>
+    </Grid>
+);
 const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps) => {
     const { documentScanList, documentDetailById } = useAppSelector(claimPHSelector);
     const { values } = useFormikContext<ClaimConsiderValues>();
@@ -117,6 +165,94 @@ const ClaimSummary = ({ attachedDocuments, createdClaimDate }: ClaimSummaryProps
                 <CustomDisplayText label="คำวินิจฉัย 3" value={formatDiagnosis(diagnosis3)} xs={12} md={12} />
                 <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
             </Grid>
+            <Box
+                sx={{
+                    mx: 2,
+                    mb: 2,
+                    pt: 2,
+                    borderTop: "1px solid #E0E0E0",
+                }}
+            >
+                {/* Header */}
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "flex-start",
+                        gap: 1,
+                        mb: 1.5,
+                    }}
+                >
+                    {/* Icon */}
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            width: 32,
+                            height: 32,
+                            flexShrink: 0,
+                            borderRadius: 1,
+                            bgcolor: "#E2F2FF",
+                        }}
+                    >
+                        <BedIcon
+                            sx={{
+                                fontSize: 20,
+                                color: "#007AC1",
+                            }}
+                        />
+                    </Box>
+
+                    {/* Title */}
+                    <Box>
+                        <Typography
+                            sx={{
+                                color: "#007AC1",
+                                fontWeight: 700,
+                                fontSize: 13,
+                                lineHeight: 1.4,
+                            }}
+                        >
+                            สรุปจำนวนวันนอน
+                        </Typography>
+
+                        <Typography
+                            sx={{
+                                color: "#667085",
+                                fontSize: 12,
+                                lineHeight: 1.4,
+                                mt: 0.25,
+                            }}
+                        >
+                            IPD
+                        </Typography>
+                    </Box>
+                </Box>
+
+                {/* Stay Day Summary */}
+                <Grid container spacing={1.5}>
+                    <StayDayBox
+                        label="จำนวนวัน IPD"
+                        value={values.ipdDays ?? 0}
+                        borderColor="#D6E8FF"
+                        valueColor="#007AC1"
+                    />
+
+                    <StayDayBox
+                        label="จำนวนวัน ICU"
+                        value={values.icuDays ?? 0}
+                        borderColor="#FFD9B3"
+                        valueColor="#E53935"
+                    />
+
+                    <StayDayBox
+                        label="จำนวนวันนอน"
+                        value={values.totalDays ?? 0}
+                        borderColor="#D0D5DD"
+                        valueColor="#344054"
+                    />
+                </Grid>
+            </Box>
             <StandardDataTable
                 name="claimSummaryDocumentTable"
                 title=""

@@ -10,7 +10,7 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/comp
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { claimConsiderSelector, ClaimConsiderValues, setClaimForm } from "../../store/claimConsiderSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
-import { useFormik } from "formik";
+import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
@@ -67,7 +67,50 @@ const useConsiderDetailHook = () => {
 
     const formik = useFormik<ClaimConsiderValues>({
         initialValues: { ...form },
-        validate: () => {},
+        validate: (values) => {
+            const errors: FormikErrors<ClaimConsiderValues> = {};
+            const req = "โปรดระบุ";
+            const today = dayjs().endOf("day");
+
+            if (!values.incidentTypeId) errors.incidentTypeId = req;
+            if (!values.coverageTypeId) errors.coverageTypeId = req;
+            if (!values.medicalTypeId) errors.medicalTypeId = req;
+            if (!values.notificationDate) errors.notificationDate = req;
+            if (!values.documentCompleteDate) errors.documentCompleteDate = req;
+            if (!values.incidentDate) {
+                errors.incidentDate = "กรุณาระบุวันที่เกิดเหตุ";
+            } else if (dayjs(values.incidentDate).isAfter(today)) {
+                errors.incidentDate = "วันที่เกิดเหตุต้องไม่เป็นวันที่อนาคต";
+            }
+
+            if (!values.admissionDate) {
+                errors.admissionDate = "กรุณาระบุวันที่เข้าโรงพยาบาล";
+            } else if (dayjs(values.admissionDate).isAfter(today)) {
+                errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่เป็นวันที่อนาคต";
+            } else if (values.incidentDate && dayjs(values.admissionDate).isBefore(values.incidentDate, "day")) {
+                errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่น้อยกว่าวันที่เกิดเหตุ";
+            }
+
+            if (!values.dischargeDate) {
+                errors.dischargeDate = "กรุณาระบุวันที่ออกโรงพยาบาล";
+            } else if (dayjs(values.dischargeDate).isAfter(today)) {
+                errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่เป็นวันที่อนาคต";
+            } else if (values.incidentDate && dayjs(values.dischargeDate).isBefore(values.incidentDate, "day")) {
+                errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
+            } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
+                errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+            }
+            if (!values.chiefComplaintId) errors.chiefComplaintId = req;
+            if (!values.hospitalId) errors.hospitalId = req;
+            if (!values.diagnoses[0]?.icd10Id) {
+                errors.diagnoses = [
+                    {
+                        icd10Id: req,
+                    },
+                ];
+            }
+            return errors;
+        },
         onSubmit: () => {},
     });
 
