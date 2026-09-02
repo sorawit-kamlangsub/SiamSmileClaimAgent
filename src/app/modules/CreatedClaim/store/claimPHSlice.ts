@@ -4,11 +4,11 @@ import dayjs, { Dayjs } from "dayjs";
 import {
     CaseDocumentV2Request,
     CaseItemV2Request,
-    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
     GetDocumentSubTypeDtoResponse,
+    GetPreviousClaimDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { DocumentByIdResponseDto } from "../../../api/docstorageApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
@@ -127,7 +127,7 @@ export type ContactInfo = GetContactPersonDtoResponse & {
 
 interface ClaimPHState {
     isContinuous: boolean;
-    oldClaim: GetClaimHistoryDtoResponse | undefined;
+    oldClaim: GetPreviousClaimDtoResponse | undefined;
     form: ClaimFormValues;
     bankAccounts: ClaimBankAccount[];
     contacts: ContactInfo[];
@@ -211,7 +211,7 @@ const claimPHSlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
+        setOldClaim(state, action: PayloadAction<GetPreviousClaimDtoResponse>) {
             state.oldClaim = action.payload;
         },
         // toggleOldClaimHidden(state) {

@@ -1,27 +1,52 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect } from "react";
 import { Box, Grid } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
 import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAFormSection";
 import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 import { useClaimPA } from "../../../hooks/CreateClaim/ClaimPA/useClaimPA";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 import OldClaimSection from "../../../components/CreateClaim/ClaimPH/OldClaimSection";
-import { claimPASelector, resetState } from "../../../store/claimPASlice";
+import { claimPASelector, resetState, setOldClaim } from "../../../store/claimPASlice";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import ClaimStickyHeader from "../../../components/CreateClaim/ClaimStickyHeader";
+import { useGetPreviousClaim } from "../../../../../api/coreClaimApi";
 
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { isContinuous, oldClaim, insured } = useAppSelector(claimPASelector);
-    const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPA();
+    const { isContinuous: isContinuousParam } = useParams();
+    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const { oldClaim, insured } = useAppSelector(claimPASelector);
+    const {
+        appId,
+        refId,
+        applicationId,
+        claimInfo,
+        isLoading,
+        isContinuous: isContinuousEncode,
+        oldClaimId: oldClaimIdEncode,
+    } = useClaimPA();
+
+    const realOldClaimId = isContinuous && oldClaimIdEncode ? atob(oldClaimIdEncode) : undefined;
+    const { data: previousClaimData } = useGetPreviousClaim(realOldClaimId ?? "");
+    const previousClaim = previousClaimData?.data;
+
+    useEffect(() => {
+        if (previousClaim) {
+            dispatch(setOldClaim(previousClaim));
+        }
+    }, [previousClaim, dispatch]);
 
     useEffect(() => {
         if (insured?.policyCode && applicationId && insured.policyCode !== applicationId) {
             dispatch(resetState());
         }
     }, [applicationId]);
+
+    const handleNext = useCallback(() => {
+        navigate(`/claim/pa/${appId}/${refId}/${isContinuousEncode}/${oldClaimIdEncode}/summary`);
+    }, [navigate, appId, refId, isContinuousEncode, oldClaimIdEncode]);
 
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
     return (
@@ -40,7 +65,7 @@ const ClaimPAPage: React.FC = () => {
                     </Grid>
                 )}
                 <Grid item xs={12}>
-                    <ClaimPAFormSection onNext={() => navigate(`/claim/pa/${appId}/${refId}/summary`)} />
+                    <ClaimPAFormSection onNext={handleNext} />
                 </Grid>
             </Grid>
         </Box>

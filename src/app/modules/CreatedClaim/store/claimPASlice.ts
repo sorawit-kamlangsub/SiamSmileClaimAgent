@@ -22,10 +22,10 @@ import {
     CaseV2Request,
     ClaimV2Request,
     CreateCoreClaimV2DtoRequest,
-    GetClaimHistoryDtoResponse,
     GetContactPersonDtoResponse,
     GetCustomerBankAccountDtoResponse,
     GetCustomerDetailByIdDtoResponse,
+    GetPreviousClaimDtoResponse,
 } from "../../../api/coreClaimApi.client";
 import { OrganLossItem } from "../hooks/CreateClaim/organLoss.types";
 
@@ -109,6 +109,7 @@ export interface ClaimInsuredItem {
 export enum DeathExtraCoverageId {
     PublicDisaster = 6, // ภัยสาธารณะ
     SchoolLiability = 7, // รับผิดสถานศึกษา
+    FuneralExpense = 8, // ค่าปลงศพ — TODO: เช็ค id จริงจาก backend
 }
 
 export const MAX_INSURED_PER_CLAIM = 15;
@@ -165,7 +166,7 @@ export type CreateCoreClaimDto = LocalCoreClaim;
 
 interface ClaimPAState {
     isContinuous: boolean;
-    oldClaim: GetClaimHistoryDtoResponse | undefined;
+    oldClaim: GetPreviousClaimDtoResponse | undefined;
     insured: GetCustomerDetailByIdDtoResponse | undefined;
     pendingInsured: PendingInsured | undefined;
     school: SchoolInfo | null;
@@ -252,7 +253,7 @@ const claimPASlice = createSlice({
         setIsContinuous(state, action: PayloadAction<boolean>) {
             state.isContinuous = action.payload;
         },
-        setOldClaim(state, action: PayloadAction<GetClaimHistoryDtoResponse>) {
+        setOldClaim(state, action: PayloadAction<GetPreviousClaimDtoResponse>) {
             state.oldClaim = action.payload;
         },
         setInsured(state, action: PayloadAction<GetCustomerDetailByIdDtoResponse | undefined>) {

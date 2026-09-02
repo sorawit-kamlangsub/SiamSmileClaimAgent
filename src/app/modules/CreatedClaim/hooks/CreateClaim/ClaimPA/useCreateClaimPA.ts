@@ -18,8 +18,8 @@ import {
 } from "../../../store/claimPASlice";
 import { BeneficiaryForm, ClaimBankAccount, ContactInfo } from "../../../store/claimPHSlice";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
-import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
 import { CoverageType } from "../../../../../functionHelpers";
+import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
 
 const generateRequestId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -131,7 +131,7 @@ export const mapBankAccountToBeneficiary = (
           ]
         : [];
 
-const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
+export const mapCaseEntryToV2 = (caseEntry: LocalCaseEntry): CaseV2Request => {
     const {
         tempCaseId,
         tempClaimId,
@@ -196,10 +196,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
         (message) => onError?.(message)
     );
 
-    const { mutateAsync: createPaymentAsync } = useCreatePayment(
-        () => {},
-        (message) => onError?.(message)
-    );
+    const { confirmPayment: confirmPaymentShared } = useConfirmClaimPayment(onError);
 
     const buildLocalCoreClaim = (beneficiaryList: BeneficiaryForm[]): LocalCoreClaim => ({
         ...tmpCoreClaim,
@@ -246,79 +243,13 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
         return { claimResponse, beneficiaryList };
     };
 
-    const buildPaymentPayload = async (
-        claimResponse: CreateCoreClaimDtoResponseServiceResponse,
-        beneficiaryList: BeneficiaryForm[]
-    ): Promise<any[]> => {
-        const responseList = claimResponse?.data?.responseList ?? [];
-
-        const allBeneficiaries = (tmpCoreClaim.createClaim ?? []).flatMap((claim: LocalClaimEntry) => {
-            const c = claim.createCase?.[0];
-
-            return beneficiaryList.length > 0
-                ? mapBeneficiariesToRequest(beneficiaryList, claim.tempClaimId, c?.tempCaseId).map((beneficiary) => ({
-                      beneficiary,
-                      payeeTypeId: 4, // Beneficiary
-                  }))
-                : mapBankAccountToBeneficiary(
-                      selectedAccount,
-                      selectedContact,
-                      c?.caseAmount ?? 0,
-                      claim.tempClaimId,
-                      c?.tempCaseId
-                  ).map((beneficiary) => ({
-                      beneficiary,
-                      payeeTypeId: 2, // Customer
-                  }));
-        });
-
-        const payloads = await Promise.all(
-            allBeneficiaries.map(async ({ beneficiary, payeeTypeId }, index) => {
-                const item = responseList[index];
-
-                const encryptResult = await getEncryptText(
-                    beneficiary.bankAccountNo ?? "",
-                    beneficiary.phoneNo?.replace(/-/g, "").trim() ?? "",
-                    beneficiary.bankAccountName ?? ""
-                );
-
-                const matchedBank = bankAccounts.find((b) => b.bankId === beneficiary.bankId);
-
-                return {
-                    casePayableId: item?.casePayableId?.[0],
-                    grossPaidAmount: 0,
-                    withHoldingTaxAmount: 0,
-                    netPaidAmount: beneficiary.payoutAmount ?? 0,
-
-                    payeeTypeId,
-
-                    receivingBankId: beneficiary.bankId,
-                    receivingBankAccountNo: encryptResult.accountNoResult,
-                    receivingBankName: matchedBank?.bankName,
-                    receivingAccountName: encryptResult.bankAccountNameResult,
-                    phoneNumber: encryptResult.phoneNumberResult,
-                    claimCase: item?.caseNo,
-                    claimNo: item?.claimNo,
-                };
-            })
-        );
-        return payloads;
-    };
-
-    // ── ขั้นที่ 2: โอนเงิน ──
     const confirmPayment = async (
         claimResponse: CreateCoreClaimDtoResponseServiceResponse,
         beneficiaryList: BeneficiaryForm[]
     ) => {
-        try {
-            const paymentPayloadList = await buildPaymentPayload(claimResponse, beneficiaryList);
-            const paymentResponses = paymentPayloadList.length > 0 ? await createPaymentAsync(paymentPayloadList) : [];
-            onSuccess?.();
-            return { ...claimResponse, paymentResponses };
-        } catch (err: any) {
-            onError?.(err?.message || "สร้างเคลมสำเร็จ แต่โอนเงินไม่สำเร็จ");
-            return claimResponse;
-        }
+        const responseList = claimResponse?.data?.responseList ?? [];
+        const paymentResponses = await confirmPaymentShared(responseList, beneficiaryList, onSuccess);
+        return { ...claimResponse, paymentResponses };
     };
 
     return {

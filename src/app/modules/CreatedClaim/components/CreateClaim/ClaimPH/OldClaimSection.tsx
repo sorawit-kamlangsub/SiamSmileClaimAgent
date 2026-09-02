@@ -2,7 +2,9 @@ import React from "react";
 import { Box, Chip, Divider, Grid, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import {
+    backgroundColorMapPaymentStatus,
     cellAlignOptions,
+    colorMapPaymentStatus,
     defaultOptionStandardDataTable,
     formatDateString,
     smallSizeFooter,
@@ -10,12 +12,12 @@ import {
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import { GetClaimHistoryDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { GetPreviousClaimDtoResponse } from "../../../../../api/coreClaimApi.client";
 import CachedIcon from "@mui/icons-material/Cached";
 import { useClaimHistory } from "../../../hooks/Monitor/useClaimHistory";
 
 interface Props {
-    data: GetClaimHistoryDtoResponse;
+    data: GetPreviousClaimDtoResponse | undefined;
 }
 const OldClaimSection: React.FC<Props> = ({ data }) => {
     const { caseData, caseDataisLoading } = useClaimHistory(undefined, data?.claimId);
@@ -54,32 +56,23 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
             },
         },
         {
-            name: "payableStatusName",
+            name: "paymentStatusName",
             label: "สถานะ",
             options: {
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (value, tableMeta) => {
                     const item = caseData?.data?.[tableMeta.rowIndex];
-                    const statusId = item?.paymentStatusId;
-
-                    const statusStyleMap: Record<number, { bg: string; color: string }> = {
-                        2: { bg: "#e3f2fd", color: "#1565c0" }, // Open
-                        3: { bg: "#fff3e0", color: "#e65100" }, // Partial Paid
-                        4: { bg: "#e8f5e9", color: "#2e7d32" }, // Fully Paid
-                        5: { bg: "#ffebee", color: "#c62828" }, // Canceled
-                    };
-
-                    const style = statusId != null ? statusStyleMap[statusId] : undefined;
 
                     return (
                         <Chip
                             label={value}
                             size="small"
                             sx={{
-                                backgroundColor: style?.bg ?? "#f5f5f5",
-                                color: style?.color ?? "#616161",
+                                backgroundColor:
+                                    backgroundColorMapPaymentStatus[item?.paymentStatusId ?? 0] ?? "#f5f5f5",
+                                color: colorMapPaymentStatus[item?.paymentStatusId ?? 0] ?? "#616161",
                                 fontWeight: 600,
-                                fontSize: 11,
+                                fontSize: 13,
                             }}
                         />
                     );
@@ -87,7 +80,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
             },
         },
         {
-            name: "totalCaseAmount",
+            name: "caseAmount",
             label: "ยอดเบิก",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -95,7 +88,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
             },
         },
         {
-            name: "totalPaidAmount",
+            name: "casePaidAmount",
             label: "ยอดจ่าย",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -107,7 +100,6 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
     return (
         <CustomBox>
             <HeadingWithColor icon={<CachedIcon sx={{ fontSize: 27 }} />} text="ข้อมูลเคลมเดิม" color="blue" />
-
             <>
                 <Box
                     sx={{
@@ -126,7 +118,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         ClaimNo :{" "}
                                     </Typography>
                                     <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                        {data.claimNo}
+                                        {data?.claimNo}
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
@@ -142,7 +134,7 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         Diagnosis :{" "}
                                     </Typography>
                                     <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                        {data?.icD10Detail ?? "-"}
+                                        {data?.icD10DescriptionTH ?? "-"}
                                     </Typography>
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
@@ -159,8 +151,9 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         ยอดจ่ายรวม :{" "}
                                     </Typography>
                                     <Typography variant="body2" color="primary" fontWeight={700} component="span">
-                                        {data?.paidAmount?.toLocaleString("th-TH", { minimumFractionDigits: 2 }) ??
-                                            "0.00"}
+                                        {data?.totalNetPaidAmount?.toLocaleString("th-TH", {
+                                            minimumFractionDigits: 2,
+                                        }) ?? "0.00"}
                                     </Typography>
                                 </Grid>
                             </Grid>
@@ -186,7 +179,9 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         วงเงินคงเหลือ
                                     </Typography>
                                     <Typography color="#2e7d32" fontWeight={700} fontSize={18}>
-                                        {(3200).toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                                        {data?.remainingCoverageLimit?.toLocaleString("th-TH", {
+                                            minimumFractionDigits: 2,
+                                        })}
                                     </Typography>
                                 </Box>
 
@@ -197,7 +192,9 @@ const OldClaimSection: React.FC<Props> = ({ data }) => {
                                         คงเหลือหลังหักเคลมเดิม
                                     </Typography>
                                     <Typography color="#2e7d32" fontWeight={700} fontSize={18}>
-                                        {(500000).toLocaleString("th-TH", { minimumFractionDigits: 2 })}
+                                        {data?.remainingAmountAfterPreviousClaim?.toLocaleString("th-TH", {
+                                            minimumFractionDigits: 2,
+                                        })}
                                     </Typography>
                                 </Box>
                             </Box>

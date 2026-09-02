@@ -3,6 +3,7 @@ import {
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
+    CreateContinuedClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
@@ -36,6 +37,7 @@ const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicati
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
+const getPreviousClaimQueryKey = ["getPreviousClaim"];
 const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCase"];
 
 export const useCalculateCaseClaim = (
@@ -523,6 +525,27 @@ export const useSaveClaimEditDraft = (
         },
     });
 };
+
+//สร้าง claim ต่อเนื่อง
+export const createContinuedClaim = (
+    onSuccessCallback?: (response: CreateCoreClaimDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: CreateContinuedClaimDtoRequest | undefined) => coreClaimClient.createContinuedClaim(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
 export const useUpsertClaimDecision = (
     onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
@@ -540,6 +563,14 @@ export const useUpsertClaimDecision = (
             },
         }
     );
+};
+
+//api สําหรับ get claim ตั้งต้น detail ของ claim ต่อเนื่อง
+export const useGetPreviousClaim = (claimId: string) => {
+    return useQuery([getPreviousClaimQueryKey, claimId], () => coreClaimClient.getPreviousClaim(claimId), {
+        enabled: !!claimId,
+        refetchOnWindowFocus: false,
+    });
 };
 
 export const useGetStandardMedicalExpenseByCase = (

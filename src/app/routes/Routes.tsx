@@ -79,7 +79,7 @@ const Routes: RouteMapType[] = [
         children: [],
     },
     {
-        path: "claim/ph/:appId/:refId",
+        path: "claim/ph/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PH",
         element: <Outlet />,
         permissions: [],
@@ -100,7 +100,7 @@ const Routes: RouteMapType[] = [
         ],
     },
     {
-        path: "claim/pa/:appId/:refId",
+        path: "claim/pa/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PA",
         element: <Outlet />,
         permissions: [],

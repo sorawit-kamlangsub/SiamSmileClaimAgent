@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Box, Button, Grid, LinearProgress, RadioGroup, Typography } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
     BeneficiaryForm,
     removeBankAccount,
@@ -21,6 +21,7 @@ import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
 import { useCreateClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateClaimPH";
+import { useCreateContinuedClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateContinuedClaimPH";
 import Swal from "sweetalert2";
 import { swalError } from "../../../../_common";
 import { useBeneficiaryPH } from "../../../hooks/CreateClaim/ClaimPH/useBeneficiaryPH";
@@ -32,8 +33,12 @@ import { ContactCard } from "../../../components/CreateClaim/ContactCard";
 const ClaimPHSummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
-    const { form, bankAccounts, contacts, insured } = useAppSelector((state) => state.claimph);
+    const { isContinuous: isContinuousParam } = useParams();
+    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const { form, bankAccounts, contacts, insured, oldClaim } = useAppSelector((state) => state.claimph);
     const { createClaimPH, confirmPayment, isLoading } = useCreateClaimPH();
+    const { createClaimPH: createContinuedClaimPH, confirmPayment: confirmContinuedPayment } =
+        useCreateContinuedClaimPH();
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
@@ -43,6 +48,40 @@ const ClaimPHSummaryPage: React.FC = () => {
         handleConfirm(beneficiaries);
     });
     const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
+
+    const buildContinuedSuccessHtml = (oldClaimNo: string, responseList: any[]) => {
+        const rowsHtml = responseList
+            .map(
+                (item: any, index: number) => `
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 4px;">
+            <div style="flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:#F2994A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;">${
+                index + 1
+            }</div>
+            <span style="font-size:13px;color:#999;white-space:nowrap;">เคสใหม่</span>
+            <span style="color:#DDD;font-size:12px;">•</span>
+            <span style="font-size:13.5px;font-weight:700;color:#F2994A;white-space:nowrap;">${
+                item?.caseNo ?? "-"
+            }</span>
+        </div>
+    `
+            )
+            .join("");
+
+        return `
+        <div style="max-width:360px;margin:0 auto;">
+            <div style="
+                display:flex;align-items:center;justify-content:center;gap:6px;
+                font-size:13px;color:#666;margin-bottom:10px;
+            ">
+                <span>🔗 ต่อเนื่องจาก</span>
+                <span style="font-weight:700;color:#333;">${oldClaimNo || "-"}</span>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:2px;max-height:220px;overflow-y:auto;padding:2px;">
+                ${rowsHtml}
+            </div>
+        </div>
+    `;
+    };
 
     const handleSelectBank = (id: string) => {
         dispatch(selectBankAccount(id));
@@ -68,7 +107,9 @@ const ClaimPHSummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await createClaimPH(freshBeneficiaries);
+                    const res = isContinuous
+                        ? await createContinuedClaimPH(freshBeneficiaries)
+                        : await createClaimPH(freshBeneficiaries);
                     return res;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);
@@ -80,6 +121,34 @@ const ClaimPHSummaryPage: React.FC = () => {
             const responseList = data?.responseList ?? [];
 
             if (result.isConfirmed && data?.isResult && responseList.length > 0) {
+                if (isContinuous) {
+                    Swal.fire({
+                        icon: "success",
+                        title: "ทำรายการสำเร็จ",
+                        width: 400,
+                        html: `
+                    <div style="color:#888;font-size:13px;margin-top:-8px;margin-bottom:12px;text-align:center;">
+                        เพิ่มเคสต่อเนื่องเข้าเคลมเดิมเรียบร้อย
+                    </div>
+                    ${buildContinuedSuccessHtml(oldClaim?.claimNo ?? "", responseList)}
+                `,
+                        confirmButtonText: isDeathDisability ? "ตกลง" : "โอนเงิน",
+                        showCancelButton: !isDeathDisability,
+                        cancelButtonText: "ปิด",
+                        allowOutsideClick: false,
+                        backdrop: "rgba(0,0,0,0.4)",
+                    }).then((confirmResult) => {
+                        if (!isDeathDisability && confirmResult.isConfirmed) {
+                            setClaimResult(claimResponse);
+                            setPendingBeneficiaryList(beneficiaryList ?? []);
+                            setOpenConfirm(true);
+                        } else {
+                            dispatch(resetState());
+                            navigate(`/monitor-claim`);
+                        }
+                    });
+                    return;
+                }
                 const itemsHtml = responseList
                     .map(
                         (item: any, index: number) => `
@@ -174,7 +243,9 @@ const ClaimPHSummaryPage: React.FC = () => {
             showLoaderOnConfirm: true,
             preConfirm: async () => {
                 try {
-                    const res = await confirmPayment(claimResult, pendingBeneficiaryList);
+                    const res = isContinuous
+                        ? await confirmContinuedPayment(claimResult, pendingBeneficiaryList)
+                        : await confirmPayment(claimResult, pendingBeneficiaryList);
                     return res;
                 } catch (error) {
                     Swal.showValidationMessage(`Request failed: ${error}`);

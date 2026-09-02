@@ -18,7 +18,7 @@ import {
 
 export const useClaimPA = () => {
     const dispatch = useAppDispatch();
-    const { appId, refId } = useParams();
+    const { appId, refId, oldClaimId, isContinuous } = useParams();
     const { pendingInsured } = useAppSelector(claimPASelector);
 
     const customerId = refId ? parseInt(atob(refId)) : undefined;
@@ -63,6 +63,8 @@ export const useClaimPA = () => {
     return {
         appId,
         refId,
+        oldClaimId,
+        isContinuous,
         applicationId: activeApplicationId,
         customerId: activeCustomerId,
         claimInfo: claimInfoQuery.data?.data,
