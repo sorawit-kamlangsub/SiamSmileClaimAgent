@@ -20,6 +20,7 @@ import ClaimSummary from "./SubDetailsTab/ClaimSummary";
 import { useAppSelector } from "../../../../../../redux";
 import { claimConsiderSelector } from "../../../store/claimConsiderSlice";
 import useClaimStepCalculateHook from "../../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
+import { useState } from "react";
 
 type ClaimDetailsTabProps = {
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
@@ -27,6 +28,7 @@ type ClaimDetailsTabProps = {
 };
 const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
+    const [isCombinedWithMedicalAll, setIsCombinedWithMedicalAll] = useState(false);
     const considerDetail = useConsiderDetailHook();
     const {
         formik,
@@ -40,7 +42,10 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         attachedDocuments,
         setAttachedDocuments,
     } = considerDetail;
-    const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook(considerDetail);
+    const { handleSaveDraft, handleConfirmConsider, handleApprove } = useClaimDetailActionHook({
+        ...considerDetail,
+        isCombinedWithMedicalAll,
+    });
     const { filledItems } = useAppSelector(claimConsiderSelector);
     const { activeStep, setActiveStep, furthestStep, isLastStep, isCalculating, handleNext, handleBack } =
         useClaimStepCalculateHook({
@@ -102,6 +107,8 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                         <ClaimSummary
                                             attachedDocuments={attachedDocuments}
                                             createdClaimDate={detail?.createdDate}
+                                            isCombinedWithMedicalAll={isCombinedWithMedicalAll}
+                                            onCombinedWithMedicalAllChange={setIsCombinedWithMedicalAll}
                                         />
                                     </Grid>
                                 </Grid>
@@ -140,6 +147,11 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                         <Button
                                             variant="contained"
                                             startIcon={<SaveIcon />}
+                                            disabled={
+                                                !formik.values.considerResult ||
+                                                !formik.values.decisionReasonId ||
+                                                !formik.values.decisionReasonDetail
+                                            }
                                             onClick={() => handleConfirmConsider()}
                                             sx={{
                                                 bgcolor: "#2E7D32",
@@ -167,7 +179,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             bgcolor: "#2E7D32",
                                             "&:hover": { bgcolor: "#1B5E20" },
                                         }}
-                                        onClick={() => handleConfirmConsider(2)}
+                                        onClick={handleApprove}
                                     >
                                         อนุมัติ
                                     </Button>

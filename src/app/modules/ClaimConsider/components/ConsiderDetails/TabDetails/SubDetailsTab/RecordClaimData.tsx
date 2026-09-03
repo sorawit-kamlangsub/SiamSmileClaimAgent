@@ -2,7 +2,9 @@ import { Box, Grid, Paper, Typography } from "@mui/material";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import ArticleIcon from "@mui/icons-material/Article";
-import ClaimTypeSelector, { ClaimTypeOption } from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
+import ClaimTypeSelector, {
+    ClaimTypeOption,
+} from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { CoverageType, MedicalType } from "../../../../../../functionHelpers";
 import ChipSelector, { ChipOption } from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import FormikDatePicker from "../../../../../_common/components/CustomFormik/FormikDatePicker";
@@ -153,14 +155,16 @@ const RecordClaimData = ({
                             </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                            <FormikTimePicker
-                                name="incidentTime"
-                                label="เวลาที่เกิดเหตุ"
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                actions={["accept"]}
-                                required
-                            />
+                            <Box data-field-name="incidentTime">
+                                <FormikTimePicker
+                                    name="incidentTime"
+                                    label="เวลาที่เกิดเหตุ"
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    actions={["accept"]}
+                                    required
+                                />
+                            </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
                             <Box data-field-name="admissionDate">
@@ -175,14 +179,16 @@ const RecordClaimData = ({
                             </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                            <FormikTimePicker
-                                name="admissionTime"
-                                label="เวลาที่เข้า รพ."
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                actions={["accept"]}
-                                required
-                            />
+                            <Box data-field-name="admissionTime">
+                                <FormikTimePicker
+                                    name="admissionTime"
+                                    label="เวลาที่เข้า รพ."
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    actions={["accept"]}
+                                    required
+                                />
+                            </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
                             <Box data-field-name="dischargeDate">
@@ -197,14 +203,16 @@ const RecordClaimData = ({
                             </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                            <FormikTimePicker
-                                name="dischargeTime"
-                                label="เวลาที่ออก รพ."
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                actions={["accept"]}
-                                required
-                            />
+                            <Box data-field-name="dischargeTime">
+                                <FormikTimePicker
+                                    name="dischargeTime"
+                                    label="เวลาที่ออก รพ."
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    actions={["accept"]}
+                                    required
+                                />
+                            </Box>
                         </Grid>
                         {isIPD && (
                             <Grid item xs={12} lg={12} data-field-name="ipdDays">

@@ -126,6 +126,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetCustomerSearchDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -213,6 +221,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -267,6 +283,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerDetailByIdDtoResponseServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -359,6 +383,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -467,6 +499,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -521,6 +561,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerBankAccountDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -582,6 +630,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetContactPersonDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -645,6 +701,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetPolicyBenefitSheredDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -654,7 +718,7 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Calculate ข้อมูล Case Claim
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
     calculateCaseClaim(body?: CalculateCaseClaimDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
@@ -701,6 +765,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<CalculateCaseClaimDtoResponseServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -769,6 +841,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<CalculateCaseDisabilityDtoResponseServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -825,6 +905,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<CreateCoreClaimDtoResponseServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -883,6 +971,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<CreateCoreClaimDtoResponseServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -939,6 +1035,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDocumentSubTypeDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -1022,6 +1126,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetDocumentByCaseIdDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1103,6 +1215,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetClaimHistoryDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -1186,6 +1306,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetClaimContinueDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1268,6 +1396,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetCaseByClaimIdDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1334,6 +1470,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDashboardCustomerConsiderDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -1447,6 +1591,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1559,6 +1711,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1614,6 +1774,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetClaimDetailConsiderDtoResponseServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1668,6 +1836,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetPreviousClaimDtoResponseServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -1751,6 +1927,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetClaimTransactionLogDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1822,6 +2006,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetPolicyBenefitDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -1904,6 +2096,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDCRDtoResponseListServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -1996,6 +2196,14 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2053,6 +2261,79 @@ export class CoreClaimClient {
             result200 = resultData200;
             return Promise.resolve<UpsertClaimDecisionDtoResponseServiceResponse>(result200);
 
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpsertClaimDecisionDtoResponseServiceResponse>(null as any);
+    }
+
+    /**
+     * อนุมัติผลพิจารณา
+     * @param body (optional) 
+     * @return Success
+     */
+    approveClaimDecision(body?: ApproveClaimDecisionDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
+        let url_ = this.baseUrl + "/claim/decision/approve";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processApproveClaimDecision(_response);
+        });
+    }
+
+    protected processApproveClaimDecision(response: AxiosResponse): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<UpsertClaimDecisionDtoResponseServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2109,6 +2390,14 @@ export class CoreClaimClient {
             let resultData200  = _responseText;
             result200 = resultData200;
             return Promise.resolve<SaveClaimEditDraftDtoResponeServiceResponse>(result200);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
 
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
@@ -4267,6 +4556,20 @@ export interface AllUserDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface ApproveCasePayableRequest {
+    payableAmount: number;
+    toBankId: number;
+    toBankName: string;
+    toBankAccountNo: string;
+}
+
+export interface ApproveClaimDecisionDtoRequest {
+    claimDecision: UpsertClaimDecisionDtoRequest;
+    calculateCaseCode?: string;
+    isCombinedWithMedicalAll: boolean;
+    casePayable: ApproveCasePayableRequest;
+}
+
 export interface BeneficiarySaveClaimEditDraftRequest {
     beneficiaryId?: string;
     policyBeneficiaryId?: number;
@@ -4983,6 +5286,7 @@ export interface GetChiefComplaintDtoResponseListServiceResponse {
 export interface GetClaimContinueDtoResponse {
     claimId?: string;
     claimNo?: string | undefined;
+    caseId?: string | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
     chiefComplaint?: string | undefined;
     chiefComplaintCustom?: string | undefined;
@@ -6245,6 +6549,7 @@ export interface UpsertClaimDecisionCaseDocumentRequest {
     documentNo?: string | undefined;
     documentSubTypeId?: number;
     documentReviewStatusId?: number | undefined;
+    documentReviewRemark?: string | undefined;
     caseDocumentDetail?: UpsertClaimDecisionCaseDocumentDetailRequest[] | undefined;
 }
 

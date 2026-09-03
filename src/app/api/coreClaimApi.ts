@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+    ApproveClaimDecisionDtoRequest,
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     CoreClaimClient,
@@ -552,6 +553,25 @@ export const useUpsertClaimDecision = (
 ) => {
     return useMutation(
         (body?: UpsertClaimDecisionDtoRequest | undefined) => coreClaimClient.upsertClaimDecision(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+export const useApproveClaimDecision = (
+    onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (body?: ApproveClaimDecisionDtoRequest | undefined) => coreClaimClient.approveClaimDecision(body),
         {
             onSuccess: (response) => {
                 if (!response.isSuccess)
