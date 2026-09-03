@@ -265,6 +265,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                         claimCase: item?.caseNo,
                         claimNo: item?.claimNo,
                         payeeTypeId: 4, //beneficiary
+                        paymentTypeId: 2, //CasePayment
                     };
                 })
             );
@@ -292,6 +293,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     claimCase: item?.caseNo,
                     claimNo: item?.claimNo,
                     payeeTypeId: 2, //Customer
+                    paymentTypeId: 2, //CasePayment
                 },
             ];
         }
