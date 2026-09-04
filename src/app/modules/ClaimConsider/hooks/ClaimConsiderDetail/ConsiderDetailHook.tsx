@@ -84,6 +84,7 @@ const useConsiderDetailHook = () => {
             } else if (dayjs(values.incidentDate).isAfter(today)) {
                 errors.incidentDate = "วันที่เกิดเหตุต้องไม่เป็นวันที่อนาคต";
             }
+            if (!values.incidentTime) errors.incidentTime = req;
 
             if (!values.admissionDate) {
                 errors.admissionDate = "กรุณาระบุวันที่เข้าโรงพยาบาล";
@@ -92,6 +93,7 @@ const useConsiderDetailHook = () => {
             } else if (values.incidentDate && dayjs(values.admissionDate).isBefore(values.incidentDate, "day")) {
                 errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่น้อยกว่าวันที่เกิดเหตุ";
             }
+            if (!values.admissionTime) errors.admissionTime = req;
 
             if (!values.dischargeDate) {
                 errors.dischargeDate = "กรุณาระบุวันที่ออกโรงพยาบาล";
@@ -102,6 +104,7 @@ const useConsiderDetailHook = () => {
             } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
             }
+            if (!values.dischargeTime) errors.dischargeTime = req;
             if (!values.chiefComplaintId) errors.chiefComplaintId = req;
             if (!values.hospitalId) errors.hospitalId = req;
             if (!values.diagnoses[0]?.icd10Id) {

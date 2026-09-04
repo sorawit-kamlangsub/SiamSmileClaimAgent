@@ -1,6 +1,8 @@
 import dayjs, { Dayjs } from "dayjs";
-import { useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
+import { useApproveClaimDecision, useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
 import {
+    ApproveCasePayableRequest,
+    ApproveClaimDecisionDtoRequest,
     SaveClaimEditDraftDtoRequest,
     CaseSaveClaimEditDraftRequest,
     CaseAssessmentSaveClaimEditDraftRequest,
@@ -37,6 +39,7 @@ import {
  */
 type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConsiderValues> = {
     formik: FormikProps<T>;
+    isCombinedWithMedicalAll?: boolean;
     /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
     caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
     /**
@@ -56,11 +59,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     formik,
     detailData,
     customerDetailData,
+    isCombinedWithMedicalAll = false,
     caseFields,
     documentReviews,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
-    const { filledItems } = useAppSelector(claimConsiderSelector);
+    const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
     const caseItemId = crypto.randomUUID();
     const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
     const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
@@ -72,6 +76,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     );
     const saveClaimDecision = useUpsertClaimDecision(
         () => swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (error) => swalError("ไม่สำเร็จ", error)
+    );
+    const approveClaimDecision = useApproveClaimDecision(
+        () => swalSuccess("อนุมัติผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
     );
 
@@ -491,7 +499,25 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         await saveClaimDecision.mutateAsync(payload);
     };
 
-    return { handleSaveDraft, handleConfirmConsider };
+    const mapCasePayableForApprove = (): ApproveCasePayableRequest =>
+        ({
+            payableAmount: calculateResult?.medicalPay ?? 0,
+            // ยังไม่มีข้อมูลบัญชีผู้รับเงินใน flow นี้ จึงให้ field บัญชีเป็น undefined ชั่วคราว
+        }) as ApproveCasePayableRequest;
+
+    const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
+        claimDecision: mapClaimDecisionPayload(2),
+        calculateCaseCode: calculateResult?.calculateCaseCode,
+        isCombinedWithMedicalAll,
+        casePayable: mapCasePayableForApprove(),
+    });
+
+    const handleApprove = async () => {
+        const payload = mapApproveClaimDecisionPayload();
+        await approveClaimDecision.mutateAsync(payload);
+    };
+
+    return { handleSaveDraft, handleConfirmConsider, handleApprove };
 };
 
 export default useClaimDetailActionHook;

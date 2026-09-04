@@ -114,10 +114,16 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
 
-    const { handleSaveDraft, handleConfirmConsider } = useClaimDetailActionHook({
+    const {
+        handleSaveDraft,
+        handleConfirmConsider,
+        handleApprove: submitApproveDecision,
+    } = useClaimDetailActionHook({
         formik,
         detailData,
         customerDetailData,
+        // "โอนค่าชดเชยรวมกับค่ารักษา" (ติ๊ก = โอนรวม) → payload อนุมัติ isCombinedWithMedicalAll
+        isCombinedWithMedicalAll: mergeCompensation,
         caseFields: {
             hn: formik.values.hn || undefined,
             vn: formik.values.vn || undefined,
@@ -294,15 +300,15 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             setConfirmApproveOpen(true);
             return;
         }
-        // ปุ่มอนุมัติ = decisionId 2
-        await handleConfirmConsider(2);
+        // ปุ่มอนุมัติ → POST /claim/decision/approve (decisionId 2)
+        await submitApproveDecision();
     };
 
-    /** ปุ่ม "ยืนยันการทำรายการ" ใน Modal : ยิง /decision จริง */
+    /** ปุ่ม "ยืนยันการทำรายการ" ใน Modal : ยิง /claim/decision/approve จริง */
     const handleConfirmApprove = async () => {
         setConfirmApproveOpen(false);
-        // ปุ่มอนุมัติ = decisionId 2
-        await handleConfirmConsider(2);
+        // ปุ่มอนุมัติ → POST /claim/decision/approve (decisionId 2)
+        await submitApproveDecision();
     };
 
     const handleBack = () => {
