@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
@@ -89,9 +89,13 @@ type ConsiderSectionProps = {
     decisionReasonLoading: boolean;
     /**
      * decisionId ของผลการพิจารณาที่ไม่ต้องแสดงปุ่มในหน้านี้
-     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3)
+     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3, "ยกเลิก" = 5)
      */
     hiddenDecisionIds?: number[];
+    /** override หัวข้อ section — default "ผลการพิจารณา" (เคลมโรงพยาบาลใช้ "แจ้งผลการพิจารณาโรงพยาบาล") */
+    headingText?: string;
+    /** override label ปุ่ม/หัวข้อรายละเอียดของแต่ละ decisionId (เช่น เคลมโรงพยาบาล "รอแก้ไข" → "แจ้งแก้ไข") */
+    labelOverrides?: Partial<Record<number, string>>;
 };
 
 const ConsiderSection = ({
@@ -100,22 +104,32 @@ const ConsiderSection = ({
     decisionReason,
     decisionReasonLoading,
     hiddenDecisionIds,
+    headingText,
+    labelOverrides,
 }: ConsiderSectionProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
 
-    const visibleStatusOptions = statusOptions.filter(
-        (status) => !hiddenDecisionIds?.includes(status.decisionId)
-    );
+    const visibleStatusOptions = statusOptions.filter((status) => !hiddenDecisionIds?.includes(status.decisionId));
+    const labelOf = (status: StatusOption) => labelOverrides?.[status.decisionId] ?? status.label;
+
+    // ผลการพิจารณาที่เลือกไว้เดิมกลายเป็นตัวเลือกที่ถูกซ่อน (เช่น เปลี่ยน hiddenDecisionIds ภายหลัง) : ล้างค่าเพื่อไม่ให้ค้าง
+    useEffect(() => {
+        if (formik.values.considerResult === undefined) return;
+        const stillVisible = visibleStatusOptions.some((status) => status.decisionId === formik.values.considerResult);
+        if (stillVisible) return;
+
+        formik.setFieldValue("considerResult", undefined, false);
+        formik.setFieldValue("decisionReasonId", undefined, false);
+        formik.setFieldValue("decisionReasonDetail", "", false);
+    }, [hiddenDecisionIds, formik.values.considerResult]);
 
     const reasonMeta = formik.getFieldMeta<number | undefined>("decisionReasonId");
     const detailMeta = formik.getFieldMeta<string | undefined>("decisionReasonDetail");
     const reasonHasError = !!reasonMeta.touched && !!reasonMeta.error;
     const detailHasError = !!detailMeta.touched && !!detailMeta.error;
 
-    const selectedStatus = visibleStatusOptions.find(
-        (status) => status.decisionId === formik.values.considerResult
-    );
+    const selectedStatus = visibleStatusOptions.find((status) => status.decisionId === formik.values.considerResult);
     const selectStatus = (status: StatusOption) => {
         formik.setFieldValue("considerResult", status.decisionId, false);
         formik.setFieldValue("decisionReasonId", undefined, false);
@@ -131,7 +145,11 @@ const ConsiderSection = ({
 
     return (
         <CustomPaper>
-            <HeadingWithColor icon={<FactCheckIcon sx={{ fontSize: 27 }} />} text="ผลการพิจารณา" color="blue" />
+            <HeadingWithColor
+                icon={<FactCheckIcon sx={{ fontSize: 27 }} />}
+                text={headingText ?? "ผลการพิจารณา"}
+                color="blue"
+            />
 
             <Box aria-label="เลือกผลการพิจารณา" role="radiogroup" sx={{ mt: 2.5 }}>
                 <Grid container spacing={{ xs: 1.25, sm: 2 }}>
@@ -172,7 +190,7 @@ const ConsiderSection = ({
                                         },
                                     }}
                                 >
-                                    {status.label}
+                                    {labelOf(status)}
                                 </Button>
                             </Grid>
                         );
@@ -214,7 +232,7 @@ const ConsiderSection = ({
                             {selectedStatus.icon}
                         </Box>
                         <Box>
-                            <Typography fontWeight={600}>{selectedStatus.label}</Typography>
+                            <Typography fontWeight={600}>{labelOf(selectedStatus)}</Typography>
                             <Typography
                                 sx={{
                                     mt: 0.25,
