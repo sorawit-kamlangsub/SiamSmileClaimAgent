@@ -64,6 +64,7 @@ export const claimStepBoxSx = {
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const {
         formik,
+        isContinuous,
         incidentType,
         coverageType,
         medicalType,
@@ -316,6 +317,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
+                                    disabled={isContinuous}
                                 />
                             </Box>
                         </Grid>

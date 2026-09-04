@@ -587,8 +587,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             isFirstRenderIncident.current = false;
             return;
         }
-        // เคลมต่อเนื่อง (เสียชีวิต) prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
-        if (isContinuousDeath) return;
+        // เคลมต่อเนื่อง prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuous) return;
         if (!formik.values.incidentTypeId) return;
         formik.setValues(
             {
@@ -632,7 +632,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             isFirstRenderCoverage.current = false;
             return;
         }
-        if (isContinuousDeath) return;
+        // เคลมต่อเนื่อง prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuous) return;
         if (!formik.values.coverageTypeId) return;
         formik.setValues(
             {
@@ -708,6 +709,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 coverageTypeId: oldClaim.coverageTypeId,
                 coverageTypeName: "เสียชีวิต",
                 causeOfIncidentId: oldClaim.causeOfIncidentId,
+                medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 // วันที่
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 deathDate: oldClaim.deathDate ? dayjs(oldClaim.deathDate) : formik.values.deathDate,
@@ -716,11 +718,42 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 // สถานที่เสียชีวิต — placeOfDeathId ตรงกับ DeathPlaceType (2=บ้าน, 3=สถานพยาบาล, 4=อื่นๆ)
                 deathPlaceType: oldClaim.placeOfDeathId ?? formik.values.deathPlaceType,
                 accidentPlace: oldClaim.placeOfDeathDetail ?? formik.values.accidentPlace,
+                // การวินิจฉัย — oldClaim มีแค่ข้อความ icD10DescriptionTH ยังไม่มี icd10Id
+                diagnoses: [
+                    {
+                        // TODO: default icd10Id จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field icd10Id (รอ API เพิ่ม)
+                        icd10Id: formik.values.diagnoses[0]?.icd10Id,
+                        icd10Detail: oldClaim.icD10DescriptionTH ?? formik.values.diagnoses[0]?.icd10Detail,
+                    },
+                    ...formik.values.diagnoses.slice(1),
+                ],
+                // TODO: default hospitalId (สถานพยาบาล) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field hospitalId (รอ API เพิ่ม)
+                // TODO: default chiefComplaintId (ChiefComplaint) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field ChiefComplaint (รอ API เพิ่ม)
+                // TODO: default remark (Remark) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field Remark (รอ API เพิ่ม)
             },
             false
         );
         dispatch(setEnabled(true));
     }, [isContinuousDeath, oldClaim]);
+
+    // เคลมต่อเนื่องปกติ (ไม่ใช่เสียชีวิต): default ค่าจากเคลมตั้งต้น (ครั้งเดียว)
+    const didPrefillContinuousNormal = useRef(false);
+    useEffect(() => {
+        if (!isContinuous || isContinuousDeath || !oldClaim || didPrefillContinuousNormal.current) return;
+        didPrefillContinuousNormal.current = true;
+        formik.setValues(
+            {
+                ...formik.values,
+                incidentTypeId: oldClaim.incidentTypeId ?? formik.values.incidentTypeId,
+                coverageTypeId: oldClaim.coverageTypeId ?? formik.values.coverageTypeId,
+                medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
+                incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
+                // TODO: default chiefComplaintId (ChiefComplaint) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field ChiefComplaint (รอ API เพิ่ม)
+                // TODO: default remark (Remark) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field Remark (รอ API เพิ่ม)
+            },
+            false
+        );
+    }, [isContinuous, isContinuousDeath, oldClaim]);
 
     const isIncidentDateDisabled = isContinuous;
     return {

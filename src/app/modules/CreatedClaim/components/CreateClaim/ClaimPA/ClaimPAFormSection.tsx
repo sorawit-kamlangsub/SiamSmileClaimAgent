@@ -103,6 +103,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         incidentTypeMappingLoading,
         incidentTypeLoading,
         customerBenefitLoading,
+        isContinuous,
         isContinuousDeath,
         insured,
         shouldShowOcrDocumentScan,
@@ -144,6 +145,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         isDeath &&
         values.incidentTypeId === IncidentType.Illness &&
         values.causeOfIncidentId === CauseOfIncident.Illness;
+    // เคลมต่อเนื่องประเภทเสียชีวิตจากอุบัติเหตุ — ล็อกวันที่เสียชีวิตให้ default ตามเคลมหลัก
+    const isContinuousAccidentDeath = isContinuousDeath && values.incidentTypeId === IncidentType.Accident;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
     const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD;
     const isOPD = values.medicalTypeId === MedicalType.OPD;
@@ -503,7 +506,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 slotProps={{ textField: { size: "small" } }}
                                 maxDate={dayjs()}
                                 required
-                                // disabled={isContinuousDeath}
+                                disabled={isContinuous}
                             />
                         </Grid>
                         {isMedical && (
@@ -530,19 +533,19 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 />
                             </Grid>
                         )}
-                        {isDeath ||
-                            (isContinuousDeath && (
-                                <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
-                                    <FormikDatePicker
-                                        name="deathDate"
-                                        label="วันที่เสียชีวิต"
-                                        formik={formik}
-                                        slotProps={{ textField: { size: "small" } }}
-                                        maxDate={dayjs()}
-                                        required
-                                    />
-                                </Grid>
-                            ))}
+                        {(isDeath || isContinuousDeath) && (
+                            <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
+                                <FormikDatePicker
+                                    name="deathDate"
+                                    label="วันที่เสียชีวิต"
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    maxDate={dayjs()}
+                                    required
+                                    disabled={isContinuousAccidentDeath}
+                                />
+                            </Grid>
+                        )}
                         {(isDeath || isDisability || isContinuousDeath) && (
                             <>
                                 <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("notificationDate")}>
