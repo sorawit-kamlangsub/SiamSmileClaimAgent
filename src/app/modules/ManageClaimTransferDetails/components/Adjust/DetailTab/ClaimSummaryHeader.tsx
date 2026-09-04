@@ -58,7 +58,7 @@ const ClaimSummaryHeader = ({ claimDetails, onClNoClick }: ClaimSummaryHeaderPro
                 <Grid item xs={12} md={4}>
                     <Field label="จำนวนเงินที่โอนแล้ว">
                         <Typography sx={{ fontWeight: 700, color: "#1565C0" }}>
-                            {numberWithCommas(claimDetails?.transferredAmount ?? 0)}
+                            {numberWithCommas(claimDetails?.totalNetPaidAmount ?? 0)}
                         </Typography>
                     </Field>
                 </Grid>

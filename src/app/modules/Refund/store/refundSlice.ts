@@ -7,6 +7,11 @@ export type RefundState = {
     dialogRefund: {
         isOpen: boolean;
     };
+
+    searchMonitor: {
+        branchId: number | undefined;
+        paymentStatusId: number | undefined;
+    };
 };
 
 const initialState: RefundState = {
@@ -16,10 +21,19 @@ const initialState: RefundState = {
     dialogRefund: {
         isOpen: false,
     },
+    searchMonitor: {
+        branchId: undefined,
+        paymentStatusId: undefined,
+    },
 };
 
 export type SetSearchBankStatusPayload = {
     searchDetail: string | undefined;
+};
+
+export type SetSearchMonitorByFilterPayload = {
+    branchId: number | undefined;
+    paymentStatusId: number | undefined;
 };
 
 export type SetIsOpenDialogPayload = {
@@ -38,12 +52,27 @@ const refundSlice = createSlice({
             state.dialogRefund.isOpen = action.payload.isOpen;
         },
 
+        setSearchMonitorByFilter: (state, action: PayloadAction<SetSearchMonitorByFilterPayload>) => {
+            state.searchMonitor.branchId = action.payload.branchId;
+            state.searchMonitor.paymentStatusId = action.payload.paymentStatusId;
+        },
+
+        resetFilterSearch: (state) => {
+            state.searchMonitor = initialState.searchMonitor;
+        },
+
         resetToDefault: () => {
             initialState;
         },
     },
 });
 
-export const { setSearchClaimBySearchDetail, setIsOpenDialog, resetToDefault } = refundSlice.actions;
+export const {
+    setSearchClaimBySearchDetail,
+    setIsOpenDialog,
+    setSearchMonitorByFilter,
+    resetFilterSearch,
+    resetToDefault,
+} = refundSlice.actions;
 
 export default refundSlice.reducer;

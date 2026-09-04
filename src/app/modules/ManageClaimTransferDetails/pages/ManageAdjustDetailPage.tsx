@@ -8,6 +8,7 @@ import useManageAdjustDetailHook from "../hooks/Adjust/ManageAdjustDetailHook";
 import TransferRecordForm from "../components/Adjust/DetailTab/TransferRecordForm";
 import { useParams } from "react-router-dom";
 import ClamTransactionDataTable from "../components/Adjust/TransactionTab/ClamTransactionDataTable";
+import TransferHistory from "../components/HistoryTransferTab/TransferHistory";
 
 const ManageAdjustDetailPage = () => {
     const { id = "" } = useParams();
@@ -72,7 +73,11 @@ const ManageAdjustDetailPage = () => {
                     <ClamTransactionDataTable caseId={id} />
                 </Box>
             )}
-            {activeTab === 2 && <Box sx={{ marginTop: "16px" }}>{/* ประวัติการโอนเงิน */}</Box>}
+            {activeTab === 2 && (
+                <Box sx={{ marginTop: "16px" }}>
+                    <TransferHistory />
+                </Box>
+            )}
         </Box>
     );
 };

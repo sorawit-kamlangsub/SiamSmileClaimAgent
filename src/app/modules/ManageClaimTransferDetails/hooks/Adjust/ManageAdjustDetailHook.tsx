@@ -1,7 +1,7 @@
 import { FormikErrors, useFormik } from "formik";
-import { swalError, swalSuccess, swalWarning } from "../../../_common";
+import { swalConfirm, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { useEffect } from "react";
-import { useGetAdjustReasonOptions, useGetClaimAdjustDetail } from "../../adjustClaimAPI";
+import { useGetAdjustReasonOptions, useGetClaimAdjustDetail, useSaveAdjustTransfer } from "../../adjustClaimAPI";
 import { TransferItemsFormValues } from "../../components/Adjust/DetailTab/TransferItemTable";
 import { TransferRecordFormValues } from "../../components/Adjust/DetailTab/TransferRecordForm";
 
@@ -24,6 +24,11 @@ const useManageAdjustDetailHook = (clNo: string) => {
         swalError("แจ้งเตือน", err);
     };
 
+    const { mutate: adjustMutate, isLoading: isAdjustLoading } = useSaveAdjustTransfer(
+        handleSaveSuccess,
+        handleSaveError
+    );
+
     const formik = useFormik<ClaimTransferAdditionalFormValues>({
         initialValues: emptyFormValues,
         validate: (values) => {
@@ -38,11 +43,21 @@ const useManageAdjustDetailHook = (clNo: string) => {
         onSubmit: (values) => {
             // TODO: submit the additional-transfer request
             const itemsToSubmit = values.items.map((item) => ({
-                caseId: item.caseId,
+                caseNo: item.caseNo,
                 additionalAmount: Number(item.additionalAmount ?? 0).toFixed(2),
             }));
             const payload = {
                 caseId: clNo,
+                claimNo: detailData?.data?.claimNo,
+                caseNo: itemsToSubmit?.[0]?.caseNo,
+                totalNetPaidAmount: Number(itemsToSubmit?.[0]?.additionalAmount ?? 0),
+                toBankId: detailData?.data?.account?.bankId,
+                toBankName: detailData?.data?.account?.bankName,
+                toBankAccountNo: detailData?.data?.account?.accountNo,
+                toBankAccountName: detailData?.data?.account?.accountName,
+                phoneNumber: detailData?.data?.account?.phoneNumber,
+                adjustmentReasonId: values.reasonId,
+                remark: values.note,
             };
 
             const sumAfterAdditionalTransfer =
@@ -53,7 +68,15 @@ const useManageAdjustDetailHook = (clNo: string) => {
             } else if (Number(itemsToSubmit?.[0]?.additionalAmount) === 0) {
                 swalWarning("แจ้งเตือน", "กรุณากรอกจำนวนเงินที่ต้องการโอนเพิ่ม");
             } else {
-                console.log(values);
+                if (payload) {
+                    swalConfirm("ยืนยันทำรายการ", "", "ยืนยัน", "ยกเลิก").then((res) => {
+                        if (res.isConfirmed) {
+                            adjustMutate(payload);
+                        }
+                    });
+                } else {
+                    swalWarning("แจ้งเตือน", "ไม่พบข้อมูล");
+                }
             }
         },
     });

@@ -8,6 +8,7 @@ const apiURL = `${API_CLAIM_FUND_URL}`;
 const getAdjustDetail = "getClaimAdjustDetailKey";
 const getAdjustReasonOptions = "getAdjustReasonOptionsKey";
 const getTransferHistory = "getTransferHistoryKey";
+const getAdjustHistoryTransaction = "getAdjustHistoryTransactionKey";
 
 /**
  * Fetches everything needed to render the adjust-detail page: the summary
@@ -97,14 +98,90 @@ const getAdjustReasonOptionsData = () => {
         });
 };
 
-export const useGetTransferHistory = (caseId: string) => {
-    return useQuery([getTransferHistory, caseId], () => getTransferHistoryData(caseId), { enabled: !!caseId });
+export const useGetTransactionHistory = (caseId: string) => {
+    return useQuery([getTransferHistory, caseId], () => getTransactionHistoryData(caseId), { enabled: !!caseId });
 };
 
-const getTransferHistoryData = (caseId: string) => {
+const getTransactionHistoryData = (caseId: string) => {
     const url = encodeURLWithParams(`${apiURL}/AdditionalTransfer/GetClaimTransactions`, { caseId });
     return axios
         .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+export const useGetTransferHistory = (caseId: string) => {
+    return useQuery([getAdjustHistoryTransaction, caseId], () => getTransferHistoryData(caseId), { enabled: !!caseId });
+};
+
+const getTransferHistoryData = (caseId: string) => {
+    const url = encodeURLWithParams(`${apiURL}/AdditionalTransfer/TransferHistory`, { caseId });
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+type SaveAdjustTransferType = {
+    caseId: string;
+    claimNo: string;
+    caseNo: string;
+    totalNetPaidAmount: number;
+    toBankId: number;
+    toBankName: string;
+    toBankAccountNo: string;
+    toBankAccountName: string;
+    phoneNumber: string;
+    adjustmentReasonId: number;
+    remark: string;
+};
+
+export const useSaveAdjustTransfer = (
+    onSuccessCallBack: (res: any) => void,
+    onErrorCallback: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((payload: any) => saveAdjustTransfer(payload), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+
+            queryClient.invalidateQueries([getAdjustDetail]);
+            queryClient.invalidateQueries([getTransferHistory]);
+            queryClient.invalidateQueries([getAdjustHistoryTransaction]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback && onErrorCallback(error.message);
+            queryClient.invalidateQueries([getAdjustDetail]);
+            queryClient.invalidateQueries([getTransferHistory]);
+            queryClient.invalidateQueries([getAdjustHistoryTransaction]);
+        },
+    });
+};
+
+const saveAdjustTransfer = (payload: SaveAdjustTransferType) => {
+    const url = `${apiURL}/AdditionalTransfer/SaveAdditionalTransfer`;
+    return axios
+        .post(url, payload)
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;

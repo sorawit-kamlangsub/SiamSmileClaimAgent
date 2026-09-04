@@ -2,76 +2,31 @@ import { Box, IconButton, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
+import { useGetClaimAdjustMonitorWithFilter } from "../adjustTransferMonitorAPI";
+import { PaginationResultDto, PaginationSortableDto } from "../../_common";
+import { useMemo, useState } from "react";
+import { numberWithCommas } from "../../../functionHelpers";
+import { useAppSelector } from "../../../../redux";
+import dayjs from "dayjs";
 
-export type AdditionalTransferStatus = "รอดำเนินการ" | "โอนสำเร็จ" | "โอนเงินไม่สำเร็จ";
-
-export interface AdditionalTransferRow {
-    clNo: string;
-    ccNo: string;
-    createdDate: string;
-    insuredName: string;
-    branch: string;
-    transferredAmount: number;
-    additionalAmount: number;
-    status: AdditionalTransferStatus;
-    reason: string | null;
-}
-
-const dataMock: AdditionalTransferRow[] = [
-    {
-        clNo: "CL6904000010",
-        ccNo: "CC6904000010",
-        createdDate: "21/07/2569 09:35:27",
-        insuredName: "โรงเรียนบ้านท่ามะกา",
-        branch: "กาญจนบุรี",
-        transferredAmount: 4000.0,
-        additionalAmount: 4734.0,
-        status: "รอดำเนินการ",
-        reason: null,
-    },
-    {
-        clNo: "CL6904000048",
-        ccNo: "CC6904000048",
-        createdDate: "21/07/2569 09:37:36",
-        insuredName: "โรงเรียนบ้านสันติสุข",
-        branch: "สำนักงานใหญ่",
-        transferredAmount: 1700.0,
-        additionalAmount: 1895.0,
-        status: "รอดำเนินการ",
-        reason: null,
-    },
-    {
-        clNo: "CL6904000115",
-        ccNo: "CC6904000115",
-        createdDate: "20/07/2569 13:10:39",
-        insuredName: "นางสาวสุนิสา สุวรรณโชค",
-        branch: "สำนักงานใหญ่",
-        transferredAmount: 1000.0,
-        additionalAmount: 2093.0,
-        status: "โอนเงินไม่สำเร็จ",
-        reason: "บัญชีปลายทางปิด",
-    },
-    {
-        clNo: "CL6904000132",
-        ccNo: "CC6904000132",
-        createdDate: "22/07/2569 10:22:14",
-        insuredName: "โรงเรียนวัดบางไผ่",
-        branch: "กรุงเทพมหานคร",
-        transferredAmount: 1200.0,
-        additionalAmount: 1500.0,
-        status: "โอนเงินไม่สำเร็จ",
-        reason: "เลขที่บัญชีปลายทางไม่ถูกต้อง",
-    },
-];
-
-const statusColorMap: Record<AdditionalTransferStatus, { bg: string; text: string }> = {
-    รอดำเนินการ: { bg: "#FFF3E0", text: "#EF6C00" },
-    โอนสำเร็จ: { bg: "#E8F5E9", text: "#2E7D32" },
-    โอนเงินไม่สำเร็จ: { bg: "#FDECEA", text: "#C62828" },
+const statusColorMap: Record<number, { bg: string; text: string }> = {
+    2: { bg: "#FFF3E0", text: "#EF6C00" },
+    3: { bg: "#E8F5E9", text: "#2E7D32" },
+    4: { bg: "#FDECEA", text: "#C62828" },
+    5: { bg: "#FDECEA", text: "#C62828" },
 };
 
-const StatusPill = ({ status }: { status: AdditionalTransferStatus }) => {
-    const { bg, text } = statusColorMap[status];
+const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
+
+const StatusPill = ({
+    paymentStatusId,
+    paymentStatusNameTH,
+}: {
+    paymentStatusId: number;
+    paymentStatusNameTH: string;
+}) => {
+    const { bg, text } = statusColorMap[paymentStatusId] ?? defaultStatusColor;
+
     return (
         <Box
             sx={{
@@ -85,31 +40,46 @@ const StatusPill = ({ status }: { status: AdditionalTransferStatus }) => {
             }}
         >
             <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: text }} />
-            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: text }}>{status}</Typography>
+            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: text }}>{paymentStatusNameTH}</Typography>
         </Box>
     );
 };
 
-const formatAmount = (value: number) =>
-    value.toLocaleString("th-TH", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-    });
-
 const useAdjustTransferDataTableHook = () => {
-    const handleView = (row: AdditionalTransferRow) => {
-        // TODO: open view dialog / navigate to detail page
-        console.log("view", row);
-    };
+    const { searchMonitor } = useAppSelector((state) => state.refund);
+    const [paginated, setPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 10,
+    });
+    const { data: getClaimAdjustMonitorData, isLoading: isGetClaimAdjustLoading } = useGetClaimAdjustMonitorWithFilter({
+        branceId: searchMonitor.branchId ?? null,
+        paymentStatusId: searchMonitor.paymentStatusId ?? null,
+        pagination: paginated,
+    });
+    // const handleView = (row: AdditionalTransferRow) => {
+    //     // TODO: open view dialog / navigate to detail page
+    //     console.log("view", row);
+    // };
 
-    const handleEdit = (row: AdditionalTransferRow) => {
-        // TODO: open edit dialog for a failed transfer (e.g. fix account no. and retry)
-        console.log("edit", row);
-    };
+    // const handleEdit = (row: AdditionalTransferRow) => {
+    //     // TODO: open edit dialog for a failed transfer (e.g. fix account no. and retry)
+    //     console.log("edit", row);
+    // };
+
+    const pagination: PaginationResultDto = useMemo(
+        () => ({
+            totalAmountRecords: getClaimAdjustMonitorData?.totalAmountRecords ?? 0,
+            totalAmountPages: getClaimAdjustMonitorData?.totalAmountPages ?? 0,
+            currentPage: getClaimAdjustMonitorData?.currentPage ?? 0,
+            recordsPerPage: getClaimAdjustMonitorData?.recordsPerPage ?? 0,
+            pageIndex: getClaimAdjustMonitorData?.pageIndex ?? 0,
+        }),
+        [getClaimAdjustMonitorData]
+    );
 
     const columns: MUIDataTableColumn[] = [
         {
-            name: "clNo",
+            name: "claimNo",
             label: "เลขที่ CL",
             options: {
                 sort: false,
@@ -117,41 +87,58 @@ const useAdjustTransferDataTableHook = () => {
             },
         },
         {
-            name: "ccNo",
+            name: "caseNo",
             label: "เลขที่ CC",
             options: { sort: false, filter: false },
         },
         {
             name: "createdDate",
             label: "วันที่สร้างเคลม",
-            options: { sort: false, filter: false },
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    const formatDate = getClaimAdjustMonitorData?.data?.[rowIndex]?.createdDate
+                        ? dayjs(getClaimAdjustMonitorData?.data?.[rowIndex]?.createdDate).format("DD/MM/YYYY HH:mm:ss")
+                        : "-";
+                    return formatDate;
+                },
+            },
         },
         {
-            name: "insuredName",
+            name: "customerName",
             label: "ชื่อผู้เอาประกัน",
             options: { sort: false, filter: false },
         },
         {
-            name: "branch",
+            name: "branchName",
             label: "สาขา",
-            options: { sort: false, filter: false },
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return getClaimAdjustMonitorData?.data?.[rowIndex]?.branchName ?? "-";
+                },
+            },
         },
         {
-            name: "transferredAmount",
+            name: "totalNetPaidAmount",
             label: "จำนวนเงินที่โอนแล้ว",
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => formatAmount(dataMock[dataIndex].transferredAmount),
+                customBodyRenderLite: (rowIndex) =>
+                    numberWithCommas(getClaimAdjustMonitorData?.data?.[rowIndex]?.totalNetPaidAmount ?? 0),
             },
         },
         {
-            name: "additionalAmount",
+            name: "addPayAmount",
             label: "โอนเพิ่ม",
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => formatAmount(dataMock[dataIndex].additionalAmount),
+                customBodyRenderLite: (rowIndex) =>
+                    numberWithCommas(getClaimAdjustMonitorData?.data?.[rowIndex]?.addPayAmount ?? 0),
             },
         },
         {
@@ -160,16 +147,21 @@ const useAdjustTransferDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => <StatusPill status={dataMock[dataIndex].status} />,
+                customBodyRenderLite: (rowIndex) => (
+                    <StatusPill
+                        paymentStatusId={getClaimAdjustMonitorData?.data?.[rowIndex]?.paymentStatusId}
+                        paymentStatusNameTH={getClaimAdjustMonitorData?.data?.[rowIndex]?.paymentStatusNameTH}
+                    />
+                ),
             },
         },
         {
-            name: "reason",
+            name: "remark",
             label: "สาเหตุ",
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => dataMock[dataIndex].reason ?? "-",
+                customBodyRenderLite: (rowIndex) => getClaimAdjustMonitorData?.data?.[rowIndex]?.remark ?? "-",
             },
         },
         {
@@ -178,15 +170,15 @@ const useAdjustTransferDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => {
-                    const row = dataMock[dataIndex];
+                customBodyRenderLite: (rowIndex) => {
+                    const row = getClaimAdjustMonitorData?.data?.[rowIndex];
                     return (
                         <Box sx={{ display: "flex", gap: "4px" }}>
-                            <IconButton size="small" onClick={() => handleView(row)}>
+                            <IconButton size="small" onClick={() => {}}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
                             {row.status === "โอนเงินไม่สำเร็จ" && (
-                                <IconButton size="small" onClick={() => handleEdit(row)}>
+                                <IconButton size="small" onClick={() => {}}>
                                     <EditIcon sx={{ color: "#B8860B", fontSize: 20 }} />
                                 </IconButton>
                             )}
@@ -197,7 +189,7 @@ const useAdjustTransferDataTableHook = () => {
         },
     ];
 
-    return { columns, dataMock };
+    return { columns, setPaginated, pagination, getClaimAdjustMonitorData, isGetClaimAdjustLoading };
 };
 
 export default useAdjustTransferDataTableHook;

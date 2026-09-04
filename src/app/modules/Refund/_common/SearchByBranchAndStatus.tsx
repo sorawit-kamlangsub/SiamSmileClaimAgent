@@ -1,7 +1,10 @@
 import { Box, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { FormikDropdown } from "../../_common";
-import { useGetBranch } from "../../IncreaseLimitTransfer/_common/masterAPI";
+import { useGetBranch, useGetPaymentStatus } from "../../IncreaseLimitTransfer/_common/masterAPI";
+import { useEffect } from "react";
+import { useAppDispatch } from "../../../../redux";
+import { resetFilterSearch, setSearchMonitorByFilter } from "../store/refundSlice";
 
 export interface SelectOption {
     value: string | number;
@@ -9,8 +12,8 @@ export interface SelectOption {
 }
 
 export interface BranchStatusFilterValues {
-    branch: string | number;
-    status: string | number;
+    branch: number | undefined;
+    status: number | undefined;
 }
 
 export interface SearchByBranchAndStatusProps {
@@ -21,8 +24,8 @@ export interface SearchByBranchAndStatusProps {
 }
 
 const defaultValues: BranchStatusFilterValues = {
-    branch: "",
-    status: "",
+    branch: undefined,
+    status: undefined,
 };
 
 const SearchByBranchAndStatus = ({
@@ -32,12 +35,29 @@ const SearchByBranchAndStatus = ({
     onButtonClick,
 }: SearchByBranchAndStatusProps) => {
     const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
+    const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatus();
     const formik = useFormik<BranchStatusFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
             onButtonClick(values);
         },
     });
+
+    const dispatch = useAppDispatch();
+
+    useEffect(() => {
+        if (formik?.values) {
+            const payload = {
+                branchId: formik.values?.branch ?? undefined,
+                paymentStatusId: formik.values?.status ?? undefined,
+            };
+            dispatch(setSearchMonitorByFilter(payload));
+        }
+
+        return () => {
+            dispatch(resetFilterSearch());
+        };
+    }, [formik.values]);
 
     return (
         <Box
@@ -61,6 +81,7 @@ const SearchByBranchAndStatus = ({
                         valueFieldName="branchId"
                         displayFieldName="branchName"
                         isLoading={branchDataIsLoading}
+                        firstItemText="ทั้งหมด"
                     />
                 </Grid>
 
@@ -70,9 +91,10 @@ const SearchByBranchAndStatus = ({
                         formik={formik}
                         label="สถานะ"
                         fullWidth
-                        data={[]}
-                        displayFieldName="label"
-                        valueFieldName="value"
+                        data={paymentStatus?.data ?? []}
+                        valueFieldName="id"
+                        displayFieldName="name"
+                        isLoading={paymentStatusIsLoading}
                     />
                 </Grid>
 

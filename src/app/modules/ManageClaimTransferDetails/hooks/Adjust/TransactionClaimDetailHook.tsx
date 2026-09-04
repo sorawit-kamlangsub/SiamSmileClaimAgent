@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetTransferHistory } from "../../adjustClaimAPI";
+import { useGetTransactionHistory } from "../../adjustClaimAPI";
 import { Box } from "@mui/material";
 import { numberWithCommas } from "../../../../functionHelpers";
 type TransactionClaimDetailHookProps = {
@@ -8,7 +8,7 @@ type TransactionClaimDetailHookProps = {
 };
 
 const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps) => {
-    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetTransferHistory(caseId);
+    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetTransactionHistory(caseId);
     const columns: MUIDataTableColumn[] = [
         {
             name: "transactionDate",

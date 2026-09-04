@@ -1,5 +1,4 @@
 import { Box, Typography } from "@mui/material";
-import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import dayjs from "dayjs";
 import { setBankLogo } from "../../../../../functionHelpers";
 
@@ -19,7 +18,6 @@ const ReceivingAccountCard = ({
     bankId,
 }: ReceivingAccountCardProps) => {
     const avatarBank = setBankLogo(bankId);
-    console.log("🚀 ~ ReceivingAccountCard ~ avatarBank:", avatarBank);
     return (
         <Box
             sx={{
