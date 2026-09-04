@@ -73,6 +73,25 @@ ESLint runs with `--max-warnings 0`. `@typescript-eslint/no-explicit-any` is **o
 
 Git Flow: branch off `develop` (main branch for PRs), naming `feature/<name>`. Conventional Commits (`feat:`, `fix:`, `chore:`, …) — `release-it` + conventional-changelog cut releases from `master` / `develop` into `CHANGELOG.md`. Gitignored build output dirs: `dev/`, `uat/`, `production/`, `dist/`.
 
+### Commit message rules
+
+**Type** — เลือกให้ตรงกับลักษณะการเปลี่ยนแปลงมากที่สุด:
+`feat` เพิ่ม feature ใหม่ · `fix` แก้ bug · `refactor` ปรับโครงสร้างโค้ดโดยไม่เปลี่ยน business logic · `perf` ปรับปรุง performance · `style` ปรับ UI/CSS/formatting โดยไม่เปลี่ยน logic · `docs` แก้ documentation · `test` เพิ่ม/แก้ test · `build` เปลี่ยน build config หรือ dependency · `ci` เปลี่ยน CI/CD · `chore` งาน maintenance ทั่วไป · `revert` ย้อนการเปลี่ยนแปลงจาก commit ก่อนหน้า
+
+**Header format:** `<type>(<scope>): <short description>` — เช่น `feat(claim): เพิ่มการตรวจสอบเอกสาร OCR`
+
+**Body** — ต้องมี `## Summary` พร้อม 4 หัวข้อนี้เสมอ:
+- **การเปลี่ยนแปลง:** โค้ดเปลี่ยนอะไร และเปลี่ยนเพื่ออะไร
+- **ผลกระทบ/API/Security:** ผลกระทบต่อ API, Database, Authentication/Authorization, Security, existing functionality — ถ้าไม่มีให้ระบุ `ไม่มี`
+- **การทดสอบ:** สิ่งที่ทดสอบแล้วจริง (unit test, integration test, manual test, build, lint, edge case) — ถ้าไม่ได้ทดสอบต้องระบุเหตุผลชัดเจน ห้ามอ้างว่า test ผ่านถ้าไม่ได้ทดสอบจริง
+- **ข้อจำกัดหรือสิ่งที่ต้องติดตาม:** known issues, technical debt, TODO — ถ้าไม่มีให้ระบุ `ไม่มี`
+
+**ข้อห้าม:**
+- ห้ามใช้ `feat` หากเป็นเพียงการแก้ bug, ห้ามใช้ `fix` หากเป็นการเพิ่ม feature ใหม่
+- ห้ามเขียน commit message ที่กว้างเกินไป เช่น `update code`, `fix issue`, `change stuff`
+- ห้ามกล่าวอ้างว่า test ผ่านหากไม่มีข้อมูลยืนยัน
+- ห้ามกล่าวอ้างว่าไม่มีผลกระทบต่อ API/Security หากยังไม่มีข้อมูลเพียงพอ
+
 ## SSD skill
 
 The `ssd` skill ([.claude/skills/ssd/SKILL.md](.claude/skills/ssd/SKILL.md)) packages the team's React/.NET/Python/Git conventions. Invoke with `/ssd <command>` (e.g. `/ssd frontend-review`, `/ssd react-api`, `/ssd git-commit`, `/ssd ts-fix-unused`); `/ssd help` lists all commands. Follow its reference files exactly when a command matches the task.
