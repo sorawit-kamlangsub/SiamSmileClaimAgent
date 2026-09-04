@@ -49,6 +49,11 @@ Company API convention: **GET and POST only** — no PUT / PATCH / DELETE. Mutat
 
 Dates cross the wire as strings but are typed `dayjs.Dayjs` in generated DTOs (NSwag `dateTimeType: DayJS`). Format for display with `formatDateString` / helpers in [src/app/functionHelpers.ts](src/app/functionHelpers.ts) (default format `DD/MM/BBBB` — `BBBB` = Buddhist year). Call `.toString()` on a `Dayjs` before passing it to `formatDateString`.
 
+**Generated API binding — hard rule:**
+- Before writing a new API call, check whether the endpoint/DTO already exists on the relevant generated client (`src/app/api/*.client.ts` — `CoreClaimClient`, `MastersClient`, `DocumentClient`, `DocumentUploaderClient`, …) or its hook wrapper (the sibling `src/app/api/*.ts` file, no `.client` suffix). Reuse it — don't hand-roll a duplicate `axios` call or a second hook for something that's already wrapped. See [api-inventory.md](docs/api-inventory.md) for the full current list before adding a new hook.
+- **Never hand-edit a `*.client.ts` file.** It's 100% NSwag output — `npm run codegen` overwrites it wholesale, so a manual fix silently disappears on the next regen and the file drifts from the backend contract. If a client is missing a method, has a stale/wrong DTO field, or is otherwise out of date, that's a backend/swagger problem: get the backend contract fixed, then `npm run codegen` (needs local `.env.local` with `VITE_API_URL`, see Commands) — don't patch the generated file directly.
+- The sibling wrapper (`*.ts`, no `.client`) is the opposite: hand-written by design, and **is** where new `useGetX` / `useXMutation` hooks belong, following the pattern above.
+
 ### State (Redux)
 [src/redux/rootReducer.ts](src/redux/rootReducer.ts) combines one slice per feature module (`checkeligible`, `claimph`, `claimpa`, `claimConsider`, …). Only `layout` is wrapped in `redux-persist`; feature slices are in-memory. Use the typed `useAppSelector` / `useAppDispatch` from [src/redux/hook.ts](src/redux/hook.ts). Each slice lives at `modules/<Feature>/store/<feature>Slice.ts` and exports its actions plus a `<feature>Selector`.
 

@@ -2221,6 +2221,392 @@ export class CoreClaimClient {
     }
 }
 
+export class HospitalBillingClient {
+    private instance: AxiosInstance;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, instance?: AxiosInstance) {
+        this.instance = instance ? instance : axios.create();
+
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    /**
+     * ค้นหารายการวางบิลโรงพยาบาลและคืน dashboard counts ตาม BillingDetail.
+     * @param statusId (optional)
+     * @param searchBy (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    filter(
+        statusId?: number | undefined,
+        searchBy?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BillingListDtoServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/filter?";
+        if (statusId === null) throw new Error("The parameter 'statusId' cannot be null.");
+        else if (statusId !== undefined) url_ += "StatusId=" + encodeURIComponent("" + statusId) + "&";
+        if (searchBy === null) throw new Error("The parameter 'searchBy' cannot be null.");
+        else if (searchBy !== undefined) url_ += "SearchBy=" + encodeURIComponent("" + searchBy) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processFilter(_response);
+            });
+    }
+
+    protected processFilter(response: AxiosResponse): Promise<BillingListDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BillingListDtoServiceResponse>(result200);
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400 = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BillingListDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * อ่านรายละเอียดรอบวางบิลสำหรับตรวจสอบหรือดูผลที่บันทึกไว้.
+     * @return Success
+     */
+    hospital(billingDetailId: string, cancelToken?: CancelToken | undefined): Promise<BillingDetailDtoServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/{billingDetailId}";
+        if (billingDetailId === undefined || billingDetailId === null)
+            throw new Error("The parameter 'billingDetailId' must be defined.");
+        url_ = url_.replace("{billingDetailId}", encodeURIComponent("" + billingDetailId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processHospital(_response);
+            });
+    }
+
+    protected processHospital(response: AxiosResponse): Promise<BillingDetailDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BillingDetailDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404 = _responseText;
+            result404 = JSON.parse(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BillingDetailDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * อ่านประวัติรอบวางบิลและ immutable review revisions ของ Case.
+     * @return Success
+     */
+    history(billingDetailId: string, cancelToken?: CancelToken | undefined): Promise<BillingHistoryDtoServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/{billingDetailId}/history";
+        if (billingDetailId === undefined || billingDetailId === null)
+            throw new Error("The parameter 'billingDetailId' must be defined.");
+        url_ = url_.replace("{billingDetailId}", encodeURIComponent("" + billingDetailId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processHistory(_response);
+            });
+    }
+
+    protected processHistory(response: AxiosResponse): Promise<BillingHistoryDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BillingHistoryDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404 = _responseText;
+            result404 = JSON.parse(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BillingHistoryDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * ยืนยันผลตรวจสอบและบันทึก Case, snapshot และ return request แบบ atomic.
+     * @param body (optional)
+     * @return Success
+     */
+    submit(
+        billingDetailId: string,
+        body?: SubmitHospitalBillingDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BillingSubmitResultDtoServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/{billingDetailId}/submit";
+        if (billingDetailId === undefined || billingDetailId === null)
+            throw new Error("The parameter 'billingDetailId' must be defined.");
+        url_ = url_.replace("{billingDetailId}", encodeURIComponent("" + billingDetailId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processSubmit(_response);
+            });
+    }
+
+    protected processSubmit(response: AxiosResponse): Promise<BillingSubmitResultDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BillingSubmitResultDtoServiceResponse>(result200);
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400 = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404 = _responseText;
+            result404 = JSON.parse(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+        } else if (status === 409) {
+            const _responseText = response.data;
+            let result409: any = null;
+            let resultData409 = _responseText;
+            result409 = JSON.parse(resultData409);
+            return throwException("Conflict", status, _responseText, _headers, result409);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BillingSubmitResultDtoServiceResponse>(null as any);
+    }
+}
+
 export class IClaimClient {
     private instance: AxiosInstance;
     private baseUrl: string;
@@ -4535,6 +4921,225 @@ export interface BeneficiaryV2Request {
     payables?: CasePayableV2Request[] | undefined;
 }
 
+export interface BillingClaimDto {
+    incidentTypeId?: number | undefined;
+    incidentDate?: dayjs.Dayjs | undefined;
+    incidentTime?: TimeSpan;
+    symptomOnsetDate?: dayjs.Dayjs | undefined;
+    coverageTypeId?: number | undefined;
+    medicalTypeId?: number | undefined;
+    occurrenceDate?: dayjs.Dayjs | undefined;
+    occurrenceTime?: TimeSpan;
+    admissionDate?: dayjs.Dayjs | undefined;
+    admissionTime?: TimeSpan;
+    dischargeDate?: dayjs.Dayjs | undefined;
+    dischargeTime?: TimeSpan;
+    hn?: string | undefined;
+    vn?: string | undefined;
+    an?: string | undefined;
+    chiefComplaintId?: number | undefined;
+    chiefComplaint?: string | undefined;
+    diagnosis1Id?: number | undefined;
+    diagnosis2Id?: number | undefined;
+    diagnosis3Id?: number | undefined;
+    note?: string | undefined;
+}
+
+export interface BillingDetailDto {
+    billingDetailId?: string;
+    billingHeaderId?: string;
+    caseId?: string;
+    claimId?: string;
+    previousBillingDetailId?: string | undefined;
+    externalBillingId?: string | undefined;
+    billingNo?: string | undefined;
+    claimCode?: string | undefined;
+    caseNo?: string | undefined;
+    hospitalName?: string | undefined;
+    provinceName?: string | undefined;
+    claimType?: string | undefined;
+    submittedDate?: dayjs.Dayjs;
+    originalBilledAmount?: number;
+    statusId?: number;
+    version?: number;
+    caseVersion?: number;
+    claimVersion?: number;
+    rowVersion?: string | undefined;
+    caseRowVersion?: string | undefined;
+    claimRowVersion?: string | undefined;
+    reviewRemark?: string | undefined;
+    insured?: BillingInsuredDto;
+    data?: BillingReviewDataDto;
+    totals?: BillingTotalsDto;
+    requiredDocumentSubTypeIds?: number[] | undefined;
+}
+
+export interface BillingDetailDtoServiceResponse {
+    data?: BillingDetailDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface BillingDocumentDto {
+    caseDocumentId?: string;
+    documentId?: string | undefined;
+    documentSubTypeId?: number | undefined;
+    documentName?: string | undefined;
+    fileCount?: number | undefined;
+    reviewStatusId?: number | undefined;
+    note?: string | undefined;
+}
+
+export interface BillingExpenseDto {
+    caseItemId?: string | undefined;
+    standardMedicalExpenseId?: number;
+    itemName?: string | undefined;
+    claimAmount?: number;
+    discountAmount?: number;
+    nonCoveredAmount?: number;
+    nonCoveredReasonId?: number | undefined;
+    note?: string | undefined;
+}
+
+export interface BillingHistoryDto {
+    rounds?: BillingRoundDto[] | undefined;
+    revisions?: BillingRevisionDto[] | undefined;
+}
+
+export interface BillingHistoryDtoServiceResponse {
+    data?: BillingHistoryDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface BillingInsuredDto {
+    name?: string | undefined;
+    applicationId?: string | undefined;
+    studentCard?: string | undefined;
+    plan?: string | undefined;
+    coverageStart?: dayjs.Dayjs | undefined;
+    coverageEnd?: dayjs.Dayjs | undefined;
+}
+
+export interface BillingListDto {
+    items?: BillingListItemDto[] | undefined;
+    counts?: { [key: string]: number } | undefined;
+}
+
+export interface BillingListDtoServiceResponse {
+    data?: BillingListDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface BillingListItemDto {
+    billingDetailId?: string;
+    billingHeaderId?: string;
+    caseId?: string;
+    externalBillingId?: string | undefined;
+    claimCode?: string | undefined;
+    insuredName?: string | undefined;
+    hospitalName?: string | undefined;
+    submittedDate?: dayjs.Dayjs;
+    treatmentDate?: dayjs.Dayjs | undefined;
+    claimType?: string | undefined;
+    statusId?: number;
+    amount?: number;
+    readonly canReview?: boolean;
+}
+
+export interface BillingMedicalDto {
+    underlyingDiseaseDetail?: string | undefined;
+    illnessDetail?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
+}
+
+export interface BillingReviewDataDto {
+    claim: BillingClaimDto;
+    medical: BillingMedicalDto;
+    expenses: BillingExpenseDto[];
+    documents: BillingDocumentDto[];
+    ssEndDiscountAmount?: number;
+}
+
+export interface BillingRevisionDto {
+    revisionId?: string;
+    version?: number;
+    previousStatusId?: number;
+    statusId?: number;
+    reviewedDate?: dayjs.Dayjs;
+    reviewedByUserId?: number;
+    returnStatus?: string | undefined;
+    snapshot?: BillingDetailDto;
+}
+
+export interface BillingRoundDto {
+    billingDetailId?: string;
+    previousBillingDetailId?: string | undefined;
+    externalBillingId?: string | undefined;
+    statusId?: number;
+    submittedDate?: dayjs.Dayjs;
+}
+
+export interface BillingSubmitResultDto {
+    billingDetailId?: string;
+    revisionId?: string;
+    statusId?: number;
+    version?: number;
+    netBillableAmount?: number;
+    returnRequestId?: string | undefined;
+    returnStatus?: string | undefined;
+}
+
+export interface BillingSubmitResultDtoServiceResponse {
+    data?: BillingSubmitResultDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface BillingTotalsDto {
+    totalClaimedAmount?: number;
+    totalDiscountAmount?: number;
+    totalNonCoveredAmount?: number;
+    ssEndDiscountAmount?: number;
+    netBillableAmount?: number;
+}
+
 export interface CalculateCaseClaim {
     productId?: number;
     coverageTypeId?: number;
@@ -6327,6 +6932,16 @@ export interface MedicalExpenseList {
     unPay?: number;
 }
 
+export interface ProblemDetails {
+    type?: string | undefined;
+    title?: string | undefined;
+    status?: number | undefined;
+    detail?: string | undefined;
+    instance?: string | undefined;
+
+    [key: string]: any;
+}
+
 export interface SaveClaimEditDraftDtoRequest {
     claimId?: string;
     caseId?: string;
@@ -6377,6 +6992,19 @@ export interface StandardMedicalExpenseCategoryDtoResponseListServiceResponse {
     currentPage?: number | undefined;
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
+}
+
+export interface SubmitHospitalBillingDto {
+    requestId?: string;
+    expectedVersion?: number;
+    expectedCaseVersion?: number;
+    expectedClaimVersion?: number;
+    rowVersion: string;
+    caseRowVersion: string;
+    claimRowVersion: string;
+    reviewStatusId?: number;
+    reviewRemark?: string | undefined;
+    data: BillingReviewDataDto;
 }
 
 export interface TimeSpan {
