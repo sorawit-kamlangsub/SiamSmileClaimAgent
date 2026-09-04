@@ -12,7 +12,7 @@ interface StatItemProps {
 const StatItem = ({ icon, label, value, color, showDivider = true }: StatItemProps) => (
     <Grid
         item
-        xs={4}
+        xs={3}
         sx={{
             textAlign: "center",
             borderRight: showDivider ? "1px solid #E0E0E0" : "none",
