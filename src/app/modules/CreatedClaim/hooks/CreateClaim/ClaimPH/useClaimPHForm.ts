@@ -517,8 +517,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 coverageTypeId: oldClaim.coverageTypeId ?? formik.values.coverageTypeId,
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
-                // TODO: default chiefComplaintId จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field ChiefComplaint (รอ API เพิ่ม)
-                // TODO: default remark จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field Remark (รอ API เพิ่ม)
+                chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
+                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
             },
             false
         );
@@ -530,10 +530,13 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     }, [customerBenefit?.data]);
 
     const isIncidentDateDisabled = isContinuous;
+    // เคลมต่อเนื่อง: ยังรอข้อมูลเคลมตั้งต้นมา prefill (icD10Id ฯลฯ)
+    const isOldClaimLoading = isContinuous && !oldClaim;
     return {
         formik,
         isContinuous,
         isIncidentDateDisabled,
+        isOldClaimLoading,
         incidentType,
         coverageType,
         medicalType,

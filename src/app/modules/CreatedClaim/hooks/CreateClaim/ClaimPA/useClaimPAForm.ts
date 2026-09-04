@@ -718,18 +718,17 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 // สถานที่เสียชีวิต — placeOfDeathId ตรงกับ DeathPlaceType (2=บ้าน, 3=สถานพยาบาล, 4=อื่นๆ)
                 deathPlaceType: oldClaim.placeOfDeathId ?? formik.values.deathPlaceType,
                 accidentPlace: oldClaim.placeOfDeathDetail ?? formik.values.accidentPlace,
-                // การวินิจฉัย — oldClaim มีแค่ข้อความ icD10DescriptionTH ยังไม่มี icd10Id
+                // การวินิจฉัย — ดึงจากเคลมตั้งต้น (icD10Id + ข้อความ icD10DescriptionTH)
                 diagnoses: [
                     {
-                        // TODO: default icd10Id จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field icd10Id (รอ API เพิ่ม)
-                        icd10Id: formik.values.diagnoses[0]?.icd10Id,
+                        icd10Id: oldClaim.icD10Id ?? formik.values.diagnoses[0]?.icd10Id,
                         icd10Detail: oldClaim.icD10DescriptionTH ?? formik.values.diagnoses[0]?.icd10Detail,
                     },
                     ...formik.values.diagnoses.slice(1),
                 ],
-                // TODO: default hospitalId (สถานพยาบาล) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field hospitalId (รอ API เพิ่ม)
-                // TODO: default chiefComplaintId (ChiefComplaint) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field ChiefComplaint (รอ API เพิ่ม)
-                // TODO: default remark (Remark) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field Remark (รอ API เพิ่ม)
+                hospitalId: oldClaim.hospitalId ?? formik.values.hospitalId,
+                chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
+                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
             },
             false
         );
@@ -748,19 +747,22 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 coverageTypeId: oldClaim.coverageTypeId ?? formik.values.coverageTypeId,
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
-                // TODO: default chiefComplaintId (ChiefComplaint) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field ChiefComplaint (รอ API เพิ่ม)
-                // TODO: default remark (Remark) จากเคลมตั้งต้น — GetPreviousClaimDtoResponse ยังไม่มี field Remark (รอ API เพิ่ม)
+                chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
+                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
             },
             false
         );
     }, [isContinuous, isContinuousDeath, oldClaim]);
 
     const isIncidentDateDisabled = isContinuous;
+    // เคลมต่อเนื่อง: ยังรอข้อมูลเคลมตั้งต้นมา prefill (icD10Id ฯลฯ)
+    const isOldClaimLoading = isContinuous && !oldClaim;
     return {
         formik,
         isContinuous,
         isContinuousDeath,
         isIncidentDateDisabled,
+        isOldClaimLoading,
         incidentType,
         coverageType,
         medicalType,
