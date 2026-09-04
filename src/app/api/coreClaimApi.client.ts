@@ -718,7 +718,7 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Calculate ข้อมูล Case Claim
-     * @param body (optional)
+     * @param body (optional) 
      * @return Success
      */
     calculateCaseClaim(body?: CalculateCaseClaimDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
