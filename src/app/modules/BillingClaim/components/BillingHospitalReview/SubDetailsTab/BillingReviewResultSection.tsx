@@ -2,7 +2,6 @@ import { Box, Button, Grid, TextField, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import BlockIcon from "@mui/icons-material/Block";
-import CancelIcon from "@mui/icons-material/Cancel";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
@@ -25,7 +24,7 @@ const RESULT_OPTIONS: {
     },
     {
         value: BILLING_STATUS.needsCorrection,
-        label: "รอแก้ไข",
+        label: "แจ้งแก้ไข",
         icon: <FormatListBulletedIcon fontSize="small" />,
         color: "#806033",
         softColor: "#FAF7F2",
@@ -37,25 +36,23 @@ const RESULT_OPTIONS: {
         color: "#D76451",
         softColor: "#FFF4F1",
     },
-    {
-        value: BILLING_STATUS.cancelled,
-        label: "ยกเลิก",
-        icon: <CancelIcon fontSize="small" />,
-        color: "#D92D2D",
-        softColor: "#FFF4F4",
-    },
+    // CR Ver2 : ตัดตัวเลือก "ยกเลิก" ออกจากหน้าวางบิลเคลมโรงพยาบาล — ยังคงมีใน BILLING_STATUS/filter หน้า Monitor
 ];
 
-/** Step 3 "ผลการตรวจสอบ" — bind `values.reviewStatusId` / `values.reviewRemark` (≤1000 ตัวอักษร) */
+/** Step 3 "แจ้งผลการพิจารณาโรงพยาบาล" — bind `values.reviewStatusId` / `values.reviewRemark` (≤1000 ตัวอักษร) */
 const BillingReviewResultSection = ({ readOnly = false }: { readOnly?: boolean }) => {
     const formik = useFormikContext<BillingReviewFormValues>();
     const selected = RESULT_OPTIONS.find((opt) => opt.value === formik.values.reviewStatusId);
 
     return (
         <CustomPaper>
-            <HeadingWithColor icon={<FactCheckIcon sx={{ fontSize: 27 }} />} text="ผลการตรวจสอบ" color="blue" />
+            <HeadingWithColor
+                icon={<FactCheckIcon sx={{ fontSize: 27 }} />}
+                text="แจ้งผลการพิจารณาโรงพยาบาล"
+                color="blue"
+            />
 
-            <Box role="radiogroup" aria-label="เลือกผลการตรวจสอบ" sx={{ mt: 2.5 }}>
+            <Box role="radiogroup" aria-label="เลือกผลการพิจารณาโรงพยาบาล" sx={{ mt: 2.5 }}>
                 <Grid container spacing={{ xs: 1.25, sm: 2 }}>
                     {RESULT_OPTIONS.map((option) => {
                         const isSelected = option.value === formik.values.reviewStatusId;
@@ -108,8 +105,8 @@ const BillingReviewResultSection = ({ readOnly = false }: { readOnly?: boolean }
                         multiline
                         minRows={3}
                         disabled={readOnly}
-                        label="หมายเหตุผลการตรวจสอบ"
-                        placeholder="ระบุรายละเอียดผลการตรวจสอบ"
+                        label="หมายเหตุผลการพิจารณา"
+                        placeholder="ระบุรายละเอียดผลการพิจารณา"
                         value={formik.values.reviewRemark}
                         onChange={(e) => formik.setFieldValue("reviewRemark", e.target.value)}
                         inputProps={{ maxLength: 1000 }}
