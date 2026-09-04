@@ -133,6 +133,17 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 }
             }
 
+            // ── ตรวจความคุ้มครองตามวันที่เกิดเหตุ ──
+            const hasBenefitQueryParams = Boolean(
+                values.incidentTypeId &&
+                    values.coverageTypeId &&
+                    values.incidentDate &&
+                    (isMedical ? values.medicalTypeId : isCause ? values.causeOfIncidentId : true)
+            );
+            if (hasBenefitQueryParams && !customerBenefitLoading && (customerBenefit?.data?.length ?? 0) === 0) {
+                errors.incidentDate = "ไม่มีความคุ้มครองในวันที่เกิดเหตุ";
+            }
+
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
             else if ((isDeath || isDisability || isIPD) && Number(values.transferAmount) > maxTransferAmount) {
