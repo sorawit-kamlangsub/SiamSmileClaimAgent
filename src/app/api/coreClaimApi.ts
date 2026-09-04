@@ -600,8 +600,8 @@ export const useGetStandardMedicalExpenseByCase = (
     medicalTypeId: number | undefined,
     isUseOften: boolean,
     productTypeId: number | undefined,
-    productId: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    productId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -612,8 +612,8 @@ export const useGetStandardMedicalExpenseByCase = (
             medicalTypeId,
             isUseOften,
             productTypeId,
-            productId,
             causeOfIncidentId,
+            productId,
         ],
         () =>
             coreClaimClient.getStandardMedicalExpenseByCase(
@@ -623,8 +623,8 @@ export const useGetStandardMedicalExpenseByCase = (
                 medicalTypeId,
                 isUseOften,
                 productTypeId,
-                productId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                productId
             ),
         {
             enabled: !!caseId,
