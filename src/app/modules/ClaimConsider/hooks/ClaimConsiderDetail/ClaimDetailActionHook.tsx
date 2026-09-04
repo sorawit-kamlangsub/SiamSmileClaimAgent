@@ -20,9 +20,11 @@ import {
     UpsertClaimDecisionCaseDocumentRequest,
     UpsertClaimDecisionCaseDocumentDetailRequest,
     UpsertClaimDecisionCaseRequest,
+    UpsertClaimDecisionDtoResponseServiceResponse,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
 import { swalError, swalSuccess } from "../../../_common";
+import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
 import { useAppSelector } from "../../../../../redux";
@@ -43,10 +45,25 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
     caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
     /**
-     * ผลการตรวจเอกสารรายรายการ ต่อท้าย case.caseDocument
-     * (เคลมโรงพยาบาล : ตารางตรวจสอบเอกสาร -> documentReviewStatusId) เฉพาะ decision
+     * ตารางตรวจสอบเอกสาร (ค่าดิบจาก formik ของเคลมโรงพยาบาล)
+     * hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId เอง
      */
-    documentReviews?: UpsertClaimDecisionCaseDocumentRequest[];
+    documentChecks?: DocumentCheckRow[];
+    /**
+     * บัญชีปลายทางรับเงิน — ส่งมาเฉพาะเคลมโรงพยาบาล
+     * เคลมลูกค้าไม่ต้องส่ง casePayable จึงไม่มี toBankId / toBankName / toBankAccountNo
+     */
+    payoutAccount?: { bankId?: number; bankName?: string; bankAccountNo?: string };
+    /**
+     * ให้หน้าที่เรียกจัดการผลสำเร็จของการอนุมัติเอง (เช่น แสดง toast)
+     * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
+     */
+    onApproveSuccess?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void;
+    /**
+     * ให้หน้าที่เรียกจัดการผลสำเร็จของการบันทึกผลพิจารณาเอง (เช่น redirect)
+     * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
+     */
+    onConfirmConsiderSuccess?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -55,13 +72,26 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
  */
 const DEFAULT_NON_COVERED_REASON_ID = 1;
 
+/** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
+const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+/**
+ * casePayable ฝั่ง FE : บัญชีปลายทางเป็น optional เพราะเคลมลูกค้าไม่ส่ง
+ * (DTO ที่ codegen มาประกาศทั้งสามฟิลด์เป็น required)
+ */
+type CasePayableDraft = Pick<ApproveCasePayableRequest, "payableAmount"> &
+    Partial<Omit<ApproveCasePayableRequest, "payableAmount">>;
+
 const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderValues>({
     formik,
     detailData,
     customerDetailData,
     isCombinedWithMedicalAll = false,
     caseFields,
-    documentReviews,
+    documentChecks,
+    payoutAccount,
+    onApproveSuccess,
+    onConfirmConsiderSuccess,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
@@ -75,11 +105,17 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         (error) => swalError("ไม่สำเร็จ", error)
     );
     const saveClaimDecision = useUpsertClaimDecision(
-        () => swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (response) =>
+            onConfirmConsiderSuccess
+                ? onConfirmConsiderSuccess(response)
+                : swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
     );
     const approveClaimDecision = useApproveClaimDecision(
-        () => swalSuccess("อนุมัติผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (response) =>
+            onApproveSuccess
+                ? onApproveSuccess(response)
+                : swalSuccess("อนุมัติผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
     );
 
@@ -438,11 +474,24 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         );
     };
 
+    /** ตารางตรวจสอบเอกสารของเคลมโรงพยาบาล -> caseDocument[].documentReviewStatusId */
+    const mapDocumentReviewsForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] =>
+        (documentChecks ?? [])
+            .filter((doc) => doc.checkResult !== "" && isGuid(doc.documentId))
+            .map(
+                (doc): UpsertClaimDecisionCaseDocumentRequest => ({
+                    documentId: doc.documentId,
+                    documentNo: doc.documentName,
+                    documentReviewStatusId: doc.checkResult || undefined,
+                    caseDocumentDetail: [],
+                })
+            );
+
     /** รวมทุกแหล่งเป็น array เดียวสำหรับ payload (รวมผลการตรวจเอกสารของเคลมโรงพยาบาล) */
     const mapCaseDocumentForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] => [
         ...mapConsiderDocumentForDecision(),
         ...mapDocumentScanListForDecision(),
-        ...(documentReviews ?? []),
+        ...mapDocumentReviewsForDecision(),
     ];
     /** Case: ก้อนกลางของ DTO */
     const mapCaseForDecision = (overrideDecisionId?: number): UpsertClaimDecisionCaseRequest => {
@@ -499,17 +548,27 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         await saveClaimDecision.mutateAsync(payload);
     };
 
-    const mapCasePayableForApprove = (): ApproveCasePayableRequest =>
-        ({
-            payableAmount: calculateResult?.medicalPay ?? 0,
-            // ยังไม่มีข้อมูลบัญชีผู้รับเงินใน flow นี้ จึงให้ field บัญชีเป็น undefined ชั่วคราว
-        }) as ApproveCasePayableRequest;
+    const mapCasePayableForApprove = (): CasePayableDraft => {
+        const payable = { payableAmount: calculateResult?.medicalPay ?? 0 };
+        // ส่งบัญชีปลายทางเฉพาะเมื่อ caller ให้มาครบทั้งสามค่า (เคลมโรงพยาบาล)
+        // เคลมลูกค้าไม่ส่ง payoutAccount มาเลย จึงได้แต่ payableAmount
+        if (payoutAccount?.bankId && payoutAccount.bankName && payoutAccount.bankAccountNo) {
+            return {
+                ...payable,
+                toBankId: payoutAccount.bankId,
+                toBankName: payoutAccount.bankName,
+                toBankAccountNo: payoutAccount.bankAccountNo,
+            };
+        }
+        return payable;
+    };
 
     const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
         claimDecision: mapClaimDecisionPayload(2),
         calculateCaseCode: calculateResult?.calculateCaseCode,
         isCombinedWithMedicalAll,
-        casePayable: mapCasePayableForApprove(),
+        // DTO ประกาศบัญชีปลายทางเป็น required แต่เคลมลูกค้าไม่ต้องส่ง
+        casePayable: mapCasePayableForApprove() as ApproveCasePayableRequest,
     });
 
     const handleApprove = async () => {
@@ -517,7 +576,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         await approveClaimDecision.mutateAsync(payload);
     };
 
-    return { handleSaveDraft, handleConfirmConsider, handleApprove };
+    return { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving: approveClaimDecision.isLoading };
 };
 
 export default useClaimDetailActionHook;

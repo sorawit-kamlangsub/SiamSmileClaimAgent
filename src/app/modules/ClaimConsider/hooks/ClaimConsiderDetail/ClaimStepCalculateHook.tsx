@@ -5,10 +5,15 @@ import {
     CalculateCaseClaimDtoRequest,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../api/coreClaimApi.client";
-import { useAppDispatch } from "../../../../../redux";
+import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { useCalculateCaseClaim } from "../../../../api/coreClaimApi";
 import { swalError } from "../../../_common";
-import { ClaimConsiderValues, ClaimExpenseItem, setCalculateExpenseResult } from "../../store/claimConsiderSlice";
+import {
+    ClaimConsiderValues,
+    ClaimExpenseItem,
+    claimConsiderSelector,
+    setCalculateExpenseResult,
+} from "../../store/claimConsiderSlice";
 
 const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
     "incidentTypeId",
@@ -41,6 +46,9 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     stepsLength,
 }: UseClaimStepCalculateHookProps<TValues>) => {
     const dispatch = useAppDispatch();
+    // sync มาจาก ClaimExpenseDetailHook (/standard-medical-expense/case) — อ่านจาก store แทนการรับเป็น param
+    // เพื่อไม่ต้องแก้ call site ทั้งสองที่ของ hook นี้
+    const { caseAdjudicationId } = useAppSelector(claimConsiderSelector);
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -81,8 +89,8 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
         };
 
         return {
-            caseAdjudicationId: undefined,
-            isSimulateCase: true,
+            caseAdjudicationId: caseAdjudicationId ?? undefined,
+            isSimulateCase: false,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
             jsonDetail: calculateDetail,

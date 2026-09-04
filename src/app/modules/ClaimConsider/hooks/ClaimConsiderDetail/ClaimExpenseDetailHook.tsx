@@ -9,10 +9,16 @@ import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/coreC
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux";
-import { applyMaximumLimit, hasAmountSumError, toAmount } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    applyMaximumLimit,
+    hasAmountSumError,
+    hasMissingReasonError,
+    toAmount,
+} from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
-import { ClaimExpenseItem, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
+import { ClaimExpenseItem, setCaseAdjudicationId, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
 import { useGetStandardMedicalExpenseByCase } from "../../../../api/coreClaimApi";
+import { CoverageType } from "../../../../functionHelpers";
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
     data
         .map((cat) => {
@@ -90,8 +96,8 @@ const useClaimExpenseDetailHook = () => {
         form.medicalTypeId,
         false,
         customerDetailData?.data?.productTypeId,
-        customerDetailData?.data?.productId,
-        undefined
+        undefined,
+        customerDetailData?.data?.productId
     );
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
@@ -124,6 +130,17 @@ const useClaimExpenseDetailHook = () => {
             caseItemId: item.caseItemId,
         }));
     }, [frequentData]);
+
+    /** caseAdjudicationId มาระดับ item — ทุกแถวของ case เดียวกันเป็นค่าเดียวกัน จึงหยิบตัวแรกที่ไม่ว่าง */
+    const caseAdjudicationId = useMemo(
+        () => frequentData?.data?.find((item) => item.caseAdjudicationId)?.caseAdjudicationId ?? null,
+        [frequentData]
+    );
+
+    // ส่งขึ้น Redux ให้ ClaimStepCalculateHook หยิบไปใส่ payload คำนวณ (คนละ component จึงส่งเป็น prop ไม่ได้)
+    useEffect(() => {
+        dispatch(setCaseAdjudicationId(caseAdjudicationId));
+    }, [dispatch, caseAdjudicationId]);
     const categories = useMemo(() => {
         const raw = categoryData?.data ?? [];
         setExpandedIds([]);
@@ -253,9 +270,14 @@ const useClaimExpenseDetailHook = () => {
         setReasonError("");
     };
 
+    /** ประเภทความคุ้มครอง = ค่ารักษา : เงื่อนไขแสดง Section "รายการค่ารักษาเพิ่มเติม" */
+    const isMedicalCoverage = form.coverageTypeId === CoverageType.Medical;
+
     const hasAnyAmount = items.some((item) => Number(item.claimAmount ?? 0) > 0);
     const hasDiscountError = items.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
     const hasNotCoveredError = items.some((item) => hasAmountSumError(item));
+    /** มียอดไม่คุ้มครองแต่ยังไม่ระบุสาเหตุ — บังคับตาม spec */
+    const hasReasonError = items.some((item) => hasMissingReasonError(item));
     const handleAddToTable = () => {
         if (!selectedItem) return;
 
@@ -311,6 +333,13 @@ const useClaimExpenseDetailHook = () => {
         } else {
             setDiscountError("");
         }
+        // ยอดไม่คุ้มครอง > 0 ต้องระบุสาเหตุ
+        if (hasMissingReasonError({ claimAmount: amount, discount, notCovered, reason })) {
+            setReasonError("กรุณาเลือกสาเหตุไม่คุ้มครอง");
+            hasError = true;
+        } else {
+            setReasonError("");
+        }
         if (hasError) return;
 
         const newItem: ClaimExpenseItem = {
@@ -354,10 +383,10 @@ const useClaimExpenseDetailHook = () => {
             swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาตรวจสอบยอดส่วนลด/ไม่คุ้มครองให้ไม่เกินยอดเบิก");
             return false;
         }
-        // if (hasReasonError) {
-        //     swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครองให้ครบทุกรายการที่มียอดไม่คุ้มครอง");
-        //     return false;
-        // }
+        if (hasReasonError) {
+            swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครองให้ครบทุกรายการที่มียอดไม่คุ้มครอง");
+            return false;
+        }
 
         const filteredItems = filterFilledItems(items);
 
@@ -421,6 +450,7 @@ const useClaimExpenseDetailHook = () => {
         expenseItems: items,
         frequentItems,
         isFrequentLoading,
+        caseAdjudicationId,
         showAddPanel,
         setShowAddPanel,
         searchText,
@@ -463,7 +493,9 @@ const useClaimExpenseDetailHook = () => {
         setReasonError,
         hasDiscountError,
         hasNotCoveredError,
+        hasReasonError,
         hasAnyAmount,
+        isMedicalCoverage,
         pendingReceiptAmount,
         setPendingReceiptAmount,
     };

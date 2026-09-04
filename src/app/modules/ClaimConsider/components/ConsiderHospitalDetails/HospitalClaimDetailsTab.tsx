@@ -50,10 +50,6 @@ const steps = [{ label: "บันทึกข้อมูลเคลม" }, { 
 
 const fmtBaht = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
-/** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
-const isGuid = (value: string) =>
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-
 type HospitalClaimDetailsTabProps = {
     /**
      * โหมดดูอย่างเดียว : แสดงข้อมูลชุดเดียวกับหน้าพิจารณา แต่แก้ไขไม่ได้
@@ -110,6 +106,39 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
 
+    const detail = detailData?.data;
+    const customerDetail = customerDetailData?.data;
+
+    /**
+     * "โอนค่าชดเชยรวมกับค่ารักษา" : Default บังคับโอนรวม
+     * เลือกโอนแยกได้เฉพาะผลิตภัณฑ์ PH + IPD / Day Case (ชีท IPD row 858 : Enable เฉพาะ PH)
+     * และเมื่อโอนแยกจึงมีการ์ดบัญชีรับเงินค่าชดเชย
+     */
+    const allowSeparateCompensation =
+        isProductType(customerDetail?.productTypeId, PRODUCT_TYPE_GROUP.PH) &&
+        (formik.values.medicalTypeId === MedicalType.IPD || formik.values.medicalTypeId === MedicalType.DayCaseSurgery);
+
+    const { data: bankAccountData } = useGetCustomerBankAccount(
+        allowSeparateCompensation ? customerDetail?.policyCode : undefined
+    );
+    const defaultBankAccount = bankAccountData?.data?.[0];
+
+    /** ชื่อธนาคารจาก customerDetail.bankId (จับจาก master bank) */
+    const { data: bankListData } = useGetBank();
+    const customerBankName = customerDetail?.bankId
+        ? bankListData?.data?.find((b) => b.organizeId === customerDetail.bankId)?.organizeName
+        : undefined;
+
+    /** บัญชีรับเงินค่าชดเชย : ใช้ค่าที่ผู้ใช้แก้ไขใน Step 3 ถ้ามี ไม่งั้น default จาก customerDetail แล้วค่อย fallback API */
+    const payoutAccount: Step3PayoutAccount = editedPayoutAccount ?? {
+        phone: customerDetail?.mobilePhoneNumber ?? undefined,
+        accountName: customerDetail?.bankAccountName ?? defaultBankAccount?.bankAccountName ?? undefined,
+        bankId: defaultBankAccount?.bankId ?? customerDetail?.bankId ?? undefined,
+        bankName: customerBankName ?? defaultBankAccount?.bankName ?? undefined,
+        accountNo: customerDetail?.bankAccountNo ?? defaultBankAccount?.bankAccountNo ?? undefined,
+        relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
+    };
+
     const {
         handleSaveDraft,
         handleConfirmConsider,
@@ -124,22 +153,18 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             hn: formik.values.hn || undefined,
             vn: formik.values.vn || undefined,
         },
-        // ตารางตรวจสอบเอกสาร -> case.caseDocument[].documentReviewStatusId
-        // ส่งเฉพาะแถวที่มี documentId เป็น GUID จริง (ตอนนี้ยังเป็น mock row จึงถูกกรองออกหมด)
-        documentReviews: formik.values.documentChecks
-            .filter((doc) => doc.checkResult !== "" && isGuid(doc.documentId))
-            .map((doc) => ({
-                documentId: doc.documentId,
-                documentNo: doc.documentName,
-                documentReviewStatusId: doc.checkResult || undefined,
-                caseDocumentDetail: [],
-            })),
+        // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
+        documentChecks: formik.values.documentChecks,
+        // เคลมโรงพยาบาลต้องส่งบัญชีปลายทางใน casePayable (เคลมลูกค้าไม่ส่ง)
+        payoutAccount: {
+            bankId: payoutAccount.bankId,
+            bankName: payoutAccount.bankName,
+            bankAccountNo: payoutAccount.accountNo,
+        },
     });
 
     const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook();
 
-    const detail = detailData?.data;
-    const customerDetail = customerDetailData?.data;
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
 
@@ -177,27 +202,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         medicalUnpay: calculateResult?.medicalUnpay ?? 0,
     };
 
-    /**
-     * "โอนค่าชดเชยรวมกับค่ารักษา" : Default บังคับโอนรวม
-     * เลือกโอนแยกได้เฉพาะผลิตภัณฑ์ PH + IPD / Day Case (ชีท IPD row 858 : Enable เฉพาะ PH)
-     * และเมื่อโอนแยกจึงมีการ์ดบัญชีรับเงินค่าชดเชย
-     */
-    const allowSeparateCompensation =
-        isProductType(customerDetail?.productTypeId, PRODUCT_TYPE_GROUP.PH) &&
-        (formik.values.medicalTypeId === MedicalType.IPD ||
-            formik.values.medicalTypeId === MedicalType.DayCaseSurgery);
-
-    const { data: bankAccountData } = useGetCustomerBankAccount(
-        allowSeparateCompensation ? customerDetail?.policyCode : undefined
-    );
-    const defaultBankAccount = bankAccountData?.data?.[0];
-
-    /** ชื่อธนาคารจาก customerDetail.bankId (จับจาก master bank) */
-    const { data: bankListData } = useGetBank();
-    const customerBankName = customerDetail?.bankId
-        ? bankListData?.data?.find((b) => b.organizeId === customerDetail.bankId)?.organizeName
-        : undefined;
-
     /** ประเภทการรักษา IPD : แสดงการ์ดสรุปจำนวนวันนอน + ช่อง AN / ข้อบ่งชี้การ Admit */
     const isIPD = formik.values.medicalTypeId === MedicalType.IPD;
     const stayDays = isIPD
@@ -207,15 +211,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
               totalDays: (formik.values.ipdDays || 0) + (formik.values.icuDays || 0),
           }
         : undefined;
-
-    /** บัญชีรับเงินค่าชดเชย : ใช้ค่าที่ผู้ใช้แก้ไขใน Step 3 ถ้ามี ไม่งั้น default จาก customerDetail แล้วค่อย fallback API */
-    const payoutAccount: Step3PayoutAccount = editedPayoutAccount ?? {
-        phone: customerDetail?.mobilePhoneNumber ?? undefined,
-        accountName: customerDetail?.bankAccountName ?? defaultBankAccount?.bankAccountName ?? undefined,
-        bankName: customerBankName ?? defaultBankAccount?.bankName ?? undefined,
-        accountNo: customerDetail?.bankAccountNo ?? defaultBankAccount?.bankAccountNo ?? undefined,
-        relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
-    };
 
     /** โอนค่าชดเชยแยก (ไม่ติ๊กโอนรวม) → ต้องยืนยันผ่าน Modal ก่อนอนุมัติ */
     const isSeparateCompensation = allowSeparateCompensation && !mergeCompensation;
@@ -234,10 +229,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             const isValid = await validateStep1();
             if (!isValid) return;
             if (!isDocumentResultAllSelected()) {
-                swalError(
-                    "ยังดำเนินการต่อไม่ได้",
-                    "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป"
-                );
+                swalError("ยังดำเนินการต่อไม่ได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
                 return;
             }
         }
