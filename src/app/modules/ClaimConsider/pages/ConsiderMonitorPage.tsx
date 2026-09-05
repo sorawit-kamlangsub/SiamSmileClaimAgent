@@ -11,7 +11,7 @@ import { useState } from "react";
 import dayjs from "dayjs";
 
 const ConsiderMonitorPage = () => {
-    const { formik, statusOptions, decisionDataLoading } = useSearchFilterHook();
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook();
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
         dateFrom: dayjs(),
@@ -58,7 +58,7 @@ const ConsiderMonitorPage = () => {
                         formik={formik}
                         statusOptions={statusOptions}
                         onSearch={handleSearch}
-                        decisionDataLoading={decisionDataLoading}
+                        claimTransactionTypeDataLoading={claimTransactionTypeDataLoading}
                         onClear={handleClear}
                     />
                 </Grid>

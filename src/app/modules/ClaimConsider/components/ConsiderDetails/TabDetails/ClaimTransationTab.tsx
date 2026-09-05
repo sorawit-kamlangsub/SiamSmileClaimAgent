@@ -15,6 +15,13 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import AddCardOutlinedIcon from "@mui/icons-material/AddCardOutlined";
 import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import AssignmentReturnedOutlinedIcon from "@mui/icons-material/AssignmentReturnedOutlined";
+import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
+import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
+import DraftsOutlinedIcon from "@mui/icons-material/DraftsOutlined";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
+import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import ReplyAllOutlinedIcon from "@mui/icons-material/ReplyAllOutlined";
 import useClaimTransactionHook from "../../../hooks/ClaimConsiderDetail/ClaimTransactionHook";
 import { formatDateString, numberWithCommas } from "../../../../../functionHelpers";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
@@ -26,18 +33,28 @@ type TransactionLogVisual = {
 };
 
 const transactionLogVisualMap: Record<number, TransactionLogVisual> = {
-    1: { icon: NoteAddOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างเคลม
-    2: { icon: FolderOpenOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างเคส
-    3: { icon: SmsOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ส่ง SMS
+    0: { icon: HistoryOutlinedIcon, bgcolor: "#9E9E9E", color: "#FFFFFF" }, // ไม่ทราบประเภท / ยังไม่รองรับ
+    1: { icon: NoteAddOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างรายการเคลม
+    2: { icon: FolderOpenOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างรายการเคส
+    3: { icon: SmsOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ส่ง SMS สำเร็จ
     4: { icon: CheckCircleOutlineIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // โอนสำเร็จ
     5: { icon: ErrorOutlineIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // โอนไม่สำเร็จ
-    6: { icon: HourglassEmptyOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // ระหว่างพิจารณา
-    7: { icon: TaskAltIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // อนุมัติ
-    8: { icon: HighlightOffIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // ปฏิเสธ
-    9: { icon: CancelOutlinedIcon, bgcolor: "#B71C1C", color: "#FFFFFF" }, // ยกเลิก
+    6: { icon: HourglassEmptyOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // อยู่ระหว่างการพิจารณา
+    7: { icon: TaskAltIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // บันทึกผลพิจารณา (อนุมัติ)
+    8: { icon: HighlightOffIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // บันทึกผลพิจารณา (ปฏิเสธ)
+    9: { icon: CancelOutlinedIcon, bgcolor: "#B71C1C", color: "#FFFFFF" }, // บันทึกผลพิจารณา (ยกเลิก)
     10: { icon: AddCardOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // โอนเพิ่ม
     11: { icon: ReplayOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // คืนเงิน
     12: { icon: AssignmentReturnedOutlinedIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // คืนเงินสำเร็จ
+    13: { icon: LocalHospitalOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // แจ้งเข้ารับการรักษา
+    14: { icon: MeetingRoomOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // Discharge
+    15: { icon: DraftsOutlinedIcon, bgcolor: "#757575", color: "#FFFFFF" }, // บันทึกแบบร่าง
+    16: { icon: NotificationsActiveOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // แจ้งผลการโอนเงิน
+    23: { icon: LocalHospitalOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // Admission (จาก SmileConnect)
+    24: { icon: MeetingRoomOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // Discharge (จาก SmileConnect)
+    25: { icon: ReplyOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ตอบกลับผลพิจารณา
+    26: { icon: ReceiptLongOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // รับผลวางบิล
+    27: { icon: ReplyAllOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ตอบกลับผลวางบิล
 };
 
 const getTransactionVisual = (typeId?: number): TransactionLogVisual => {

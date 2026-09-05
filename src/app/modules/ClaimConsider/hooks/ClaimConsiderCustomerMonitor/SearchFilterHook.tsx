@@ -1,6 +1,6 @@
 import dayjs, { Dayjs } from "dayjs";
 import { FormikErrors, useFormik } from "formik";
-import { useGetDecision } from "../../../../api/coreClaimMastersApi";
+import { useGetClaimTransactionType } from "../../../../api/coreClaimMastersApi";
 import { useMemo } from "react";
 
 export type SearchFilterType = {
@@ -26,16 +26,16 @@ type UseSearchFilterHookParams = {
 
 const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
     const currentDate = dayjs();
-    const { data: decisionData, isLoading: decisionDataLoading } = useGetDecision();
+    const { data: claimTransactionTypeData, isLoading: claimTransactionTypeDataLoading } = useGetClaimTransactionType();
     const statusOptions = useMemo(
         () => [
             { value: 0, label: "ทั้งหมด" },
-            ...(decisionData?.data ?? []).map((item) => ({
-                value: item.decisionId ?? 0,
-                label: item.decisionNameTH ?? "",
+            ...(claimTransactionTypeData?.data ?? []).map((item) => ({
+                value: item.claimTransactionTypeId ?? 0,
+                label: item.claimTransactionTypeName ?? "",
             })),
         ],
-        [decisionData]
+        [claimTransactionTypeData]
     );
 
     const defaultValues: SearchFilterType = {
@@ -57,7 +57,7 @@ const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
             onSearch?.(values); // ← เพิ่ม
         },
     });
-    return { formik, statusOptions, decisionDataLoading };
+    return { formik, statusOptions, claimTransactionTypeDataLoading };
 };
 
 export default useSearchFilterHook;

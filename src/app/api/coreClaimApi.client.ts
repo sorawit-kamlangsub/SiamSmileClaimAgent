@@ -5194,9 +5194,9 @@ export interface AllUserDtoResponseListServiceResponse {
 
 export interface ApproveCasePayableRequest {
     payableAmount: number;
-    toBankId: number;
-    toBankName: string;
-    toBankAccountNo: string;
+    toBankId?: number | undefined;
+    toBankName?: string | undefined;
+    toBankAccountNo?: string | undefined;
 }
 
 export interface ApproveClaimDecisionDtoRequest {
@@ -5725,7 +5725,7 @@ export interface CasePayableV2Request {
 }
 
 export interface CaseRegistrationV2Request {
-    notificationDate?: dayjs.Dayjs;
+    notificationDate?: dayjs.Dayjs | undefined;
     notifyBy?: string | undefined;
     initialCoverageTypeId?: number | undefined;
     initialCaseAmount?: number;
