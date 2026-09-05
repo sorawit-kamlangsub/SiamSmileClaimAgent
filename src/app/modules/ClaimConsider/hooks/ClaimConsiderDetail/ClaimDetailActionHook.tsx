@@ -559,6 +559,13 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 toBankName: payoutAccount.bankName,
                 toBankAccountNo: payoutAccount.bankAccountNo,
             };
+        } else {
+            return {
+                ...payable,
+                toBankId: undefined,
+                toBankName: undefined,
+                toBankAccountNo: undefined,
+            };
         }
         return payable;
     };

@@ -14,7 +14,7 @@ import { FormikProps } from "formik";
 type ConsiderCustomerMonitorFilterProps = {
     formik: FormikProps<SearchFilterType>;
     statusOptions: ReturnType<typeof useSearchFilterHook>["statusOptions"];
-    decisionDataLoading: boolean;
+    claimTransactionTypeDataLoading: boolean;
     onSearch: () => void;
     onClear: () => void;
     isHospital?: boolean;
@@ -23,7 +23,7 @@ type ConsiderCustomerMonitorFilterProps = {
 const ConsiderCustomerMonitorFilter = ({
     formik,
     statusOptions,
-    decisionDataLoading,
+    claimTransactionTypeDataLoading,
     onSearch,
     onClear,
     isHospital,
@@ -108,7 +108,7 @@ const ConsiderCustomerMonitorFilter = ({
                             label="สถานะรายการ"
                             name="statusId"
                             options={statusOptions ?? defaultToggleButtonOptions}
-                            disabled={decisionDataLoading}
+                            disabled={claimTransactionTypeDataLoading}
                         />
                     </Grid>
                 </Grid>

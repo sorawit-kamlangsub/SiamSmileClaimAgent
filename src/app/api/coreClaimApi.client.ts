@@ -5012,9 +5012,9 @@ export interface AllUserDtoResponseListServiceResponse {
 
 export interface ApproveCasePayableRequest {
     payableAmount: number;
-    toBankId: number;
-    toBankName: string;
-    toBankAccountNo: string;
+    toBankId?: number | undefined;
+    toBankName?: string | undefined;
+    toBankAccountNo?: string | undefined;
 }
 
 export interface ApproveClaimDecisionDtoRequest {
@@ -5543,7 +5543,7 @@ export interface CasePayableV2Request {
 }
 
 export interface CaseRegistrationV2Request {
-    notificationDate?: dayjs.Dayjs;
+    notificationDate?: dayjs.Dayjs | undefined;
     notifyBy?: string | undefined;
     initialCoverageTypeId?: number | undefined;
     initialCaseAmount?: number;
@@ -6883,6 +6883,7 @@ export interface GetPreviousClaimDtoResponse {
     deathDate?: dayjs.Dayjs | undefined;
     placeOfDeathId?: number | undefined;
     placeOfDeathDetail?: string | undefined;
+    icD10Id?: number | undefined;
     icD10DescriptionTH?: string | undefined;
     paymentStatusId?: number | undefined;
     causeOfIncidentId?: number | undefined;
@@ -6890,6 +6891,9 @@ export interface GetPreviousClaimDtoResponse {
     totalNetPaidAmount?: number;
     remainingCoverageLimit?: number | undefined;
     remainingAmountAfterPreviousClaim?: number | undefined;
+    chiefComplaintCustom?: string | undefined;
+    chiefComplaintId?: number | undefined;
+    hospitalId?: number | undefined;
 }
 
 export interface GetPreviousClaimDtoResponseServiceResponse {
