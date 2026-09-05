@@ -134,7 +134,11 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                             <div>
                                 <Grid container spacing={2}>
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
-                                        <ExpenseDetails />
+                                        <ExpenseDetails
+                                            formik={formik}
+                                            detailData={considerDetail.detailData}
+                                            customerDetailData={considerDetail.customerDetailData}
+                                        />
                                     </Grid>
                                 </Grid>
                             </div>

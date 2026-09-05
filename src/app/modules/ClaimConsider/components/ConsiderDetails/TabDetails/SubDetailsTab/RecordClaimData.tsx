@@ -119,10 +119,10 @@ const RecordClaimData = ({
                         </Grid>
                         {/* วันที่ต่างๆ */}
                         <Grid item xs={12} sm={6} md={3}>
-                            <Box data-field-name="notificationDate">
+                            <Box data-field-name="createdDate">
                                 <FormikDatePicker
-                                    name="notificationDate"
-                                    label="วันที่รับแจ้ง"
+                                    name="createdDate"
+                                    label="วันที่แจ้ง"
                                     formik={formik}
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}

@@ -38,6 +38,7 @@ import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/Miscellaneous
 import { CATEGORY_ICON_MAP } from "../../../../../ClaimSimulate/components/CategoryIcon";
 import { hasAmountSumError, hasMissingReasonError } from "../../../../../ClaimSimulate/store/Claimsimulateutils";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../../../api/coreClaimApi";
 
 // ─── Reference styles ──────────────────────────────────────────────
 const REF = {
@@ -111,10 +112,13 @@ const tableSelectSx = {
 };
 
 interface TreeNode {
+    /** id สำหรับใช้เป็น React key + expand/select state เท่านั้น — สร้างขึ้นให้ไม่ซ้ำกันเสมอ ไม่ใช่ id จาก backend */
     id: number;
     label: string;
     code?: string;
     standardMedicalExpenseId?: number;
+    /** ไว้ผูกกับรายการที่เลือก (เฉพาะ leaf) — คนละตัวกับ `id` ที่ใช้ทำ React key */
+    inputToStandardMappingId?: number;
     bodyPartId?: number;
     maximumLimit?: number;
     children: TreeNode[];
@@ -138,7 +142,7 @@ const TreeNodeRow = ({
         description: string,
         id: number,
         standardMedicalExpenseId?: number,
-        bodyPartId?: number,
+        inputToStandardMappingId?: number,
         maximumLimit?: number
     ) => void;
     selectedLeafId: number | null;
@@ -168,7 +172,7 @@ const TreeNodeRow = ({
                         description,
                         node.id,
                         node.standardMedicalExpenseId,
-                        node.bodyPartId,
+                        node.inputToStandardMappingId,
                         node.maximumLimit
                     );
                 }}
@@ -226,7 +230,10 @@ const TreeNodeRow = ({
             </Box>
 
             {hasChildren && (
-                <Collapse in={isExpanded}>
+                // unmountOnExit: ไม่งั้น MUI Collapse จะ render children ลง DOM จริงตั้งแต่แรกทุกโหนด
+                // (แค่ซ่อนด้วย height:0) ทั้งที่ expandedIds เริ่มต้นว่างเปล่า (พับหมดทุกโหนด) — ต้นไม้
+                // 3 ชั้น (หมวด→กลุ่มย่อย→รายการ) เลยกลายเป็นต้อง mount ทุกโหนดทุกใบพร้อมกันตอนเปิดหน้า
+                <Collapse in={isExpanded} unmountOnExit>
                     {node.children.map((child) => (
                         <TreeNodeRow
                             key={child.id}
@@ -276,9 +283,11 @@ const errorTooltipProps = {
 // ─── Main ─────────────────────────────────────────────────────────
 interface ExpenseRecordsProps {
     onNext?: () => void;
+    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
+    customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
 }
 
-const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
+const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ detailData, customerDetailData }) => {
     const {
         expenseItems: filledItems,
         showAddPanel,
@@ -319,7 +328,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
         isMedicalCoverage,
         pendingReceiptAmount,
         setPendingReceiptAmount,
-    } = useClaimExpenseDetailHook();
+    } = useClaimExpenseDetailHook({ detailData, customerDetailData });
 
     // ── ส่วนเกินจากบริษัทประกัน (ยัง UI-only — ต่อ endpoint จริงเมื่อพร้อม) ──
     const [isExcessFromInsurance, setIsExcessFromInsurance] = React.useState(false);
@@ -393,8 +402,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                 <TableCell sx={{ ...headCell, width: "30%", textAlign: "left" }}>
                                     รายการค่ารักษา
                                 </TableCell>
-                                <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินตามใบเสร็จ</TableCell>{" "}
                                 {/* ★ ใหม่ */}
+                                <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินตามใบเสร็จ</TableCell>
                                 <TableCell sx={{ ...headCell, width: "10%" }}>สิทธิ์เบิก</TableCell>
                                 <TableCell sx={{ ...headCell, width: "10%" }}>ส่วนลด</TableCell>
                                 <TableCell sx={{ ...headCell, width: "10%" }}>ยอดไม่คุ้มครอง</TableCell>
@@ -471,24 +480,28 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                     disableHoverListener={!rowDiscountError}
                                                     {...errorTooltipProps}
                                                 >
-                                                    <NumericFormat
-                                                        customInput={TextField}
-                                                        size="small"
-                                                        fullWidth
-                                                        sx={tableInputSx}
-                                                        value={item.discount ?? ""}
-                                                        onValueChange={(v) =>
-                                                            handleUpdateItem({
-                                                                ...item,
-                                                                discount: v.floatValue ?? 0,
-                                                            })
-                                                        }
-                                                        thousandSeparator
-                                                        decimalScale={2}
-                                                        fixedDecimalScale
-                                                        allowNegative={false}
-                                                        error={rowDiscountError}
-                                                    />
+                                                    {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
+                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
+                                                    <Box>
+                                                        <NumericFormat
+                                                            customInput={TextField}
+                                                            size="small"
+                                                            fullWidth
+                                                            sx={tableInputSx}
+                                                            value={item.discount ?? ""}
+                                                            onValueChange={(v) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    discount: v.floatValue ?? 0,
+                                                                })
+                                                            }
+                                                            thousandSeparator
+                                                            decimalScale={2}
+                                                            fixedDecimalScale
+                                                            allowNegative={false}
+                                                            error={rowDiscountError}
+                                                        />
+                                                    </Box>
                                                 </Tooltip>
                                             </TableCell>
 
@@ -499,24 +512,28 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                     {...errorTooltipProps}
                                                     disableHoverListener={!rowSumError}
                                                 >
-                                                    <NumericFormat
-                                                        customInput={TextField}
-                                                        size="small"
-                                                        fullWidth
-                                                        sx={tableInputSx}
-                                                        value={item.notCovered ?? ""}
-                                                        onValueChange={(v) =>
-                                                            handleUpdateItem({
-                                                                ...item,
-                                                                notCovered: v.floatValue ?? 0,
-                                                            })
-                                                        }
-                                                        thousandSeparator
-                                                        decimalScale={2}
-                                                        fixedDecimalScale
-                                                        allowNegative={false}
-                                                        error={rowSumError}
-                                                    />
+                                                    {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
+                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
+                                                    <Box>
+                                                        <NumericFormat
+                                                            customInput={TextField}
+                                                            size="small"
+                                                            fullWidth
+                                                            sx={tableInputSx}
+                                                            value={item.notCovered ?? ""}
+                                                            onValueChange={(v) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    notCovered: v.floatValue ?? 0,
+                                                                })
+                                                            }
+                                                            thousandSeparator
+                                                            decimalScale={2}
+                                                            fixedDecimalScale
+                                                            allowNegative={false}
+                                                            error={rowSumError}
+                                                        />
+                                                    </Box>
                                                 </Tooltip>
                                             </TableCell>
 
@@ -879,7 +896,9 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                         </Button>
                     </Box>
 
-                    <Collapse in={showAddPanel}>
+                    {/* unmountOnExit: showAddPanel เริ่มต้นเป็น false เสมอ ถ้าไม่ unmount จะ render ต้นไม้หมวดหมู่
+                        ทั้งก้อน (หมวด→กลุ่มย่อย→รายการ) ลง DOM จริงตั้งแต่เปิดหน้า ทั้งที่ผู้ใช้ยังไม่กดเปิด panel */}
+                    <Collapse in={showAddPanel} unmountOnExit>
                         <Box
                             sx={{
                                 display: "grid",
@@ -970,7 +989,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                         <ExpandMoreIcon sx={{ fontSize: 18, color: REF.primaryDark }} />
                                                     )}
                                                 </Box>
-                                                <Collapse in={expandedIds.includes(cat.id)}>
+                                                <Collapse in={expandedIds.includes(cat.id)} unmountOnExit>
                                                     <Box sx={{ bgcolor: "grey.50" }}>
                                                         {cat.children.map((child) => (
                                                             <TreeNodeRow

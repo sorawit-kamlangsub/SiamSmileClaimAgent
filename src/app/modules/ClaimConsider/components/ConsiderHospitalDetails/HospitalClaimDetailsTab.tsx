@@ -167,7 +167,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
     });
 
-    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook();
+    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook({ detailData, customerDetailData });
 
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
@@ -236,11 +236,25 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                 swalError("ยังดำเนินการต่อไม่ได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
                 return;
             }
+            // Step 1 → Step 2 : sync coverage/medical ลง Redux ให้ ExpenseRecords ใช้กรองรายการค่ารักษา
+            // ส่งเฉพาะ 2 ฟิลด์นี้ — ห้ามส่ง formik.values ทั้งก้อน เพราะมี Dayjs (incidentDate ฯลฯ)
+            // ที่ไม่ serializable ปนอยู่ ทำให้ Redux Toolkit ต้อง deep-scan ทั้ง store ทุกครั้งที่ dispatch จนหน้าค้าง
+            dispatch(
+                setClaimForm({
+                    coverageTypeId: formik.values.coverageTypeId,
+                    medicalTypeId: formik.values.medicalTypeId,
+                })
+            );
         }
 
-        // Step 2 → Step 3 : sync ฟอร์มลง Redux แล้วเรียก /api/calculate/caseclaim
+        // Step 2 → Step 3 : sync coverage/medical ลง Redux (เผื่อผู้ใช้แก้ค่า) แล้วเรียก /api/calculate/caseclaim
         if (activeStep === 1) {
-            dispatch(setClaimForm(formik.values));
+            dispatch(
+                setClaimForm({
+                    coverageTypeId: formik.values.coverageTypeId,
+                    medicalTypeId: formik.values.medicalTypeId,
+                })
+            );
             await handleCalculate();
         }
 
@@ -400,7 +414,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 </Grid>
                             )}
                             <Grid item xs={12}>
-                                <TreatmentCostTable />
+                                <TreatmentCostTable
+                                    formik={formik}
+                                    detailData={detailData}
+                                    customerDetailData={customerDetailData}
+                                />
                             </Grid>
                         </Grid>
                     ) : (

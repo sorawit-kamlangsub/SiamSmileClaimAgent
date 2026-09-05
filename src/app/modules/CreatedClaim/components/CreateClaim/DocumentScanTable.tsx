@@ -249,7 +249,11 @@ const FileCount = ({ docData, onFileCountChange }: FileCountProps) => {
     const { data: documentData, refetch } = useGetDocumentById(documentId ?? "");
 
     useEffect(() => {
-        dispatch(setDocumentDetailById({ ...docData, docDetail: documentData?.data ?? {} }));
+        // รอผล query จริงก่อนค่อย dispatch — เดิม effect นี้ยิงทันทีตอน mount ด้วย docDetail ว่างเปล่า
+        // (documentData ยังเป็น undefined) แล้วยิงซ้ำอีกครั้งตอน query resolve จริง กลายเป็น 2 dispatch/แถวเอกสาร
+        // พอมีหลายแถวพร้อมกันในหน้ารายละเอียดค่าใช้จ่าย จะยิง action รัวๆ เกินจำเป็นตอนโหลดหน้า
+        if (!documentData) return;
+        dispatch(setDocumentDetailById({ ...docData, docDetail: documentData.data ?? {} }));
     }, [documentData]);
 
     useEffect(() => {

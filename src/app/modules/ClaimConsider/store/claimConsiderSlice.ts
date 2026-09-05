@@ -66,7 +66,7 @@ export interface ClaimConsiderValues {
     dischargeDate: Dayjs | undefined; //วันที่ออก รพ
     dischargeTime: Dayjs | undefined;
     documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
-    notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
+    createdDate: Dayjs | undefined; //วันที่แจ้ง
     // deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     // deathTime: Dayjs | undefined;
     ipdDays: number;
@@ -113,7 +113,7 @@ const defaultForm: ClaimConsiderValues = {
     icuDays: 0,
     totalDays: 0,
     documentCompleteDate: undefined,
-    notificationDate: undefined,
+    createdDate: undefined,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [

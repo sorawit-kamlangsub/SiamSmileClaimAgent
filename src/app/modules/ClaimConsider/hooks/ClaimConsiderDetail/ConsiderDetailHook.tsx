@@ -77,10 +77,10 @@ const useConsiderDetailHook = () => {
             if (!values.incidentTypeId) errors.incidentTypeId = req;
             if (!values.coverageTypeId) errors.coverageTypeId = req;
             if (!values.medicalTypeId) errors.medicalTypeId = req;
-            if (!values.notificationDate) {
-                errors.notificationDate = req;
-            } else if (dayjs(values.notificationDate).isAfter(today)) {
-                errors.notificationDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
+            if (!values.createdDate) {
+                errors.createdDate = req;
+            } else if (dayjs(values.createdDate).isAfter(today)) {
+                errors.createdDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
             }
             if (!values.documentCompleteDate) {
                 errors.documentCompleteDate = req;
@@ -254,8 +254,8 @@ const useConsiderDetailHook = () => {
             newValues.dischargeDate = dayjs(detail.dischargeDate);
             newValues.dischargeTime = dayjs(detail.dischargeDate);
         }
-        if (detail.notificationDate) {
-            newValues.notificationDate = dayjs(detail.notificationDate);
+        if (detail.createdDate) {
+            newValues.createdDate = dayjs(detail.createdDate);
         }
         if (detail.documentCompleteDate) {
             newValues.documentCompleteDate = dayjs(detail.documentCompleteDate);

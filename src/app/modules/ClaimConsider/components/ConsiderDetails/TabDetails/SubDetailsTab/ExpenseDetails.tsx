@@ -5,7 +5,6 @@ import OcrReceiptSection from "./OcrReceiptSection";
 
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import NoteAddIcon from "@mui/icons-material/NoteAdd";
-import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 
 import AddCardIcon from "@mui/icons-material/AddCard";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
@@ -14,8 +13,20 @@ import { PaymentSummaryCard } from "./PaymentSummaryCard";
 import { Grid } from "@mui/material";
 import { NPL_URL } from "../../../../../../../Const";
 import ExpenseRecords from "./ExpenseRecords";
-const ExpenseDetails = () => {
-    const { formik, customerDetailData } = useConsiderDetailHook();
+import { FormikProps } from "formik";
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../../../api/coreClaimApi";
+
+type ExpenseDetailsProps = {
+    formik: FormikProps<ClaimConsiderValues>;
+    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
+    customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+};
+
+// รับ formik/detailData/customerDetailData เป็น props จาก ClaimDetailsTab แทนการเรียก useConsiderDetailHook()
+// เอง (เดิมเรียกซ้ำกับ ClaimDetailsTab และ ClaimExpenseDetailHook รวม 3 จุด ทำให้ query/formik/effect
+// ทำงานซ้ำ 3 เท่าทุกครั้งที่หน้านี้ mount — ดูรายละเอียดใน ClaimExpenseDetailHook.tsx)
+const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetailsProps) => {
     const nplAmount = 100;
     return (
         <>
@@ -78,7 +89,7 @@ const ExpenseDetails = () => {
             </CustomPaper>
             <CustomPaper>
                 <HeadingWithColor text="รายการค่าใช้จ่าย" color="blue" icon={<NoteAddIcon sx={{ fontSize: 27 }} />} />
-                <ExpenseRecords />
+                <ExpenseRecords detailData={detailData} customerDetailData={customerDetailData} />
             </CustomPaper>
         </>
     );

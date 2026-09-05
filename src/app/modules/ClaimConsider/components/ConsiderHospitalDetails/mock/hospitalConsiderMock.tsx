@@ -23,7 +23,7 @@ export const MOCK_HOSPITAL_CLAIM = {
     coverageEndDate: "-",
     productDetail: "PH - ประกันสุขภาพ",
 
-    notificationDate: "17/05/2569 09:38:00",
+    createdDate: "17/05/2569 09:38:00",
     hospitalName: "โรงพยาบาลสินแพทย์",
     province: "กรุงเทพมหานคร",
     claimStatus: "Open",

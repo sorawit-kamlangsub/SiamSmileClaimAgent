@@ -4,7 +4,6 @@ import {
     useGetNonCoveredReason,
     useGetSimBCategory,
 } from "../../../../api/coreClaimMastersApi";
-import useConsiderDetailHook from "./ConsiderDetailHook";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,15 +16,25 @@ import {
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
 import { ClaimExpenseItem, setCaseAdjudicationId, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
-import { useGetStandardMedicalExpenseByCase } from "../../../../api/coreClaimApi";
+import {
+    useGetClaimDetailConsider,
+    useGetCustomerDetailById,
+    useGetStandardMedicalExpenseByCase,
+} from "../../../../api/coreClaimApi";
 import { CoverageType } from "../../../../functionHelpers";
-const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
-    data
+const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
+    // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
+    // เป็น undefined ได้หลายรายการพร้อมกัน (fallback ?? 0 เดิมทำให้หลายโหนดชน id 0 พร้อมกัน
+    // ทั้ง React key ซ้ำ และ expand/select state ไปเปิด/ไฮไลต์โหนดอื่นที่ id ชนกันโดยไม่ตั้งใจ)
+    // จึงแจก id ใหม่ทีละตัวแยกจาก id ทางธุรกิจไปเลย ส่วน inputToStandardMappingId ยังเก็บแยกไว้ต่างหาก
+    let nextId = 1;
+    return data
         .map((cat) => {
             const children = (cat.inputToStandardSubCategoryList ?? [])
                 .map((sub) => {
                     const leaves = (sub.inputToStandardMappingList ?? []).map((item) => ({
-                        id: item.inputToStandardMappingId ?? 0,
+                        id: nextId++,
+                        inputToStandardMappingId: item.inputToStandardMappingId,
                         standardMedicalExpenseId: item.standardMedicalExpenseId,
                         code: item.inputItemCode ?? "",
                         label: `${item.inputItemCode ?? ""} ${item.descriptionTH ?? ""}`.trim(),
@@ -37,7 +46,7 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
                     if (leaves.length === 0) return null;
 
                     return {
-                        id: sub.inputToStandardSubCategoryId ?? 0,
+                        id: nextId++,
                         label: sub.inputToStandardSubCategoryName ?? "",
                         children: leaves,
                     };
@@ -47,19 +56,33 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
             if (children.length === 0) return null;
 
             return {
-                id: cat.inputToStandardCategoryId ?? 0,
+                id: nextId++,
                 label: cat.inputToStandardCategoryName ?? "",
                 children,
             };
         })
         .filter((cat): cat is NonNullable<typeof cat> => cat !== null);
+};
 interface ClaimLineFormValues {
     items: ClaimExpenseItem[];
 }
-const useClaimExpenseDetailHook = () => {
+type UseClaimExpenseDetailHookProps = {
+    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
+    customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+};
+// รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
+// เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
+// ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
+const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
-    const { customerDetailData, detailData } = useConsiderDetailHook();
     const { filledItems, form } = useSelector((s: RootState) => s.claimConsider);
+    /**
+     * coverage/medical : ใช้ค่าใน Redux form ก่อน (ผู้ใช้แก้ใน Step 1 แล้ว sync ลงมา)
+     * ถ้ายังว่าง (ยังไม่เคย sync ลง Redux) ให้ fallback ไปค่าตั้งต้นจาก claim detail
+     * กันไม่ให้ query ยิงด้วย undefined ตอนอยู่ Step 2 ครั้งแรก
+     */
+    const coverageTypeId = form.coverageTypeId ?? detailData?.data?.coverageTypeId;
+    const medicalTypeId = form.medicalTypeId ?? detailData?.data?.medicalTypeId;
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [selectedItem, setSelectedItem] = useState<{
@@ -92,9 +115,9 @@ const useClaimExpenseDetailHook = () => {
     const { data: frequentData, isLoading: isFrequentLoading } = useGetStandardMedicalExpenseByCase(
         detailData?.data?.caseId ?? "",
         6, //simb2
-        form.coverageTypeId,
-        form.medicalTypeId,
-        false,
+        coverageTypeId,
+        medicalTypeId,
+        true,
         customerDetailData?.data?.productTypeId,
         undefined,
         customerDetailData?.data?.productId
@@ -102,8 +125,8 @@ const useClaimExpenseDetailHook = () => {
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
-        form.coverageTypeId,
-        form.medicalTypeId,
+        coverageTypeId,
+        medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
         customerDetailData?.data?.productId
@@ -111,7 +134,9 @@ const useClaimExpenseDetailHook = () => {
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
         return raw.map((item, idx) => ({
-            id: item.inputToStandardMappingId ?? idx,
+            // ใช้ idx (unique เสมอในอาร์เรย์นี้) แทน inputToStandardMappingId เพราะ id นี้เป็นของ
+            // "ประเภทรายการ" ซึ่งหลายแถวค่ารักษาอาจใช้ค่าเดียวกันซ้ำได้จริงจาก backend (ทำให้ React key ชนกัน)
+            id: idx,
             standardMedicalExpenseId: item.standardMedicalExpenseId,
             inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
@@ -143,10 +168,15 @@ const useClaimExpenseDetailHook = () => {
     }, [dispatch, caseAdjudicationId]);
     const categories = useMemo(() => {
         const raw = categoryData?.data ?? [];
+        return mapCategoriesToTree(raw);
+    }, [categoryData]);
+
+    // เคลียร์ state ของ tree เมื่อ categoryData เปลี่ยนจริง — ย้ายมาจากใน useMemo ด้านบน
+    // (เดิมเรียก setState ระหว่าง render phase ตรงๆ ซึ่งเป็น anti-pattern เสี่ยง re-render เกินจำเป็น)
+    useEffect(() => {
         setExpandedIds([]);
         setSelectedItem(null);
         setSelectedLeafId(null);
-        return mapCategoriesToTree(raw);
     }, [categoryData]);
 
     const filteredCategories = useMemo(() => {
@@ -271,7 +301,7 @@ const useClaimExpenseDetailHook = () => {
     };
 
     /** ประเภทความคุ้มครอง = ค่ารักษา : เงื่อนไขแสดง Section "รายการค่ารักษาเพิ่มเติม" */
-    const isMedicalCoverage = form.coverageTypeId === CoverageType.Medical;
+    const isMedicalCoverage = coverageTypeId === CoverageType.Medical;
 
     const hasAnyAmount = items.some((item) => Number(item.claimAmount ?? 0) > 0);
     const hasDiscountError = items.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
@@ -432,7 +462,7 @@ const useClaimExpenseDetailHook = () => {
             desc.join(" "),
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
-            matched.leaf.id, //inputToStandardMappingId
+            matched.leaf.inputToStandardMappingId,
             matched.leaf.maximumLimit
         );
     }, [searchText, categories]);

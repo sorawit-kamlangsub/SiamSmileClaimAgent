@@ -96,7 +96,7 @@ const HeaderDetails = ({
 
                             <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mb: 2 }}>
                                 <ClaimDetail
-                                    notificationDate={formatDateString(
+                                    createdDate={formatDateString(
                                         detail?.createdDate?.toString() ?? "",
                                         "DD/MM/BBBB HH:mm:ss"
                                     )}
