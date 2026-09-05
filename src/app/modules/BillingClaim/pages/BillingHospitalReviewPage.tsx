@@ -137,10 +137,11 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                 </Grid>
 
                 <Grid item xs={12}>
-                    <TabPanel value="1">
+                    {/* px: 0 — TabPanel เว้นขอบซ้าย/ขวา 24px โดย default ทำให้เนื้อหาแคบกว่าแถบแท็บด้านบน (เต็มความกว้าง) */}
+                    <TabPanel value="1" sx={{ px: 0 }}>
                         <BillingClaimDetailsTab readOnly={readOnly} />
                     </TabPanel>
-                    <TabPanel value="2">
+                    <TabPanel value="2" sx={{ px: 0 }}>
                         <BillingHistoryTab currentBillingDetailId={billingDetailId} />
                     </TabPanel>
                 </Grid>

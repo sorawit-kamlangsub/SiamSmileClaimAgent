@@ -587,8 +587,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             isFirstRenderIncident.current = false;
             return;
         }
-        // เคลมต่อเนื่อง (เสียชีวิต) prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
-        if (isContinuousDeath) return;
+        // เคลมต่อเนื่อง prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuous) return;
         if (!formik.values.incidentTypeId) return;
         formik.setValues(
             {
@@ -632,7 +632,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             isFirstRenderCoverage.current = false;
             return;
         }
-        if (isContinuousDeath) return;
+        // เคลมต่อเนื่อง prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuous) return;
         if (!formik.values.coverageTypeId) return;
         formik.setValues(
             {
@@ -708,6 +709,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 coverageTypeId: oldClaim.coverageTypeId,
                 coverageTypeName: "เสียชีวิต",
                 causeOfIncidentId: oldClaim.causeOfIncidentId,
+                medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 // วันที่
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 deathDate: oldClaim.deathDate ? dayjs(oldClaim.deathDate) : formik.values.deathDate,
@@ -716,18 +718,51 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 // สถานที่เสียชีวิต — placeOfDeathId ตรงกับ DeathPlaceType (2=บ้าน, 3=สถานพยาบาล, 4=อื่นๆ)
                 deathPlaceType: oldClaim.placeOfDeathId ?? formik.values.deathPlaceType,
                 accidentPlace: oldClaim.placeOfDeathDetail ?? formik.values.accidentPlace,
+                // การวินิจฉัย — ดึงจากเคลมตั้งต้น (icD10Id + ข้อความ icD10DescriptionTH)
+                diagnoses: [
+                    {
+                        icd10Id: oldClaim.icD10Id ?? formik.values.diagnoses[0]?.icd10Id,
+                        icd10Detail: oldClaim.icD10DescriptionTH ?? formik.values.diagnoses[0]?.icd10Detail,
+                    },
+                    ...formik.values.diagnoses.slice(1),
+                ],
+                hospitalId: oldClaim.hospitalId ?? formik.values.hospitalId,
+                chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
+                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
             },
             false
         );
         dispatch(setEnabled(true));
     }, [isContinuousDeath, oldClaim]);
 
+    // เคลมต่อเนื่องปกติ (ไม่ใช่เสียชีวิต): default ค่าจากเคลมตั้งต้น (ครั้งเดียว)
+    const didPrefillContinuousNormal = useRef(false);
+    useEffect(() => {
+        if (!isContinuous || isContinuousDeath || !oldClaim || didPrefillContinuousNormal.current) return;
+        didPrefillContinuousNormal.current = true;
+        formik.setValues(
+            {
+                ...formik.values,
+                incidentTypeId: oldClaim.incidentTypeId ?? formik.values.incidentTypeId,
+                coverageTypeId: oldClaim.coverageTypeId ?? formik.values.coverageTypeId,
+                medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
+                incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
+                chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
+                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+            },
+            false
+        );
+    }, [isContinuous, isContinuousDeath, oldClaim]);
+
     const isIncidentDateDisabled = isContinuous;
+    // เคลมต่อเนื่อง: ยังรอข้อมูลเคลมตั้งต้นมา prefill (icD10Id ฯลฯ)
+    const isOldClaimLoading = isContinuous && !oldClaim;
     return {
         formik,
         isContinuous,
         isContinuousDeath,
         isIncidentDateDisabled,
+        isOldClaimLoading,
         incidentType,
         coverageType,
         medicalType,

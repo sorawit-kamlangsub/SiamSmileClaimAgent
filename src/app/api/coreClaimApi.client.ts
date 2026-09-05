@@ -9,9 +9,9 @@
 // ReSharper disable InconsistentNaming
 
 import { customFormatter } from "../modules/_common/commonFunctions";
-import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from 'axios';
+import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, CancelToken } from "axios";
 
-import * as dayjs from 'dayjs';
+import * as dayjs from "dayjs";
 
 export class CoreClaimClient {
     private instance: AxiosInstance;
@@ -19,72 +19,68 @@ export class CoreClaimClient {
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, instance?: AxiosInstance) {
-
         this.instance = instance ? instance : axios.create();
 
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-
     }
 
     /**
      * API สำหรับ Search Customer
-     * @param searchIndex (optional) 
-     * @param isSeachDetail (optional) 
-     * @param incidentDate (optional) 
-     * @param schoolId (optional) 
-     * @param provinceId (optional) 
-     * @param incidentTypeId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param searchIndex (optional)
+     * @param isSeachDetail (optional)
+     * @param incidentDate (optional)
+     * @param schoolId (optional)
+     * @param provinceId (optional)
+     * @param incidentTypeId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getCustomerSearch(searchIndex?: number | undefined, isSeachDetail?: boolean | undefined, incidentDate?: dayjs.Dayjs | undefined, schoolId?: number | undefined, provinceId?: number | undefined, incidentTypeId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
+    getCustomerSearch(
+        searchIndex?: number | undefined,
+        isSeachDetail?: boolean | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        schoolId?: number | undefined,
+        provinceId?: number | undefined,
+        incidentTypeId?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/search?";
-        if (searchIndex === null)
-            throw new Error("The parameter 'searchIndex' cannot be null.");
-        else if (searchIndex !== undefined)
-            url_ += "searchIndex=" + encodeURIComponent("" + searchIndex) + "&";
-        if (isSeachDetail === null)
-            throw new Error("The parameter 'isSeachDetail' cannot be null.");
-        else if (isSeachDetail !== undefined)
-            url_ += "isSeachDetail=" + encodeURIComponent("" + isSeachDetail) + "&";
-        if (incidentDate === null)
-            throw new Error("The parameter 'incidentDate' cannot be null.");
+        if (searchIndex === null) throw new Error("The parameter 'searchIndex' cannot be null.");
+        else if (searchIndex !== undefined) url_ += "searchIndex=" + encodeURIComponent("" + searchIndex) + "&";
+        if (isSeachDetail === null) throw new Error("The parameter 'isSeachDetail' cannot be null.");
+        else if (isSeachDetail !== undefined) url_ += "isSeachDetail=" + encodeURIComponent("" + isSeachDetail) + "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
-            url_ += "incidentDate=" + encodeURIComponent(incidentDate ? "" + incidentDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (schoolId === null)
-            throw new Error("The parameter 'schoolId' cannot be null.");
-        else if (schoolId !== undefined)
-            url_ += "schoolId=" + encodeURIComponent("" + schoolId) + "&";
-        if (provinceId === null)
-            throw new Error("The parameter 'provinceId' cannot be null.");
-        else if (provinceId !== undefined)
-            url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
-        if (incidentTypeId === null)
-            throw new Error("The parameter 'incidentTypeId' cannot be null.");
+            url_ +=
+                "incidentDate=" +
+                encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (schoolId === null) throw new Error("The parameter 'schoolId' cannot be null.");
+        else if (schoolId !== undefined) url_ += "schoolId=" + encodeURIComponent("" + schoolId) + "&";
+        if (provinceId === null) throw new Error("The parameter 'provinceId' cannot be null.");
+        else if (provinceId !== undefined) url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
         else if (incidentTypeId !== undefined)
             url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -93,23 +89,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerSearch(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerSearch(_response);
+            });
     }
 
-    protected processGetCustomerSearch(response: AxiosResponse): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
+    protected processGetCustomerSearch(
+        response: AxiosResponse
+    ): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -122,10 +123,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerSearchDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -135,43 +135,40 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Search Customer By PolicyCode
-     * @param policyCode (optional) 
-     * @param searchIndex (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param policyCode (optional)
+     * @param searchIndex (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getCustomerSearchByPolicyCode(policyCode?: string | undefined, searchIndex?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse> {
+    getCustomerSearchByPolicyCode(
+        policyCode?: string | undefined,
+        searchIndex?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/search-by-policy-code?";
-        if (policyCode === null)
-            throw new Error("The parameter 'policyCode' cannot be null.");
-        else if (policyCode !== undefined)
-            url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (searchIndex === null)
-            throw new Error("The parameter 'searchIndex' cannot be null.");
-        else if (searchIndex !== undefined)
-            url_ += "searchIndex=" + encodeURIComponent("" + searchIndex) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (searchIndex === null) throw new Error("The parameter 'searchIndex' cannot be null.");
+        else if (searchIndex !== undefined) url_ += "searchIndex=" + encodeURIComponent("" + searchIndex) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -180,23 +177,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerSearchByPolicyCode(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerSearchByPolicyCode(_response);
+            });
     }
 
-    protected processGetCustomerSearchByPolicyCode(response: AxiosResponse): Promise<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse> {
+    protected processGetCustomerSearchByPolicyCode(
+        response: AxiosResponse
+    ): Promise<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -209,10 +211,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -224,10 +225,12 @@ export class CoreClaimClient {
      * API สำหรับ Get ข้อมูล Customer Detail By Id
      * @return Success
      */
-    getCustomerDetailById(id: number, cancelToken?: CancelToken | undefined): Promise<GetCustomerDetailByIdDtoResponseServiceResponse> {
+    getCustomerDetailById(
+        id: number,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerDetailByIdDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/customer/{id}/detail";
-        if (id === undefined || id === null)
-            throw new Error("The parameter 'id' must be defined.");
+        if (id === undefined || id === null) throw new Error("The parameter 'id' must be defined.");
         url_ = url_.replace("{id}", encodeURIComponent("" + id));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -235,23 +238,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerDetailById(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerDetailById(_response);
+            });
     }
 
-    protected processGetCustomerDetailById(response: AxiosResponse): Promise<GetCustomerDetailByIdDtoResponseServiceResponse> {
+    protected processGetCustomerDetailById(
+        response: AxiosResponse
+    ): Promise<GetCustomerDetailByIdDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -264,10 +272,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerDetailByIdDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -277,48 +284,49 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Search Customer Benefit Detail
-     * @param policyCode (optional) 
-     * @param incidentDate (optional) 
-     * @param isContinue (optional) 
-     * @param incidentTypeId (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param claimNo (optional) 
-     * @param customerTypeCode (optional) 
+     * @param policyCode (optional)
+     * @param incidentDate (optional)
+     * @param isContinue (optional)
+     * @param incidentTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param claimNo (optional)
+     * @param customerTypeCode (optional)
      * @return Success
      */
-    getCustomerBenefitDetailSearch(policyCode?: string | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, claimNo?: string | undefined, customerTypeCode?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
+    getCustomerBenefitDetailSearch(
+        policyCode?: string | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        isContinue?: boolean | undefined,
+        incidentTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        claimNo?: string | undefined,
+        customerTypeCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/search?";
-        if (policyCode === null)
-            throw new Error("The parameter 'policyCode' cannot be null.");
-        else if (policyCode !== undefined)
-            url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (incidentDate === null)
-            throw new Error("The parameter 'incidentDate' cannot be null.");
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
-            url_ += "incidentDate=" + encodeURIComponent(incidentDate ? "" + incidentDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (isContinue === null)
-            throw new Error("The parameter 'isContinue' cannot be null.");
-        else if (isContinue !== undefined)
-            url_ += "isContinue=" + encodeURIComponent("" + isContinue) + "&";
-        if (incidentTypeId === null)
-            throw new Error("The parameter 'incidentTypeId' cannot be null.");
+            url_ +=
+                "incidentDate=" +
+                encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (isContinue === null) throw new Error("The parameter 'isContinue' cannot be null.");
+        else if (isContinue !== undefined) url_ += "isContinue=" + encodeURIComponent("" + isContinue) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
         else if (incidentTypeId !== undefined)
             url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null)
-            throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined)
-            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (claimNo === null)
-            throw new Error("The parameter 'claimNo' cannot be null.");
-        else if (claimNo !== undefined)
-            url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
-        if (customerTypeCode === null)
-            throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (claimNo === null) throw new Error("The parameter 'claimNo' cannot be null.");
+        else if (claimNo !== undefined) url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
+        if (customerTypeCode === null) throw new Error("The parameter 'customerTypeCode' cannot be null.");
         else if (customerTypeCode !== undefined)
             url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -327,23 +335,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerBenefitDetailSearch(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerBenefitDetailSearch(_response);
+            });
     }
 
-    protected processGetCustomerBenefitDetailSearch(response: AxiosResponse): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
+    protected processGetCustomerBenefitDetailSearch(
+        response: AxiosResponse
+    ): Promise<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -356,10 +369,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerBenefitDetailSearchDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -369,88 +381,92 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get Customer Benefit Detail Half
-     * @param policyCode (optional) 
-     * @param caseTypeId (optional) 
-     * @param incidentDate (optional) 
-     * @param isContinue (optional) 
-     * @param incidentTypeId (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
-     * @param formatTypeId (optional) 
-     * @param cusTomerTypeCode (optional) 
-     * @param customerCode (optional) 
+     * @param policyCode (optional)
+     * @param caseTypeId (optional)
+     * @param incidentDate (optional)
+     * @param isContinue (optional)
+     * @param incidentTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param formatTypeId (optional)
+     * @param cusTomerTypeCode (optional)
+     * @param customerCode (optional)
      * @return Success
      */
-    getCustomerBenefitDetailHalf(policyCode?: string | undefined, caseTypeId?: number | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, formatTypeId?: number | undefined, cusTomerTypeCode?: string | undefined, customerCode?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
+    getCustomerBenefitDetailHalf(
+        policyCode?: string | undefined,
+        caseTypeId?: number | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        isContinue?: boolean | undefined,
+        incidentTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        formatTypeId?: number | undefined,
+        cusTomerTypeCode?: string | undefined,
+        customerCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/half?";
-        if (policyCode === null)
-            throw new Error("The parameter 'policyCode' cannot be null.");
-        else if (policyCode !== undefined)
-            url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (caseTypeId === null)
-            throw new Error("The parameter 'caseTypeId' cannot be null.");
-        else if (caseTypeId !== undefined)
-            url_ += "caseTypeId=" + encodeURIComponent("" + caseTypeId) + "&";
-        if (incidentDate === null)
-            throw new Error("The parameter 'incidentDate' cannot be null.");
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (caseTypeId === null) throw new Error("The parameter 'caseTypeId' cannot be null.");
+        else if (caseTypeId !== undefined) url_ += "caseTypeId=" + encodeURIComponent("" + caseTypeId) + "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
-            url_ += "incidentDate=" + encodeURIComponent(incidentDate ? "" + incidentDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (isContinue === null)
-            throw new Error("The parameter 'isContinue' cannot be null.");
-        else if (isContinue !== undefined)
-            url_ += "isContinue=" + encodeURIComponent("" + isContinue) + "&";
-        if (incidentTypeId === null)
-            throw new Error("The parameter 'incidentTypeId' cannot be null.");
+            url_ +=
+                "incidentDate=" +
+                encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (isContinue === null) throw new Error("The parameter 'isContinue' cannot be null.");
+        else if (isContinue !== undefined) url_ += "isContinue=" + encodeURIComponent("" + isContinue) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
         else if (incidentTypeId !== undefined)
             url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null)
-            throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined)
-            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (causeOfIncidentId === null)
-            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
-        if (formatTypeId === null)
-            throw new Error("The parameter 'formatTypeId' cannot be null.");
-        else if (formatTypeId !== undefined)
-            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
-        if (cusTomerTypeCode === null)
-            throw new Error("The parameter 'cusTomerTypeCode' cannot be null.");
+        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (cusTomerTypeCode === null) throw new Error("The parameter 'cusTomerTypeCode' cannot be null.");
         else if (cusTomerTypeCode !== undefined)
             url_ += "CusTomerTypeCode=" + encodeURIComponent("" + cusTomerTypeCode) + "&";
-        if (customerCode === null)
-            throw new Error("The parameter 'customerCode' cannot be null.");
-        else if (customerCode !== undefined)
-            url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
+        if (customerCode === null) throw new Error("The parameter 'customerCode' cannot be null.");
+        else if (customerCode !== undefined) url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerBenefitDetailHalf(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerBenefitDetailHalf(_response);
+            });
     }
 
-    protected processGetCustomerBenefitDetailHalf(response: AxiosResponse): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
+    protected processGetCustomerBenefitDetailHalf(
+        response: AxiosResponse
+    ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -463,10 +479,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -478,7 +493,10 @@ export class CoreClaimClient {
      * API สำหรับ Get ข้อมูล Customer BankAccount
      * @return Success
      */
-    getCustomerBankAccount(applicationId: string, cancelToken?: CancelToken | undefined): Promise<GetCustomerBankAccountDtoResponseListServiceResponse> {
+    getCustomerBankAccount(
+        applicationId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerBankAccountDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/{applicationId}/bank-account";
         if (applicationId === undefined || applicationId === null)
             throw new Error("The parameter 'applicationId' must be defined.");
@@ -489,23 +507,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerBankAccount(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerBankAccount(_response);
+            });
     }
 
-    protected processGetCustomerBankAccount(response: AxiosResponse): Promise<GetCustomerBankAccountDtoResponseListServiceResponse> {
+    protected processGetCustomerBankAccount(
+        response: AxiosResponse
+    ): Promise<GetCustomerBankAccountDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -518,10 +541,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerBankAccountDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -531,42 +553,48 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล Contact Person
-     * @param productTypeId (optional) 
+     * @param productTypeId (optional)
      * @return Success
      */
-    getContactPerson(applicationId: string, productTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetContactPersonDtoResponseListServiceResponse> {
+    getContactPerson(
+        applicationId: string,
+        productTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetContactPersonDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/contact-person?";
         if (applicationId === undefined || applicationId === null)
             throw new Error("The parameter 'applicationId' must be defined and cannot be null.");
-        else
-            url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        else url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetContactPerson(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetContactPerson(_response);
+            });
     }
 
-    protected processGetContactPerson(response: AxiosResponse): Promise<GetContactPersonDtoResponseListServiceResponse> {
+    protected processGetContactPerson(
+        response: AxiosResponse
+    ): Promise<GetContactPersonDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -579,10 +607,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetContactPersonDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -592,18 +619,20 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล Policy Benefit Shered (สิทธิประโยชน์ร่วม)
-     * @param applicaitonCode (optional) 
-     * @param customerTypeCode (optional) 
+     * @param applicaitonCode (optional)
+     * @param customerTypeCode (optional)
      * @return Success
      */
-    getPolicyBenefitShered(applicaitonCode?: string | undefined, customerTypeCode?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetPolicyBenefitSheredDtoResponseListServiceResponse> {
+    getPolicyBenefitShered(
+        applicaitonCode?: string | undefined,
+        customerTypeCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPolicyBenefitSheredDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/policybenefit-shered?";
-        if (applicaitonCode === null)
-            throw new Error("The parameter 'applicaitonCode' cannot be null.");
+        if (applicaitonCode === null) throw new Error("The parameter 'applicaitonCode' cannot be null.");
         else if (applicaitonCode !== undefined)
             url_ += "applicaitonCode=" + encodeURIComponent("" + applicaitonCode) + "&";
-        if (customerTypeCode === null)
-            throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        if (customerTypeCode === null) throw new Error("The parameter 'customerTypeCode' cannot be null.");
         else if (customerTypeCode !== undefined)
             url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -612,23 +641,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetPolicyBenefitShered(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPolicyBenefitShered(_response);
+            });
     }
 
-    protected processGetPolicyBenefitShered(response: AxiosResponse): Promise<GetPolicyBenefitSheredDtoResponseListServiceResponse> {
+    protected processGetPolicyBenefitShered(
+        response: AxiosResponse
+    ): Promise<GetPolicyBenefitSheredDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -641,10 +675,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetPolicyBenefitSheredDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -654,10 +687,13 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Calculate ข้อมูล Case Claim
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    calculateCaseClaim(body?: CalculateCaseClaimDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
+    calculateCaseClaim(
+        body?: CalculateCaseClaimDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/calculate/caseclaim";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -669,23 +705,28 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processCalculateCaseClaim(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCalculateCaseClaim(_response);
+            });
     }
 
-    protected processCalculateCaseClaim(response: AxiosResponse): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
+    protected processCalculateCaseClaim(
+        response: AxiosResponse
+    ): Promise<CalculateCaseClaimDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -698,10 +739,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<CalculateCaseClaimDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -711,21 +751,22 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Calculate ข้อมูล Case Disability (สูยเสียอวัยวะ)
-     * @param customerId (optional) 
-     * @param bodyPartId (optional) 
-     * @param standardMedicalExpenseId (optional) 
+     * @param customerId (optional)
+     * @param bodyPartId (optional)
+     * @param standardMedicalExpenseId (optional)
      * @return Success
      */
-    calculateCaseDisability(customerId?: number | undefined, bodyPartId?: number | undefined, standardMedicalExpenseId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<CalculateCaseDisabilityDtoResponseServiceResponse> {
+    calculateCaseDisability(
+        customerId?: number | undefined,
+        bodyPartId?: number | undefined,
+        standardMedicalExpenseId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CalculateCaseDisabilityDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/calculate/disability?";
-        if (customerId === null)
-            throw new Error("The parameter 'customerId' cannot be null.");
-        else if (customerId !== undefined)
-            url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
-        if (bodyPartId === null)
-            throw new Error("The parameter 'bodyPartId' cannot be null.");
-        else if (bodyPartId !== undefined)
-            url_ += "bodyPartId=" + encodeURIComponent("" + bodyPartId) + "&";
+        if (customerId === null) throw new Error("The parameter 'customerId' cannot be null.");
+        else if (customerId !== undefined) url_ += "customerId=" + encodeURIComponent("" + customerId) + "&";
+        if (bodyPartId === null) throw new Error("The parameter 'bodyPartId' cannot be null.");
+        else if (bodyPartId !== undefined) url_ += "bodyPartId=" + encodeURIComponent("" + bodyPartId) + "&";
         if (standardMedicalExpenseId === null)
             throw new Error("The parameter 'standardMedicalExpenseId' cannot be null.");
         else if (standardMedicalExpenseId !== undefined)
@@ -736,23 +777,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processCalculateCaseDisability(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCalculateCaseDisability(_response);
+            });
     }
 
-    protected processCalculateCaseDisability(response: AxiosResponse): Promise<CalculateCaseDisabilityDtoResponseServiceResponse> {
+    protected processCalculateCaseDisability(
+        response: AxiosResponse
+    ): Promise<CalculateCaseDisabilityDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -765,10 +811,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<CalculateCaseDisabilityDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -778,10 +823,13 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Create ข้อมูล CoreClaim
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    createCoreClaim(body?: CreateCoreClaimV2DtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<CreateCoreClaimDtoResponseServiceResponse> {
+    createCoreClaim(
+        body?: CreateCoreClaimV2DtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CreateCoreClaimDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/create/coreclaim";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -793,20 +841,23 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processCreateCoreClaim(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCreateCoreClaim(_response);
+            });
     }
 
     protected processCreateCoreClaim(response: AxiosResponse): Promise<CreateCoreClaimDtoResponseServiceResponse> {
@@ -822,10 +873,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<CreateCoreClaimDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -835,10 +885,13 @@ export class CoreClaimClient {
 
     /**
      * เพิ่ม Case ใหม่ภายใต้ Claim เดิมโดยอ้างอิง ClaimId
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    createContinuedClaim(body?: CreateContinuedClaimDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<CreateCoreClaimDtoResponseServiceResponse> {
+    createContinuedClaim(
+        body?: CreateContinuedClaimDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CreateCoreClaimDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/create/continued-claim";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -850,20 +903,23 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processCreateContinuedClaim(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCreateContinuedClaim(_response);
+            });
     }
 
     protected processCreateContinuedClaim(response: AxiosResponse): Promise<CreateCoreClaimDtoResponseServiceResponse> {
@@ -879,10 +935,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<CreateCoreClaimDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -892,10 +947,13 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล DocumentSubType , documentTypeId : เอกสารของโปรเจค , documentPrefix : คำนำหน้ารหัสเอกสาร, documentSubTypeIdList = รายการรหัสเอกสารย่อยที่ต้องการแสดง
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    getDocumentSubType(body?: GetDocumentSubTypeDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentSubTypeDtoResponseListServiceResponse> {
+    getDocumentSubType(
+        body?: GetDocumentSubTypeDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDocumentSubTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/document-subtype";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -907,23 +965,28 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDocumentSubType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDocumentSubType(_response);
+            });
     }
 
-    protected processGetDocumentSubType(response: AxiosResponse): Promise<GetDocumentSubTypeDtoResponseListServiceResponse> {
+    protected processGetDocumentSubType(
+        response: AxiosResponse
+    ): Promise<GetDocumentSubTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -936,10 +999,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDocumentSubTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -949,38 +1011,36 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล Document By CaseId
-     * @param caseId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param caseId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getDocumentByCaseId(caseId?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentByCaseIdDtoResponseListServiceResponse> {
+    getDocumentByCaseId(
+        caseId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDocumentByCaseIdDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/document/case/filter?";
-        if (caseId === null)
-            throw new Error("The parameter 'caseId' cannot be null.");
-        else if (caseId !== undefined)
-            url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
+        else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -989,23 +1049,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDocumentByCaseId(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDocumentByCaseId(_response);
+            });
     }
 
-    protected processGetDocumentByCaseId(response: AxiosResponse): Promise<GetDocumentByCaseIdDtoResponseListServiceResponse> {
+    protected processGetDocumentByCaseId(
+        response: AxiosResponse
+    ): Promise<GetDocumentByCaseIdDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1018,10 +1083,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDocumentByCaseIdDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1031,38 +1095,36 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล ประวัติการเคลม
-     * @param applicationId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param applicationId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getClaimHistory(applicationId?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetClaimHistoryDtoResponseListServiceResponse> {
+    getClaimHistory(
+        applicationId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimHistoryDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/claim/history/filter?";
-        if (applicationId === null)
-            throw new Error("The parameter 'applicationId' cannot be null.");
-        else if (applicationId !== undefined)
-            url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (applicationId === null) throw new Error("The parameter 'applicationId' cannot be null.");
+        else if (applicationId !== undefined) url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1071,20 +1133,23 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetClaimHistory(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimHistory(_response);
+            });
     }
 
     protected processGetClaimHistory(response: AxiosResponse): Promise<GetClaimHistoryDtoResponseListServiceResponse> {
@@ -1100,10 +1165,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetClaimHistoryDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1113,38 +1177,36 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล การเคลมต่อเนื่อง
-     * @param applicationId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param applicationId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getClaimContinue(applicationId?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetClaimContinueDtoResponseListServiceResponse> {
+    getClaimContinue(
+        applicationId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimContinueDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/claim/continue/filter?";
-        if (applicationId === null)
-            throw new Error("The parameter 'applicationId' cannot be null.");
-        else if (applicationId !== undefined)
-            url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (applicationId === null) throw new Error("The parameter 'applicationId' cannot be null.");
+        else if (applicationId !== undefined) url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1153,23 +1215,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetClaimContinue(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimContinue(_response);
+            });
     }
 
-    protected processGetClaimContinue(response: AxiosResponse): Promise<GetClaimContinueDtoResponseListServiceResponse> {
+    protected processGetClaimContinue(
+        response: AxiosResponse
+    ): Promise<GetClaimContinueDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1182,10 +1249,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetClaimContinueDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1195,38 +1261,36 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล Case By ClaimId
-     * @param claimId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param claimId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getCaseByClaimId(claimId?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCaseByClaimIdDtoResponseListServiceResponse> {
+    getCaseByClaimId(
+        claimId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCaseByClaimIdDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/claim/case/filter?";
-        if (claimId === null)
-            throw new Error("The parameter 'claimId' cannot be null.");
-        else if (claimId !== undefined)
-            url_ += "claimId=" + encodeURIComponent("" + claimId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (claimId === null) throw new Error("The parameter 'claimId' cannot be null.");
+        else if (claimId !== undefined) url_ += "claimId=" + encodeURIComponent("" + claimId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1235,23 +1299,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCaseByClaimId(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseByClaimId(_response);
+            });
     }
 
-    protected processGetCaseByClaimId(response: AxiosResponse): Promise<GetCaseByClaimIdDtoResponseListServiceResponse> {
+    protected processGetCaseByClaimId(
+        response: AxiosResponse
+    ): Promise<GetCaseByClaimIdDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1264,10 +1333,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCaseByClaimIdDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1277,48 +1345,54 @@ export class CoreClaimClient {
 
     /**
      * Service สำหรับ Get ข้อมูล Dashboard Customer Consider (พิจารณาเคลมลูกค้า)
-     * @param dateOption (optional) 
-     * @param dateFrom (optional) 
-     * @param dateTo (optional) 
+     * @param dateOption (optional)
+     * @param dateFrom (optional)
+     * @param dateTo (optional)
      * @return Success
      */
-    getDashboardCustomerConsider(dateOption?: number | undefined, dateFrom?: dayjs.Dayjs | undefined, dateTo?: dayjs.Dayjs | undefined, cancelToken?: CancelToken | undefined): Promise<GetDashboardCustomerConsiderDtoResponseListServiceResponse> {
+    getDashboardCustomerConsider(
+        dateOption?: number | undefined,
+        dateFrom?: dayjs.Dayjs | undefined,
+        dateTo?: dayjs.Dayjs | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDashboardCustomerConsiderDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/dashboard/customer-consider/filter?";
-        if (dateOption === null)
-            throw new Error("The parameter 'dateOption' cannot be null.");
-        else if (dateOption !== undefined)
-            url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
-        if (dateFrom === null)
-            throw new Error("The parameter 'dateFrom' cannot be null.");
+        if (dateOption === null) throw new Error("The parameter 'dateOption' cannot be null.");
+        else if (dateOption !== undefined) url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
+        if (dateFrom === null) throw new Error("The parameter 'dateFrom' cannot be null.");
         else if (dateFrom !== undefined)
-            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (dateTo === null)
-            throw new Error("The parameter 'dateTo' cannot be null.");
+            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (dateTo === null) throw new Error("The parameter 'dateTo' cannot be null.");
         else if (dateTo !== undefined)
-            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
+            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDashboardCustomerConsider(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDashboardCustomerConsider(_response);
+            });
     }
 
-    protected processGetDashboardCustomerConsider(response: AxiosResponse): Promise<GetDashboardCustomerConsiderDtoResponseListServiceResponse> {
+    protected processGetDashboardCustomerConsider(
+        response: AxiosResponse
+    ): Promise<GetDashboardCustomerConsiderDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1331,10 +1405,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDashboardCustomerConsiderDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1344,68 +1417,65 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล CustomerClaim Adjudication Monitor
-     * @param dateOption (optional) 
-     * @param dateFrom (optional) 
-     * @param dateTo (optional) 
-     * @param isProductTypeId_PH (optional) 
-     * @param isProductTypeId_PA (optional) 
-     * @param claimTransactionTypeId (optional) 
-     * @param searchOption (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param dateOption (optional)
+     * @param dateFrom (optional)
+     * @param dateTo (optional)
+     * @param isProductTypeId_PH (optional)
+     * @param isProductTypeId_PA (optional)
+     * @param claimTransactionTypeId (optional)
+     * @param searchOption (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getCustomerClaimAdjudicationMonitor(dateOption?: number | undefined, dateFrom?: dayjs.Dayjs | undefined, dateTo?: dayjs.Dayjs | undefined, isProductTypeId_PH?: boolean | undefined, isProductTypeId_PA?: boolean | undefined, claimTransactionTypeId?: number | undefined, searchOption?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse> {
+    getCustomerClaimAdjudicationMonitor(
+        dateOption?: number | undefined,
+        dateFrom?: dayjs.Dayjs | undefined,
+        dateTo?: dayjs.Dayjs | undefined,
+        isProductTypeId_PH?: boolean | undefined,
+        isProductTypeId_PA?: boolean | undefined,
+        claimTransactionTypeId?: number | undefined,
+        searchOption?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/claim/customer-monitor/filter?";
-        if (dateOption === null)
-            throw new Error("The parameter 'dateOption' cannot be null.");
-        else if (dateOption !== undefined)
-            url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
-        if (dateFrom === null)
-            throw new Error("The parameter 'dateFrom' cannot be null.");
+        if (dateOption === null) throw new Error("The parameter 'dateOption' cannot be null.");
+        else if (dateOption !== undefined) url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
+        if (dateFrom === null) throw new Error("The parameter 'dateFrom' cannot be null.");
         else if (dateFrom !== undefined)
-            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (dateTo === null)
-            throw new Error("The parameter 'dateTo' cannot be null.");
+            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (dateTo === null) throw new Error("The parameter 'dateTo' cannot be null.");
         else if (dateTo !== undefined)
-            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (isProductTypeId_PH === null)
-            throw new Error("The parameter 'isProductTypeId_PH' cannot be null.");
+            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (isProductTypeId_PH === null) throw new Error("The parameter 'isProductTypeId_PH' cannot be null.");
         else if (isProductTypeId_PH !== undefined)
             url_ += "isProductTypeId_PH=" + encodeURIComponent("" + isProductTypeId_PH) + "&";
-        if (isProductTypeId_PA === null)
-            throw new Error("The parameter 'isProductTypeId_PA' cannot be null.");
+        if (isProductTypeId_PA === null) throw new Error("The parameter 'isProductTypeId_PA' cannot be null.");
         else if (isProductTypeId_PA !== undefined)
             url_ += "isProductTypeId_PA=" + encodeURIComponent("" + isProductTypeId_PA) + "&";
-        if (claimTransactionTypeId === null)
-            throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
+        if (claimTransactionTypeId === null) throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
         else if (claimTransactionTypeId !== undefined)
             url_ += "claimTransactionTypeId=" + encodeURIComponent("" + claimTransactionTypeId) + "&";
-        if (searchOption === null)
-            throw new Error("The parameter 'searchOption' cannot be null.");
-        else if (searchOption !== undefined)
-            url_ += "searchOption=" + encodeURIComponent("" + searchOption) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (searchOption === null) throw new Error("The parameter 'searchOption' cannot be null.");
+        else if (searchOption !== undefined) url_ += "searchOption=" + encodeURIComponent("" + searchOption) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1414,23 +1484,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCustomerClaimAdjudicationMonitor(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCustomerClaimAdjudicationMonitor(_response);
+            });
     }
 
-    protected processGetCustomerClaimAdjudicationMonitor(response: AxiosResponse): Promise<GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse> {
+    protected processGetCustomerClaimAdjudicationMonitor(
+        response: AxiosResponse
+    ): Promise<GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1443,10 +1518,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1456,68 +1530,65 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล HospitalClaim Adjudication Monitor
-     * @param dateOption (optional) 
-     * @param dateFrom (optional) 
-     * @param dateTo (optional) 
-     * @param isProductTypeId_PH (optional) 
-     * @param isProductTypeId_PA (optional) 
-     * @param claimTransactionTypeId (optional) 
-     * @param searchOption (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param dateOption (optional)
+     * @param dateFrom (optional)
+     * @param dateTo (optional)
+     * @param isProductTypeId_PH (optional)
+     * @param isProductTypeId_PA (optional)
+     * @param claimTransactionTypeId (optional)
+     * @param searchOption (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getHospitalClaimAdjudicationMonitor(dateOption?: number | undefined, dateFrom?: dayjs.Dayjs | undefined, dateTo?: dayjs.Dayjs | undefined, isProductTypeId_PH?: boolean | undefined, isProductTypeId_PA?: boolean | undefined, claimTransactionTypeId?: number | undefined, searchOption?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse> {
+    getHospitalClaimAdjudicationMonitor(
+        dateOption?: number | undefined,
+        dateFrom?: dayjs.Dayjs | undefined,
+        dateTo?: dayjs.Dayjs | undefined,
+        isProductTypeId_PH?: boolean | undefined,
+        isProductTypeId_PA?: boolean | undefined,
+        claimTransactionTypeId?: number | undefined,
+        searchOption?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/claim/hospital-monitor/filter?";
-        if (dateOption === null)
-            throw new Error("The parameter 'dateOption' cannot be null.");
-        else if (dateOption !== undefined)
-            url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
-        if (dateFrom === null)
-            throw new Error("The parameter 'dateFrom' cannot be null.");
+        if (dateOption === null) throw new Error("The parameter 'dateOption' cannot be null.");
+        else if (dateOption !== undefined) url_ += "dateOption=" + encodeURIComponent("" + dateOption) + "&";
+        if (dateFrom === null) throw new Error("The parameter 'dateFrom' cannot be null.");
         else if (dateFrom !== undefined)
-            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (dateTo === null)
-            throw new Error("The parameter 'dateTo' cannot be null.");
+            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (dateTo === null) throw new Error("The parameter 'dateTo' cannot be null.");
         else if (dateTo !== undefined)
-            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (isProductTypeId_PH === null)
-            throw new Error("The parameter 'isProductTypeId_PH' cannot be null.");
+            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (isProductTypeId_PH === null) throw new Error("The parameter 'isProductTypeId_PH' cannot be null.");
         else if (isProductTypeId_PH !== undefined)
             url_ += "isProductTypeId_PH=" + encodeURIComponent("" + isProductTypeId_PH) + "&";
-        if (isProductTypeId_PA === null)
-            throw new Error("The parameter 'isProductTypeId_PA' cannot be null.");
+        if (isProductTypeId_PA === null) throw new Error("The parameter 'isProductTypeId_PA' cannot be null.");
         else if (isProductTypeId_PA !== undefined)
             url_ += "isProductTypeId_PA=" + encodeURIComponent("" + isProductTypeId_PA) + "&";
-        if (claimTransactionTypeId === null)
-            throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
+        if (claimTransactionTypeId === null) throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
         else if (claimTransactionTypeId !== undefined)
             url_ += "claimTransactionTypeId=" + encodeURIComponent("" + claimTransactionTypeId) + "&";
-        if (searchOption === null)
-            throw new Error("The parameter 'searchOption' cannot be null.");
-        else if (searchOption !== undefined)
-            url_ += "searchOption=" + encodeURIComponent("" + searchOption) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (searchOption === null) throw new Error("The parameter 'searchOption' cannot be null.");
+        else if (searchOption !== undefined) url_ += "searchOption=" + encodeURIComponent("" + searchOption) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1526,23 +1597,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetHospitalClaimAdjudicationMonitor(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetHospitalClaimAdjudicationMonitor(_response);
+            });
     }
 
-    protected processGetHospitalClaimAdjudicationMonitor(response: AxiosResponse): Promise<GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse> {
+    protected processGetHospitalClaimAdjudicationMonitor(
+        response: AxiosResponse
+    ): Promise<GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1555,10 +1631,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1570,10 +1645,12 @@ export class CoreClaimClient {
      * API สำหรับ Get ข้อมูลรายละเอียด Claim พิจารณา
      * @return Success
      */
-    getClaimDetailConsider(claimId: string, cancelToken?: CancelToken | undefined): Promise<GetClaimDetailConsiderDtoResponseServiceResponse> {
+    getClaimDetailConsider(
+        claimId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimDetailConsiderDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/claim/detail/consider/{claimId}";
-        if (claimId === undefined || claimId === null)
-            throw new Error("The parameter 'claimId' must be defined.");
+        if (claimId === undefined || claimId === null) throw new Error("The parameter 'claimId' must be defined.");
         url_ = url_.replace("{claimId}", encodeURIComponent("" + claimId));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1581,23 +1658,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetClaimDetailConsider(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimDetailConsider(_response);
+            });
     }
 
-    protected processGetClaimDetailConsider(response: AxiosResponse): Promise<GetClaimDetailConsiderDtoResponseServiceResponse> {
+    protected processGetClaimDetailConsider(
+        response: AxiosResponse
+    ): Promise<GetClaimDetailConsiderDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1610,10 +1692,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetClaimDetailConsiderDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1625,10 +1706,12 @@ export class CoreClaimClient {
      * API สำหรับ Get ข้อมูลเคลมก่อนหน้า
      * @return Success
      */
-    getPreviousClaim(claimId: string, cancelToken?: CancelToken | undefined): Promise<GetPreviousClaimDtoResponseServiceResponse> {
+    getPreviousClaim(
+        claimId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPreviousClaimDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/claim/{claimId}/previous";
-        if (claimId === undefined || claimId === null)
-            throw new Error("The parameter 'claimId' must be defined.");
+        if (claimId === undefined || claimId === null) throw new Error("The parameter 'claimId' must be defined.");
         url_ = url_.replace("{claimId}", encodeURIComponent("" + claimId));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1636,20 +1719,23 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetPreviousClaim(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPreviousClaim(_response);
+            });
     }
 
     protected processGetPreviousClaim(response: AxiosResponse): Promise<GetPreviousClaimDtoResponseServiceResponse> {
@@ -1665,10 +1751,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetPreviousClaimDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1678,38 +1763,36 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล TransactionLog Claim (ประวัติการทำรายการ)
-     * @param claimId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param claimId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getClaimTransactionLog(claimId?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetClaimTransactionLogDtoResponseListServiceResponse> {
+    getClaimTransactionLog(
+        claimId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimTransactionLogDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/claim/transaction-log/filter?";
-        if (claimId === null)
-            throw new Error("The parameter 'claimId' cannot be null.");
-        else if (claimId !== undefined)
-            url_ += "claimId=" + encodeURIComponent("" + claimId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (claimId === null) throw new Error("The parameter 'claimId' cannot be null.");
+        else if (claimId !== undefined) url_ += "claimId=" + encodeURIComponent("" + claimId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1718,23 +1801,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetClaimTransactionLog(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimTransactionLog(_response);
+            });
     }
 
-    protected processGetClaimTransactionLog(response: AxiosResponse): Promise<GetClaimTransactionLogDtoResponseListServiceResponse> {
+    protected processGetClaimTransactionLog(
+        response: AxiosResponse
+    ): Promise<GetClaimTransactionLogDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1747,10 +1835,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetClaimTransactionLogDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1760,28 +1847,28 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล PolicyBenefit (ความคุ้มครอง)
-     * @param productTypeId (optional) 
-     * @param applicationCode (optional) 
-     * @param productId (optional) 
-     * @param customerTypeCode (optional) 
+     * @param productTypeId (optional)
+     * @param applicationCode (optional)
+     * @param productId (optional)
+     * @param customerTypeCode (optional)
      * @return Success
      */
-    getPolicyBenefit(productTypeId?: number | undefined, applicationCode?: string | undefined, productId?: number | undefined, customerTypeCode?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetPolicyBenefitDtoResponseListServiceResponse> {
+    getPolicyBenefit(
+        productTypeId?: number | undefined,
+        applicationCode?: string | undefined,
+        productId?: number | undefined,
+        customerTypeCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPolicyBenefitDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/policy/benefit?";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (applicationCode === null)
-            throw new Error("The parameter 'applicationCode' cannot be null.");
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
         else if (applicationCode !== undefined)
             url_ += "applicationCode=" + encodeURIComponent("" + applicationCode) + "&";
-        if (productId === null)
-            throw new Error("The parameter 'productId' cannot be null.");
-        else if (productId !== undefined)
-            url_ += "productId=" + encodeURIComponent("" + productId) + "&";
-        if (customerTypeCode === null)
-            throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        if (productId === null) throw new Error("The parameter 'productId' cannot be null.");
+        else if (productId !== undefined) url_ += "productId=" + encodeURIComponent("" + productId) + "&";
+        if (customerTypeCode === null) throw new Error("The parameter 'customerTypeCode' cannot be null.");
         else if (customerTypeCode !== undefined)
             url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1790,23 +1877,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetPolicyBenefit(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPolicyBenefit(_response);
+            });
     }
 
-    protected processGetPolicyBenefit(response: AxiosResponse): Promise<GetPolicyBenefitDtoResponseListServiceResponse> {
+    protected processGetPolicyBenefit(
+        response: AxiosResponse
+    ): Promise<GetPolicyBenefitDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1819,10 +1911,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetPolicyBenefitDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1832,38 +1923,37 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล DCR (การชำระเงิน)
-     * @param applicationCode (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param applicationCode (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getDCR(applicationCode?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDCRDtoResponseListServiceResponse> {
+    getDCR(
+        applicationCode?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDCRDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/dcr/filter?";
-        if (applicationCode === null)
-            throw new Error("The parameter 'applicationCode' cannot be null.");
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
         else if (applicationCode !== undefined)
             url_ += "applicationCode=" + encodeURIComponent("" + applicationCode) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -1872,20 +1962,23 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDCR(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDCR(_response);
+            });
     }
 
     protected processGetDCR(response: AxiosResponse): Promise<GetDCRDtoResponseListServiceResponse> {
@@ -1901,10 +1994,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDCRDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -1914,72 +2006,74 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล รายการค่ารักษา(เบื้องต้น) Default จาก CaseItem จากหน้าแจ้งเคลม
-     * @param formatTypeId (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param isUseOften (optional) 
-     * @param productTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
-     * @param productId (optional) 
+     * @param formatTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param isUseOften (optional)
+     * @param productTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param productId (optional)
      * @return Success
      */
-    getStandardMedicalExpenseByCase(caseId: string, formatTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, isUseOften?: boolean | undefined, productTypeId?: number | undefined, causeOfIncidentId?: number | undefined, productId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
+    getStandardMedicalExpenseByCase(
+        caseId: string,
+        formatTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        isUseOften?: boolean | undefined,
+        productTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        productId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/standard-medical-expense/case?";
         if (caseId === undefined || caseId === null)
             throw new Error("The parameter 'caseId' must be defined and cannot be null.");
-        else
-            url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
-        if (formatTypeId === null)
-            throw new Error("The parameter 'formatTypeId' cannot be null.");
-        else if (formatTypeId !== undefined)
-            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        else url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null)
-            throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined)
-            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (isUseOften === null)
-            throw new Error("The parameter 'isUseOften' cannot be null.");
-        else if (isUseOften !== undefined)
-            url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (causeOfIncidentId === null)
-            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (isUseOften === null) throw new Error("The parameter 'isUseOften' cannot be null.");
+        else if (isUseOften !== undefined) url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
-        if (productId === null)
-            throw new Error("The parameter 'productId' cannot be null.");
-        else if (productId !== undefined)
-            url_ += "productId=" + encodeURIComponent("" + productId) + "&";
+        if (productId === null) throw new Error("The parameter 'productId' cannot be null.");
+        else if (productId !== undefined) url_ += "productId=" + encodeURIComponent("" + productId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetStandardMedicalExpenseByCase(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetStandardMedicalExpenseByCase(_response);
+            });
     }
 
-    protected processGetStandardMedicalExpenseByCase(response: AxiosResponse): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
+    protected processGetStandardMedicalExpenseByCase(
+        response: AxiosResponse
+    ): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1992,10 +2086,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2005,10 +2098,13 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ บันทึกผลพิจารณาเคลม
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    upsertClaimDecision(body?: UpsertClaimDecisionDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
+    upsertClaimDecision(
+        body?: UpsertClaimDecisionDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/claim/decision";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2020,23 +2116,28 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processUpsertClaimDecision(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUpsertClaimDecision(_response);
+            });
     }
 
-    protected processUpsertClaimDecision(response: AxiosResponse): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
+    protected processUpsertClaimDecision(
+        response: AxiosResponse
+    ): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -2049,10 +2150,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<UpsertClaimDecisionDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2062,10 +2162,13 @@ export class CoreClaimClient {
 
     /**
      * อนุมัติผลพิจารณา
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    approveClaimDecision(body?: ApproveClaimDecisionDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
+    approveClaimDecision(
+        body?: ApproveClaimDecisionDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/claim/decision/approve";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2077,23 +2180,28 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processApproveClaimDecision(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processApproveClaimDecision(_response);
+            });
     }
 
-    protected processApproveClaimDecision(response: AxiosResponse): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
+    protected processApproveClaimDecision(
+        response: AxiosResponse
+    ): Promise<UpsertClaimDecisionDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -2106,10 +2214,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<UpsertClaimDecisionDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2119,10 +2226,13 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ บันทึกผลพิจารณาเคลม [บันทึกแบบร่าง]
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    saveClaimEditDraft(body?: SaveClaimEditDraftDtoRequest | undefined, cancelToken?: CancelToken | undefined): Promise<SaveClaimEditDraftDtoResponeServiceResponse> {
+    saveClaimEditDraft(
+        body?: SaveClaimEditDraftDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<SaveClaimEditDraftDtoResponeServiceResponse> {
         let url_ = this.baseUrl + "/claim/decision/draft";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -2134,20 +2244,23 @@ export class CoreClaimClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processSaveClaimEditDraft(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processSaveClaimEditDraft(_response);
+            });
     }
 
     protected processSaveClaimEditDraft(response: AxiosResponse): Promise<SaveClaimEditDraftDtoResponeServiceResponse> {
@@ -2163,10 +2276,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<SaveClaimEditDraftDtoResponeServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2181,52 +2293,47 @@ export class HospitalBillingClient {
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, instance?: AxiosInstance) {
-
         this.instance = instance ? instance : axios.create();
 
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-
     }
 
     /**
      * ค้นหารายการวางบิลโรงพยาบาลและคืน dashboard counts ตาม BillingDetail.
-     * @param statusId (optional) 
-     * @param searchBy (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param statusId (optional)
+     * @param searchBy (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    filter(statusId?: number | undefined, searchBy?: string | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<BillingListDtoServiceResponse> {
+    filter(
+        statusId?: number | undefined,
+        searchBy?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BillingListDtoServiceResponse> {
         let url_ = this.baseUrl + "/billing/hospital/filter?";
-        if (statusId === null)
-            throw new Error("The parameter 'statusId' cannot be null.");
-        else if (statusId !== undefined)
-            url_ += "StatusId=" + encodeURIComponent("" + statusId) + "&";
-        if (searchBy === null)
-            throw new Error("The parameter 'searchBy' cannot be null.");
-        else if (searchBy !== undefined)
-            url_ += "SearchBy=" + encodeURIComponent("" + searchBy) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (statusId === null) throw new Error("The parameter 'statusId' cannot be null.");
+        else if (statusId !== undefined) url_ += "StatusId=" + encodeURIComponent("" + statusId) + "&";
+        if (searchBy === null) throw new Error("The parameter 'searchBy' cannot be null.");
+        else if (searchBy !== undefined) url_ += "SearchBy=" + encodeURIComponent("" + searchBy) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -2235,20 +2342,23 @@ export class HospitalBillingClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processFilter(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processFilter(_response);
+            });
     }
 
     protected processFilter(response: AxiosResponse): Promise<BillingListDtoServiceResponse> {
@@ -2264,38 +2374,33 @@ export class HospitalBillingClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<BillingListDtoServiceResponse>(result200);
-
         } else if (status === 400) {
             const _responseText = response.data;
             let result400: any = null;
-            let resultData400  = _responseText;
+            let resultData400 = _responseText;
             result400 = JSON.parse(resultData400);
             return throwException("Bad Request", status, _responseText, _headers, result400);
-
         } else if (status === 401) {
             const _responseText = response.data;
             let result401: any = null;
-            let resultData401  = _responseText;
+            let resultData401 = _responseText;
             result401 = JSON.parse(resultData401);
             return throwException("Unauthorized", status, _responseText, _headers, result401);
-
         } else if (status === 403) {
             const _responseText = response.data;
             let result403: any = null;
-            let resultData403  = _responseText;
+            let resultData403 = _responseText;
             result403 = JSON.parse(resultData403);
             return throwException("Forbidden", status, _responseText, _headers, result403);
-
         } else if (status === 500) {
             const _responseText = response.data;
             let result500: any = null;
-            let resultData500  = _responseText;
+            let resultData500 = _responseText;
             result500 = JSON.parse(resultData500);
             return throwException("Server Error", status, _responseText, _headers, result500);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2318,20 +2423,23 @@ export class HospitalBillingClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processHospital(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processHospital(_response);
+            });
     }
 
     protected processHospital(response: AxiosResponse): Promise<BillingDetailDtoServiceResponse> {
@@ -2347,38 +2455,33 @@ export class HospitalBillingClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<BillingDetailDtoServiceResponse>(result200);
-
         } else if (status === 401) {
             const _responseText = response.data;
             let result401: any = null;
-            let resultData401  = _responseText;
+            let resultData401 = _responseText;
             result401 = JSON.parse(resultData401);
             return throwException("Unauthorized", status, _responseText, _headers, result401);
-
         } else if (status === 403) {
             const _responseText = response.data;
             let result403: any = null;
-            let resultData403  = _responseText;
+            let resultData403 = _responseText;
             result403 = JSON.parse(resultData403);
             return throwException("Forbidden", status, _responseText, _headers, result403);
-
         } else if (status === 404) {
             const _responseText = response.data;
             let result404: any = null;
-            let resultData404  = _responseText;
+            let resultData404 = _responseText;
             result404 = JSON.parse(resultData404);
             return throwException("Not Found", status, _responseText, _headers, result404);
-
         } else if (status === 500) {
             const _responseText = response.data;
             let result500: any = null;
-            let resultData500  = _responseText;
+            let resultData500 = _responseText;
             result500 = JSON.parse(resultData500);
             return throwException("Server Error", status, _responseText, _headers, result500);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2401,20 +2504,23 @@ export class HospitalBillingClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processHistory(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processHistory(_response);
+            });
     }
 
     protected processHistory(response: AxiosResponse): Promise<BillingHistoryDtoServiceResponse> {
@@ -2430,38 +2536,33 @@ export class HospitalBillingClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<BillingHistoryDtoServiceResponse>(result200);
-
         } else if (status === 401) {
             const _responseText = response.data;
             let result401: any = null;
-            let resultData401  = _responseText;
+            let resultData401 = _responseText;
             result401 = JSON.parse(resultData401);
             return throwException("Unauthorized", status, _responseText, _headers, result401);
-
         } else if (status === 403) {
             const _responseText = response.data;
             let result403: any = null;
-            let resultData403  = _responseText;
+            let resultData403 = _responseText;
             result403 = JSON.parse(resultData403);
             return throwException("Forbidden", status, _responseText, _headers, result403);
-
         } else if (status === 404) {
             const _responseText = response.data;
             let result404: any = null;
-            let resultData404  = _responseText;
+            let resultData404 = _responseText;
             result404 = JSON.parse(resultData404);
             return throwException("Not Found", status, _responseText, _headers, result404);
-
         } else if (status === 500) {
             const _responseText = response.data;
             let result500: any = null;
-            let resultData500  = _responseText;
+            let resultData500 = _responseText;
             result500 = JSON.parse(resultData500);
             return throwException("Server Error", status, _responseText, _headers, result500);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2471,10 +2572,14 @@ export class HospitalBillingClient {
 
     /**
      * ยืนยันผลตรวจสอบและบันทึก Case, snapshot และ return request แบบ atomic.
-     * @param body (optional) 
+     * @param body (optional)
      * @return Success
      */
-    submit(billingDetailId: string, body?: SubmitHospitalBillingDto | undefined, cancelToken?: CancelToken | undefined): Promise<BillingSubmitResultDtoServiceResponse> {
+    submit(
+        billingDetailId: string,
+        body?: SubmitHospitalBillingDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BillingSubmitResultDtoServiceResponse> {
         let url_ = this.baseUrl + "/billing/hospital/{billingDetailId}/submit";
         if (billingDetailId === undefined || billingDetailId === null)
             throw new Error("The parameter 'billingDetailId' must be defined.");
@@ -2489,20 +2594,23 @@ export class HospitalBillingClient {
             url: url_,
             headers: {
                 "Content-Type": "application/json-patch+json",
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processSubmit(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processSubmit(_response);
+            });
     }
 
     protected processSubmit(response: AxiosResponse): Promise<BillingSubmitResultDtoServiceResponse> {
@@ -2518,52 +2626,45 @@ export class HospitalBillingClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<BillingSubmitResultDtoServiceResponse>(result200);
-
         } else if (status === 400) {
             const _responseText = response.data;
             let result400: any = null;
-            let resultData400  = _responseText;
+            let resultData400 = _responseText;
             result400 = JSON.parse(resultData400);
             return throwException("Bad Request", status, _responseText, _headers, result400);
-
         } else if (status === 401) {
             const _responseText = response.data;
             let result401: any = null;
-            let resultData401  = _responseText;
+            let resultData401 = _responseText;
             result401 = JSON.parse(resultData401);
             return throwException("Unauthorized", status, _responseText, _headers, result401);
-
         } else if (status === 403) {
             const _responseText = response.data;
             let result403: any = null;
-            let resultData403  = _responseText;
+            let resultData403 = _responseText;
             result403 = JSON.parse(resultData403);
             return throwException("Forbidden", status, _responseText, _headers, result403);
-
         } else if (status === 404) {
             const _responseText = response.data;
             let result404: any = null;
-            let resultData404  = _responseText;
+            let resultData404 = _responseText;
             result404 = JSON.parse(resultData404);
             return throwException("Not Found", status, _responseText, _headers, result404);
-
         } else if (status === 409) {
             const _responseText = response.data;
             let result409: any = null;
-            let resultData409  = _responseText;
+            let resultData409 = _responseText;
             result409 = JSON.parse(resultData409);
             return throwException("Conflict", status, _responseText, _headers, result409);
-
         } else if (status === 500) {
             const _responseText = response.data;
             let result500: any = null;
-            let resultData500  = _responseText;
+            let resultData500 = _responseText;
             result500 = JSON.parse(resultData500);
             return throwException("Server Error", status, _responseText, _headers, result500);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2578,135 +2679,142 @@ export class IClaimClient {
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, instance?: AxiosInstance) {
-
         this.instance = instance ? instance : axios.create();
 
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-
     }
 
     /**
      * API สำหรับ Get ข้อมูล เช็คสิทธิ์ความคุ้มครอง
-     * @param hospitalCode (optional) 
-     * @param claimType (optional) 
-     * @param episodeType (optional) 
-     * @param incurredDate (optional) 
-     * @param incurredTime (optional) 
-     * @param incidentDate (optional) 
-     * @param incidentTime (optional) 
-     * @param claimFromMotorcycle (optional) 
-     * @param searchOptionId (optional) 
-     * @param userName (optional) 
-     * @param cIDPassport (optional) 
-     * @param iD (optional) 
-     * @param insurerCode (optional) 
-     * @param policyNumber (optional) 
-     * @param causeOfAccident (optional) 
-     * @param applicationCode (optional) 
-     * @param name (optional) 
-     * @param surName (optional) 
-     * @param birthDate (optional) 
+     * @param hospitalCode (optional)
+     * @param claimType (optional)
+     * @param episodeType (optional)
+     * @param incurredDate (optional)
+     * @param incurredTime (optional)
+     * @param incidentDate (optional)
+     * @param incidentTime (optional)
+     * @param claimFromMotorcycle (optional)
+     * @param searchOptionId (optional)
+     * @param userName (optional)
+     * @param cIDPassport (optional)
+     * @param iD (optional)
+     * @param insurerCode (optional)
+     * @param policyNumber (optional)
+     * @param causeOfAccident (optional)
+     * @param applicationCode (optional)
+     * @param name (optional)
+     * @param surName (optional)
+     * @param birthDate (optional)
      * @return Success
      */
-    checkEligible(iClaimToken: string, hospitalCode?: string | undefined, claimType?: string | undefined, episodeType?: string | undefined, incurredDate?: dayjs.Dayjs | undefined, incurredTime?: dayjs.Dayjs | undefined, incidentDate?: dayjs.Dayjs | undefined, incidentTime?: dayjs.Dayjs | undefined, claimFromMotorcycle?: boolean | undefined, searchOptionId?: number | undefined, userName?: string | undefined, cIDPassport?: string | undefined, iD?: string | undefined, insurerCode?: string | undefined, policyNumber?: string | undefined, causeOfAccident?: string | undefined, applicationCode?: string | undefined, name?: string | undefined, surName?: string | undefined, birthDate?: dayjs.Dayjs | undefined, cancelToken?: CancelToken | undefined): Promise<CheckEligibleDtoResponseListServiceResponse> {
+    checkEligible(
+        iClaimToken: string,
+        hospitalCode?: string | undefined,
+        claimType?: string | undefined,
+        episodeType?: string | undefined,
+        incurredDate?: dayjs.Dayjs | undefined,
+        incurredTime?: dayjs.Dayjs | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        incidentTime?: dayjs.Dayjs | undefined,
+        claimFromMotorcycle?: boolean | undefined,
+        searchOptionId?: number | undefined,
+        userName?: string | undefined,
+        cIDPassport?: string | undefined,
+        iD?: string | undefined,
+        insurerCode?: string | undefined,
+        policyNumber?: string | undefined,
+        causeOfAccident?: string | undefined,
+        applicationCode?: string | undefined,
+        name?: string | undefined,
+        surName?: string | undefined,
+        birthDate?: dayjs.Dayjs | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CheckEligibleDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/IClaim/check-eligible?";
-        if (hospitalCode === null)
-            throw new Error("The parameter 'hospitalCode' cannot be null.");
-        else if (hospitalCode !== undefined)
-            url_ += "HospitalCode=" + encodeURIComponent("" + hospitalCode) + "&";
-        if (claimType === null)
-            throw new Error("The parameter 'claimType' cannot be null.");
-        else if (claimType !== undefined)
-            url_ += "ClaimType=" + encodeURIComponent("" + claimType) + "&";
-        if (episodeType === null)
-            throw new Error("The parameter 'episodeType' cannot be null.");
-        else if (episodeType !== undefined)
-            url_ += "EpisodeType=" + encodeURIComponent("" + episodeType) + "&";
-        if (incurredDate === null)
-            throw new Error("The parameter 'incurredDate' cannot be null.");
+        if (hospitalCode === null) throw new Error("The parameter 'hospitalCode' cannot be null.");
+        else if (hospitalCode !== undefined) url_ += "HospitalCode=" + encodeURIComponent("" + hospitalCode) + "&";
+        if (claimType === null) throw new Error("The parameter 'claimType' cannot be null.");
+        else if (claimType !== undefined) url_ += "ClaimType=" + encodeURIComponent("" + claimType) + "&";
+        if (episodeType === null) throw new Error("The parameter 'episodeType' cannot be null.");
+        else if (episodeType !== undefined) url_ += "EpisodeType=" + encodeURIComponent("" + episodeType) + "&";
+        if (incurredDate === null) throw new Error("The parameter 'incurredDate' cannot be null.");
         else if (incurredDate !== undefined)
-            url_ += "IncurredDate=" + encodeURIComponent(incurredDate ? "" + incurredDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (incurredTime === null)
-            throw new Error("The parameter 'incurredTime' cannot be null.");
+            url_ +=
+                "IncurredDate=" +
+                encodeURIComponent(incurredDate ? "" + incurredDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (incurredTime === null) throw new Error("The parameter 'incurredTime' cannot be null.");
         else if (incurredTime !== undefined)
-            url_ += "IncurredTime=" + encodeURIComponent(incurredTime ? "" + incurredTime.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (incidentDate === null)
-            throw new Error("The parameter 'incidentDate' cannot be null.");
+            url_ +=
+                "IncurredTime=" +
+                encodeURIComponent(incurredTime ? "" + incurredTime.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
-            url_ += "IncidentDate=" + encodeURIComponent(incidentDate ? "" + incidentDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (incidentTime === null)
-            throw new Error("The parameter 'incidentTime' cannot be null.");
+            url_ +=
+                "IncidentDate=" +
+                encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (incidentTime === null) throw new Error("The parameter 'incidentTime' cannot be null.");
         else if (incidentTime !== undefined)
-            url_ += "IncidentTime=" + encodeURIComponent(incidentTime ? "" + incidentTime.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
-        if (claimFromMotorcycle === null)
-            throw new Error("The parameter 'claimFromMotorcycle' cannot be null.");
+            url_ +=
+                "IncidentTime=" +
+                encodeURIComponent(incidentTime ? "" + incidentTime.format("YYYY-MM-DDTHH:mm:ss") : "") +
+                "&";
+        if (claimFromMotorcycle === null) throw new Error("The parameter 'claimFromMotorcycle' cannot be null.");
         else if (claimFromMotorcycle !== undefined)
             url_ += "ClaimFromMotorcycle=" + encodeURIComponent("" + claimFromMotorcycle) + "&";
-        if (searchOptionId === null)
-            throw new Error("The parameter 'searchOptionId' cannot be null.");
+        if (searchOptionId === null) throw new Error("The parameter 'searchOptionId' cannot be null.");
         else if (searchOptionId !== undefined)
             url_ += "SearchOptionId=" + encodeURIComponent("" + searchOptionId) + "&";
-        if (userName === null)
-            throw new Error("The parameter 'userName' cannot be null.");
-        else if (userName !== undefined)
-            url_ += "UserName=" + encodeURIComponent("" + userName) + "&";
-        if (cIDPassport === null)
-            throw new Error("The parameter 'cIDPassport' cannot be null.");
-        else if (cIDPassport !== undefined)
-            url_ += "CIDPassport=" + encodeURIComponent("" + cIDPassport) + "&";
-        if (iD === null)
-            throw new Error("The parameter 'iD' cannot be null.");
-        else if (iD !== undefined)
-            url_ += "ID=" + encodeURIComponent("" + iD) + "&";
-        if (insurerCode === null)
-            throw new Error("The parameter 'insurerCode' cannot be null.");
-        else if (insurerCode !== undefined)
-            url_ += "InsurerCode=" + encodeURIComponent("" + insurerCode) + "&";
-        if (policyNumber === null)
-            throw new Error("The parameter 'policyNumber' cannot be null.");
-        else if (policyNumber !== undefined)
-            url_ += "PolicyNumber=" + encodeURIComponent("" + policyNumber) + "&";
-        if (causeOfAccident === null)
-            throw new Error("The parameter 'causeOfAccident' cannot be null.");
+        if (userName === null) throw new Error("The parameter 'userName' cannot be null.");
+        else if (userName !== undefined) url_ += "UserName=" + encodeURIComponent("" + userName) + "&";
+        if (cIDPassport === null) throw new Error("The parameter 'cIDPassport' cannot be null.");
+        else if (cIDPassport !== undefined) url_ += "CIDPassport=" + encodeURIComponent("" + cIDPassport) + "&";
+        if (iD === null) throw new Error("The parameter 'iD' cannot be null.");
+        else if (iD !== undefined) url_ += "ID=" + encodeURIComponent("" + iD) + "&";
+        if (insurerCode === null) throw new Error("The parameter 'insurerCode' cannot be null.");
+        else if (insurerCode !== undefined) url_ += "InsurerCode=" + encodeURIComponent("" + insurerCode) + "&";
+        if (policyNumber === null) throw new Error("The parameter 'policyNumber' cannot be null.");
+        else if (policyNumber !== undefined) url_ += "PolicyNumber=" + encodeURIComponent("" + policyNumber) + "&";
+        if (causeOfAccident === null) throw new Error("The parameter 'causeOfAccident' cannot be null.");
         else if (causeOfAccident !== undefined)
             url_ += "CauseOfAccident=" + encodeURIComponent("" + causeOfAccident) + "&";
-        if (applicationCode === null)
-            throw new Error("The parameter 'applicationCode' cannot be null.");
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
         else if (applicationCode !== undefined)
             url_ += "ApplicationCode=" + encodeURIComponent("" + applicationCode) + "&";
-        if (name === null)
-            throw new Error("The parameter 'name' cannot be null.");
-        else if (name !== undefined)
-            url_ += "Name=" + encodeURIComponent("" + name) + "&";
-        if (surName === null)
-            throw new Error("The parameter 'surName' cannot be null.");
-        else if (surName !== undefined)
-            url_ += "SurName=" + encodeURIComponent("" + surName) + "&";
-        if (birthDate === null)
-            throw new Error("The parameter 'birthDate' cannot be null.");
+        if (name === null) throw new Error("The parameter 'name' cannot be null.");
+        else if (name !== undefined) url_ += "Name=" + encodeURIComponent("" + name) + "&";
+        if (surName === null) throw new Error("The parameter 'surName' cannot be null.");
+        else if (surName !== undefined) url_ += "SurName=" + encodeURIComponent("" + surName) + "&";
+        if (birthDate === null) throw new Error("The parameter 'birthDate' cannot be null.");
         else if (birthDate !== undefined)
-            url_ += "BirthDate=" + encodeURIComponent(birthDate ? "" + birthDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
+            url_ +=
+                "BirthDate=" + encodeURIComponent(birthDate ? "" + birthDate.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "IClaimToken": iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
-                "Accept": "text/plain"
+                IClaimToken: iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processCheckEligible(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCheckEligible(_response);
+            });
     }
 
     protected processCheckEligible(response: AxiosResponse): Promise<CheckEligibleDtoResponseListServiceResponse> {
@@ -2722,10 +2830,9 @@ export class IClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<CheckEligibleDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2740,44 +2847,46 @@ export class MastersClient {
     protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
 
     constructor(baseUrl?: string, instance?: AxiosInstance) {
-
         this.instance = instance ? instance : axios.create();
 
         this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
-
     }
 
     /**
      * API สำหรับ Get ข้อมูลพนักงาน
-     * @param userId (optional) 
+     * @param userId (optional)
      * @return Success
      */
-    users(userId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<AllUserDtoResponseListServiceResponse> {
+    users(
+        userId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<AllUserDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/users?";
-        if (userId === null)
-            throw new Error("The parameter 'userId' cannot be null.");
-        else if (userId !== undefined)
-            url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        if (userId === null) throw new Error("The parameter 'userId' cannot be null.");
+        else if (userId !== undefined) url_ += "userId=" + encodeURIComponent("" + userId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processUsers(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUsers(_response);
+            });
     }
 
     protected processUsers(response: AxiosResponse): Promise<AllUserDtoResponseListServiceResponse> {
@@ -2793,10 +2902,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<AllUserDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2806,43 +2914,48 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล ZebraCarOwner (เจ้าของรถม้าลาย)
-     * @param zebraId (optional) 
-     * @param employeeId (optional) 
+     * @param zebraId (optional)
+     * @param employeeId (optional)
      * @return Success
      */
-    getZebraCarOwner(zebraId?: number | undefined, employeeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetZebraCarOwnerDtoResponseListServiceResponse> {
+    getZebraCarOwner(
+        zebraId?: number | undefined,
+        employeeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetZebraCarOwnerDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/zebracar/owner?";
-        if (zebraId === null)
-            throw new Error("The parameter 'zebraId' cannot be null.");
-        else if (zebraId !== undefined)
-            url_ += "zebraId=" + encodeURIComponent("" + zebraId) + "&";
-        if (employeeId === null)
-            throw new Error("The parameter 'employeeId' cannot be null.");
-        else if (employeeId !== undefined)
-            url_ += "employeeId=" + encodeURIComponent("" + employeeId) + "&";
+        if (zebraId === null) throw new Error("The parameter 'zebraId' cannot be null.");
+        else if (zebraId !== undefined) url_ += "zebraId=" + encodeURIComponent("" + zebraId) + "&";
+        if (employeeId === null) throw new Error("The parameter 'employeeId' cannot be null.");
+        else if (employeeId !== undefined) url_ += "employeeId=" + encodeURIComponent("" + employeeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetZebraCarOwner(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetZebraCarOwner(_response);
+            });
     }
 
-    protected processGetZebraCarOwner(response: AxiosResponse): Promise<GetZebraCarOwnerDtoResponseListServiceResponse> {
+    protected processGetZebraCarOwner(
+        response: AxiosResponse
+    ): Promise<GetZebraCarOwnerDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -2855,10 +2968,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetZebraCarOwnerDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2868,40 +2980,43 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Title (คำนำหน้าชื่อ) personTypeId : 1, 3 = สถานที่ , 2 = บุคคล
-     * @param titleId (optional) 
-     * @param personTypeId (optional) 
+     * @param titleId (optional)
+     * @param personTypeId (optional)
      * @return Success
      */
-    getTitle(titleId?: number | undefined, personTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetTitleDtoResponseListServiceResponse> {
+    getTitle(
+        titleId?: number | undefined,
+        personTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetTitleDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/title?";
-        if (titleId === null)
-            throw new Error("The parameter 'titleId' cannot be null.");
-        else if (titleId !== undefined)
-            url_ += "titleId=" + encodeURIComponent("" + titleId) + "&";
-        if (personTypeId === null)
-            throw new Error("The parameter 'personTypeId' cannot be null.");
-        else if (personTypeId !== undefined)
-            url_ += "personTypeId=" + encodeURIComponent("" + personTypeId) + "&";
+        if (titleId === null) throw new Error("The parameter 'titleId' cannot be null.");
+        else if (titleId !== undefined) url_ += "titleId=" + encodeURIComponent("" + titleId) + "&";
+        if (personTypeId === null) throw new Error("The parameter 'personTypeId' cannot be null.");
+        else if (personTypeId !== undefined) url_ += "personTypeId=" + encodeURIComponent("" + personTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetTitle(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetTitle(_response);
+            });
     }
 
     protected processGetTitle(response: AxiosResponse): Promise<GetTitleDtoResponseListServiceResponse> {
@@ -2917,10 +3032,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetTitleDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2930,13 +3044,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล RelationType (ประเภทความสัมพันธ์)
-     * @param relationTypeId (optional) 
+     * @param relationTypeId (optional)
      * @return Success
      */
-    getRelationType(relationTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetRelationTypeDtoResponseListServiceResponse> {
+    getRelationType(
+        relationTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetRelationTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/relationtype?";
-        if (relationTypeId === null)
-            throw new Error("The parameter 'relationTypeId' cannot be null.");
+        if (relationTypeId === null) throw new Error("The parameter 'relationTypeId' cannot be null.");
         else if (relationTypeId !== undefined)
             url_ += "relationTypeId=" + encodeURIComponent("" + relationTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -2945,20 +3061,23 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetRelationType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetRelationType(_response);
+            });
     }
 
     protected processGetRelationType(response: AxiosResponse): Promise<GetRelationTypeDtoResponseListServiceResponse> {
@@ -2974,10 +3093,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetRelationTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -2987,35 +3105,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Beneficiary (ผู้รับผลประโยชน์) By PolicyCode
-     * @param policyCode (optional) 
+     * @param policyCode (optional)
      * @return Success
      */
-    getBeneficiary(policyCode?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetBeneficiaryDtoResponseListServiceResponse> {
+    getBeneficiary(
+        policyCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetBeneficiaryDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/beneficiary?";
-        if (policyCode === null)
-            throw new Error("The parameter 'policyCode' cannot be null.");
-        else if (policyCode !== undefined)
-            url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetBeneficiary(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBeneficiary(_response);
+            });
     }
 
     protected processGetBeneficiary(response: AxiosResponse): Promise<GetBeneficiaryDtoResponseListServiceResponse> {
@@ -3031,10 +3153,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetBeneficiaryDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3044,65 +3165,65 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล SIMB
-     * @param formatTypeId (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param isUseOften (optional) 
-     * @param productTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
-     * @param plandId (optional) 
+     * @param formatTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param isUseOften (optional)
+     * @param productTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param plandId (optional)
      * @return Success
      */
-    getSimB(formatTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, isUseOften?: boolean | undefined, productTypeId?: number | undefined, causeOfIncidentId?: number | undefined, plandId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<InputToStandardMappingDtoResponseListServiceResponse> {
+    getSimB(
+        formatTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        isUseOften?: boolean | undefined,
+        productTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        plandId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<InputToStandardMappingDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/simb?";
-        if (formatTypeId === null)
-            throw new Error("The parameter 'formatTypeId' cannot be null.");
-        else if (formatTypeId !== undefined)
-            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null)
-            throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined)
-            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (isUseOften === null)
-            throw new Error("The parameter 'isUseOften' cannot be null.");
-        else if (isUseOften !== undefined)
-            url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (causeOfIncidentId === null)
-            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (isUseOften === null) throw new Error("The parameter 'isUseOften' cannot be null.");
+        else if (isUseOften !== undefined) url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
-        if (plandId === null)
-            throw new Error("The parameter 'plandId' cannot be null.");
-        else if (plandId !== undefined)
-            url_ += "plandId=" + encodeURIComponent("" + plandId) + "&";
+        if (plandId === null) throw new Error("The parameter 'plandId' cannot be null.");
+        else if (plandId !== undefined) url_ += "plandId=" + encodeURIComponent("" + plandId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetSimB(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetSimB(_response);
+            });
     }
 
     protected processGetSimB(response: AxiosResponse): Promise<InputToStandardMappingDtoResponseListServiceResponse> {
@@ -3118,10 +3239,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<InputToStandardMappingDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3131,63 +3251,66 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล SIMB Category
-     * @param formatTypeId (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param productTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
-     * @param planId (optional) 
+     * @param formatTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param productTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param planId (optional)
      * @return Success
      */
-    getSimBCategory(formatTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, productTypeId?: number | undefined, causeOfIncidentId?: number | undefined, planId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
+    getSimBCategory(
+        formatTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        productTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        planId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/simb/category?";
-        if (formatTypeId === null)
-            throw new Error("The parameter 'formatTypeId' cannot be null.");
-        else if (formatTypeId !== undefined)
-            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null)
-            throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined)
-            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (causeOfIncidentId === null)
-            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
-        if (planId === null)
-            throw new Error("The parameter 'planId' cannot be null.");
-        else if (planId !== undefined)
-            url_ += "planId=" + encodeURIComponent("" + planId) + "&";
+        if (planId === null) throw new Error("The parameter 'planId' cannot be null.");
+        else if (planId !== undefined) url_ += "planId=" + encodeURIComponent("" + planId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetSimBCategory(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetSimBCategory(_response);
+            });
     }
 
-    protected processGetSimBCategory(response: AxiosResponse): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
+    protected processGetSimBCategory(
+        response: AxiosResponse
+    ): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3200,10 +3323,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<StandardMedicalExpenseCategoryDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3213,35 +3335,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Province List (จังหวัด)
-     * @param provinceId (optional) 
+     * @param provinceId (optional)
      * @return Success
      */
-    getProvince(provinceId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetProvinceDtoResponseListServiceResponse> {
+    getProvince(
+        provinceId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetProvinceDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/province?";
-        if (provinceId === null)
-            throw new Error("The parameter 'provinceId' cannot be null.");
-        else if (provinceId !== undefined)
-            url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
+        if (provinceId === null) throw new Error("The parameter 'provinceId' cannot be null.");
+        else if (provinceId !== undefined) url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetProvince(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetProvince(_response);
+            });
     }
 
     protected processGetProvince(response: AxiosResponse): Promise<GetProvinceDtoResponseListServiceResponse> {
@@ -3257,10 +3383,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetProvinceDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3270,35 +3395,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Branch (สาขา)
-     * @param branchId (optional) 
+     * @param branchId (optional)
      * @return Success
      */
-    getBranch(branchId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetBranchDtoResponseListServiceResponse> {
+    getBranch(
+        branchId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetBranchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/branch?";
-        if (branchId === null)
-            throw new Error("The parameter 'branchId' cannot be null.");
-        else if (branchId !== undefined)
-            url_ += "branchId=" + encodeURIComponent("" + branchId) + "&";
+        if (branchId === null) throw new Error("The parameter 'branchId' cannot be null.");
+        else if (branchId !== undefined) url_ += "branchId=" + encodeURIComponent("" + branchId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetBranch(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBranch(_response);
+            });
     }
 
     protected processGetBranch(response: AxiosResponse): Promise<GetBranchDtoResponseListServiceResponse> {
@@ -3314,10 +3443,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetBranchDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3327,35 +3455,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Organize (ธนาคาร)
-     * @param organizeId (optional) 
+     * @param organizeId (optional)
      * @return Success
      */
-    getAllBank(organizeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetOrganizeDtoResponseListServiceResponse> {
+    getAllBank(
+        organizeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetOrganizeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/bank?";
-        if (organizeId === null)
-            throw new Error("The parameter 'organizeId' cannot be null.");
-        else if (organizeId !== undefined)
-            url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
+        if (organizeId === null) throw new Error("The parameter 'organizeId' cannot be null.");
+        else if (organizeId !== undefined) url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetAllBank(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAllBank(_response);
+            });
     }
 
     protected processGetAllBank(response: AxiosResponse): Promise<GetOrganizeDtoResponseListServiceResponse> {
@@ -3371,10 +3503,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetOrganizeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3384,35 +3515,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Organize (โรงพยาบาล)
-     * @param organizeId (optional) 
+     * @param organizeId (optional)
      * @return Success
      */
-    getAllHospital(organizeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetOrganizeDtoResponseListServiceResponse> {
+    getAllHospital(
+        organizeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetOrganizeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/hospital?";
-        if (organizeId === null)
-            throw new Error("The parameter 'organizeId' cannot be null.");
-        else if (organizeId !== undefined)
-            url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
+        if (organizeId === null) throw new Error("The parameter 'organizeId' cannot be null.");
+        else if (organizeId !== undefined) url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetAllHospital(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAllHospital(_response);
+            });
     }
 
     protected processGetAllHospital(response: AxiosResponse): Promise<GetOrganizeDtoResponseListServiceResponse> {
@@ -3428,10 +3563,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetOrganizeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3441,43 +3575,48 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Organize (โรงเรียน)
-     * @param provinceId (optional) 
-     * @param organizeId (optional) 
+     * @param provinceId (optional)
+     * @param organizeId (optional)
      * @return Success
      */
-    getSchoolByProvinceId(provinceId?: number | undefined, organizeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetOrganizeDtoResponseListServiceResponse> {
+    getSchoolByProvinceId(
+        provinceId?: number | undefined,
+        organizeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetOrganizeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/school?";
-        if (provinceId === null)
-            throw new Error("The parameter 'provinceId' cannot be null.");
-        else if (provinceId !== undefined)
-            url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
-        if (organizeId === null)
-            throw new Error("The parameter 'organizeId' cannot be null.");
-        else if (organizeId !== undefined)
-            url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
+        if (provinceId === null) throw new Error("The parameter 'provinceId' cannot be null.");
+        else if (provinceId !== undefined) url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
+        if (organizeId === null) throw new Error("The parameter 'organizeId' cannot be null.");
+        else if (organizeId !== undefined) url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetSchoolByProvinceId(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetSchoolByProvinceId(_response);
+            });
     }
 
-    protected processGetSchoolByProvinceId(response: AxiosResponse): Promise<GetOrganizeDtoResponseListServiceResponse> {
+    protected processGetSchoolByProvinceId(
+        response: AxiosResponse
+    ): Promise<GetOrganizeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3490,10 +3629,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetOrganizeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3503,38 +3641,36 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Organize (บริษัทประกัน)
-     * @param organizeId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param organizeId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getInsuranceCompany(organizeId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
+    getInsuranceCompany(
+        organizeId?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/insurance/filter?";
-        if (organizeId === null)
-            throw new Error("The parameter 'organizeId' cannot be null.");
-        else if (organizeId !== undefined)
-            url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (organizeId === null) throw new Error("The parameter 'organizeId' cannot be null.");
+        else if (organizeId !== undefined) url_ += "organizeId=" + encodeURIComponent("" + organizeId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
-        if (page === null)
-            throw new Error("The parameter 'page' cannot be null.");
-        else if (page !== undefined)
-            url_ += "Page=" + encodeURIComponent("" + page) + "&";
-        if (recordsPerPage === null)
-            throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
         else if (recordsPerPage !== undefined)
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3543,23 +3679,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetInsuranceCompany(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetInsuranceCompany(_response);
+            });
     }
 
-    protected processGetInsuranceCompany(response: AxiosResponse): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
+    protected processGetInsuranceCompany(
+        response: AxiosResponse
+    ): Promise<GetInsuranceCompanyDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3572,10 +3713,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetInsuranceCompanyDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3585,13 +3725,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล DisabilityLossPart (ส่วนของร่างกายที่พิการ)
-     * @param disabilityLossPartId (optional) 
+     * @param disabilityLossPartId (optional)
      * @return Success
      */
-    getDisabilityLossPart(disabilityLossPartId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDisabilityLossPartDtoResponseListServiceResponse> {
+    getDisabilityLossPart(
+        disabilityLossPartId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDisabilityLossPartDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/disability/losspart?";
-        if (disabilityLossPartId === null)
-            throw new Error("The parameter 'disabilityLossPartId' cannot be null.");
+        if (disabilityLossPartId === null) throw new Error("The parameter 'disabilityLossPartId' cannot be null.");
         else if (disabilityLossPartId !== undefined)
             url_ += "disabilityLossPartId=" + encodeURIComponent("" + disabilityLossPartId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3600,23 +3742,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDisabilityLossPart(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDisabilityLossPart(_response);
+            });
     }
 
-    protected processGetDisabilityLossPart(response: AxiosResponse): Promise<GetDisabilityLossPartDtoResponseListServiceResponse> {
+    protected processGetDisabilityLossPart(
+        response: AxiosResponse
+    ): Promise<GetDisabilityLossPartDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3629,10 +3776,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDisabilityLossPartDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3642,13 +3788,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get จ้อมูล BodyPart by DisabilityLossPartId
-     * @param disabilityLossPartId (optional) 
+     * @param disabilityLossPartId (optional)
      * @return Success
      */
-    getBodyPartByDisabilityLossPart(disabilityLossPartId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse> {
+    getBodyPartByDisabilityLossPart(
+        disabilityLossPartId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/disability/bodypart?";
-        if (disabilityLossPartId === null)
-            throw new Error("The parameter 'disabilityLossPartId' cannot be null.");
+        if (disabilityLossPartId === null) throw new Error("The parameter 'disabilityLossPartId' cannot be null.");
         else if (disabilityLossPartId !== undefined)
             url_ += "disabilityLossPartId=" + encodeURIComponent("" + disabilityLossPartId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3657,23 +3805,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetBodyPartByDisabilityLossPart(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBodyPartByDisabilityLossPart(_response);
+            });
     }
 
-    protected processGetBodyPartByDisabilityLossPart(response: AxiosResponse): Promise<GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse> {
+    protected processGetBodyPartByDisabilityLossPart(
+        response: AxiosResponse
+    ): Promise<GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3686,10 +3839,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetBodyPartByDisabilityLossPartDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3699,13 +3851,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล PaymentStatus (สถานะการโอนเงิน)
-     * @param paymentStatusId (optional) 
+     * @param paymentStatusId (optional)
      * @return Success
      */
-    getPaymentStatus(paymentStatusId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetPaymentStatusDtoResponseListServiceResponse> {
+    getPaymentStatus(
+        paymentStatusId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPaymentStatusDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/paymentstatus?";
-        if (paymentStatusId === null)
-            throw new Error("The parameter 'paymentStatusId' cannot be null.");
+        if (paymentStatusId === null) throw new Error("The parameter 'paymentStatusId' cannot be null.");
         else if (paymentStatusId !== undefined)
             url_ += "paymentStatusId=" + encodeURIComponent("" + paymentStatusId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3714,23 +3868,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetPaymentStatus(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPaymentStatus(_response);
+            });
     }
 
-    protected processGetPaymentStatus(response: AxiosResponse): Promise<GetPaymentStatusDtoResponseListServiceResponse> {
+    protected processGetPaymentStatus(
+        response: AxiosResponse
+    ): Promise<GetPaymentStatusDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3743,10 +3902,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetPaymentStatusDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3756,18 +3914,20 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล AdjustmentReason (AdjustmentTypeId 2 = โอนเพิ่ม, 3 = คืนเงิน)
-     * @param adjustmentTypeId (optional) 
-     * @param adjustmentReasonId (optional) 
+     * @param adjustmentTypeId (optional)
+     * @param adjustmentReasonId (optional)
      * @return Success
      */
-    getAdjustmentReason(adjustmentTypeId?: number | undefined, adjustmentReasonId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetAdjustmentReasonDtoResponseListServiceResponse> {
+    getAdjustmentReason(
+        adjustmentTypeId?: number | undefined,
+        adjustmentReasonId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetAdjustmentReasonDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/adjustment/reason?";
-        if (adjustmentTypeId === null)
-            throw new Error("The parameter 'adjustmentTypeId' cannot be null.");
+        if (adjustmentTypeId === null) throw new Error("The parameter 'adjustmentTypeId' cannot be null.");
         else if (adjustmentTypeId !== undefined)
             url_ += "adjustmentTypeId=" + encodeURIComponent("" + adjustmentTypeId) + "&";
-        if (adjustmentReasonId === null)
-            throw new Error("The parameter 'adjustmentReasonId' cannot be null.");
+        if (adjustmentReasonId === null) throw new Error("The parameter 'adjustmentReasonId' cannot be null.");
         else if (adjustmentReasonId !== undefined)
             url_ += "adjustmentReasonId=" + encodeURIComponent("" + adjustmentReasonId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3776,23 +3936,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetAdjustmentReason(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAdjustmentReason(_response);
+            });
     }
 
-    protected processGetAdjustmentReason(response: AxiosResponse): Promise<GetAdjustmentReasonDtoResponseListServiceResponse> {
+    protected processGetAdjustmentReason(
+        response: AxiosResponse
+    ): Promise<GetAdjustmentReasonDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3805,10 +3970,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetAdjustmentReasonDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3818,13 +3982,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล DeductionSource (ช่องทางการหักเงิน)
-     * @param deductionSourceId (optional) 
+     * @param deductionSourceId (optional)
      * @return Success
      */
-    getDeductionSource(deductionSourceId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDeductionSourceDtoResponseListServiceResponse> {
+    getDeductionSource(
+        deductionSourceId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDeductionSourceDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/deduction-source?";
-        if (deductionSourceId === null)
-            throw new Error("The parameter 'deductionSourceId' cannot be null.");
+        if (deductionSourceId === null) throw new Error("The parameter 'deductionSourceId' cannot be null.");
         else if (deductionSourceId !== undefined)
             url_ += "deductionSourceId=" + encodeURIComponent("" + deductionSourceId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3833,23 +3999,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDeductionSource(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDeductionSource(_response);
+            });
     }
 
-    protected processGetDeductionSource(response: AxiosResponse): Promise<GetDeductionSourceDtoResponseListServiceResponse> {
+    protected processGetDeductionSource(
+        response: AxiosResponse
+    ): Promise<GetDeductionSourceDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3862,10 +4033,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDeductionSourceDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3875,35 +4045,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล Decision (ผลการพิจารณา)
-     * @param decisionId (optional) 
+     * @param decisionId (optional)
      * @return Success
      */
-    getDecision(decisionId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDecisionDtoResponseListServiceResponse> {
+    getDecision(
+        decisionId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDecisionDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/claim/decision?";
-        if (decisionId === null)
-            throw new Error("The parameter 'decisionId' cannot be null.");
-        else if (decisionId !== undefined)
-            url_ += "decisionId=" + encodeURIComponent("" + decisionId) + "&";
+        if (decisionId === null) throw new Error("The parameter 'decisionId' cannot be null.");
+        else if (decisionId !== undefined) url_ += "decisionId=" + encodeURIComponent("" + decisionId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDecision(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDecision(_response);
+            });
     }
 
     protected processGetDecision(response: AxiosResponse): Promise<GetDecisionDtoResponseListServiceResponse> {
@@ -3919,10 +4093,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDecisionDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3932,13 +4105,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล ClaimTransactionType (ประเภทธุรกรรมเคลม)
-     * @param claimTransactionTypeId (optional) 
+     * @param claimTransactionTypeId (optional)
      * @return Success
      */
-    getClaimTransactionType(claimTransactionTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetClaimTransactionTypeDtoResponseListServiceResponse> {
+    getClaimTransactionType(
+        claimTransactionTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetClaimTransactionTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/claim/transaction-type?";
-        if (claimTransactionTypeId === null)
-            throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
+        if (claimTransactionTypeId === null) throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
         else if (claimTransactionTypeId !== undefined)
             url_ += "claimTransactionTypeId=" + encodeURIComponent("" + claimTransactionTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -3947,23 +4122,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetClaimTransactionType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimTransactionType(_response);
+            });
     }
 
-    protected processGetClaimTransactionType(response: AxiosResponse): Promise<GetClaimTransactionTypeDtoResponseListServiceResponse> {
+    protected processGetClaimTransactionType(
+        response: AxiosResponse
+    ): Promise<GetClaimTransactionTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -3976,10 +4156,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetClaimTransactionTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -3989,43 +4168,49 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล DecisionReason (สาเหตุจากผลการพิจารณา)
-     * @param decisionReasonId (optional) 
-     * @param decisionId (optional) 
+     * @param decisionReasonId (optional)
+     * @param decisionId (optional)
      * @return Success
      */
-    getDecisionReason(decisionReasonId?: number | undefined, decisionId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDecisionReasonDtoResponseListServiceResponse> {
+    getDecisionReason(
+        decisionReasonId?: number | undefined,
+        decisionId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDecisionReasonDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/claim/decision/reason?";
-        if (decisionReasonId === null)
-            throw new Error("The parameter 'decisionReasonId' cannot be null.");
+        if (decisionReasonId === null) throw new Error("The parameter 'decisionReasonId' cannot be null.");
         else if (decisionReasonId !== undefined)
             url_ += "decisionReasonId=" + encodeURIComponent("" + decisionReasonId) + "&";
-        if (decisionId === null)
-            throw new Error("The parameter 'decisionId' cannot be null.");
-        else if (decisionId !== undefined)
-            url_ += "decisionId=" + encodeURIComponent("" + decisionId) + "&";
+        if (decisionId === null) throw new Error("The parameter 'decisionId' cannot be null.");
+        else if (decisionId !== undefined) url_ += "decisionId=" + encodeURIComponent("" + decisionId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDecisionReason(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDecisionReason(_response);
+            });
     }
 
-    protected processGetDecisionReason(response: AxiosResponse): Promise<GetDecisionReasonDtoResponseListServiceResponse> {
+    protected processGetDecisionReason(
+        response: AxiosResponse
+    ): Promise<GetDecisionReasonDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4038,10 +4223,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDecisionReasonDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4053,10 +4237,12 @@ export class MastersClient {
      * API สำหรับ Get ข้อมูล EmployeeClaimPaymentLimit (วงเงินผู้คีย์เคลม)
      * @return Success
      */
-    employeePaymentLimit(userId: number, cancelToken?: CancelToken | undefined): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
+    employeePaymentLimit(
+        userId: number,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
         let url_ = this.baseUrl + "/Masters/employee-payment-limit/{userId}";
-        if (userId === undefined || userId === null)
-            throw new Error("The parameter 'userId' must be defined.");
+        if (userId === undefined || userId === null) throw new Error("The parameter 'userId' must be defined.");
         url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -4064,23 +4250,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processEmployeePaymentLimit(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processEmployeePaymentLimit(_response);
+            });
     }
 
-    protected processEmployeePaymentLimit(response: AxiosResponse): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
+    protected processEmployeePaymentLimit(
+        response: AxiosResponse
+    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4093,10 +4284,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4106,13 +4296,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล DocumentReviewStatus (สถานะการตรวจเอกสาร)
-     * @param documentReviewStatusId (optional) 
+     * @param documentReviewStatusId (optional)
      * @return Success
      */
-    getDocumentReviewStatus(documentReviewStatusId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentReviewStatusDtoResponseListServiceResponse> {
+    getDocumentReviewStatus(
+        documentReviewStatusId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDocumentReviewStatusDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/document/review/status?";
-        if (documentReviewStatusId === null)
-            throw new Error("The parameter 'documentReviewStatusId' cannot be null.");
+        if (documentReviewStatusId === null) throw new Error("The parameter 'documentReviewStatusId' cannot be null.");
         else if (documentReviewStatusId !== undefined)
             url_ += "documentReviewStatusId=" + encodeURIComponent("" + documentReviewStatusId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -4121,23 +4313,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDocumentReviewStatus(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDocumentReviewStatus(_response);
+            });
     }
 
-    protected processGetDocumentReviewStatus(response: AxiosResponse): Promise<GetDocumentReviewStatusDtoResponseListServiceResponse> {
+    protected processGetDocumentReviewStatus(
+        response: AxiosResponse
+    ): Promise<GetDocumentReviewStatusDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4150,10 +4347,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDocumentReviewStatusDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4163,10 +4359,13 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล DocumentRecipientType (ประเภทผู้รับเอกสาร)
-     * @param documentRecipientTypeId (optional) 
+     * @param documentRecipientTypeId (optional)
      * @return Success
      */
-    getDocumentRecipientType(documentRecipientTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
+    getDocumentRecipientType(
+        documentRecipientTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/document/recipient-type?";
         if (documentRecipientTypeId === null)
             throw new Error("The parameter 'documentRecipientTypeId' cannot be null.");
@@ -4178,23 +4377,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetDocumentRecipientType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDocumentRecipientType(_response);
+            });
     }
 
-    protected processGetDocumentRecipientType(response: AxiosResponse): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
+    protected processGetDocumentRecipientType(
+        response: AxiosResponse
+    ): Promise<GetDocumentRecipientTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4207,10 +4411,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetDocumentRecipientTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4220,11 +4423,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล BankAccountRelationType (ประเภทความสัมพันธ์ของบัญชีธนาคาร) BankAccountRelationGroupId : 1 = PH , PA , ClaimMisc : 2 = Motor
-     * @param bankAccountRelationTypeId (optional) 
-     * @param bankAccountRelationGroupId (optional) 
+     * @param bankAccountRelationTypeId (optional)
+     * @param bankAccountRelationGroupId (optional)
      * @return Success
      */
-    getBankAccountRelationType(bankAccountRelationTypeId?: number | undefined, bankAccountRelationGroupId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
+    getBankAccountRelationType(
+        bankAccountRelationTypeId?: number | undefined,
+        bankAccountRelationGroupId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/bankaccount/relation/type?";
         if (bankAccountRelationTypeId === null)
             throw new Error("The parameter 'bankAccountRelationTypeId' cannot be null.");
@@ -4240,23 +4447,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetBankAccountRelationType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBankAccountRelationType(_response);
+            });
     }
 
-    protected processGetBankAccountRelationType(response: AxiosResponse): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
+    protected processGetBankAccountRelationType(
+        response: AxiosResponse
+    ): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4269,10 +4481,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetBankAccountRelationTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4282,18 +4493,20 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล ContactPersonType (ประเภทผู้ติดต่อ) ContactPersonGroupId : 1 = PH , DeathClaim : 2 = PA, 3 = Motor
-     * @param contactPersonTypeId (optional) 
-     * @param contactPersonGroupId (optional) 
+     * @param contactPersonTypeId (optional)
+     * @param contactPersonGroupId (optional)
      * @return Success
      */
-    getContactPersonType(contactPersonTypeId?: number | undefined, contactPersonGroupId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
+    getContactPersonType(
+        contactPersonTypeId?: number | undefined,
+        contactPersonGroupId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/contactperson/type?";
-        if (contactPersonTypeId === null)
-            throw new Error("The parameter 'contactPersonTypeId' cannot be null.");
+        if (contactPersonTypeId === null) throw new Error("The parameter 'contactPersonTypeId' cannot be null.");
         else if (contactPersonTypeId !== undefined)
             url_ += "contactPersonTypeId=" + encodeURIComponent("" + contactPersonTypeId) + "&";
-        if (contactPersonGroupId === null)
-            throw new Error("The parameter 'contactPersonGroupId' cannot be null.");
+        if (contactPersonGroupId === null) throw new Error("The parameter 'contactPersonGroupId' cannot be null.");
         else if (contactPersonGroupId !== undefined)
             url_ += "contactPersonGroupId=" + encodeURIComponent("" + contactPersonGroupId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -4302,23 +4515,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetContactPersonType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetContactPersonType(_response);
+            });
     }
 
-    protected processGetContactPersonType(response: AxiosResponse): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
+    protected processGetContactPersonType(
+        response: AxiosResponse
+    ): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4331,10 +4549,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetContactPersonTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4344,18 +4561,20 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล NonCoveredReason (สาเหตุที่ไม่คุ้มครอง)
-     * @param nonCoveredReasonId (optional) 
-     * @param coverageTypeId (optional) 
+     * @param nonCoveredReasonId (optional)
+     * @param coverageTypeId (optional)
      * @return Success
      */
-    getNonCoveredReason(nonCoveredReasonId?: number | undefined, coverageTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetNonCoveredReasonDtoResponseListServiceResponse> {
+    getNonCoveredReason(
+        nonCoveredReasonId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetNonCoveredReasonDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/noncoveredreason?";
-        if (nonCoveredReasonId === null)
-            throw new Error("The parameter 'nonCoveredReasonId' cannot be null.");
+        if (nonCoveredReasonId === null) throw new Error("The parameter 'nonCoveredReasonId' cannot be null.");
         else if (nonCoveredReasonId !== undefined)
             url_ += "nonCoveredReasonId=" + encodeURIComponent("" + nonCoveredReasonId) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -4364,23 +4583,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetNonCoveredReason(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetNonCoveredReason(_response);
+            });
     }
 
-    protected processGetNonCoveredReason(response: AxiosResponse): Promise<GetNonCoveredReasonDtoResponseListServiceResponse> {
+    protected processGetNonCoveredReason(
+        response: AxiosResponse
+    ): Promise<GetNonCoveredReasonDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4393,10 +4617,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetNonCoveredReasonDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4406,13 +4629,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล IncidentType (เหตุของการเคลม)
-     * @param incidentTypeId (optional) 
+     * @param incidentTypeId (optional)
      * @return Success
      */
-    getIncidentType(incidentTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<IncidentTypeDtoResponseListServiceResponse> {
+    getIncidentType(
+        incidentTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<IncidentTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/incidenttype?";
-        if (incidentTypeId === null)
-            throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
         else if (incidentTypeId !== undefined)
             url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -4421,20 +4646,23 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetIncidentType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetIncidentType(_response);
+            });
     }
 
     protected processGetIncidentType(response: AxiosResponse): Promise<IncidentTypeDtoResponseListServiceResponse> {
@@ -4450,10 +4678,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<IncidentTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4463,53 +4690,52 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล CoverageType, MedicalType, CauseOfIncident By IncidentTypeId
-     * @param incidentTypeId (optional) 
-     * @param claimSourceId (optional) 
-     * @param productTypeId (optional) 
-     * @param productCategoryCode (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
-     * @param isClaimContinue (optional) 
-     * @param initialClaimId (optional) 
+     * @param incidentTypeId (optional)
+     * @param claimSourceId (optional)
+     * @param productTypeId (optional)
+     * @param productCategoryCode (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param isClaimContinue (optional)
+     * @param initialClaimId (optional)
      * @return Success
      */
-    getIncidentTypeMapping(incidentTypeId?: number | undefined, claimSourceId?: number | undefined, productTypeId?: number | undefined, productCategoryCode?: string | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, isClaimContinue?: boolean | undefined, initialClaimId?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
+    getIncidentTypeMapping(
+        incidentTypeId?: number | undefined,
+        claimSourceId?: number | undefined,
+        productTypeId?: number | undefined,
+        productCategoryCode?: string | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        isClaimContinue?: boolean | undefined,
+        initialClaimId?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/incidenttype/mapping?";
-        if (incidentTypeId === null)
-            throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
         else if (incidentTypeId !== undefined)
             url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
-        if (claimSourceId === null)
-            throw new Error("The parameter 'claimSourceId' cannot be null.");
-        else if (claimSourceId !== undefined)
-            url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (productCategoryCode === null)
-            throw new Error("The parameter 'productCategoryCode' cannot be null.");
+        if (claimSourceId === null) throw new Error("The parameter 'claimSourceId' cannot be null.");
+        else if (claimSourceId !== undefined) url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (productCategoryCode === null) throw new Error("The parameter 'productCategoryCode' cannot be null.");
         else if (productCategoryCode !== undefined)
             url_ += "productCategoryCode=" + encodeURIComponent("" + productCategoryCode) + "&";
-        if (coverageTypeId === null)
-            throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
         else if (coverageTypeId !== undefined)
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
-        if (medicalTypeId === null)
-            throw new Error("The parameter 'medicalTypeId' cannot be null.");
-        else if (medicalTypeId !== undefined)
-            url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (causeOfIncidentId === null)
-            throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
+        else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
-        if (isClaimContinue === null)
-            throw new Error("The parameter 'isClaimContinue' cannot be null.");
+        if (isClaimContinue === null) throw new Error("The parameter 'isClaimContinue' cannot be null.");
         else if (isClaimContinue !== undefined)
             url_ += "isClaimContinue=" + encodeURIComponent("" + isClaimContinue) + "&";
-        if (initialClaimId === null)
-            throw new Error("The parameter 'initialClaimId' cannot be null.");
+        if (initialClaimId === null) throw new Error("The parameter 'initialClaimId' cannot be null.");
         else if (initialClaimId !== undefined)
             url_ += "initialClaimId=" + encodeURIComponent("" + initialClaimId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -4518,23 +4744,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetIncidentTypeMapping(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetIncidentTypeMapping(_response);
+            });
     }
 
-    protected processGetIncidentTypeMapping(response: AxiosResponse): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
+    protected processGetIncidentTypeMapping(
+        response: AxiosResponse
+    ): Promise<GetIncidentTypeMappingDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4547,10 +4778,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetIncidentTypeMappingDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4560,35 +4790,39 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล FormatType (ประการจ่าย)
-     * @param formatTypeId (optional) 
+     * @param formatTypeId (optional)
      * @return Success
      */
-    getFormatType(formatTypeId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<FormatTypeDtoResponseListServiceResponse> {
+    getFormatType(
+        formatTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<FormatTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/formatType?";
-        if (formatTypeId === null)
-            throw new Error("The parameter 'formatTypeId' cannot be null.");
-        else if (formatTypeId !== undefined)
-            url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
+        if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
+        else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetFormatType(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetFormatType(_response);
+            });
     }
 
     protected processGetFormatType(response: AxiosResponse): Promise<FormatTypeDtoResponseListServiceResponse> {
@@ -4604,10 +4838,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<FormatTypeDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4617,13 +4850,15 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล ChiefComplaint (อาการสำคัญที่ผู้เคลมแจ้ง)
-     * @param chiefComplaintId (optional) 
+     * @param chiefComplaintId (optional)
      * @return Success
      */
-    getChiefComplaint(chiefComplaintId?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetChiefComplaintDtoResponseListServiceResponse> {
+    getChiefComplaint(
+        chiefComplaintId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetChiefComplaintDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/chiefcomplaint?";
-        if (chiefComplaintId === null)
-            throw new Error("The parameter 'chiefComplaintId' cannot be null.");
+        if (chiefComplaintId === null) throw new Error("The parameter 'chiefComplaintId' cannot be null.");
         else if (chiefComplaintId !== undefined)
             url_ += "chiefComplaintId=" + encodeURIComponent("" + chiefComplaintId) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -4632,23 +4867,28 @@ export class MastersClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetChiefComplaint(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetChiefComplaint(_response);
+            });
     }
 
-    protected processGetChiefComplaint(response: AxiosResponse): Promise<GetChiefComplaintDtoResponseListServiceResponse> {
+    protected processGetChiefComplaint(
+        response: AxiosResponse
+    ): Promise<GetChiefComplaintDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4661,10 +4901,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetChiefComplaintDtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4674,45 +4913,47 @@ export class MastersClient {
 
     /**
      * API สำหรับ Get ข้อมูล ICD10 (รหัสวินิจฉัยโรค)
-     * @param iCD10Id (optional) 
-     * @param iCD10Code (optional) 
-     * @param isTPA (optional) 
+     * @param iCD10Id (optional)
+     * @param iCD10Code (optional)
+     * @param isTPA (optional)
      * @return Success
      */
-    getICD10(iCD10Id?: number | undefined, iCD10Code?: string | undefined, isTPA?: boolean | undefined, cancelToken?: CancelToken | undefined): Promise<GetICD10DtoResponseListServiceResponse> {
+    getICD10(
+        iCD10Id?: number | undefined,
+        iCD10Code?: string | undefined,
+        isTPA?: boolean | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetICD10DtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/icd10?";
-        if (iCD10Id === null)
-            throw new Error("The parameter 'iCD10Id' cannot be null.");
-        else if (iCD10Id !== undefined)
-            url_ += "ICD10Id=" + encodeURIComponent("" + iCD10Id) + "&";
-        if (iCD10Code === null)
-            throw new Error("The parameter 'iCD10Code' cannot be null.");
-        else if (iCD10Code !== undefined)
-            url_ += "ICD10Code=" + encodeURIComponent("" + iCD10Code) + "&";
-        if (isTPA === null)
-            throw new Error("The parameter 'isTPA' cannot be null.");
-        else if (isTPA !== undefined)
-            url_ += "isTPA=" + encodeURIComponent("" + isTPA) + "&";
+        if (iCD10Id === null) throw new Error("The parameter 'iCD10Id' cannot be null.");
+        else if (iCD10Id !== undefined) url_ += "ICD10Id=" + encodeURIComponent("" + iCD10Id) + "&";
+        if (iCD10Code === null) throw new Error("The parameter 'iCD10Code' cannot be null.");
+        else if (iCD10Code !== undefined) url_ += "ICD10Code=" + encodeURIComponent("" + iCD10Code) + "&";
+        if (isTPA === null) throw new Error("The parameter 'isTPA' cannot be null.");
+        else if (isTPA !== undefined) url_ += "isTPA=" + encodeURIComponent("" + isTPA) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetICD10(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetICD10(_response);
+            });
     }
 
     protected processGetICD10(response: AxiosResponse): Promise<GetICD10DtoResponseListServiceResponse> {
@@ -4728,10 +4969,9 @@ export class MastersClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetICD10DtoResponseListServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -4942,7 +5182,7 @@ export interface BillingInsuredDto {
 
 export interface BillingListDto {
     items?: BillingListItemDto[] | undefined;
-    counts?: { [key: string]: number; } | undefined;
+    counts?: { [key: string]: number } | undefined;
 }
 
 export interface BillingListDtoServiceResponse {
@@ -5410,8 +5650,7 @@ export interface CaseV2Request {
     beneficiaries?: BeneficiaryV2Request[] | undefined;
 }
 
-export interface CheckEligibleDtoResponse {
-}
+export interface CheckEligibleDtoResponse {}
 
 export interface CheckEligibleDtoResponseListServiceResponse {
     data?: CheckEligibleDtoResponse[] | undefined;
@@ -7146,10 +7385,10 @@ export class ApiException extends Error {
     message: string;
     status: number;
     response: string;
-    headers: { [key: string]: any; };
+    headers: { [key: string]: any };
     result: any;
 
-    constructor(message: string, status: number, response: string, headers: { [key: string]: any; }, result: any) {
+    constructor(message: string, status: number, response: string, headers: { [key: string]: any }, result: any) {
         super();
 
         this.message = message;
@@ -7166,11 +7405,15 @@ export class ApiException extends Error {
     }
 }
 
-function throwException(message: string, status: number, response: string, headers: { [key: string]: any; }, result?: any): any {
-    if (result !== null && result !== undefined)
-        throw result;
-    else
-        throw new ApiException(message, status, response, headers, null);
+function throwException(
+    message: string,
+    status: number,
+    response: string,
+    headers: { [key: string]: any },
+    result?: any
+): any {
+    if (result !== null && result !== undefined) throw result;
+    else throw new ApiException(message, status, response, headers, null);
 }
 
 function isAxiosError(obj: any | undefined): obj is AxiosError {

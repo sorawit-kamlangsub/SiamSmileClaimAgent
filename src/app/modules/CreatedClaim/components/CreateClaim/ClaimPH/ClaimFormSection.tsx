@@ -64,6 +64,8 @@ export const claimStepBoxSx = {
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const {
         formik,
+        isContinuous,
+        isOldClaimLoading,
         incidentType,
         coverageType,
         medicalType,
@@ -316,6 +318,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
+                                    disabled={isContinuous}
                                 />
                             </Box>
                         </Grid>
@@ -492,7 +495,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             <>
                                 {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
-                                        <CD10Autocomplete name={`diagnoses.${index}.icd10Id`} formik={formik} />
+                                        <CD10Autocomplete
+                                            name={`diagnoses.${index}.icd10Id`}
+                                            formik={formik}
+                                            loading={isOldClaimLoading}
+                                            disabled={isOldClaimLoading}
+                                        />
                                     </Grid>
                                 ))}
                                 <Grid item xs={12}>

@@ -22,6 +22,8 @@ type FormikAutocompleteApiProp = {
     selectedCallback?: (item: any) => void;
     filterSelectedOptions?: boolean;
     useFocusError?: boolean;
+    /** loading จากภายนอก (เช่น รอ prefill ข้อมูล) — รวมกับ loading ของ query ค้นหา */
+    loading?: boolean;
 } & FormControlProps;
 
 const FormikAutocompleteApi = ({
@@ -37,6 +39,7 @@ const FormikAutocompleteApi = ({
     filterSelectedOptions,
     required = false,
     useFocusError = true,
+    loading: externalLoading = false,
     ...formControlProps
 }: FormikAutocompleteApiProp) => {
     const { touched, value, error } = formik.getFieldMeta<string | number | undefined>(name);
@@ -44,7 +47,8 @@ const FormikAutocompleteApi = ({
 
     const [searchText, setSearchText] = useState("");
 
-    const { data: options, isLoading: loading, isError } = useQueryGet(searchText, value);
+    const { data: options, isLoading: queryLoading, isError } = useQueryGet(searchText, value);
+    const loading = queryLoading || externalLoading;
 
     const handleChange = (_event: any, newValue: { [key: string]: any } | null) => {
         if (!newValue) {

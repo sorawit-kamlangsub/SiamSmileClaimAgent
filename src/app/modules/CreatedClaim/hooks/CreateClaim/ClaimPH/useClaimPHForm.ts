@@ -133,6 +133,17 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 }
             }
 
+            // ── ตรวจความคุ้มครองตามวันที่เกิดเหตุ ──
+            const hasBenefitQueryParams = Boolean(
+                values.incidentTypeId &&
+                    values.coverageTypeId &&
+                    values.incidentDate &&
+                    (isMedical ? values.medicalTypeId : isCause ? values.causeOfIncidentId : true)
+            );
+            if (hasBenefitQueryParams && !customerBenefitLoading && (customerBenefit?.data?.length ?? 0) === 0) {
+                errors.incidentDate = "ไม่มีความคุ้มครองในวันที่เกิดเหตุ";
+            }
+
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
             else if ((isDeath || isDisability || isIPD) && Number(values.transferAmount) > maxTransferAmount) {
@@ -378,6 +389,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             isFirstRenderIncident.current = false;
             return;
         }
+        // เคลมต่อเนื่อง: prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuous) return;
         if (!formik.values.incidentTypeId) return;
         formik.setValues(
             {
@@ -426,6 +439,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             prevIncidentTypeId.current = formik.values.incidentTypeId;
             return;
         }
+        // เคลมต่อเนื่อง: prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
+        if (isContinuous) return;
         if (!formik.values.coverageTypeId) return;
 
         const isMedicalAuto =
@@ -490,11 +505,24 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     useEffect(() => {
         formik.setFieldValue("transferAmount", totalOrganLossAmount);
     }, [totalOrganLossAmount]);
+    // เคลมต่อเนื่องปกติ: default ค่าจากเคลมตั้งต้น (ครั้งเดียว)
+    const didPrefillContinuous = useRef(false);
     useEffect(() => {
-        if (isContinuous && oldClaim?.incidentDate) {
-            formik.setFieldValue("incidentDate", dayjs(oldClaim.incidentDate));
-        }
-    }, [isContinuous, oldClaim?.incidentDate]);
+        if (!isContinuous || !oldClaim || didPrefillContinuous.current) return;
+        didPrefillContinuous.current = true;
+        formik.setValues(
+            {
+                ...formik.values,
+                incidentTypeId: oldClaim.incidentTypeId ?? formik.values.incidentTypeId,
+                coverageTypeId: oldClaim.coverageTypeId ?? formik.values.coverageTypeId,
+                medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
+                incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
+                chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
+                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+            },
+            false
+        );
+    }, [isContinuous, oldClaim]);
 
     const maxTransferAmount = useMemo(() => {
         const data = customerBenefit?.data ?? [];
@@ -502,10 +530,13 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     }, [customerBenefit?.data]);
 
     const isIncidentDateDisabled = isContinuous;
+    // เคลมต่อเนื่อง: ยังรอข้อมูลเคลมตั้งต้นมา prefill (icD10Id ฯลฯ)
+    const isOldClaimLoading = isContinuous && !oldClaim;
     return {
         formik,
         isContinuous,
         isIncidentDateDisabled,
+        isOldClaimLoading,
         incidentType,
         coverageType,
         medicalType,

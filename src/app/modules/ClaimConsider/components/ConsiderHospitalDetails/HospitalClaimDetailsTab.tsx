@@ -48,6 +48,9 @@ import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable"
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
+/** เคลมโรงพยาบาล : ปุ่ม "รอแก้ไข" (decisionId 4) ของ ConsiderSection แสดงเป็น "แจ้งแก้ไข" — CR Ver2 ข้อ 2 */
+const HOSPITAL_DECISION_LABEL_OVERRIDES: Partial<Record<number, string>> = { 4: "แจ้งแก้ไข" };
+
 const fmtBaht = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
 type HospitalClaimDetailsTabProps = {
@@ -90,6 +93,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
         handleDocumentCheckChange,
+        handleDocumentScan,
         documentCheckResultOptions,
         claimListTypeConfig,
         detailData,
@@ -372,6 +376,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             <Grid item xs={12}>
                                 <DocumentVerifyTable
                                     onChange={handleDocumentCheckChange}
+                                    onScan={handleDocumentScan}
                                     options={documentCheckResultOptions}
                                     readOnly={readOnly}
                                 />
@@ -382,8 +387,10 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     aplicationCode={customerDetail?.policyCode ?? ""}
                                     decisionReason={decisionReason}
                                     decisionReasonLoading={decisionReasonLoading}
-                                    // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3)
-                                    hiddenDecisionIds={[3]}
+                                    // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 5) — CR Ver2
+                                    hiddenDecisionIds={[3, 5]}
+                                    headingText="แจ้งผลการพิจารณาโรงพยาบาล"
+                                    labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
                                 />
                             </Grid>
                         </Grid>

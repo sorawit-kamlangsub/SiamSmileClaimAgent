@@ -515,6 +515,14 @@ const useHospitalConsiderDetailHook = () => {
         formik.setFieldValue("documentChecks", nextRows);
     };
 
+    /**
+     * สแกน/ค้นหาเอกสารแถวนั้นใหม่ : ล้างผลตรวจเดิมเฉพาะแถวนั้น เพื่อบังคับให้ตรวจซ้ำ (CR Ver2 ข้อ 4)
+     * ไม่ล้างหมายเหตุ — คงค่าเดิมไว้ตาม behavior เดิมของระบบ
+     */
+    const handleDocumentScan = (rowIndex: number) => {
+        handleDocumentCheckChange(rowIndex, "checkResult", "");
+    };
+
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
         formik.values.considerResult
@@ -562,6 +570,7 @@ const useHospitalConsiderDetailHook = () => {
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
         handleDocumentCheckChange,
+        handleDocumentScan,
         documentCheckResultOptions,
         documentCheckResultOptionsLoading,
     };

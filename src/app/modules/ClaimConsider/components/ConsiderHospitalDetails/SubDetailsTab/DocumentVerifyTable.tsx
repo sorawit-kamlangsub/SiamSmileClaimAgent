@@ -37,6 +37,8 @@ type DocumentVerifyTableProps = {
         field: TField,
         value: DocumentCheckRow[TField]
     ) => void;
+    /** สแกน/ค้นหาเอกสารแถวนั้นใหม่ : ล้างผลตรวจเดิมเฉพาะแถวนั้น (CR Ver2 ข้อ 4) */
+    onScan?: (rowIndex: number) => void;
     /** ตัวเลือกผลการตรวจเอกสาร จาก Master API (/api/Masters/document/review/status) */
     options: DocumentCheckResultOption[];
     /** โหมดดูอย่างเดียว : แก้ผลการตรวจและหมายเหตุไม่ได้ แต่ยังกดดูเอกสารได้ */
@@ -47,7 +49,7 @@ type DocumentVerifyTableProps = {
 const isRemarkRequired = (result: DocumentCheckResult | "") =>
     result === DOCUMENT_CHECK_RESULTS.failed || result === DOCUMENT_CHECK_RESULTS.waiting;
 
-const DocumentVerifyTable = ({ onChange, options, readOnly = false }: DocumentVerifyTableProps) => {
+const DocumentVerifyTable = ({ onChange, onScan, options, readOnly = false }: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
 
@@ -73,8 +75,14 @@ const DocumentVerifyTable = ({ onChange, options, readOnly = false }: DocumentVe
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: () => (
-                    <Button size="small" variant="contained" sx={{ width: 150 }}>
+                customBodyRender: (_value, tableMeta) => (
+                    <Button
+                        size="small"
+                        variant="contained"
+                        disabled={readOnly}
+                        sx={{ width: 150 }}
+                        onClick={() => onScan?.(tableMeta.rowIndex)}
+                    >
                         สแกนเอกสาร
                     </Button>
                 ),
