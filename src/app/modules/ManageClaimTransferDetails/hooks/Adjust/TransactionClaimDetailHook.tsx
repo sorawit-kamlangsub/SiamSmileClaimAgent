@@ -3,12 +3,33 @@ import { MUIDataTableColumn } from "mui-datatables";
 import { useGetTransactionHistory } from "../../adjustClaimAPI";
 import { Box } from "@mui/material";
 import { numberWithCommas } from "../../../../functionHelpers";
+import { useMemo, useState } from "react";
+import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 type TransactionClaimDetailHookProps = {
     caseId: string;
 };
 
 const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps) => {
-    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetTransactionHistory(caseId);
+    const [paginated, setPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 10,
+    });
+    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetTransactionHistory(
+        caseId,
+        paginated
+    );
+
+    const pagination: PaginationResultDto = useMemo(
+        () => ({
+            totalAmountRecords: historyTransactionData?.totalAmountRecords ?? 0,
+            totalAmountPages: historyTransactionData?.totalAmountPages ?? 0,
+            currentPage: historyTransactionData?.currentPage ?? 0,
+            recordsPerPage: historyTransactionData?.recordsPerPage ?? 0,
+            pageIndex: historyTransactionData?.pageIndex ?? 0,
+        }),
+        [historyTransactionData]
+    );
+
     const columns: MUIDataTableColumn[] = [
         {
             name: "transactionDate",
@@ -68,7 +89,7 @@ const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps)
             },
         },
     ];
-    return { columns, historyTransactionData, isHistoryTransactionLoading };
+    return { columns, historyTransactionData, isHistoryTransactionLoading, pagination, setPaginated };
 };
 
 export default TransactionClaimDetailHook;

@@ -177,7 +177,7 @@ const useAdjustTransferDataTableHook = () => {
                             <IconButton size="small" onClick={() => {}}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                            {row.status === "โอนเงินไม่สำเร็จ" && (
+                            {row.paymentStatusId === 5 && (
                                 <IconButton size="small" onClick={() => {}}>
                                     <EditIcon sx={{ color: "#B8860B", fontSize: 20 }} />
                                 </IconButton>

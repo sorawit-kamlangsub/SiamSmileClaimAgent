@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_CLAIM_FUND_URL } from "../../../Const";
-import { encodeURLWithParams } from "../_common";
+import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
 const apiURL = `${API_CLAIM_FUND_URL}`;
 
@@ -98,12 +98,14 @@ const getAdjustReasonOptionsData = () => {
         });
 };
 
-export const useGetTransactionHistory = (caseId: string) => {
-    return useQuery([getTransferHistory, caseId], () => getTransactionHistoryData(caseId), { enabled: !!caseId });
+export const useGetTransactionHistory = (caseId: string, pagination: PaginationSortableDto) => {
+    return useQuery([getTransferHistory, caseId, pagination], () => getTransactionHistoryData(caseId, pagination), {
+        enabled: !!caseId,
+    });
 };
 
-const getTransactionHistoryData = (caseId: string) => {
-    const url = encodeURLWithParams(`${apiURL}/AdditionalTransfer/GetClaimTransactions`, { caseId });
+const getTransactionHistoryData = (caseId: string, pagination: PaginationSortableDto) => {
+    const url = encodeURLWithParams(`${apiURL}/AdditionalTransfer/GetClaimTransactions`, { caseId, ...pagination });
     return axios
         .get(url)
         .then((res) => {
