@@ -89,6 +89,8 @@ interface ClaimConsiderState {
     form: ClaimConsiderValues;
     filledItems: ClaimExpenseItem[];
     calculateResult: CalculateCaseClaimDtoResponse | null;
+    /** adjudication ของ case ที่กำลังพิจารณา ได้จาก /standard-medical-expense/case ส่งต่อให้ payload คำนวณ */
+    caseAdjudicationId: string | null;
 }
 const defaultForm: ClaimConsiderValues = {
     incidentTypeId: undefined,
@@ -132,6 +134,7 @@ const initialState: ClaimConsiderState = {
     form: defaultForm,
     filledItems: [],
     calculateResult: null,
+    caseAdjudicationId: null,
 };
 
 const claimConsiderSlice = createSlice({
@@ -157,6 +160,9 @@ const claimConsiderSlice = createSlice({
         setCalculateExpenseResult(state, action: PayloadAction<CalculateCaseClaimDtoResponse | null>) {
             state.calculateResult = action.payload;
         },
+        setCaseAdjudicationId(state, action: PayloadAction<string | null>) {
+            state.caseAdjudicationId = action.payload;
+        },
         resetState: () => initialState,
     },
 });
@@ -168,6 +174,7 @@ export const {
     updateFilledClaimLineItem,
     removeFilledClaimLineItem,
     setCalculateExpenseResult,
+    setCaseAdjudicationId,
     resetState,
 } = claimConsiderSlice.actions;
 

@@ -6,6 +6,7 @@ import {
     Collapse,
     Divider,
     FormControl,
+    FormHelperText,
     IconButton,
     InputAdornment,
     MenuItem,
@@ -21,6 +22,7 @@ import {
     Tooltip,
     Typography,
 } from "@mui/material";
+import { NumericFormat } from "react-number-format";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
@@ -34,11 +36,7 @@ import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/MiscellaneousServicesOutlined";
 
 import { CATEGORY_ICON_MAP } from "../../../../../ClaimSimulate/components/CategoryIcon";
-import {
-    hasAmountSumError,
-    toAmount,
-    sanitizeDecimalInput,
-} from "../../../../../ClaimSimulate/store/Claimsimulateutils";
+import { hasAmountSumError, hasMissingReasonError } from "../../../../../ClaimSimulate/store/Claimsimulateutils";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
 
 // ─── Reference styles ──────────────────────────────────────────────
@@ -317,6 +315,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
         isCategoryLoading,
         discountError,
         notCoveredError,
+        reasonError,
+        isMedicalCoverage,
         pendingReceiptAmount,
         setPendingReceiptAmount,
     } = useClaimExpenseDetailHook();
@@ -414,6 +414,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                 filledItems.map((item) => {
                                     const rowDiscountError = Number(item.discount ?? 0) > Number(item.claimAmount ?? 0);
                                     const rowSumError = hasAmountSumError(item);
+                                    const rowReasonError = hasMissingReasonError(item);
 
                                     return (
                                         <TableRow key={item.id}>
@@ -424,36 +425,42 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                             </TableCell>
                                             {/* ยอดเงินตามใบเสร็จ */}
                                             <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <TextField
+                                                <NumericFormat
+                                                    customInput={TextField}
                                                     size="small"
                                                     fullWidth
                                                     sx={tableInputSx}
                                                     value={item.receiptAmount ?? ""}
-                                                    onChange={(e) =>
+                                                    onValueChange={(v) =>
                                                         handleUpdateItem({
                                                             ...item,
-                                                            receiptAmount: toAmount(e.target.value),
+                                                            receiptAmount: v.floatValue ?? 0,
                                                         })
                                                     }
-                                                    type="number"
-                                                    inputProps={{ min: 0 }}
+                                                    thousandSeparator
+                                                    decimalScale={2}
+                                                    fixedDecimalScale
+                                                    allowNegative={false}
                                                 />
                                             </TableCell>
                                             {/* ยอดเบิก */}
                                             <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <TextField
+                                                <NumericFormat
+                                                    customInput={TextField}
                                                     size="small"
                                                     fullWidth
                                                     sx={tableInputSx}
                                                     value={item.claimAmount ?? ""}
-                                                    onChange={(e) =>
+                                                    onValueChange={(v) =>
                                                         handleUpdateItem({
                                                             ...item,
-                                                            claimAmount: toAmount(e.target.value),
+                                                            claimAmount: v.floatValue ?? 0,
                                                         })
                                                     }
-                                                    type="number"
-                                                    inputProps={{ min: 0 }}
+                                                    thousandSeparator
+                                                    decimalScale={2}
+                                                    fixedDecimalScale
+                                                    allowNegative={false}
                                                 />
                                             </TableCell>
 
@@ -464,20 +471,23 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                     disableHoverListener={!rowDiscountError}
                                                     {...errorTooltipProps}
                                                 >
-                                                    <TextField
+                                                    <NumericFormat
+                                                        customInput={TextField}
                                                         size="small"
                                                         fullWidth
                                                         sx={tableInputSx}
                                                         value={item.discount ?? ""}
-                                                        onChange={(e) =>
+                                                        onValueChange={(v) =>
                                                             handleUpdateItem({
                                                                 ...item,
-                                                                discount: toAmount(e.target.value),
+                                                                discount: v.floatValue ?? 0,
                                                             })
                                                         }
-                                                        type="number"
+                                                        thousandSeparator
+                                                        decimalScale={2}
+                                                        fixedDecimalScale
+                                                        allowNegative={false}
                                                         error={rowDiscountError}
-                                                        inputProps={{ min: 0 }}
                                                     />
                                                 </Tooltip>
                                             </TableCell>
@@ -489,55 +499,64 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                     {...errorTooltipProps}
                                                     disableHoverListener={!rowSumError}
                                                 >
-                                                    <TextField
+                                                    <NumericFormat
+                                                        customInput={TextField}
                                                         size="small"
                                                         fullWidth
                                                         sx={tableInputSx}
                                                         value={item.notCovered ?? ""}
-                                                        onChange={(e) =>
+                                                        onValueChange={(v) =>
                                                             handleUpdateItem({
                                                                 ...item,
-                                                                notCovered: toAmount(e.target.value),
+                                                                notCovered: v.floatValue ?? 0,
                                                             })
                                                         }
-                                                        type="number"
+                                                        thousandSeparator
+                                                        decimalScale={2}
+                                                        fixedDecimalScale
+                                                        allowNegative={false}
                                                         error={rowSumError}
-                                                        inputProps={{ min: 0 }}
                                                     />
                                                 </Tooltip>
                                             </TableCell>
 
                                             {/* สาเหตุไม่คุ้มครอง */}
                                             <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <FormControl fullWidth size="small">
-                                                    <Select
-                                                        displayEmpty
-                                                        value={item.reason ?? ""}
-                                                        sx={tableSelectSx}
-                                                        onChange={(e) =>
-                                                            handleUpdateItem({
-                                                                ...item,
-                                                                reason:
-                                                                    e.target.value === ""
-                                                                        ? undefined
-                                                                        : Number(e.target.value),
-                                                            })
-                                                        }
-                                                    >
-                                                        <MenuItem value="">
-                                                            <em>-</em>
-                                                        </MenuItem>
-                                                        {notCoveredReasonOptions.map((o) => (
-                                                            <MenuItem
-                                                                key={o.value}
-                                                                value={o.value}
-                                                                sx={{ fontSize: 13 }}
-                                                            >
-                                                                {o.label}
+                                                <Tooltip
+                                                    title="กรุณาเลือกสาเหตุไม่คุ้มครอง"
+                                                    disableHoverListener={!rowReasonError}
+                                                    {...errorTooltipProps}
+                                                >
+                                                    <FormControl fullWidth size="small" error={rowReasonError}>
+                                                        <Select
+                                                            displayEmpty
+                                                            value={item.reason ?? ""}
+                                                            sx={tableSelectSx}
+                                                            onChange={(e) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    reason:
+                                                                        e.target.value === ""
+                                                                            ? undefined
+                                                                            : Number(e.target.value),
+                                                                })
+                                                            }
+                                                        >
+                                                            <MenuItem value="">
+                                                                <em>-</em>
                                                             </MenuItem>
-                                                        ))}
-                                                    </Select>
-                                                </FormControl>
+                                                            {notCoveredReasonOptions.map((o) => (
+                                                                <MenuItem
+                                                                    key={o.value}
+                                                                    value={o.value}
+                                                                    sx={{ fontSize: 13 }}
+                                                                >
+                                                                    {o.label}
+                                                                </MenuItem>
+                                                            ))}
+                                                        </Select>
+                                                    </FormControl>
+                                                </Tooltip>
                                             </TableCell>
 
                                             {/* หมายเหตุ */}
@@ -817,300 +836,320 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                 </Box>
             </Box>
 
-            {/* ── รายการค่ารักษาเพิ่มเติม (แสดงตลอด ไม่ต้องเปิด/ปิด) ── */}
-            <Box
-                sx={{
-                    mt: 2.5,
-                    border: "1px solid",
-                    borderColor: REF.lineStrong,
-                    borderRadius: 1.5,
-                    p: 1.75,
-                    boxShadow: "0 2px 8px rgba(31,64,104,.08)",
-                }}
-            >
+            {/* ── รายการค่ารักษาเพิ่มเติม — แสดงเฉพาะประเภทความคุ้มครอง = ค่ารักษา ── */}
+            {isMedicalCoverage && (
                 <Box
-                    display="flex"
-                    justifyContent="space-between"
-                    alignItems="flex-start"
-                    gap={2}
-                    mb={1.5}
-                    flexWrap="wrap"
+                    sx={{
+                        mt: 2.5,
+                        border: "1px solid",
+                        borderColor: REF.lineStrong,
+                        borderRadius: 1.5,
+                        p: 1.75,
+                        boxShadow: "0 2px 8px rgba(31,64,104,.08)",
+                    }}
                 >
-                    <Box>
-                        <Typography fontWeight={700} color={REF.primaryDark} fontSize={15}>
-                            รายการค่ารักษาเพิ่มเติม
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                            กรณีไม่มีในรายการที่ใช้บ่อย กรุณาเลือกหมวดและเพิ่มรายการลงในตาราง
-                        </Typography>
-                    </Box>
-                    <Button
-                        variant={showAddPanel ? "outlined" : "contained"}
-                        size="small"
-                        startIcon={showAddPanel ? <RemoveCircleOutlineIcon /> : <AddCircleOutlineIcon />}
-                        disabled={isAddPanelDisabled}
-                        onClick={() => {
-                            if (isAddPanelDisabled) return;
-                            setShowAddPanel(!showAddPanel);
-                        }}
-                        sx={{ borderRadius: 1, fontWeight: 600, whiteSpace: "nowrap" }}
-                    >
-                        {isCategoryLoading ? "กำลังโหลด..." : showAddPanel ? "ซ่อน" : "เพิ่มรายการค่ารักษา"}
-                    </Button>
-                </Box>
-
-                <Collapse in={showAddPanel}>
                     <Box
-                        sx={{
-                            display: "grid",
-                            gap: 2,
-                            gridTemplateColumns: { xs: "1fr", md: "7fr 5fr" },
-                            alignItems: "start",
-                        }}
+                        display="flex"
+                        justifyContent="space-between"
+                        alignItems="flex-start"
+                        gap={2}
+                        mb={1.5}
+                        flexWrap="wrap"
                     >
-                        {/* ── ฝั่งซ้าย: ค้นหา + tree หมวด ── */}
+                        <Box>
+                            <Typography fontWeight={700} color={REF.primaryDark} fontSize={15}>
+                                รายการค่ารักษาเพิ่มเติม
+                            </Typography>
+                            <Typography variant="caption" color="text.secondary">
+                                กรณีไม่มีในรายการที่ใช้บ่อย กรุณาเลือกหมวดและเพิ่มรายการลงในตาราง
+                            </Typography>
+                        </Box>
+                        <Button
+                            variant={showAddPanel ? "outlined" : "contained"}
+                            size="small"
+                            startIcon={showAddPanel ? <RemoveCircleOutlineIcon /> : <AddCircleOutlineIcon />}
+                            disabled={isAddPanelDisabled}
+                            onClick={() => {
+                                if (isAddPanelDisabled) return;
+                                setShowAddPanel(!showAddPanel);
+                            }}
+                            sx={{ borderRadius: 1, fontWeight: 600, whiteSpace: "nowrap" }}
+                        >
+                            {isCategoryLoading ? "กำลังโหลด..." : showAddPanel ? "ซ่อน" : "เพิ่มรายการค่ารักษา"}
+                        </Button>
+                    </Box>
+
+                    <Collapse in={showAddPanel}>
                         <Box
                             sx={{
-                                border: "1px solid",
-                                borderColor: REF.lineStrong,
-                                borderRadius: 1,
-                                overflow: "hidden",
+                                display: "grid",
+                                gap: 2,
+                                gridTemplateColumns: { xs: "1fr", md: "7fr 5fr" },
+                                alignItems: "start",
                             }}
                         >
-                            <Box sx={{ p: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
-                                <TextField
-                                    size="small"
-                                    fullWidth
-                                    placeholder="ค้นหารายการค่ารักษา เช่น ยา , ค่าแพทย์ , ค่าห้อง"
-                                    value={searchText}
-                                    onChange={(e) => setSearchText(e.target.value)}
-                                    sx={refInputSx}
-                                    InputProps={{
-                                        endAdornment: (
-                                            <InputAdornment position="end">
-                                                <SearchIcon sx={{ fontSize: 20, color: REF.primary }} />
-                                            </InputAdornment>
-                                        ),
-                                    }}
-                                />
-                            </Box>
+                            {/* ── ฝั่งซ้าย: ค้นหา + tree หมวด ── */}
+                            <Box
+                                sx={{
+                                    border: "1px solid",
+                                    borderColor: REF.lineStrong,
+                                    borderRadius: 1,
+                                    overflow: "hidden",
+                                }}
+                            >
+                                <Box sx={{ p: 1.5, borderBottom: "1px solid", borderColor: "divider" }}>
+                                    <TextField
+                                        size="small"
+                                        fullWidth
+                                        placeholder="ค้นหารายการค่ารักษา เช่น ยา , ค่าแพทย์ , ค่าห้อง"
+                                        value={searchText}
+                                        onChange={(e) => setSearchText(e.target.value)}
+                                        sx={refInputSx}
+                                        InputProps={{
+                                            endAdornment: (
+                                                <InputAdornment position="end">
+                                                    <SearchIcon sx={{ fontSize: 20, color: REF.primary }} />
+                                                </InputAdornment>
+                                            ),
+                                        }}
+                                    />
+                                </Box>
 
-                            <Box sx={{ maxHeight: { xs: 320, md: 420 }, overflowY: "auto" }}>
-                                {filteredCategories.length === 0 ? (
-                                    <Box sx={{ py: 4, textAlign: "center" }}>
-                                        <Typography variant="body2" color="text.disabled">
-                                            ไม่พบรายการที่ค้นหา
-                                        </Typography>
-                                    </Box>
-                                ) : (
-                                    filteredCategories.map((cat) => (
-                                        <Box key={cat.id}>
-                                            <Box
-                                                onClick={() => handleToggleExpand(cat.id)}
-                                                sx={{
-                                                    display: "flex",
-                                                    alignItems: "center",
-                                                    px: 1.5,
-                                                    py: 1,
-                                                    cursor: "pointer",
-                                                    borderBottom: "1px solid",
-                                                    borderColor: "divider",
-                                                    bgcolor: expandedIds.includes(cat.id) ? REF.soft : "white",
-                                                }}
-                                            >
+                                <Box sx={{ maxHeight: { xs: 320, md: 420 }, overflowY: "auto" }}>
+                                    {filteredCategories.length === 0 ? (
+                                        <Box sx={{ py: 4, textAlign: "center" }}>
+                                            <Typography variant="body2" color="text.disabled">
+                                                ไม่พบรายการที่ค้นหา
+                                            </Typography>
+                                        </Box>
+                                    ) : (
+                                        filteredCategories.map((cat) => (
+                                            <Box key={cat.id}>
                                                 <Box
+                                                    onClick={() => handleToggleExpand(cat.id)}
                                                     sx={{
-                                                        mr: 1.25,
-                                                        color: REF.primaryDark,
-                                                        bgcolor: REF.soft,
-                                                        width: 36,
-                                                        height: 36,
-                                                        borderRadius: "10px",
                                                         display: "flex",
                                                         alignItems: "center",
-                                                        justifyContent: "center",
-                                                        flexShrink: 0,
+                                                        px: 1.5,
+                                                        py: 1,
+                                                        cursor: "pointer",
+                                                        borderBottom: "1px solid",
+                                                        borderColor: "divider",
+                                                        bgcolor: expandedIds.includes(cat.id) ? REF.soft : "white",
                                                     }}
                                                 >
-                                                    {CATEGORY_ICON_MAP[cat.id] ?? (
-                                                        <MiscellaneousServicesOutlinedIcon sx={{ fontSize: 18 }} />
+                                                    <Box
+                                                        sx={{
+                                                            mr: 1.25,
+                                                            color: REF.primaryDark,
+                                                            bgcolor: REF.soft,
+                                                            width: 36,
+                                                            height: 36,
+                                                            borderRadius: "10px",
+                                                            display: "flex",
+                                                            alignItems: "center",
+                                                            justifyContent: "center",
+                                                            flexShrink: 0,
+                                                        }}
+                                                    >
+                                                        {CATEGORY_ICON_MAP[cat.id] ?? (
+                                                            <MiscellaneousServicesOutlinedIcon sx={{ fontSize: 18 }} />
+                                                        )}
+                                                    </Box>
+                                                    <Typography
+                                                        variant="body2"
+                                                        fontWeight={700}
+                                                        color={REF.primaryDark}
+                                                        sx={{ flex: 1 }}
+                                                    >
+                                                        หมวด : {cat.label}
+                                                    </Typography>
+                                                    {expandedIds.includes(cat.id) ? (
+                                                        <ExpandLessIcon sx={{ fontSize: 18, color: REF.primaryDark }} />
+                                                    ) : (
+                                                        <ExpandMoreIcon sx={{ fontSize: 18, color: REF.primaryDark }} />
                                                     )}
                                                 </Box>
-                                                <Typography
-                                                    variant="body2"
-                                                    fontWeight={700}
-                                                    color={REF.primaryDark}
-                                                    sx={{ flex: 1 }}
-                                                >
-                                                    หมวด : {cat.label}
-                                                </Typography>
-                                                {expandedIds.includes(cat.id) ? (
-                                                    <ExpandLessIcon sx={{ fontSize: 18, color: REF.primaryDark }} />
-                                                ) : (
-                                                    <ExpandMoreIcon sx={{ fontSize: 18, color: REF.primaryDark }} />
-                                                )}
+                                                <Collapse in={expandedIds.includes(cat.id)}>
+                                                    <Box sx={{ bgcolor: "grey.50" }}>
+                                                        {cat.children.map((child) => (
+                                                            <TreeNodeRow
+                                                                key={child.id}
+                                                                node={child}
+                                                                depth={0}
+                                                                expandedIds={expandedIds}
+                                                                onToggle={handleToggleExpand}
+                                                                onSelectLeaf={handleSelectLeaf}
+                                                                selectedLeafId={selectedLeafId}
+                                                            />
+                                                        ))}
+                                                    </Box>
+                                                </Collapse>
                                             </Box>
-                                            <Collapse in={expandedIds.includes(cat.id)}>
-                                                <Box sx={{ bgcolor: "grey.50" }}>
-                                                    {cat.children.map((child) => (
-                                                        <TreeNodeRow
-                                                            key={child.id}
-                                                            node={child}
-                                                            depth={0}
-                                                            expandedIds={expandedIds}
-                                                            onToggle={handleToggleExpand}
-                                                            onSelectLeaf={handleSelectLeaf}
-                                                            selectedLeafId={selectedLeafId}
-                                                        />
-                                                    ))}
-                                                </Box>
-                                            </Collapse>
-                                        </Box>
-                                    ))
-                                )}
+                                        ))
+                                    )}
+                                </Box>
                             </Box>
-                        </Box>
 
-                        {/* ── ฝั่งขวา: ฟอร์มเพิ่มรายการ ── */}
-                        <Box
-                            sx={{
-                                border: "1px solid",
-                                borderColor: REF.lineStrong,
-                                borderRadius: 1,
-                                bgcolor: "#f8fbff",
-                                p: 1.75,
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1.25,
-                            }}
-                        >
-                            <Typography variant="caption" color="text.secondary" fontWeight={600}>
-                                รายการค่ารักษาที่เลือก
-                            </Typography>
-
-                            <TextField
-                                fullWidth
-                                multiline
-                                minRows={1}
-                                maxRows={4}
-                                value={selectedItem ? `${selectedItem.code} ${selectedItem.description}` : ""}
-                                placeholder="ยังไม่ได้เลือกรายการ — เลือกจากรายการทางซ้าย"
-                                InputProps={{ readOnly: true }}
+                            {/* ── ฝั่งขวา: ฟอร์มเพิ่มรายการ ── */}
+                            <Box
                                 sx={{
-                                    "& .MuiOutlinedInput-root": {
-                                        borderRadius: "8px",
-                                        backgroundColor: "#fff",
-                                        minHeight: 40,
-                                        fontSize: 13,
-                                        "& fieldset": { borderColor: REF.lineStrong },
-                                        "&:hover fieldset": { borderColor: REF.primary },
-                                        "&.Mui-focused fieldset": {
-                                            borderColor: REF.primary,
-                                            borderWidth: 1.5,
-                                        },
-                                    },
-                                    "& .MuiInputBase-input": { color: "primary.main" },
+                                    border: "1px solid",
+                                    borderColor: REF.lineStrong,
+                                    borderRadius: 1,
+                                    bgcolor: "#f8fbff",
+                                    p: 1.75,
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1.25,
                                 }}
-                            />
-                            <TextField
-                                size="small"
-                                fullWidth
-                                type="number"
-                                label="ยอดเงินตามใบเสร็จ"
-                                value={pendingReceiptAmount}
-                                onChange={(e) => setPendingReceiptAmount(sanitizeDecimalInput(e.target.value))}
-                                disabled={!selectedItem}
-                                sx={refInputSx}
-                                inputProps={{ min: 0 }}
-                            />
-                            <TextField
-                                size="small"
-                                fullWidth
-                                type="number"
-                                label="ยอดเบิก"
-                                value={pendingAmount}
-                                onChange={(e) => setPendingAmount(sanitizeDecimalInput(e.target.value))}
-                                disabled={!selectedItem}
-                                sx={refInputSx}
-                                inputProps={{ min: 0 }}
-                            />
-
-                            <Box display="flex" gap={1.25} flexDirection={{ xs: "column", sm: "row" }}>
-                                <TextField
-                                    size="small"
-                                    fullWidth
-                                    type="number"
-                                    label="ส่วนลด"
-                                    value={pendingDiscount}
-                                    onChange={(e) => setPendingDiscount(sanitizeDecimalInput(e.target.value))}
-                                    disabled={!selectedItem}
-                                    error={!!discountError}
-                                    helperText={discountError}
-                                    sx={refInputSx}
-                                    inputProps={{ min: 0 }}
-                                />
-                                <TextField
-                                    size="small"
-                                    fullWidth
-                                    type="number"
-                                    label="ยอดไม่คุ้มครอง"
-                                    value={pendingNotCovered}
-                                    onChange={(e) => setPendingNotCovered(sanitizeDecimalInput(e.target.value))}
-                                    disabled={!selectedItem}
-                                    error={!!notCoveredError}
-                                    helperText={notCoveredError}
-                                    sx={refInputSx}
-                                    inputProps={{ min: 0 }}
-                                />
-                            </Box>
-
-                            <FormControl fullWidth size="small" disabled={!selectedItem || isNonCoveredReasonLoading}>
-                                <Select
-                                    displayEmpty
-                                    value={pendingReason ?? ""}
-                                    onChange={(e) =>
-                                        setPendingReason(e.target.value === "" ? undefined : Number(e.target.value))
-                                    }
-                                    sx={formSelectSx}
-                                >
-                                    <MenuItem value="">
-                                        <em style={{ color: "#9aa5b1" }}>สาเหตุไม่คุ้มครอง</em>
-                                    </MenuItem>
-                                    {notCoveredReasonOptions.map((o) => (
-                                        <MenuItem key={o.value} value={o.value}>
-                                            {o.label}
-                                        </MenuItem>
-                                    ))}
-                                </Select>
-                            </FormControl>
-
-                            <TextField
-                                size="small"
-                                fullWidth
-                                multiline
-                                minRows={2}
-                                label="หมายเหตุ"
-                                value={pendingRemark}
-                                onChange={(e) => setPendingRemark(e.target.value)}
-                                disabled={!selectedItem}
-                                sx={refTextAreaSx}
-                            />
-
-                            <Button
-                                variant="contained"
-                                fullWidth
-                                startIcon={<AddBoxOutlinedIcon />}
-                                onClick={handleAddToTable}
-                                disabled={!selectedItem || !pendingAmount}
-                                sx={{ borderRadius: 1.5, fontWeight: 700, mt: "auto" }}
-                                size="medium"
                             >
-                                เพิ่มลงในตาราง
-                            </Button>
+                                <Typography variant="caption" color="text.secondary" fontWeight={600}>
+                                    รายการค่ารักษาที่เลือก
+                                </Typography>
+
+                                <TextField
+                                    fullWidth
+                                    multiline
+                                    minRows={1}
+                                    maxRows={4}
+                                    value={selectedItem ? `${selectedItem.code} ${selectedItem.description}` : ""}
+                                    placeholder="ยังไม่ได้เลือกรายการ — เลือกจากรายการทางซ้าย"
+                                    InputProps={{ readOnly: true }}
+                                    sx={{
+                                        "& .MuiOutlinedInput-root": {
+                                            borderRadius: "8px",
+                                            backgroundColor: "#fff",
+                                            minHeight: 40,
+                                            fontSize: 13,
+                                            "& fieldset": { borderColor: REF.lineStrong },
+                                            "&:hover fieldset": { borderColor: REF.primary },
+                                            "&.Mui-focused fieldset": {
+                                                borderColor: REF.primary,
+                                                borderWidth: 1.5,
+                                            },
+                                        },
+                                        "& .MuiInputBase-input": { color: "primary.main" },
+                                    }}
+                                />
+                                <NumericFormat
+                                    customInput={TextField}
+                                    size="small"
+                                    fullWidth
+                                    label="ยอดเงินตามใบเสร็จ"
+                                    value={pendingReceiptAmount}
+                                    onValueChange={(v) => setPendingReceiptAmount(v.value)}
+                                    thousandSeparator
+                                    decimalScale={2}
+                                    fixedDecimalScale
+                                    allowNegative={false}
+                                    disabled={!selectedItem}
+                                    sx={refInputSx}
+                                />
+                                <NumericFormat
+                                    customInput={TextField}
+                                    size="small"
+                                    fullWidth
+                                    label="ยอดเบิก"
+                                    value={pendingAmount}
+                                    onValueChange={(v) => setPendingAmount(v.value)}
+                                    thousandSeparator
+                                    decimalScale={2}
+                                    fixedDecimalScale
+                                    allowNegative={false}
+                                    disabled={!selectedItem}
+                                    sx={refInputSx}
+                                />
+
+                                <Box display="flex" gap={1.25} flexDirection={{ xs: "column", sm: "row" }}>
+                                    <NumericFormat
+                                        customInput={TextField}
+                                        size="small"
+                                        fullWidth
+                                        label="ส่วนลด"
+                                        value={pendingDiscount}
+                                        onValueChange={(v) => setPendingDiscount(v.value)}
+                                        thousandSeparator
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                        allowNegative={false}
+                                        disabled={!selectedItem}
+                                        error={!!discountError}
+                                        helperText={discountError}
+                                        sx={refInputSx}
+                                    />
+                                    <NumericFormat
+                                        customInput={TextField}
+                                        size="small"
+                                        fullWidth
+                                        label="ยอดไม่คุ้มครอง"
+                                        value={pendingNotCovered}
+                                        onValueChange={(v) => setPendingNotCovered(v.value)}
+                                        thousandSeparator
+                                        decimalScale={2}
+                                        fixedDecimalScale
+                                        allowNegative={false}
+                                        disabled={!selectedItem}
+                                        error={!!notCoveredError}
+                                        helperText={notCoveredError}
+                                        sx={refInputSx}
+                                    />
+                                </Box>
+
+                                <FormControl
+                                    fullWidth
+                                    size="small"
+                                    disabled={!selectedItem || isNonCoveredReasonLoading}
+                                    error={!!reasonError}
+                                >
+                                    <Select
+                                        displayEmpty
+                                        value={pendingReason ?? ""}
+                                        onChange={(e) =>
+                                            setPendingReason(e.target.value === "" ? undefined : Number(e.target.value))
+                                        }
+                                        sx={formSelectSx}
+                                    >
+                                        <MenuItem value="">
+                                            <em style={{ color: "#9aa5b1" }}>สาเหตุไม่คุ้มครอง</em>
+                                        </MenuItem>
+                                        {notCoveredReasonOptions.map((o) => (
+                                            <MenuItem key={o.value} value={o.value}>
+                                                {o.label}
+                                            </MenuItem>
+                                        ))}
+                                    </Select>
+                                    {reasonError && <FormHelperText>{reasonError}</FormHelperText>}
+                                </FormControl>
+
+                                <TextField
+                                    size="small"
+                                    fullWidth
+                                    multiline
+                                    minRows={2}
+                                    label="หมายเหตุ"
+                                    value={pendingRemark}
+                                    onChange={(e) => setPendingRemark(e.target.value)}
+                                    disabled={!selectedItem}
+                                    sx={refTextAreaSx}
+                                />
+
+                                <Button
+                                    variant="contained"
+                                    fullWidth
+                                    startIcon={<AddBoxOutlinedIcon />}
+                                    onClick={handleAddToTable}
+                                    disabled={!selectedItem || !pendingAmount}
+                                    sx={{ borderRadius: 1.5, fontWeight: 700, mt: "auto" }}
+                                    size="medium"
+                                >
+                                    เพิ่มลงในตาราง
+                                </Button>
+                            </Box>
                         </Box>
-                    </Box>
-                </Collapse>
-            </Box>
+                    </Collapse>
+                </Box>
+            )}
         </Box>
     );
 };

@@ -1,5 +1,6 @@
 import { Grid, Paper, Tab, Tabs, Skeleton } from "@mui/material";
 import HeaderCardCustomerDetails from "./HeaderDetailCards/HeaderCardCustomerDetails";
+import HeaderCardSchoolDetails from "./HeaderDetailCards/HeaderCardSchoolDetails";
 import ClaimDetail from "./HeaderDetailCards/ClaimDetail";
 import { useState } from "react";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -11,7 +12,12 @@ import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { TabContext, TabPanel } from "@mui/lab";
 import ClaimDetailsTab from "./TabDetails/ClaimDetailsTab";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
-import { calculatePolicyAgeText, formatDateString } from "../../../../functionHelpers";
+import {
+    PRODUCT_TYPE_GROUP,
+    calculatePolicyAgeText,
+    formatDateString,
+    isProductType,
+} from "../../../../functionHelpers";
 import ClaimTransationTab from "./TabDetails/ClaimTransationTab";
 import PolicyBenefitTab from "./TabDetails/PolicyBenefitTab";
 
@@ -52,6 +58,12 @@ const HeaderDetails = ({
                         </>
                     ) : (
                         <>
+                            {isProductType(customerDetail?.productTypeId, PRODUCT_TYPE_GROUP.PA) && (
+                                <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mb: 2 }}>
+                                    <HeaderCardSchoolDetails customerDetail={customerDetail} />
+                                </Grid>
+                            )}
+
                             <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mb: 2 }}>
                                 <HeaderCardCustomerDetails
                                     name={customerDetail?.customerName ?? "-"}

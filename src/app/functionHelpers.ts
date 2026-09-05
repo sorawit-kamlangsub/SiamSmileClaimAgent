@@ -425,6 +425,19 @@ export const colorMapPaymentStatus: Record<number, "#11734B" | "#a56e07" | "#B32
     5: "#B32615", // Failed
 };
 
+//CustomerPaymentStatus (สถานะการชำระเบี้ยของลูกค้า — customerPaymentStatusCode ส่งมาเป็น string)
+export const backgroundColorMapCustomerPaymentStatus: Record<string, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    "3301": "#FFCFC9", // ยังไม่มีการชำระเงิน
+    "3302": "#FFF1CD", // ชำระเงินแล้วบางส่วน
+    "3303": "#D4EDBC", // ชำระเบี้ยครบ
+};
+
+export const colorMapCustomerPaymentStatus: Record<string, "#11734B" | "#a56e07" | "#B32615"> = {
+    "3301": "#B32615", // ยังไม่มีการชำระเงิน
+    "3302": "#a56e07", // ชำระเงินแล้วบางส่วน
+    "3303": "#11734B", // ชำระเบี้ยครบ
+};
+
 //AppStatus
 export const backgroundColorMapAppStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
     2: "#D4EDBC", // ปกติ

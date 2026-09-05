@@ -77,8 +77,16 @@ const useConsiderDetailHook = () => {
             if (!values.incidentTypeId) errors.incidentTypeId = req;
             if (!values.coverageTypeId) errors.coverageTypeId = req;
             if (!values.medicalTypeId) errors.medicalTypeId = req;
-            if (!values.notificationDate) errors.notificationDate = req;
-            if (!values.documentCompleteDate) errors.documentCompleteDate = req;
+            if (!values.notificationDate) {
+                errors.notificationDate = req;
+            } else if (dayjs(values.notificationDate).isAfter(today)) {
+                errors.notificationDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
+            }
+            if (!values.documentCompleteDate) {
+                errors.documentCompleteDate = req;
+            } else if (dayjs(values.documentCompleteDate).isAfter(today)) {
+                errors.documentCompleteDate = "วันที่เอกสารครบต้องไม่เป็นวันที่อนาคต";
+            }
             if (!values.incidentDate) {
                 errors.incidentDate = "กรุณาระบุวันที่เกิดเหตุ";
             } else if (dayjs(values.incidentDate).isAfter(today)) {

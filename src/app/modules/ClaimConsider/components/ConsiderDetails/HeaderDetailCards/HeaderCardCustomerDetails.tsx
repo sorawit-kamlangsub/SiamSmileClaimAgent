@@ -62,7 +62,7 @@ const HeaderCardCustomerDetails = ({
                     padding: "16px 20px",
                     position: "relative",
                     overflow: "hidden",
-                    boxShadow: 9,
+                    boxShadow: 1,
                 }}
             >
                 <Grid container spacing={2} alignItems="center" wrap="nowrap">
