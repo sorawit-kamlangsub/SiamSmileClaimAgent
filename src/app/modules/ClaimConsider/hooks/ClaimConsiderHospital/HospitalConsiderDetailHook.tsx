@@ -94,7 +94,7 @@ const buildInitialValues = (claimListType: ClaimListType): HospitalConsiderValue
     dischargeTime: undefined,
     // ชีทระบุ Default = วันที่ปัจจุบัน
     documentCompleteDate: dayjs(),
-    notificationDate: undefined,
+    createdDate: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,
@@ -141,7 +141,7 @@ const FIELD_ERROR_ORDER = [
     "coverageTypeId",
     "medicalTypeId",
     "causeOfIncidentId",
-    "notificationDate",
+    "createdDate",
     "documentCompleteDate",
     "incidentDate",
     "admissionDate",
@@ -183,7 +183,7 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     if (isMedical && !values.medicalTypeId) errors.medicalTypeId = sel;
     if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = sel;
 
-    if (!values.notificationDate) errors.notificationDate = req;
+    if (!values.createdDate) errors.createdDate = req;
     if (!values.documentCompleteDate) errors.documentCompleteDate = req;
     if (!values.incidentDate) errors.incidentDate = req;
     if (!values.admissionDate) errors.admissionDate = req;
@@ -415,8 +415,8 @@ const useHospitalConsiderDetailHook = () => {
             formik.setFieldValue("dischargeDate", dayjs(detail.dischargeDate), false);
             formik.setFieldValue("dischargeTime", dayjs(detail.dischargeDate), false);
         }
-        if (detail.notificationDate) {
-            formik.setFieldValue("notificationDate", dayjs(detail.notificationDate), false);
+        if (detail.createdDate) {
+            formik.setFieldValue("createdDate", dayjs(detail.createdDate), false);
         }
 
         formik.setFieldValue("hospitalId", detail.hospitalId ?? undefined, false);

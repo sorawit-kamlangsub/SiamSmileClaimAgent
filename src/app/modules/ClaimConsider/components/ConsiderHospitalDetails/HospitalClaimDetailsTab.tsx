@@ -163,7 +163,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
     });
 
-    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook();
+    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook({ detailData, customerDetailData });
 
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
@@ -407,7 +407,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 </Grid>
                             )}
                             <Grid item xs={12}>
-                                <TreatmentCostTable />
+                                <TreatmentCostTable
+                                    formik={formik}
+                                    detailData={detailData}
+                                    customerDetailData={customerDetailData}
+                                />
                             </Grid>
                         </Grid>
                     ) : (

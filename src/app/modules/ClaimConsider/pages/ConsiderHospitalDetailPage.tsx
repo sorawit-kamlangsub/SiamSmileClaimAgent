@@ -95,7 +95,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
 
                         <Grid item xs={12} sx={{ mb: 2 }}>
                             <ClaimDetail
-                                notificationDate={formatDateString(
+                                createdDate={formatDateString(
                                     detail?.createdDate?.toString() ?? "",
                                     "DD/MM/BBBB HH:mm:ss"
                                 )}

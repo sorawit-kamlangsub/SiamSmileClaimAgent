@@ -4,7 +4,6 @@ import {
     useGetNonCoveredReason,
     useGetSimBCategory,
 } from "../../../../api/coreClaimMastersApi";
-import useConsiderDetailHook from "./ConsiderDetailHook";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
@@ -17,7 +16,11 @@ import {
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
 import { ClaimExpenseItem, setCaseAdjudicationId, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
-import { useGetStandardMedicalExpenseByCase } from "../../../../api/coreClaimApi";
+import {
+    useGetClaimDetailConsider,
+    useGetCustomerDetailById,
+    useGetStandardMedicalExpenseByCase,
+} from "../../../../api/coreClaimApi";
 import { CoverageType } from "../../../../functionHelpers";
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
     // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
@@ -63,9 +66,15 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
 interface ClaimLineFormValues {
     items: ClaimExpenseItem[];
 }
-const useClaimExpenseDetailHook = () => {
+type UseClaimExpenseDetailHookProps = {
+    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
+    customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+};
+// รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
+// เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
+// ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
+const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
-    const { customerDetailData, detailData } = useConsiderDetailHook();
     const { filledItems, form } = useSelector((s: RootState) => s.claimConsider);
     /**
      * coverage/medical : ใช้ค่าใน Redux form ก่อน (ผู้ใช้แก้ใน Step 1 แล้ว sync ลงมา)
@@ -108,7 +117,7 @@ const useClaimExpenseDetailHook = () => {
         6, //simb2
         coverageTypeId,
         medicalTypeId,
-        false,
+        true,
         customerDetailData?.data?.productTypeId,
         undefined,
         customerDetailData?.data?.productId
@@ -125,7 +134,9 @@ const useClaimExpenseDetailHook = () => {
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
         return raw.map((item, idx) => ({
-            id: item.inputToStandardMappingId ?? idx,
+            // ใช้ idx (unique เสมอในอาร์เรย์นี้) แทน inputToStandardMappingId เพราะ id นี้เป็นของ
+            // "ประเภทรายการ" ซึ่งหลายแถวค่ารักษาอาจใช้ค่าเดียวกันซ้ำได้จริงจาก backend (ทำให้ React key ชนกัน)
+            id: idx,
             standardMedicalExpenseId: item.standardMedicalExpenseId,
             inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
@@ -157,10 +168,15 @@ const useClaimExpenseDetailHook = () => {
     }, [dispatch, caseAdjudicationId]);
     const categories = useMemo(() => {
         const raw = categoryData?.data ?? [];
+        return mapCategoriesToTree(raw);
+    }, [categoryData]);
+
+    // เคลียร์ state ของ tree เมื่อ categoryData เปลี่ยนจริง — ย้ายมาจากใน useMemo ด้านบน
+    // (เดิมเรียก setState ระหว่าง render phase ตรงๆ ซึ่งเป็น anti-pattern เสี่ยง re-render เกินจำเป็น)
+    useEffect(() => {
         setExpandedIds([]);
         setSelectedItem(null);
         setSelectedLeafId(null);
-        return mapCategoriesToTree(raw);
     }, [categoryData]);
 
     const filteredCategories = useMemo(() => {
