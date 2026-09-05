@@ -111,10 +111,13 @@ const tableSelectSx = {
 };
 
 interface TreeNode {
+    /** id สำหรับใช้เป็น React key + expand/select state เท่านั้น — สร้างขึ้นให้ไม่ซ้ำกันเสมอ ไม่ใช่ id จาก backend */
     id: number;
     label: string;
     code?: string;
     standardMedicalExpenseId?: number;
+    /** ไว้ผูกกับรายการที่เลือก (เฉพาะ leaf) — คนละตัวกับ `id` ที่ใช้ทำ React key */
+    inputToStandardMappingId?: number;
     bodyPartId?: number;
     maximumLimit?: number;
     children: TreeNode[];
@@ -138,7 +141,7 @@ const TreeNodeRow = ({
         description: string,
         id: number,
         standardMedicalExpenseId?: number,
-        bodyPartId?: number,
+        inputToStandardMappingId?: number,
         maximumLimit?: number
     ) => void;
     selectedLeafId: number | null;
@@ -168,7 +171,7 @@ const TreeNodeRow = ({
                         description,
                         node.id,
                         node.standardMedicalExpenseId,
-                        node.bodyPartId,
+                        node.inputToStandardMappingId,
                         node.maximumLimit
                     );
                 }}
@@ -471,24 +474,28 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                     disableHoverListener={!rowDiscountError}
                                                     {...errorTooltipProps}
                                                 >
-                                                    <NumericFormat
-                                                        customInput={TextField}
-                                                        size="small"
-                                                        fullWidth
-                                                        sx={tableInputSx}
-                                                        value={item.discount ?? ""}
-                                                        onValueChange={(v) =>
-                                                            handleUpdateItem({
-                                                                ...item,
-                                                                discount: v.floatValue ?? 0,
-                                                            })
-                                                        }
-                                                        thousandSeparator
-                                                        decimalScale={2}
-                                                        fixedDecimalScale
-                                                        allowNegative={false}
-                                                        error={rowDiscountError}
-                                                    />
+                                                    {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
+                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
+                                                    <Box>
+                                                        <NumericFormat
+                                                            customInput={TextField}
+                                                            size="small"
+                                                            fullWidth
+                                                            sx={tableInputSx}
+                                                            value={item.discount ?? ""}
+                                                            onValueChange={(v) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    discount: v.floatValue ?? 0,
+                                                                })
+                                                            }
+                                                            thousandSeparator
+                                                            decimalScale={2}
+                                                            fixedDecimalScale
+                                                            allowNegative={false}
+                                                            error={rowDiscountError}
+                                                        />
+                                                    </Box>
                                                 </Tooltip>
                                             </TableCell>
 
@@ -499,24 +506,28 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = () => {
                                                     {...errorTooltipProps}
                                                     disableHoverListener={!rowSumError}
                                                 >
-                                                    <NumericFormat
-                                                        customInput={TextField}
-                                                        size="small"
-                                                        fullWidth
-                                                        sx={tableInputSx}
-                                                        value={item.notCovered ?? ""}
-                                                        onValueChange={(v) =>
-                                                            handleUpdateItem({
-                                                                ...item,
-                                                                notCovered: v.floatValue ?? 0,
-                                                            })
-                                                        }
-                                                        thousandSeparator
-                                                        decimalScale={2}
-                                                        fixedDecimalScale
-                                                        allowNegative={false}
-                                                        error={rowSumError}
-                                                    />
+                                                    {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
+                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
+                                                    <Box>
+                                                        <NumericFormat
+                                                            customInput={TextField}
+                                                            size="small"
+                                                            fullWidth
+                                                            sx={tableInputSx}
+                                                            value={item.notCovered ?? ""}
+                                                            onValueChange={(v) =>
+                                                                handleUpdateItem({
+                                                                    ...item,
+                                                                    notCovered: v.floatValue ?? 0,
+                                                                })
+                                                            }
+                                                            thousandSeparator
+                                                            decimalScale={2}
+                                                            fixedDecimalScale
+                                                            allowNegative={false}
+                                                            error={rowSumError}
+                                                        />
+                                                    </Box>
                                                 </Tooltip>
                                             </TableCell>
 

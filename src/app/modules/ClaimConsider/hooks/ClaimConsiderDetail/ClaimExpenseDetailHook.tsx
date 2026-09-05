@@ -19,13 +19,19 @@ import { swalError } from "../../../_common";
 import { ClaimExpenseItem, setCaseAdjudicationId, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
 import { useGetStandardMedicalExpenseByCase } from "../../../../api/coreClaimApi";
 import { CoverageType } from "../../../../functionHelpers";
-const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
-    data
+const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
+    // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
+    // เป็น undefined ได้หลายรายการพร้อมกัน (fallback ?? 0 เดิมทำให้หลายโหนดชน id 0 พร้อมกัน
+    // ทั้ง React key ซ้ำ และ expand/select state ไปเปิด/ไฮไลต์โหนดอื่นที่ id ชนกันโดยไม่ตั้งใจ)
+    // จึงแจก id ใหม่ทีละตัวแยกจาก id ทางธุรกิจไปเลย ส่วน inputToStandardMappingId ยังเก็บแยกไว้ต่างหาก
+    let nextId = 1;
+    return data
         .map((cat) => {
             const children = (cat.inputToStandardSubCategoryList ?? [])
                 .map((sub) => {
                     const leaves = (sub.inputToStandardMappingList ?? []).map((item) => ({
-                        id: item.inputToStandardMappingId ?? 0,
+                        id: nextId++,
+                        inputToStandardMappingId: item.inputToStandardMappingId,
                         standardMedicalExpenseId: item.standardMedicalExpenseId,
                         code: item.inputItemCode ?? "",
                         label: `${item.inputItemCode ?? ""} ${item.descriptionTH ?? ""}`.trim(),
@@ -37,7 +43,7 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
                     if (leaves.length === 0) return null;
 
                     return {
-                        id: sub.inputToStandardSubCategoryId ?? 0,
+                        id: nextId++,
                         label: sub.inputToStandardSubCategoryName ?? "",
                         children: leaves,
                     };
@@ -47,12 +53,13 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
             if (children.length === 0) return null;
 
             return {
-                id: cat.inputToStandardCategoryId ?? 0,
+                id: nextId++,
                 label: cat.inputToStandardCategoryName ?? "",
                 children,
             };
         })
         .filter((cat): cat is NonNullable<typeof cat> => cat !== null);
+};
 interface ClaimLineFormValues {
     items: ClaimExpenseItem[];
 }
@@ -60,6 +67,13 @@ const useClaimExpenseDetailHook = () => {
     const dispatch = useDispatch();
     const { customerDetailData, detailData } = useConsiderDetailHook();
     const { filledItems, form } = useSelector((s: RootState) => s.claimConsider);
+    /**
+     * coverage/medical : ใช้ค่าใน Redux form ก่อน (ผู้ใช้แก้ใน Step 1 แล้ว sync ลงมา)
+     * ถ้ายังว่าง (ยังไม่เคย sync ลง Redux) ให้ fallback ไปค่าตั้งต้นจาก claim detail
+     * กันไม่ให้ query ยิงด้วย undefined ตอนอยู่ Step 2 ครั้งแรก
+     */
+    const coverageTypeId = form.coverageTypeId ?? detailData?.data?.coverageTypeId;
+    const medicalTypeId = form.medicalTypeId ?? detailData?.data?.medicalTypeId;
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [selectedItem, setSelectedItem] = useState<{
@@ -92,8 +106,8 @@ const useClaimExpenseDetailHook = () => {
     const { data: frequentData, isLoading: isFrequentLoading } = useGetStandardMedicalExpenseByCase(
         detailData?.data?.caseId ?? "",
         6, //simb2
-        form.coverageTypeId,
-        form.medicalTypeId,
+        coverageTypeId,
+        medicalTypeId,
         false,
         customerDetailData?.data?.productTypeId,
         undefined,
@@ -102,8 +116,8 @@ const useClaimExpenseDetailHook = () => {
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
-        form.coverageTypeId,
-        form.medicalTypeId,
+        coverageTypeId,
+        medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
         customerDetailData?.data?.productId
@@ -271,7 +285,7 @@ const useClaimExpenseDetailHook = () => {
     };
 
     /** ประเภทความคุ้มครอง = ค่ารักษา : เงื่อนไขแสดง Section "รายการค่ารักษาเพิ่มเติม" */
-    const isMedicalCoverage = form.coverageTypeId === CoverageType.Medical;
+    const isMedicalCoverage = coverageTypeId === CoverageType.Medical;
 
     const hasAnyAmount = items.some((item) => Number(item.claimAmount ?? 0) > 0);
     const hasDiscountError = items.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
@@ -432,7 +446,7 @@ const useClaimExpenseDetailHook = () => {
             desc.join(" "),
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
-            matched.leaf.id, //inputToStandardMappingId
+            matched.leaf.inputToStandardMappingId,
             matched.leaf.maximumLimit
         );
     }, [searchText, categories]);
