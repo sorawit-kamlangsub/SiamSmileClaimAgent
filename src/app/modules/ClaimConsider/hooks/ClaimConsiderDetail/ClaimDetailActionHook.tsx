@@ -410,13 +410,13 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             approvedDischargeDate: decisionId === 2 ? asDate(dischargeDate) : undefined,
             approvedDischargeTime: decisionId === 2 ? asTimeSpan(dischargeTime) : undefined,
             approvedIPDDayCount: decisionId === 2 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: formik.values.icuDays,
+            approvedICUDayCount: decisionId === 2 ? formik.values.icuDays : undefined,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
-            compensateAmount: 0, //ไม่มี
-            approvedMedicalAmount: 0, //ต้องอนุมัติ
-            approvedCompensateAmount: 0, //ต้องอนุมัติ
-            patientPayAmount: 0, //เคลมโรงพยาบาลถึงจะมี
+            compensateAmount: decisionId === 2 ? calculateResult?.compensateInclude : undefined, //ไม่มี
+            approvedMedicalAmount: decisionId === 2 ? calculateResult?.medicalPay : undefined, //ต้องอนุมัติ
+            approvedCompensateAmount: decisionId === 2 ? calculateResult?.compensateRemain : undefined, //ต้องอนุมัติ
+            patientPayAmount: decisionId === 2 ? calculateResult?.medicalUnpay : undefined, //เคลมโรงพยาบาลถึงจะมี
             isExgratia: false, //ไม่มี
             exgratiaAmount: 0, //ไม่มี
             deductibleAmount: 0, //ไม่มี
@@ -513,9 +513,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             icD10_2ndId: values.diagnoses?.[1]?.icd10Id,
             icD10_3rdId: values.diagnoses?.[2]?.icd10Id,
             caseAmount: netClaimAmount, //ยอดเบิก
-            latestApprovedAmount: 0, //ต้องอนุมัติ
+            latestApprovedAmount: calculateResult?.medicalPay, //ต้องอนุมัติ
             latestNonCoveredAmount: totalNotCovered,
-            latestPatientPayAmount: 0, //โรงพยาบาล
+            latestPatientPayAmount: calculateResult?.medicalUnpay, //โรงพยาบาล
             isCaseDisability: false, //ไม่มี
             hn: caseFields?.hn,
             an: caseFields?.an,
