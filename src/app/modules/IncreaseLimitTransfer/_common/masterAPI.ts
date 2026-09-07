@@ -6,7 +6,7 @@ const getBranch = "getBranchKey";
 const getPaymentStatus = "getPaymentStatusKey";
 
 const coreClaimURL = `${APIGW_URL}/claim/core`;
-const ClaimFundMasterURL = `${API_CLAIM_FUND_URL}/Masters`;
+const ClaimFundMasterURL = `${API_CLAIM_FUND_URL}/api/ClaimFund/Masters`;
 
 export const useGetBranch = () => {
     return useQuery([getBranch], () => getBranchData());

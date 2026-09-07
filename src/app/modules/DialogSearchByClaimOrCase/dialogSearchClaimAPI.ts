@@ -34,7 +34,7 @@ export const useSearchClaimOrCase = (
 };
 
 const searchClaimByClaimOrCase = (payload: SearchClaimOrCasePayload) => {
-    const url = encodeURLWithParams(`${apiURL}/Setting/SearchClaimOrCase`, payload);
+    const url = encodeURLWithParams(`${apiURL}/api/ClaimFund/Setting/SearchClaimOrCase`, payload);
     return axios
         .get(url)
         .then((res) => {
