@@ -40,6 +40,7 @@ const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
 const getPreviousClaimQueryKey = ["getPreviousClaim"];
 const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCase"];
+const getDCRQueryKey = ["getDCR"];
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -679,6 +680,25 @@ export const useGetHospitalClaimAdjudicationMonitor = (
         {
             enabled: !!isSearch,
             refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDCR = (
+    applicationCode?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getDCRQueryKey, applicationCode, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimClient.getDCR(applicationCode, searchDetail, orderingField, ascendingOrder, page, recordsPerPage),
+        {
+            enabled: !!applicationCode,
+            refetchOnWindowFocus: true,
         }
     );
 };
