@@ -723,6 +723,8 @@ export const useGetHospitalClaimAdjudicationMonitor = (
 
 export const useGetDocumentByCaseId = (
     caseId: string,
+    productTypeId?: number | undefined,
+    claimSourceId?: number | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,
@@ -730,10 +732,22 @@ export const useGetDocumentByCaseId = (
     recordsPerPage?: number | undefined
 ) => {
     return useQuery(
-        [getDocumentByCaseIdQueryKey, caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        [
+            getDocumentByCaseIdQueryKey,
+            caseId,
+            productTypeId,
+            claimSourceId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
         () =>
             coreClaimClient.getDocumentByCaseId(
                 caseId,
+                productTypeId,
+                claimSourceId,
                 searchDetail,
                 orderingField,
                 ascendingOrder,

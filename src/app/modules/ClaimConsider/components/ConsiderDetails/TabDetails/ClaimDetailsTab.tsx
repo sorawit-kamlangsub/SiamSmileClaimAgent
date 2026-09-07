@@ -124,6 +124,8 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             Header="สแกนเอกสาร"
                                             aplicationCode={customerDetail?.policyCode ?? ""}
                                             documentType="เอกสารประกอบการพิจารณาเคลม"
+                                            caseId={detail?.caseId}
+                                            claimSourceId={detail?.claimSourceId}
                                             onAttachedDocumentsChange={setAttachedDocuments}
                                         />
                                     </Grid>
