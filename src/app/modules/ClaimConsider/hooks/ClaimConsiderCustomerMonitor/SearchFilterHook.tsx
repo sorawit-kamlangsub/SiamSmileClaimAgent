@@ -30,10 +30,12 @@ const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
     const statusOptions = useMemo(
         () => [
             { value: 0, label: "ทั้งหมด" },
-            ...(claimTransactionTypeData?.data ?? []).map((item) => ({
-                value: item.claimTransactionTypeId ?? 0,
-                label: item.claimTransactionTypeName ?? "",
-            })),
+            ...(claimTransactionTypeData?.data ?? [])
+                .filter((item) => item.claimTransactionTypeId !== 9) // ซ่อนสถานะ "อนุมัติ" (id 9)
+                .map((item) => ({
+                    value: item.claimTransactionTypeId ?? 0,
+                    label: item.claimTransactionTypeName ?? "",
+                })),
         ],
         [claimTransactionTypeData]
     );

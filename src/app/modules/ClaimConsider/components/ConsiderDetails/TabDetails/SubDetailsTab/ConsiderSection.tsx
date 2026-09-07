@@ -57,7 +57,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "rejected",
-        decisionId: 6,
+        decisionId: 5,
         label: "ปฏิเสธ",
         icon: <BlockIcon fontSize="small" />,
         color: "#D76451",
@@ -70,7 +70,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "cancelled",
-        decisionId: 5,
+        decisionId: 6,
         label: "ยกเลิก",
         icon: <CancelIcon fontSize="small" />,
         color: "#D92D2D",
