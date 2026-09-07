@@ -382,7 +382,6 @@ export class CoreClaimClient {
     /**
      * API สำหรับ Get Customer Benefit Detail Half
      * @param policyCode (optional)
-     * @param caseTypeId (optional)
      * @param incidentDate (optional)
      * @param isContinue (optional)
      * @param incidentTypeId (optional)
@@ -392,11 +391,11 @@ export class CoreClaimClient {
      * @param formatTypeId (optional)
      * @param cusTomerTypeCode (optional)
      * @param customerCode (optional)
+     * @param claimNo (optional)
      * @return Success
      */
     getCustomerBenefitDetailHalf(
         policyCode?: string | undefined,
-        caseTypeId?: number | undefined,
         incidentDate?: dayjs.Dayjs | undefined,
         isContinue?: boolean | undefined,
         incidentTypeId?: number | undefined,
@@ -406,13 +405,12 @@ export class CoreClaimClient {
         formatTypeId?: number | undefined,
         cusTomerTypeCode?: string | undefined,
         customerCode?: string | undefined,
+        claimNo?: string | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/half?";
         if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
         else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (caseTypeId === null) throw new Error("The parameter 'caseTypeId' cannot be null.");
-        else if (caseTypeId !== undefined) url_ += "caseTypeId=" + encodeURIComponent("" + caseTypeId) + "&";
         if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
             url_ +=
@@ -439,6 +437,8 @@ export class CoreClaimClient {
             url_ += "CusTomerTypeCode=" + encodeURIComponent("" + cusTomerTypeCode) + "&";
         if (customerCode === null) throw new Error("The parameter 'customerCode' cannot be null.");
         else if (customerCode !== undefined) url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
+        if (claimNo === null) throw new Error("The parameter 'claimNo' cannot be null.");
+        else if (claimNo !== undefined) url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -1012,6 +1012,8 @@ export class CoreClaimClient {
     /**
      * API สำหรับ Get ข้อมูล Document By CaseId
      * @param caseId (optional)
+     * @param productTypeId (optional)
+     * @param claimSourceId (optional)
      * @param searchDetail (optional)
      * @param orderingField (optional)
      * @param ascendingOrder (optional)
@@ -1021,6 +1023,8 @@ export class CoreClaimClient {
      */
     getDocumentByCaseId(
         caseId?: string | undefined,
+        productTypeId?: number | undefined,
+        claimSourceId?: number | undefined,
         searchDetail?: string | undefined,
         orderingField?: string | undefined,
         ascendingOrder?: boolean | undefined,
@@ -1031,6 +1035,10 @@ export class CoreClaimClient {
         let url_ = this.baseUrl + "/document/case/filter?";
         if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
         else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (claimSourceId === null) throw new Error("The parameter 'claimSourceId' cannot be null.");
+        else if (claimSourceId !== undefined) url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
         if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
         else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
         if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
@@ -1091,6 +1099,67 @@ export class CoreClaimClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetDocumentByCaseIdDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับแสดงข้อมูลภาพรวมการตรวจสอบเอกสาร ผลการพิจารณา และรายการค่าใช้จ่ายของ Case
+     * @return Success
+     */
+    getCaseReviewOverview(
+        caseId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCaseReviewOverviewDtoResponseServiceResponse> {
+        let url_ = this.baseUrl + "/document/case/{caseId}/overview";
+        if (caseId === undefined || caseId === null) throw new Error("The parameter 'caseId' must be defined.");
+        url_ = url_.replace("{caseId}", encodeURIComponent("" + caseId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseReviewOverview(_response);
+            });
+    }
+
+    protected processGetCaseReviewOverview(
+        response: AxiosResponse
+    ): Promise<GetCaseReviewOverviewDtoResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetCaseReviewOverviewDtoResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetCaseReviewOverviewDtoResponseServiceResponse>(null as any);
     }
 
     /**
@@ -5284,7 +5353,7 @@ export interface BillingTotalsDto {
 }
 
 export interface CalculateCaseClaim {
-    productId?: number;
+    productId?: number | undefined;
     coverageTypeId?: number;
     medicalTypeId?: number;
     incidentTypeId?: number;
@@ -5504,6 +5573,7 @@ export interface CaseDocumentSaveClaimEditDraftRequest {
 export interface CaseDocumentV2Request {
     documentId?: string;
     documentNo?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
     documentSubTypeId?: number;
     details?: CaseDocumentDetailV2Request[] | undefined;
 }
@@ -5666,6 +5736,25 @@ export interface CheckEligibleDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+/** ผลการพิจารณาล่าสุดของ Case พร้อมเหตุผลและยอดเงินที่เกี่ยวข้อง */
+export interface ClaimDecisionOverviewDtoResponse {
+    caseAdjudicationId?: string;
+    decisionId?: number | undefined;
+    decisionName?: string | undefined;
+    decisionReasonId?: number | undefined;
+    decisionReasonName?: string | undefined;
+    rejectReasonId?: number | undefined;
+    rejectReasonName?: string | undefined;
+    /** ข้อความเหตุผลที่ใช้แสดงผล โดยเลือก RejectReason ก่อน DecisionReason เมื่อมีข้อมูล */
+    reason?: string | undefined;
+    decisionRemark?: string | undefined;
+    decisionDate?: dayjs.Dayjs | undefined;
+    coveredAmount?: number | undefined;
+    nonCoveredAmount?: number | undefined;
+    approvedMedicalAmount?: number | undefined;
+    patientPayAmount?: number | undefined;
+}
+
 export interface ClaimEditDraftSaveClaimEditDraftRequest {
     baseClaimVersion: number;
     baseCaseVersion: number;
@@ -5756,6 +5845,99 @@ export interface DisabilityExpenseList {
     benefitPerUnit?: number;
     benefitUnitName?: string | undefined;
     benefitMaxPrice?: number;
+}
+
+/** สรุปรายการเอกสารที่ใช้แสดงในส่วนตรวจสอบเอกสาร */
+export interface DocumentReviewOverviewDtoResponse {
+    /** จำนวนเอกสารหลังรวมรายการที่มี DocumentId เดียวกันแล้ว */
+    totalCount?: number;
+    /** รายการเอกสาร โดยหนึ่ง DocumentId จะแสดงเพียงหนึ่งรายการและมี status เดียว */
+    documents?: DocumentReviewOverviewItemDtoResponse[] | undefined;
+}
+
+/** ข้อมูลเอกสารพร้อมผลการตรวจสอบล่าสุดและจำนวนไฟล์จาก DocStorage */
+export interface DocumentReviewOverviewItemDtoResponse {
+    caseId?: string;
+    caseDocumentId?: string;
+    documentId?: string | undefined;
+    documentNo?: string | undefined;
+    documentRemark?: string | undefined;
+    documentSubTypeId?: number | undefined;
+    documentSubTypeCode?: string | undefined;
+    documentSubTypeName?: string | undefined;
+    documentTypeId?: number | undefined;
+    documentTypeName?: string | undefined;
+    /** จำนวนไฟล์ใต้ DocumentId นี้จาก metadata ของ DocStorage */
+    fileCount?: number | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    updatedDate?: dayjs.Dayjs | undefined;
+    documentReviewId?: string | undefined;
+    /** status ล่าสุดของเอกสาร โดยรวม review จากทุก CaseDocument ที่ใช้ DocumentId เดียวกัน */
+    documentReviewStatusId?: number | undefined;
+    documentReviewStatusName?: string | undefined;
+    documentReviewRemark?: string | undefined;
+    documentReviewByUserId?: number | undefined;
+    documentReviewDate?: dayjs.Dayjs | undefined;
+}
+
+export interface ExpenseCategorySummaryDtoResponse {
+    originalAmount?: number;
+    discountAmount?: number;
+    netCaseAmount?: number;
+    nonCoveredAmount?: number;
+    approvedAmount?: number;
+    patientPayAmount?: number;
+    standardMedicalExpenseCategoryId?: number | undefined;
+    standardMedicalExpenseCategoryName?: string | undefined;
+}
+
+/** รูปแบบการจัดกลุ่มรายการค่าใช้จ่าย */
+export interface ExpenseFormatOverviewDtoResponse {
+    formatTypeId?: number;
+    formatTypeName?: string | undefined;
+}
+
+/** รายการค่าใช้จ่ายหนึ่งรายการของ Case */
+export interface ExpenseItemOverviewDtoResponse {
+    caseItemId?: string;
+    inputToStandardMappingId?: number | undefined;
+    standardMedicalExpenseId?: number | undefined;
+    standardMedicalExpenseName?: string | undefined;
+    standardMedicalExpenseCategoryId?: number | undefined;
+    standardMedicalExpenseCategoryName?: string | undefined;
+    nonCoveredReasonId?: number | undefined;
+    nonCoveredReasonName?: string | undefined;
+    quantity?: number | undefined;
+    perUnit?: number | undefined;
+    medicalTypeId?: number | undefined;
+    originalAmount?: number;
+    discountAmount?: number;
+    netCaseAmount?: number;
+    nonCoveredAmount?: number;
+    approvedAmount?: number;
+    patientPayAmount?: number;
+    remark?: string | undefined;
+}
+
+/** ข้อมูลส่วนรายการค่าใช้จ่าย รูปแบบรายการ ยอดแยกหมวด และยอดรวมของ Case */
+export interface ExpenseSummaryOverviewDtoResponse {
+    /** รูปแบบรายการค่าใช้จ่ายที่เปิดใช้งานสำหรับหน้า review */
+    formats?: ExpenseFormatOverviewDtoResponse[] | undefined;
+    /** รายการค่าใช้จ่ายของ Case พร้อมยอดก่อนและหลังการพิจารณา */
+    items?: ExpenseItemOverviewDtoResponse[] | undefined;
+    /** ยอดรวมที่จัดกลุ่มตามหมวดค่าใช้จ่าย */
+    categorySummaries?: ExpenseCategorySummaryDtoResponse[] | undefined;
+    totals?: ExpenseTotalsOverviewDtoResponse;
+}
+
+/** โครงสร้างยอดเงินที่ใช้ร่วมกันระหว่างยอดรวมระดับ Case และยอดรวมตามหมวด */
+export interface ExpenseTotalsOverviewDtoResponse {
+    originalAmount?: number;
+    discountAmount?: number;
+    netCaseAmount?: number;
+    nonCoveredAmount?: number;
+    approvedAmount?: number;
+    patientPayAmount?: number;
 }
 
 export interface FormatTypeDtoResponse {
@@ -5943,6 +6125,28 @@ export interface GetCaseByClaimIdDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+/** Response สำหรับข้อมูลภาพรวมทั้งหน้า review ของ Case ในการเรียก API ครั้งเดียว */
+export interface GetCaseReviewOverviewDtoResponse {
+    caseId?: string;
+    documentReview?: DocumentReviewOverviewDtoResponse;
+    claimDecision?: ClaimDecisionOverviewDtoResponse;
+    expenseSummary?: ExpenseSummaryOverviewDtoResponse;
+}
+
+export interface GetCaseReviewOverviewDtoResponseServiceResponse {
+    data?: GetCaseReviewOverviewDtoResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetChiefComplaintDtoResponse {
     chiefComplaintId?: number;
     chiefComplaintCode?: string | undefined;
@@ -6000,6 +6204,8 @@ export interface GetClaimDetailConsiderDtoResponse {
     createByUserName?: string | undefined;
     claimNo?: string | undefined;
     caseNo?: string | undefined;
+    productTypeId?: number | undefined;
+    claimSourceId?: number | undefined;
     claimType?: string | undefined;
     claimStatusId?: number | undefined;
     claimStatusName?: string | undefined;
@@ -6026,6 +6232,9 @@ export interface GetClaimDetailConsiderDtoResponse {
     caseId?: string | undefined;
     documentReceivedByUserId?: number | undefined;
     documentReceivedByUserName?: string | undefined;
+    caseAmount?: number | undefined;
+    nplAmount?: number | undefined;
+    paymentAmount?: number | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
@@ -6562,8 +6771,8 @@ export interface GetDocumentByCaseIdDtoResponse {
     documentId?: string | undefined;
     documentCode?: string | undefined;
     documentSubTypeId?: number | undefined;
-    documentSubTypeName?: string | undefined;
-    documentTypeId?: number | undefined;
+    claimDocumentTypeName?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
     totalCount?: number | undefined;
 }
 
@@ -6896,7 +7105,7 @@ export interface GetPreviousClaimDtoResponse {
     causeOfIncidentId?: number | undefined;
     totalCaseAmount?: number;
     totalNetPaidAmount?: number;
-    remainingCoverageLimit?: number | undefined;
+    remainingCoverageLimit?: number;
     remainingAmountAfterPreviousClaim?: number | undefined;
     chiefComplaintCustom?: string | undefined;
     chiefComplaintId?: number | undefined;

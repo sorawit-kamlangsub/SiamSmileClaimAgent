@@ -17,6 +17,9 @@ const NO_REQUIRED_DOCS: RequiredDocsConfig = { idCard: false, receipt: false, me
 
 const CASE_DOCUMENT_SUB_TYPE_ID = 530;
 
+// เอกสารจาก OCR scan ล็อกเป็นประเภท "เอกสารประกอบการพิจารณาเคลม" (ดู documentTypeId ใน DocumentScanTable)
+const OCR_CLAIM_DOCUMENT_TYPE_ID = 11;
+
 const ocrDocumentPayload = (
     ocrResult: OcrDocumentScanResult,
     documentIds: DocStorageDocumentIds
@@ -24,7 +27,12 @@ const ocrDocumentPayload = (
     const list: CaseDocumentV2Request[] = [];
 
     const pushDoc = (documentId: string | undefined, detail: CaseDocumentDetailV2Request) => {
-        list.push({ documentId, documentSubTypeId: CASE_DOCUMENT_SUB_TYPE_ID, details: [detail] });
+        list.push({
+            documentId,
+            documentSubTypeId: CASE_DOCUMENT_SUB_TYPE_ID,
+            claimDocumentTypeId: OCR_CLAIM_DOCUMENT_TYPE_ID,
+            details: [detail],
+        });
     };
 
     if (ocrResult.idCard) {

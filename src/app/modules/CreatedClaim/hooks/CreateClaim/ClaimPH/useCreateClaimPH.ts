@@ -169,6 +169,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                                       documentId: d.documentId,
                                       documentNo: d.documentCode,
                                       documentSubTypeId: d.documentSubTypeId,
+                                      claimDocumentTypeId: d.documentTypeId,
                                   })),
 
                             contacts:

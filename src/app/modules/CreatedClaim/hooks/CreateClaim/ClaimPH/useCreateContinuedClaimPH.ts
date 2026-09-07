@@ -160,6 +160,7 @@ export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (mes
                               documentId: d.documentId,
                               documentNo: d.documentCode,
                               documentSubTypeId: d.documentSubTypeId,
+                              claimDocumentTypeId: d.documentTypeId,
                           })),
 
                     contacts:

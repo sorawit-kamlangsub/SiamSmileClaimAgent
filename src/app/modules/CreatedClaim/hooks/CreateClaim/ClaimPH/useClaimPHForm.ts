@@ -371,14 +371,16 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         insured?.policyCode,
-        0,
         formik.values.incidentDate,
-        isContinuous === false ? undefined : true,
+        isContinuous,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
         formik.values.medicalTypeId ?? 0,
         formik.values.causeOfIncidentId,
-        formatType
+        formatType,
+        undefined,
+        undefined,
+        isContinuous ? oldClaim?.claimNo : undefined
     );
 
     const isFirstRenderIncident = useRef(true);

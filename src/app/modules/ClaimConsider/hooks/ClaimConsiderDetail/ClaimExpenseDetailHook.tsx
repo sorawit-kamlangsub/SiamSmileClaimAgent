@@ -161,7 +161,6 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         () => frequentData?.data?.find((item) => item.caseAdjudicationId)?.caseAdjudicationId ?? null,
         [frequentData]
     );
-
     // ส่งขึ้น Redux ให้ ClaimStepCalculateHook หยิบไปใส่ payload คำนวณ (คนละ component จึงส่งเป็น prop ไม่ได้)
     useEffect(() => {
         dispatch(setCaseAdjudicationId(caseAdjudicationId));

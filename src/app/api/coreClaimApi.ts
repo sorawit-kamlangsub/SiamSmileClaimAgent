@@ -291,7 +291,6 @@ export const useCalculateCaseDisability = (
 
 export const useGetCustomerBenefitDetailHalf = (
     policyCode?: string | undefined,
-    caseTypeId?: number | undefined,
     incidentDate?: Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
@@ -300,13 +299,13 @@ export const useGetCustomerBenefitDetailHalf = (
     causeOfIncidentId?: number | undefined,
     formatTypeId?: number | undefined,
     cusTomerTypeCode?: string | undefined,
-    customerCode?: string | undefined
+    customerCode?: string | undefined,
+    claimNo?: string | undefined
 ) => {
     return useQuery(
         [
             getCustomerBenefitDetailHalfQueryKey,
             policyCode,
-            caseTypeId,
             incidentDate,
             isContinue,
             incidentTypeId,
@@ -316,11 +315,11 @@ export const useGetCustomerBenefitDetailHalf = (
             formatTypeId,
             cusTomerTypeCode,
             customerCode,
+            claimNo,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailHalf(
                 policyCode,
-                caseTypeId,
                 incidentDate,
                 isContinue,
                 incidentTypeId,
@@ -329,7 +328,8 @@ export const useGetCustomerBenefitDetailHalf = (
                 causeOfIncidentId,
                 formatTypeId,
                 cusTomerTypeCode,
-                customerCode
+                customerCode,
+                claimNo
             ),
         {
             enabled:

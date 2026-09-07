@@ -731,6 +731,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}
                                 isLoading={customerBenefitLoading}
+                                isContinuous={isContinuous}
                                 planCode={
                                     isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
                                         ? insured?.productName
