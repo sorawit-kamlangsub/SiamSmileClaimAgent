@@ -547,7 +547,6 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         effectiveInsured?.policyCode,
-        undefined,
         formik.values.incidentDate,
         false,
         formik.values.incidentTypeId,

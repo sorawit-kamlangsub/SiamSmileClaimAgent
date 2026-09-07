@@ -371,7 +371,6 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         insured?.policyCode,
-        0,
         formik.values.incidentDate,
         isContinuous === false ? undefined : true,
         formik.values.incidentTypeId,
