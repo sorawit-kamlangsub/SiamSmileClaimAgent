@@ -1,10 +1,17 @@
 import { useMemo, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 import { useGetClaimHistory } from "../../../../api/coreClaimApi";
-import {
-    ClaimHistorySummary,
-    MOCK_CLAIM_HISTORY_SUMMARY,
-} from "../../components/ConsiderDetails/TabDetails/mock/claimHistoryMock";
+
+export interface ClaimHistorySummary {
+    /** จำนวนรายการเคลมย้อนหลังทั้งหมด */
+    totalCount: number;
+    /** OPD คงเหลือในปีกรมธรรม์ปัจจุบัน (ครั้ง) */
+    opdRemaining: number;
+    /** จำนวนรายการที่เป็นเคลมต่อเนื่อง */
+    continuousCount: number;
+    /** ยอดเบิกสะสมในปีกรมธรรม์ปัจจุบัน (บาท) */
+    accumulatedClaimAmount: number;
+}
 
 export type ClaimHistorySortField = "incidentDate" | "claimNo" | "claimAmount";
 
@@ -13,6 +20,9 @@ export const CLAIM_HISTORY_SORT_OPTIONS: { value: ClaimHistorySortField; label: 
     { value: "claimNo", label: "เลขที่เคลม" },
     { value: "claimAmount", label: "ยอดเบิก" },
 ];
+
+/** ค่า mock ชั่วคราวของการ์ด "OPD คงเหลือในปีกรมธรรม์" — BE ยังไม่ส่ง field นี้มาที่ endpoint ใด */
+const MOCK_OPD_REMAINING = 8;
 
 /** map ค่า sort ฝั่ง UI ไปเป็นชื่อ field ที่ API คาดหวังใน orderingField */
 const ORDERING_FIELD_MAP: Record<ClaimHistorySortField, string> = {
@@ -24,8 +34,8 @@ const ORDERING_FIELD_MAP: Record<ClaimHistorySortField, string> = {
 /**
  * ต่อ useGetClaimHistory ของจริงแล้ว (src/app/api/coreClaimApi.ts) — ตารางใช้ข้อมูลจริงทั้งหมด
  *
- * ส่วนสรุปยอด (OPD คงเหลือ/เคลมต่อเนื่อง/ยอดเบิกสะสม) BE ยังไม่มี endpoint แยกให้ ยังใช้ mock อยู่
- * (ดูคอมเมนต์ตรง summary ด้านล่าง) ยกเว้น "จำนวนรายการ" ที่ใช้ totalAmountRecords จริงจาก response แล้ว
+ * ส่วนสรุปยอด : "จำนวนรายการ" ใช้ totalAmountRecords จริงจาก response, "เคลมต่อเนื่อง"/"ยอดเบิกสะสม"
+ * คำนวณจากแถวในตารางหน้าปัจจุบัน เหลือแค่ "OPD คงเหลือ" ที่ยังเป็นค่า mock เพราะ BE ยังไม่ส่งมาให้
  */
 const useClaimHistoryTab = (applicationId?: string) => {
     const [searchText, setSearchText] = useState("");
@@ -82,8 +92,8 @@ const useClaimHistoryTab = (applicationId?: string) => {
     );
 
     const summary: ClaimHistorySummary = {
-        ...MOCK_CLAIM_HISTORY_SUMMARY,
         totalCount: pagination.totalAmountRecords ?? 0,
+        opdRemaining: MOCK_OPD_REMAINING,
         continuousCount,
         accumulatedClaimAmount,
     };
