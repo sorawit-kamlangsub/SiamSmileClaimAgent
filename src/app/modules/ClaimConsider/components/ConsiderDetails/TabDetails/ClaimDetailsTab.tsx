@@ -92,6 +92,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             customerDetail,
             filledItems,
             stepsLength: steps.length,
+            paymentAmount: detail?.paymentAmount,
         });
     return (
         <>

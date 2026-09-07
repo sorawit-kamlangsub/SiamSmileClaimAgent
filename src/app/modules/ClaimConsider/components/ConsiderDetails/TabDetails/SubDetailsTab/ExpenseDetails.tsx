@@ -52,7 +52,7 @@ const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetai
                             iconColor="#1967D2"
                             title="สิทธิ์เบิก"
                             subtitle="ค่ารักษา"
-                            amount={5000}
+                            amount={detailData?.data?.caseAmount || 0}
                             unit="บาท"
                             accentColor="#1967D2"
                         />
@@ -64,7 +64,7 @@ const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetai
                             iconColor="#F5A623"
                             title="จ่ายเงินเกินสิทธิ์เบิก (NPL)"
                             subtitle="ยอดที่เกินสิทธิ์เบิกและบันทึกแยก"
-                            amount={nplAmount}
+                            amount={detailData?.data?.nplAmount || 0}
                             unit="บาท"
                             accentColor="#F5A623"
                             badge={nplAmount > 0 ? "บันทึก NPL" : "ไม่มียอดจ่ายเกินสิทธิ์เบิก"}
@@ -80,7 +80,7 @@ const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetai
                             iconColor="#0FA789"
                             title="จำนวนเงินโอนรวม"
                             subtitle="ยอดเงินโอน"
-                            amount={5000}
+                            amount={detailData?.data?.paymentAmount || 0}
                             unit="บาท"
                             accentColor="#0FA789"
                         />

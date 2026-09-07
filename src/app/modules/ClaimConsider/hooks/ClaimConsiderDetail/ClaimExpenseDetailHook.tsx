@@ -10,8 +10,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux";
 import {
     applyMaximumLimit,
+    getClaimAmountReconciliation,
     hasAmountSumError,
     hasMissingReasonError,
+    sumClaimExpenseItems,
     toAmount,
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
@@ -229,11 +231,19 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         }));
     }, [nonCoveredReasonData]);
 
-    const totalReceipt = items.reduce((s, i) => s + (i.receiptAmount || 0), 0); // ยอดเงินตามใบเสร็จรวม
-    const totalClaim = items.reduce((s, i) => s + (i.claimAmount || 0), 0);
-    const totalDiscount = items.reduce((s, i) => s + (i.discount || 0), 0);
-    const totalNotCovered = items.reduce((s, i) => s + (i.notCovered || 0), 0);
+    const { totalReceipt, totalClaim, totalDiscount, totalNotCovered } = sumClaimExpenseItems(items);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered; // ยอดเบิกสุทธิ
+
+    // ยอดที่จ่ายจริง = paymentAmount ตัวเดียวกับการ์ด "สรุปรายการแจ้งโอน" (ExpenseDetails.tsx) — ไม่ใช่
+    // ค่าที่คำนวณจากรายการค่ารักษาฝั่ง FE เอง เพราะ netClaimAmount ไม่ได้ถูก cap ด้วยยอดใบเสร็จ/สิทธิ์เบิก
+    const paymentAmount = detailData?.data?.paymentAmount ?? 0;
+    const amountReconciliation = getClaimAmountReconciliation({
+        totalReceipt,
+        totalClaim,
+        totalDiscount,
+        totalNotCovered,
+        paymentAmount,
+    });
     const filterFilledItems = (items: ClaimExpenseItem[]) =>
         items.filter((item) => {
             const hasClaimAmount = item.claimAmount !== undefined && item.claimAmount !== null;
@@ -508,6 +518,8 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         totalDiscount,
         totalNotCovered,
         netClaimAmount,
+        paymentAmount,
+        amountReconciliation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
