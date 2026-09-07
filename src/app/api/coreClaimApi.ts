@@ -328,7 +328,8 @@ export const useGetCustomerBenefitDetailHalf = (
     causeOfIncidentId?: number | undefined,
     formatTypeId?: number | undefined,
     cusTomerTypeCode?: string | undefined,
-    customerCode?: string | undefined
+    customerCode?: string | undefined,
+    claimNo?: string | undefined
 ) => {
     return useQuery(
         [
@@ -343,6 +344,7 @@ export const useGetCustomerBenefitDetailHalf = (
             formatTypeId,
             cusTomerTypeCode,
             customerCode,
+            claimNo,
         ],
         () =>
             coreClaimClient.getCustomerBenefitDetailHalf(
@@ -355,7 +357,8 @@ export const useGetCustomerBenefitDetailHalf = (
                 causeOfIncidentId,
                 formatTypeId,
                 cusTomerTypeCode,
-                customerCode
+                customerCode,
+                claimNo
             ),
         {
             enabled:
