@@ -37,6 +37,7 @@ const getDecisionReasonQueryKey = ["getDecisionReason"];
 const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
 const getDocumentReviewStatusQueryKey = ["getDocumentReviewStatus"];
 const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
+const getBenefitQueryKey = ["getBenefit"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -496,6 +497,17 @@ export const useGetClaimTransactionType = (claimTransactionTypeId?: number | und
         [getClaimTransactionTypeQueryKey, claimTransactionTypeId],
         () => coreClaimMastersClient.getClaimTransactionType(claimTransactionTypeId),
         {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetBenefit = (benefitId?: number | undefined, benefitIdList?: number[] | undefined) => {
+    return useQuery(
+        [getBenefitQueryKey, benefitId, benefitIdList],
+        () => coreClaimMastersClient.getBenefit(benefitId, benefitIdList),
+        {
+            enabled: benefitId !== undefined || !!benefitIdList?.length,
             refetchOnWindowFocus: false,
         }
     );

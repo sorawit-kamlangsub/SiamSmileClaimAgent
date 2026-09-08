@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+    useGetBenefit,
     useGetInsuranceCompany,
     useGetNonCoveredReason,
     useGetSimBCategory,
@@ -162,6 +163,24 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
     const caseAdjudicationId = useMemo(
         () => frequentData?.data?.find((item) => item.caseAdjudicationId)?.caseAdjudicationId ?? null,
         [frequentData]
+    );
+
+    /** benefitId มาระดับ item — case เดียวอาจมีหลายสิทธิ์เบิกพร้อมกัน (เช่น ค่ารักษา + ค่าห้อง) จึงรวมทุกตัวที่ไม่ซ้ำ
+     * เพื่อโชว์ชื่อสิทธิ์เบิกทั้งหมดในการ์ด "สิทธิ์เบิก" ไม่ใช่หยิบมาแค่ตัวแรก */
+    const benefitIdList = useMemo(
+        () => [...new Set(frequentData?.data?.map((item) => item.benefitId).filter((id): id is number => !!id))],
+        [frequentData]
+    );
+    const { data: benefitData } = useGetBenefit(undefined, benefitIdList);
+    const benefitName = useMemo(
+        () =>
+            benefitIdList.length === 0
+                ? undefined
+                : benefitIdList
+                      .map((id) => benefitData?.data?.find((b) => b.benefitId === id)?.benefitName)
+                      .filter((name): name is string => !!name)
+                      .join(", "),
+        [benefitData, benefitIdList]
     );
     // ส่งขึ้น Redux ให้ ClaimStepCalculateHook หยิบไปใส่ payload คำนวณ (คนละ component จึงส่งเป็น prop ไม่ได้)
     useEffect(() => {
@@ -490,6 +509,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         frequentItems,
         isFrequentLoading,
         caseAdjudicationId,
+        benefitName,
         showAddPanel,
         setShowAddPanel,
         searchText,
