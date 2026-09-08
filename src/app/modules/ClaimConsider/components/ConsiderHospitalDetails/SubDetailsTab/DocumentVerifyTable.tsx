@@ -117,9 +117,9 @@ const DocumentVerifyTable = ({
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "left" }),
-                // ชื่อจาก DocStorage (documentTypeName) เป็นหลัก, fallback = ชื่อจาก overview
+                // ชื่อจาก useGetDocumentByCaseId (claimDocumentTypeName) เป็นหลัก, fallback = DocStorage
                 customBodyRender: (value: DocumentCheckRow["documentName"], tableMeta) =>
-                    documentInfoByDocumentId[rows[tableMeta.rowIndex].documentId]?.documentName || value,
+                    value || documentInfoByDocumentId[rows[tableMeta.rowIndex].documentId]?.documentName || "-",
             },
         },
         {

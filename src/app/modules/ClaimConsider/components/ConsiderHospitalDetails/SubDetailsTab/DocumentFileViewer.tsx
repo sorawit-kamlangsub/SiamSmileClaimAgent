@@ -29,6 +29,8 @@ type FileView = {
 
 const openInNewTab = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
 
+const IMAGE_EXTENSIONS = ["JPG", "JPEG", "PNG", "GIF", "WEBP", "BMP", "TIF", "TIFF", "HEIC", "SVG"];
+
 const extensionOf = (fileName: string) => {
     const dot = fileName.lastIndexOf(".");
     return dot === -1 ? "" : fileName.slice(dot + 1).toUpperCase();
@@ -36,7 +38,7 @@ const extensionOf = (fileName: string) => {
 
 const fileIcon = (fileType: string) => {
     if (fileType === "PDF") return <PictureAsPdfOutlinedIcon />;
-    if (["JPG", "JPEG", "PNG", "GIF", "WEBP"].includes(fileType)) return <ImageOutlinedIcon />;
+    if (IMAGE_EXTENSIONS.includes(fileType)) return <ImageOutlinedIcon />;
 
     return <InsertDriveFileOutlinedIcon />;
 };
@@ -54,11 +56,13 @@ const DocumentFileViewer = ({ documentId }: DocumentFileViewerProps) => {
         () =>
             (data?.data ?? []).map((file, index) => {
                 const fileName = file.fileName ?? `ไฟล์ ${index + 1}`;
-                const isImage = !!file.isImage;
+                const fileType = extensionOf(fileName);
+                // ใช้ทั้ง flag จาก BE และนามสกุลไฟล์ — บางไฟล์ BE ไม่ได้ตั้ง isImage มา
+                const isImage = !!file.isImage || IMAGE_EXTENSIONS.includes(fileType);
                 return {
                     id: file.documentFileId ?? `${documentId ?? "doc"}-${index + 1}`,
                     fileName,
-                    fileType: extensionOf(fileName),
+                    fileType,
                     isImage,
                     previewUrl: isImage
                         ? file.fileURL || file.pathFullDoc || file.pathThumbnailImg || undefined

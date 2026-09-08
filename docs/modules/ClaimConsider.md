@@ -45,10 +45,11 @@ expense editor, **not** reusable without refactor, see below), `OcrReceiptSectio
 **`ConsiderHospitalDetails/`** — hospital-specific: `HospitalClaimDetailsTab.tsx` (the 3-step
 hospital flow orchestrator), `mock/hospitalConsiderMock.tsx` (⚠ **partly still mock** —
 `ClaimListType` config, `DOCUMENT_CHECK_RESULTS` + colors, `DocumentCheckRow`/`DocumentFile`
-types, `ContinuousClaimRow`; the "ตรวจสอบเอกสาร" table is real now — documentIds/result/remark
-from `useGetCaseReviewOverview`, display name (`documentTypeName`) + file count + scan-link data
-(`documentCode`/`mainIndex`/`searchIndex`) from `useGetDocumentListByIds` (keyed by documentId →
-`documentInfoByDocId`). "สแกนเอกสาร" opens `${DOC_STORAGE_URL}/document/scan?...` in a new tab
+types, `ContinuousClaimRow`; the "ตรวจสอบเอกสาร" table is real now — row list (documentId,
+`documentSubTypeId`, name = `claimDocumentTypeName`) from `useGetDocumentByCaseId` (claimSourceId
+`3`); prior result/remark merged in from `useGetCaseReviewOverview` by documentId; file count +
+scan-link data (`documentCode`/`mainIndex`/`searchIndex`) from `useGetDocumentListByIds` (keyed by
+documentId → `documentInfoByDocId`). "สแกนเอกสาร" opens `${DOC_STORAGE_URL}/document/scan?...` in a new tab
 (like `CreatedClaim/DocumentScanTable`) **and** still clears that row's result (CR Ver2 ข้อ 4);
 the detail modal (`DocumentFileViewer`) fetches its file list via `useGetDocumentFileByDocumentId`,
 is disabled when a documentId has no files in DocStorage, and opens non-image files via

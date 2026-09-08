@@ -52,15 +52,16 @@ export const useGetDocumentListByIds = (documentIds: string[]) => {
 
 /**
  * ไฟล์เอกสารทั้งหมดของ DocumentId เดียว (GET /document/{documentId}/documentFile)
- * เรียกตอนเปิด modal ดูรายละเอียดเอกสาร
+ * เรียกตอนเปิด modal ดูรายละเอียดเอกสาร — ส่ง recordsPerPage สูงเพื่อให้ได้ครบทุกไฟล์ (ไม่โดน paginate)
  */
 export const useGetDocumentFileByDocumentId = (documentId?: string) => {
     return useQuery(
         [getDocumentFileByDocumentIdQueryKey, documentId],
-        () => docStorageClient.getDocumentFileByDocumentId(documentId as string),
+        () => docStorageClient.getDocumentFileByDocumentId(documentId as string, 1, 100),
         {
             enabled: !!documentId,
-            refetchOnWindowFocus: false,
+            staleTime: 0,
+            refetchOnWindowFocus: true,
         }
     );
 };
