@@ -369,27 +369,37 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get Customer Benefit Detail Half
-     * @param policyCode (optional) 
-     * @param incidentDate (optional) 
-     * @param isContinue (optional) 
-     * @param incidentTypeId (optional) 
-     * @param coverageTypeId (optional) 
-     * @param medicalTypeId (optional) 
-     * @param causeOfIncidentId (optional) 
-     * @param formatTypeId (optional) 
-     * @param cusTomerTypeCode (optional) 
-     * @param customerCode (optional) 
-     * @param claimNo (optional) 
+     * @param policyCode (optional)
+     * @param incidentDate (optional)
+     * @param isContinue (optional)
+     * @param incidentTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param medicalTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param formatTypeId (optional)
+     * @param cusTomerTypeCode (optional)
+     * @param customerCode (optional)
+     * @param claimNo (optional)
      * @return Success
      */
-    getCustomerBenefitDetailHalf(policyCode?: string | undefined, incidentDate?: dayjs.Dayjs | undefined, isContinue?: boolean | undefined, incidentTypeId?: number | undefined, coverageTypeId?: number | undefined, medicalTypeId?: number | undefined, causeOfIncidentId?: number | undefined, formatTypeId?: number | undefined, cusTomerTypeCode?: string | undefined, customerCode?: string | undefined, claimNo?: string | undefined, cancelToken?: CancelToken | undefined): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
+    getCustomerBenefitDetailHalf(
+        policyCode?: string | undefined,
+        incidentDate?: dayjs.Dayjs | undefined,
+        isContinue?: boolean | undefined,
+        incidentTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        medicalTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        formatTypeId?: number | undefined,
+        cusTomerTypeCode?: string | undefined,
+        customerCode?: string | undefined,
+        claimNo?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/customer/benefit-detail/half?";
-        if (policyCode === null)
-            throw new Error("The parameter 'policyCode' cannot be null.");
-        else if (policyCode !== undefined)
-            url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
-        if (incidentDate === null)
-            throw new Error("The parameter 'incidentDate' cannot be null.");
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
             url_ += "incidentDate=" + encodeURIComponent(incidentDate ? "" + incidentDate.format('YYYY-MM-DDTHH:mm:ss') : "") + "&";
         if (isContinue === null)
@@ -420,14 +430,10 @@ export class CoreClaimClient {
             throw new Error("The parameter 'cusTomerTypeCode' cannot be null.");
         else if (cusTomerTypeCode !== undefined)
             url_ += "CusTomerTypeCode=" + encodeURIComponent("" + cusTomerTypeCode) + "&";
-        if (customerCode === null)
-            throw new Error("The parameter 'customerCode' cannot be null.");
-        else if (customerCode !== undefined)
-            url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
-        if (claimNo === null)
-            throw new Error("The parameter 'claimNo' cannot be null.");
-        else if (claimNo !== undefined)
-            url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
+        if (customerCode === null) throw new Error("The parameter 'customerCode' cannot be null.");
+        else if (customerCode !== undefined) url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
+        if (claimNo === null) throw new Error("The parameter 'claimNo' cannot be null.");
+        else if (claimNo !== undefined) url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -949,40 +955,39 @@ export class CoreClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล Document By CaseId
-     * @param caseId (optional) 
-     * @param productTypeId (optional) 
-     * @param claimSourceId (optional) 
-     * @param searchDetail (optional) 
-     * @param orderingField (optional) 
-     * @param ascendingOrder (optional) 
-     * @param page (optional) 
-     * @param recordsPerPage (optional) 
+     * @param caseId (optional)
+     * @param productTypeId (optional)
+     * @param claimSourceId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
-    getDocumentByCaseId(caseId?: string | undefined, productTypeId?: number | undefined, claimSourceId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<GetDocumentByCaseIdDtoResponseListServiceResponse> {
+    getDocumentByCaseId(
+        caseId?: string | undefined,
+        productTypeId?: number | undefined,
+        claimSourceId?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDocumentByCaseIdDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/document/case/filter?";
-        if (caseId === null)
-            throw new Error("The parameter 'caseId' cannot be null.");
-        else if (caseId !== undefined)
-            url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
-        if (productTypeId === null)
-            throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined)
-            url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
-        if (claimSourceId === null)
-            throw new Error("The parameter 'claimSourceId' cannot be null.");
-        else if (claimSourceId !== undefined)
-            url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
-        if (searchDetail === null)
-            throw new Error("The parameter 'searchDetail' cannot be null.");
-        else if (searchDetail !== undefined)
-            url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
-        if (orderingField === null)
-            throw new Error("The parameter 'orderingField' cannot be null.");
-        else if (orderingField !== undefined)
-            url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
-        if (ascendingOrder === null)
-            throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
+        else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (claimSourceId === null) throw new Error("The parameter 'claimSourceId' cannot be null.");
+        else if (claimSourceId !== undefined) url_ += "claimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
         else if (ascendingOrder !== undefined)
             url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
         if (page === null)
@@ -1043,10 +1048,12 @@ export class CoreClaimClient {
      * API สำหรับแสดงข้อมูลภาพรวมการตรวจสอบเอกสาร ผลการพิจารณา และรายการค่าใช้จ่ายของ Case
      * @return Success
      */
-    getCaseReviewOverview(caseId: string, cancelToken?: CancelToken | undefined): Promise<GetCaseReviewOverviewDtoResponseServiceResponse> {
+    getCaseReviewOverview(
+        caseId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCaseReviewOverviewDtoResponseServiceResponse> {
         let url_ = this.baseUrl + "/document/case/{caseId}/overview";
-        if (caseId === undefined || caseId === null)
-            throw new Error("The parameter 'caseId' must be defined.");
+        if (caseId === undefined || caseId === null) throw new Error("The parameter 'caseId' must be defined.");
         url_ = url_.replace("{caseId}", encodeURIComponent("" + caseId));
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1054,23 +1061,28 @@ export class CoreClaimClient {
             method: "GET",
             url: url_,
             headers: {
-                "Accept": "text/plain"
+                Accept: "text/plain",
             },
-            cancelToken
+            cancelToken,
         };
 
-        return this.instance.request(options_).catch((_error: any) => {
-            if (isAxiosError(_error) && _error.response) {
-                return _error.response;
-            } else {
-                throw _error;
-            }
-        }).then((_response: AxiosResponse) => {
-            return this.processGetCaseReviewOverview(_response);
-        });
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseReviewOverview(_response);
+            });
     }
 
-    protected processGetCaseReviewOverview(response: AxiosResponse): Promise<GetCaseReviewOverviewDtoResponseServiceResponse> {
+    protected processGetCaseReviewOverview(
+        response: AxiosResponse
+    ): Promise<GetCaseReviewOverviewDtoResponseServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1083,10 +1095,9 @@ export class CoreClaimClient {
         if (status === 200) {
             const _responseText = response.data;
             let result200: any = null;
-            let resultData200  = _responseText;
+            let resultData200 = _responseText;
             result200 = resultData200;
             return Promise.resolve<GetCaseReviewOverviewDtoResponseServiceResponse>(result200);
-
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);

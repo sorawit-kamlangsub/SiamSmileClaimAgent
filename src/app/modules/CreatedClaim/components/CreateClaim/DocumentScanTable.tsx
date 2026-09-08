@@ -162,7 +162,7 @@ const DocumentScanTable = ({
                 documentId: d.documentId,
                 documentNo: d.documentCode,
                 documentSubTypeId: d.documentSubTypeId,
-                claimDocumentTypeId: d.documentTypeId,
+                claimDocumentTypeId: d.documentTypeId ?? documentTypeId[documentType],
             }));
 
         onAttachedDocumentsChange(attachedDocs);

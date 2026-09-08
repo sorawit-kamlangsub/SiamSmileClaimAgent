@@ -173,9 +173,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 const mainBenefit = getDeathMainBenefit(deathBenefits);
                 const selectedExtraBenefits = deathBenefits.filter((benefit) => {
                     const category = classifyDeathBenefit(benefit);
-                    return (
-                        category !== undefined && category !== "main" && values.extraCoverageIds.includes(category)
-                    );
+                    return category !== undefined && category !== "main" && values.extraCoverageIds.includes(category);
                 });
                 // เคลมต่อเนื่อง: ยอดหลักถูกล็อก ตรวจเฉพาะความคุ้มครองเพิ่มเติมที่เลือก
                 const visibleBenefits = isContinuousDeath
@@ -407,9 +405,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                   (customerBenefit?.data ?? []).filter((b) => {
                       const category = classifyDeathBenefit(b);
                       return (
-                          category !== undefined &&
-                          category !== "main" &&
-                          values.extraCoverageIds.includes(category)
+                          category !== undefined && category !== "main" && values.extraCoverageIds.includes(category)
                       );
                   })
                 : isDeath
@@ -548,14 +544,15 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         effectiveInsured?.policyCode,
         formik.values.incidentDate,
-        false,
+        isContinuous,
         formik.values.incidentTypeId,
         formik.values.coverageTypeId,
         formik.values.medicalTypeId ?? 0,
         formik.values.causeOfIncidentId,
         formattype,
         effectiveInsured?.customerTypeCode,
-        effectiveInsured?.customerCode
+        effectiveInsured?.customerCode,
+        isContinuous ? oldClaim?.claimNo : undefined
     );
 
     // ความคุ้มครองเสียชีวิต "เพิ่มเติม" (ไม่รวมยอดหลัก) สำหรับเคลมต่อเนื่อง
