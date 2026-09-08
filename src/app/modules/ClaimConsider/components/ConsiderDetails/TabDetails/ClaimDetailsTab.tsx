@@ -6,6 +6,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
+import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
 import {
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -54,7 +55,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         leaveToMonitor();
     };
 
-    const considerDetail = useConsiderDetailHook();
+    const considerDetail = useConsiderDetailHook({ enableDraftOverlay: true });
     const {
         formik,
         incidentType,
@@ -106,6 +107,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                     />
 
                     <Box sx={{ marginTop: "20px" }}>
+                        <DraftViewingBanner />
                         {activeStep === 0 && (
                             <div>
                                 <Grid container spacing={2}>

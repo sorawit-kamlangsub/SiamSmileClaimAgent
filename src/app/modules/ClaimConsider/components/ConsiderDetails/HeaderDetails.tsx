@@ -161,7 +161,7 @@ const HeaderDetails = ({
                             <ClaimDetailsTab customerDetail={customerDetail} detail={detail} />
                         </TabPanel>
                         <TabPanel value="2">
-                            <ClaimTransationTab />
+                            <ClaimTransationTab onViewDraft={() => setTabValue("1")} />
                         </TabPanel>
                         <TabPanel value="3">
                             <PolicyBenefitTab />

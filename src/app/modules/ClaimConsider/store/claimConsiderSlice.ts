@@ -85,12 +85,26 @@ export interface ClaimConsiderValues {
     considerDocument: CaseDocumentConsiderRequest[] | undefined;
 }
 
+/** ข้อมูลแบบร่างที่กำลังเปิดดู (กดจากปุ่มดวงตาในแท็บ "ประวัติการทำรายการ") — 3 field ล่างมาจากแถว
+ * transaction log โดยตรง ไม่ใช่จาก draft API เก็บเป็น string เท่านั้น (Dayjs ไม่ serializable ทำให้ RTK
+ * ต้อง deep-scan ทั้ง store ทุก dispatch จนหน้าค้าง) */
+export interface ViewingDraftInfo {
+    draftRevisionId: string;
+    createdDate?: string;
+    employeeName?: string;
+    transactionLogRemark?: string;
+}
+
 interface ClaimConsiderState {
     form: ClaimConsiderValues;
     filledItems: ClaimExpenseItem[];
     calculateResult: CalculateCaseClaimDtoResponse | null;
     /** adjudication ของ case ที่กำลังพิจารณา ได้จาก /standard-medical-expense/case ส่งต่อให้ payload คำนวณ */
     caseAdjudicationId: string | null;
+    viewingDraft: ViewingDraftInfo | null;
+    /** revisionId ที่ merge ลง filledItems ไปแล้ว — เก็บใน Redux ไม่ใช่ ref เพราะ ExpenseDetails
+     * ถูก unmount ทุกครั้งที่สลับ step (activeStep === 1) ถ้าใช้ ref จะ merge ทับงานที่ผู้ใช้แก้ไปแล้วซ้ำ */
+    draftExpenseAppliedRevisionId: string | null;
 }
 const defaultForm: ClaimConsiderValues = {
     incidentTypeId: undefined,
@@ -135,6 +149,8 @@ const initialState: ClaimConsiderState = {
     filledItems: [],
     calculateResult: null,
     caseAdjudicationId: null,
+    viewingDraft: null,
+    draftExpenseAppliedRevisionId: null,
 };
 
 const claimConsiderSlice = createSlice({
@@ -163,6 +179,17 @@ const claimConsiderSlice = createSlice({
         setCaseAdjudicationId(state, action: PayloadAction<string | null>) {
             state.caseAdjudicationId = action.payload;
         },
+        setViewingDraft(state, action: PayloadAction<ViewingDraftInfo>) {
+            state.viewingDraft = action.payload;
+            state.draftExpenseAppliedRevisionId = null; // revision ใหม่ = ต้อง merge รายการค่าใช้จ่ายใหม่
+        },
+        clearViewingDraft(state) {
+            state.viewingDraft = null;
+            state.draftExpenseAppliedRevisionId = null;
+        },
+        setDraftExpenseApplied(state, action: PayloadAction<string>) {
+            state.draftExpenseAppliedRevisionId = action.payload;
+        },
         resetState: () => initialState,
     },
 });
@@ -175,6 +202,9 @@ export const {
     removeFilledClaimLineItem,
     setCalculateExpenseResult,
     setCaseAdjudicationId,
+    setViewingDraft,
+    clearViewingDraft,
+    setDraftExpenseApplied,
     resetState,
 } = claimConsiderSlice.actions;
 

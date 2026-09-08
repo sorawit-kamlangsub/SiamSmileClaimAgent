@@ -18,9 +18,16 @@ import {
     toAmount,
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
-import { ClaimExpenseItem, setCaseAdjudicationId, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
+import {
+    ClaimExpenseItem,
+    setCaseAdjudicationId,
+    setDraftExpenseApplied,
+    setFilledClaimLineItems,
+} from "../../store/claimConsiderSlice";
+import { mergeDraftCaseItems } from "../../store/draftRevisionMappers";
 import {
     useGetClaimDetailConsider,
+    useGetClaimEditDraftRevision,
     useGetCustomerDetailById,
     useGetStandardMedicalExpenseByCase,
 } from "../../../../api/coreClaimApi";
@@ -78,7 +85,12 @@ type UseClaimExpenseDetailHookProps = {
 // ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
 const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
-    const { filledItems, form } = useSelector((s: RootState) => s.claimConsider);
+    const { filledItems, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
+        (s: RootState) => s.claimConsider
+    );
+    const draftRevisionId = viewingDraft?.draftRevisionId;
+    // queryKey เดียวกับใน ConsiderDetailHook — React Query แชร์ cache กัน ไม่ยิง request ซ้ำ
+    const { data: draftRevision } = useGetClaimEditDraftRevision(draftRevisionId);
     /**
      * coverage/medical : ใช้ค่าใน Redux form ก่อน (ผู้ใช้แก้ใน Step 1 แล้ว sync ลงมา)
      * ถ้ายังว่าง (ยังไม่เคย sync ลง Redux) ให้ fallback ไปค่าตั้งต้นจาก claim detail
@@ -503,6 +515,27 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         formikClaimLine.setFieldValue("items", frequentItems);
         dispatch(setFilledClaimLineItems(frequentItems));
     }, [frequentItems, isFrequentLoading]);
+
+    // ── overlay ยอดจาก "บันทึกแบบร่าง" (กดดูจากแท็บประวัติการทำรายการ) ──
+    // merge ทับ frequentItems เสมอ (ไม่ใช่ items) ผลลัพธ์จึงเหมือนกันไม่ว่า seed effect ด้านบนจะรันไปแล้วหรือยัง
+    // flag "merge แล้ว" เก็บใน Redux ไม่ใช่ ref เพราะ component นี้ (ExpenseDetails) ถูก unmount ทุกครั้งที่
+    // สลับออกจาก step "รายละเอียดค่าใช้จ่าย" — ถ้าใช้ ref จะ merge ทับงานที่ผู้ใช้แก้ไปแล้วทุกครั้งที่กลับเข้ามา
+    useEffect(() => {
+        if (!draftRevisionId) return;
+        if (draftExpenseAppliedRevisionId === draftRevisionId) return;
+        if (isFrequentLoading || frequentItems.length === 0) return;
+        const draftCaseItems = draftRevision?.data?.payload?.case?.caseItem;
+        if (!draftCaseItems) return;
+
+        // ใช้แค่ตั้งชื่อแถวที่ผู้ใช้เพิ่มเองตอนทำร่าง — ไม่ gate การ merge ด้วย isCategoryLoading เพราะแถว
+        // ปกติ (99% ของเคส) ต้องไม่รอ category tree โหลด ถ้ามาไม่ทันแถวเพิ่มเองจะไม่มีชื่อ ยอมรับได้
+        const categoryLeaves = categories.flatMap((cat) => cat.children.flatMap((sub) => sub.children));
+        const merged = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        formikClaimLine.setFieldValue("items", merged);
+        dispatch(setFilledClaimLineItems(merged));
+        dispatch(setDraftExpenseApplied(draftRevisionId));
+    }, [draftRevisionId, draftExpenseAppliedRevisionId, draftRevision, frequentItems, isFrequentLoading, categories]);
+
     return {
         formikClaimLine,
         expenseItems: items,

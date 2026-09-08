@@ -1,6 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import {
+    useGetClaimDetailConsider,
+    useGetClaimEditDraftRevision,
+    useGetCustomerDetailById,
+} from "../../../../api/coreClaimApi";
 import {
     useGetDecisionReason,
     useGetIncidentType,
@@ -8,14 +12,15 @@ import {
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
-import { claimConsiderSelector, ClaimConsiderValues, resetState } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, ClaimConsiderValues, resetState, setClaimForm } from "../../store/claimConsiderSlice";
+import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRevisionMappers";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType } from "../../../../functionHelpers";
-import { CaseDocumentV2Request, TimeSpan } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 
 /** รวมวันที่+เวลาที่กรอกแยกกันเป็น dayjs เดียว — วันที่มาจาก date picker เวลามาจาก time picker คนละ field */
 const combineDateTime = (
@@ -24,17 +29,6 @@ const combineDateTime = (
 ): dayjs.Dayjs | undefined => {
     if (!date || !time) return undefined;
     return date.hour(time.hour()).minute(time.minute()).second(0).millisecond(0);
-};
-
-/**
- * detail.incidentTime/admissionTime/dischargeTime พิมพ์เป็น TimeSpan (object) แต่ backend ส่งจริงเป็น
- * string "HH:mm:ss" (ดู asTimeSpan ฝั่งส่งใน ClaimDetailActionHook.tsx ที่ cast กลับด้าน — สรุป TimeSpan
- * ของ NSwag ตัวนี้เป็น string เสมอ ไม่ใช่ object ที่มี .hours/.minutes) จึง parse เป็น dayjs ตรงๆ แทนการอ่าน field
- */
-const parseTimeSpan = (time: TimeSpan | undefined): dayjs.Dayjs | undefined => {
-    if (!time) return undefined;
-    const parsed = dayjs(time as unknown as string, "HH:mm:ss");
-    return parsed.isValid() ? parsed : undefined;
 };
 
 const calculateStayDays = (
@@ -66,11 +60,19 @@ const calculateStayDays = (
     return fullDays + (remainingMinutes >= SIX_HOURS ? 1 : 0);
 };
 
-const useConsiderDetailHook = () => {
+type UseConsiderDetailHookOptions = {
+    /** true เฉพาะ instance ที่เป็นเจ้าของฟอร์มจริง (ClaimDetailsTab) — hook นี้ถูกเรียกอีก 2 จุด
+     * (ConsiderDetailPage, PolicyBenefitHook) ที่สร้าง formik ของตัวเองแยกต่างหาก ไม่ควร overlay ซ้ำ */
+    enableDraftOverlay?: boolean;
+};
+
+const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetailHookOptions = {}) => {
     const { id } = useParams();
     const claimId = id ? atob(id) : undefined;
     const dispatch = useAppDispatch();
-    const { form } = useAppSelector(claimConsiderSelector);
+    const { form, viewingDraft } = useAppSelector(claimConsiderSelector);
+    const draftRevisionId = viewingDraft?.draftRevisionId;
+    const { data: draftRevision } = useGetClaimEditDraftRevision(draftRevisionId);
     const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "");
     const detail = detailData?.data;
@@ -346,6 +348,39 @@ const useConsiderDetailHook = () => {
         hasSyncedMainRef.current = true;
         dispatch(setEnabled(true));
     }, [detail, incidentType, coverageType, incidentTypeMapping]);
+
+    // ---- phase 1.5 : ทับค่าจาก "บันทึกแบบร่าง" ที่ผู้ใช้กดดูจากแท็บประวัติการทำรายการ ----
+    // ต้องประกาศหลัง phase 1 เสมอ (effect รันตามลำดับที่ประกาศภายใน commit เดียวกัน) และ deps คร่อม
+    // deps ของ phase 1 ไว้ เพื่อให้รันซ้ำได้ทั้ง 2 ทาง ไม่ว่า phase 1 จะเสร็จก่อนหรือ draft response จะมาก่อน
+    const appliedDraftRevisionIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!enableDraftOverlay || !draftRevisionId) return;
+        if (appliedDraftRevisionIdRef.current === draftRevisionId) return;
+        if (!hasSyncedMainRef.current) return; // phase 1 ต้องลงก่อน ไม่งั้นถูกทับกลับ
+        const payload = draftRevision?.data?.payload;
+        if (!payload || !incidentTypeMapping?.data) return;
+
+        const draftValues = mapDraftPayloadToFormValues({
+            payload,
+            incidentType,
+            coverageType,
+            mappingData: incidentTypeMapping.data,
+        });
+
+        // ต้องอัปเดต 2 ref นี้ก่อน setValues ไม่งั้น cascade-reset effect ด้านล่างจะเห็นว่า incident/coverage
+        // เปลี่ยนแล้วล้าง coverage/medical ของแบบร่างทิ้งใน commit ถัดไป
+        if (draftValues.incidentTypeId !== undefined) prevIncidentTypeIdRef.current = draftValues.incidentTypeId;
+        if (draftValues.coverageTypeId !== undefined) prevCoverageTypeIdRef.current = draftValues.coverageTypeId;
+
+        formik.setValues((prev) => ({ ...prev, ...draftValues }), false);
+        appliedDraftRevisionIdRef.current = draftRevisionId;
+
+        // ให้ ClaimExpenseDetailHook ยิง master list ด้วย coverage/medical ของแบบร่าง (hook นั้นอ่าน
+        // Redux form ก่อนแล้วค่อย fallback ไป detail)
+        dispatch(
+            setClaimForm({ coverageTypeId: draftValues.coverageTypeId, medicalTypeId: draftValues.medicalTypeId })
+        );
+    }, [enableDraftOverlay, draftRevisionId, draftRevision, incidentType, coverageType, incidentTypeMapping, detail]);
 
     // ---- cascade reset: จัดการเมื่อ incidentTypeId หรือ coverageTypeId เปลี่ยน ----
     useEffect(() => {
