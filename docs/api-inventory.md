@@ -62,6 +62,8 @@ in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetInsuranceCompany`.
 | Hook | Purpose |
 |---|---|
 | `useGetDocumentById(documentId)` | Fetch stored document metadata |
+| `useGetDocumentListByIds(documentIds[])` | GET `/document/documentid/list?documentIds=...` — metadata + `fileCount` for many documentIds at once (feeds the "ตรวจสอบเอกสาร" count column + the open-modal gate) |
+| `useGetDocumentFileByDocumentId(documentId?)` | GET `/document/{documentId}/documentFile` — real file list for one document (called when the document-detail modal opens) |
 | `useCreateDocumentToDocStorage` **(mutation)** | Upload a document |
 
 ## `claimFundApi.ts` — Claim Fund / Transfer service (raw axios, no NSwag client, `${API_CLAIM_FUND_URL}/api`)

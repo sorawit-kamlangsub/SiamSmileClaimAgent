@@ -225,6 +225,8 @@ export type DocumentFile = {
 
 export type DocumentCheckRow = {
     documentId: string;
+    /** documentSubTypeId จาก overview — ใช้ประกอบลิงก์ไปแนบเอกสารที่ DocStorage */
+    documentSubTypeId?: number;
     documentName: string;
     files: DocumentFile[];
     checkResult: DocumentCheckResult | "";

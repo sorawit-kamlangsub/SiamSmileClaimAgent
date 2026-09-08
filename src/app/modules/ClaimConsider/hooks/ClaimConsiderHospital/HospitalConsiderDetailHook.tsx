@@ -10,6 +10,7 @@ import {
     useGetCustomerDetailById,
 } from "../../../../api/coreClaimApi";
 import { DocumentReviewOverviewItemDtoResponse } from "../../../../api/coreClaimApi.client";
+import { useGetDocumentListByIds } from "../../../../api/docstorageApi";
 import {
     useGetDecisionReason,
     useGetDocumentReviewStatus,
@@ -70,34 +71,34 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     documentChecks: DocumentCheckRow[];
 }
 
+/** ข้อมูลเอกสารจาก DocStorage (GET /document/documentid/list) ที่ตาราง "ตรวจสอบเอกสาร" ใช้แสดง */
+export type DocStorageDocInfo = {
+    /** ชื่อเอกสาร = documentTypeName */
+    documentName: string;
+    /** จำนวนไฟล์ที่แนบจริงใน DocStorage */
+    fileCount: number;
+    /** ข้อมูลสำหรับประกอบลิงก์ไปแนบเอกสารที่หน้า DocStorage (ปุ่ม "สแกนเอกสาร") */
+    documentCode: string;
+    mainIndex: string;
+    searchIndex: string;
+};
+
 /**
  * map ผลจาก GET /document/case/{caseId}/overview (documentReview.documents[])
  * -> แถวตาราง "ตรวจสอบเอกสาร"
+ *
+ * `files` ปล่อยว่างไว้เสมอ — จำนวนไฟล์จริงมาจาก GET /document/documentid/list (ตาราง)
+ * และรายการไฟล์มาจาก GET /document/{documentId}/documentFile (ตอนเปิด modal)
  */
 const mapDocumentChecks = (documents: DocumentReviewOverviewItemDtoResponse[]): DocumentCheckRow[] =>
-    documents.map((doc) => {
-        const documentName = doc.documentTypeName || "-";
-        const fileCount = doc.fileCount ?? 0;
-        const uploadedDate =
-            formatDateString((doc.updatedDate ?? doc.createdDate)?.toString() ?? "", "DD/MM/BBBB HH:mm") || "-";
-
-        return {
-            documentId: doc.documentId ?? doc.caseDocumentId ?? "",
-            documentName,
-            // overview ส่งมาแค่จำนวนไฟล์ (fileCount) — สร้าง placeholder ให้ตัวนับ/ปุ่มดูรายละเอียดทำงาน
-            // ตัวไฟล์จริงจะเชื่อมกับ DocStorage ภายหลัง (ดู DocumentFileViewer)
-            files: Array.from({ length: fileCount }, (_, index) => ({
-                fileId: `${doc.caseDocumentId ?? doc.documentId ?? "doc"}-${index + 1}`,
-                fileName: `${documentName} - ไฟล์ ${index + 1}`,
-                fileType: "",
-                fileSize: "-",
-                uploadedDate,
-                uploadedBy: "-",
-            })),
-            checkResult: doc.documentReviewStatusId || "",
-            remark: doc.documentReviewRemark || doc.documentRemark || "",
-        };
-    });
+    documents.map((doc) => ({
+        documentId: doc.documentId ?? doc.caseDocumentId ?? "",
+        documentSubTypeId: doc.documentSubTypeId,
+        documentName: doc.documentTypeName || "-",
+        files: [],
+        checkResult: doc.documentReviewStatusId || "",
+        remark: doc.documentReviewRemark || doc.documentRemark || "",
+    }));
 
 /**
  * ค่าเริ่มต้นของฟอร์ม
@@ -288,6 +289,37 @@ const useHospitalConsiderDetailHook = () => {
     const { data: caseReviewOverviewData, isLoading: caseReviewOverviewLoading } = useGetCaseReviewOverview(
         detail?.caseId ?? undefined
     );
+    const overviewDocuments = useMemo(
+        () => caseReviewOverviewData?.data?.documentReview?.documents ?? [],
+        [caseReviewOverviewData]
+    );
+
+    /**
+     * เอกสารจริงใน DocStorage ของทุก documentId ในเคสนี้ (GET /document/documentid/list)
+     * ตาราง "ตรวจสอบเอกสาร" แสดงชื่อ (documentTypeName) + จำนวนไฟล์ (fileCount) จาก endpoint นี้
+     * และใช้ fileCount เป็นเงื่อนไขเปิด modal ดูรายละเอียด (0 = ไม่มีเอกสารแนบ เปิดไม่ได้)
+     */
+    const documentIds = useMemo(
+        () => overviewDocuments.map((doc) => doc.documentId).filter((id): id is string => !!id),
+        [overviewDocuments]
+    );
+    const { data: documentStorageListData, isLoading: documentStorageListLoading } =
+        useGetDocumentListByIds(documentIds);
+    const documentInfoByDocId = useMemo<Record<string, DocStorageDocInfo>>(() => {
+        const map: Record<string, DocStorageDocInfo> = {};
+        (documentStorageListData?.data ?? []).forEach((doc) => {
+            if (doc.documentId) {
+                map[doc.documentId] = {
+                    documentName: doc.documentTypeName || "-",
+                    fileCount: doc.fileCount ?? 0,
+                    documentCode: doc.documentCode ?? "",
+                    mainIndex: doc.mainIndex ?? "",
+                    searchIndex: doc.searchIndex ?? "",
+                };
+            }
+        });
+        return map;
+    }, [documentStorageListData]);
 
     /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม + แถบสรุป) */
     const { data: claimContinueData, isLoading: continuousClaimRowsLoading } = useGetClaimContinue(
@@ -426,12 +458,11 @@ const useHospitalConsiderDetailHook = () => {
     // ---- sync: ตาราง "ตรวจสอบเอกสาร" จาก overview API (ครั้งเดียว ไม่ทับค่าที่ผู้ใช้แก้) ----
     useEffect(() => {
         if (hasSyncedDocumentsRef.current) return;
-        const documents = caseReviewOverviewData?.data?.documentReview?.documents;
-        if (!documents) return;
+        if (!caseReviewOverviewData?.data?.documentReview) return;
 
-        formik.setFieldValue("documentChecks", mapDocumentChecks(documents), false);
+        formik.setFieldValue("documentChecks", mapDocumentChecks(overviewDocuments), false);
         hasSyncedDocumentsRef.current = true;
-    }, [caseReviewOverviewData]);
+    }, [caseReviewOverviewData, overviewDocuments]);
 
     // ---- phase 1: sync incidentType, coverageType, date/time, diagnoses, remark ----
     useEffect(() => {
@@ -604,6 +635,8 @@ const useHospitalConsiderDetailHook = () => {
         detailDataLoading,
         customerDetailLoading,
         caseReviewOverviewLoading,
+        documentInfoByDocId,
+        documentStorageListLoading,
         incidentType,
         incidentTypeLoading,
         coverageType,

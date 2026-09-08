@@ -95,6 +95,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         handleDocumentCheckChange,
         handleDocumentScan,
         documentCheckResultOptions,
+        documentInfoByDocId,
         claimListTypeConfig,
         detailData,
         customerDetailData,
@@ -223,9 +224,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const currentCaseNo = detail?.caseNo ?? "";
     const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
+    /** จำนวนไฟล์จริงใน DocStorage ของ documentId นั้น (0 = ยังไม่มีเอกสารแนบ) */
+    const getFileCount = (documentId: string) => documentInfoByDocId[documentId]?.fileCount ?? 0;
+
     /** เอกสารที่มีไฟล์แนบต้องเลือกผลการตรวจครบก่อนกด "ถัดไป" (ชีท row 104-105) */
     const isDocumentResultAllSelected = () =>
-        !formik.values.documentChecks.some((doc) => doc.files.length > 0 && doc.checkResult === "");
+        !formik.values.documentChecks.some((doc) => getFileCount(doc.documentId) > 0 && doc.checkResult === "");
 
     const handleNext = async () => {
         // Step 1 : ต้องผ่าน Validate + เลือกผลการตรวจเอกสารครบ ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท)
@@ -277,7 +281,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
      */
     const isDocumentResultAllPassed = () =>
         !formik.values.documentChecks.some(
-            (doc) => doc.files.length > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
+            (doc) => getFileCount(doc.documentId) > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
         );
 
     /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง */
@@ -378,6 +382,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     onChange={handleDocumentCheckChange}
                                     onScan={handleDocumentScan}
                                     options={documentCheckResultOptions}
+                                    documentInfoByDocumentId={documentInfoByDocId}
                                     readOnly={readOnly}
                                 />
                             </Grid>
