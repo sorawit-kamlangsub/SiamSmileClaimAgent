@@ -43,6 +43,7 @@ const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCas
 const getHospitalClaimAdjudicationMonitorQueryKey = ["getHospitalClaimAdjudicationMonitor"];
 const getDocumentByCaseIdQueryKey = ["getDocumentByCaseId"];
 const getDCRQueryKey = ["getDCR"];
+const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
 
 /**
  * ล้าง cache ของ query ที่ได้รับผลกระทบจากการบันทึก/พิจารณาเคลม (ใช้ร่วมกันทั้งเคลมลูกค้าและเคลม รพ.
@@ -776,6 +777,17 @@ export const useGetDCR = (
         {
             enabled: !!applicationCode,
             refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetClaimEditDraftRevision = (draftRevisionId?: string | undefined) => {
+    return useQuery(
+        [getClaimEditDraftRevisionQueryKey, draftRevisionId],
+        () => coreClaimClient.getClaimEditDraftRevision(draftRevisionId),
+        {
+            enabled: !!draftRevisionId,
+            refetchOnWindowFocus: false,
         }
     );
 };
