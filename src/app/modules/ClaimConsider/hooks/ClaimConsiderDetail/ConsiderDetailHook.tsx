@@ -15,7 +15,27 @@ import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSel
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType } from "../../../../functionHelpers";
-import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentV2Request, TimeSpan } from "../../../../api/coreClaimApi.client";
+
+/** รวมวันที่+เวลาที่กรอกแยกกันเป็น dayjs เดียว — วันที่มาจาก date picker เวลามาจาก time picker คนละ field */
+const combineDateTime = (
+    date: dayjs.Dayjs | null | undefined,
+    time: dayjs.Dayjs | null | undefined
+): dayjs.Dayjs | undefined => {
+    if (!date || !time) return undefined;
+    return date.hour(time.hour()).minute(time.minute()).second(0).millisecond(0);
+};
+
+/**
+ * detail.incidentTime/admissionTime/dischargeTime พิมพ์เป็น TimeSpan (object) แต่ backend ส่งจริงเป็น
+ * string "HH:mm:ss" (ดู asTimeSpan ฝั่งส่งใน ClaimDetailActionHook.tsx ที่ cast กลับด้าน — สรุป TimeSpan
+ * ของ NSwag ตัวนี้เป็น string เสมอ ไม่ใช่ object ที่มี .hours/.minutes) จึง parse เป็น dayjs ตรงๆ แทนการอ่าน field
+ */
+const parseTimeSpan = (time: TimeSpan | undefined): dayjs.Dayjs | undefined => {
+    if (!time) return undefined;
+    const parsed = dayjs(time as unknown as string, "HH:mm:ss");
+    return parsed.isValid() ? parsed : undefined;
+};
 
 const calculateStayDays = (
     admissionDate: dayjs.Dayjs | null | undefined,
@@ -23,13 +43,12 @@ const calculateStayDays = (
     dischargeDate: dayjs.Dayjs | null | undefined,
     dischargeTime: dayjs.Dayjs | null | undefined
 ): number => {
-    if (!admissionDate || !admissionTime || !dischargeDate || !dischargeTime) {
+    const admission = combineDateTime(admissionDate, admissionTime);
+    const discharge = combineDateTime(dischargeDate, dischargeTime);
+
+    if (!admission || !discharge) {
         return 0;
     }
-
-    const admission = admissionDate.hour(admissionTime.hour()).minute(admissionTime.minute()).second(0).millisecond(0);
-
-    const discharge = dischargeDate.hour(dischargeTime.hour()).minute(dischargeTime.minute()).second(0).millisecond(0);
 
     const diffMinutes = discharge.diff(admission, "minute");
 
@@ -113,6 +132,40 @@ const useConsiderDetailHook = () => {
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
             }
             if (!values.dischargeTime) errors.dischargeTime = req;
+
+            // ── ลำดับเวลาตามหลักความเป็นจริง: เกิดเหตุ ≤ เข้า รพ < ออก รพ ──
+            // เทียบเป็น datetime เดียวกัน (วันที่+เวลารวมกัน) ไม่ใช่เทียบแยกวันกับเวลา เพราะเกิดเหตุกับ
+            // เข้า รพ อาจเป็นวันเดียวกันแต่เวลาเข้า รพ ก่อนเวลาเกิดเหตุก็ได้ ซึ่ง validate ระดับวันด้านบนจับไม่ได้
+            const incidentDateTime = combineDateTime(values.incidentDate, values.incidentTime);
+            const admissionDateTime = combineDateTime(values.admissionDate, values.admissionTime);
+            const dischargeDateTime = combineDateTime(values.dischargeDate, values.dischargeTime);
+
+            // ── ห้ามเลือกเวลาที่ยังไม่ถึง ──
+            // เช็ควันที่ด้านบน (isAfter(today)) เทียบแค่ระดับวัน ไม่พอสำหรับ "วันนี้แต่เวลาในอนาคต"
+            // เช่น ตอนนี้ 10:00 แต่เลือกเวลาที่เกิดเหตุเป็น 23:00 วันนี้ — ผ่าน check วันที่แต่เป็นเวลาที่ยังไม่ถึงจริง
+            const now = dayjs();
+            if (!errors.incidentDate && !errors.incidentTime && incidentDateTime && incidentDateTime.isAfter(now)) {
+                errors.incidentTime = "เวลาที่เกิดเหตุต้องไม่เป็นเวลาในอนาคต";
+            }
+            if (!errors.admissionDate && !errors.admissionTime && admissionDateTime && admissionDateTime.isAfter(now)) {
+                errors.admissionTime = "เวลาที่เข้าโรงพยาบาลต้องไม่เป็นเวลาในอนาคต";
+            }
+            if (!errors.dischargeDate && !errors.dischargeTime && dischargeDateTime && dischargeDateTime.isAfter(now)) {
+                errors.dischargeTime = "เวลาที่ออกโรงพยาบาลต้องไม่เป็นเวลาในอนาคต";
+            }
+
+            // เช็คเฉพาะตอน field วันที่/เวลาที่เกี่ยวข้องยังไม่มี error อื่นอยู่ก่อน กัน error ซ้อนทับกัน
+            if (!errors.admissionDate && !errors.admissionTime && incidentDateTime && admissionDateTime) {
+                if (admissionDateTime.isBefore(incidentDateTime)) {
+                    errors.admissionTime = "เวลาที่เข้าโรงพยาบาลต้องไม่ก่อนเวลาที่เกิดเหตุ";
+                }
+            }
+            if (!errors.dischargeDate && !errors.dischargeTime && admissionDateTime && dischargeDateTime) {
+                if (!dischargeDateTime.isAfter(admissionDateTime)) {
+                    errors.dischargeTime = "เวลาที่ออกโรงพยาบาลต้องหลังเวลาที่เข้าโรงพยาบาล";
+                }
+            }
+
             if (!values.chiefComplaintId) errors.chiefComplaintId = req;
             if (!values.hospitalId) errors.hospitalId = req;
             if (!values.diagnoses[0]?.icd10Id) {
@@ -258,17 +311,20 @@ const useConsiderDetailHook = () => {
         }
 
         // ---- วันที่และข้อมูลอื่นๆ ----
+        // เวลาต้องอ่านจาก field .xTime (TimeSpan) โดยเฉพาะ ไม่ใช่ derive จาก .xDate เพราะ field วันที่กับ
+        // เวลาแยกกันจาก backend — .xDate อาจไม่มีเวลาจริงติดมาด้วย (fallback ไป .xDate ไว้เผื่อ backend เก่าที่
+        // ยังไม่ส่ง .xTime มา)
         if (detail.admissionDate) {
             newValues.admissionDate = dayjs(detail.admissionDate);
-            newValues.admissionTime = dayjs(detail.admissionDate);
+            newValues.admissionTime = parseTimeSpan(detail.admissionTime) ?? dayjs(detail.admissionDate);
         }
         if (detail.incidentDate) {
             newValues.incidentDate = dayjs(detail.incidentDate);
-            newValues.incidentTime = dayjs(detail.incidentDate);
+            newValues.incidentTime = parseTimeSpan(detail.incidentTime) ?? dayjs(detail.incidentDate);
         }
         if (detail.dischargeDate) {
             newValues.dischargeDate = dayjs(detail.dischargeDate);
-            newValues.dischargeTime = dayjs(detail.dischargeDate);
+            newValues.dischargeTime = parseTimeSpan(detail.dischargeTime) ?? dayjs(detail.dischargeDate);
         }
         if (detail.createdDate) {
             newValues.createdDate = dayjs(detail.createdDate);
