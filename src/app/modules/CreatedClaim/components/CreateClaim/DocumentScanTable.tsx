@@ -1,8 +1,8 @@
 import { MUIDataTableColumn } from "mui-datatables";
 import { Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
-import { useCallback, useEffect, useState } from "react";
-import { useGetDocumentType } from "../../../../api/coreClaimApi";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useGetDocumentByCaseId, useGetDocumentType } from "../../../../api/coreClaimApi";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../functionHelpers";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import { StandardDataTable } from "../../../_common";
@@ -60,6 +60,9 @@ type DocumentScanTableProps = {
     documentType?: DocumentTypeKey | undefined;
     Header?: string;
     rejectClaim?: boolean;
+    /** caseId ของเคสที่กำลังพิจารณา — ถ้าส่งมาจะดึงเอกสารที่ลูกค้าแนบไว้จริงมาทับแถวของ master (ไม่ส่ง = พฤติกรรมเดิม) */
+    caseId?: string;
+    claimSourceId?: number;
     onAttachedDocumentsChange?: (docs: CaseDocumentV2Request[]) => void;
 };
 
@@ -69,6 +72,8 @@ const DocumentScanTable = ({
     rejectClaim,
     productTypeId,
     Header,
+    caseId,
+    claimSourceId,
     onAttachedDocumentsChange,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
@@ -79,7 +84,7 @@ const DocumentScanTable = ({
         setFileCountByDocId((prev) => (prev[documentId] === fileCount ? prev : { ...prev, [documentId]: fileCount }));
     }, []);
 
-    const { data, isLoading } = useGetDocumentType(
+    const { data, isLoading: isMasterLoading } = useGetDocumentType(
         {
             documentTypeId: documentTypeId[documentType],
             documentPrefix: "DOC",
@@ -87,13 +92,66 @@ const DocumentScanTable = ({
         },
         isEnabled
     );
-    const enrichedData = data?.data || [];
+
+    // ดึงเอกสารที่ลูกค้าแนบไว้จริงของเคสนี้ (documentId ตัวจริงที่เก็บไฟล์) มา merge ทับรายการ master
+    // ด้านบน — ถ้าไม่ส่ง caseId มา (เช่นตอนสแกนเอกสารปฏิเสธ/ตอนสร้างเคลมที่ยังไม่มี caseId) query
+    // จะไม่ยิงเลยเพราะ enabled: !!caseId ใน useGetDocumentByCaseId ทำให้พฤติกรรมเดิมไม่เปลี่ยน
+    //
+    // รอ productTypeId ให้พร้อมก่อนค่อยส่ง caseId จริงเข้าไป : ที่ ClaimDetailsTab caseId มาจาก
+    // detail?.caseId (พร้อมทันทีที่โหลดรายละเอียดเคลมเสร็จ) ส่วน productTypeId มาจาก
+    // customerDetail?.productTypeId ?? 0 ซึ่ง customerDetail ต้องรอ detail.customerId ก่อนถึงยิง
+    // จึงมาถึงทีหลังเสมอ ถ้าไม่ guard ตรงนี้ query จะยิงรอบแรกด้วย productTypeId=0 ก่อน แล้วพอ
+    // customerDetail มาค่อยยิงซ้ำอีกรอบด้วยค่าจริง (query key เปลี่ยนเพราะ productTypeId อยู่ในคีย์)
+    const { data: caseDocumentData, isLoading: isCaseDocumentLoading } = useGetDocumentByCaseId(
+        productTypeId ? caseId ?? "" : "",
+        productTypeId,
+        claimSourceId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        100
+    );
+
+    const isLoading = isMasterLoading || isCaseDocumentLoading;
+
+    // match ด้วย documentSubTypeId — แถว master ที่ลูกค้าแนบเอกสารมาแล้วจะถูกทับด้วย documentId/
+    // documentCode ตัวจริงของเคส ส่วนเอกสารที่ลูกค้าแนบเป็นประเภทที่ไม่อยู่ใน master ของ productTypeId
+    // นี้ (หาคู่ไม่เจอ) จะต่อท้ายไว้แทนที่จะทิ้ง
+    const enrichedData: GetDocumentSubTypeDtoResponse[] = useMemo(() => {
+        const masterRows = data?.data ?? [];
+        const caseRows = caseDocumentData?.data ?? [];
+        const usedCaseRowIndexes = new Set<number>();
+
+        const merged = masterRows.map((masterRow) => {
+            const caseRowIndex = caseRows.findIndex(
+                (caseRow, idx) =>
+                    !usedCaseRowIndexes.has(idx) && caseRow.documentSubTypeId === masterRow.documentSubTypeId
+            );
+            if (caseRowIndex === -1) return masterRow;
+            usedCaseRowIndexes.add(caseRowIndex);
+            const caseRow = caseRows[caseRowIndex];
+            return { ...masterRow, documentId: caseRow.documentId, documentCode: caseRow.documentCode };
+        });
+
+        const extraCaseRows: GetDocumentSubTypeDtoResponse[] = caseRows
+            .filter((_caseRow, idx) => !usedCaseRowIndexes.has(idx))
+            .map((caseRow) => ({
+                documentId: caseRow.documentId,
+                documentCode: caseRow.documentCode,
+                documentSubTypeId: caseRow.documentSubTypeId,
+                documentSubTypeName: caseRow.claimDocumentTypeName,
+                documentTypeId: caseRow.claimDocumentTypeId,
+            }));
+
+        return [...merged, ...extraCaseRows];
+    }, [data, caseDocumentData]);
 
     useEffect(() => {
         if (enrichedData.length > 0) {
             dispatch(setDocument(enrichedData));
         }
-    }, [data]);
+    }, [enrichedData]);
 
     useEffect(() => {
         if (!onAttachedDocumentsChange) return;
@@ -177,7 +235,7 @@ const DocumentScanTable = ({
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const docData = data?.data?.[tableMeta.rowIndex] || {};
+                    const docData = enrichedData[tableMeta.rowIndex] || {};
 
                     return <FileCount docData={docData} onFileCountChange={handleFileCountChange} />;
                 },

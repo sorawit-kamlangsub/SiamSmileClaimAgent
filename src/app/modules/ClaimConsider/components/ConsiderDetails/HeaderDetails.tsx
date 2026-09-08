@@ -20,6 +20,8 @@ import {
 } from "../../../../functionHelpers";
 import ClaimTransationTab from "./TabDetails/ClaimTransationTab";
 import PolicyBenefitTab from "./TabDetails/PolicyBenefitTab";
+import ClaimHistoryTab from "./TabDetails/ClaimHistoryTab";
+import PaymentHistoryTab from "./TabDetails/PaymentHistoryTab";
 
 type HeaderDetailsProps = {
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
@@ -163,6 +165,12 @@ const HeaderDetails = ({
                         </TabPanel>
                         <TabPanel value="3">
                             <PolicyBenefitTab />
+                        </TabPanel>
+                        <TabPanel value="4">
+                            <ClaimHistoryTab applicationId={customerDetail?.policyCode} />
+                        </TabPanel>
+                        <TabPanel value="5">
+                            <PaymentHistoryTab applicationCode={customerDetail?.policyCode} />
                         </TabPanel>
                     </Grid>
                 </TabContext>

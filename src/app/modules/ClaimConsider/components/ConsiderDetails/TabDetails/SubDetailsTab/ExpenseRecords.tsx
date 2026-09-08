@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import {
+    Alert,
     Box,
     Button,
     Checkbox,
@@ -316,6 +317,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ detailData, customerDet
         totalDiscount,
         totalNotCovered,
         netClaimAmount,
+        paymentAmount,
+        amountReconciliation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
@@ -751,7 +754,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ detailData, customerDet
                                     </Typography>
                                 </Box>
                                 <Typography fontWeight={700} color={REF.primary} whiteSpace="nowrap">
-                                    {fmt(netClaimAmount)}{" "}
+                                    {fmt(paymentAmount)}{" "}
                                     <Typography component="span" variant="caption">
                                         บาท
                                     </Typography>
@@ -759,6 +762,20 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ detailData, customerDet
                             </Box>
                         </Stack>
                     </Box>
+
+                    {/* ── ผลตรวจสอบยอดเงิน ClaimLine (ยอดที่จ่าย+ไม่คุ้มครอง เทียบใบเสร็จสุทธิ / เทียบสิทธิ์เบิก) ── */}
+                    <Alert
+                        severity={
+                            amountReconciliation.status === "ok"
+                                ? "success"
+                                : amountReconciliation.status === "error"
+                                ? "error"
+                                : "warning"
+                        }
+                        sx={{ mt: 1.5 }}
+                    >
+                        {amountReconciliation.message}
+                    </Alert>
 
                     <Divider sx={{ my: 2 }} />
 

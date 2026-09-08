@@ -14,6 +14,7 @@ import {
     claimConsiderSelector,
     setCalculateExpenseResult,
 } from "../../store/claimConsiderSlice";
+import { getClaimAmountReconciliation, sumClaimExpenseItems } from "../../../ClaimSimulate/store/Claimsimulateutils";
 
 const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
     "incidentTypeId",
@@ -37,6 +38,8 @@ type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
     filledItems: ClaimExpenseItem[];
     stepsLength: number;
+    /** ยอดที่จ่ายจริง (detail.paymentAmount) — ใช้เช็คยอดเงิน ClaimLine ก่อนปล่อยผ่าน Step 2 */
+    paymentAmount?: number;
 };
 
 const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
@@ -44,6 +47,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     customerDetail,
     filledItems,
     stepsLength,
+    paymentAmount,
 }: UseClaimStepCalculateHookProps<TValues>) => {
     const dispatch = useAppDispatch();
     // sync มาจาก ClaimExpenseDetailHook (/standard-medical-expense/case) — อ่านจาก store แทนการรับเป็น param
@@ -161,6 +165,12 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
         }
 
         if (activeStep === 1) {
+            const totals = sumClaimExpenseItems(filledItems);
+            const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount: paymentAmount ?? 0 });
+            if (reconciliation.status === "error") {
+                swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
+                return;
+            }
             await handleCalculate();
         }
         const next = Math.min(activeStep + 1, stepsLength - 1);

@@ -14,7 +14,7 @@ import {
     UpsertClaimDecisionDtoRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { API_URL } from "../../Const";
 
@@ -41,6 +41,35 @@ const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
 const getPreviousClaimQueryKey = ["getPreviousClaim"];
 const getStandardMedicalExpenseByCaseQueryKey = ["getStandardMedicalExpenseByCase"];
+const getHospitalClaimAdjudicationMonitorQueryKey = ["getHospitalClaimAdjudicationMonitor"];
+const getDocumentByCaseIdQueryKey = ["getDocumentByCaseId"];
+const getDCRQueryKey = ["getDCR"];
+
+/**
+ * ล้าง cache ของ query ที่ได้รับผลกระทบจากการบันทึก/พิจารณาเคลม (ใช้ร่วมกันทั้งเคลมลูกค้าและเคลม รพ.
+ * เพราะ mutation ชุดนี้ใช้ผ่าน useClaimDetailActionHook เหมือนกันทั้งสอง flow)
+ *
+ * ทำไมต้องมี : global staleTime = 5 นาที ถ้าไม่ invalidate ผู้ใช้ที่บันทึกแล้วกลับเข้ารายการเดิม
+ * ภายใน 5 นาทีจะเห็นข้อมูล "ก่อนบันทึก" จาก cache จนกว่าจะ refresh ทั้งหน้า
+ *
+ * ทำไมใช้ refetchType "none" : query รายละเอียด/ค่ารักษา/เอกสาร ยัง active อยู่ตอนกดบันทึก และผู้ใช้
+ * กำลังจะออกจากหน้าอยู่แล้ว การ refetch ตรงนั้นเป็น request ที่เสียเปล่าบนหน้าที่หนักที่สุด — แค่มาร์ค
+ * ว่า stale ก็พอ รอบ mount ถัดไปจะยิงใหม่เอง (refetchOnMount ไม่ได้ถูก override จึงเป็น true ตาม default)
+ *
+ * หมายเหตุรูปแบบ key : key ในไฟล์นี้เป็น array ซ้อน array เช่น [["getClaimDetailConsider"], claimId]
+ * จึงต้องส่ง filter เป็น [key] ไม่ใช่ key เปล่าๆ ไม่งั้นจะเทียบ string กับ array แล้วไม่ match อะไรเลย
+ */
+const invalidateClaimConsiderQueries = (queryClient: QueryClient) => {
+    [
+        getClaimDetailConsiderQueryKey,
+        getStandardMedicalExpenseByCaseQueryKey,
+        getDocumentByCaseIdQueryKey,
+        getClaimTransactionLogQueryKey,
+        getCustomerClaimAdjudicationMonitorQueryKey,
+        getHospitalClaimAdjudicationMonitorQueryKey,
+        getDashboardCustomerConsiderQueryKey,
+    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey], { refetchType: "none" }));
+};
 
 export const useCalculateCaseClaim = (
     onSuccessCallback?: (response: CalculateCaseClaimDtoResponseServiceResponse) => void,
@@ -531,8 +560,10 @@ export const useSaveClaimEditDraft = (
     onSuccessCallback?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void,
     onErrorCallback?: (error: string) => void
 ) => {
+    const queryClient = useQueryClient();
     return useMutation((body?: SaveClaimEditDraftDtoRequest | undefined) => coreClaimClient.saveClaimEditDraft(body), {
         onSuccess: (response) => {
+            invalidateClaimConsiderQueries(queryClient);
             if (!response.isSuccess)
                 onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
             else onSuccessCallback?.(response);
@@ -567,10 +598,12 @@ export const useUpsertClaimDecision = (
     onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
 ) => {
+    const queryClient = useQueryClient();
     return useMutation(
         (body?: UpsertClaimDecisionDtoRequest | undefined) => coreClaimClient.upsertClaimDecision(body),
         {
             onSuccess: (response) => {
+                invalidateClaimConsiderQueries(queryClient);
                 if (!response.isSuccess)
                     onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
                 else onSuccessCallback?.(response);
@@ -586,10 +619,12 @@ export const useApproveClaimDecision = (
     onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
 ) => {
+    const queryClient = useQueryClient();
     return useMutation(
         (body?: ApproveClaimDecisionDtoRequest | undefined) => coreClaimClient.approveClaimDecision(body),
         {
             onSuccess: (response) => {
+                invalidateClaimConsiderQueries(queryClient);
                 if (!response.isSuccess)
                     onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
                 else onSuccessCallback?.(response);
@@ -666,7 +701,7 @@ export const useGetHospitalClaimAdjudicationMonitor = (
 ) => {
     return useQuery(
         [
-            getCustomerClaimAdjudicationMonitorQueryKey,
+            getHospitalClaimAdjudicationMonitorQueryKey,
             dateOption,
             dateFrom,
             dateTo,
@@ -698,6 +733,65 @@ export const useGetHospitalClaimAdjudicationMonitor = (
         {
             enabled: !!isSearch,
             refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDocumentByCaseId = (
+    caseId: string,
+    productTypeId?: number | undefined,
+    claimSourceId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getDocumentByCaseIdQueryKey,
+            caseId,
+            productTypeId,
+            claimSourceId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getDocumentByCaseId(
+                caseId,
+                productTypeId,
+                claimSourceId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDCR = (
+    applicationCode?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getDCRQueryKey, applicationCode, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimClient.getDCR(applicationCode, searchDetail, orderingField, ascendingOrder, page, recordsPerPage),
+        {
+            enabled: !!applicationCode,
+            refetchOnWindowFocus: true,
         }
     );
 };
