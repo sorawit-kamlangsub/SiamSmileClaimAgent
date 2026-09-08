@@ -8,7 +8,7 @@ import {
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
-import { claimConsiderSelector, ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, ClaimConsiderValues, resetState } from "../../store/claimConsiderSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
@@ -176,6 +176,22 @@ const useConsiderDetailHook = () => {
     const hasSyncedMainRef = useRef(false);
     const prevIncidentTypeIdRef = useRef(formik.values.incidentTypeId);
     const prevCoverageTypeIdRef = useRef(formik.values.coverageTypeId);
+
+    // ---- เปลี่ยนเคลม (claimId เปลี่ยน) : ล้างสถานะของเคลมก่อนหน้าทิ้งทั้งหมด ----
+    // ClaimDetailsTab ไม่ถูก unmount ตอนสลับไปดูอีกเคลม (คนละ path param บน route เดียวกัน) จึง
+    // ต้องเคลียร์เองที่นี่ ไม่งั้น filledItems ใน Redux ค้างจากเคลมก่อนหน้า ทำให้ effect เติม
+    // "รายการค่ารักษา(เบื้องต้น)" ใน ClaimExpenseDetailHook เห็น items.length > 0 อยู่แล้วและข้ามการโหลด
+    // รายการของเคลมใหม่ไปเลย — และ hasSyncedMainRef ที่เป็น true ค้างจะทำให้ formik ไม่ sync ค่าจาก detail ใหม่ด้วย
+    const prevClaimIdRef = useRef(claimId);
+    useEffect(() => {
+        if (prevClaimIdRef.current === claimId) return;
+        prevClaimIdRef.current = claimId;
+        dispatch(resetState());
+        hasSyncedMainRef.current = false;
+        prevIncidentTypeIdRef.current = undefined;
+        prevCoverageTypeIdRef.current = undefined;
+        formik.resetForm();
+    }, [claimId]);
 
     // ---- phase 1: sync initial values from detail (ใช้ setValues ครั้งเดียว) ----
     useEffect(() => {
