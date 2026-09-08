@@ -113,7 +113,13 @@ const DocumentScanTable = ({
         100
     );
 
-    const isLoading = isMasterLoading || isCaseDocumentLoading;
+    // useGetDocumentByCaseId เป็น enabled: !!caseId — ถ้าไม่ส่ง caseId มา (เช่นตารางเอกสารประกอบการปฏิเสธ)
+    // query นี้ถูก disable ถาวรและไม่เคยยิงเลย แต่ react-query v4 ให้ query ที่ disable ตั้งแต่แรกค้างสถานะ
+    // isLoading=true ตลอดไป (ไม่มีทาง resolve เป็น false) ถ้ารวมเข้า isLoading ตรงๆ ตารางจะค้างที่
+    // LinearProgress ตลอดกาลทั้งที่ master list โหลดเสร็จแล้ว จึงต้องนับ isCaseDocumentLoading เฉพาะตอน
+    // query นี้ enabled จริงเท่านั้น
+    const isCaseDocumentEnabled = !!productTypeId && !!caseId;
+    const isLoading = isMasterLoading || (isCaseDocumentEnabled && isCaseDocumentLoading);
 
     // match ด้วย documentSubTypeId — แถว master ที่ลูกค้าแนบเอกสารมาแล้วจะถูกทับด้วย documentId/
     // documentCode ตัวจริงของเคส ส่วนเอกสารที่ลูกค้าแนบเป็นประเภทที่ไม่อยู่ใน master ของ productTypeId
