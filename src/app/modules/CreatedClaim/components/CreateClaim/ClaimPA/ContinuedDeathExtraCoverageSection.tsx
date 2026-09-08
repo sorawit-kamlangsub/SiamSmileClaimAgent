@@ -294,6 +294,7 @@ const ContinuedDeathExtraCoverageSection: React.FC<Props> = ({ oldClaim, benefit
                     {extraBenefits.map(({ benefit, category }) => {
                         const id = benefit.standardMedicalExpenseId ?? -1;
                         const isSelected = extraCoverageIds.includes(category);
+                        const isRemainEmpty = (benefit.remainAmount ?? 0) <= 0;
                         return (
                             <Grid item xs={12} sm={6} md={4} key={id}>
                                 <Box
@@ -359,13 +360,23 @@ const ContinuedDeathExtraCoverageSection: React.FC<Props> = ({ oldClaim, benefit
                                             mb: 1.5,
                                         }}
                                     >
-                                        <Typography fontSize={11.5} color="text.secondary">
-                                            วงเงินสูงสุด
+                                        <Typography
+                                            fontSize={11.5}
+                                            color={isRemainEmpty ? "error.main" : "text.secondary"}
+                                        >
+                                            วงเงินคงเหลือ
                                         </Typography>
-                                        <Typography fontSize={12.5} fontWeight={700} color="#1F2A44">
-                                            {numberWithCommas(benefit.maxPrice ?? 0)}
+                                        <Typography
+                                            fontSize={12.5}
+                                            fontWeight={700}
+                                            color={isRemainEmpty ? "error.main" : "#1F2A44"}
+                                        >
+                                            {numberWithCommas(benefit.remainAmount ?? 0)}
                                         </Typography>
-                                        <Typography fontSize={11.5} color="text.secondary">
+                                        <Typography
+                                            fontSize={11.5}
+                                            color={isRemainEmpty ? "error.main" : "text.secondary"}
+                                        >
                                             บาท
                                         </Typography>
                                     </Box>

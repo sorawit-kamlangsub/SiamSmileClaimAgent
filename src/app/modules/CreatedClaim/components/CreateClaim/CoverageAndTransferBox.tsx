@@ -15,6 +15,8 @@ interface Props {
     onBenefitAmountsChange: (value: Record<number, string>) => void;
     onTransferAmountChange: (value: number) => void;
     debounceMs?: number;
+    /** เคลมต่อเนื่อง: แสดง/ตรวจสอบด้วย benefit คงเหลือ (remainBenefit / remainAmount) แทนวงเงินสูงสุด */
+    isContinuous?: boolean;
 }
 
 const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
@@ -70,6 +72,7 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     onBenefitAmountsChange,
     onTransferAmountChange,
     debounceMs = 300,
+    isContinuous = false,
 }) => {
     const [localAmounts, setLocalAmounts] = useState(benefitAmounts);
     const [amountErrors, setAmountErrors] = useState<Record<number, string>>({});
@@ -106,7 +109,10 @@ const CoverageAndTransferBox: React.FC<Props> = ({
         if (maxPrice != null && numValue > maxPrice) {
             setAmountErrors((prev) => ({
                 ...prev,
-                [benefitId]: `ไม่เกิน ${numberWithCommas(maxPrice.toString(), 0)} บาท`,
+                [benefitId]: `ไม่เกินวงเงิน${isContinuous ? "คงเหลือ" : "สูงสุด"} ${numberWithCommas(
+                    maxPrice.toString(),
+                    0
+                )} บาท`,
             }));
         } else {
             setAmountErrors((prev) => {
@@ -257,17 +263,34 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                                 </Typography>
                                 <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
                                     <Typography fontSize={11} color="primary.main">
-                                        {numberWithCommas(item.pricePerUnit?.toString() || "0", 0)} บาท{item.unitName}
-                                        /สูงสุด {numberWithCommas(item.maxQuantity?.toString() || "0", 0)}{" "}
+                                        {numberWithCommas(item.pricePerUnit?.toString() || "0", 0)} บาท{item.unitName}/
+                                        {isContinuous ? "คงเหลือ" : "สูงสุด"}{" "}
+                                        {numberWithCommas(
+                                            (isContinuous ? item.remainBenefit : item.maxQuantity)?.toString() || "0",
+                                            0
+                                        )}{" "}
                                         {item.quantityUnitName}
                                     </Typography>
-                                    {item.maxPrice && (
+                                    {(isContinuous ? item.remainAmount != null : !!item.maxPrice) && (
                                         <>
                                             <Typography fontSize={11} color="text.disabled">
                                                 |
                                             </Typography>
-                                            <Typography fontSize={11} color="success.main">
-                                                วงเงินสูงสุด {numberWithCommas(item.maxPrice?.toString() || "0", 0)} บาท
+                                            <Typography
+                                                fontSize={11}
+                                                color={
+                                                    isContinuous && (item.remainAmount ?? 0) <= 0
+                                                        ? "error.main"
+                                                        : "success.main"
+                                                }
+                                            >
+                                                {isContinuous ? "วงเงินคงเหลือ" : "วงเงินสูงสุด"}{" "}
+                                                {numberWithCommas(
+                                                    (isContinuous ? item.remainAmount : item.maxPrice)?.toString() ||
+                                                        "0",
+                                                    0
+                                                )}{" "}
+                                                บาท
                                             </Typography>
                                         </>
                                     )}
@@ -282,7 +305,11 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                             value={item.benefitId != null ? localAmounts[item.benefitId] ?? "" : ""}
                             onChange={(e) =>
                                 item.benefitId != null &&
-                                handleAmountChange(item.benefitId, e.target.value, item.maxPrice)
+                                handleAmountChange(
+                                    item.benefitId,
+                                    e.target.value,
+                                    isContinuous ? item.remainAmount : item.maxPrice
+                                )
                             }
                             onBlur={() => item.benefitId != null && handleAmountBlur(item.benefitId)}
                             error={item.benefitId != null && !!amountErrors[item.benefitId]}

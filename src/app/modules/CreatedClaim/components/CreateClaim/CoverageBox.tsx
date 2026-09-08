@@ -109,7 +109,14 @@ const CoverageBox: React.FC<Props> = ({ items, isLoading, planCode, isContinuous
                                     <Typography fontSize={11} color="text.disabled">
                                         |
                                     </Typography>
-                                    <Typography fontSize={11} color="success.main">
+                                    <Typography
+                                        fontSize={11}
+                                        color={
+                                            isContinuous && (item.remainAmount ?? 0) <= 0
+                                                ? "error.main"
+                                                : "success.main"
+                                        }
+                                    >
                                         {isContinuous ? "วงเงินคงเหลือ" : "วงเงินสูงสุด"}{" "}
                                         {numberWithCommas(
                                             (isContinuous ? item.remainAmount : item.maxPrice)?.toString() || "0",

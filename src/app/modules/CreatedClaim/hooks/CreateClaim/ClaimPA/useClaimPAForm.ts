@@ -193,14 +193,16 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     if (expenseId == null) return;
 
                     const amount = amountNumber(values.deathBenefitAmounts?.[expenseId]);
-                    const maxPrice = benefit.maxPrice == null ? undefined : Number(benefit.maxPrice);
+                    // เคลมต่อเนื่อง: จำกัดด้วย benefit คงเหลือ (remainAmount) แทนวงเงินสูงสุด (maxPrice)
+                    const limitRaw = isContinuousDeath ? benefit.remainAmount : benefit.maxPrice;
+                    const limit = limitRaw == null ? undefined : Number(limitRaw);
 
                     if (amount <= 0) {
                         deathBenefitErrors[expenseId] = "กรุณากรอกจำนวนเงินมากกว่า 0 บาท";
-                    } else if (maxPrice != null && amount > maxPrice) {
-                        deathBenefitErrors[expenseId] = `จำนวนเงินต้องไม่เกินวงเงินสูงสุด ${maxPrice.toLocaleString(
-                            "th-TH"
-                        )} บาท`;
+                    } else if (limit != null && amount > limit) {
+                        deathBenefitErrors[expenseId] = `จำนวนเงินต้องไม่เกินวงเงิน${
+                            isContinuousDeath ? "คงเหลือ" : "สูงสุด"
+                        } ${limit.toLocaleString("th-TH")} บาท`;
                     }
                 });
 

@@ -51,7 +51,7 @@ demo's checkbox-multi-select-then-confirm-billing flow if picked up later.
 
 `SummaryHeaderCard`, `StatusFilterToggle`, `StepToggleBar`, `HeaderCardCustomerDetails`,
 `ClaimDetail`, `CollapsibleSection`, `RecordClaimData`, `TreatmentInfoSection`,
-`AttendingDoctorSection`, `DocumentVerifyTable`, `getDocumentCheckRows` /
+`AttendingDoctorSection`, `DocumentVerifyTable`,
 `CLAIM_LIST_TYPE_CONFIG` / `DOCUMENT_CHECK_RESULTS` (from `hospitalConsiderMock.tsx`). The
 Formik-context components (`RecordClaimData` etc.) work because `BillingHospitalValues extends
 HospitalConsiderValues` — same field names, so `useFormikContext<HospitalConsiderValues>()`

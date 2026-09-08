@@ -43,9 +43,11 @@ expense editor, **not** reusable without refactor, see below), `OcrReceiptSectio
 `ClaimSummary`, `ConsiderSection` (decision-reason picker), `PaymentSummaryCard`).
 
 **`ConsiderHospitalDetails/`** — hospital-specific: `HospitalClaimDetailsTab.tsx` (the 3-step
-hospital flow orchestrator), `mock/hospitalConsiderMock.tsx` (⚠ **not swapped for real API
-yet** — `ClaimListType` config, `DOCUMENT_CHECK_RESULTS`, `MOCK_DOCUMENT_CHECK_ROWS`,
-`ContinuousClaimRow`; **reused directly by `BillingClaim`**, don't fork it), `SubDetailsTab/`
+hospital flow orchestrator), `mock/hospitalConsiderMock.tsx` (⚠ **partly still mock** —
+`ClaimListType` config, `DOCUMENT_CHECK_RESULTS` + colors, `DocumentCheckRow`/`DocumentFile`
+types, `ContinuousClaimRow`; the "ตรวจสอบเอกสาร" table now loads from
+`useGetCaseReviewOverview` (mapped in `HospitalConsiderDetailHook`), header/continuous-claim
+data still mock; **reused directly by `BillingClaim`**, don't fork it), `SubDetailsTab/`
 (`CollapsibleSection`, `TreatmentInfoSection`, `AttendingDoctorSection`, `ContinuousClaimSection`
 /`ContinuousClaimBanner`, `DocumentVerifyTable`, `DocumentFileViewer`, `ExpensesTabs/` —
 `TreatmentCostTable`, `ClaimSummaryStep3` (prop-driven money summary, good reuse candidate),

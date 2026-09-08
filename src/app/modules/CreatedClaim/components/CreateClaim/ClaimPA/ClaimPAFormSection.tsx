@@ -178,7 +178,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         () => (customerBenefit?.data ?? []).filter((b) => b.coverageTypeId === CoverageType.Death),
         [customerBenefit?.data]
     );
-    const maxPrice = currentBenefit?.maxPrice;
+    // เคลมต่อเนื่อง: เทียบกับ benefit คงเหลือ (remainAmount) แทนวงเงินสูงสุด (maxPrice)
+    const maxPrice = isContinuous ? currentBenefit?.remainAmount : currentBenefit?.maxPrice;
     const isOverEligibleLimit =
         !isContinuousDeath && typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
@@ -721,7 +722,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
                                 onChange={(items) => dispatch(setOrganLossItems(items))}
                                 customerId={insured?.customerId}
-                                maxTransferAmount={disabilityBenefit?.maxPrice}
+                                maxTransferAmount={
+                                    isContinuous ? disabilityBenefit?.remainAmount : disabilityBenefit?.maxPrice
+                                }
                             />
                         </Box>
                     )}

@@ -384,11 +384,11 @@ const ClaimSummaryStep3 = ({
                         bg="#e8f0fb"
                     />
                     <SummaryLine
-                        label="ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
-                        value={fmt(calc.compensateRemain)}
+                        label="ส่วนเกิน (ลูกค้าจ่าย)"
+                        value={fmt(calc.medicalUnpay)}
                         bold
-                        color="#15803d"
-                        bg="#F7FEE7"
+                        color="#FF6467"
+                        bg="#FEF2F2"
                         noDivider
                     />
                 </Paper>

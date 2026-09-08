@@ -27,6 +27,7 @@ query hooks unless noted `(mutation)`.
 | `useGetDashboardCustomerConsider(dateType, from, to)` | Dashboard summary counts for the consider-monitor pages (`customerTotalCount`, `hospitalWaitConsiderCount`, `hospitalRequestBillingCount`, …) |
 | `useGetCustomerClaimAdjudicationMonitor` | List rows for `/consider/monitor` (customer) |
 | `useGetClaimDetailConsider(claimId)` | Full claim detail for the consider/review detail pages |
+| `useGetCaseReviewOverview(caseId)` | GET `/document/case/{caseId}/overview` — document-review / decision / expense overview for a case (feeds the "ตรวจสอบเอกสาร" table in the hospital consider flow) |
 | `useGetClaimTransactionLog` | Transaction/status-change timeline for a claim |
 | `useGetPolicyBenefit` | Policy benefit table (grouped by category) |
 | `useSaveClaimEditDraft` **(mutation)** | POST `/claim/decision/draft` — save without finalizing a decision |
