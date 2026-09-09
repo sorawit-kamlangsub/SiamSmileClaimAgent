@@ -90,7 +90,11 @@ const FormikAutocompleteApi = ({
                     isOptionEqualToValue={(option, value) =>
                         option && value ? option[valueFieldName] === value[valueFieldName] : false
                     }
-                    onInputChange={(_event, value) => {
+                    onInputChange={(_event, value, reason) => {
+                        // MUI ยิง reason="reset" เองตอน mount / ตอน value prop เปลี่ยน โดยส่ง input ว่างมา
+                        // ก่อน option จะโหลดเสร็จ — ห้ามตีความว่าผู้ใช้ล้างค่า ไม่งั้น id ที่ prefill (sync
+                        // มาจาก server) จะโดนล้างทิ้งก่อน option ของมันจะ resolve
+                        if (reason === "reset") return;
                         if (value == "") {
                             setFieldValue(name, null, true);
                             setFieldValue(`${name}_selectedText`, null, true);

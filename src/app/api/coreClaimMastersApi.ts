@@ -224,13 +224,13 @@ export const useGetICD10Filter = (
     const { data, isLoading, ...rest } = useGetICD10();
 
     return useMemo(() => {
-        if (isLoading) return { data, isLoading, ...rest } as UseQueryResult<GetICD10DtoResponse[], unknown>;
+        const all = data?.data ?? [];
+        const selected = all.find((item) => item.icD10Id == defaultId);
+        const filteredData = all.filter((item) => item.icD10Detail?.includes(key)).slice(0, 10);
 
-        const selectedHospital = data?.data?.find((item) => item.icD10Id == defaultId);
-        const filteredData = data?.data?.filter((item) => item.icD10Detail?.includes(key)).slice(0, 10);
-
-        if (selectedHospital && !filteredData?.includes(selectedHospital)) {
-            filteredData?.unshift(selectedHospital);
+        // คงรายการที่ prefill (icD10Id == defaultId) ไว้เสมอ ไม่ให้หลุดเพราะ slice(0, 10)
+        if (selected && !filteredData.some((item) => item.icD10Id === selected.icD10Id)) {
+            filteredData.unshift(selected);
         }
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetICD10DtoResponse[], unknown>;
@@ -332,14 +332,13 @@ export const useGetHospitalDetailAllFilter = (
     const { data, isLoading, ...rest } = useGetAllHospital();
 
     return useMemo(() => {
-        if (isLoading) return { data, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;
-        // as UseQueryResult<HospitalDetailRequestDto, unknown>;
+        const all = data?.data ?? [];
+        const selectedHospital = all.find((item) => item.organizeId == defaultId);
+        const filteredData = all.filter((item) => item.organizeName?.includes(key)).slice(0, 10);
 
-        const selectedHospital = data?.data?.find((item) => item.organizeId == defaultId);
-        const filteredData = data?.data?.filter((item) => item.organizeName?.includes(key)).slice(0, 10);
-
-        if (selectedHospital && !filteredData?.includes(selectedHospital)) {
-            filteredData?.unshift(selectedHospital);
+        // คงรายการที่ prefill (organizeId == defaultId) ไว้เสมอ ไม่ให้หลุดเพราะ slice(0, 10)
+        if (selectedHospital && !filteredData.some((item) => item.organizeId === selectedHospital.organizeId)) {
+            filteredData.unshift(selectedHospital);
         }
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;

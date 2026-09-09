@@ -13,6 +13,1501 @@ import axios, { AxiosError, AxiosInstance, AxiosRequestConfig, AxiosResponse, Ca
 
 import * as dayjs from "dayjs";
 
+export class ClaimFundClient {
+    private instance: AxiosInstance;
+    private baseUrl: string;
+    protected jsonParseReviver: ((key: string, value: any) => any) | undefined = undefined;
+
+    constructor(baseUrl?: string, instance?: AxiosInstance) {
+        this.instance = instance ? instance : axios.create();
+
+        this.baseUrl = baseUrl !== undefined && baseUrl !== null ? baseUrl : "";
+    }
+
+    /**
+     * ข้อมูลสาเหตุการโอนเพิ่ม
+     * @return Success
+     */
+    getAdjustmentReasons(
+        cancelToken?: CancelToken | undefined
+    ): Promise<AdjustmentReasonResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetAdjustmentReasons";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAdjustmentReasons(_response);
+            });
+    }
+
+    protected processGetAdjustmentReasons(
+        response: AxiosResponse
+    ): Promise<AdjustmentReasonResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<AdjustmentReasonResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AdjustmentReasonResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * ข้อมูลสาเหตุการโอนเพิ่ม By Id
+     * @param adjustmentReasonId (optional)
+     * @return Success
+     */
+    getAdjustmentReasonById(
+        adjustmentReasonId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<AdjustmentReasonResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetAdjustmentReasonById?";
+        if (adjustmentReasonId === null) throw new Error("The parameter 'adjustmentReasonId' cannot be null.");
+        else if (adjustmentReasonId !== undefined)
+            url_ += "AdjustmentReasonId=" + encodeURIComponent("" + adjustmentReasonId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAdjustmentReasonById(_response);
+            });
+    }
+
+    protected processGetAdjustmentReasonById(
+        response: AxiosResponse
+    ): Promise<AdjustmentReasonResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<AdjustmentReasonResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AdjustmentReasonResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * ข้อมูลสถานะการจ่ายเงิน (Payment Status)
+     * @return Success
+     */
+    getPaymentStatuses(cancelToken?: CancelToken | undefined): Promise<PaymentStatusResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetPaymentStatuses";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPaymentStatuses(_response);
+            });
+    }
+
+    protected processGetPaymentStatuses(response: AxiosResponse): Promise<PaymentStatusResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<PaymentStatusResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<PaymentStatusResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * ข้อมูลประเภทความสัมพันธ์ของบัญชี กับผู้รับสินไหม
+     * @return Success
+     */
+    getBankAccountRelationTypes(
+        cancelToken?: CancelToken | undefined
+    ): Promise<BankAccountRelationTypeResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetBankAccountRelationTypes";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBankAccountRelationTypes(_response);
+            });
+    }
+
+    protected processGetBankAccountRelationTypes(
+        response: AxiosResponse
+    ): Promise<BankAccountRelationTypeResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BankAccountRelationTypeResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BankAccountRelationTypeResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * ข้อมูลประเภทความสัมพันธ์ของบัญชี กับผู้รับสินไหม By Id
+     * @param bankAccountRelationTypeId (optional)
+     * @return Success
+     */
+    getBankAccountRelationTypeById(
+        bankAccountRelationTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BankAccountRelationTypeResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetBankAccountRelationTypeById?";
+        if (bankAccountRelationTypeId === null)
+            throw new Error("The parameter 'bankAccountRelationTypeId' cannot be null.");
+        else if (bankAccountRelationTypeId !== undefined)
+            url_ += "bankAccountRelationTypeId=" + encodeURIComponent("" + bankAccountRelationTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetBankAccountRelationTypeById(_response);
+            });
+    }
+
+    protected processGetBankAccountRelationTypeById(
+        response: AxiosResponse
+    ): Promise<BankAccountRelationTypeResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BankAccountRelationTypeResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BankAccountRelationTypeResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * ตั้งค่าการโอนเงิน
+     * @return Success
+     */
+    getCurrentSetting(cancelToken?: CancelToken | undefined): Promise<PayTransferSettingResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Setting/GetCurrentSetting";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCurrentSetting(_response);
+            });
+    }
+
+    protected processGetCurrentSetting(response: AxiosResponse): Promise<PayTransferSettingResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<PayTransferSettingResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<PayTransferSettingResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * บันทึกการตั้งค่าการโอนเงิน
+     * @param body (optional)
+     * @return Success
+     */
+    updateSettingAutoTransfer(
+        body?: UpdatePayTransferSettingRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<UpdatePayTransferSettingRequestDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Setting/UpdateSettingAutoTransfer";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUpdateSettingAutoTransfer(_response);
+            });
+    }
+
+    protected processUpdateSettingAutoTransfer(
+        response: AxiosResponse
+    ): Promise<UpdatePayTransferSettingRequestDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<UpdatePayTransferSettingRequestDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpdatePayTransferSettingRequestDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * ค้นหารายการจาก เลขที่ ClaimNo / CaseNo
+     * @return Success
+     */
+    searchClaimOrCase(
+        searchDetail: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<SearchClaimOrCaseResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Setting/SearchClaimOrCase?";
+        if (searchDetail === undefined || searchDetail === null)
+            throw new Error("The parameter 'searchDetail' must be defined and cannot be null.");
+        else url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processSearchClaimOrCase(_response);
+            });
+    }
+
+    protected processSearchClaimOrCase(
+        response: AxiosResponse
+    ): Promise<SearchClaimOrCaseResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<SearchClaimOrCaseResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<SearchClaimOrCaseResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * Monitor ขยายวงเงิน
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    increaseTransferLimitMonitors(
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<IncreaseTransferLimitMonitorResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/IncreaseTransferLimitMonitors?";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processIncreaseTransferLimitMonitors(_response);
+            });
+    }
+
+    protected processIncreaseTransferLimitMonitors(
+        response: AxiosResponse
+    ): Promise<IncreaseTransferLimitMonitorResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<IncreaseTransferLimitMonitorResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<IncreaseTransferLimitMonitorResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * รายละเอียดบัญชี (แก้ไขการโอนเงิน)
+     * @param paymentId (optional)
+     * @return Success
+     */
+    getAdditionalTransferAccountDetail(
+        paymentId?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<AdditionalTransferAccountDetailsResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/GetAdditionalTransferAccountDetail?";
+        if (paymentId === null) throw new Error("The parameter 'paymentId' cannot be null.");
+        else if (paymentId !== undefined) url_ += "paymentId=" + encodeURIComponent("" + paymentId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetAdditionalTransferAccountDetail(_response);
+            });
+    }
+
+    protected processGetAdditionalTransferAccountDetail(
+        response: AxiosResponse
+    ): Promise<AdditionalTransferAccountDetailsResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<AdditionalTransferAccountDetailsResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AdditionalTransferAccountDetailsResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * ตรวจสอบรายการโอนเงินเพิ่ม (Monitor)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @param body (optional)
+     * @return Success
+     */
+    additionalTransferMonitor(
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        body?: AdditionalTransferMonitorRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<Usp_AdditionalTransferMonitor_SelectResultListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/AdditionalTransferMonitor?";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processAdditionalTransferMonitor(_response);
+            });
+    }
+
+    protected processAdditionalTransferMonitor(
+        response: AxiosResponse
+    ): Promise<Usp_AdditionalTransferMonitor_SelectResultListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<Usp_AdditionalTransferMonitor_SelectResultListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<Usp_AdditionalTransferMonitor_SelectResultListServiceResponse>(null as any);
+    }
+
+    /**
+     * ดึงประวัติการทำรายการ (Transaction) ของเคลม
+     * @param caseId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    getClaimTransaction(
+        caseId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<AdditionalTransferTransactionResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/GetClaimTransaction?";
+        if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
+        else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimTransaction(_response);
+            });
+    }
+
+    protected processGetClaimTransaction(
+        response: AxiosResponse
+    ): Promise<AdditionalTransferTransactionResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<AdditionalTransferTransactionResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AdditionalTransferTransactionResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * โอนเพิ่ม รายละเอียด tep(1)
+     * @param caseId (optional)
+     * @return Success
+     */
+    additionalTransferDetails(
+        caseId?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<AdditionalTransferDetailsResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/AdditionalTransferDetails?";
+        if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
+        else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processAdditionalTransferDetails(_response);
+            });
+    }
+
+    protected processAdditionalTransferDetails(
+        response: AxiosResponse
+    ): Promise<AdditionalTransferDetailsResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<AdditionalTransferDetailsResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AdditionalTransferDetailsResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * ประวัติการทำรายการ
+     * @param caseId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    getClaimTransactions(
+        caseId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<AdditionalTransferTransactionResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/GetClaimTransactions?";
+        if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
+        else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetClaimTransactions(_response);
+            });
+    }
+
+    protected processGetClaimTransactions(
+        response: AxiosResponse
+    ): Promise<AdditionalTransferTransactionResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<AdditionalTransferTransactionResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<AdditionalTransferTransactionResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * ประวัติการโอนเงิน
+     * @param caseId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    transferHistory(
+        caseId?: string | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<TransferTransactionResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/TransferHistory?";
+        if (caseId === null) throw new Error("The parameter 'caseId' cannot be null.");
+        else if (caseId !== undefined) url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processTransferHistory(_response);
+            });
+    }
+
+    protected processTransferHistory(response: AxiosResponse): Promise<TransferTransactionResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<TransferTransactionResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TransferTransactionResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * แก้ไขการโอนเงินเพิ่ม
+     * @param body (optional)
+     * @return Success
+     */
+    updateAdditionalTransfer(
+        body?: UpdateAdditionalTransferRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<UpdateAdditionalTransferRequestDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/UpdateAdditionalTransfer";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUpdateAdditionalTransfer(_response);
+            });
+    }
+
+    protected processUpdateAdditionalTransfer(
+        response: AxiosResponse
+    ): Promise<UpdateAdditionalTransferRequestDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<UpdateAdditionalTransferRequestDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpdateAdditionalTransferRequestDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * สอบถามธนาคาร Inquiry Monitor
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    inquiryMonitors(
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<Usp_InquiryMonitor_SelectResultListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Inquiry/InquiryMonitors?";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processInquiryMonitors(_response);
+            });
+    }
+
+    protected processInquiryMonitors(
+        response: AxiosResponse
+    ): Promise<Usp_InquiryMonitor_SelectResultListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<Usp_InquiryMonitor_SelectResultListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<Usp_InquiryMonitor_SelectResultListServiceResponse>(null as any);
+    }
+
+    /**
+     * สอบถามธนาคาร Inquiry Monitor รายละเอียด
+     * @return Success
+     */
+    inquiryDetail(
+        payTransferTransactionId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BankInquiryDetailResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Inquiry/InquiryDetail?";
+        if (payTransferTransactionId === undefined || payTransferTransactionId === null)
+            throw new Error("The parameter 'payTransferTransactionId' must be defined and cannot be null.");
+        else url_ += "PayTransferTransactionId=" + encodeURIComponent("" + payTransferTransactionId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processInquiryDetail(_response);
+            });
+    }
+
+    protected processInquiryDetail(response: AxiosResponse): Promise<BankInquiryDetailResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BankInquiryDetailResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BankInquiryDetailResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * Monitor - แก้ไขการโอนเงิน
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    failedPayTransferTransactionMonitor(
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<Usp_FailedPayTransferTransaction_SelectResultListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/FailedPayTransfer/FailedPayTransferTransactionMonitor?";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processFailedPayTransferTransactionMonitor(_response);
+            });
+    }
+
+    protected processFailedPayTransferTransactionMonitor(
+        response: AxiosResponse
+    ): Promise<Usp_FailedPayTransferTransaction_SelectResultListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<Usp_FailedPayTransferTransaction_SelectResultListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<Usp_FailedPayTransferTransaction_SelectResultListServiceResponse>(null as any);
+    }
+
+    /**
+     * รายละเอียด Monitor - แก้ไขการโอนเงิน
+     * @return Success
+     */
+    failedPayTransferTransactionDetail(
+        payTransferTransactionId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<FailedPayTransferTransactionResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/FailedPayTransfer/FailedPayTransferTransactionDetail?";
+        if (payTransferTransactionId === undefined || payTransferTransactionId === null)
+            throw new Error("The parameter 'payTransferTransactionId' must be defined and cannot be null.");
+        else url_ += "PayTransferTransactionId=" + encodeURIComponent("" + payTransferTransactionId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processFailedPayTransferTransactionDetail(_response);
+            });
+    }
+
+    protected processFailedPayTransferTransactionDetail(
+        response: AxiosResponse
+    ): Promise<FailedPayTransferTransactionResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<FailedPayTransferTransactionResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<FailedPayTransferTransactionResponseDtoServiceResponse>(null as any);
+    }
+}
+
 export class CoreClaimClient {
     private instance: AxiosInstance;
     private baseUrl: string;
@@ -1716,11 +3211,14 @@ export class CoreClaimClient {
      */
     getClaimDetailConsider(
         claimId: string,
+        caseId: string,
         cancelToken?: CancelToken | undefined
     ): Promise<GetClaimDetailConsiderDtoResponseServiceResponse> {
-        let url_ = this.baseUrl + "/claim/detail/consider/{claimId}";
+        let url_ = this.baseUrl + "/claim/detail/consider/{claimId}/{caseId}";
         if (claimId === undefined || claimId === null) throw new Error("The parameter 'claimId' must be defined.");
         url_ = url_.replace("{claimId}", encodeURIComponent("" + claimId));
+        if (caseId === undefined || caseId === null) throw new Error("The parameter 'caseId' must be defined.");
+        url_ = url_.replace("{caseId}", encodeURIComponent("" + caseId));
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -5186,6 +6684,120 @@ export class MastersClient {
     }
 }
 
+export interface AdditionalTransferAccountDetailsResponseDto {
+    toAccountName?: string | undefined;
+    toAccountNo?: string | undefined;
+    toBank?: string | undefined;
+    toBankId?: number | undefined;
+    phoneNo?: string | undefined;
+    claimantAccountRelationship?: string | undefined;
+    casePayableId?: string;
+}
+
+export interface AdditionalTransferAccountDetailsResponseDtoListServiceResponse {
+    data?: AdditionalTransferAccountDetailsResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface AdditionalTransferDetailsResponseDto {
+    claimId?: string;
+    caseId?: string;
+    claimNo?: string | undefined;
+    customerName?: string | undefined;
+    createdByUserName?: string | undefined;
+    /** จำนวนเงินที่โอนแล้ว */
+    totalNetPaidAmount?: number | undefined;
+    /** จำนวนรายการ */
+    countItem?: number;
+    /** จำนวนเงินโอนได้สูงสุด */
+    additionalTransferLimit?: number;
+    caseDetails?: CaseDetailDto[] | undefined;
+    account?: AccountDetail;
+}
+
+export interface AdditionalTransferDetailsResponseDtoServiceResponse {
+    data?: AdditionalTransferDetailsResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface AdditionalTransferMonitorRequestDto {
+    branceId?: number | undefined;
+    paymentStatusId?: number | undefined;
+}
+
+export interface AdditionalTransferTransactionResponseDto {
+    remark?: string | undefined;
+    transactionDate?: dayjs.Dayjs | undefined;
+    claimTransactionTypeName?: string | undefined;
+    createdByFullName?: string | undefined;
+    amountTotal?: number | undefined;
+}
+
+export interface AdditionalTransferTransactionResponseDtoListServiceResponse {
+    data?: AdditionalTransferTransactionResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface AdjustmentReasonResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface AdjustmentReasonResponseDtoListServiceResponse {
+    data?: AdjustmentReasonResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface AdjustmentReasonResponseDtoServiceResponse {
+    data?: AdjustmentReasonResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface AllUserDtoResponse {
     userId?: number | undefined;
     employeeId?: number;
@@ -5236,6 +6848,62 @@ export interface ApproveClaimDecisionDtoRequest {
     calculateCaseCode?: string;
     isCombinedWithMedicalAll: boolean;
     casePayable: ApproveCasePayableRequest;
+}
+
+export interface BankAccountRelationTypeResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface BankAccountRelationTypeResponseDtoListServiceResponse {
+    data?: BankAccountRelationTypeResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface BankAccountRelationTypeResponseDtoServiceResponse {
+    data?: BankAccountRelationTypeResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface BankInquiryDetailResponseDto {
+    transRefNo?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    payerBankName?: string | undefined;
+    statusBank?: string | undefined;
+    descriptionTH?: string | undefined;
+    status?: string | undefined;
+}
+
+export interface BankInquiryDetailResponseDtoServiceResponse {
+    data?: BankInquiryDetailResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
 }
 
 export interface BeneficiarySaveClaimEditDraftRequest {
@@ -5658,6 +7326,15 @@ export interface CaseDeathV2Request {
     deathTime?: TimeSpan;
     placeOfDeathId?: number;
     placeOfDeathDetail?: string | undefined;
+}
+
+export interface CaseDetailDto {
+    customerName?: string | undefined;
+    /** ประเภทความคุ้มครอง */
+    coverageTypeNameTH?: string | undefined;
+    caseNo?: string | undefined;
+    /** จำนวนเงินที่โอนแล้ว */
+    totalNetPaidAmount?: number | undefined;
 }
 
 export interface CaseDisabilitySaveClaimEditDraftRequest {
@@ -6251,6 +7928,29 @@ export interface ExpenseTotalsOverviewDtoResponse {
     patientPayAmount?: number;
 }
 
+export interface FailedPayTransferTransactionResponseDto {
+    transRefNo?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    payerBankName?: string | undefined;
+    statusBank?: string | undefined;
+    descriptionTH?: string | undefined;
+    status?: string | undefined;
+}
+
+export interface FailedPayTransferTransactionResponseDtoServiceResponse {
+    data?: FailedPayTransferTransactionResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface FormatTypeDtoResponse {
     /** รหัสรูปแบบใบ invoice (Primary Key) */
     formatTypeId?: number;
@@ -6544,8 +8244,11 @@ export interface GetClaimDetailConsiderDtoResponse {
     medicalTypeId?: number | undefined;
     causeOfIncidentId?: number | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
+    incidentTime?: TimeSpan;
     admissionDate?: dayjs.Dayjs | undefined;
+    admissionTime?: TimeSpan;
     dischargeDate?: dayjs.Dayjs | undefined;
+    dischargeTime?: TimeSpan;
     documentCompleteDate?: dayjs.Dayjs | undefined;
     hospitalId?: number | undefined;
     chiefComplaintId?: number | undefined;
@@ -6565,6 +8268,15 @@ export interface GetClaimDetailConsiderDtoResponse {
     caseAmount?: number | undefined;
     nplAmount?: number | undefined;
     paymentAmount?: number | undefined;
+    hn?: string | undefined;
+    an?: string | undefined;
+    vn?: string | undefined;
+    underlyingDiseaseDetail?: string | undefined;
+    treatmentMethod?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
@@ -6624,6 +8336,9 @@ export interface GetClaimHistoryDtoResponse {
     claimType?: string | undefined;
     paymentDate?: dayjs.Dayjs | undefined;
     isEnableClaimContinue?: boolean | undefined;
+    displayClaimNature?: string | undefined;
+    claimStatusId?: number | undefined;
+    claimStatusName?: string | undefined;
     totalCount?: number | undefined;
 }
 
@@ -6657,6 +8372,7 @@ export interface GetClaimTransactionLogDtoResponse {
     decisionId?: number | undefined;
     decisionName?: string | undefined;
     transactionLogRemark?: string | undefined;
+    referenceId?: string | undefined;
     totalCount?: number | undefined;
 }
 
@@ -7249,6 +8965,7 @@ export interface GetHospitalClaimAdjudicationMonitorDtoResponse {
     cardDetail?: string | undefined;
     customerId?: number | undefined;
     totalCount?: number | undefined;
+    caseId?: string | undefined;
 }
 
 export interface GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse {
@@ -7626,6 +9343,38 @@ export interface IncidentTypeDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface IncreaseTransferLimitMonitorResponseDto {
+    caseId?: string;
+    /** เลขที่ CC */
+    caseNo?: string | undefined;
+    /** เลขที่ CL */
+    claimNo?: string | undefined;
+    /** วันที่สร้างเคลม */
+    createdDate?: dayjs.Dayjs | undefined;
+    /** สาขา */
+    branchName?: string | undefined;
+    /** จำนวนเงิน */
+    amount?: number | undefined;
+    /** เลขที่บัญชี */
+    toAccountNo?: string | undefined;
+    /** ประเภทโอนเงิน */
+    transferType?: string | undefined;
+}
+
+export interface IncreaseTransferLimitMonitorResponseDtoListServiceResponse {
+    data?: IncreaseTransferLimitMonitorResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface InputToStandardMappingDtoResponse {
     inputToStandardMappingId?: number;
     formatTypeId?: number | undefined;
@@ -7670,6 +9419,52 @@ export interface MedicalExpenseList {
     unPay?: number;
 }
 
+export interface PayTransferSettingHistoryResponseDto {
+    createdByUser?: string | undefined;
+    employeeCode?: string | undefined;
+    isAutoTransfer?: boolean;
+    createdDate?: dayjs.Dayjs | undefined;
+}
+
+export interface PayTransferSettingResponseDto {
+    paytransferSettingId?: string;
+    isAutoTransfer?: boolean;
+    history?: PayTransferSettingHistoryResponseDto[] | undefined;
+}
+
+export interface PayTransferSettingResponseDtoServiceResponse {
+    data?: PayTransferSettingResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface PaymentStatusResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface PaymentStatusResponseDtoListServiceResponse {
+    data?: PaymentStatusResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface ProblemDetails {
     type?: string | undefined;
     title?: string | undefined;
@@ -7701,6 +9496,35 @@ export interface SaveClaimEditDraftDtoRespone {
 
 export interface SaveClaimEditDraftDtoResponeServiceResponse {
     data?: SaveClaimEditDraftDtoRespone;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface SearchClaimOrCaseResponseDto {
+    caseId?: string;
+    claimId?: string | undefined;
+    claimCase?: string | undefined;
+    /** วันที่สร้างเคลม */
+    createdClaimDate?: dayjs.Dayjs | undefined;
+    customerName?: string | undefined;
+    /** ประเภทความคุ้มครอง */
+    coverageType?: string | undefined;
+    /** จำนวนเงิน (case) */
+    caseAmount?: number | undefined;
+    /** รายการที่ค้นหาเป็นเลขที่ ClaimNo หรือไม */
+    isClaimNo?: boolean;
+}
+
+export interface SearchClaimOrCaseResponseDtoListServiceResponse {
+    data?: SearchClaimOrCaseResponseDto[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -7765,6 +9589,80 @@ export interface TimeSpan {
     readonly totalMilliseconds?: number;
     readonly totalMinutes?: number;
     readonly totalSeconds?: number;
+}
+
+export interface TransferTransactionDetailResponseDto {
+    paymentCode?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    paymentTypeName?: string | undefined;
+    totalNetPaidAmount?: number | undefined;
+    toBankName?: string | undefined;
+    toBankAccountNo?: string | undefined;
+    toBankAccountName?: string | undefined;
+}
+
+export interface TransferTransactionResponseDto {
+    payTransferDetails?: TransferTransactionDetailResponseDto[] | undefined;
+}
+
+export interface TransferTransactionResponseDtoServiceResponse {
+    data?: TransferTransactionResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface UpdateAdditionalTransferRequestDto {
+    bankAccountRelationTypeId: number;
+    toBankId: number;
+    toBankAccountNo: string;
+    toBankAccountName: string;
+    totalNetPaidAmount?: number | undefined;
+    phoneNumber: string;
+    paymentId?: string;
+    caseId?: string;
+    casePayableId?: string;
+    claimId?: string;
+    toBankName?: string | undefined;
+}
+
+export interface UpdateAdditionalTransferRequestDtoServiceResponse {
+    data?: UpdateAdditionalTransferRequestDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface UpdatePayTransferSettingRequestDto {
+    paytransferSettingId: string;
+}
+
+export interface UpdatePayTransferSettingRequestDtoServiceResponse {
+    data?: UpdatePayTransferSettingRequestDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
 }
 
 export interface UpsertClaimDecisionBeneficiaryRequest {
@@ -7942,6 +9840,110 @@ export interface UpsertClaimDecisionDtoResponse {
 
 export interface UpsertClaimDecisionDtoResponseServiceResponse {
     data?: UpsertClaimDecisionDtoResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface AccountDetail {
+    /** ประเภทผู้ติดต่อ */
+    contactPerson?: string | undefined;
+    accountNo?: string | undefined;
+    accountName?: string | undefined;
+    bankId?: number | undefined;
+    bankName?: string | undefined;
+    createdAccoutDetailDate?: dayjs.Dayjs | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    phoneNumber?: string | undefined;
+}
+
+export interface Usp_AdditionalTransferMonitor_SelectResult {
+    caseId?: string;
+    claimId?: string;
+    claimNo?: string | undefined;
+    caseNo?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    customerName?: string | undefined;
+    branchName?: number | undefined;
+    paymentStatusNameTH?: string | undefined;
+    remark?: number | undefined;
+    totalNetPaidAmount?: number | undefined;
+    addPayAmount?: number | undefined;
+    totalCount?: number | undefined;
+    paymentStatusId?: number | undefined;
+    casePayableId?: string;
+}
+
+export interface Usp_AdditionalTransferMonitor_SelectResultListServiceResponse {
+    data?: Usp_AdditionalTransferMonitor_SelectResult[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface Usp_FailedPayTransferTransaction_SelectResult {
+    claimNo?: string | undefined;
+    caseNo?: string | undefined;
+    claimCreated?: dayjs.Dayjs | undefined;
+    toAccountNo?: string | undefined;
+    toBank?: string | undefined;
+    toAccountName?: string | undefined;
+    totalNetPaidAmount?: number | undefined;
+    paymentStatusId?: number | undefined;
+    payTransferTransactionId?: string | undefined;
+    payListHeaderId?: string | undefined;
+    paymentCode?: string | undefined;
+    paymentId?: string;
+    paymentStatusNameTH?: string | undefined;
+    totalCount?: number | undefined;
+}
+
+export interface Usp_FailedPayTransferTransaction_SelectResultListServiceResponse {
+    data?: Usp_FailedPayTransferTransaction_SelectResult[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface Usp_InquiryMonitor_SelectResult {
+    paymentId?: string;
+    toAccountNo?: string | undefined;
+    toAccountName?: string | undefined;
+    toBank?: string | undefined;
+    totalNetPaidAmount?: number | undefined;
+    paymentCode?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    claimNo?: string | undefined;
+    payTransferTransactionId?: string | undefined;
+    transferStatusId?: number | undefined;
+    transferStatusName?: string | undefined;
+    payListHeaderId?: string | undefined;
+    totalCount?: number | undefined;
+}
+
+export interface Usp_InquiryMonitor_SelectResultListServiceResponse {
+    data?: Usp_InquiryMonitor_SelectResult[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

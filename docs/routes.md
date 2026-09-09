@@ -23,8 +23,8 @@ don't derive from each other. Both must be updated by hand when adding a page.
 | `/manage/transfer/repay` | แก้ไขการโอนเงิน | `RepayPage` | ManageTransfer |
 | `/manage/bank/status` | สอบถามธนาคาร | `BankStatusCheck` | BankStatus |
 | `/manage/setting/transfer` | ตั้งค่าการโอนเงิน | `ManageTransferPage` | ManageClaimFund |
-| `/consider/monitor` | พิจารณาเคลม - เคลมลูกค้า | `Outlet` → `ConsiderMonitorPage` (child `path:"customers"`, also `index:true` — see quirk below), `customers/:id` → `ConsiderDetailPage` | ClaimConsider |
-| `/consider/hospital-monitor` | พิจารณาเคลม - เคลมโรงพยาบาล | `Outlet` → `ConsiderHospitalMonitorPage` (index), `hospital/:id` → `ConsiderHospitalDetailPage`, `hospital/:id/document` → `ConsiderHospitalDocumentPage` | ClaimConsider |
+| `/consider/monitor` | พิจารณาเคลม - เคลมลูกค้า | `Outlet` → `ConsiderMonitorPage` (child `path:"customers"`, also `index:true` — see quirk below), `customers/:id/:caseId` → `ConsiderDetailPage` (both params `btoa`-encoded; `:caseId` feeds `useGetClaimDetailConsider`) | ClaimConsider |
+| `/consider/hospital-monitor` | พิจารณาเคลม - เคลมโรงพยาบาล | `Outlet` → `ConsiderHospitalMonitorPage` (index), `hospital/:id/:caseId` → `ConsiderHospitalDetailPage`, `hospital/:id/:caseId/document` → `ConsiderHospitalDocumentPage` (both params `btoa`-encoded; `:caseId` feeds `useGetClaimDetailConsider`) | ClaimConsider |
 | `/billing` | วางบิลเคลม | `Outlet` → `Navigate to="hospital"` (index), `customers` → `BillingCustomerPage`, `hospital` → `BillingHospitalMonitorPage`, `hospital/:id/review` → `BillingHospitalReviewPage`, `hospital/:id/document` → `BillingHospitalDocumentPage` | **BillingClaim** |
 
 Plus `src/App.tsx` itself: `AuthRoutes` (callbacks, `/unauthorized`), `/` → `Home`, public

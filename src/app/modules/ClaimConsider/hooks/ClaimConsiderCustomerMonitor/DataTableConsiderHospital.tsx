@@ -13,6 +13,13 @@ import {
     formatDateString,
 } from "../../../../functionHelpers";
 import { useGetHospitalClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
+import { GetHospitalClaimAdjudicationMonitorDtoResponse } from "../../../../api/coreClaimApi.client";
+
+/**
+ * TODO(caseId): BE ยังไม่ส่ง caseId มากับ monitor list — cast ชั่วคราวจนกว่าจะ `npm run codegen`
+ * ให้ GetHospitalClaimAdjudicationMonitorDtoResponse มี field caseId แล้วค่อยลบ type นี้ทิ้ง
+ */
+type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string };
 
 const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -172,9 +179,12 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="พิจารณาเคลม">
                                     <IconButton
                                         onClick={() => {
+                                            const row = claimHospitalData?.data?.[rowIndex] as
+                                                | MonitorRowWithCaseId
+                                                | undefined;
                                             navigate(
-                                                `${appliedFilter.path}/${btoa(
-                                                    claimHospitalData?.data?.[rowIndex]?.claimId ?? ""
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
                                                 )}`
                                             );
                                         }}
@@ -191,9 +201,12 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
                                         onClick={() => {
+                                            const row = claimHospitalData?.data?.[rowIndex] as
+                                                | MonitorRowWithCaseId
+                                                | undefined;
                                             navigate(
-                                                `${appliedFilter.path}/${btoa(
-                                                    claimHospitalData?.data?.[rowIndex]?.claimId ?? ""
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
                                                 )}/document`
                                             );
                                         }}

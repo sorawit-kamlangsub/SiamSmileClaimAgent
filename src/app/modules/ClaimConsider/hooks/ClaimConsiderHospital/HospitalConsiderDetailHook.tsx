@@ -10,11 +10,14 @@ import {
     useGetCustomerDetailById,
     useGetDocumentByCaseId,
 } from "../../../../api/coreClaimApi";
-import { GetDocumentByCaseIdDtoResponse } from "../../../../api/coreClaimApi.client";
+import { GetClaimDetailConsiderDtoResponse, GetDocumentByCaseIdDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDocumentListByIds } from "../../../../api/docstorageApi";
 import {
+    useGetAllHospital,
+    useGetChiefComplaint,
     useGetDecisionReason,
     useGetDocumentReviewStatus,
+    useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
 } from "../../../../api/coreClaimMastersApi";
@@ -22,6 +25,7 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/comp
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { parseTimeSpan } from "../../store/draftRevisionMappers";
 import {
     CLAIM_LIST_TYPE_CONFIG,
     ContinuousClaimRow,
@@ -112,6 +116,17 @@ const mapDocumentChecks = (
             remark: review?.remark ?? "",
         };
     });
+
+/**
+ * BE ส่ง field เวลาแยก (incidentTime / admissionTime / dischargeTime เป็น TimeSpan string "HH:mm:ss")
+ * มากับ GetClaimDetailConsider แล้ว แต่ NSwag client ยัง regenerate ไม่ทัน — ครอบ type ตรงนี้ให้ตรงกับ
+ * payload จริงจนกว่าจะรัน `npm run codegen` (แนวเดียวกับที่ ConsiderDetailHook ใช้ parseTimeSpan)
+ */
+type ClaimDetailConsiderWithTime = GetClaimDetailConsiderDtoResponse & {
+    incidentTime?: string;
+    admissionTime?: string;
+    dischargeTime?: string;
+};
 
 /**
  * ค่าเริ่มต้นของฟอร์ม
@@ -281,8 +296,10 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 };
 
 const useHospitalConsiderDetailHook = () => {
-    const { id } = useParams();
+    const { id, caseId: caseIdEncoded } = useParams();
     const claimId = id ? atob(id) : undefined;
+    // route hospital/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
+    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
     const [searchParams] = useSearchParams();
     const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
 
@@ -293,8 +310,8 @@ const useHospitalConsiderDetailHook = () => {
     const claimListType = parseClaimListType(searchParams.get("type"));
     const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
 
-    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "");
-    const detail = detailData?.data;
+    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
+    const detail = detailData?.data as ClaimDetailConsiderWithTime | undefined;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detail?.customerId ?? undefined
@@ -385,6 +402,12 @@ const useHospitalConsiderDetailHook = () => {
             })),
         [claimContinueData]
     );
+
+    // master list ที่ dropdown ใน RecordClaimData ใช้ — เรียกที่นี่ด้วย (query key เดียวกัน dedupe ไม่ยิงซ้ำ)
+    // เพื่อรวมสถานะ loading ไว้ gate ทั้ง Step 1
+    const { isLoading: hospitalListLoading } = useGetAllHospital();
+    const { isLoading: chiefComplaintListLoading } = useGetChiefComplaint();
+    const { isLoading: icd10ListLoading } = useGetICD10();
 
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const incidentType: ClaimTypeOption[] =
@@ -527,20 +550,37 @@ const useHospitalConsiderDetailHook = () => {
             prevCoverageTypeIdRef.current = matchedCoverage.id;
         }
 
+        // เวลาต้องอ่านจาก field .xTime (TimeSpan "HH:mm:ss") โดยเฉพาะ — .xDate ไม่มีเวลาจริงติดมาด้วย
+        // fallback ไปเวลาจาก .xDate เผื่อ backend ยังไม่ส่ง .xTime มา
         if (detail.admissionDate) {
             formik.setFieldValue("admissionDate", dayjs(detail.admissionDate), false);
-            formik.setFieldValue("admissionTime", dayjs(detail.admissionDate), false);
+            formik.setFieldValue(
+                "admissionTime",
+                parseTimeSpan(detail.admissionTime) ?? dayjs(detail.admissionDate),
+                false
+            );
         }
         if (detail.incidentDate) {
             formik.setFieldValue("incidentDate", dayjs(detail.incidentDate), false);
-            formik.setFieldValue("incidentTime", dayjs(detail.incidentDate), false);
+            formik.setFieldValue(
+                "incidentTime",
+                parseTimeSpan(detail.incidentTime) ?? dayjs(detail.incidentDate),
+                false
+            );
         }
         if (detail.dischargeDate) {
             formik.setFieldValue("dischargeDate", dayjs(detail.dischargeDate), false);
-            formik.setFieldValue("dischargeTime", dayjs(detail.dischargeDate), false);
+            formik.setFieldValue(
+                "dischargeTime",
+                parseTimeSpan(detail.dischargeTime) ?? dayjs(detail.dischargeDate),
+                false
+            );
         }
         if (detail.createdDate) {
             formik.setFieldValue("createdDate", dayjs(detail.createdDate), false);
+        }
+        if (detail.documentCompleteDate) {
+            formik.setFieldValue("documentCompleteDate", dayjs(detail.documentCompleteDate), false);
         }
 
         formik.setFieldValue("hospitalId", detail.hospitalId ?? undefined, false);
@@ -669,9 +709,38 @@ const useHospitalConsiderDetailHook = () => {
         [documentReviewStatusRaw]
     );
 
+    /**
+     * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
+     * นับเฉพาะ query ที่ป้อนค่า default ให้ field ในฟอร์ม (สถานพยาบาล/อาการสำคัญ/การวินิจฉัย/เหตุ/วันที่)
+     * — ไม่รวมตาราง "ตรวจสอบเอกสาร" ที่มี loading ของตัวเอง
+     */
+    const rawStep1Loading =
+        detailDataLoading ||
+        customerDetailLoading ||
+        incidentTypeLoading ||
+        incidentTypeMappingLoading ||
+        hospitalListLoading ||
+        chiefComplaintListLoading ||
+        icd10ListLoading;
+
+    /**
+     * เพดานเวลา : ถ้า API get ข้อมูลไม่สำเร็จ (error / retry ค้าง) ไม่รอเกิน 8 วิ — ปลดล็อกฟอร์มให้กรอกมือ
+     * field ไหนไม่มีข้อมูล default ก็ปล่อยว่างให้ผู้ใช้กรอกเอง
+     */
+    const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+    useEffect(() => {
+        setLoadingTimedOut(false);
+        if (!rawStep1Loading) return;
+        const timer = window.setTimeout(() => setLoadingTimedOut(true), 8000);
+        return () => window.clearTimeout(timer);
+    }, [claimId, rawStep1Loading]);
+
+    const isStep1Loading = rawStep1Loading && !loadingTimedOut;
+
     return {
         formik,
         validateStep1,
+        isStep1Loading,
         claimListType,
         claimListTypeConfig,
         detailData,

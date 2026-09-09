@@ -493,11 +493,15 @@ export const useGetCustomerClaimAdjudicationMonitor = (
     );
 };
 
-export const useGetClaimDetailConsider = (claimId: string) => {
-    return useQuery([getClaimDetailConsiderQueryKey, claimId], () => coreClaimClient.getClaimDetailConsider(claimId), {
-        enabled: !!claimId,
-        refetchOnWindowFocus: false,
-    });
+export const useGetClaimDetailConsider = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getClaimDetailConsiderQueryKey, claimId, caseId],
+        () => coreClaimClient.getClaimDetailConsider(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };
 
 /**

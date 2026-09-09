@@ -13,6 +13,13 @@ import {
     formatDateString,
 } from "../../../../functionHelpers";
 import { useGetCustomerClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
+import { GetCustomerClaimAdjudicationMonitorDtoResponse } from "../../../../api/coreClaimApi.client";
+
+/**
+ * TODO(caseId): BE ยังไม่ส่ง caseId มากับ monitor list — cast ชั่วคราวจนกว่าจะ `npm run codegen`
+ * ให้ GetCustomerClaimAdjudicationMonitorDtoResponse มี field caseId แล้วค่อยลบ type นี้ทิ้ง
+ */
+type MonitorRowWithCaseId = GetCustomerClaimAdjudicationMonitorDtoResponse & { caseId?: string };
 
 const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -147,9 +154,14 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="พิจารณาเคลม">
                                     <IconButton
                                         onClick={() => {
+                                            const row = claimTransactionData?.data?.[rowIndex] as
+                                                | MonitorRowWithCaseId
+                                                | undefined;
+                                            // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
+                                            // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
                                             navigate(
-                                                `${appliedFilter.path}/${btoa(
-                                                    claimTransactionData?.data?.[rowIndex]?.claimId ?? ""
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
                                                 )}`
                                             );
                                         }}
@@ -166,9 +178,14 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
                                         onClick={() => {
+                                            const row = claimTransactionData?.data?.[rowIndex] as
+                                                | MonitorRowWithCaseId
+                                                | undefined;
+                                            // TODO(caseId): ยังไม่มี route/หน้า customers/:id/:caseId/document ของฝั่งลูกค้า
+                                            // (มีเฉพาะฝั่ง รพ.) — ใส่ caseId segment ไว้ให้ครบ เผื่อเพิ่มหน้าภายหลัง
                                             navigate(
-                                                `${appliedFilter.path}/${btoa(
-                                                    claimTransactionData?.data?.[rowIndex]?.claimId ?? ""
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
                                                 )}/document`
                                             );
                                         }}

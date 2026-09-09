@@ -33,10 +33,12 @@ type ConsiderHospitalDetailPageProps = {
 const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetailPageProps) => {
     const [tabValue, setTabValue] = useState("1");
     const [searchParams] = useSearchParams();
-    const { id } = useParams();
+    const { id, caseId: caseIdEncoded } = useParams();
     const claimId = id ? atob(id) : "";
+    // route hospital/:id/:caseId(/document) — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
+    const caseId = caseIdEncoded ? atob(caseIdEncoded) : "";
 
-    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId);
+    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId, caseId);
     const detail = detailData?.data;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(

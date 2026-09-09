@@ -56,13 +56,19 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const item = items[tableMeta.rowIndex] as GetClaimHistoryDtoResponse;
+                    // TODO(caseId): GetClaimHistoryDtoResponse ยังไม่มี caseId จาก BE — cast ไว้ก่อน
+                    // route customers/:id/:caseId ต้องการ :caseId (btoa) คู่กับ :id เพื่อยิง useGetClaimDetailConsider
+                    const item = items[tableMeta.rowIndex] as GetClaimHistoryDtoResponse & { caseId?: string };
                     return (
                         <Button
                             variant="outlined"
                             size="small"
                             endIcon={<LaunchIcon fontSize="small" />}
-                            onClick={() => navigate(`/consider/monitor/customers/${btoa(item.claimId ?? "")}`)}
+                            onClick={() =>
+                                navigate(
+                                    `/consider/monitor/customers/${btoa(item.claimId ?? "")}/${btoa(item.caseId ?? "")}`
+                                )
+                            }
                             sx={{ borderRadius: 5, textTransform: "none" }}
                         >
                             {item.claimNo}
