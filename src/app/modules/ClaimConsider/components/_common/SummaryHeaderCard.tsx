@@ -7,21 +7,32 @@ interface StatItemProps {
     value: number | string;
     color: string;
     showDivider?: boolean;
+    /** จำนวน stat ทั้งหมด — ใช้คำนวณความกว้างคอลัมน์ให้พอดีแถวเสมอ ไม่ว่าจะมีกี่รายการ */
+    itemsCount: number;
 }
 
-const StatItem = ({ icon, label, value, color, showDivider = true }: StatItemProps) => (
+const StatItem = ({ icon, label, value, color, showDivider = true, itemsCount }: StatItemProps) => (
     <Grid
         item
-        xs={3}
+        xs={Math.max(1, Math.floor(12 / itemsCount))}
         sx={{
             textAlign: "center",
             borderRight: showDivider ? "1px solid #E0E0E0" : "none",
-            padding: "8px 4px",
+            padding: { xs: "4px 2px", sm: "8px 4px" },
         }}
     >
-        <Box sx={{ display: "flex", justifyContent: "center", marginBottom: "4px" }}>{icon}</Box>
-        <Typography sx={{ fontSize: "0.8rem", color, lineHeight: 1.3 }}>{label}</Typography>
-        <Typography sx={{ fontSize: "1.6rem", fontWeight: 700, color }}>{value}</Typography>
+        <Box
+            sx={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "4px",
+                "& svg": { fontSize: { xs: 18, sm: 26 } },
+            }}
+        >
+            {icon}
+        </Box>
+        <Typography sx={{ fontSize: { xs: "0.7rem", sm: "0.8rem" }, color, lineHeight: 1.3 }}>{label}</Typography>
+        <Typography sx={{ fontSize: { xs: "1.05rem", sm: "1.6rem" }, fontWeight: 700, color }}>{value}</Typography>
     </Grid>
 );
 
@@ -71,29 +82,42 @@ const SummaryHeaderCard = ({
     return (
         <Grid container spacing={2}>
             <Grid item xs={12} sm={12} md={6} lg={6}>
-                <Grid container spacing={2} alignItems="center" wrap="nowrap" sx={{ padding: 3, gap: 2 }}>
+                <Grid
+                    container
+                    spacing={{ xs: 1.25, sm: 2 }}
+                    alignItems="center"
+                    wrap="nowrap"
+                    sx={{ padding: { xs: "10px 12px", sm: 3 }, gap: { xs: 1, sm: 2 } }}
+                >
                     <Grid item>
                         <Box
                             sx={{
-                                width: 56,
-                                height: 56,
+                                width: { xs: 36, sm: 56 },
+                                height: { xs: 36, sm: 56 },
                                 borderRadius: "12px",
                                 backgroundColor: lightBackground,
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                                 color,
+                                "& svg": { fontSize: { xs: 20, sm: 30 } },
                             }}
                         >
                             {icon}
                         </Box>
                     </Grid>
-                    <Grid item>
-                        <Typography sx={{ fontWeight: 700, color, fontSize: "1rem" }}>{title}</Typography>
+                    <Grid item sx={{ minWidth: 0 }}>
+                        <Typography noWrap sx={{ fontWeight: 700, color, fontSize: { xs: "0.75rem", sm: "1rem" } }}>
+                            {title}
+                        </Typography>
                         <Box sx={{ display: "flex", alignItems: "baseline", gap: "6px" }}>
-                            <Typography sx={{ fontWeight: 700, color, fontSize: "2rem" }}>{totalValue}</Typography>
+                            <Typography sx={{ fontWeight: 700, color, fontSize: { xs: "1.3rem", sm: "2rem" } }}>
+                                {totalValue}
+                            </Typography>
                             {totalUnitLabel && (
-                                <Typography sx={{ color, fontSize: "0.9rem" }}>{totalUnitLabel}</Typography>
+                                <Typography sx={{ color, fontSize: { xs: "0.75rem", sm: "0.9rem" } }}>
+                                    {totalUnitLabel}
+                                </Typography>
                             )}
                         </Box>
                     </Grid>
@@ -119,6 +143,7 @@ const SummaryHeaderCard = ({
                                 value={stat.value}
                                 color={color}
                                 showDivider={index < stats.length - 1}
+                                itemsCount={stats.length}
                             />
                         ))}
                     </Grid>
