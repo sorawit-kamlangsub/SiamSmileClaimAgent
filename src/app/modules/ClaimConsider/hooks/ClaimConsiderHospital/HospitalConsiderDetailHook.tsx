@@ -10,7 +10,7 @@ import {
     useGetCustomerDetailById,
     useGetDocumentByCaseId,
 } from "../../../../api/coreClaimApi";
-import { GetClaimDetailConsiderDtoResponse, GetDocumentByCaseIdDtoResponse } from "../../../../api/coreClaimApi.client";
+import { GetDocumentByCaseIdDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDocumentListByIds } from "../../../../api/docstorageApi";
 import {
     useGetAllHospital,
@@ -116,17 +116,6 @@ const mapDocumentChecks = (
             remark: review?.remark ?? "",
         };
     });
-
-/**
- * BE ส่ง field เวลาแยก (incidentTime / admissionTime / dischargeTime เป็น TimeSpan string "HH:mm:ss")
- * มากับ GetClaimDetailConsider แล้ว แต่ NSwag client ยัง regenerate ไม่ทัน — ครอบ type ตรงนี้ให้ตรงกับ
- * payload จริงจนกว่าจะรัน `npm run codegen` (แนวเดียวกับที่ ConsiderDetailHook ใช้ parseTimeSpan)
- */
-type ClaimDetailConsiderWithTime = GetClaimDetailConsiderDtoResponse & {
-    incidentTime?: string;
-    admissionTime?: string;
-    dischargeTime?: string;
-};
 
 /**
  * ค่าเริ่มต้นของฟอร์ม
@@ -311,7 +300,7 @@ const useHospitalConsiderDetailHook = () => {
     const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
 
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
-    const detail = detailData?.data as ClaimDetailConsiderWithTime | undefined;
+    const detail = detailData?.data;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detail?.customerId ?? undefined
@@ -597,6 +586,24 @@ const useHospitalConsiderDetailHook = () => {
         );
 
         formik.setFieldValue("detail", detail.remark, false);
+
+        // ---- ข้อมูลการเข้ารับการรักษา : default จาก SmileConnect ที่ BE ส่งผ่าน GetClaimDetailConsider ----
+        formik.setFieldValue("hn", detail.hn ?? "", false);
+        formik.setFieldValue("vn", detail.vn ?? "", false);
+        formik.setFieldValue("an", detail.an ?? "", false);
+        formik.setFieldValue("underlyingDisease", detail.underlyingDiseaseDetail ?? "", false);
+        formik.setFieldValue("treatmentMethod", detail.treatmentMethod ?? "", false);
+        formik.setFieldValue("labResult", detail.investigationResults ?? "", false);
+        formik.setFieldValue(
+            "hasProcedure",
+            detail.isProcedurePerformed === true ? "yes" : detail.isProcedurePerformed === false ? "no" : "",
+            false
+        );
+        // admitIndication / additionalDetail : BE ยังไม่ส่ง default มา ปล่อยว่างให้กรอกมือ
+
+        // ---- แพทย์เจ้าของไข้ ----
+        formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);
+        formik.setFieldValue("doctorName", detail.physicianName ?? "", false);
 
         hasSyncedMainRef.current = true;
     }, [detail, incidentType, coverageType]);

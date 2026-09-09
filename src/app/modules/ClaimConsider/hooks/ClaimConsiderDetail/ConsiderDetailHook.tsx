@@ -20,18 +20,7 @@ import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSel
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType } from "../../../../functionHelpers";
-import { CaseDocumentV2Request, GetClaimDetailConsiderDtoResponse } from "../../../../api/coreClaimApi.client";
-
-/**
- * BE ส่ง field เวลาแยก (incidentTime / admissionTime / dischargeTime เป็น TimeSpan string "HH:mm:ss")
- * มากับ GetClaimDetailConsider แล้ว แต่ NSwag client ยัง regenerate ไม่ทัน — ครอบ type ให้ตรงกับ payload
- * จริงจนกว่าจะรัน `npm run codegen`
- */
-type ClaimDetailConsiderWithTime = GetClaimDetailConsiderDtoResponse & {
-    incidentTime?: string;
-    admissionTime?: string;
-    dischargeTime?: string;
-};
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 
 /** รวมวันที่+เวลาที่กรอกแยกกันเป็น dayjs เดียว — วันที่มาจาก date picker เวลามาจาก time picker คนละ field */
 const combineDateTime = (
@@ -88,7 +77,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     const { data: draftRevision } = useGetClaimEditDraftRevision(draftRevisionId);
     const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
-    const detail = detailData?.data as ClaimDetailConsiderWithTime | undefined;
+    const detail = detailData?.data;
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detail?.customerId ?? 0
     );
