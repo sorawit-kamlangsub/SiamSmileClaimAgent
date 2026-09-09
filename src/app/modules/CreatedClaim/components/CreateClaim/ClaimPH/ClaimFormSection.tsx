@@ -124,11 +124,20 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    // เคลมต่อเนื่อง: เทียบกับ benefit คงเหลือ (remainAmount) แทนวงเงินสูงสุด (maxPrice)
     const totalEligibleAmount = useMemo(
-        () => (customerBenefit?.data ?? []).reduce((sum, item) => sum + (item.maxPrice ?? 0), 0),
-        [customerBenefit?.data]
+        () =>
+            (customerBenefit?.data ?? []).reduce(
+                (sum, item) => sum + ((isContinuous ? item.remainAmount : item.maxPrice) ?? 0),
+                0
+            ),
+        [customerBenefit?.data, isContinuous]
     );
-    const maxPrice = isManualIPD ? totalEligibleAmount : currentBenefit?.maxPrice;
+    const maxPrice = isManualIPD
+        ? totalEligibleAmount
+        : isContinuous
+        ? currentBenefit?.remainAmount
+        : currentBenefit?.maxPrice;
     const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
     const handleSubmit = async () => {
@@ -581,6 +590,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 <CoverageAndTransferBox
                                     items={customerBenefit?.data ?? []}
                                     isLoading={customerBenefitLoading}
+                                    isContinuous={isContinuous}
                                     planCode={
                                         isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
                                             ? insured?.productName

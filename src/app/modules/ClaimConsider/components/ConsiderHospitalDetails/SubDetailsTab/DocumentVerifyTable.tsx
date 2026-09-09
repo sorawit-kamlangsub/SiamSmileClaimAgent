@@ -21,15 +21,28 @@ import { useState } from "react";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
-import { cellAlignOptions, defaultOptionStandardDataTable } from "../../../../../functionHelpers";
+import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../../functionHelpers";
+import { DOC_STORAGE_URL } from "../../../../../../Const";
 import {
     DOCUMENT_CHECK_RESULTS,
     DocumentCheckResult,
     DocumentCheckResultOption,
     DocumentCheckRow,
 } from "../mock/hospitalConsiderMock";
-import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
+import {
+    DocStorageDocInfo,
+    HospitalConsiderValues,
+} from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import DocumentFileViewer from "./DocumentFileViewer";
+
+/** ค่าเริ่มต้นเมื่อยังไม่มีข้อมูล DocStorage ของ documentId นั้น */
+const EMPTY_DOC_INFO: DocStorageDocInfo = {
+    documentName: "-",
+    fileCount: 0,
+    documentCode: "",
+    mainIndex: "",
+    searchIndex: "",
+};
 
 type DocumentVerifyTableProps = {
     onChange: <TField extends keyof DocumentCheckRow>(
@@ -41,6 +54,12 @@ type DocumentVerifyTableProps = {
     onScan?: (rowIndex: number) => void;
     /** ตัวเลือกผลการตรวจเอกสาร จาก Master API (/api/Masters/document/review/status) */
     options: DocumentCheckResultOption[];
+    /**
+     * ข้อมูลเอกสารจริงใน DocStorage ต่อ documentId (GET /document/documentid/list)
+     * ใช้แสดงคอลัมน์ "รายการเอกสาร" (documentTypeName) + "จำนวนเอกสาร" (fileCount)
+     * และ fileCount เป็นเงื่อนไขเปิด modal ดูรายละเอียด (0 = เปิดไม่ได้)
+     */
+    documentInfoByDocumentId: Record<string, DocStorageDocInfo>;
     /** โหมดดูอย่างเดียว : แก้ผลการตรวจและหมายเหตุไม่ได้ แต่ยังกดดูเอกสารได้ */
     readOnly?: boolean;
 };
@@ -49,9 +68,37 @@ type DocumentVerifyTableProps = {
 const isRemarkRequired = (result: DocumentCheckResult | "") =>
     result === DOCUMENT_CHECK_RESULTS.failed || result === DOCUMENT_CHECK_RESULTS.waiting;
 
-const DocumentVerifyTable = ({ onChange, onScan, options, readOnly = false }: DocumentVerifyTableProps) => {
+const DocumentVerifyTable = ({
+    onChange,
+    onScan,
+    options,
+    documentInfoByDocumentId,
+    readOnly = false,
+}: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
+
+    /** ข้อมูล DocStorage ของแถวนั้น (ไม่มีใน map = ยังไม่มีเอกสารแนบ) */
+    const getDocInfo = (documentId: string) => documentInfoByDocumentId[documentId] ?? EMPTY_DOC_INFO;
+
+    /**
+     * ปุ่ม "สแกนเอกสาร" : เปิดหน้า DocStorage เพื่อแนบเอกสารของ documentId นั้น (เหมือน DocumentScanTable)
+     * แล้วล้างผลการตรวจของแถวนั้นให้ตรวจซ้ำ — พฤติกรรมเดิม (CR Ver2 ข้อ 4) ยังคงไว้
+     */
+    const handleScan = (rowIndex: number) => {
+        const row = rows[rowIndex];
+        const info = getDocInfo(row.documentId);
+        if (info.documentCode) {
+            const url =
+                `${DOC_STORAGE_URL}/document/scan?documentId=${row.documentId}` +
+                `&documentCode=${info.documentCode}` +
+                `&documentSubType=${row.documentSubTypeId ?? ""}` +
+                `&mainIndex=${info.mainIndex}` +
+                `&searchIndex=${info.searchIndex}`;
+            handleClickLink(url);
+        }
+        onScan?.(rowIndex);
+    };
 
     /** error ระดับฟอร์ม : หมายเหตุยังไม่ครบสำหรับเอกสารที่ผล ไม่ผ่าน / รอเอกสารเพิ่มเติม */
     const { error: documentChecksError, touched: documentChecksTouched } =
@@ -66,7 +113,14 @@ const DocumentVerifyTable = ({ onChange, onScan, options, readOnly = false }: Do
         {
             name: "documentName",
             label: "รายการเอกสาร",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
+            options: {
+                filter: false,
+                sort: false,
+                ...cellAlignOptions({ align: "left" }),
+                // ชื่อจาก useGetDocumentByCaseId (claimDocumentTypeName) เป็นหลัก, fallback = DocStorage
+                customBodyRender: (value: DocumentCheckRow["documentName"], tableMeta) =>
+                    value || documentInfoByDocumentId[rows[tableMeta.rowIndex].documentId]?.documentName || "-",
+            },
         },
         {
             name: "",
@@ -76,26 +130,28 @@ const DocumentVerifyTable = ({ onChange, onScan, options, readOnly = false }: Do
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (_value, tableMeta) => (
-                    <Button
-                        size="small"
-                        variant="contained"
-                        disabled={readOnly}
-                        sx={{ width: 150 }}
-                        onClick={() => onScan?.(tableMeta.rowIndex)}
-                    >
-                        สแกนเอกสาร
-                    </Button>
+                    <Tooltip title="แนบเอกสารที่ DocStorage" arrow placement="top">
+                        <Button
+                            size="small"
+                            variant="contained"
+                            disabled={readOnly}
+                            sx={{ width: 150 }}
+                            onClick={() => handleScan(tableMeta.rowIndex)}
+                        >
+                            สแกนเอกสาร
+                        </Button>
+                    </Tooltip>
                 ),
             },
         },
         {
-            name: "files",
+            name: "documentId",
             label: "จำนวนเอกสาร",
             options: {
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (value: DocumentCheckRow["files"]) => value.length,
+                customBodyRender: (value: DocumentCheckRow["documentId"]) => getDocInfo(value).fileCount,
             },
         },
         {
@@ -108,7 +164,8 @@ const DocumentVerifyTable = ({ onChange, onScan, options, readOnly = false }: Do
                 customBodyRender: (_value, tableMeta) => {
                     const row = rows[tableMeta.rowIndex];
 
-                    const hasFile = row.files.length > 0;
+                    // เปิด modal ได้เฉพาะเมื่อ documentId นั้นมีไฟล์แนบใน DocStorage
+                    const hasFile = getDocInfo(row.documentId).fileCount > 0;
 
                     return (
                         <Tooltip title={hasFile ? "ดูรายละเอียด" : "ยังไม่มีเอกสาร"} arrow placement="top">
@@ -264,7 +321,7 @@ const DocumentVerifyTable = ({ onChange, onScan, options, readOnly = false }: Do
                     </Button>
                 </DialogTitle>
                 <DialogContent dividers>
-                    <DocumentFileViewer key={viewingRow?.documentId} files={viewingRow?.files ?? []} />
+                    <DocumentFileViewer key={viewingRow?.documentId} documentId={viewingRow?.documentId} />
                 </DialogContent>
             </Dialog>
         </CustomPaper>

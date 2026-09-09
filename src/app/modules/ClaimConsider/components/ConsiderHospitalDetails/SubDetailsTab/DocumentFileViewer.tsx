@@ -1,18 +1,44 @@
-import { Box, Divider, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Divider, Typography } from "@mui/material";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
 import PictureAsPdfOutlinedIcon from "@mui/icons-material/PictureAsPdfOutlined";
-import { useState } from "react";
+import OpenInNewOutlinedIcon from "@mui/icons-material/OpenInNewOutlined";
+import { useMemo, useState } from "react";
 
-import { DocumentFile } from "../mock/hospitalConsiderMock";
+import { formatDateString } from "../../../../../functionHelpers";
+import { useGetDocumentFileByDocumentId } from "../../../../../api/docstorageApi";
 
 type DocumentFileViewerProps = {
-    files: DocumentFile[];
+    /** documentId ของแถวที่กดดู — undefined เมื่อ modal ปิดอยู่ */
+    documentId?: string;
+};
+
+/** view-model ของไฟล์ 1 รายการ ที่ประกอบจาก DocumentFileResponseDto */
+type FileView = {
+    id: string;
+    fileName: string;
+    fileType: string;
+    isImage: boolean;
+    /** URL สำหรับแสดงรูปในกรอบตัวอย่าง (เฉพาะไฟล์รูปภาพ) */
+    previewUrl?: string;
+    /** pathFullDoc — ไฟล์ที่ไม่ใช่รูปภาพให้กดลิงก์ไปเปิดแทน */
+    openUrl?: string;
+    uploadedDate: string;
+    uploadedBy: string;
+};
+
+const openInNewTab = (url: string) => window.open(url, "_blank", "noopener,noreferrer");
+
+const IMAGE_EXTENSIONS = ["JPG", "JPEG", "PNG", "GIF", "WEBP", "BMP", "TIF", "TIFF", "HEIC", "SVG"];
+
+const extensionOf = (fileName: string) => {
+    const dot = fileName.lastIndexOf(".");
+    return dot === -1 ? "" : fileName.slice(dot + 1).toUpperCase();
 };
 
 const fileIcon = (fileType: string) => {
-    if (fileType.toUpperCase() === "PDF") return <PictureAsPdfOutlinedIcon />;
-    if (["JPG", "JPEG", "PNG"].includes(fileType.toUpperCase())) return <ImageOutlinedIcon />;
+    if (fileType === "PDF") return <PictureAsPdfOutlinedIcon />;
+    if (IMAGE_EXTENSIONS.includes(fileType)) return <ImageOutlinedIcon />;
 
     return <InsertDriveFileOutlinedIcon />;
 };
@@ -20,12 +46,50 @@ const fileIcon = (fileType: string) => {
 /**
  * ตัวอ่านไฟล์เอกสาร แสดงรายการไฟล์ที่สแกนไว้และตัวอย่างของไฟล์ที่เลือก
  *
+ * ดึงไฟล์จริงจาก DocStorage (GET /document/{documentId}/documentFile) ตอนเปิด modal
  * ดูได้อย่างเดียว ไม่มีการเพิ่ม ลบ หรือแก้ไขเอกสาร
  */
-const DocumentFileViewer = ({ files }: DocumentFileViewerProps) => {
-    const [selectedFileId, setSelectedFileId] = useState<string | undefined>(files[0]?.fileId);
+const DocumentFileViewer = ({ documentId }: DocumentFileViewerProps) => {
+    const { data, isLoading } = useGetDocumentFileByDocumentId(documentId);
 
-    const selectedFile = files.find((file) => file.fileId === selectedFileId) ?? files[0];
+    const files = useMemo<FileView[]>(
+        () =>
+            (data?.data ?? []).map((file, index) => {
+                const fileName = file.fileName ?? `ไฟล์ ${index + 1}`;
+                const fileType = extensionOf(fileName);
+                // ใช้ทั้ง flag จาก BE และนามสกุลไฟล์ — บางไฟล์ BE ไม่ได้ตั้ง isImage มา
+                const isImage = !!file.isImage || IMAGE_EXTENSIONS.includes(fileType);
+                return {
+                    id: file.documentFileId ?? `${documentId ?? "doc"}-${index + 1}`,
+                    fileName,
+                    fileType,
+                    isImage,
+                    previewUrl: isImage
+                        ? file.fileURL || file.pathFullDoc || file.pathThumbnailImg || undefined
+                        : undefined,
+                    // ไฟล์ที่ไม่ใช่รูปภาพ : เปิดผ่าน pathFullDoc
+                    openUrl: !isImage ? file.pathFullDoc || file.fileURL || undefined : undefined,
+                    uploadedDate:
+                        formatDateString(
+                            (file.createdDate ?? file.updatedDate)?.toString() ?? "",
+                            "DD/MM/BBBB HH:mm"
+                        ) || "-",
+                    uploadedBy: file.createdByUserName ?? "-",
+                };
+            }),
+        [data, documentId]
+    );
+
+    const [selectedFileId, setSelectedFileId] = useState<string>();
+    const selectedFile = files.find((file) => file.id === selectedFileId) ?? files[0];
+
+    if (isLoading) {
+        return (
+            <Box sx={{ minHeight: 320, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <CircularProgress size={28} />
+            </Box>
+        );
+    }
 
     if (files.length === 0) {
         return (
@@ -55,10 +119,10 @@ const DocumentFileViewer = ({ files }: DocumentFileViewerProps) => {
 
                 {files.map((file) => (
                     <FileRow
-                        key={file.fileId}
+                        key={file.id}
                         file={file}
-                        selected={file.fileId === selectedFile?.fileId}
-                        onClick={() => setSelectedFileId(file.fileId)}
+                        selected={file.id === selectedFile?.id}
+                        onClick={() => setSelectedFileId(file.id)}
                     />
                 ))}
             </Box>
@@ -85,22 +149,43 @@ const DocumentFileViewer = ({ files }: DocumentFileViewerProps) => {
                         bgcolor: "#F4F7FA",
                         color: "text.secondary",
                         px: 3,
+                        py: 2,
                         textAlign: "center",
+                        overflow: "hidden",
                     }}
                 >
-                    <Box sx={{ "& svg": { fontSize: 64, color: "#9FB3C6" } }}>
-                        {fileIcon(selectedFile?.fileType ?? "")}
-                    </Box>
-                    <Typography fontWeight={600} color="text.primary">
-                        {selectedFile?.fileName}
-                    </Typography>
-                    <Typography fontSize={13}>{`${selectedFile?.fileType} · ${selectedFile?.fileSize}`}</Typography>
-                    <Typography fontSize={13}>
-                        {`สแกนเมื่อ ${selectedFile?.uploadedDate} โดย ${selectedFile?.uploadedBy}`}
-                    </Typography>
-                    <Typography fontSize={12} mt={1}>
-                        ตัวอย่างเอกสารจะแสดงที่นี่เมื่อเชื่อมกับ DocStorage แล้ว
-                    </Typography>
+                    {selectedFile?.isImage && selectedFile.previewUrl ? (
+                        <Box
+                            component="img"
+                            src={selectedFile.previewUrl}
+                            alt={selectedFile.fileName}
+                            sx={{ maxWidth: "100%", maxHeight: 440, objectFit: "contain", borderRadius: 1 }}
+                        />
+                    ) : (
+                        <>
+                            <Box sx={{ "& svg": { fontSize: 64, color: "#9FB3C6" } }}>
+                                {fileIcon(selectedFile?.fileType ?? "")}
+                            </Box>
+                            <Typography fontWeight={600} color="text.primary">
+                                {selectedFile?.fileName}
+                            </Typography>
+                            <Typography fontSize={13}>{selectedFile?.fileType || "ไฟล์เอกสาร"}</Typography>
+                            <Typography fontSize={13}>
+                                {`สแกนเมื่อ ${selectedFile?.uploadedDate} โดย ${selectedFile?.uploadedBy}`}
+                            </Typography>
+                            {selectedFile?.openUrl && (
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    startIcon={<OpenInNewOutlinedIcon />}
+                                    onClick={() => selectedFile.openUrl && openInNewTab(selectedFile.openUrl)}
+                                    sx={{ mt: 1 }}
+                                >
+                                    เปิดเอกสาร
+                                </Button>
+                            )}
+                        </>
+                    )}
                 </Box>
             </Box>
         </Box>
@@ -108,7 +193,7 @@ const DocumentFileViewer = ({ files }: DocumentFileViewerProps) => {
 };
 
 type FileRowProps = {
-    file: DocumentFile;
+    file: FileView;
     selected: boolean;
     onClick: () => void;
 };
@@ -136,7 +221,7 @@ const FileRow = ({ file, selected, onClick }: FileRowProps) => (
                 {file.fileName}
             </Typography>
             <Typography fontSize={12} color="text.secondary">
-                {`${file.fileType} · ${file.fileSize}`}
+                {`${file.fileType || "ไฟล์"} · ${file.uploadedDate}`}
             </Typography>
         </Box>
     </Box>

@@ -36,6 +36,7 @@ const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
+const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
 const getPolicyBenefitQueryKey = ["getPolicyBenefit"];
 const getPreviousClaimQueryKey = ["getPreviousClaim"];
@@ -492,11 +493,30 @@ export const useGetCustomerClaimAdjudicationMonitor = (
     );
 };
 
-export const useGetClaimDetailConsider = (claimId: string) => {
-    return useQuery([getClaimDetailConsiderQueryKey, claimId], () => coreClaimClient.getClaimDetailConsider(claimId), {
-        enabled: !!claimId,
-        refetchOnWindowFocus: false,
-    });
+export const useGetClaimDetailConsider = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getClaimDetailConsiderQueryKey, claimId, caseId],
+        () => coreClaimClient.getClaimDetailConsider(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/**
+ * ภาพรวมการตรวจสอบเอกสาร / ผลการพิจารณา / รายการค่าใช้จ่ายของ Case
+ * (GET /document/case/{caseId}/overview) — ป้อนตาราง "ตรวจสอบเอกสาร" ของหน้าพิจารณาเคลมโรงพยาบาล
+ */
+export const useGetCaseReviewOverview = (caseId?: string) => {
+    return useQuery(
+        [getCaseReviewOverviewQueryKey, caseId],
+        () => coreClaimClient.getCaseReviewOverview(caseId as string),
+        {
+            enabled: !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };
 
 export const useGetClaimTransactionLog = (

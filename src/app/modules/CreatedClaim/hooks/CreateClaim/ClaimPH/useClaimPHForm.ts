@@ -147,7 +147,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
             else if ((isDeath || isDisability || isIPD) && Number(values.transferAmount) > maxTransferAmount) {
-                errors.transferAmount = `ไม่เกินวงเงินสูงสุด ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
+                errors.transferAmount = `ไม่เกินวงเงิน${
+                    isContinuous ? "คงเหลือ" : "สูงสุด"
+                } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
             return errors;
         },
@@ -528,8 +530,11 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
     const maxTransferAmount = useMemo(() => {
         const data = customerBenefit?.data ?? [];
-        return data.length > 0 ? data[data.length - 1].maxPrice ?? 0 : 0;
-    }, [customerBenefit?.data]);
+        if (data.length === 0) return 0;
+        // เคลมต่อเนื่อง: จำกัดด้วย benefit คงเหลือ (remainAmount) แทนวงเงินสูงสุด (maxPrice)
+        const last = data[data.length - 1];
+        return (isContinuous ? last.remainAmount : last.maxPrice) ?? 0;
+    }, [customerBenefit?.data, isContinuous]);
 
     const isIncidentDateDisabled = isContinuous;
     // เคลมต่อเนื่อง: ยังรอข้อมูลเคลมตั้งต้นมา prefill (icD10Id ฯลฯ)

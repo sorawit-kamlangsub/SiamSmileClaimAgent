@@ -26,3 +26,7 @@ export const billingStatusLabel = (statusId?: number): string =>
     statusId !== undefined && statusId in BILLING_STATUS_LABEL
         ? BILLING_STATUS_LABEL[statusId as BillingStatusId]
         : "-";
+
+/** สถานะคำขอส่งกลับ — "Pending" = BE บันทึกคำขอแล้ว ยังไม่ยืนยันว่า SmileConnect รับ (handoff ข้อ "สถานะและเหตุผล") */
+export const billingReturnStatusLabel = (raw: string | undefined): string =>
+    raw === "Pending" ? "รอดำเนินการส่งกลับ" : raw ?? "-";

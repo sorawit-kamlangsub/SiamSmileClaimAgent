@@ -234,7 +234,8 @@ const Routes: RouteMapType[] = [
                 index: true,
             },
             {
-                path: "customers/:id",
+                // :caseId (btoa) ต่อจาก :id (btoa) — ส่งมาจากหน้า monitor เพื่อยิง useGetClaimDetailConsider
+                path: "customers/:id/:caseId",
                 title: "บันทึกข้อมูลเคลม - เคลมลูกค้า",
                 element: <ConsiderDetailPage />,
             },
@@ -251,12 +252,14 @@ const Routes: RouteMapType[] = [
                 element: <ConsiderHospitalMonitorPage />,
             },
             {
-                path: "hospital/:id",
+                // :caseId (btoa) ต่อจาก :id (btoa) — ส่งมาจากหน้า monitor เพื่อยิง useGetClaimDetailConsider
+                path: "hospital/:id/:caseId",
                 title: "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล",
                 element: <ConsiderHospitalDetailPage />,
             },
             {
-                path: "hospital/:id/document",
+                // :caseId (btoa) ต่อจาก :id (btoa) — หน้าดูเอกสารใช้ useGetClaimDetailConsider เหมือนหน้าพิจารณา
+                path: "hospital/:id/:caseId/document",
                 title: "ดูรายละเอียดเคลม - เคลมโรงพยาบาล",
                 element: <ConsiderHospitalDocumentPage />,
             },

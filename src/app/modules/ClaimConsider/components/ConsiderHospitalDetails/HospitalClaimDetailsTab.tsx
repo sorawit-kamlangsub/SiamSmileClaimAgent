@@ -3,6 +3,7 @@ import {
     Box,
     Button,
     Chip,
+    CircularProgress,
     Dialog,
     DialogActions,
     DialogContent,
@@ -77,6 +78,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const {
         formik,
         validateStep1,
+        isStep1Loading,
         incidentType,
         incidentTypeLoading,
         coverageType,
@@ -94,6 +96,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         handleDocumentCheckChange,
         handleDocumentScan,
         documentCheckResultOptions,
+        documentInfoByDocId,
         claimListTypeConfig,
         detailData,
         customerDetailData,
@@ -222,9 +225,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const currentCaseNo = detail?.caseNo ?? "";
     const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
+    /** จำนวนไฟล์จริงใน DocStorage ของ documentId นั้น (0 = ยังไม่มีเอกสารแนบ) */
+    const getFileCount = (documentId: string) => documentInfoByDocId[documentId]?.fileCount ?? 0;
+
     /** เอกสารที่มีไฟล์แนบต้องเลือกผลการตรวจครบก่อนกด "ถัดไป" (ชีท row 104-105) */
     const isDocumentResultAllSelected = () =>
-        !formik.values.documentChecks.some((doc) => doc.files.length > 0 && doc.checkResult === "");
+        !formik.values.documentChecks.some((doc) => getFileCount(doc.documentId) > 0 && doc.checkResult === "");
 
     const handleNext = async () => {
         // Step 1 : ต้องผ่าน Validate + เลือกผลการตรวจเอกสารครบ ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท)
@@ -276,7 +282,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
      */
     const isDocumentResultAllPassed = () =>
         !formik.values.documentChecks.some(
-            (doc) => doc.files.length > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
+            (doc) => getFileCount(doc.documentId) > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
         );
 
     /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง */
@@ -336,59 +342,87 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
                 <Box sx={{ marginTop: "20px" }}>
                     {activeStep === 0 ? (
-                        <Grid container spacing={2}>
-                            {continuousClaim && (
-                                <Grid item xs={12}>
-                                    <ContinuousClaimBanner
-                                        claim={continuousClaim}
-                                        currentCaseNo={currentCaseNo}
-                                        currentCaseStatus={currentCaseStatus}
+                        <Box sx={{ position: "relative" }}>
+                            {isStep1Loading && (
+                                <Box
+                                    sx={{
+                                        position: "absolute",
+                                        inset: 0,
+                                        zIndex: 20,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        gap: 1.5,
+                                        bgcolor: "rgba(255, 255, 255, 0.65)",
+                                        borderRadius: 2,
+                                    }}
+                                >
+                                    <CircularProgress />
+                                    <Typography variant="body2" color="text.secondary">
+                                        กำลังโหลดข้อมูลเคลม...
+                                    </Typography>
+                                </Box>
+                            )}
+                            <Grid
+                                container
+                                spacing={2}
+                                sx={isStep1Loading ? { pointerEvents: "none", opacity: 0.5 } : undefined}
+                            >
+                                {continuousClaim && (
+                                    <Grid item xs={12}>
+                                        <ContinuousClaimBanner
+                                            claim={continuousClaim}
+                                            currentCaseNo={currentCaseNo}
+                                            currentCaseStatus={currentCaseStatus}
+                                        />
+                                    </Grid>
+                                )}
+                                <Grid item xs={12} sx={readOnlySx}>
+                                    <RecordClaimData
+                                        incidentType={incidentType}
+                                        incidentTypeLoading={incidentTypeLoading}
+                                        coverageType={coverageType}
+                                        causeOfIncident={causeOfIncident}
+                                        medicalType={medicalType}
+                                        incidentTypeMappingLoading={incidentTypeMappingLoading}
+                                        continuousClaimRows={continuousClaimRows}
+                                        continuousClaimOpen={continuousClaimOpen}
+                                        onContinuousClaimOpenChange={setContinuousClaimOpen}
+                                        onContinuousClaimToggle={handleToggleContinuousClaim}
+                                        onContinuousClaimSelect={handleSelectContinuousClaim}
+                                        onContinuousClaimClear={handleClearContinuousClaim}
                                     />
                                 </Grid>
-                            )}
-                            <Grid item xs={12} sx={readOnlySx}>
-                                <RecordClaimData
-                                    incidentType={incidentType}
-                                    incidentTypeLoading={incidentTypeLoading}
-                                    coverageType={coverageType}
-                                    causeOfIncident={causeOfIncident}
-                                    medicalType={medicalType}
-                                    incidentTypeMappingLoading={incidentTypeMappingLoading}
-                                    continuousClaimRows={continuousClaimRows}
-                                    continuousClaimOpen={continuousClaimOpen}
-                                    onContinuousClaimOpenChange={setContinuousClaimOpen}
-                                    onContinuousClaimToggle={handleToggleContinuousClaim}
-                                    onContinuousClaimSelect={handleSelectContinuousClaim}
-                                    onContinuousClaimClear={handleClearContinuousClaim}
-                                />
+                                <Grid item xs={12} sx={readOnlySx}>
+                                    <TreatmentInfoSection />
+                                </Grid>
+                                <Grid item xs={12} sx={readOnlySx}>
+                                    <AttendingDoctorSection />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <DocumentVerifyTable
+                                        onChange={handleDocumentCheckChange}
+                                        onScan={handleDocumentScan}
+                                        options={documentCheckResultOptions}
+                                        documentInfoByDocumentId={documentInfoByDocId}
+                                        readOnly={readOnly}
+                                    />
+                                </Grid>
+                                <Grid item xs={12} sx={readOnlySx}>
+                                    <ConsiderSection
+                                        productId={customerDetail?.productTypeId}
+                                        aplicationCode={customerDetail?.policyCode ?? ""}
+                                        decisionReason={decisionReason}
+                                        decisionReasonLoading={decisionReasonLoading}
+                                        // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 5) — CR Ver2
+                                        hiddenDecisionIds={[3, 5]}
+                                        headingText="แจ้งผลการพิจารณาโรงพยาบาล"
+                                        labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
+                                    />
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12} sx={readOnlySx}>
-                                <TreatmentInfoSection />
-                            </Grid>
-                            <Grid item xs={12} sx={readOnlySx}>
-                                <AttendingDoctorSection />
-                            </Grid>
-                            <Grid item xs={12}>
-                                <DocumentVerifyTable
-                                    onChange={handleDocumentCheckChange}
-                                    onScan={handleDocumentScan}
-                                    options={documentCheckResultOptions}
-                                    readOnly={readOnly}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sx={readOnlySx}>
-                                <ConsiderSection
-                                    productId={customerDetail?.productTypeId}
-                                    aplicationCode={customerDetail?.policyCode ?? ""}
-                                    decisionReason={decisionReason}
-                                    decisionReasonLoading={decisionReasonLoading}
-                                    // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 5) — CR Ver2
-                                    hiddenDecisionIds={[3, 5]}
-                                    headingText="แจ้งผลการพิจารณาโรงพยาบาล"
-                                    labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
-                                />
-                            </Grid>
-                        </Grid>
+                        </Box>
                     ) : activeStep === 1 ? (
                         <Grid container spacing={2}>
                             {claimListTypeConfig.hasSimBSelector && (
@@ -462,7 +496,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 justifyContent: "flex-end",
                             }}
                         >
-                            <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
+                            <Button
+                                variant="outlined"
+                                startIcon={<SaveAsIcon />}
+                                onClick={handleSaveDraft}
+                                disabled={isStep1Loading}
+                            >
                                 บันทึกแบบร่าง
                             </Button>
 
@@ -471,7 +510,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     <Button
                                         variant="contained"
                                         startIcon={<SaveIcon />}
-                                        disabled={!formik.values.considerResult}
+                                        disabled={!formik.values.considerResult || isStep1Loading}
                                         onClick={handleConfirmConsiderResult}
                                         sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                     >
@@ -482,7 +521,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="contained"
                                         endIcon={<ArrowForwardIcon />}
                                         onClick={handleNext}
-                                        disabled={isCalculating}
+                                        disabled={isCalculating || isStep1Loading}
                                     >
                                         {isCalculating ? "กำลังคำนวณ..." : "ถัดไป"}
                                     </Button>

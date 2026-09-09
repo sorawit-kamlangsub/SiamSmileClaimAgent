@@ -53,23 +53,6 @@ export const toDocumentFormItem = (item: BillingDocumentDto): BillingDocumentFor
     _rowKey: item.caseDocumentId ?? makeRowKey(),
 });
 
-/** สร้างแถวค่ารักษาใหม่ — `caseItemId: undefined` คือสัญญาณให้ BE รู้ว่าเป็นแถวใหม่ (handoff ข้อ 5) */
-export const buildNewExpenseFormItem = (
-    standardMedicalExpenseId: number,
-    itemName: string
-): BillingExpenseFormItem => ({
-    caseItemId: undefined,
-    standardMedicalExpenseId,
-    itemName,
-    claimAmount: 0,
-    discountAmount: 0,
-    nonCoveredAmount: 0,
-    nonCoveredReasonId: undefined,
-    note: undefined,
-    _rowKey: makeRowKey(),
-    _isNew: true,
-});
-
 /** DTO (ซ้อน claim/medical) → ฟอร์ม flat ตอนโหลด Detail */
 export const toFormValues = (data: BillingReviewDataDto): BillingReviewFormValues => {
     const claim = data.claim ?? ({} as BillingClaimDto);
@@ -115,7 +98,19 @@ export const toFormValues = (data: BillingReviewDataDto): BillingReviewFormValue
         ssEndDiscountAmount: data.ssEndDiscountAmount ?? 0,
 
         reviewStatusId: undefined,
+        reviewReasonId: undefined,
         reviewRemark: "",
+        rejectionDocuments: [],
+
+        // ฟิลด์ FE-only (ดู comment บน BillingReviewFormValues) — ยังไม่มีค่าจาก BE ให้ sync จึงใช้ default
+        isContinuousClaim: false,
+        continuousClaim: undefined,
+        documentCompleteDate: dayjs(), // สเปค : Default วันที่ปัจจุบัน
+        admitIndication: "",
+        ipdDays: 0,
+        icuDays: 0,
+        simBCategory: "SimB2", // สเปค : Default Sim B2
+        mergeCompensation: true,
     };
 };
 
@@ -140,7 +135,15 @@ const toDocumentDto = (item: BillingDocumentFormItem): BillingDocumentDto => ({
     note: item.note,
 });
 
-/** ฟอร์ม flat → DTO ซ้อน claim/medical ตอนสร้าง payload submit (ส่งเต็มชุด ไม่ใช่ PATCH) */
+/**
+ * ฟอร์ม flat → DTO ซ้อน claim/medical ตอนสร้าง payload submit (ส่งเต็มชุด ไม่ใช่ PATCH)
+ *
+ * จงใจไม่ map ฟิลด์ FE-only ต่อไปนี้ขึ้น BE เพราะ `BillingReviewDataDto`/`BillingExpenseDto`/`BillingDocumentDto`
+ * ยังไม่มี field รองรับ (ดู PENDING_BE_FIELDS ที่ billingPendingFields.ts) : isContinuousClaim, continuousClaim,
+ * documentCompleteDate, admitIndication, ipdDays, icuDays, simBCategory, mergeCompensation, rejectionDocuments,
+ * รวมถึง `_receiptAmount`/`_entitlementAmount`/`_isInsuranceExcess`/`_insuranceCompanyName` บนแต่ละแถว expenses
+ * — ฟิลด์เหล่านี้อยู่ในฟอร์มเพื่อให้ UI bind ค่าได้เท่านั้น ยังไม่ round-trip ขึ้น BE จนกว่า contract จะรองรับ
+ */
 export const toReviewDataDto = (values: BillingReviewFormValues): BillingReviewDataDto => ({
     claim: {
         incidentTypeId: values.incidentTypeId,
