@@ -3,6 +3,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { CustomDisplayText } from "../../../../../../_common/components/CustomComponent/CustomDisplayText";
 import { formatDateString } from "../../../../../../../functionHelpers";
 import { ClaimConsiderValues } from "../../../../../store/claimConsiderSlice";
+import { useGetAllHospital, useGetChiefComplaint, useGetICD10 } from "../../../../../../../api/coreClaimMastersApi";
 
 type ClaimInformationSectionProps = {
     values: ClaimConsiderValues;
@@ -14,11 +15,26 @@ const formatDate = (date: Dayjs | undefined) => formatDateString(date?.toString(
 const formatTime = (date: Dayjs | undefined) =>
     date && dayjs(date).isValid() ? dayjs(date).format("HH:mm") : undefined;
 
-const formatDiagnosis = (diagnosis?: { icd10Id?: number; icd10Detail?: string }) =>
-    diagnosis?.icd10Id !== undefined ? diagnosis.icd10Detail ?? "-" : undefined;
-
 const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationSectionProps) => {
     const [diagnosis1, diagnosis2, diagnosis3] = values.diagnoses ?? [];
+
+    // resolve ชื่อจาก id เอง แทนการอ่าน values.hospitalName/chiefComplaintId_selectedText/diagnoses[n].icd10Detail
+    // ตรงๆ — ฟิลด์เหล่านั้นมีแค่ตอนผู้ใช้เพิ่งเลือกเองใน Step 1 เท่านั้น ตอน sync ค่าจาก server (เคสปกติของหน้านี้)
+    // ConsiderDetailHook เติมมาแค่ id ไม่มีชื่อมาด้วย (DTO ก็ไม่มี field ชื่อให้) จึงว่างเสมอถ้าอ่านแบบเดิม
+    // ใช้ query แบบดึงลิสต์เต็ม (ไม่ใช่ *Filter ที่ debounce/slice(0,10) สำหรับ autocomplete) — query key
+    // ตรงกับที่ Step 1 เรียกอยู่แล้วผ่าน useGetHospitalDetailAllFilter/useGetICD10Filter จึง cache hit ไม่ยิงซ้ำ
+    const { data: chiefComplaintData } = useGetChiefComplaint();
+    const { data: hospitalData } = useGetAllHospital();
+    const { data: icd10Data } = useGetICD10();
+
+    const chiefComplaintName = chiefComplaintData?.data?.find(
+        (item) => item.chiefComplaintId === values.chiefComplaintId
+    )?.detail;
+    const hospitalName = hospitalData?.data?.find((item) => item.organizeId === values.hospitalId)?.organizeName;
+    const getIcd10Name = (diagnosis?: { icd10Id?: number }) =>
+        diagnosis?.icd10Id !== undefined
+            ? icd10Data?.data?.find((item) => item.icD10Id === diagnosis.icd10Id)?.icD10Detail ?? "-"
+            : undefined;
 
     return (
         <Grid container spacing={2} p={2}>
@@ -32,11 +48,11 @@ const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationS
             <CustomDisplayText label="เวลาที่เข้า รพ." value={formatTime(values.admissionTime)} />
             <CustomDisplayText label="วันที่ออก รพ." value={formatDate(values.dischargeDate)} />
             <CustomDisplayText label="เวลาที่ออก รพ." value={formatTime(values.dischargeTime)} />
-            <CustomDisplayText label="อาการสำคัญ" value={values.chiefComplaintId_selectedText} xs={12} md={6} />
-            <CustomDisplayText label="สถานพยาบาล" value={values.hospitalName} xs={12} md={12} />
-            <CustomDisplayText label="คำวินิจฉัย 1" value={formatDiagnosis(diagnosis1)} xs={12} md={12} />
-            <CustomDisplayText label="คำวินิจฉัย 2" value={formatDiagnosis(diagnosis2)} xs={12} md={12} />
-            <CustomDisplayText label="คำวินิจฉัย 3" value={formatDiagnosis(diagnosis3)} xs={12} md={12} />
+            <CustomDisplayText label="อาการสำคัญ" value={chiefComplaintName} xs={12} md={6} />
+            <CustomDisplayText label="สถานพยาบาล" value={hospitalName} xs={12} md={12} />
+            <CustomDisplayText label="คำวินิจฉัย 1" value={getIcd10Name(diagnosis1)} xs={12} md={12} />
+            <CustomDisplayText label="คำวินิจฉัย 2" value={getIcd10Name(diagnosis2)} xs={12} md={12} />
+            <CustomDisplayText label="คำวินิจฉัย 3" value={getIcd10Name(diagnosis3)} xs={12} md={12} />
             <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
         </Grid>
     );

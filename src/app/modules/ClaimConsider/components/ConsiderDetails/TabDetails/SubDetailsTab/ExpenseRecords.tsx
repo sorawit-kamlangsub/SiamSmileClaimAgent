@@ -39,7 +39,6 @@ import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/Miscellaneous
 import { CATEGORY_ICON_MAP } from "../../../../../ClaimSimulate/components/CategoryIcon";
 import { hasAmountSumError, hasMissingReasonError } from "../../../../../ClaimSimulate/store/Claimsimulateutils";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../../../api/coreClaimApi";
 
 // ─── Reference styles ──────────────────────────────────────────────
 const REF = {
@@ -284,11 +283,14 @@ const errorTooltipProps = {
 // ─── Main ─────────────────────────────────────────────────────────
 interface ExpenseRecordsProps {
     onNext?: () => void;
-    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
-    customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+    expenseDetail: ReturnType<typeof useClaimExpenseDetailHook>;
 }
 
-const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ detailData, customerDetailData }) => {
+// รับ expenseDetail (ผลลัพธ์จาก useClaimExpenseDetailHook) เป็น prop จากผู้เรียก (ExpenseDetails /
+// TreatmentCostTable) แทนการเรียก hook เองที่นี่ — hook นี้หนัก (formik + query หลายตัว + effect sync ลง
+// Redux) ผู้เรียกบางจุด (ExpenseDetails) ต้องใช้ผลลัพธ์บางส่วน (เช่น benefitName) ก่อนถึงจุดนี้อยู่แล้ว
+// เรียกซ้ำอีกรอบในนี้จะยิง query/formik/effect ซ้ำสองชุดโดยไม่จำเป็น
+const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
     const {
         expenseItems: filledItems,
         showAddPanel,
@@ -331,7 +333,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ detailData, customerDet
         isMedicalCoverage,
         pendingReceiptAmount,
         setPendingReceiptAmount,
-    } = useClaimExpenseDetailHook({ detailData, customerDetailData });
+    } = expenseDetail;
 
     // ── ส่วนเกินจากบริษัทประกัน (ยัง UI-only — ต่อ endpoint จริงเมื่อพร้อม) ──
     const [isExcessFromInsurance, setIsExcessFromInsurance] = React.useState(false);
