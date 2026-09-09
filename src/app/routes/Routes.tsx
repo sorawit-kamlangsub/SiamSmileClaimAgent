@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import CheckEligibleDetailPage from "../modules/CheckEligible/pages/CheckEligibleDetailPage";
 import ClaimPHPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHPage";
 import ClaimPHSummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPH/ClaimPHSummaryPage";
@@ -30,6 +30,11 @@ import ConsiderHospitalDocumentPage from "../modules/ClaimConsider/pages/Conside
 import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
 import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
 import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/ConsiderHospitalMonitorPage.tsx";
+
+import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
+import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
+import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
+import BillingCustomerPage from "../modules/BillingClaim/pages/BillingCustomerPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -229,7 +234,8 @@ const Routes: RouteMapType[] = [
                 index: true,
             },
             {
-                path: "customers/:id",
+                // :caseId (btoa) ต่อจาก :id (btoa) — ส่งมาจากหน้า monitor เพื่อยิง useGetClaimDetailConsider
+                path: "customers/:id/:caseId",
                 title: "บันทึกข้อมูลเคลม - เคลมลูกค้า",
                 element: <ConsiderDetailPage />,
             },
@@ -246,14 +252,50 @@ const Routes: RouteMapType[] = [
                 element: <ConsiderHospitalMonitorPage />,
             },
             {
-                path: "hospital/:id",
+                // :caseId (btoa) ต่อจาก :id (btoa) — ส่งมาจากหน้า monitor เพื่อยิง useGetClaimDetailConsider
+                path: "hospital/:id/:caseId",
                 title: "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล",
                 element: <ConsiderHospitalDetailPage />,
             },
             {
-                path: "hospital/:id/document",
+                // :caseId (btoa) ต่อจาก :id (btoa) — หน้าดูเอกสารใช้ useGetClaimDetailConsider เหมือนหน้าพิจารณา
+                path: "hospital/:id/:caseId/document",
                 title: "ดูรายละเอียดเคลม - เคลมโรงพยาบาล",
                 element: <ConsiderHospitalDocumentPage />,
+            },
+        ],
+    },
+    // ===== วางบิลเคลม =====
+    {
+        path: "/billing",
+        title: "วางบิลเคลม",
+        element: <Outlet />,
+        permissions: [],
+        children: [
+            {
+                index: true,
+                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                element: <Navigate to="hospital" replace />,
+            },
+            {
+                path: "customers",
+                title: "วางบิลเคลม - เคลมลูกค้า",
+                element: <BillingCustomerPage />,
+            },
+            {
+                path: "hospital",
+                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                element: <BillingHospitalMonitorPage />,
+            },
+            {
+                path: "hospital/:id/review",
+                title: "ตรวจสอบรายการวางบิล - เคลมโรงพยาบาล",
+                element: <BillingHospitalReviewPage />,
+            },
+            {
+                path: "hospital/:id/document",
+                title: "ดูรายละเอียดการวางบิล - เคลมโรงพยาบาล",
+                element: <BillingHospitalDocumentPage />,
             },
         ],
     },

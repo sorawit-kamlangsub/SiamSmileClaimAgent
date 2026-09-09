@@ -94,6 +94,24 @@ export const swalSuccess = (title: string, text: string, confirmButtonText = "Ok
     });
 };
 
+/**
+ * แจ้งเตือนแบบ toast มุมขวาบน ปิดเองอัตโนมัติ ไม่ต้องกดปิด (ใช้กับ warning/success ที่ไม่ block การทำงานต่อ)
+ * @param icon ไอคอนของ toast ("success" | "warning" | "error" | "info")
+ * @param title ข้อความของ toast
+ * @param timer ระยะเวลาก่อนปิดเอง (มิลลิวินาที)
+ */
+export const swalToast = (icon: "success" | "warning" | "error" | "info", title: string, timer = 3000) => {
+    return Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon,
+        title,
+        timer,
+        timerProgressBar: true,
+        showConfirmButton: false,
+    });
+};
+
 export const swalWarningNotOutsideClick = (title: string, text: string, confirmButtonText = "ตกลง") => {
     return Swal.fire({
         title,

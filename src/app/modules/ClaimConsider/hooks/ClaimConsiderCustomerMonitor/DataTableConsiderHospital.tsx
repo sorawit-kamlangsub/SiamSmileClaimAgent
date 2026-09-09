@@ -7,12 +7,19 @@ import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 import React, { useEffect, useMemo } from "react";
 import { AppliedFilter } from "./SearchFilterHook";
 import {
-    backgroundColorMapDecision,
+    backgroundColorMapClaimTransactionType,
     cellAlignOptions,
-    colorMapDecision,
+    colorMapClaimTransactionType,
     formatDateString,
 } from "../../../../functionHelpers";
 import { useGetHospitalClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
+import { GetHospitalClaimAdjudicationMonitorDtoResponse } from "../../../../api/coreClaimApi.client";
+
+/**
+ * TODO(caseId): BE ยังไม่ส่ง caseId มากับ monitor list — cast ชั่วคราวจนกว่าจะ `npm run codegen`
+ * ให้ GetHospitalClaimAdjudicationMonitorDtoResponse มี field caseId แล้วค่อยลบ type นี้ทิ้ง
+ */
+type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string };
 
 const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -131,16 +138,20 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
             },
         },
         {
-            name: "decisionNameTH",
+            name: "claimTransactionTypeName",
             label: "สถานะรายการ",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRenderLite: (rowIndex) => {
                     const row = claimHospitalData?.data?.[rowIndex];
-                    const value = row?.decisionName;
+                    const value = row?.claimTransactionTypeName;
                     if (!value) return "-";
-                    const bgColor = row?.decisionId ? backgroundColorMapDecision[row?.decisionId] : undefined;
-                    const textColor = row?.decisionId ? colorMapDecision[row?.decisionId] : undefined;
+                    const bgColor = row?.claimTransactionTypeId
+                        ? backgroundColorMapClaimTransactionType[row?.claimTransactionTypeId]
+                        : undefined;
+                    const textColor = row?.claimTransactionTypeId
+                        ? colorMapClaimTransactionType[row?.claimTransactionTypeId]
+                        : undefined;
                     return (
                         <Chip
                             label={value}
@@ -168,9 +179,12 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="พิจารณาเคลม">
                                     <IconButton
                                         onClick={() => {
+                                            const row = claimHospitalData?.data?.[rowIndex] as
+                                                | MonitorRowWithCaseId
+                                                | undefined;
                                             navigate(
-                                                `${appliedFilter.path}/${btoa(
-                                                    claimHospitalData?.data?.[rowIndex]?.claimId ?? ""
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
                                                 )}`
                                             );
                                         }}
@@ -187,9 +201,12 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
                                         onClick={() => {
+                                            const row = claimHospitalData?.data?.[rowIndex] as
+                                                | MonitorRowWithCaseId
+                                                | undefined;
                                             navigate(
-                                                `${appliedFilter.path}/${btoa(
-                                                    claimHospitalData?.data?.[rowIndex]?.claimId ?? ""
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
                                                 )}/document`
                                             );
                                         }}

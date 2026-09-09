@@ -178,14 +178,20 @@ const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm, isL
                             }}
                         >
                             <Typography fontSize={15} fontWeight="bold" color="#c8a415">
-                                กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการทำรายการ
+                                กรุณาตรวจสอบข้อมูลบัญชีและจำนวนเงินให้ถูกต้องก่อนกดโอนเงิน ระบบจะสร้าง CL, สร้าง CC
+                                และทำรายการโอนเงิน
                             </Typography>
                         </Box>
                     </Grid>
                 </Grid>
 
-                {/* ปุ่มยืนยัน */}
-                <Grid container justifyContent="center" alignItems="center" mt={2}>
+                {/* ปุ่มยกเลิก / โอนเงิน */}
+                <Grid container justifyContent="center" alignItems="center" spacing={1.5} mt={0.5}>
+                    <Grid item xs={12} sm={6} md={4} lg={3}>
+                        <Button variant="outlined" fullWidth size="medium" onClick={onClose} disabled={isLoading}>
+                            ยกเลิก
+                        </Button>
+                    </Grid>
                     <Grid item xs={12} sm={6} md={4} lg={3}>
                         <Button
                             variant="contained"
@@ -194,9 +200,8 @@ const ConfirmTransferPAModal: React.FC<Props> = ({ open, onClose, onConfirm, isL
                             size="medium"
                             onClick={() => onConfirm()}
                             disabled={isLoading}
-                            sx={{ mt: 1 }}
                         >
-                            ยืนยันแจ้งโอนเงิน
+                            โอนเงิน
                         </Button>
                     </Grid>
                 </Grid>

@@ -23,7 +23,7 @@ export const MOCK_HOSPITAL_CLAIM = {
     coverageEndDate: "-",
     productDetail: "PH - ประกันสุขภาพ",
 
-    notificationDate: "17/05/2569 09:38:00",
+    createdDate: "17/05/2569 09:38:00",
     hospitalName: "โรงพยาบาลสินแพทย์",
     province: "กรุงเทพมหานคร",
     claimStatus: "Open",
@@ -225,73 +225,10 @@ export type DocumentFile = {
 
 export type DocumentCheckRow = {
     documentId: string;
+    /** documentSubTypeId จาก overview — ใช้ประกอบลิงก์ไปแนบเอกสารที่ DocStorage */
+    documentSubTypeId?: number;
     documentName: string;
     files: DocumentFile[];
     checkResult: DocumentCheckResult | "";
     remark: string;
-};
-
-const mockFile = (fileId: string, fileName: string, fileType: string, fileSize: string): DocumentFile => ({
-    fileId,
-    fileName,
-    fileType,
-    fileSize,
-    uploadedDate: "17/05/2569 09:38",
-    uploadedBy: "ระบบ SmileConnect",
-});
-
-/** รายการเอกสารที่ต้องใช้ประกอบการพิจารณาเคลม ตาม Spec */
-export const MOCK_DOCUMENT_CHECK_ROWS: DocumentCheckRow[] = [
-    {
-        documentId: "DOC-A",
-        documentName: "แบบฟอร์ม A",
-        files: [
-            mockFile("F-A-01", "form-a-page1.pdf", "PDF", "412 KB"),
-            mockFile("F-A-02", "form-a-page2.pdf", "PDF", "388 KB"),
-        ],
-        checkResult: "",
-        remark: "",
-    },
-    {
-        documentId: "DOC-INV",
-        documentName: "ใบแจ้งหนี้",
-        files: [mockFile("F-INV-01", "invoice-CL6905000124.pdf", "PDF", "256 KB")],
-        checkResult: "",
-        remark: "",
-    },
-    {
-        documentId: "DOC-INV-DETAIL",
-        documentName: "รายละเอียดใบแจ้งหนี้",
-        files: [mockFile("F-INVD-01", "invoice-detail.jpg", "JPG", "1.2 MB")],
-        checkResult: "",
-        remark: "",
-    },
-    { documentId: "DOC-LAB", documentName: "ผลการตรวจ LAB / X-ray", files: [], checkResult: "", remark: "" },
-    { documentId: "DOC-OTHER", documentName: "เอกสารอื่นๆ", files: [], checkResult: "", remark: "" },
-    {
-        documentId: "DOC-ID-CARD",
-        documentName: "บัตรประชาชน",
-        files: [mockFile("F-ID-01", "id-card.jpg", "JPG", "684 KB")],
-        checkResult: "",
-        remark: "",
-    },
-    { documentId: "DOC-BUNDLE", documentName: "ชุดรวมเอกสาร", files: [], checkResult: "", remark: "" },
-];
-
-/** แถวเอกสาร "แบบฟอร์ม B" เฉพาะประเภทรายการเคลม IPD (ชีท IPD row 281) */
-const MOCK_DOCUMENT_CHECK_ROW_FORM_B: DocumentCheckRow = {
-    documentId: "DOC-FORM-B",
-    documentName: "แบบฟอร์ม B",
-    files: [],
-    checkResult: "",
-    remark: "",
-};
-
-/**
- * รายการเอกสารตรวจสอบตามประเภทรายการเคลม
- * IPD เพิ่ม "แบบฟอร์ม B" ต่อจาก "แบบฟอร์ม A"
- */
-export const getDocumentCheckRows = (claimListType: ClaimListType): DocumentCheckRow[] => {
-    if (claimListType !== CLAIM_LIST_TYPES.ipd) return MOCK_DOCUMENT_CHECK_ROWS;
-    return [MOCK_DOCUMENT_CHECK_ROWS[0], MOCK_DOCUMENT_CHECK_ROW_FORM_B, ...MOCK_DOCUMENT_CHECK_ROWS.slice(1)];
 };

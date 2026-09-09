@@ -1,25 +1,50 @@
 import { useEffect, useMemo, useState } from "react";
 import {
+    useGetBenefit,
     useGetInsuranceCompany,
     useGetNonCoveredReason,
     useGetSimBCategory,
 } from "../../../../api/coreClaimMastersApi";
-import useConsiderDetailHook from "./ConsiderDetailHook";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useFormik } from "formik";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../../../../../redux";
-import { applyMaximumLimit, hasAmountSumError, toAmount } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    applyMaximumLimit,
+    getClaimAmountReconciliation,
+    hasAmountSumError,
+    hasMissingReasonError,
+    sumClaimExpenseItems,
+    toAmount,
+} from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { swalError } from "../../../_common";
-import { ClaimExpenseItem, setFilledClaimLineItems } from "../../store/claimConsiderSlice";
-import { useGetStandardMedicalExpenseByCase } from "../../../../api/coreClaimApi";
-const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) =>
-    data
+import {
+    ClaimExpenseItem,
+    setCaseAdjudicationId,
+    setDraftExpenseApplied,
+    setFilledClaimLineItems,
+} from "../../store/claimConsiderSlice";
+import { mergeDraftCaseItems } from "../../store/draftRevisionMappers";
+import {
+    useGetClaimDetailConsider,
+    useGetClaimEditDraftRevision,
+    useGetCustomerDetailById,
+    useGetStandardMedicalExpenseByCase,
+} from "../../../../api/coreClaimApi";
+import { CoverageType } from "../../../../functionHelpers";
+const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
+    // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
+    // เป็น undefined ได้หลายรายการพร้อมกัน (fallback ?? 0 เดิมทำให้หลายโหนดชน id 0 พร้อมกัน
+    // ทั้ง React key ซ้ำ และ expand/select state ไปเปิด/ไฮไลต์โหนดอื่นที่ id ชนกันโดยไม่ตั้งใจ)
+    // จึงแจก id ใหม่ทีละตัวแยกจาก id ทางธุรกิจไปเลย ส่วน inputToStandardMappingId ยังเก็บแยกไว้ต่างหาก
+    let nextId = 1;
+    return data
         .map((cat) => {
             const children = (cat.inputToStandardSubCategoryList ?? [])
                 .map((sub) => {
                     const leaves = (sub.inputToStandardMappingList ?? []).map((item) => ({
-                        id: item.inputToStandardMappingId ?? 0,
+                        id: nextId++,
+                        inputToStandardMappingId: item.inputToStandardMappingId,
                         standardMedicalExpenseId: item.standardMedicalExpenseId,
                         code: item.inputItemCode ?? "",
                         label: `${item.inputItemCode ?? ""} ${item.descriptionTH ?? ""}`.trim(),
@@ -31,7 +56,7 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
                     if (leaves.length === 0) return null;
 
                     return {
-                        id: sub.inputToStandardSubCategoryId ?? 0,
+                        id: nextId++,
                         label: sub.inputToStandardSubCategoryName ?? "",
                         children: leaves,
                     };
@@ -41,19 +66,38 @@ const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) 
             if (children.length === 0) return null;
 
             return {
-                id: cat.inputToStandardCategoryId ?? 0,
+                id: nextId++,
                 label: cat.inputToStandardCategoryName ?? "",
                 children,
             };
         })
         .filter((cat): cat is NonNullable<typeof cat> => cat !== null);
+};
 interface ClaimLineFormValues {
     items: ClaimExpenseItem[];
 }
-const useClaimExpenseDetailHook = () => {
+type UseClaimExpenseDetailHookProps = {
+    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
+    customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+};
+// รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
+// เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
+// ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
+const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
-    const { customerDetailData, detailData } = useConsiderDetailHook();
-    const { filledItems, form } = useSelector((s: RootState) => s.claimConsider);
+    const { filledItems, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
+        (s: RootState) => s.claimConsider
+    );
+    const draftRevisionId = viewingDraft?.draftRevisionId;
+    // queryKey เดียวกับใน ConsiderDetailHook — React Query แชร์ cache กัน ไม่ยิง request ซ้ำ
+    const { data: draftRevision } = useGetClaimEditDraftRevision(draftRevisionId);
+    /**
+     * coverage/medical : ใช้ค่าใน Redux form ก่อน (ผู้ใช้แก้ใน Step 1 แล้ว sync ลงมา)
+     * ถ้ายังว่าง (ยังไม่เคย sync ลง Redux) ให้ fallback ไปค่าตั้งต้นจาก claim detail
+     * กันไม่ให้ query ยิงด้วย undefined ตอนอยู่ Step 2 ครั้งแรก
+     */
+    const coverageTypeId = form.coverageTypeId ?? detailData?.data?.coverageTypeId;
+    const medicalTypeId = form.medicalTypeId ?? detailData?.data?.medicalTypeId;
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [selectedItem, setSelectedItem] = useState<{
@@ -86,18 +130,18 @@ const useClaimExpenseDetailHook = () => {
     const { data: frequentData, isLoading: isFrequentLoading } = useGetStandardMedicalExpenseByCase(
         detailData?.data?.caseId ?? "",
         6, //simb2
-        form.coverageTypeId,
-        form.medicalTypeId,
-        false,
+        coverageTypeId,
+        medicalTypeId,
+        true,
         customerDetailData?.data?.productTypeId,
-        customerDetailData?.data?.productId,
-        undefined
+        undefined,
+        customerDetailData?.data?.productId
     );
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
-        form.coverageTypeId,
-        form.medicalTypeId,
+        coverageTypeId,
+        medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
         customerDetailData?.data?.productId
@@ -105,7 +149,9 @@ const useClaimExpenseDetailHook = () => {
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
         return raw.map((item, idx) => ({
-            id: item.inputToStandardMappingId ?? idx,
+            // ใช้ idx (unique เสมอในอาร์เรย์นี้) แทน inputToStandardMappingId เพราะ id นี้เป็นของ
+            // "ประเภทรายการ" ซึ่งหลายแถวค่ารักษาอาจใช้ค่าเดียวกันซ้ำได้จริงจาก backend (ทำให้ React key ชนกัน)
+            id: idx,
             standardMedicalExpenseId: item.standardMedicalExpenseId,
             inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
@@ -124,12 +170,45 @@ const useClaimExpenseDetailHook = () => {
             caseItemId: item.caseItemId,
         }));
     }, [frequentData]);
+
+    /** caseAdjudicationId มาระดับ item — ทุกแถวของ case เดียวกันเป็นค่าเดียวกัน จึงหยิบตัวแรกที่ไม่ว่าง */
+    const caseAdjudicationId = useMemo(
+        () => frequentData?.data?.find((item) => item.caseAdjudicationId)?.caseAdjudicationId ?? null,
+        [frequentData]
+    );
+
+    /** benefitId มาระดับ item — case เดียวอาจมีหลายสิทธิ์เบิกพร้อมกัน (เช่น ค่ารักษา + ค่าห้อง) จึงรวมทุกตัวที่ไม่ซ้ำ
+     * เพื่อโชว์ชื่อสิทธิ์เบิกทั้งหมดในการ์ด "สิทธิ์เบิก" ไม่ใช่หยิบมาแค่ตัวแรก */
+    const benefitIdList = useMemo(
+        () => [...new Set(frequentData?.data?.map((item) => item.benefitId).filter((id): id is number => !!id))],
+        [frequentData]
+    );
+    const { data: benefitData } = useGetBenefit(undefined, benefitIdList);
+    const benefitName = useMemo(
+        () =>
+            benefitIdList.length === 0
+                ? undefined
+                : benefitIdList
+                      .map((id) => benefitData?.data?.find((b) => b.benefitId === id)?.benefitName)
+                      .filter((name): name is string => !!name)
+                      .join(", "),
+        [benefitData, benefitIdList]
+    );
+    // ส่งขึ้น Redux ให้ ClaimStepCalculateHook หยิบไปใส่ payload คำนวณ (คนละ component จึงส่งเป็น prop ไม่ได้)
+    useEffect(() => {
+        dispatch(setCaseAdjudicationId(caseAdjudicationId));
+    }, [dispatch, caseAdjudicationId]);
     const categories = useMemo(() => {
         const raw = categoryData?.data ?? [];
+        return mapCategoriesToTree(raw);
+    }, [categoryData]);
+
+    // เคลียร์ state ของ tree เมื่อ categoryData เปลี่ยนจริง — ย้ายมาจากใน useMemo ด้านบน
+    // (เดิมเรียก setState ระหว่าง render phase ตรงๆ ซึ่งเป็น anti-pattern เสี่ยง re-render เกินจำเป็น)
+    useEffect(() => {
         setExpandedIds([]);
         setSelectedItem(null);
         setSelectedLeafId(null);
-        return mapCategoriesToTree(raw);
     }, [categoryData]);
 
     const filteredCategories = useMemo(() => {
@@ -182,11 +261,19 @@ const useClaimExpenseDetailHook = () => {
         }));
     }, [nonCoveredReasonData]);
 
-    const totalReceipt = items.reduce((s, i) => s + (i.receiptAmount || 0), 0); // ยอดเงินตามใบเสร็จรวม
-    const totalClaim = items.reduce((s, i) => s + (i.claimAmount || 0), 0);
-    const totalDiscount = items.reduce((s, i) => s + (i.discount || 0), 0);
-    const totalNotCovered = items.reduce((s, i) => s + (i.notCovered || 0), 0);
+    const { totalReceipt, totalClaim, totalDiscount, totalNotCovered } = sumClaimExpenseItems(items);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered; // ยอดเบิกสุทธิ
+
+    // ยอดที่จ่ายจริง = paymentAmount ตัวเดียวกับการ์ด "สรุปรายการแจ้งโอน" (ExpenseDetails.tsx) — ไม่ใช่
+    // ค่าที่คำนวณจากรายการค่ารักษาฝั่ง FE เอง เพราะ netClaimAmount ไม่ได้ถูก cap ด้วยยอดใบเสร็จ/สิทธิ์เบิก
+    const paymentAmount = detailData?.data?.paymentAmount ?? 0;
+    const amountReconciliation = getClaimAmountReconciliation({
+        totalReceipt,
+        totalClaim,
+        totalDiscount,
+        totalNotCovered,
+        paymentAmount,
+    });
     const filterFilledItems = (items: ClaimExpenseItem[]) =>
         items.filter((item) => {
             const hasClaimAmount = item.claimAmount !== undefined && item.claimAmount !== null;
@@ -253,9 +340,14 @@ const useClaimExpenseDetailHook = () => {
         setReasonError("");
     };
 
+    /** ประเภทความคุ้มครอง = ค่ารักษา : เงื่อนไขแสดง Section "รายการค่ารักษาเพิ่มเติม" */
+    const isMedicalCoverage = coverageTypeId === CoverageType.Medical;
+
     const hasAnyAmount = items.some((item) => Number(item.claimAmount ?? 0) > 0);
     const hasDiscountError = items.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
     const hasNotCoveredError = items.some((item) => hasAmountSumError(item));
+    /** มียอดไม่คุ้มครองแต่ยังไม่ระบุสาเหตุ — บังคับตาม spec */
+    const hasReasonError = items.some((item) => hasMissingReasonError(item));
     const handleAddToTable = () => {
         if (!selectedItem) return;
 
@@ -311,6 +403,13 @@ const useClaimExpenseDetailHook = () => {
         } else {
             setDiscountError("");
         }
+        // ยอดไม่คุ้มครอง > 0 ต้องระบุสาเหตุ
+        if (hasMissingReasonError({ claimAmount: amount, discount, notCovered, reason })) {
+            setReasonError("กรุณาเลือกสาเหตุไม่คุ้มครอง");
+            hasError = true;
+        } else {
+            setReasonError("");
+        }
         if (hasError) return;
 
         const newItem: ClaimExpenseItem = {
@@ -354,10 +453,10 @@ const useClaimExpenseDetailHook = () => {
             swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาตรวจสอบยอดส่วนลด/ไม่คุ้มครองให้ไม่เกินยอดเบิก");
             return false;
         }
-        // if (hasReasonError) {
-        //     swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครองให้ครบทุกรายการที่มียอดไม่คุ้มครอง");
-        //     return false;
-        // }
+        if (hasReasonError) {
+            swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครองให้ครบทุกรายการที่มียอดไม่คุ้มครอง");
+            return false;
+        }
 
         const filteredItems = filterFilledItems(items);
 
@@ -403,7 +502,7 @@ const useClaimExpenseDetailHook = () => {
             desc.join(" "),
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
-            matched.leaf.id, //inputToStandardMappingId
+            matched.leaf.inputToStandardMappingId,
             matched.leaf.maximumLimit
         );
     }, [searchText, categories]);
@@ -416,11 +515,34 @@ const useClaimExpenseDetailHook = () => {
         formikClaimLine.setFieldValue("items", frequentItems);
         dispatch(setFilledClaimLineItems(frequentItems));
     }, [frequentItems, isFrequentLoading]);
+
+    // ── overlay ยอดจาก "บันทึกแบบร่าง" (กดดูจากแท็บประวัติการทำรายการ) ──
+    // merge ทับ frequentItems เสมอ (ไม่ใช่ items) ผลลัพธ์จึงเหมือนกันไม่ว่า seed effect ด้านบนจะรันไปแล้วหรือยัง
+    // flag "merge แล้ว" เก็บใน Redux ไม่ใช่ ref เพราะ component นี้ (ExpenseDetails) ถูก unmount ทุกครั้งที่
+    // สลับออกจาก step "รายละเอียดค่าใช้จ่าย" — ถ้าใช้ ref จะ merge ทับงานที่ผู้ใช้แก้ไปแล้วทุกครั้งที่กลับเข้ามา
+    useEffect(() => {
+        if (!draftRevisionId) return;
+        if (draftExpenseAppliedRevisionId === draftRevisionId) return;
+        if (isFrequentLoading || frequentItems.length === 0) return;
+        const draftCaseItems = draftRevision?.data?.payload?.case?.caseItem;
+        if (!draftCaseItems) return;
+
+        // ใช้แค่ตั้งชื่อแถวที่ผู้ใช้เพิ่มเองตอนทำร่าง — ไม่ gate การ merge ด้วย isCategoryLoading เพราะแถว
+        // ปกติ (99% ของเคส) ต้องไม่รอ category tree โหลด ถ้ามาไม่ทันแถวเพิ่มเองจะไม่มีชื่อ ยอมรับได้
+        const categoryLeaves = categories.flatMap((cat) => cat.children.flatMap((sub) => sub.children));
+        const merged = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        formikClaimLine.setFieldValue("items", merged);
+        dispatch(setFilledClaimLineItems(merged));
+        dispatch(setDraftExpenseApplied(draftRevisionId));
+    }, [draftRevisionId, draftExpenseAppliedRevisionId, draftRevision, frequentItems, isFrequentLoading, categories]);
+
     return {
         formikClaimLine,
         expenseItems: items,
         frequentItems,
         isFrequentLoading,
+        caseAdjudicationId,
+        benefitName,
         showAddPanel,
         setShowAddPanel,
         searchText,
@@ -448,6 +570,8 @@ const useClaimExpenseDetailHook = () => {
         totalDiscount,
         totalNotCovered,
         netClaimAmount,
+        paymentAmount,
+        amountReconciliation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
@@ -463,7 +587,9 @@ const useClaimExpenseDetailHook = () => {
         setReasonError,
         hasDiscountError,
         hasNotCoveredError,
+        hasReasonError,
         hasAnyAmount,
+        isMedicalCoverage,
         pendingReceiptAmount,
         setPendingReceiptAmount,
     };

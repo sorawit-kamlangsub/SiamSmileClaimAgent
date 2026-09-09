@@ -1,6 +1,8 @@
 import dayjs, { Dayjs } from "dayjs";
-import { useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
+import { useApproveClaimDecision, useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
 import {
+    ApproveCasePayableRequest,
+    ApproveClaimDecisionDtoRequest,
     SaveClaimEditDraftDtoRequest,
     CaseSaveClaimEditDraftRequest,
     CaseAssessmentSaveClaimEditDraftRequest,
@@ -18,9 +20,11 @@ import {
     UpsertClaimDecisionCaseDocumentRequest,
     UpsertClaimDecisionCaseDocumentDetailRequest,
     UpsertClaimDecisionCaseRequest,
+    UpsertClaimDecisionDtoResponseServiceResponse,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
 import { swalError, swalSuccess } from "../../../_common";
+import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
 import { useAppSelector } from "../../../../../redux";
@@ -37,13 +41,29 @@ import {
  */
 type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConsiderValues> = {
     formik: FormikProps<T>;
+    isCombinedWithMedicalAll?: boolean;
     /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
     caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
     /**
-     * ผลการตรวจเอกสารรายรายการ ต่อท้าย case.caseDocument
-     * (เคลมโรงพยาบาล : ตารางตรวจสอบเอกสาร -> documentReviewStatusId) เฉพาะ decision
+     * ตารางตรวจสอบเอกสาร (ค่าดิบจาก formik ของเคลมโรงพยาบาล)
+     * hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId เอง
      */
-    documentReviews?: UpsertClaimDecisionCaseDocumentRequest[];
+    documentChecks?: DocumentCheckRow[];
+    /**
+     * บัญชีปลายทางรับเงิน — ส่งมาเฉพาะเคลมโรงพยาบาล
+     * เคลมลูกค้าไม่ต้องส่ง casePayable จึงไม่มี toBankId / toBankName / toBankAccountNo
+     */
+    payoutAccount?: { bankId?: number; bankName?: string; bankAccountNo?: string };
+    /**
+     * ให้หน้าที่เรียกจัดการผลสำเร็จของการอนุมัติเอง (เช่น แสดง toast)
+     * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
+     */
+    onApproveSuccess?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void;
+    /**
+     * ให้หน้าที่เรียกจัดการผลสำเร็จของการบันทึกผลพิจารณาเอง (เช่น redirect)
+     * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
+     */
+    onConfirmConsiderSuccess?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -52,15 +72,29 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
  */
 const DEFAULT_NON_COVERED_REASON_ID = 1;
 
+/** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
+const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+
+/**
+ * casePayable ฝั่ง FE : บัญชีปลายทางเป็น optional เพราะเคลมลูกค้าไม่ส่ง
+ * (DTO ที่ codegen มาประกาศทั้งสามฟิลด์เป็น required)
+ */
+type CasePayableDraft = Pick<ApproveCasePayableRequest, "payableAmount"> &
+    Partial<Omit<ApproveCasePayableRequest, "payableAmount">>;
+
 const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderValues>({
     formik,
     detailData,
     customerDetailData,
+    isCombinedWithMedicalAll = false,
     caseFields,
-    documentReviews,
+    documentChecks,
+    payoutAccount,
+    onApproveSuccess,
+    onConfirmConsiderSuccess,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
-    const { filledItems } = useAppSelector(claimConsiderSelector);
+    const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
     const caseItemId = crypto.randomUUID();
     const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
     const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
@@ -71,7 +105,17 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         (error) => swalError("ไม่สำเร็จ", error)
     );
     const saveClaimDecision = useUpsertClaimDecision(
-        () => swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (response) =>
+            onConfirmConsiderSuccess
+                ? onConfirmConsiderSuccess(response)
+                : swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (error) => swalError("ไม่สำเร็จ", error)
+    );
+    const approveClaimDecision = useApproveClaimDecision(
+        (response) =>
+            onApproveSuccess
+                ? onApproveSuccess(response)
+                : swalSuccess("อนุมัติผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
     );
 
@@ -361,25 +405,25 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             decisionDate: dayjs(),
             decisionReasonId: decisionReasonId,
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: decisionId === 2 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: decisionId === 2 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: decisionId === 2 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: decisionId === 2 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: decisionId === 2 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: formik.values.icuDays,
+            approvedAdmissionDate: decisionId === 9 ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: decisionId === 9 ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: decisionId === 9 ? asTimeSpan(dischargeTime) : undefined,
+            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : undefined,
+            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : undefined,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
-            compensateAmount: 0, //ไม่มี
-            approvedMedicalAmount: 0, //ต้องอนุมัติ
-            approvedCompensateAmount: 0, //ต้องอนุมัติ
-            patientPayAmount: 0, //เคลมโรงพยาบาลถึงจะมี
+            compensateAmount: decisionId === 9 ? calculateResult?.compensateInclude : undefined, //ไม่มี
+            approvedMedicalAmount: decisionId === 9 ? calculateResult?.medicalPay : undefined, //ต้องอนุมัติ
+            approvedCompensateAmount: decisionId === 9 ? calculateResult?.compensateRemain : undefined, //ต้องอนุมัติ
+            patientPayAmount: decisionId === 9 ? calculateResult?.medicalUnpay : undefined, //เคลมโรงพยาบาลถึงจะมี
             isExgratia: false, //ไม่มี
             exgratiaAmount: 0, //ไม่มี
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: decisionId === 6 ? decisionReasonId : undefined,
-            rejectDate: decisionId === 6 ? dayjs() : undefined,
+            rejectReasonId: decisionId === 5 ? decisionReasonId : undefined,
+            rejectDate: decisionId === 5 ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDecision(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -430,11 +474,27 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         );
     };
 
+    /** ตารางตรวจสอบเอกสารของเคลมโรงพยาบาล -> caseDocument[].documentReviewStatusId */
+    const mapDocumentReviewsForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] =>
+        (documentChecks ?? [])
+            .filter((doc) => doc.checkResult !== "" && isGuid(doc.documentId))
+            .map(
+                (doc): UpsertClaimDecisionCaseDocumentRequest => ({
+                    documentId: doc.documentId,
+                    documentNo: doc.documentName,
+                    // documentSubTypeId มาจาก GET /document/case/filter (ผ่าน mapDocumentChecks) — BE บังคับ > 0
+                    documentSubTypeId: doc.documentSubTypeId,
+                    documentReviewStatusId: doc.checkResult || undefined,
+                    documentReviewRemark: doc.remark || undefined,
+                    caseDocumentDetail: [],
+                })
+            );
+
     /** รวมทุกแหล่งเป็น array เดียวสำหรับ payload (รวมผลการตรวจเอกสารของเคลมโรงพยาบาล) */
     const mapCaseDocumentForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] => [
         ...mapConsiderDocumentForDecision(),
         ...mapDocumentScanListForDecision(),
-        ...(documentReviews ?? []),
+        ...mapDocumentReviewsForDecision(),
     ];
     /** Case: ก้อนกลางของ DTO */
     const mapCaseForDecision = (overrideDecisionId?: number): UpsertClaimDecisionCaseRequest => {
@@ -456,9 +516,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             icD10_2ndId: values.diagnoses?.[1]?.icd10Id,
             icD10_3rdId: values.diagnoses?.[2]?.icd10Id,
             caseAmount: netClaimAmount, //ยอดเบิก
-            latestApprovedAmount: 0, //ต้องอนุมัติ
+            latestApprovedAmount: calculateResult?.medicalPay, //ต้องอนุมัติ
             latestNonCoveredAmount: totalNotCovered,
-            latestPatientPayAmount: 0, //โรงพยาบาล
+            latestPatientPayAmount: calculateResult?.medicalUnpay, //โรงพยาบาล
             isCaseDisability: false, //ไม่มี
             hn: caseFields?.hn,
             an: caseFields?.an,
@@ -491,7 +551,42 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         await saveClaimDecision.mutateAsync(payload);
     };
 
-    return { handleSaveDraft, handleConfirmConsider };
+    const mapCasePayableForApprove = (): CasePayableDraft => {
+        const payable = { payableAmount: calculateResult?.medicalPay ?? 0 };
+        // ส่งบัญชีปลายทางเฉพาะเมื่อ caller ให้มาครบทั้งสามค่า (เคลมโรงพยาบาล)
+        // เคลมลูกค้าไม่ส่ง payoutAccount มาเลย จึงได้แต่ payableAmount
+        if (payoutAccount?.bankId && payoutAccount.bankName && payoutAccount.bankAccountNo) {
+            return {
+                ...payable,
+                toBankId: payoutAccount.bankId,
+                toBankName: payoutAccount.bankName,
+                toBankAccountNo: payoutAccount.bankAccountNo,
+            };
+        } else {
+            return {
+                ...payable,
+                toBankId: undefined,
+                toBankName: undefined,
+                toBankAccountNo: undefined,
+            };
+        }
+        return payable;
+    };
+
+    const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
+        claimDecision: mapClaimDecisionPayload(9),
+        calculateCaseCode: calculateResult?.calculateCaseCode,
+        isCombinedWithMedicalAll,
+        // DTO ประกาศบัญชีปลายทางเป็น required แต่เคลมลูกค้าไม่ต้องส่ง
+        casePayable: mapCasePayableForApprove() as ApproveCasePayableRequest,
+    });
+
+    const handleApprove = async () => {
+        const payload = mapApproveClaimDecisionPayload();
+        await approveClaimDecision.mutateAsync(payload);
+    };
+
+    return { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving: approveClaimDecision.isLoading };
 };
 
 export default useClaimDetailActionHook;

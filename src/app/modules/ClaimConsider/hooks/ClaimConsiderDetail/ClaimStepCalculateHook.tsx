@@ -1,29 +1,58 @@
 import { useState } from "react";
-import { FormikProps } from "formik";
+import { FormikErrors, FormikProps, FormikTouched } from "formik";
 import {
     CalculateCaseClaim,
     CalculateCaseClaimDtoRequest,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../api/coreClaimApi.client";
-import { useAppDispatch } from "../../../../../redux";
+import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { useCalculateCaseClaim } from "../../../../api/coreClaimApi";
 import { swalError } from "../../../_common";
-import { ClaimExpenseItem, setCalculateExpenseResult } from "../../store/claimConsiderSlice";
+import {
+    ClaimConsiderValues,
+    ClaimExpenseItem,
+    claimConsiderSelector,
+    setCalculateExpenseResult,
+} from "../../store/claimConsiderSlice";
+import { getClaimAmountReconciliation, sumClaimExpenseItems } from "../../../ClaimSimulate/store/Claimsimulateutils";
 
-type UseClaimStepCalculateHookProps = {
-    formik: FormikProps<any>;
+const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
+    "incidentTypeId",
+    "coverageTypeId",
+    "medicalTypeId",
+    "createdDate",
+    "documentCompleteDate",
+    "incidentDate",
+    "incidentTime",
+    "admissionDate",
+    "admissionTime",
+    "dischargeDate",
+    "dischargeTime",
+    "hospitalId",
+    "chiefComplaintId",
+    "diagnoses",
+];
+
+type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
+    formik: FormikProps<TValues>;
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
     filledItems: ClaimExpenseItem[];
     stepsLength: number;
+    /** ยอดที่จ่ายจริง (detail.paymentAmount) — ใช้เช็คยอดเงิน ClaimLine ก่อนปล่อยผ่าน Step 2 */
+    paymentAmount?: number;
 };
 
-const useClaimStepCalculateHook = ({
+const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     formik,
     customerDetail,
     filledItems,
     stepsLength,
-}: UseClaimStepCalculateHookProps) => {
+    paymentAmount,
+}: UseClaimStepCalculateHookProps<TValues>) => {
     const dispatch = useAppDispatch();
+    // sync มาจาก ClaimExpenseDetailHook (/standard-medical-expense/case) — อ่านจาก store แทนการรับเป็น param
+    // เพื่อไม่ต้องแก้ call site ทั้งสองที่ของ hook นี้
+    const { caseAdjudicationId } = useAppSelector(claimConsiderSelector);
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -32,6 +61,14 @@ const useClaimStepCalculateHook = ({
     const calculateCaseClaim = useCalculateCaseClaim(() => {}, onErrorCallback);
 
     const isLastStep = activeStep === stepsLength - 1;
+
+    const scrollToStepToggleBar = () => {
+        window.setTimeout(() => {
+            document
+                .querySelector<HTMLElement>("[data-step-toggle-bar]")
+                ?.scrollIntoView({ behavior: "smooth", block: "start" });
+        }, 0);
+    };
 
     const buildCalculatePayload = (): CalculateCaseClaimDtoRequest => {
         const calculateDetail: CalculateCaseClaim = {
@@ -56,8 +93,8 @@ const useClaimStepCalculateHook = ({
         };
 
         return {
-            caseAdjudicationId: undefined,
-            isSimulateCase: true,
+            caseAdjudicationId: caseAdjudicationId ?? undefined,
+            isSimulateCase: false,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
             jsonDetail: calculateDetail,
@@ -79,17 +116,72 @@ const useClaimStepCalculateHook = ({
         }
     };
 
+    const validateStep1 = async (): Promise<boolean> => {
+        const errors: FormikErrors<TValues> = await formik.validateForm();
+
+        if (Object.keys(errors).length === 0) {
+            return true;
+        }
+
+        const touched: FormikTouched<TValues> = {
+            ...formik.touched,
+            incidentTypeId: errors.incidentTypeId ? true : formik.touched.incidentTypeId,
+            coverageTypeId: errors.coverageTypeId ? true : formik.touched.coverageTypeId,
+            medicalTypeId: errors.medicalTypeId ? true : formik.touched.medicalTypeId,
+            createdDate: errors.createdDate ? true : formik.touched.createdDate,
+            documentCompleteDate: errors.documentCompleteDate ? true : formik.touched.documentCompleteDate,
+            incidentDate: errors.incidentDate ? true : formik.touched.incidentDate,
+            incidentTime: errors.incidentTime ? true : formik.touched.incidentTime,
+            admissionDate: errors.admissionDate ? true : formik.touched.admissionDate,
+            admissionTime: errors.admissionTime ? true : formik.touched.admissionTime,
+            dischargeDate: errors.dischargeDate ? true : formik.touched.dischargeDate,
+            dischargeTime: errors.dischargeTime ? true : formik.touched.dischargeTime,
+            chiefComplaintId: errors.chiefComplaintId ? true : formik.touched.chiefComplaintId,
+            hospitalId: errors.hospitalId ? true : formik.touched.hospitalId,
+            diagnoses: errors.diagnoses ? [{ icd10Id: true }] : formik.touched.diagnoses,
+        };
+        await formik.setTouched(touched, false);
+
+        const firstErrorField = STEP_1_ERROR_ORDER.find((field) => errors[field]);
+        if (firstErrorField) {
+            window.setTimeout(() => {
+                const fieldWrapper = document.querySelector<HTMLElement>(`[data-field-name="${firstErrorField}"]`);
+                fieldWrapper?.scrollIntoView({ behavior: "smooth", block: "center" });
+                fieldWrapper
+                    ?.querySelector<HTMLElement>(
+                        'input, textarea, button, [role="combobox"], [tabindex]:not([tabindex="-1"])'
+                    )
+                    ?.focus({ preventScroll: true });
+            }, 0);
+        }
+
+        return false;
+    };
+
     const handleNext = async () => {
+        if (activeStep === 0) {
+            const isValid = await validateStep1();
+            if (!isValid) return;
+        }
+
         if (activeStep === 1) {
+            const totals = sumClaimExpenseItems(filledItems);
+            const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount: paymentAmount ?? 0 });
+            if (reconciliation.status === "error") {
+                swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
+                return;
+            }
             await handleCalculate();
         }
         const next = Math.min(activeStep + 1, stepsLength - 1);
         setActiveStep(next);
         setFurthestStep((prev) => Math.max(prev, next));
+        scrollToStepToggleBar();
     };
 
     const handleBack = () => {
         setActiveStep((prev) => Math.max(prev - 1, 0));
+        scrollToStepToggleBar();
     };
 
     return {

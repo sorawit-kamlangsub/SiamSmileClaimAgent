@@ -1,4 +1,4 @@
-import { Box, Typography } from "@mui/material";
+import { Box, ButtonBase, Typography } from "@mui/material";
 
 export interface StepDef {
     label: string;
@@ -22,12 +22,14 @@ const StepToggleBar = ({ steps, activeStep, onStepChange, isStepClickable }: Ste
 
     return (
         <Box
+            data-step-toggle-bar
             sx={{
                 display: "flex",
                 backgroundColor: "#EDF1F5",
                 borderRadius: "10px",
                 padding: "6px",
                 gap: "4px",
+                scrollMarginTop: "100px",
             }}
         >
             {steps.map((step, index) => {
@@ -35,9 +37,12 @@ const StepToggleBar = ({ steps, activeStep, onStepChange, isStepClickable }: Ste
                 const clickable = canClick(index);
 
                 return (
-                    <Box
+                    <ButtonBase
                         key={step.label}
-                        onClick={() => clickable && onStepChange(index)}
+                        data-step-index={index}
+                        aria-current={isActive ? "step" : undefined}
+                        disabled={!clickable}
+                        onClick={() => onStepChange(index)}
                         sx={{
                             flex: 1,
                             display: "flex",
@@ -79,7 +84,7 @@ const StepToggleBar = ({ steps, activeStep, onStepChange, isStepClickable }: Ste
                         >
                             {step.label}
                         </Typography>
-                    </Box>
+                    </ButtonBase>
                 );
             })}
         </Box>

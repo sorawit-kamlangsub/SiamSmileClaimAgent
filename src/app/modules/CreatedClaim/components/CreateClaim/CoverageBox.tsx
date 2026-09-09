@@ -10,6 +10,8 @@ interface Props {
     items: GetCustomerBenefitDetailHalfDtoResponse[];
     isLoading: boolean;
     planCode: string | undefined;
+    /** เคลมต่อเนื่อง: แสดง benefit คงเหลือ (remainBenefit / remainAmount) แทนวงเงินสูงสุด */
+    isContinuous?: boolean;
 }
 
 const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
@@ -33,7 +35,7 @@ const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
     );
 };
 
-const CoverageBox: React.FC<Props> = ({ items, isLoading, planCode }) => (
+const CoverageBox: React.FC<Props> = ({ items, isLoading, planCode, isContinuous = false }) => (
     <Box sx={{ border: "0.5px solid #B5D4F4", borderRadius: 2, p: 1.5 }}>
         {/* Header */}
         <Box display="flex" alignItems="center" justifyContent="space-between" mb={1}>
@@ -94,16 +96,33 @@ const CoverageBox: React.FC<Props> = ({ items, isLoading, planCode }) => (
                         </Typography>
                         <Box display="flex" alignItems="center" gap={1} flexWrap="wrap">
                             <Typography fontSize={11} color="primary.main">
-                                {numberWithCommas(item.pricePerUnit?.toString() || "0", 0)} บาท{item.unitName}/สูงสุด{" "}
-                                {numberWithCommas(item.maxQuantity?.toString() || "0", 0)} {item.quantityUnitName}
+                                {numberWithCommas(item.pricePerUnit?.toString() || "0", 0)} บาท{item.unitName}/
+                                {isContinuous ? "คงเหลือ" : "สูงสุด"}{" "}
+                                {numberWithCommas(
+                                    (isContinuous ? item.remainBenefit : item.maxQuantity)?.toString() || "0",
+                                    0
+                                )}{" "}
+                                {item.quantityUnitName}
                             </Typography>
-                            {item.maxPrice && (
+                            {(isContinuous ? item.remainAmount != null : !!item.maxPrice) && (
                                 <>
                                     <Typography fontSize={11} color="text.disabled">
                                         |
                                     </Typography>
-                                    <Typography fontSize={11} color="success.main">
-                                        วงเงินสูงสุด {numberWithCommas(item.maxPrice?.toString() || "0", 0)} บาท
+                                    <Typography
+                                        fontSize={11}
+                                        color={
+                                            isContinuous && (item.remainAmount ?? 0) <= 0
+                                                ? "error.main"
+                                                : "success.main"
+                                        }
+                                    >
+                                        {isContinuous ? "วงเงินคงเหลือ" : "วงเงินสูงสุด"}{" "}
+                                        {numberWithCommas(
+                                            (isContinuous ? item.remainAmount : item.maxPrice)?.toString() || "0",
+                                            0
+                                        )}{" "}
+                                        บาท
                                     </Typography>
                                 </>
                             )}

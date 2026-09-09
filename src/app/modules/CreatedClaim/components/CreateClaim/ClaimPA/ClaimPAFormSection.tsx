@@ -103,7 +103,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         incidentTypeMappingLoading,
         incidentTypeLoading,
         customerBenefitLoading,
+        isContinuous,
         isContinuousDeath,
+        isOldClaimLoading,
         insured,
         shouldShowOcrDocumentScan,
         isOcrDocsValid,
@@ -144,6 +146,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         isDeath &&
         values.incidentTypeId === IncidentType.Illness &&
         values.causeOfIncidentId === CauseOfIncident.Illness;
+    // เคลมต่อเนื่องประเภทเสียชีวิตจากอุบัติเหตุ — ล็อกวันที่เสียชีวิตให้ default ตามเคลมหลัก
+    const isContinuousAccidentDeath = isContinuousDeath && values.incidentTypeId === IncidentType.Accident;
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
     const isIPDMedical = values.coverageTypeId === CoverageType.Medical && values.medicalTypeId === MedicalType.IPD;
     const isOPD = values.medicalTypeId === MedicalType.OPD;
@@ -174,7 +178,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         () => (customerBenefit?.data ?? []).filter((b) => b.coverageTypeId === CoverageType.Death),
         [customerBenefit?.data]
     );
-    const maxPrice = currentBenefit?.maxPrice;
+    // เคลมต่อเนื่อง: เทียบกับ benefit คงเหลือ (remainAmount) แทนวงเงินสูงสุด (maxPrice)
+    const maxPrice = isContinuous ? currentBenefit?.remainAmount : currentBenefit?.maxPrice;
     const isOverEligibleLimit =
         !isContinuousDeath && typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
@@ -503,7 +508,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 slotProps={{ textField: { size: "small" } }}
                                 maxDate={dayjs()}
                                 required
-                                // disabled={isContinuousDeath}
+                                disabled={isContinuous}
                             />
                         </Grid>
                         {isMedical && (
@@ -530,19 +535,19 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 />
                             </Grid>
                         )}
-                        {isDeath ||
-                            (isContinuousDeath && (
-                                <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
-                                    <FormikDatePicker
-                                        name="deathDate"
-                                        label="วันที่เสียชีวิต"
-                                        formik={formik}
-                                        slotProps={{ textField: { size: "small" } }}
-                                        maxDate={dayjs()}
-                                        required
-                                    />
-                                </Grid>
-                            ))}
+                        {(isDeath || isContinuousDeath) && (
+                            <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("deathDate")}>
+                                <FormikDatePicker
+                                    name="deathDate"
+                                    label="วันที่เสียชีวิต"
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    maxDate={dayjs()}
+                                    required
+                                    disabled={isContinuousAccidentDeath}
+                                />
+                            </Grid>
+                        )}
                         {(isDeath || isDisability || isContinuousDeath) && (
                             <>
                                 <Grid item xs={12} sm={6} md={4} ref={registerFieldRef("notificationDate")}>
@@ -662,7 +667,12 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             <>
                                 {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
-                                        <CD10Autocomplete name={`diagnoses.${index}.icd10Id`} formik={formik} />
+                                        <CD10Autocomplete
+                                            name={`diagnoses.${index}.icd10Id`}
+                                            formik={formik}
+                                            loading={isOldClaimLoading}
+                                            disabled={isOldClaimLoading}
+                                        />
                                     </Grid>
                                 ))}
                                 <Grid item xs={12}>
@@ -712,7 +722,9 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 isNonCoveredReasonLoading={isNonCoveredReasonLoading}
                                 onChange={(items) => dispatch(setOrganLossItems(items))}
                                 customerId={insured?.customerId}
-                                maxTransferAmount={disabilityBenefit?.maxPrice}
+                                maxTransferAmount={
+                                    isContinuous ? disabilityBenefit?.remainAmount : disabilityBenefit?.maxPrice
+                                }
                             />
                         </Box>
                     )}
@@ -722,6 +734,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}
                                 isLoading={customerBenefitLoading}
+                                isContinuous={isContinuous}
                                 planCode={
                                     isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
                                         ? insured?.productName

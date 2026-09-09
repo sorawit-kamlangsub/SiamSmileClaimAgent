@@ -1,16 +1,13 @@
 import { Box, Button, Chip, Dialog, DialogContent, DialogTitle, IconButton, Tooltip } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import ArticleIcon from "@mui/icons-material/Article";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useFormikContext } from "formik";
 
-import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
-import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { FormikCheckbox, StandardDataTable } from "../../../../_common";
 import { cellAlignOptions, defaultOptionStandardDataTable, numberWithCommas } from "../../../../../functionHelpers";
 import { ContinuousClaimRow } from "../mock/hospitalConsiderMock";
-import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
+import { ClaimConsiderValues } from "../../../store/claimConsiderSlice";
 
 type ContinuousClaimSectionProps = {
     rows: ContinuousClaimRow[];
@@ -22,7 +19,8 @@ type ContinuousClaimSectionProps = {
 };
 
 /**
- * ส่วน "รายละเอียดเคลม" ที่ให้ระบุว่าเคสนี้เป็นเคลมต่อเนื่องหรือไม่
+ * ส่วนให้ระบุว่าเคสนี้เป็นเคลมต่อเนื่องหรือไม่ — เนื้อหาซ้อนอยู่ใน Paper ของ RecordClaimData
+ * (เหนือ "เหตุของการเคลม") จึงไม่มี Paper/Heading ของตัวเอง
  *
  * ติ๊ก Checkbox แล้วเปิด Modal ให้เลือกเคลมเดิม เมื่อเลือกแล้วจะแสดงเป็น Chip
  * และหน้าจอจะแสดงแถบสรุปเคลมต่อเนื่อง (ContinuousClaimBanner) ด้านบน
@@ -35,7 +33,7 @@ const ContinuousClaimSection = ({
     onSelect,
     onClear,
 }: ContinuousClaimSectionProps) => {
-    const formik = useFormikContext<HospitalConsiderValues>();
+    const formik = useFormikContext<ClaimConsiderValues>();
     const selected = formik.values.continuousClaim;
 
     const columns: MUIDataTableColumn[] = [
@@ -91,10 +89,8 @@ const ContinuousClaimSection = ({
     ];
 
     return (
-        <CustomPaper>
-            <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="รายละเอียดเคลม" color="blue" />
-
-            <Box px={2} display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
+        <Box mb={2}>
+            <Box display="flex" alignItems="center" gap={1.5} flexWrap="wrap">
                 <Box
                     sx={{
                         px: 2,
@@ -164,7 +160,7 @@ const ContinuousClaimSection = ({
                     />
                 </DialogContent>
             </Dialog>
-        </CustomPaper>
+        </Box>
     );
 };
 

@@ -17,16 +17,17 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 import AddBankAccountModal from "../../../components/CreateClaim/AddBankAccountModal";
 import AddContactModal from "../../../components/CreateClaim/AddContactModal";
 import ConfirmTransferPHModal from "../../../components/CreateClaim/ClaimPH/ConfirmTransferPHModal";
+import ClaimTransferProgressModal from "../../../components/CreateClaim/ClaimTransferProgressModal";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ClaimSummaryPHTable from "../../../components/CreateClaim/ClaimPH/ClaimSummaryPHTable";
 import { useCreateClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateClaimPH";
 import { useCreateContinuedClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useCreateContinuedClaimPH";
+import { useClaimTransferProcess } from "../../../hooks/CreateClaim/useClaimTransferProcess";
 import Swal from "sweetalert2";
 import { swalError } from "../../../../_common";
 import { useBeneficiaryPH } from "../../../hooks/CreateClaim/ClaimPH/useBeneficiaryPH";
 import BeneficiarySectionPH from "../../../components/CreateClaim/ClaimPH/BeneficiarySectionPH";
-import { CreateCoreClaimDtoResponseServiceResponse } from "../../../../../api/coreClaimApi.client";
 import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
 import { ContactCard } from "../../../components/CreateClaim/ContactCard";
 
@@ -42,12 +43,17 @@ const ClaimPHSummaryPage: React.FC = () => {
     const [openBank, setOpenBank] = useState(false);
     const [openContact, setOpenContact] = useState(false);
     const [openConfirm, setOpenConfirm] = useState(false);
-    const [claimResult, setClaimResult] = useState<CreateCoreClaimDtoResponseServiceResponse | undefined>(undefined);
-    const [pendingBeneficiaryList, setPendingBeneficiaryList] = useState<BeneficiaryForm[]>([]);
     const { formik, isLoading: beneficiaryLoading } = useBeneficiaryPH((beneficiaries) => {
         handleConfirm(beneficiaries);
     });
     const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
+
+    // แจ้งเคลมทั่วไป (ไม่ใช่เสียชีวิต/ทุพพลภาพ) : สร้าง CL/CC + โอนเงิน ต่อกันหลังกด "โอนเงิน" ใน ConfirmTransferPHModal
+    const transferProcess = useClaimTransferProcess({
+        isContinuous,
+        createClaim: isContinuous ? createContinuedClaimPH : createClaimPH,
+        confirmPayment: isContinuous ? confirmContinuedPayment : confirmPayment,
+    });
 
     const buildContinuedSuccessHtml = (oldClaimNo: string, responseList: any[]) => {
         const rowsHtml = responseList
@@ -91,6 +97,7 @@ const ClaimPHSummaryPage: React.FC = () => {
         dispatch(selectContact(id));
     };
 
+    /** ส่งตรวจสอบ (เสียชีวิต/ทุพพลภาพ) : flow เดิม — ไม่ผ่าน Modal ยืนยันบัญชีโอนเงิน/progress */
     const handleConfirm = async (freshBeneficiaries?: BeneficiaryForm[]) => {
         if (isLoading) return;
 
@@ -116,7 +123,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                 }
             },
         }).then((result: any) => {
-            const { claimResponse, beneficiaryList } = result?.value ?? {};
+            const { claimResponse } = result?.value ?? {};
             const data = claimResponse?.data;
             const responseList = data?.responseList ?? [];
 
@@ -132,20 +139,12 @@ const ClaimPHSummaryPage: React.FC = () => {
                     </div>
                     ${buildContinuedSuccessHtml(oldClaim?.claimNo ?? "", responseList)}
                 `,
-                        confirmButtonText: isDeathDisability ? "ตกลง" : "โอนเงิน",
-                        showCancelButton: !isDeathDisability,
-                        cancelButtonText: "ปิด",
+                        confirmButtonText: "ตกลง",
                         allowOutsideClick: false,
                         backdrop: "rgba(0,0,0,0.4)",
-                    }).then((confirmResult) => {
-                        if (!isDeathDisability && confirmResult.isConfirmed) {
-                            setClaimResult(claimResponse);
-                            setPendingBeneficiaryList(beneficiaryList ?? []);
-                            setOpenConfirm(true);
-                        } else {
-                            dispatch(resetState());
-                            navigate(`/monitor-claim`);
-                        }
+                    }).then(() => {
+                        dispatch(resetState());
+                        navigate(`/monitor-claim`);
                     });
                     return;
                 }
@@ -177,225 +176,118 @@ const ClaimPHSummaryPage: React.FC = () => {
             `
                     )
                     .join("");
-                if (isDeathDisability) {
-                    Swal.fire({
-                        icon: "success",
-                        title: "ทำรายการสำเร็จ",
-                        html: `
+                Swal.fire({
+                    icon: "success",
+                    title: "ทำรายการสำเร็จ",
+                    html: `
                     <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:3;">
                         ระบบได้ส่งข้อมูลให้ฝ่ายพิจารณาเคลมเรียบร้อย
                     </div>
                     ${itemsHtml}
                 `,
-                        confirmButtonText: "ตกลง",
-                        allowOutsideClick: false,
-                        backdrop: "rgba(0,0,0,0.4)",
-                    }).then(() => {
-                        dispatch(resetState());
-                        navigate(`/monitor-claim`);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: "success",
-                        title: "ทำรายการสำเร็จ",
-                        html: `
-                <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:3;">
-                    ระบบได้ทำรายการเรียบร้อย กรุณากด "โอนเงิน" เพื่อดำเนินการโอนเงินต่อ
-                </div>
-                ${itemsHtml}
-            `,
-                        confirmButtonText: "โอนเงิน",
-                        showCancelButton: true,
-                        cancelButtonText: "ปิด",
-                        allowOutsideClick: false,
-                        backdrop: "rgba(0,0,0,0.4)",
-                    }).then((confirmResult) => {
-                        if (confirmResult.isConfirmed) {
-                            setClaimResult(claimResponse);
-                            setPendingBeneficiaryList(beneficiaryList ?? []);
-                            setOpenConfirm(true);
-                        } else {
-                            dispatch(resetState());
-                            navigate(`/monitor-claim`);
-                        }
-                    });
-                }
+                    confirmButtonText: "ตกลง",
+                    allowOutsideClick: false,
+                    backdrop: "rgba(0,0,0,0.4)",
+                }).then(() => {
+                    navigate(`/monitor-claim`);
+                    dispatch(resetState());
+                });
             } else if (result.isConfirmed) {
                 swalError("บันทึกไม่สำเร็จ !", data?.msg || "กรุณาลองใหม่อีกครั้ง");
             }
         });
     };
-    const handleActualTransfer = async () => {
-        if (!claimResult) return;
 
+    /** แจ้งเคลมทั่วไป : กด "โอนเงิน" ใน ConfirmTransferPHModal แล้ว สร้าง CL/CC → โอนเงิน ต่อกัน (ClaimTransferProgressModal) */
+    const handleTransferFlow = async () => {
         setOpenConfirm(false);
 
-        Swal.fire({
-            icon: "question",
-            iconHtml: "?",
-            showCancelButton: true,
-            confirmButtonText: "ตกลง",
-            cancelButtonText: "ยกเลิก",
-            reverseButtons: true,
-            allowOutsideClick: false,
-            backdrop: "rgba(0,0,0,0.4)",
-            title: "ยืนยันการโอนเงิน",
-            showLoaderOnConfirm: true,
-            preConfirm: async () => {
-                try {
-                    const res = isContinuous
-                        ? await confirmContinuedPayment(claimResult, pendingBeneficiaryList)
-                        : await confirmPayment(claimResult, pendingBeneficiaryList);
-                    return res;
-                } catch (error) {
-                    Swal.showValidationMessage(`Request failed: ${error}`);
-                }
-            },
-        }).then((result: any) => {
-            const data = result?.value?.data;
-            const responseList = data?.responseList ?? [];
-            const paymentResponses = result?.value?.paymentResponses;
-            const paymentCodeList = paymentResponses?.data?.paymentCodeResponse ?? [];
+        const outcome = await transferProcess.run();
+        if (!outcome.ok) {
+            swalError("ทำรายการไม่สำเร็จ !", outcome.message);
+            return;
+        }
 
-            if (result.isConfirmed && responseList.length > 0) {
-                const itemsHtml = responseList
-                    .map(
-                        (item: any, index: number) => `
-                <div
-                    style="
-                        background:#fff;
-                        border:1px solid #E5E5E5;
-                        border-radius:12px;
-                        padding:16px;
-                        width:300px;
-                        margin:0 auto;
-                        margin-bottom:${index < responseList.length - 1 ? "12px" : "0"};
-                        box-shadow:0 2px 8px rgba(0,0,0,.12);
-                        text-align:left;
-                    "
-                >
+        const responseList = outcome.result?.data?.responseList ?? [];
+        const paymentCodeList = outcome.result?.paymentResponses?.data?.paymentCodeResponse ?? [];
+
+        const itemsHtml = responseList
+            .map(
+                (item: any, index: number) => `
+                <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
+                    index < responseList.length - 1 ? "12px" : "0"
+                };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
                     <div style="display:flex;align-items:center;margin-bottom:12px;">
-                        <div
-                            style="
-                                width:24px;
-                                height:24px;
-                                border-radius:50%;
-                                background:#27AE60;
-                                color:#fff;
-                                display:flex;
-                                align-items:center;
-                                justify-content:center;
-                                font-size:12px;
-                                font-weight:bold;
-                                margin-right:10px;
-                            "
-                        >
-                            ✓
-                        </div>
-
+                        <div style="width:24px;height:24px;border-radius:50%;background:#27AE60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">✓</div>
                         <div>
                             <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
                             <div style="display:flex;align-items:center;gap:6px;">
-                                <span style="font-size:18px;font-weight:700;color:#27AE60;">
-                                    ${item?.claimNo ?? "-"}
-                                </span>
-
+                                <span style="font-size:18px;font-weight:700;color:#27AE60;">${
+                                    item?.claimNo ?? "-"
+                                }</span>
                                 <span
                                     class="material-icons copy-btn"
                                     data-copy="${item?.claimNo ?? ""}"
-                                    style="
-                                        cursor:pointer;
-                                        color:#2196F3;
-                                        font-size:18px;
-                                        margin-left:6px;
-                                        user-select:none;
-                                    "
-                                >
-                                    content_copy
-                                </span>
+                                    style="cursor:pointer;color:#2196F3;font-size:18px;margin-left:6px;user-select:none;"
+                                >content_copy</span>
                             </div>
                         </div>
                     </div>
-
-                    <div style="display:flex;align-items:center;">
-                        <div
-                            style="
-                                width:24px;
-                                height:24px;
-                                border-radius:50%;
-                                background:#2F80ED;
-                                color:#fff;
-                                display:flex;
-                                align-items:center;
-                                justify-content:center;
-                                font-size:12px;
-                                font-weight:bold;
-                                margin-right:10px;
-                            "
-                        >
-                            $
+                    <div style="display:flex;align-items:center;margin-bottom:12px;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่เคส :</div>
+                            <div style="font-size:18px;font-weight:700;color:#2F80ED;">${item?.caseNo ?? "-"}</div>
                         </div>
-
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#F2994A;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">฿</div>
                         <div>
                             <div style="font-size:12px;color:#888;">เลขที่การโอนเงิน :</div>
-                            <div style="font-size:18px;font-weight:700;color:#2F80ED;">
-                                ${paymentCodeList[index]?.paymentCode ?? "-"}
-                            </div>
+                            <div style="font-size:18px;font-weight:700;color:#F2994A;">${
+                                paymentCodeList[index]?.paymentCode ?? "-"
+                            }</div>
                         </div>
                     </div>
                 </div>
             `
-                    )
-                    .join("");
+            )
+            .join("");
 
-                Swal.fire({
-                    icon: "success",
-                    title: "ทำรายการสำเร็จ",
-                    html: `
-                <div
-                    style="
-                        color:#666;
-                        font-size:14px;
-                        margin-top:-8px;
-                        margin-bottom:24px;
-                        text-align:center;
-                        letter-spacing:normal;
-                        word-spacing:normal;
-                        font-family:inherit;
-                        line-height:3;
-                    "
-                >
+        Swal.fire({
+            icon: "success",
+            title: "ทำรายการสำเร็จ",
+            html: `
+                <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:1.8;">
                     ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
                 </div>
                 ${itemsHtml}
             `,
-                    confirmButtonText: "ตกลง",
-                    allowOutsideClick: false,
-                    backdrop: "rgba(0,0,0,0.4)",
-                    customClass: {
-                        confirmButton: "swal2-styled swal2-ok",
-                    },
-                    didOpen: () => {
-                        document.querySelectorAll(".copy-btn").forEach((btn) => {
-                            btn.addEventListener("click", async () => {
-                                const el = btn as HTMLElement;
-                                const text = el.dataset.copy ?? "";
+            confirmButtonText: "ตกลง",
+            allowOutsideClick: false,
+            backdrop: "rgba(0,0,0,0.4)",
+            customClass: {
+                confirmButton: "swal2-styled swal2-ok",
+            },
+            didOpen: () => {
+                document.querySelectorAll(".copy-btn").forEach((btn) => {
+                    btn.addEventListener("click", async () => {
+                        const el = btn as HTMLElement;
+                        const text = el.dataset.copy ?? "";
 
-                                await navigator.clipboard.writeText(text);
+                        await navigator.clipboard.writeText(text);
 
-                                el.textContent = "check";
-                                el.style.color = "#4CAF50";
-                                el.style.cursor = "default";
+                        el.textContent = "check";
+                        el.style.color = "#4CAF50";
+                        el.style.cursor = "default";
 
-                                el.classList.remove("copy-btn");
-                            });
-                        });
-                    },
-                }).then(() => {
-                    dispatch(resetState());
-                    navigate(`/monitor-claim`);
+                        el.classList.remove("copy-btn");
+                    });
                 });
-            }
+            },
+        }).then(() => {
+            dispatch(resetState());
+            navigate(`/monitor-claim`);
         });
     };
     return (
@@ -518,7 +410,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                             color="success"
                             startIcon={<CommentIcon />}
                             size="medium"
-                            onClick={() => (isDeathDisability ? formik.handleSubmit() : handleConfirm())}
+                            onClick={() => (isDeathDisability ? formik.handleSubmit() : setOpenConfirm(true))}
                         >
                             {isDeathDisability ? "ส่งตรวจสอบ" : "แจ้งโอนเงิน"}
                         </Button>
@@ -530,9 +422,10 @@ const ClaimPHSummaryPage: React.FC = () => {
                 <ConfirmTransferPHModal
                     open={openConfirm}
                     onClose={() => setOpenConfirm(false)}
-                    onConfirm={handleActualTransfer}
+                    onConfirm={handleTransferFlow}
                     isLoading={isLoading}
                 />
+                <ClaimTransferProgressModal open={transferProcess.open} steps={transferProcess.steps} />
             </Grid>
         </>
     );

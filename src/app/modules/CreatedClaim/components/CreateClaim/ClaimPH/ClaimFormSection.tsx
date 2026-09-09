@@ -64,6 +64,8 @@ export const claimStepBoxSx = {
 const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const {
         formik,
+        isContinuous,
+        isOldClaimLoading,
         incidentType,
         coverageType,
         medicalType,
@@ -122,11 +124,20 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     // ── ยอดโอนเกินสิทธิ์ (NPL) ──
     const [isConfirmExcessOpen, setIsConfirmExcessOpen] = useState(false);
     const currentBenefit = customerBenefit?.data?.find((item) => item.medicalTypeId === values.medicalTypeId);
+    // เคลมต่อเนื่อง: เทียบกับ benefit คงเหลือ (remainAmount) แทนวงเงินสูงสุด (maxPrice)
     const totalEligibleAmount = useMemo(
-        () => (customerBenefit?.data ?? []).reduce((sum, item) => sum + (item.maxPrice ?? 0), 0),
-        [customerBenefit?.data]
+        () =>
+            (customerBenefit?.data ?? []).reduce(
+                (sum, item) => sum + ((isContinuous ? item.remainAmount : item.maxPrice) ?? 0),
+                0
+            ),
+        [customerBenefit?.data, isContinuous]
     );
-    const maxPrice = isManualIPD ? totalEligibleAmount : currentBenefit?.maxPrice;
+    const maxPrice = isManualIPD
+        ? totalEligibleAmount
+        : isContinuous
+        ? currentBenefit?.remainAmount
+        : currentBenefit?.maxPrice;
     const isOverEligibleLimit = typeof maxPrice === "number" && (values.transferAmount ?? 0) > maxPrice;
 
     const handleSubmit = async () => {
@@ -316,6 +327,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
+                                    disabled={isContinuous}
                                 />
                             </Box>
                         </Grid>
@@ -492,7 +504,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             <>
                                 {values.diagnoses.map((_item, index) => (
                                     <Grid item xs={12} lg={9} key={index}>
-                                        <CD10Autocomplete name={`diagnoses.${index}.icd10Id`} formik={formik} />
+                                        <CD10Autocomplete
+                                            name={`diagnoses.${index}.icd10Id`}
+                                            formik={formik}
+                                            loading={isOldClaimLoading}
+                                            disabled={isOldClaimLoading}
+                                        />
                                     </Grid>
                                 ))}
                                 <Grid item xs={12}>
@@ -556,6 +573,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                             <CoverageBox
                                 items={customerBenefit?.data ?? []}
                                 isLoading={customerBenefitLoading}
+                                isContinuous={isContinuous}
                                 planCode={
                                     isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
                                         ? insured?.productName
@@ -572,6 +590,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 <CoverageAndTransferBox
                                     items={customerBenefit?.data ?? []}
                                     isLoading={customerBenefitLoading}
+                                    isContinuous={isContinuous}
                                     planCode={
                                         isProductType(insured?.productTypeId, PRODUCT_TYPE_GROUP.PH)
                                             ? insured?.productName

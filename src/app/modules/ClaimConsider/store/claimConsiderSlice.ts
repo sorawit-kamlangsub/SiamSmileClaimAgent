@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs, { Dayjs } from "dayjs";
 import { RootState } from "../../../../redux";
 import { CalculateCaseClaimDtoResponse } from "../../../api/coreClaimApi.client";
+import { ContinuousClaimRow } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
 export interface DiagnosisModel {
     icd10Id?: number;
@@ -66,9 +67,12 @@ export interface ClaimConsiderValues {
     dischargeDate: Dayjs | undefined; //วันที่ออก รพ
     dischargeTime: Dayjs | undefined;
     documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
-    notificationDate: Dayjs | undefined; //วันที่รับแจ้ง
+    createdDate: Dayjs | undefined; //วันที่แจ้ง
     // deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     // deathTime: Dayjs | undefined;
+    /** เคลมต่อเนื่อง */
+    isContinuousClaim: boolean;
+    continuousClaim: ContinuousClaimRow | undefined;
     ipdDays: number;
     icuDays: number;
     totalDays: number;
@@ -85,10 +89,26 @@ export interface ClaimConsiderValues {
     considerDocument: CaseDocumentConsiderRequest[] | undefined;
 }
 
+/** ข้อมูลแบบร่างที่กำลังเปิดดู (กดจากปุ่มดวงตาในแท็บ "ประวัติการทำรายการ") — 3 field ล่างมาจากแถว
+ * transaction log โดยตรง ไม่ใช่จาก draft API เก็บเป็น string เท่านั้น (Dayjs ไม่ serializable ทำให้ RTK
+ * ต้อง deep-scan ทั้ง store ทุก dispatch จนหน้าค้าง) */
+export interface ViewingDraftInfo {
+    draftRevisionId: string;
+    createdDate?: string;
+    employeeName?: string;
+    transactionLogRemark?: string;
+}
+
 interface ClaimConsiderState {
     form: ClaimConsiderValues;
     filledItems: ClaimExpenseItem[];
     calculateResult: CalculateCaseClaimDtoResponse | null;
+    /** adjudication ของ case ที่กำลังพิจารณา ได้จาก /standard-medical-expense/case ส่งต่อให้ payload คำนวณ */
+    caseAdjudicationId: string | null;
+    viewingDraft: ViewingDraftInfo | null;
+    /** revisionId ที่ merge ลง filledItems ไปแล้ว — เก็บใน Redux ไม่ใช่ ref เพราะ ExpenseDetails
+     * ถูก unmount ทุกครั้งที่สลับ step (activeStep === 1) ถ้าใช้ ref จะ merge ทับงานที่ผู้ใช้แก้ไปแล้วซ้ำ */
+    draftExpenseAppliedRevisionId: string | null;
 }
 const defaultForm: ClaimConsiderValues = {
     incidentTypeId: undefined,
@@ -107,11 +127,13 @@ const defaultForm: ClaimConsiderValues = {
     dischargeTime: undefined,
     // deathDate: undefined,
     // deathTime: undefined,
+    isContinuousClaim: false,
+    continuousClaim: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,
     documentCompleteDate: undefined,
-    notificationDate: undefined,
+    createdDate: undefined,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [
@@ -132,6 +154,9 @@ const initialState: ClaimConsiderState = {
     form: defaultForm,
     filledItems: [],
     calculateResult: null,
+    caseAdjudicationId: null,
+    viewingDraft: null,
+    draftExpenseAppliedRevisionId: null,
 };
 
 const claimConsiderSlice = createSlice({
@@ -157,6 +182,20 @@ const claimConsiderSlice = createSlice({
         setCalculateExpenseResult(state, action: PayloadAction<CalculateCaseClaimDtoResponse | null>) {
             state.calculateResult = action.payload;
         },
+        setCaseAdjudicationId(state, action: PayloadAction<string | null>) {
+            state.caseAdjudicationId = action.payload;
+        },
+        setViewingDraft(state, action: PayloadAction<ViewingDraftInfo>) {
+            state.viewingDraft = action.payload;
+            state.draftExpenseAppliedRevisionId = null; // revision ใหม่ = ต้อง merge รายการค่าใช้จ่ายใหม่
+        },
+        clearViewingDraft(state) {
+            state.viewingDraft = null;
+            state.draftExpenseAppliedRevisionId = null;
+        },
+        setDraftExpenseApplied(state, action: PayloadAction<string>) {
+            state.draftExpenseAppliedRevisionId = action.payload;
+        },
         resetState: () => initialState,
     },
 });
@@ -168,6 +207,10 @@ export const {
     updateFilledClaimLineItem,
     removeFilledClaimLineItem,
     setCalculateExpenseResult,
+    setCaseAdjudicationId,
+    setViewingDraft,
+    clearViewingDraft,
+    setDraftExpenseApplied,
     resetState,
 } = claimConsiderSlice.actions;
 

@@ -31,6 +31,7 @@ export const useConfirmClaimPayment = (onError?: (message: string) => void) => {
                 ? mapBeneficiariesToRequest(beneficiaryList, claim.tempClaimId, c?.tempCaseId).map((beneficiary) => ({
                       beneficiary,
                       payeeTypeId: 4, // Beneficiary
+                      paymentTypeId: 2, // CasePayment
                   }))
                 : mapBankAccountToBeneficiary(
                       selectedAccount,
@@ -41,6 +42,7 @@ export const useConfirmClaimPayment = (onError?: (message: string) => void) => {
                   ).map((beneficiary) => ({
                       beneficiary,
                       payeeTypeId: 2, // Customer
+                      paymentTypeId: 2, // CasePayment
                   }));
         });
 

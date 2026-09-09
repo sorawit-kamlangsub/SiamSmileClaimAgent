@@ -391,23 +391,25 @@ export const colorMapCaseStatus: Record<number, "#11734B" | "#a56e07" | "#B32615
 
 //Decision
 export const backgroundColorMapDecision: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
-    2: "#D4EDBC", // อนุมัติ
+    2: "#FFF1CD", // รอพิจารณา
     3: "#FFF1CD", // รอเอกสาร
     4: "#FFF1CD", // รอแก้ไข
-    5: "#FFCFC9", // ยกเลิก
-    6: "#FFCFC9", // ปฏิเสธ
-    7: "#FFF1CD", // รอตรวจสอบการแก้ไข
-    8: "#FFF1CD", // รอพิจารณา
+    5: "#FFCFC9", // ปฏิเสธ
+    6: "#FFCFC9", // ยกเลิก
+    7: "#FFF1CD", // อยู่ระหว่างดำเนินการ
+    8: "#FFF1CD", // รอตรวจสอบการแก้ไข
+    9: "#D4EDBC", // อนุมัติ
 };
 
 export const colorMapDecision: Record<number, "#11734B" | "#a56e07" | "#B32615"> = {
-    2: "#11734B", // อนุมัติ
+    2: "#a56e07", // รอพิจารณา
     3: "#a56e07", // รอเอกสาร
     4: "#a56e07", // รอแก้ไข
-    5: "#B32615", // ยกเลิก
-    6: "#B32615", // ปฏิเสธ
-    7: "#a56e07", // รอตรวจสอบการแก้ไข
-    8: "#a56e07", // รอพิจารณา
+    5: "#B32615", // ปฏิเสธ
+    6: "#B32615", // ยกเลิก
+    7: "#a56e07", // อยู่ระหว่างดำเนินการ
+    8: "#a56e07", // รอตรวจสอบการแก้ไข
+    9: "#11734B", // อนุมัติ
 };
 
 //PaymentStatus
@@ -423,6 +425,19 @@ export const colorMapPaymentStatus: Record<number, "#11734B" | "#a56e07" | "#B32
     3: "#11734B", // Paid
     4: "#B32615", // Cancelled
     5: "#B32615", // Failed
+};
+
+//CustomerPaymentStatus (สถานะการชำระเบี้ยของลูกค้า — customerPaymentStatusCode ส่งมาเป็น string)
+export const backgroundColorMapCustomerPaymentStatus: Record<string, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
+    "3301": "#FFCFC9", // ยังไม่มีการชำระเงิน
+    "3302": "#FFF1CD", // ชำระเงินแล้วบางส่วน
+    "3303": "#D4EDBC", // ชำระเบี้ยครบ
+};
+
+export const colorMapCustomerPaymentStatus: Record<string, "#11734B" | "#a56e07" | "#B32615"> = {
+    "3301": "#B32615", // ยังไม่มีการชำระเงิน
+    "3302": "#a56e07", // ชำระเงินแล้วบางส่วน
+    "3303": "#11734B", // ชำระเบี้ยครบ
 };
 
 //AppStatus

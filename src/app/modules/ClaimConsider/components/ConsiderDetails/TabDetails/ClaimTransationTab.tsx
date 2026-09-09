@@ -15,10 +15,24 @@ import CancelOutlinedIcon from "@mui/icons-material/CancelOutlined";
 import AddCardOutlinedIcon from "@mui/icons-material/AddCardOutlined";
 import ReplayOutlinedIcon from "@mui/icons-material/ReplayOutlined";
 import AssignmentReturnedOutlinedIcon from "@mui/icons-material/AssignmentReturnedOutlined";
+import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
+import MeetingRoomOutlinedIcon from "@mui/icons-material/MeetingRoomOutlined";
+import DraftsOutlinedIcon from "@mui/icons-material/DraftsOutlined";
+import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
+import ReplyOutlinedIcon from "@mui/icons-material/ReplyOutlined";
+import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
+import ReplyAllOutlinedIcon from "@mui/icons-material/ReplyAllOutlined";
 import useClaimTransactionHook from "../../../hooks/ClaimConsiderDetail/ClaimTransactionHook";
-import { formatDateString, numberWithCommas } from "../../../../../functionHelpers";
+import {
+    backgroundColorMapDecision,
+    colorMapDecision,
+    formatDateString,
+    numberWithCommas,
+} from "../../../../../functionHelpers";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
+import { useAppDispatch } from "../../../../../../redux";
+import { setViewingDraft } from "../../../store/claimConsiderSlice";
 type TransactionLogVisual = {
     icon: React.ElementType;
     bgcolor: string;
@@ -26,19 +40,36 @@ type TransactionLogVisual = {
 };
 
 const transactionLogVisualMap: Record<number, TransactionLogVisual> = {
-    1: { icon: NoteAddOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างเคลม
-    2: { icon: FolderOpenOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างเคส
-    3: { icon: SmsOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ส่ง SMS
+    0: { icon: HistoryOutlinedIcon, bgcolor: "#9E9E9E", color: "#FFFFFF" }, // ไม่ทราบประเภท / ยังไม่รองรับ
+    1: { icon: NoteAddOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างรายการเคลม
+    2: { icon: FolderOpenOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // สร้างรายการเคส
+    3: { icon: SmsOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ส่ง SMS สำเร็จ
     4: { icon: CheckCircleOutlineIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // โอนสำเร็จ
     5: { icon: ErrorOutlineIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // โอนไม่สำเร็จ
-    6: { icon: HourglassEmptyOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // ระหว่างพิจารณา
-    7: { icon: TaskAltIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // อนุมัติ
-    8: { icon: HighlightOffIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // ปฏิเสธ
-    9: { icon: CancelOutlinedIcon, bgcolor: "#B71C1C", color: "#FFFFFF" }, // ยกเลิก
+    6: { icon: HourglassEmptyOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // อยู่ระหว่างการพิจารณา
+    7: { icon: TaskAltIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // บันทึกผลพิจารณา (อนุมัติ)
+    8: { icon: HighlightOffIcon, bgcolor: "#D32F2F", color: "#FFFFFF" }, // บันทึกผลพิจารณา (ปฏิเสธ)
+    9: { icon: CancelOutlinedIcon, bgcolor: "#B71C1C", color: "#FFFFFF" }, // บันทึกผลพิจารณา (ยกเลิก)
     10: { icon: AddCardOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // โอนเพิ่ม
     11: { icon: ReplayOutlinedIcon, bgcolor: "#C79207", color: "#FFFFFF" }, // คืนเงิน
     12: { icon: AssignmentReturnedOutlinedIcon, bgcolor: "#2E9E5B", color: "#FFFFFF" }, // คืนเงินสำเร็จ
+    13: { icon: LocalHospitalOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // แจ้งเข้ารับการรักษา
+    14: { icon: MeetingRoomOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // Discharge
+    15: { icon: DraftsOutlinedIcon, bgcolor: "#757575", color: "#FFFFFF" }, // บันทึกแบบร่าง
+    16: { icon: NotificationsActiveOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // แจ้งผลการโอนเงิน
+    23: { icon: LocalHospitalOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // Admission (จาก SmileConnect)
+    24: { icon: MeetingRoomOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // Discharge (จาก SmileConnect)
+    25: { icon: ReplyOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ตอบกลับผลพิจารณา
+    26: { icon: ReceiptLongOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // รับผลวางบิล
+    27: { icon: ReplyAllOutlinedIcon, bgcolor: "#0B79D0", color: "#FFFFFF" }, // ตอบกลับผลวางบิล
 };
+
+/** ประเภทรายการที่ถือเป็นผลพิจารณา (อยู่ระหว่างพิจารณา/อนุมัติ/ปฏิเสธ/ยกเลิก) — โชว์ chip decisionName */
+const DECISION_CHIP_TRANSACTION_LOG_TYPE_IDS = [6, 7, 8, 9];
+/** ประเภทรายการแจ้งผลการโอนเงิน — โชว์ chip paymentStatusNameTH */
+const PAYMENT_STATUS_CHIP_TRANSACTION_LOG_TYPE_ID = 16;
+
+const DRAFT_CHIP_TRANSACTION_LOG_TYPE_ID = 15;
 
 const getTransactionVisual = (typeId?: number): TransactionLogVisual => {
     return transactionLogVisualMap[typeId ?? 0] ?? transactionLogVisualMap[0];
@@ -85,7 +116,13 @@ const getStatus = (status?: string | number) => {
             };
     }
 };
-const ClaimTransactionTab = () => {
+type ClaimTransactionTabProps = {
+    /** ให้ parent (HeaderDetails) สลับไปแท็บ "ข้อมูลการเคลม" — ข้อมูลของแบบร่างเอง dispatch ลง Redux เอง */
+    onViewDraft?: () => void;
+};
+
+const ClaimTransactionTab = ({ onViewDraft }: ClaimTransactionTabProps) => {
+    const dispatch = useAppDispatch();
     const { transaction, transactionLoading, pagination, setPaginated } = useClaimTransactionHook();
 
     const transactionList = transaction?.data ?? [];
@@ -153,13 +190,31 @@ const ClaimTransactionTab = () => {
                             color,
                         } = getTransactionVisual(item.transactionLogTypeId);
                         const transactionLogDetail =
-                            item.transactionLogTypeId === 1
+                            item.transactionLogTypeId === 1 //สร้างรายการเคลม
                                 ? item.claimNo
-                                : item.transactionLogTypeId === 2
+                                : item.transactionLogTypeId === 2 //สร้างรายการเคส
                                 ? item.caseNo
-                                : item.transactionLogTypeId === 4
+                                : item.transactionLogTypeId === PAYMENT_STATUS_CHIP_TRANSACTION_LOG_TYPE_ID //แจ้งผลการโอนเงิน
                                 ? `จำนวนเงิน ${numberWithCommas(item.totalAmount?.toString() ?? "0", 2)} บาท`
+                                : item.transactionLogTypeId === DRAFT_CHIP_TRANSACTION_LOG_TYPE_ID //บันทึกแบบร่าง
+                                ? item.transactionLogRemark ?? ""
                                 : "";
+                        // referenceId ของแถวบันทึกแบบร่าง = draftRevisionId ที่ใช้ยิง
+                        // useGetClaimEditDraftRevision — แถวประเภทอื่นกดดวงตาแล้วไม่มีอะไรเกิด (ตามที่ตกลง)
+                        const isDraftRow =
+                            item.transactionLogTypeId === DRAFT_CHIP_TRANSACTION_LOG_TYPE_ID && !!item.referenceId;
+                        const handleViewDraft = () => {
+                            if (!item.referenceId) return;
+                            dispatch(
+                                setViewingDraft({
+                                    draftRevisionId: item.referenceId,
+                                    createdDate: item.createdDate?.toString(),
+                                    employeeName: item.employeeName,
+                                    transactionLogRemark: item.transactionLogRemark,
+                                })
+                            );
+                            onViewDraft?.();
+                        };
 
                         return (
                             <Box
@@ -245,18 +300,54 @@ const ClaimTransactionTab = () => {
                                         </Box>
 
                                         <Stack direction="row" spacing={2} alignItems="center" flexShrink={0}>
-                                            <Chip
-                                                label={item.paymentStatusNameTH}
-                                                size="medium"
-                                                sx={{
-                                                    borderRadius: "16px",
-                                                    fontWeight: 600,
-                                                    ...status.sx,
-                                                }}
-                                            />
+                                            {/* แสดงเฉพาะรายการที่เป็นผลพิจารณา (6 อยู่ระหว่างพิจารณา, 7 อนุมัติ,
+                                                8 ปฏิเสธ, 9 ยกเลิก) — วางตำแหน่งเดียวกับ chip paymentStatusNameTH
+                                                เพราะทั้งคู่สื่อ "สถานะ" ของรายการนี้ */}
+                                            {DECISION_CHIP_TRANSACTION_LOG_TYPE_IDS.includes(
+                                                item.transactionLogTypeId ?? 0
+                                            ) &&
+                                                item.decisionName && (
+                                                    <Chip
+                                                        label={item.decisionName}
+                                                        size="medium"
+                                                        sx={{
+                                                            borderRadius: "16px",
+                                                            fontWeight: 600,
+                                                            bgcolor: backgroundColorMapDecision[item.decisionId ?? 0],
+                                                            color: colorMapDecision[item.decisionId ?? 0],
+                                                        }}
+                                                    />
+                                                )}
 
-                                            <Tooltip title="ดูรายละเอียด">
+                                            {/* แสดงเฉพาะ transactionLogTypeId = 16 (แจ้งผลการโอนเงิน) เท่านั้น */}
+                                            {item.transactionLogTypeId ===
+                                                PAYMENT_STATUS_CHIP_TRANSACTION_LOG_TYPE_ID && (
+                                                <Chip
+                                                    label={item.paymentStatusNameTH}
+                                                    size="medium"
+                                                    sx={{
+                                                        borderRadius: "16px",
+                                                        fontWeight: 600,
+                                                        ...status.sx,
+                                                    }}
+                                                />
+                                            )}
+                                            {item.transactionLogTypeId === DRAFT_CHIP_TRANSACTION_LOG_TYPE_ID && (
+                                                <Chip
+                                                    label="Draft"
+                                                    size="medium"
+                                                    sx={{
+                                                        borderRadius: "16px",
+                                                        fontWeight: 600,
+                                                        bgcolor: "#FFF1CD",
+                                                        color: "#a56e07",
+                                                    }}
+                                                />
+                                            )}
+
+                                            <Tooltip title={isDraftRow ? "ดูข้อมูลแบบร่าง" : "ดูรายละเอียด"}>
                                                 <IconButton
+                                                    onClick={isDraftRow ? handleViewDraft : undefined}
                                                     sx={{
                                                         bgcolor: "#E2F2FF",
                                                         "&:hover": { bgcolor: "#d4ecff" },

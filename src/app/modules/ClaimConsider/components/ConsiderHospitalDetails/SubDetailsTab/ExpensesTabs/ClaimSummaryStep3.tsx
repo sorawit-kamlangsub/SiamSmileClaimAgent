@@ -1,5 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Box, Button, Checkbox, Chip, Divider, FormControlLabel, Grid, Paper, TextField, Typography } from "@mui/material";
+import {
+    Autocomplete,
+    Box,
+    Button,
+    Checkbox,
+    Chip,
+    Divider,
+    FormControlLabel,
+    Grid,
+    Paper,
+    TextField,
+    Typography,
+} from "@mui/material";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
@@ -8,6 +20,7 @@ import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlin
 import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 import { MUIDataTableColumn } from "mui-datatables";
 
+import { useGetBank } from "../../../../../../api/coreClaimMastersApi";
 import { StandardDataTable } from "../../../../../_common";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import { cellAlignOptions } from "../../../../../../functionHelpers";
@@ -36,6 +49,8 @@ export type Step3CompensationRow = {
 export type Step3PayoutAccount = {
     phone?: string;
     accountName?: string;
+    /** id จาก master ธนาคาร (GetOrganizeDtoResponse.organizeId) — คู่กับ bankName เสมอ */
+    bankId?: number;
     bankName?: string;
     accountNo?: string;
     /** ป้ายความสัมพันธ์ของเจ้าของบัญชี เช่น "ผู้ชำระเบี้ยในระบบ" */
@@ -67,6 +82,19 @@ type ClaimSummaryStep3Props = {
     /** ยกสถานะ checkbox "โอนค่าชดเชยรวมกับค่ารักษา" ให้ parent คุม (optional) */
     mergeChecked?: boolean;
     onMergeChange?: (checked: boolean) => void;
+    /**
+     * ซ่อนตาราง "ค่าชดเชย" (compensationRows) — ใช้เมื่อหน้าเรียกไม่มีรายการค่าชดเชยแยกต่อบรรทัดให้แสดง
+     * (เช่นหน้าวางบิลเคลมโรงพยาบาล ที่สเปคมีแค่สรุปค่าชดเชยรวม ไม่มีตารางย่อย) default false = พฤติกรรมเดิม
+     */
+    hideCompensationTable?: boolean;
+    /**
+     * บรรทัดสุดท้ายของการ์ด "สรุปค่าใช้จ่ายโรงพยาบาล" — default "excess" = พฤติกรรมเดิม
+     * ("ส่วนเกิน (ลูกค้าจ่าย)" = medicalUnpay) ส่วน "compensateRemain" = "ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
+     * ตามสเปคหน้าวางบิลเคลมโรงพยาบาล
+     */
+    lastSummaryLine?: "excess" | "compensateRemain";
+    /** ปิดปุ่ม "แก้ไขบัญชี" ของ "บัญชีรับเงินค่าชดเชย" — default false = พฤติกรรมเดิม */
+    disableAccountEdit?: boolean;
 };
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
@@ -76,7 +104,11 @@ const withTotalRow = <T extends Record<string, unknown>>(rows: T[], totalRow: T)
 
 const tableSx = {
     "& td, & th": { fontSize: "15px !important", py: "5px !important", px: "9px !important" },
-    "& td": { borderRight: "1px solid #e0e0e0", borderBottom: "1px solid #e0e0e0", "&:last-child": { borderRight: "none" } },
+    "& td": {
+        borderRight: "1px solid #e0e0e0",
+        borderBottom: "1px solid #e0e0e0",
+        "&:last-child": { borderRight: "none" },
+    },
     "& tbody tr:last-child:not(:only-child) td": {
         bgcolor: "#3d3d3d !important",
         color: "#fff !important",
@@ -112,11 +144,24 @@ const SummaryLine = ({
     noDivider?: boolean;
 }) => (
     <>
-        <Box display="flex" justifyContent="space-between" alignItems="center" py={0.75} px={1.5} sx={{ bgcolor: bg ?? "transparent" }}>
+        <Box
+            display="flex"
+            justifyContent="space-between"
+            alignItems="center"
+            py={0.75}
+            px={1.5}
+            sx={{ bgcolor: bg ?? "transparent" }}
+        >
             <Typography variant="body2" fontWeight={bold ? 700 : 400} color={color ?? "text.primary"}>
                 {label}
             </Typography>
-            <Typography variant="body2" fontWeight={bold ? 700 : 400} color={color ?? "text.primary"} minWidth={110} textAlign="right">
+            <Typography
+                variant="body2"
+                fontWeight={bold ? 700 : 400}
+                color={color ?? "text.primary"}
+                minWidth={110}
+                textAlign="right"
+            >
                 {value}
             </Typography>
         </Box>
@@ -142,6 +187,9 @@ const ClaimSummaryStep3 = ({
     stayDays,
     mergeChecked: mergeCheckedProp,
     onMergeChange,
+    hideCompensationTable = false,
+    lastSummaryLine = "excess",
+    disableAccountEdit = false,
 }: ClaimSummaryStep3Props) => {
     // ติ๊ก "โอนค่าชดเชยรวมกับค่ารักษา" : default = โอนรวม (controlled ได้จาก parent)
     const [mergeCheckedInternal, setMergeCheckedInternal] = useState(true);
@@ -161,6 +209,10 @@ const ClaimSummaryStep3 = ({
     const handleAccountField = (field: keyof Step3PayoutAccount, value: string) => {
         setAccountDraft((prev) => ({ ...prev, [field]: value }));
     };
+
+    // ธนาคารต้องเลือกจาก master เพื่อให้ได้ bankId ไปเป็น toBankId ใน payload อนุมัติ
+    const { data: bankListData } = useGetBank();
+    const bankOptions = bankListData?.data ?? [];
     const handleToggleEditAccount = () => {
         if (isEditingAccount) onPayoutAccountChange?.(accountDraft);
         setIsEditingAccount((prev) => !prev);
@@ -193,14 +245,30 @@ const ClaimSummaryStep3 = ({
 
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
-        { name: "amountNet", label: "รายการเบิก", options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) } },
-        { name: "payAmount", label: "สิทธิ์เบิก", options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) } },
-        { name: "unPayAmount", label: "ส่วนเกินสิทธิ์", options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) } },
+        {
+            name: "amountNet",
+            label: "รายการเบิก",
+            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) },
+        },
+        {
+            name: "payAmount",
+            label: "สิทธิ์เบิก",
+            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) },
+        },
+        {
+            name: "unPayAmount",
+            label: "ส่วนเกินสิทธิ์",
+            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) },
+        },
     ];
 
     const compensationColumns: MUIDataTableColumn[] = [
         { name: "description", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
-        { name: "amount", label: "สิทธิ์เบิก", options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) } },
+        {
+            name: "amount",
+            label: "สิทธิ์เบิก",
+            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) },
+        },
     ];
 
     const treatmentData = withTotalRow(treatmentRows, {
@@ -218,7 +286,11 @@ const ClaimSummaryStep3 = ({
     return (
         <Grid container spacing={2.5}>
             <Grid item xs={12}>
-                <HeadingWithColor text="รายการค่ารักษา" color="blue" icon={<LocalHospitalOutlinedIcon sx={{ fontSize: 18 }} />} />
+                <HeadingWithColor
+                    text="รายการค่ารักษา"
+                    color="blue"
+                    icon={<LocalHospitalOutlinedIcon sx={{ fontSize: 18 }} />}
+                />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
                     <StandardDataTable
                         name="HospitalTreatmentSummaryTable"
@@ -236,24 +308,30 @@ const ClaimSummaryStep3 = ({
                 </Paper>
             </Grid>
 
-            <Grid item xs={12}>
-                <HeadingWithColor text="ค่าชดเชย" color="blue" icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 18 }} />} />
-                <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
-                    <StandardDataTable
-                        name="HospitalCompensationTable"
-                        title=""
-                        data={compensationData}
-                        isLoading={false}
-                        columns={compensationColumns}
-                        color="primary"
-                        columnHeaderAlign="center"
-                        displayToolbar={false}
-                        displayFooter={false}
-                        options={tableOptions}
-                        sx={tableSx}
+            {!hideCompensationTable && (
+                <Grid item xs={12}>
+                    <HeadingWithColor
+                        text="ค่าชดเชย"
+                        color="blue"
+                        icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 18 }} />}
                     />
-                </Paper>
-            </Grid>
+                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
+                        <StandardDataTable
+                            name="HospitalCompensationTable"
+                            title=""
+                            data={compensationData}
+                            isLoading={false}
+                            columns={compensationColumns}
+                            color="primary"
+                            columnHeaderAlign="center"
+                            displayToolbar={false}
+                            displayFooter={false}
+                            options={tableOptions}
+                            sx={tableSx}
+                        />
+                    </Paper>
+                </Grid>
+            )}
 
             {stayDays && (
                 <Grid item xs={12}>
@@ -271,7 +349,11 @@ const ClaimSummaryStep3 = ({
             )}
 
             <Grid item xs={12} md={6}>
-                <HeadingWithColor text="สรุปค่าชดเชย" color="blue" icon={<SummarizeOutlinedIcon sx={{ fontSize: 18 }} />} />
+                <HeadingWithColor
+                    text="สรุปค่าชดเชย"
+                    color="blue"
+                    icon={<SummarizeOutlinedIcon sx={{ fontSize: 18 }} />}
+                />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
                     <Box px={1.5} py={0.5} bgcolor="#f8f9fa">
                         <FormControlLabel
@@ -303,36 +385,66 @@ const ClaimSummaryStep3 = ({
             </Grid>
 
             <Grid item xs={12} md={6}>
-                <HeadingWithColor text="สรุปค่าใช้จ่ายโรงพยาบาล" color="blue" icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />} />
+                <HeadingWithColor
+                    text="สรุปค่าใช้จ่ายโรงพยาบาล"
+                    color="blue"
+                    icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />}
+                />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
                     <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
                     <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(calc.medicalCoverPay)} />
                     <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(calc.compensateInclude)} />
-                    <SummaryLine label="สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท" value={fmt(calc.medicalPay)} bold color="#1a5da8" bg="#e8f0fb" />
                     <SummaryLine
-                        label="ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
-                        value={fmt(calc.compensateRemain)}
+                        label="สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท"
+                        value={fmt(calc.medicalPay)}
                         bold
-                        color="#15803d"
-                        bg="#F7FEE7"
-                        noDivider
+                        color="#1a5da8"
+                        bg="#e8f0fb"
                     />
+                    {lastSummaryLine === "compensateRemain" ? (
+                        <SummaryLine
+                            label="ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
+                            value={fmt(calc.compensateRemain)}
+                            bold
+                            color="#15803d"
+                            bg="#F7FEE7"
+                            noDivider
+                        />
+                    ) : (
+                        <SummaryLine
+                            label="ส่วนเกิน (ลูกค้าจ่าย)"
+                            value={fmt(calc.medicalUnpay)}
+                            bold
+                            color="#FF6467"
+                            bg="#FEF2F2"
+                            noDivider
+                        />
+                    )}
                 </Paper>
             </Grid>
 
             {/* บัญชีรับเงินค่าชดเชย — โชว์เฉพาะ PH + IPD */}
             {showPayoutAccount && (
                 <Grid item xs={12}>
-                    <Paper variant="outlined" sx={{ borderRadius: 2, p: 2, borderColor: "#c8e6c9", bgcolor: "#f6fdf8" }}>
+                    <Paper
+                        variant="outlined"
+                        sx={{ borderRadius: 2, p: 2, borderColor: "#c8e6c9", bgcolor: "#f6fdf8" }}
+                    >
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 0.5, flexWrap: "wrap" }}>
                             <AccountBalanceOutlinedIcon sx={{ fontSize: 18, color: "#15803d" }} />
                             <Typography sx={{ fontWeight: 700, color: "#15803d" }}>บัญชีรับเงินค่าชดเชย</Typography>
                             {payoutAccount?.relationLabel && (
-                                <Chip label={payoutAccount.relationLabel} size="small" color="primary" variant="outlined" />
+                                <Chip
+                                    label={payoutAccount.relationLabel}
+                                    size="small"
+                                    color="primary"
+                                    variant="outlined"
+                                />
                             )}
                             <Button
                                 size="small"
                                 variant={isEditingAccount ? "contained" : "outlined"}
+                                disabled={disableAccountEdit}
                                 onClick={handleToggleEditAccount}
                                 sx={{ ml: "auto" }}
                             >
@@ -340,7 +452,8 @@ const ClaimSummaryStep3 = ({
                             </Button>
                         </Box>
                         <Typography variant="caption" color="text.secondary">
-                            ระบบแสดงข้อมูล Default จากข้อมูลผู้ชำระเบี้ย / ข้อมูลบัญชีที่มีอยู่ สามารถแก้ไขเฉพาะรายการนี้ได้
+                            ระบบแสดงข้อมูล Default จากข้อมูลผู้ชำระเบี้ย / ข้อมูลบัญชีที่มีอยู่
+                            สามารถแก้ไขเฉพาะรายการนี้ได้
                         </Typography>
                         <Grid container spacing={2} sx={{ mt: 0.5 }}>
                             <Grid item xs={12} sm={6}>
@@ -366,14 +479,23 @@ const ClaimSummaryStep3 = ({
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
-                                <TextField
+                                <Autocomplete
                                     fullWidth
                                     size="small"
-                                    required
-                                    label="ธนาคาร"
-                                    value={accountDraft.bankName ?? ""}
-                                    onChange={(e) => handleAccountField("bankName", e.target.value)}
-                                    InputProps={{ readOnly: !isEditingAccount }}
+                                    disabled={!isEditingAccount}
+                                    options={bankOptions}
+                                    getOptionLabel={(option) => option.organizeName ?? ""}
+                                    isOptionEqualToValue={(option, value) => option.organizeId === value.organizeId}
+                                    value={bankOptions.find((b) => b.organizeId === accountDraft.bankId) ?? null}
+                                    // เซ็ต bankId กับ bankName พร้อมกัน ป้องกัน toBankId ไม่ตรงกับ toBankName
+                                    onChange={(_event, option) =>
+                                        setAccountDraft((prev) => ({
+                                            ...prev,
+                                            bankId: option?.organizeId,
+                                            bankName: option?.organizeName,
+                                        }))
+                                    }
+                                    renderInput={(params) => <TextField {...params} required label="ธนาคาร" />}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>

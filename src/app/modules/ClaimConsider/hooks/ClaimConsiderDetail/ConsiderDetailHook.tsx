@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import {
+    useGetClaimContinue,
+    useGetClaimDetailConsider,
+    useGetClaimEditDraftRevision,
+    useGetCustomerDetailById,
+} from "../../../../api/coreClaimApi";
 import {
     useGetDecisionReason,
     useGetIncidentType,
@@ -8,14 +13,25 @@ import {
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
-import { claimConsiderSelector, ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, ClaimConsiderValues, resetState, setClaimForm } from "../../store/claimConsiderSlice";
+import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRevisionMappers";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
-import { CoverageType } from "../../../../functionHelpers";
+import { CoverageType, formatDateString } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
+import { ContinuousClaimRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+
+/** รวมวันที่+เวลาที่กรอกแยกกันเป็น dayjs เดียว — วันที่มาจาก date picker เวลามาจาก time picker คนละ field */
+const combineDateTime = (
+    date: dayjs.Dayjs | null | undefined,
+    time: dayjs.Dayjs | null | undefined
+): dayjs.Dayjs | undefined => {
+    if (!date || !time) return undefined;
+    return date.hour(time.hour()).minute(time.minute()).second(0).millisecond(0);
+};
 
 const calculateStayDays = (
     admissionDate: dayjs.Dayjs | null | undefined,
@@ -23,13 +39,12 @@ const calculateStayDays = (
     dischargeDate: dayjs.Dayjs | null | undefined,
     dischargeTime: dayjs.Dayjs | null | undefined
 ): number => {
-    if (!admissionDate || !admissionTime || !dischargeDate || !dischargeTime) {
+    const admission = combineDateTime(admissionDate, admissionTime);
+    const discharge = combineDateTime(dischargeDate, dischargeTime);
+
+    if (!admission || !discharge) {
         return 0;
     }
-
-    const admission = admissionDate.hour(admissionTime.hour()).minute(admissionTime.minute()).second(0).millisecond(0);
-
-    const discharge = dischargeDate.hour(dischargeTime.hour()).minute(dischargeTime.minute()).second(0).millisecond(0);
 
     const diffMinutes = discharge.diff(admission, "minute");
 
@@ -47,18 +62,51 @@ const calculateStayDays = (
     return fullDays + (remainingMinutes >= SIX_HOURS ? 1 : 0);
 };
 
-const useConsiderDetailHook = () => {
-    const { id } = useParams();
+type UseConsiderDetailHookOptions = {
+    /** true เฉพาะ instance ที่เป็นเจ้าของฟอร์มจริง (ClaimDetailsTab) — hook นี้ถูกเรียกอีก 2 จุด
+     * (ConsiderDetailPage, PolicyBenefitHook) ที่สร้าง formik ของตัวเองแยกต่างหาก ไม่ควร overlay ซ้ำ */
+    enableDraftOverlay?: boolean;
+};
+
+const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetailHookOptions = {}) => {
+    const { id, caseId: caseIdEncoded } = useParams();
     const claimId = id ? atob(id) : undefined;
+    // route customers/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
+    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
     const dispatch = useAppDispatch();
-    const { form } = useAppSelector(claimConsiderSelector);
+    const { form, viewingDraft } = useAppSelector(claimConsiderSelector);
+    const draftRevisionId = viewingDraft?.draftRevisionId;
+    const { data: draftRevision } = useGetClaimEditDraftRevision(draftRevisionId);
     const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
-    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "");
+    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
     const detail = detailData?.data;
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detail?.customerId ?? 0
     );
     const customerDetail = customerDetailData?.data;
+
+    /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม) */
+    const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
+    const { data: claimContinueData } = useGetClaimContinue(customerDetail?.policyCode ?? undefined);
+    const continuousClaimRows: ContinuousClaimRow[] = useMemo(
+        () =>
+            (claimContinueData?.data ?? []).map((item) => ({
+                claimNo: item.claimNo ?? "-",
+                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
+                incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                totalClaimAmount: item.totalCaseAmount ?? 0,
+                totalPaidAmount: item.totalPaidAmount ?? 0,
+                admissionDate: formatDateString(item.admissionDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                claimInfo: item.claimDetail ?? "-",
+                diagnosis1: item.icD10Detail ?? "-",
+                remainingLimit: item.remainAmount ?? 0,
+                // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
+                previousCaseNo: "-",
+                previousCaseStatus: "-",
+            })),
+        [claimContinueData]
+    );
+
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const incidentType: ClaimTypeOption[] =
         incidentTypeRaw?.data?.map((item) => ({
@@ -77,13 +125,22 @@ const useConsiderDetailHook = () => {
             if (!values.incidentTypeId) errors.incidentTypeId = req;
             if (!values.coverageTypeId) errors.coverageTypeId = req;
             if (!values.medicalTypeId) errors.medicalTypeId = req;
-            if (!values.notificationDate) errors.notificationDate = req;
-            if (!values.documentCompleteDate) errors.documentCompleteDate = req;
+            if (!values.createdDate) {
+                errors.createdDate = req;
+            } else if (dayjs(values.createdDate).isAfter(today)) {
+                errors.createdDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
+            }
+            if (!values.documentCompleteDate) {
+                errors.documentCompleteDate = req;
+            } else if (dayjs(values.documentCompleteDate).isAfter(today)) {
+                errors.documentCompleteDate = "วันที่เอกสารครบต้องไม่เป็นวันที่อนาคต";
+            }
             if (!values.incidentDate) {
                 errors.incidentDate = "กรุณาระบุวันที่เกิดเหตุ";
             } else if (dayjs(values.incidentDate).isAfter(today)) {
                 errors.incidentDate = "วันที่เกิดเหตุต้องไม่เป็นวันที่อนาคต";
             }
+            if (!values.incidentTime) errors.incidentTime = req;
 
             if (!values.admissionDate) {
                 errors.admissionDate = "กรุณาระบุวันที่เข้าโรงพยาบาล";
@@ -92,6 +149,7 @@ const useConsiderDetailHook = () => {
             } else if (values.incidentDate && dayjs(values.admissionDate).isBefore(values.incidentDate, "day")) {
                 errors.admissionDate = "วันที่เข้าโรงพยาบาลต้องไม่น้อยกว่าวันที่เกิดเหตุ";
             }
+            if (!values.admissionTime) errors.admissionTime = req;
 
             if (!values.dischargeDate) {
                 errors.dischargeDate = "กรุณาระบุวันที่ออกโรงพยาบาล";
@@ -102,6 +160,41 @@ const useConsiderDetailHook = () => {
             } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
             }
+            if (!values.dischargeTime) errors.dischargeTime = req;
+
+            // ── ลำดับเวลาตามหลักความเป็นจริง: เกิดเหตุ ≤ เข้า รพ < ออก รพ ──
+            // เทียบเป็น datetime เดียวกัน (วันที่+เวลารวมกัน) ไม่ใช่เทียบแยกวันกับเวลา เพราะเกิดเหตุกับ
+            // เข้า รพ อาจเป็นวันเดียวกันแต่เวลาเข้า รพ ก่อนเวลาเกิดเหตุก็ได้ ซึ่ง validate ระดับวันด้านบนจับไม่ได้
+            const incidentDateTime = combineDateTime(values.incidentDate, values.incidentTime);
+            const admissionDateTime = combineDateTime(values.admissionDate, values.admissionTime);
+            const dischargeDateTime = combineDateTime(values.dischargeDate, values.dischargeTime);
+
+            // ── ห้ามเลือกเวลาที่ยังไม่ถึง ──
+            // เช็ควันที่ด้านบน (isAfter(today)) เทียบแค่ระดับวัน ไม่พอสำหรับ "วันนี้แต่เวลาในอนาคต"
+            // เช่น ตอนนี้ 10:00 แต่เลือกเวลาที่เกิดเหตุเป็น 23:00 วันนี้ — ผ่าน check วันที่แต่เป็นเวลาที่ยังไม่ถึงจริง
+            const now = dayjs();
+            if (!errors.incidentDate && !errors.incidentTime && incidentDateTime && incidentDateTime.isAfter(now)) {
+                errors.incidentTime = "เวลาที่เกิดเหตุต้องไม่เป็นเวลาในอนาคต";
+            }
+            if (!errors.admissionDate && !errors.admissionTime && admissionDateTime && admissionDateTime.isAfter(now)) {
+                errors.admissionTime = "เวลาที่เข้าโรงพยาบาลต้องไม่เป็นเวลาในอนาคต";
+            }
+            if (!errors.dischargeDate && !errors.dischargeTime && dischargeDateTime && dischargeDateTime.isAfter(now)) {
+                errors.dischargeTime = "เวลาที่ออกโรงพยาบาลต้องไม่เป็นเวลาในอนาคต";
+            }
+
+            // เช็คเฉพาะตอน field วันที่/เวลาที่เกี่ยวข้องยังไม่มี error อื่นอยู่ก่อน กัน error ซ้อนทับกัน
+            if (!errors.admissionDate && !errors.admissionTime && incidentDateTime && admissionDateTime) {
+                if (admissionDateTime.isBefore(incidentDateTime)) {
+                    errors.admissionTime = "เวลาที่เข้าโรงพยาบาลต้องไม่ก่อนเวลาที่เกิดเหตุ";
+                }
+            }
+            if (!errors.dischargeDate && !errors.dischargeTime && admissionDateTime && dischargeDateTime) {
+                if (!dischargeDateTime.isAfter(admissionDateTime)) {
+                    errors.dischargeTime = "เวลาที่ออกโรงพยาบาลต้องหลังเวลาที่เข้าโรงพยาบาล";
+                }
+            }
+
             if (!values.chiefComplaintId) errors.chiefComplaintId = req;
             if (!values.hospitalId) errors.hospitalId = req;
             if (!values.diagnoses[0]?.icd10Id) {
@@ -115,6 +208,28 @@ const useConsiderDetailHook = () => {
         },
         onSubmit: () => {},
     });
+
+    /** เปิด/ปิด Modal เลือกเคลมต่อเนื่อง ตามการติ๊ก Checkbox */
+    const handleToggleContinuousClaim = (checked: boolean) => {
+        formik.setFieldValue("isContinuousClaim", checked);
+
+        if (checked) {
+            setContinuousClaimOpen(true);
+            return;
+        }
+
+        formik.setFieldValue("continuousClaim", undefined);
+    };
+
+    const handleSelectContinuousClaim = (row: ContinuousClaimRow) => {
+        formik.setFieldValue("continuousClaim", row);
+        setContinuousClaimOpen(false);
+    };
+
+    const handleClearContinuousClaim = () => {
+        formik.setFieldValue("continuousClaim", undefined);
+        formik.setFieldValue("isContinuousClaim", false);
+    };
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
@@ -165,6 +280,22 @@ const useConsiderDetailHook = () => {
     const hasSyncedMainRef = useRef(false);
     const prevIncidentTypeIdRef = useRef(formik.values.incidentTypeId);
     const prevCoverageTypeIdRef = useRef(formik.values.coverageTypeId);
+
+    // ---- เปลี่ยนเคลม (claimId เปลี่ยน) : ล้างสถานะของเคลมก่อนหน้าทิ้งทั้งหมด ----
+    // ClaimDetailsTab ไม่ถูก unmount ตอนสลับไปดูอีกเคลม (คนละ path param บน route เดียวกัน) จึง
+    // ต้องเคลียร์เองที่นี่ ไม่งั้น filledItems ใน Redux ค้างจากเคลมก่อนหน้า ทำให้ effect เติม
+    // "รายการค่ารักษา(เบื้องต้น)" ใน ClaimExpenseDetailHook เห็น items.length > 0 อยู่แล้วและข้ามการโหลด
+    // รายการของเคลมใหม่ไปเลย — และ hasSyncedMainRef ที่เป็น true ค้างจะทำให้ formik ไม่ sync ค่าจาก detail ใหม่ด้วย
+    const prevClaimIdRef = useRef(claimId);
+    useEffect(() => {
+        if (prevClaimIdRef.current === claimId) return;
+        prevClaimIdRef.current = claimId;
+        dispatch(resetState());
+        hasSyncedMainRef.current = false;
+        prevIncidentTypeIdRef.current = undefined;
+        prevCoverageTypeIdRef.current = undefined;
+        formik.resetForm();
+    }, [claimId]);
 
     // ---- phase 1: sync initial values from detail (ใช้ setValues ครั้งเดียว) ----
     useEffect(() => {
@@ -231,20 +362,23 @@ const useConsiderDetailHook = () => {
         }
 
         // ---- วันที่และข้อมูลอื่นๆ ----
+        // เวลาต้องอ่านจาก field .xTime (TimeSpan) โดยเฉพาะ ไม่ใช่ derive จาก .xDate เพราะ field วันที่กับ
+        // เวลาแยกกันจาก backend — .xDate อาจไม่มีเวลาจริงติดมาด้วย (fallback ไป .xDate ไว้เผื่อ backend เก่าที่
+        // ยังไม่ส่ง .xTime มา)
         if (detail.admissionDate) {
             newValues.admissionDate = dayjs(detail.admissionDate);
-            newValues.admissionTime = dayjs(detail.admissionDate);
+            newValues.admissionTime = parseTimeSpan(detail.admissionTime) ?? dayjs(detail.admissionDate);
         }
         if (detail.incidentDate) {
             newValues.incidentDate = dayjs(detail.incidentDate);
-            newValues.incidentTime = dayjs(detail.incidentDate);
+            newValues.incidentTime = parseTimeSpan(detail.incidentTime) ?? dayjs(detail.incidentDate);
         }
         if (detail.dischargeDate) {
             newValues.dischargeDate = dayjs(detail.dischargeDate);
-            newValues.dischargeTime = dayjs(detail.dischargeDate);
+            newValues.dischargeTime = parseTimeSpan(detail.dischargeTime) ?? dayjs(detail.dischargeDate);
         }
-        if (detail.notificationDate) {
-            newValues.notificationDate = dayjs(detail.notificationDate);
+        if (detail.createdDate) {
+            newValues.createdDate = dayjs(detail.createdDate);
         }
         if (detail.documentCompleteDate) {
             newValues.documentCompleteDate = dayjs(detail.documentCompleteDate);
@@ -263,6 +397,39 @@ const useConsiderDetailHook = () => {
         hasSyncedMainRef.current = true;
         dispatch(setEnabled(true));
     }, [detail, incidentType, coverageType, incidentTypeMapping]);
+
+    // ---- phase 1.5 : ทับค่าจาก "บันทึกแบบร่าง" ที่ผู้ใช้กดดูจากแท็บประวัติการทำรายการ ----
+    // ต้องประกาศหลัง phase 1 เสมอ (effect รันตามลำดับที่ประกาศภายใน commit เดียวกัน) และ deps คร่อม
+    // deps ของ phase 1 ไว้ เพื่อให้รันซ้ำได้ทั้ง 2 ทาง ไม่ว่า phase 1 จะเสร็จก่อนหรือ draft response จะมาก่อน
+    const appliedDraftRevisionIdRef = useRef<string | null>(null);
+    useEffect(() => {
+        if (!enableDraftOverlay || !draftRevisionId) return;
+        if (appliedDraftRevisionIdRef.current === draftRevisionId) return;
+        if (!hasSyncedMainRef.current) return; // phase 1 ต้องลงก่อน ไม่งั้นถูกทับกลับ
+        const payload = draftRevision?.data?.payload;
+        if (!payload || !incidentTypeMapping?.data) return;
+
+        const draftValues = mapDraftPayloadToFormValues({
+            payload,
+            incidentType,
+            coverageType,
+            mappingData: incidentTypeMapping.data,
+        });
+
+        // ต้องอัปเดต 2 ref นี้ก่อน setValues ไม่งั้น cascade-reset effect ด้านล่างจะเห็นว่า incident/coverage
+        // เปลี่ยนแล้วล้าง coverage/medical ของแบบร่างทิ้งใน commit ถัดไป
+        if (draftValues.incidentTypeId !== undefined) prevIncidentTypeIdRef.current = draftValues.incidentTypeId;
+        if (draftValues.coverageTypeId !== undefined) prevCoverageTypeIdRef.current = draftValues.coverageTypeId;
+
+        formik.setValues((prev) => ({ ...prev, ...draftValues }), false);
+        appliedDraftRevisionIdRef.current = draftRevisionId;
+
+        // ให้ ClaimExpenseDetailHook ยิง master list ด้วย coverage/medical ของแบบร่าง (hook นั้นอ่าน
+        // Redux form ก่อนแล้วค่อย fallback ไป detail)
+        dispatch(
+            setClaimForm({ coverageTypeId: draftValues.coverageTypeId, medicalTypeId: draftValues.medicalTypeId })
+        );
+    }, [enableDraftOverlay, draftRevisionId, draftRevision, incidentType, coverageType, incidentTypeMapping, detail]);
 
     // ---- cascade reset: จัดการเมื่อ incidentTypeId หรือ coverageTypeId เปลี่ยน ----
     useEffect(() => {
@@ -350,6 +517,12 @@ const useConsiderDetailHook = () => {
         decisionReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
+        continuousClaimRows,
+        continuousClaimOpen,
+        setContinuousClaimOpen,
+        handleToggleContinuousClaim,
+        handleSelectContinuousClaim,
+        handleClearContinuousClaim,
     };
 };
 

@@ -18,12 +18,12 @@ const ConsiderCustomerHeader = ({ dashboardData, dashboardDataLoading }: Conside
                         sx={{
                             border: "1px solid #E0E0E0",
                             borderRadius: "16px",
-                            padding: "16px 20px",
+                            padding: { xs: "10px 12px", sm: "16px 20px" },
                             height: "100%",
                         }}
                     >
                         {dashboardDataLoading ? (
-                            <Skeleton variant="rounded" height={120} />
+                            <Skeleton variant="rounded" sx={{ height: { xs: 76, sm: 120 } }} />
                         ) : (
                             <ConsiderCustomerHeaderCard
                                 totalCustomerCount={summary?.customerTotalCount}
@@ -41,12 +41,12 @@ const ConsiderCustomerHeader = ({ dashboardData, dashboardDataLoading }: Conside
                         sx={{
                             border: "1px solid #E0E0E0",
                             borderRadius: "16px",
-                            padding: "16px 20px",
+                            padding: { xs: "10px 12px", sm: "16px 20px" },
                             height: "100%",
                         }}
                     >
                         {dashboardDataLoading ? (
-                            <Skeleton variant="rounded" height={120} />
+                            <Skeleton variant="rounded" sx={{ height: { xs: 76, sm: 120 } }} />
                         ) : (
                             <ConsiderHospitalHeaderCard
                                 totalHospitalClaimCount={summary?.hospitalTotalCount}

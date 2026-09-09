@@ -83,3 +83,84 @@ export const applyMaximumLimit = ({
         maximumLimit,
     };
 };
+
+export interface ClaimExpenseAmountLike extends ExpenseAmountLike {
+    receiptAmount?: number;
+}
+
+export interface ClaimExpenseTotals {
+    totalReceipt: number;
+    totalClaim: number;
+    totalDiscount: number;
+    totalNotCovered: number;
+}
+
+/** รวมยอดของรายการค่ารักษาทั้งหมด — ใช้ร่วมกันทั้งฝั่งแสดงผล (ExpenseRecords) และฝั่งบล็อกปุ่ม "ถัดไป" (ClaimStepCalculateHook) เพื่อไม่ให้สูตรรวมยอดเพี้ยนกันคนละที่ */
+export const sumClaimExpenseItems = (items: ClaimExpenseAmountLike[]): ClaimExpenseTotals => ({
+    totalReceipt: items.reduce((sum, item) => sum + (item.receiptAmount || 0), 0),
+    totalClaim: items.reduce((sum, item) => sum + (item.claimAmount || 0), 0),
+    totalDiscount: items.reduce((sum, item) => sum + (item.discount || 0), 0),
+    totalNotCovered: items.reduce((sum, item) => sum + (item.notCovered || 0), 0),
+});
+
+export type ClaimAmountReconciliationStatus = "ok" | "warningExgratia" | "warningDeficit" | "error";
+
+export interface ClaimAmountReconciliationResult {
+    status: ClaimAmountReconciliationStatus;
+    message: string;
+}
+
+export interface ClaimAmountReconciliationInput extends ClaimExpenseTotals {
+    /** ยอดที่จ่ายจริง — มาจาก detail.paymentAmount (ตัวเดียวกับการ์ด "สรุปรายการแจ้งโอน") */
+    paymentAmount: number;
+}
+
+const fmtBaht = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/**
+ * ตรวจสอบยอดเงิน ClaimLine ตาม spec "Validate การตรวจสอบยอดเงิน ClaimLine" —
+ * เทียบ (ยอดที่จ่าย + ยอดไม่คุ้มครอง) กับ (ใบเสร็จ - ส่วนลด) และเทียบยอดที่จ่ายกับสิทธิ์เบิก
+ *
+ * ลำดับการเช็คสำคัญ : ต้องเช็ค "เกินใบเสร็จ" (error) ก่อน "เกินสิทธิ์เบิก" (warning) เพราะเคสที่ยอดรวม
+ * เกินใบเสร็จไปแล้วถือเป็นข้อมูลผิดที่ร้ายแรงกว่า ไม่ว่าจะเกินสิทธิ์เบิกด้วยหรือไม่ก็ตาม
+ */
+export const getClaimAmountReconciliation = ({
+    totalReceipt,
+    totalClaim,
+    totalDiscount,
+    totalNotCovered,
+    paymentAmount,
+}: ClaimAmountReconciliationInput): ClaimAmountReconciliationResult => {
+    const netReceipt = Math.round((totalReceipt - totalDiscount) * 100) / 100;
+    const accounted = Math.round((paymentAmount + totalNotCovered) * 100) / 100;
+    const diff = Math.round((accounted - netReceipt) * 100) / 100;
+
+    if (diff > 0) {
+        return {
+            status: "error",
+            message: `ยอดที่จ่ายรวมยอดไม่คุ้มครอง (${fmtBaht(accounted)} บาท) มากกว่าใบเสร็จสุทธิ (${fmtBaht(
+                netReceipt
+            )} บาท) อยู่ ${fmtBaht(diff)} บาท กรุณาตรวจสอบยอดเงิน`,
+        };
+    }
+
+    if (paymentAmount > totalClaim) {
+        return {
+            status: "warningExgratia",
+            message: `ยอดที่จ่าย (${fmtBaht(paymentAmount)} บาท) มากกว่าสิทธิ์เบิก (${fmtBaht(
+                totalClaim
+            )} บาท) อยู่ ${fmtBaht(paymentAmount - totalClaim)} บาท ต้องยืนยัน Exgratia/NPL`,
+        };
+    }
+
+    if (diff < 0) {
+        return {
+            status: "warningDeficit",
+            message: `ยังมีส่วนต่าง ${fmtBaht(
+                Math.abs(diff)
+            )} บาทที่ไม่มีเหตุผลรองรับ กรุณาตรวจสอบยอดที่จ่าย/ยอดไม่คุ้มครองให้ครบตามใบเสร็จ`,
+        };
+    }
+
+    return { status: "ok", message: "ยอดเงินครบถ้วนตรงตามใบเสร็จ" };
+};

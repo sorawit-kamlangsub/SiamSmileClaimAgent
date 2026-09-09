@@ -5,7 +5,11 @@ import FormikAutocompleteApi from "../../CustomFormik/FormikAutocompleteApi";
 type CD10AutocompleteProps = Omit<
     FormikAutocompleteProps,
     "data" | "isLoading" | "valueFieldName" | "label" | "displayFieldName" | "filterSelectedOptions"
->;
+> & {
+    /** loading จากภายนอก (เช่น รอ prefill icD10Id จากเคลมตั้งต้น) — แสดง progress + disable ช่อง */
+    loading?: boolean;
+    disabled?: boolean;
+};
 
 const CD10Autocomplete = ({ formik, ...props }: CD10AutocompleteProps) => {
     return (

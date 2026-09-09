@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Typography, Chip, Stack } from "@mui/material";
+import { Box, Typography, Chip, Stack, Tooltip } from "@mui/material";
 
 export interface PaymentSummaryCardProps {
     icon: React.ReactNode;
@@ -23,6 +23,8 @@ export interface PaymentSummaryCardProps {
      * ถ้าไม่ใส่ prop นี้ = กดได้เสมอ (ตราบใดที่มี badgeHref หรือ onBadgeClick)
      */
     badgeClickable?: boolean;
+    /** ขนาด badge — "small" (ค่าเริ่มต้น เหมือนเดิม) หรือ "medium" (ใหญ่ขึ้น เผื่อ badge ที่ต้องเน้น) */
+    badgeSize?: "small" | "medium";
 }
 export function PaymentSummaryCard({
     icon,
@@ -39,6 +41,7 @@ export function PaymentSummaryCard({
     badgeOpenInNewTab = true,
     onBadgeClick,
     badgeClickable = true,
+    badgeSize = "small",
 }: PaymentSummaryCardProps) {
     const formattedAmount =
         typeof amount === "number"
@@ -110,19 +113,24 @@ export function PaymentSummaryCard({
                         {title}
                     </Typography>
                     {subtitle && (
-                        <Typography
-                            variant="caption"
-                            sx={{
-                                color: "text.secondary",
-                                lineHeight: 1.6,
-                                display: "-webkit-box",
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: "vertical",
-                                overflow: "hidden",
-                            }}
-                        >
-                            {subtitle}
-                        </Typography>
+                        // Tooltip: subtitle ถูก clamp ไว้ 2 บรรทัดกันการ์ดสูงเกินเมื่อข้อความยาว (เช่น
+                        // ชื่อสิทธิ์เบิกหลายรายการต่อกันด้วย ", ") — ต้อง hover เพื่อดูข้อความเต็มที่ถูกตัด
+                        <Tooltip title={subtitle} arrow placement="bottom-start">
+                            <Typography
+                                variant="caption"
+                                sx={{
+                                    color: "text.secondary",
+                                    lineHeight: 1.6,
+                                    display: "-webkit-box",
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: "vertical",
+                                    overflow: "hidden",
+                                    cursor: "default",
+                                }}
+                            >
+                                {subtitle}
+                            </Typography>
+                        </Tooltip>
                     )}
                 </Box>
             </Stack>
@@ -157,7 +165,7 @@ export function PaymentSummaryCard({
                         return (
                             <Chip
                                 label={badge}
-                                size="small"
+                                size={badgeSize}
                                 clickable={isInteractive}
                                 onClick={isInteractive ? onBadgeClick : undefined}
                                 {...(isInteractive && badgeHref
@@ -173,7 +181,7 @@ export function PaymentSummaryCard({
                                     color: badgeColor,
                                     border: `1px solid ${badgeColor}55`,
                                     fontWeight: 600,
-                                    fontSize: "0.7rem",
+                                    fontSize: badgeSize === "medium" ? "0.85rem" : "0.7rem",
                                     cursor: isInteractive ? "pointer" : "default",
                                     opacity: isInteractive ? 1 : 0.6,
                                     pointerEvents: isInteractive ? "auto" : "none",
