@@ -40,7 +40,6 @@ import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetai
 import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
 import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
-import ContinuousClaimSection from "./SubDetailsTab/ContinuousClaimSection";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
@@ -348,16 +347,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 </Grid>
                             )}
                             <Grid item xs={12} sx={readOnlySx}>
-                                <ContinuousClaimSection
-                                    rows={continuousClaimRows}
-                                    open={continuousClaimOpen}
-                                    onOpenChange={setContinuousClaimOpen}
-                                    onToggle={handleToggleContinuousClaim}
-                                    onSelect={handleSelectContinuousClaim}
-                                    onClear={handleClearContinuousClaim}
-                                />
-                            </Grid>
-                            <Grid item xs={12} sx={readOnlySx}>
                                 <RecordClaimData
                                     incidentType={incidentType}
                                     incidentTypeLoading={incidentTypeLoading}
@@ -365,6 +354,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     causeOfIncident={causeOfIncident}
                                     medicalType={medicalType}
                                     incidentTypeMappingLoading={incidentTypeMappingLoading}
+                                    continuousClaimRows={continuousClaimRows}
+                                    continuousClaimOpen={continuousClaimOpen}
+                                    onContinuousClaimOpenChange={setContinuousClaimOpen}
+                                    onContinuousClaimToggle={handleToggleContinuousClaim}
+                                    onContinuousClaimSelect={handleSelectContinuousClaim}
+                                    onContinuousClaimClear={handleClearContinuousClaim}
                                 />
                             </Grid>
                             <Grid item xs={12} sx={readOnlySx}>

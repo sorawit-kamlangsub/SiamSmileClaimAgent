@@ -2,6 +2,7 @@ import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import dayjs, { Dayjs } from "dayjs";
 import { RootState } from "../../../../redux";
 import { CalculateCaseClaimDtoResponse } from "../../../api/coreClaimApi.client";
+import { ContinuousClaimRow } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
 export interface DiagnosisModel {
     icd10Id?: number;
@@ -69,6 +70,9 @@ export interface ClaimConsiderValues {
     createdDate: Dayjs | undefined; //วันที่แจ้ง
     // deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     // deathTime: Dayjs | undefined;
+    /** เคลมต่อเนื่อง */
+    isContinuousClaim: boolean;
+    continuousClaim: ContinuousClaimRow | undefined;
     ipdDays: number;
     icuDays: number;
     totalDays: number;
@@ -123,6 +127,8 @@ const defaultForm: ClaimConsiderValues = {
     dischargeTime: undefined,
     // deathDate: undefined,
     // deathTime: undefined,
+    isContinuousClaim: false,
+    continuousClaim: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,

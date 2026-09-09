@@ -27,18 +27,21 @@ type ContinuousClaimBannerProps = {
     currentCaseNo: string;
     /** สถานะของเคสปัจจุบัน */
     currentCaseStatus?: string;
+    /** หัวข้อแถบ — ต่างกันตามหน้าที่เรียกใช้ (เคลมโรงพยาบาล / เคลมลูกค้า) */
+    title?: string;
 };
 
 /**
  * แถบสรุป "พิจารณาเคลมต่อเนื่อง" ที่แสดงเมื่อเคสนี้ถูกระบุว่าเป็นเคลมต่อเนื่อง
  *
- * ใช้ได้กับเคลมโรงพยาบาลทุกประเภทรายการ (OPD Half / OPD Full)
+ * ใช้ร่วมกันทั้งหน้าพิจารณาเคลมโรงพยาบาลและเคลมลูกค้า
  * เพื่อให้ผู้พิจารณาเห็นเคลมเดิม การวินิจฉัย และวงเงินคงเหลือก่อนพิจารณาเคสปัจจุบัน
  */
 const ContinuousClaimBanner = ({
     claim,
     currentCaseNo,
     currentCaseStatus = "กำลังพิจารณา",
+    title = "พิจารณาเคลมต่อเนื่อง - เคลมโรงพยาบาล",
 }: ContinuousClaimBannerProps) => {
     const [expanded, setExpanded] = useState(true);
 
@@ -79,7 +82,7 @@ const ContinuousClaimBanner = ({
 
                 <Box sx={{ flex: 1, minWidth: 240, lineHeight: 1.4 }}>
                     <Typography fontWeight={700} fontSize={18} color="#7A4A00">
-                        พิจารณาเคลมต่อเนื่อง - เคลมโรงพยาบาล
+                        {title}
                     </Typography>
                     <Typography fontSize={13} color="#8A6A3A">
                         ตรวจสอบเคลมเดิม ประวัติการรักษา และวงเงินคงเหลือก่อนพิจารณาเคสปัจจุบัน
@@ -184,7 +187,7 @@ const ContinuousClaimBanner = ({
                         </Typography>
                         <Chip
                             size="small"
-                            label="Hospital Claim"
+                            label="ติดตามอาการต่อเนื่อง"
                             variant="outlined"
                             sx={{ borderColor: ORANGE_BORDER, color: "#7A4A00", bgcolor: "#fff" }}
                         />

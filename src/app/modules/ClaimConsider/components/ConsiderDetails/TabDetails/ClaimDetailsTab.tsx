@@ -7,6 +7,7 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
 import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
+import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
 import {
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -67,6 +68,12 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         decisionReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
+        continuousClaimRows,
+        continuousClaimOpen,
+        setContinuousClaimOpen,
+        handleToggleContinuousClaim,
+        handleSelectContinuousClaim,
+        handleClearContinuousClaim,
     } = considerDetail;
     const { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving } = useClaimDetailActionHook({
         ...considerDetail,
@@ -86,6 +93,8 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             );
         },
     });
+    const continuousClaim = formik.values.continuousClaim;
+
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
     const { activeStep, setActiveStep, furthestStep, isLastStep, isCalculating, handleNext, handleBack } =
         useClaimStepCalculateHook({
@@ -111,6 +120,16 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                         {activeStep === 0 && (
                             <div>
                                 <Grid container spacing={2}>
+                                    {continuousClaim && (
+                                        <Grid item xs={12}>
+                                            <ContinuousClaimBanner
+                                                claim={continuousClaim}
+                                                currentCaseNo={detail?.caseNo ?? ""}
+                                                currentCaseStatus={detail?.claimStatusName ?? undefined}
+                                                title="พิจารณาเคลมต่อเนื่อง - เคลมลูกค้า"
+                                            />
+                                        </Grid>
+                                    )}
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
                                         <RecordClaimData
                                             incidentType={incidentType}
@@ -119,6 +138,12 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             causeOfIncident={[]}
                                             medicalType={medicalType}
                                             incidentTypeMappingLoading={incidentTypeMappingLoading}
+                                            continuousClaimRows={continuousClaimRows}
+                                            continuousClaimOpen={continuousClaimOpen}
+                                            onContinuousClaimOpenChange={setContinuousClaimOpen}
+                                            onContinuousClaimToggle={handleToggleContinuousClaim}
+                                            onContinuousClaimSelect={handleSelectContinuousClaim}
+                                            onContinuousClaimClear={handleClearContinuousClaim}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
