@@ -66,6 +66,20 @@ in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetInsuranceCompany`.
 | `useGetDocumentFileByDocumentId(documentId?)` | GET `/document/{documentId}/documentFile` — real file list for one document (called when the document-detail modal opens) |
 | `useCreateDocumentToDocStorage` **(mutation)** | Upload a document |
 
+## `hospitalBillingApi.ts` — Hospital Billing (`API_URL`), client = `HospitalBillingClient`
+
+`วางบิลเคลม > เคลมโรงพยาบาล` — real backend, GET/POST only, route + envelope unchanged since the
+2026-09-08 backend restructure (immutable review snapshot per billing round; `expectedVersion` /
+`rowVersion` are the only fields that decide `409 Conflict`). See
+[modules/BillingClaim.md](modules/BillingClaim.md) for the full module writeup.
+
+| Hook | Purpose |
+|---|---|
+| `useGetHospitalBillingFilter(statusId, searchBy, searchDetail, orderingField, ascendingOrder, page, recordsPerPage)` | GET `/billing/hospital/filter` — list + dashboard counts. `statusId=3` (ผ่าน) is rejected with 400; only 1/2/4/5 are valid |
+| `useGetHospitalBillingDetail(billingDetailId)` | GET `/billing/hospital/{billingDetailId}` — working-copy source before edit/submit |
+| `useGetHospitalBillingHistory(billingDetailId)` | GET `/billing/hospital/{billingDetailId}/history` — `rounds` (all rounds of the case) + `revisions` (this round's review history) |
+| `useSubmitHospitalBilling` **(mutation)** | POST `/billing/hospital/{billingDetailId}/submit` — idempotent via caller-supplied `requestId`; invalidates filter/detail/history on success |
+
 ## `claimFundApi.ts` — Claim Fund / Transfer service (raw axios, no NSwag client, `${API_CLAIM_FUND_URL}/api`)
 
 | Export | Purpose |
@@ -86,7 +100,7 @@ Plain async functions (no React Query hooks): `uploadIDCard`, `uploadReceipt`,
 
 ## Still no API for
 
-- **Billing rows** (`วางบิลเคลม`) — no `Billing`/`Invoice`/`PlaceBill` endpoint anywhere in the
-  generated clients. The only trace is the `hospitalRequestBillingCount` dashboard counter field.
-  `BillingClaim` module runs entirely on local mock data — see
-  [modules/BillingClaim.md](modules/BillingClaim.md).
+- **Customer billing** (`วางบิลเคลม > เคลมลูกค้า`) — out of scope per the original hospital-billing
+  handoff; `BillingCustomerPage.tsx` is a placeholder ("อยู่ระหว่างพัฒนา"), no endpoint exists.
+  `เคลมโรงพยาบาล` (the other half of `วางบิลเคลม`) is wired to a real backend — see
+  `hospitalBillingApi.ts` above and [modules/BillingClaim.md](modules/BillingClaim.md).

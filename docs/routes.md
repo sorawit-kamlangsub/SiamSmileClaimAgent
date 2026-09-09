@@ -32,8 +32,9 @@ Plus `src/App.tsx` itself: `AuthRoutes` (callbacks, `/unauthorized`), `/` → `H
 
 `:id` params across `ClaimConsider`/`BillingClaim` detail routes are `btoa(...)`-encoded on
 navigate and `atob(...)`-decoded via `useParams()` in the hook — `ClaimConsider` encodes
-`claimId`; `BillingClaim` encodes `caseId` (a billing can have multiple cases, so the id must be
-case-level, not billing-level, to unambiguously identify which case is being reviewed).
+`claimId`; `BillingClaim` encodes `billingDetailId` (**not** `caseId` — a case can have multiple
+billing rounds over time, so the id must be round-level to unambiguously identify which round is
+being reviewed).
 
 ### Known quirk — don't repeat it
 

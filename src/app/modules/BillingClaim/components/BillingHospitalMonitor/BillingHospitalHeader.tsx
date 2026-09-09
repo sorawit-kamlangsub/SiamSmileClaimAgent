@@ -5,7 +5,7 @@ import EditNoteIcon from "@mui/icons-material/EditNote";
 import BlockIcon from "@mui/icons-material/Block";
 import CancelIcon from "@mui/icons-material/Cancel";
 import SummaryHeaderCard from "../../../ClaimConsider/components/_common/SummaryHeaderCard";
-import { BILLING_STATUS } from "../../store/billingClaim.types";
+import { BILLING_STATUS, BILLING_STATUS_LABEL } from "../../store/billingClaim.types";
 
 const BLUE = "#1565C0";
 const BLUE_LIGHT_BG = "#E3F2FD";
@@ -45,22 +45,22 @@ const BillingHospitalHeader = ({ counts, isLoading = false }: BillingHospitalHea
                     stats={[
                         {
                             icon: <PendingActionsIcon sx={{ color: BLUE, fontSize: 26 }} />,
-                            label: "รอตรวจสอบ",
+                            label: BILLING_STATUS_LABEL[BILLING_STATUS.pendingReview],
                             value: countOf(BILLING_STATUS.pendingReview),
                         },
                         {
                             icon: <EditNoteIcon sx={{ color: BLUE, fontSize: 26 }} />,
-                            label: "รอแก้ไข",
+                            label: BILLING_STATUS_LABEL[BILLING_STATUS.needsCorrection],
                             value: countOf(BILLING_STATUS.needsCorrection),
                         },
                         {
                             icon: <BlockIcon sx={{ color: BLUE, fontSize: 26 }} />,
-                            label: "ไม่ผ่าน",
+                            label: BILLING_STATUS_LABEL[BILLING_STATUS.rejected],
                             value: countOf(BILLING_STATUS.rejected),
                         },
                         {
                             icon: <CancelIcon sx={{ color: BLUE, fontSize: 26 }} />,
-                            label: "ยกเลิก",
+                            label: BILLING_STATUS_LABEL[BILLING_STATUS.cancelled],
                             value: countOf(BILLING_STATUS.cancelled),
                         },
                     ]}

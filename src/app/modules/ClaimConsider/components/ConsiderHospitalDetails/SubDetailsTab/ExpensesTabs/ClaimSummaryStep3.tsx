@@ -82,6 +82,19 @@ type ClaimSummaryStep3Props = {
     /** ยกสถานะ checkbox "โอนค่าชดเชยรวมกับค่ารักษา" ให้ parent คุม (optional) */
     mergeChecked?: boolean;
     onMergeChange?: (checked: boolean) => void;
+    /**
+     * ซ่อนตาราง "ค่าชดเชย" (compensationRows) — ใช้เมื่อหน้าเรียกไม่มีรายการค่าชดเชยแยกต่อบรรทัดให้แสดง
+     * (เช่นหน้าวางบิลเคลมโรงพยาบาล ที่สเปคมีแค่สรุปค่าชดเชยรวม ไม่มีตารางย่อย) default false = พฤติกรรมเดิม
+     */
+    hideCompensationTable?: boolean;
+    /**
+     * บรรทัดสุดท้ายของการ์ด "สรุปค่าใช้จ่ายโรงพยาบาล" — default "excess" = พฤติกรรมเดิม
+     * ("ส่วนเกิน (ลูกค้าจ่าย)" = medicalUnpay) ส่วน "compensateRemain" = "ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
+     * ตามสเปคหน้าวางบิลเคลมโรงพยาบาล
+     */
+    lastSummaryLine?: "excess" | "compensateRemain";
+    /** ปิดปุ่ม "แก้ไขบัญชี" ของ "บัญชีรับเงินค่าชดเชย" — default false = พฤติกรรมเดิม */
+    disableAccountEdit?: boolean;
 };
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
@@ -174,6 +187,9 @@ const ClaimSummaryStep3 = ({
     stayDays,
     mergeChecked: mergeCheckedProp,
     onMergeChange,
+    hideCompensationTable = false,
+    lastSummaryLine = "excess",
+    disableAccountEdit = false,
 }: ClaimSummaryStep3Props) => {
     // ติ๊ก "โอนค่าชดเชยรวมกับค่ารักษา" : default = โอนรวม (controlled ได้จาก parent)
     const [mergeCheckedInternal, setMergeCheckedInternal] = useState(true);
@@ -292,28 +308,30 @@ const ClaimSummaryStep3 = ({
                 </Paper>
             </Grid>
 
-            <Grid item xs={12}>
-                <HeadingWithColor
-                    text="ค่าชดเชย"
-                    color="blue"
-                    icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 18 }} />}
-                />
-                <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
-                    <StandardDataTable
-                        name="HospitalCompensationTable"
-                        title=""
-                        data={compensationData}
-                        isLoading={false}
-                        columns={compensationColumns}
-                        color="primary"
-                        columnHeaderAlign="center"
-                        displayToolbar={false}
-                        displayFooter={false}
-                        options={tableOptions}
-                        sx={tableSx}
+            {!hideCompensationTable && (
+                <Grid item xs={12}>
+                    <HeadingWithColor
+                        text="ค่าชดเชย"
+                        color="blue"
+                        icon={<MonetizationOnOutlinedIcon sx={{ fontSize: 18 }} />}
                     />
-                </Paper>
-            </Grid>
+                    <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
+                        <StandardDataTable
+                            name="HospitalCompensationTable"
+                            title=""
+                            data={compensationData}
+                            isLoading={false}
+                            columns={compensationColumns}
+                            color="primary"
+                            columnHeaderAlign="center"
+                            displayToolbar={false}
+                            displayFooter={false}
+                            options={tableOptions}
+                            sx={tableSx}
+                        />
+                    </Paper>
+                </Grid>
+            )}
 
             {stayDays && (
                 <Grid item xs={12}>
@@ -383,14 +401,25 @@ const ClaimSummaryStep3 = ({
                         color="#1a5da8"
                         bg="#e8f0fb"
                     />
-                    <SummaryLine
-                        label="ส่วนเกิน (ลูกค้าจ่าย)"
-                        value={fmt(calc.medicalUnpay)}
-                        bold
-                        color="#FF6467"
-                        bg="#FEF2F2"
-                        noDivider
-                    />
+                    {lastSummaryLine === "compensateRemain" ? (
+                        <SummaryLine
+                            label="ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)"
+                            value={fmt(calc.compensateRemain)}
+                            bold
+                            color="#15803d"
+                            bg="#F7FEE7"
+                            noDivider
+                        />
+                    ) : (
+                        <SummaryLine
+                            label="ส่วนเกิน (ลูกค้าจ่าย)"
+                            value={fmt(calc.medicalUnpay)}
+                            bold
+                            color="#FF6467"
+                            bg="#FEF2F2"
+                            noDivider
+                        />
+                    )}
                 </Paper>
             </Grid>
 
@@ -415,6 +444,7 @@ const ClaimSummaryStep3 = ({
                             <Button
                                 size="small"
                                 variant={isEditingAccount ? "contained" : "outlined"}
+                                disabled={disableAccountEdit}
                                 onClick={handleToggleEditAccount}
                                 sx={{ ml: "auto" }}
                             >

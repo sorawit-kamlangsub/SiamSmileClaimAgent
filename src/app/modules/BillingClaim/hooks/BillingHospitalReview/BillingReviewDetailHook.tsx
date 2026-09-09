@@ -1,16 +1,22 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useFormik } from "formik";
-import { Dayjs } from "dayjs";
 import {
     useGetHospitalBillingDetail,
     useSubmitHospitalBilling,
     normalizeSubmitError,
 } from "../../../../api/hospitalBillingApi";
+import { useGetDecisionReason } from "../../../../api/coreClaimMastersApi";
 import { SubmitHospitalBillingDto } from "../../../../api/coreClaimApi.client";
-import { swalError, swalSuccess, swalWarning } from "../../../_common";
-import { toFormValues, toReviewDataDto } from "../../store/billingMappers";
-import { BILLING_STATUS, BillingReviewFormValues } from "../../store/billingClaim.types";
+import { swalConfirm, swalError, swalSuccess, swalToast, swalWarning } from "../../../_common";
+import { round2, toFormValues, toReviewDataDto } from "../../store/billingMappers";
+import {
+    BILLING_DECISION_ID,
+    BILLING_STATUS,
+    BillingReviewFormValues,
+    BillingStatusId,
+} from "../../store/billingClaim.types";
+import useBillingDocumentHook from "./BillingDocumentHook";
 
 const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     incidentTypeId: undefined,
@@ -47,13 +53,17 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     documents: [],
     ssEndDiscountAmount: 0,
     reviewStatusId: undefined,
+    reviewReasonId: undefined,
     reviewRemark: "",
-};
-
-const combineDateTime = (date: Dayjs | undefined, time: Dayjs | undefined): Dayjs | undefined => {
-    if (!date) return undefined;
-    if (!time) return date;
-    return date.hour(time.hour()).minute(time.minute()).second(time.second());
+    rejectionDocuments: [],
+    isContinuousClaim: false,
+    continuousClaim: undefined,
+    documentCompleteDate: undefined,
+    admitIndication: "",
+    ipdDays: 0,
+    icuDays: 0,
+    simBCategory: "SimB2",
+    mergeCompensation: true,
 };
 
 /**
@@ -61,6 +71,11 @@ const combineDateTime = (date: Dayjs | undefined, time: Dayjs | undefined): Dayj
  *
  * `:id` route param = `btoa(billingDetailId)` (ไม่ใช่ caseId — caseId ซ้ำกันข้ามรอบวางบิลได้,
  * hospital-billing-fe.md ข้อ 1)
+ *
+ * มี submit endpoint เดียว (`useSubmitHospitalBilling`) — ผลต่างของแต่ละปุ่มบนจอคือค่า `reviewStatusId`
+ * ที่ส่งไปเท่านั้น จึงรวมเป็น `submitReview(statusId)` ตัวเดียว แล้วให้แต่ละปุ่มเรียกพร้อม status ของตัวเอง:
+ * - "ยืนยันบันทึกผลพิจารณา" (Step 1, 2) → `submitReview(values.reviewStatusId)` (รอแก้ไข หรือ ปฏิเสธ)
+ * - "อนุมัติ" (Step 3) → `validateApprove()` ผ่านแล้วค่อย `submitReview(BILLING_STATUS.passed)`
  */
 const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const { id } = useParams();
@@ -100,6 +115,29 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const submitMutation = useSubmitHospitalBilling();
     const [isSubmitting, setIsSubmitting] = useState(false);
 
+    /**
+     * ผู้ใช้เปลี่ยนใจ (สถานะ/สาเหตุ/รายละเอียดที่จะบันทึก) หลัง submit ครั้งก่อนไม่สำเร็จ = ความตั้งใจบันทึก
+     * ใหม่ ต้องขึ้น requestId ใหม่เสมอ ไม่ให้ retry คำขอเดิมด้วย payload ที่เปลี่ยนไปแล้ว
+     */
+    useEffect(() => {
+        requestIdRef.current = undefined;
+    }, [formik.values.reviewStatusId, formik.values.reviewReasonId, formik.values.reviewRemark]);
+
+    /**
+     * สถานะ 2/4/5 ต้องระบุสาเหตุ — 2/5 ใช้ decisionId+decisionReasonId (Decision master), 4 ใช้
+     * rejectReasonId (ไม่มี master แยก ใช้ตัวเลือกชุดเดียวกับ decisionId ของสถานะ "ปฏิเสธ")
+     */
+    const reasonDecisionId = formik.values.reviewStatusId
+        ? BILLING_DECISION_ID[formik.values.reviewStatusId]
+        : undefined;
+    const { data: reviewReason, isLoading: reviewReasonLoading } = useGetDecisionReason(undefined, reasonDecisionId);
+    const needsReason = reasonDecisionId !== undefined;
+    /** *Enable ปุ่ม "ยืนยันบันทึกผลพิจารณา" เมื่อมีการเลือกผลการพิจารณา (+ สาเหตุถ้าจำเป็น) */
+    const canSubmitReview = !!formik.values.reviewStatusId && (!needsReason || !!formik.values.reviewReasonId);
+
+    const documentHook = useBillingDocumentHook(formik.values.documents);
+
+    /** required document subtype ทุกตัวต้องมีแถวและมีผลตรวจครบ — สัญญา BE จริง (handoff ข้อ 6) บังคับทุกครั้งที่ submit */
     const isDocumentSubTypeCoverageComplete = () => {
         const required = detail?.requiredDocumentSubTypeIds ?? [];
         return required.every((subTypeId) => {
@@ -111,51 +149,75 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         });
     };
 
-    const isDischargeBeforeAdmission = () => {
-        const admission = combineDateTime(formik.values.admissionDate, formik.values.admissionTime);
-        const discharge = combineDateTime(formik.values.dischargeDate, formik.values.dischargeTime);
-        return !!admission && !!discharge && discharge.isBefore(admission);
+    /** gate ปุ่ม "ถัดไป" ของ Step 1 — สเปค : "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป" */
+    const validateStep1Documents = (): boolean => {
+        if (documentHook.hasAnyMissingResult()) {
+            swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
+            return false;
+        }
+        return true;
     };
 
     /**
-     * ยืนยันผลตรวจสอบ (Step 3) — ตรวจตาม hospital-billing-fe.md ข้อ 5-7 ก่อน submit เสมอ
-     * คืน true เมื่อสำเร็จ (caller navigate กลับ list เอง)
+     * gate ปุ่ม "ถัดไป" ของ Step 2 — เทียบผลรวมยอดรายการค่ารักษากับยอดสุทธิที่โรงพยาบาลส่งมา
+     * (`detail.originalBilledAmount` — ยืนยันกับ BA ตามข้อ 7.4 ว่าใช่ฟิลด์นี้จริง) เท่ากันไปต่อได้เงียบ ๆ
+     * ไม่เท่ากันแจ้งเตือนแต่ยังกดยืนยันไปต่อได้ (ไม่ block)
      */
-    const handleConfirmReview = async (params: {
-        totalClaimedAmount: number;
-        hasUncoveredWithoutReason: boolean;
-        hasDiscountExceedsClaim: boolean;
-    }): Promise<boolean> => {
-        if (!detail?.billingDetailId) {
-            swalError("ยืนยันไม่สำเร็จ", "ไม่พบรายการวางบิลนี้ กรุณาโหลดหน้าใหม่");
+    const confirmStep2Amount = async (totalReceiptAmount: number): Promise<boolean> => {
+        const billed = round2(detail?.originalBilledAmount);
+        const diff = round2(totalReceiptAmount) - billed;
+        if (diff === 0) return true;
+
+        const wording =
+            diff < 0
+                ? "ตรวจสอบพบว่ายอดรายการค่ารักษา น้อยกว่า ยอดสุทธิจากโรงพยาบาล ยืนยันการทำรายการ ?"
+                : "ตรวจสอบพบว่ายอดรายการค่ารักษา มากกว่า ยอดสุทธิจากโรงพยาบาล ยืนยันการทำรายการ ?";
+        const result = await swalConfirm("ตรวจสอบยอดเงิน", wording, "ยืนยันการทำรายการ", "ยกเลิก");
+        return !!result.isConfirmed;
+    };
+
+    /** gate ปุ่ม "อนุมัติ" ของ Step 3 — ทุกแถวที่มีเอกสาร (Document Count > 0) ต้องมีผลเป็น "ผ่าน" */
+    const validateApprove = (): boolean => {
+        if (documentHook.hasAnyNotPassed()) {
+            swalToast("warning", "กรุณาเลือกผลการตรวจเป็น “ผ่าน” ให้ครบทุกรายการที่มีเอกสารก่อนอนุมัติ");
             return false;
         }
-        if (!formik.values.reviewStatusId) {
-            swalError("ยืนยันไม่สำเร็จ", "กรุณาเลือกผลการตรวจสอบก่อนยืนยัน");
+        return true;
+    };
+
+    /**
+     * ยิง POST /billing/hospital/{id}/submit ด้วย `statusId` ที่ระบุ — ใช้ร่วมกันทั้ง "ยืนยันบันทึกผลพิจารณา"
+     * (รอแก้ไข/ปฏิเสธ, อ่านสาเหตุ/หมายเหตุจาก `formik.values.reviewReasonId`/`reviewRemark`) และ "อนุมัติ"
+     * (ไม่มีสาเหตุ — `BILLING_DECISION_ID` ไม่มี entry ของ passed) คืน true เมื่อสำเร็จ (caller navigate เอง)
+     */
+    const submitReview = async (statusId: BillingStatusId): Promise<boolean> => {
+        if (!detail?.billingDetailId) {
+            swalError("บันทึกไม่สำเร็จ", "ไม่พบรายการวางบิลนี้ กรุณาโหลดหน้าใหม่");
+            return false;
+        }
+
+        const statusNeedsReason = BILLING_DECISION_ID[statusId] !== undefined;
+        if (statusNeedsReason && !formik.values.reviewReasonId) {
+            swalError("บันทึกไม่สำเร็จ", "กรุณาระบุสาเหตุของผลการตรวจสอบ");
+            return false;
+        }
+        if (statusId === BILLING_STATUS.needsCorrection && !formik.values.reviewRemark) {
+            swalError("บันทึกไม่สำเร็จ", "กรุณาระบุรายละเอียดการรอแก้ไข");
             return false;
         }
         if (!isDocumentSubTypeCoverageComplete()) {
-            swalError("ยืนยันไม่สำเร็จ", "เอกสารที่จำเป็นต้องมีครบและมีผลการตรวจทุกแถว");
-            return false;
-        }
-        if (isDischargeBeforeAdmission()) {
-            swalError("ยืนยันไม่สำเร็จ", "วันเวลาออก รพ. ต้องไม่ก่อนวันเวลาเข้า รพ.");
-            return false;
-        }
-        if (params.hasDiscountExceedsClaim) {
-            swalError("ยืนยันไม่สำเร็จ", "ส่วนลดรายการต้องไม่เกินยอดเบิกของรายการนั้น");
-            return false;
-        }
-        if (params.hasUncoveredWithoutReason) {
-            swalError("ยืนยันไม่สำเร็จ", "กรุณาระบุสาเหตุไม่คุ้มครองของทุกรายการที่มียอดไม่คุ้มครอง");
-            return false;
-        }
-        if (formik.values.ssEndDiscountAmount < 0 || formik.values.ssEndDiscountAmount > params.totalClaimedAmount) {
-            swalError("ยืนยันไม่สำเร็จ", "ส่วนลด SS ท้ายบิล ต้องไม่ต่ำกว่า 0 และไม่เกินยอดเบิกรวม");
+            swalError("บันทึกไม่สำเร็จ", "เอกสารที่จำเป็นต้องมีครบและมีผลการตรวจทุกแถว");
             return false;
         }
 
         if (!requestIdRef.current) requestIdRef.current = crypto.randomUUID();
+
+        /**
+         * matrix สาเหตุตาม hospital-billing-frontend-structure-handoff ("สถานะและเหตุผล"):
+         * 2/5 ส่ง decisionId+decisionReasonId, 4 ส่ง rejectReasonId เท่านั้น, 3 ไม่ส่งทั้งสามตัว
+         */
+        const isRejected = statusId === BILLING_STATUS.rejected;
+        const usesDecisionReason = statusNeedsReason && !isRejected; // 2, 5
 
         const body: SubmitHospitalBillingDto = {
             requestId: requestIdRef.current,
@@ -165,7 +227,10 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             rowVersion: detail.rowVersion ?? "",
             caseRowVersion: detail.caseRowVersion ?? "",
             claimRowVersion: detail.claimRowVersion ?? "",
-            reviewStatusId: formik.values.reviewStatusId,
+            reviewStatusId: statusId,
+            rejectReasonId: isRejected ? formik.values.reviewReasonId : undefined,
+            decisionId: usesDecisionReason ? reasonDecisionId : undefined,
+            decisionReasonId: usesDecisionReason ? formik.values.reviewReasonId : undefined,
             reviewRemark: formik.values.reviewRemark || undefined,
             data: toReviewDataDto(formik.values),
         };
@@ -180,21 +245,13 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
 
             requestIdRef.current = undefined; // สำเร็จแล้ว — ความตั้งใจบันทึกครั้งถัดไปต้องใช้ requestId ใหม่
 
-            if (formik.values.reviewStatusId === BILLING_STATUS.passed) {
-                await swalSuccess(
-                    "ยืนยันผลตรวจสอบสำเร็จ",
-                    "ผลตรวจสอบเป็น “ผ่าน” — รายการนี้จะไม่แสดงในตัวกรองทั้ง 4 สถานะอีกต่อไป (เปิดดูย้อนหลังได้จากประวัติทำรายการ)"
-                );
-            } else if (
-                formik.values.reviewStatusId === BILLING_STATUS.needsCorrection ||
-                formik.values.reviewStatusId === BILLING_STATUS.cancelled
-            ) {
+            if (statusId === BILLING_STATUS.passed) {
+                await swalToast("success", "อนุมัติรายการสำเร็จ — ระบบสร้างรายการวางบิลใหม่ให้อัตโนมัติ");
+            } else {
                 await swalSuccess(
                     "บันทึกคำขอส่งกลับสำเร็จ",
                     "ระบบบันทึกคำขอไว้แล้ว (สถานะ Pending) — ยังไม่ยืนยันการส่ง/รับที่ SmileConnect"
                 );
-            } else {
-                await swalSuccess("ยืนยันผลตรวจสอบสำเร็จ", "บันทึกผลตรวจสอบเรียบร้อย");
             }
             return true;
         } catch (rawError) {
@@ -216,15 +273,36 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         }
     };
 
+    /** ปุ่ม "ยืนยันบันทึกผลพิจารณา" (Step 1, 2) — ส่งสถานะที่เลือกไว้ในบล็อก "แจ้งผลการพิจารณาโรงพยาบาล" */
+    const handleSubmitReviewResult = async (): Promise<boolean> => {
+        if (!formik.values.reviewStatusId) {
+            swalError("บันทึกไม่สำเร็จ", "กรุณาเลือกผลการพิจารณาก่อนยืนยัน");
+            return false;
+        }
+        return submitReview(formik.values.reviewStatusId);
+    };
+
+    /** ปุ่ม "อนุมัติ" (Step 3) */
+    const handleApprove = async (): Promise<boolean> => {
+        if (!validateApprove()) return false;
+        return submitReview(BILLING_STATUS.passed);
+    };
+
     return {
         formik,
         detail,
         detailLoading,
         isReadOnly,
         isSubmitting,
-        handleConfirmReview,
+        reviewReason,
+        reviewReasonLoading,
+        canSubmitReview,
+        documentHook,
+        validateStep1Documents,
+        confirmStep2Amount,
+        handleSubmitReviewResult,
+        handleApprove,
     };
 };
 
 export default useBillingReviewDetailHook;
-export { combineDateTime };

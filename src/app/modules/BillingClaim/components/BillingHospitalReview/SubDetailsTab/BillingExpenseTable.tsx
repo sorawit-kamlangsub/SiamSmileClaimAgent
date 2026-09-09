@@ -1,7 +1,6 @@
-import { useState } from "react";
-import { Box, Button, FormControl, IconButton, MenuItem, Select, TextField, Tooltip, Typography } from "@mui/material";
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
+import { Box, Button, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { MUIDataTableColumn } from "mui-datatables";
 import { useFormikContext } from "formik";
@@ -9,93 +8,58 @@ import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
-import {
-    cellAlignOptions,
-    defaultOptionStandardDataTable,
-    handleFloatingInputChange,
-    numberWithCommas,
-} from "../../../../../functionHelpers";
+import { cellAlignOptions, defaultOptionStandardDataTable, numberWithCommas } from "../../../../../functionHelpers";
 import { useGetNonCoveredReason } from "../../../../../api/coreClaimMastersApi";
-import { buildNewExpenseFormItem } from "../../../store/billingMappers";
-import { BillingExpenseFormItem, BillingReviewFormValues } from "../../../store/billingClaim.types";
+import { PENDING_BE, PENDING_BE_TOOLTIP } from "../../../store/billingPendingFields";
+import { BillingReviewFormValues } from "../../../store/billingClaim.types";
 
 type BillingExpenseTableProps = {
-    readOnly?: boolean;
+    /** [B, C] แสดงตัวเลือก "ประเภทรายการค่าใช้จ่าย" Sim B1/B2 เหนือตาราง */
+    showSimBSelector?: boolean;
 };
 
-/** Step 2 : ตารางรายการค่ารักษา — bind `values.expenses` (`BillingExpenseDto[]`, hospital-billing-fe.md ข้อ 5) */
-const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => {
+/**
+ * Step 2 : "รายการค่ารักษา(เบื้องต้น)" — Read-only ทั้งหมดตามสเปค (ข้อมูลจาก SmileConnect)
+ *
+ * `claimAmount` bind กับคอลัมน์ "ยอดเงินตามใบเสร็จ" (ยอดที่โรงพยาบาลเรียกเก็บของรายการนั้น เป็นฟิลด์จริง
+ * ใน `BillingExpenseDto` อยู่แล้ว) ส่วน "สิทธิ์เบิก" ต้องคำนวณจาก Benefit ที่ยังไม่มี endpoint (PENDING_BE)
+ */
+const BillingExpenseTable = ({ showSimBSelector = false }: BillingExpenseTableProps) => {
     const formik = useFormikContext<BillingReviewFormValues>();
     const items = formik.values.expenses;
 
-    const { data: nonCoveredReasonData, isLoading: nonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData } = useGetNonCoveredReason();
     const nonCoveredReasonOptions = nonCoveredReasonData?.data ?? [];
+    const nonCoveredReasonName = (id: number | undefined) =>
+        id ? nonCoveredReasonOptions.find((o) => o.nonCoveredReasonId === id)?.nonCoveredReasonName ?? "-" : "-";
 
-    const [newExpenseId, setNewExpenseId] = useState("");
-    const [newExpenseName, setNewExpenseName] = useState("");
-
-    const updateItem = (rowKey: string, patch: Partial<BillingExpenseFormItem>) => {
-        formik.setFieldValue(
-            "expenses",
-            items.map((item) => (item._rowKey === rowKey ? { ...item, ...patch } : item))
-        );
-    };
-
-    /**
-     * เพิ่มรายการใหม่ — API master ค่ารักษา (`useGetSimB`) ถูก gate ด้วย `productTypeId` ที่ Billing
-     * detail ไม่มีให้ (endpoint นี้คืนแค่ insured ขั้นต่ำ) จึงให้ผู้ตรวจระบุ `standardMedicalExpenseId`
-     * ตรง ๆ — `itemName` เป็นแค่ label ช่วยจำฝั่ง FE เท่านั้น BE จะเลือกชื่อจาก master ใหม่ตอน Submit
-     * (handoff ข้อ 5) ไม่มีผลต่อข้อมูลจริง
-     */
-    const handleAdd = () => {
-        const id = Number(newExpenseId);
-        if (!id) return;
-        formik.setFieldValue("expenses", [...items, buildNewExpenseFormItem(id, newExpenseName || `รายการ #${id}`)]);
-        setNewExpenseId("");
-        setNewExpenseName("");
-    };
-
-    const removeItem = (rowKey: string) => {
-        formik.setFieldValue(
-            "expenses",
-            items.filter((item) => item._rowKey !== rowKey)
-        );
-    };
-
-    const numberField = (value: number | undefined, onChange: (value: number) => void) => (
-        <TextField
-            size="small"
-            value={value || ""}
-            disabled={readOnly}
-            onInput={handleFloatingInputChange}
-            onChange={(e) => onChange(Number(e.target.value) || 0)}
-            inputProps={{ inputMode: "decimal", style: { textAlign: "right" } }}
-            sx={{ minWidth: 110 }}
-        />
-    );
+    const money = (value: number | undefined) => numberWithCommas(value ?? 0, 2);
 
     const columns: MUIDataTableColumn[] = [
         {
             name: "itemName",
-            label: "รายการ",
+            label: "รายการค่ารักษา",
             options: {
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "left" }),
-                customBodyRender: (value) => value ?? "-",
+                customBodyRender: (v) => v ?? "-",
             },
         },
         {
             name: "claimAmount",
-            label: "ยอดเบิก",
+            label: "ยอดเงินตามใบเสร็จ",
+            options: { filter: false, sort: false, ...cellAlignOptions({ align: "right" }), customBodyRender: money },
+        },
+        {
+            name: "_entitlementAmount",
+            label: "สิทธิ์เบิก",
             options: {
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "right" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = items[tableMeta.rowIndex];
-                    return numberField(row.claimAmount, (v) => updateItem(row._rowKey, { claimAmount: v }));
-                },
+                // PENDING-BE: PENDING_BE_FIELDS.entitlementAmountPerItem — ต้องคำนวณจาก Benefit
+                customBodyRender: (v: number | undefined) => (v !== undefined ? money(v) : PENDING_BE),
             },
         },
         {
@@ -110,10 +74,10 @@ const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => 
                     const exceeds = (row.discountAmount || 0) > (row.claimAmount || 0);
                     return (
                         <Box>
-                            {numberField(row.discountAmount, (v) => updateItem(row._rowKey, { discountAmount: v }))}
+                            {money(row.discountAmount)}
                             {exceeds && (
                                 <Typography variant="caption" color="error" display="block">
-                                    ต้องไม่เกินยอดเบิก
+                                    เกินยอดเบิก — ตรวจสอบกับ SmileConnect
                                 </Typography>
                             )}
                         </Box>
@@ -124,15 +88,7 @@ const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => 
         {
             name: "nonCoveredAmount",
             label: "ยอดไม่คุ้มครอง",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "right" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = items[tableMeta.rowIndex];
-                    return numberField(row.nonCoveredAmount, (v) => updateItem(row._rowKey, { nonCoveredAmount: v }));
-                },
-            },
+            options: { filter: false, sort: false, ...cellAlignOptions({ align: "right" }), customBodyRender: money },
         },
         {
             name: "nonCoveredReasonId",
@@ -143,29 +99,11 @@ const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => 
                 ...cellAlignOptions({ align: "left" }),
                 customBodyRender: (_value, tableMeta) => {
                     const row = items[tableMeta.rowIndex];
-                    const required = (row.nonCoveredAmount || 0) > 0;
+                    const missing = (row.nonCoveredAmount || 0) > 0 && !row.nonCoveredReasonId;
                     return (
-                        <FormControl size="small" error={required && !row.nonCoveredReasonId} sx={{ minWidth: 200 }}>
-                            <Select
-                                displayEmpty
-                                disabled={readOnly || nonCoveredReasonLoading}
-                                value={row.nonCoveredReasonId ?? ""}
-                                onChange={(e) =>
-                                    updateItem(row._rowKey, {
-                                        nonCoveredReasonId: (e.target.value as number) || undefined,
-                                    })
-                                }
-                            >
-                                <MenuItem value="">
-                                    <em>{required ? "กรุณาเลือกสาเหตุ" : "-"}</em>
-                                </MenuItem>
-                                {nonCoveredReasonOptions.map((option) => (
-                                    <MenuItem key={option.nonCoveredReasonId} value={option.nonCoveredReasonId}>
-                                        {option.nonCoveredReasonName}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                        <Typography color={missing ? "error" : "inherit"} variant="body2">
+                            {missing ? "ไม่ระบุสาเหตุ" : nonCoveredReasonName(row.nonCoveredReasonId)}
+                        </Typography>
                     );
                 },
             },
@@ -177,21 +115,36 @@ const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => 
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "left" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = items[tableMeta.rowIndex];
-                    return (
-                        <TextField
-                            size="small"
-                            value={row.note ?? ""}
-                            disabled={readOnly}
-                            placeholder="ระบุหมายเหตุ"
-                            onChange={(e) => updateItem(row._rowKey, { note: e.target.value })}
-                            sx={{ minWidth: 180 }}
-                        />
-                    );
-                },
+                customBodyRender: (value) => value || "-",
             },
         },
+        ...(showSimBSelector
+            ? ([
+                  {
+                      name: "_insuranceExcess",
+                      label: "เป็นส่วนเกินจากบริษัทประกัน",
+                      options: {
+                          filter: false,
+                          sort: false,
+                          ...cellAlignOptions({ align: "center" }),
+                          // PENDING-BE: PENDING_BE_FIELDS.insuranceExcess
+                          customBodyRender: (_value, tableMeta: { rowIndex: number }) =>
+                              items[tableMeta.rowIndex]._isInsuranceExcess ? "ใช่" : "ไม่ใช่",
+                      },
+                  },
+                  {
+                      name: "_insuranceCompanyName",
+                      label: "บริษัทประกัน",
+                      options: {
+                          filter: false,
+                          sort: false,
+                          ...cellAlignOptions({ align: "left" }),
+                          customBodyRender: (_value, tableMeta: { rowIndex: number }) =>
+                              items[tableMeta.rowIndex]._insuranceCompanyName || PENDING_BE,
+                      },
+                  },
+              ] as MUIDataTableColumn[])
+            : []),
         {
             name: "_delete",
             label: " ",
@@ -199,25 +152,47 @@ const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => 
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = items[tableMeta.rowIndex];
-                    // ห้ามลบแถวเดิม (มี caseItemId จาก BE) — ลบได้เฉพาะแถวที่เพิ่งเพิ่มเอง (handoff ข้อ 5)
-                    if (!row._isNew || readOnly) return null;
-                    return (
-                        <Tooltip title="ลบรายการ">
-                            <IconButton size="small" color="error" onClick={() => removeItem(row._rowKey)}>
-                                <DeleteOutlineIcon fontSize="small" />
-                            </IconButton>
-                        </Tooltip>
-                    );
-                },
+                customBodyRender: () => (
+                    <Tooltip title={PENDING_BE_TOOLTIP} arrow>
+                        <span>
+                            <Button
+                                size="small"
+                                color="error"
+                                disabled
+                                startIcon={<DeleteOutlineIcon fontSize="small" />}
+                            >
+                                ลบ
+                            </Button>
+                        </span>
+                    </Tooltip>
+                ),
             },
         },
     ];
 
     return (
         <CustomPaper>
-            <HeadingWithColor icon={<ReceiptLongIcon sx={{ fontSize: 27 }} />} text="รายการค่ารักษา" color="blue" />
+            <HeadingWithColor
+                icon={<ReceiptLongIcon sx={{ fontSize: 27 }} />}
+                text="รายการค่ารักษา(เบื้องต้น)"
+                color="blue"
+            />
+
+            {showSimBSelector && (
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                        ประเภทรายการค่าใช้จ่าย
+                    </Typography>
+                    <Tooltip title={PENDING_BE_TOOLTIP} arrow>
+                        <span>
+                            <ToggleButtonGroup exclusive size="small" value={formik.values.simBCategory} disabled>
+                                <ToggleButton value="SimB1">Sim B1</ToggleButton>
+                                <ToggleButton value="SimB2">Sim B2</ToggleButton>
+                            </ToggleButtonGroup>
+                        </span>
+                    </Tooltip>
+                </Box>
+            )}
 
             <StandardDataTable
                 name="billingExpenseTable"
@@ -231,54 +206,14 @@ const BillingExpenseTable = ({ readOnly = false }: BillingExpenseTableProps) => 
                 options={defaultOptionStandardDataTable}
             />
 
-            {!readOnly && (
-                <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap", mt: 2 }}>
-                    <TextField
-                        size="small"
-                        label="รหัสรายการค่ารักษา"
-                        value={newExpenseId}
-                        onInput={handleFloatingInputChange}
-                        onChange={(e) => setNewExpenseId(e.target.value)}
-                        sx={{ width: 180 }}
-                    />
-                    <TextField
-                        size="small"
-                        label="คำอธิบาย (แสดงผลชั่วคราว)"
-                        value={newExpenseName}
-                        onChange={(e) => setNewExpenseName(e.target.value)}
-                        sx={{ minWidth: 240 }}
-                    />
-                    <Button
-                        size="small"
-                        variant="outlined"
-                        startIcon={<AddCircleOutlineIcon />}
-                        disabled={!newExpenseId}
-                        onClick={handleAdd}
-                    >
-                        เพิ่มรายการค่ารักษาเพิ่มเติม
-                    </Button>
-                </Box>
-            )}
-
-            <Box sx={{ display: "flex", gap: 3, justifyContent: "flex-end", flexWrap: "wrap", mt: 2, px: 1 }}>
-                <Typography variant="body2">
-                    ยอดเบิกรวม :{" "}
-                    <Typography component="span" fontWeight={700}>
-                        {numberWithCommas(items.reduce((s, i) => s + (i.claimAmount || 0), 0))}
-                    </Typography>
-                </Typography>
-                <Typography variant="body2">
-                    ส่วนลดรวม :{" "}
-                    <Typography component="span" fontWeight={700}>
-                        {numberWithCommas(items.reduce((s, i) => s + (i.discountAmount || 0), 0))}
-                    </Typography>
-                </Typography>
-                <Typography variant="body2">
-                    ยอดไม่คุ้มครองรวม :{" "}
-                    <Typography component="span" fontWeight={700} color="#B32615">
-                        {numberWithCommas(items.reduce((s, i) => s + (i.nonCoveredAmount || 0), 0))}
-                    </Typography>
-                </Typography>
+            <Box sx={{ mt: 2 }}>
+                <Tooltip title={PENDING_BE_TOOLTIP} arrow>
+                    <span>
+                        <Button size="small" variant="outlined" disabled startIcon={<AddCircleOutlineIcon />}>
+                            เพิ่มรายการค่ารักษา
+                        </Button>
+                    </span>
+                </Tooltip>
             </Box>
         </CustomPaper>
     );

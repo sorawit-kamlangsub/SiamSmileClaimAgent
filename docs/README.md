@@ -21,7 +21,7 @@ these docs don't repeat that, only add the concrete inventory CLAUDE.md doesn't 
 
 | Module | Status | Data |
 |---|---|---|
-| BillingClaim | New (this session) — hospital list + review built, customer is a placeholder | **Mock** (no backend yet) |
+| BillingClaim | Active — hospital list + review; customer is a placeholder | Real API (hospital only; customer has no endpoint) |
 | ClaimConsider | Active — customer + hospital claim consideration | Real API (hospital monitor endpoint has a query-key cache-collision bug, see its doc) |
 | CreatedClaim | Active — PH/PA claim notification flow | Real API |
 | CheckEligible | Active — eligibility check | Real API |

@@ -10,12 +10,15 @@ import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { TabContext, TabPanel } from "@mui/lab";
 
 import HeaderCardCustomerDetails from "../../ClaimConsider/components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
+import HeaderCardSchoolDetails from "../../ClaimConsider/components/ConsiderDetails/HeaderDetailCards/HeaderCardSchoolDetails";
 import ClaimDetail from "../../ClaimConsider/components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
 import BillingClaimDetailsTab from "../components/BillingHospitalReview/BillingClaimDetailsTab";
 import BillingHistoryTab from "../components/BillingHospitalReview/BillingHistoryTab";
+import useBillingProductVariant from "../hooks/BillingHospitalReview/BillingProductVariantHook";
 import { useGetHospitalBillingDetail } from "../../../api/hospitalBillingApi";
 import { billingStatusLabel } from "../store/billingStatusHelpers";
-import { formatDateString } from "../../../functionHelpers";
+import { PENDING_BE } from "../store/billingPendingFields";
+import { calculatePolicyAgeText, formatDateString } from "../../../functionHelpers";
 
 type BillingHospitalReviewPageProps = {
     /** โหมดดูอย่างเดียว : ใช้ตอนเปิดจากปุ่ม "ดูรายละเอียด" ในหน้า Monitor */
@@ -36,6 +39,7 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
 
     const { data: detailData, isLoading } = useGetHospitalBillingDetail(billingDetailId);
     const detail = detailData?.data;
+    const variant = useBillingProductVariant(detail?.data?.claim?.medicalTypeId);
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => setTabValue(newValue);
 
@@ -53,14 +57,22 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                     </>
                 ) : (
                     <>
+                        {/* "ข้อมูลสถานศึกษา" — เฉพาะ Product PA (วันนี้ isPA เป็น false เสมอ ไม่มี productTypeId
+                            จาก BE — PENDING_BE_FIELDS.productTypeId — จึงยังไม่ขึ้นการ์ดนี้จนกว่า BE จะส่งมา) */}
+                        {variant.isPA && (
+                            <Grid item xs={12} sx={{ mb: 2 }}>
+                                <HeaderCardSchoolDetails customerDetail={undefined} />
+                            </Grid>
+                        )}
+
                         <Grid item xs={12} sx={{ mb: 2 }}>
                             <HeaderCardCustomerDetails
                                 name={detail?.insured?.name ?? "-"}
-                                idCardNo="-"
+                                idCardNo={PENDING_BE}
                                 applicationId={detail?.insured?.applicationId ?? "-"}
-                                phoneNumber="-"
-                                appStatus="-"
-                                policyAgeText="-"
+                                phoneNumber={PENDING_BE}
+                                appStatus={PENDING_BE}
+                                policyAgeText={calculatePolicyAgeText(detail?.insured?.coverageStart?.toString())}
                                 coverageStartDate={
                                     formatDateString(detail?.insured?.coverageStart?.toString() ?? "", "DD/MM/BBBB") ??
                                     "-"
@@ -84,7 +96,7 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                                 branch={detail?.provinceName}
                                 claimNo={detail?.claimCode}
                                 caseNo={detail?.caseNo}
-                                claimType={detail?.claimType}
+                                claimType={variant.claimListTypeLabel}
                                 statusClaim={detail ? billingStatusLabel(detail.statusId) : undefined}
                                 claimStatusId={undefined}
                             />
@@ -127,12 +139,22 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                             />
                         </Tabs>
 
-                        <Chip
-                            label={`ประเภทรายการเคลม : ${detail?.claimType ?? "-"}`}
-                            color="primary"
-                            variant="outlined"
-                            sx={{ ml: "auto", mr: 1, fontWeight: 700 }}
-                        />
+                        <Grid sx={{ ml: "auto", mr: 1, display: "flex", gap: 1 }}>
+                            {detail?.billingNo && (
+                                <Chip
+                                    label={`เลขใบวางบิล รพ (PB) : ${detail.billingNo}`}
+                                    color="default"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 700 }}
+                                />
+                            )}
+                            <Chip
+                                label={`ประเภทรายการเคลม : ${variant.claimListTypeLabel}`}
+                                color="primary"
+                                variant="outlined"
+                                sx={{ fontWeight: 700 }}
+                            />
+                        </Grid>
                     </Paper>
                 </Grid>
 

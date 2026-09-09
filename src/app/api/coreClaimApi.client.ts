@@ -2709,7 +2709,7 @@ export class HospitalBillingClient {
     }
 
     /**
-     * ยืนยันผลตรวจสอบและบันทึก Case, snapshot และ return request แบบ atomic.
+     * ยืนยันผลตรวจสอบและบันทึก immutable review revision พร้อม return request แบบ atomic.
      * @param body (optional)
      * @return Success
      */
@@ -5306,15 +5306,18 @@ export interface BillingDetailDto {
     caseNo?: string | undefined;
     hospitalName?: string | undefined;
     provinceName?: string | undefined;
-    claimType?: string | undefined;
     submittedDate?: dayjs.Dayjs;
     originalBilledAmount?: number;
     statusId?: number;
     version?: number;
+    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Case. */
     caseVersion?: number;
+    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Claim. */
     claimVersion?: number;
     rowVersion?: string | undefined;
+    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Case. */
     caseRowVersion?: string | undefined;
+    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Claim. */
     claimRowVersion?: string | undefined;
     reviewRemark?: string | undefined;
     insured?: BillingInsuredDto;
@@ -5415,7 +5418,6 @@ export interface BillingListItemDto {
     hospitalName?: string | undefined;
     submittedDate?: dayjs.Dayjs;
     treatmentDate?: dayjs.Dayjs | undefined;
-    claimType?: string | undefined;
     statusId?: number;
     amount?: number;
     readonly canReview?: boolean;
@@ -7734,12 +7736,19 @@ export interface StandardMedicalExpenseCategoryDtoResponseListServiceResponse {
 export interface SubmitHospitalBillingDto {
     requestId?: string;
     expectedVersion?: number;
+    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
     expectedCaseVersion?: number;
+    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
     expectedClaimVersion?: number;
     rowVersion: string;
+    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
     caseRowVersion: string;
+    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
     claimRowVersion: string;
     reviewStatusId?: number;
+    rejectReasonId?: number | undefined;
+    decisionReasonId?: number | undefined;
+    decisionId?: number | undefined;
     reviewRemark?: string | undefined;
     data: BillingReviewDataDto;
 }

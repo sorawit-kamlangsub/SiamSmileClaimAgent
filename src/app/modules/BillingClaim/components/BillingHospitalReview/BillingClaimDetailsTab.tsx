@@ -3,6 +3,7 @@ import { Box, Button, Grid } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import SaveIcon from "@mui/icons-material/Save";
 import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
 
@@ -10,12 +11,16 @@ import StepToggleBar from "../../../ClaimConsider/components/ConsiderDetails/Tab
 import { LoadingPlaceHolder } from "../../../_common";
 import useBillingReviewDetailHook from "../../hooks/BillingHospitalReview/BillingReviewDetailHook";
 import useBillingExpenseHook from "../../hooks/BillingHospitalReview/BillingExpenseHook";
+import useBillingProductVariant from "../../hooks/BillingHospitalReview/BillingProductVariantHook";
+import BillingContinuousClaimSection from "./SubDetailsTab/BillingContinuousClaimSection";
 import BillingClaimInfoSection from "./SubDetailsTab/BillingClaimInfoSection";
 import BillingTreatmentSection from "./SubDetailsTab/BillingTreatmentSection";
 import BillingAttendingDoctorSection from "./SubDetailsTab/BillingAttendingDoctorSection";
 import BillingDocumentTable from "./SubDetailsTab/BillingDocumentTable";
+import BillingOcrReceiptViewer from "./SubDetailsTab/BillingOcrReceiptViewer";
+import BillingHospitalExpenseSummary from "./SubDetailsTab/BillingHospitalExpenseSummary";
 import BillingExpenseTable from "./SubDetailsTab/BillingExpenseTable";
-import BillTailDiscountCard from "./SubDetailsTab/BillTailDiscountCard";
+import BillingExpenseSummaryCard from "./SubDetailsTab/BillingExpenseSummaryCard";
 import BillingSummaryStep3 from "./SubDetailsTab/BillingSummaryStep3";
 import BillingReviewResultSection from "./SubDetailsTab/BillingReviewResultSection";
 
@@ -28,35 +33,69 @@ type BillingClaimDetailsTabProps = {
 
 /**
  * Tab "ข้อมูลเคลม" ของหน้าตรวจสอบรายการวางบิลโรงพยาบาล — flow 3 Step ต่อ API จริง
- * (Step 1 บันทึกข้อมูลเคลม · Step 2 รายละเอียดค่าใช้จ่าย · Step 3 สรุปรายการเคลม + ยืนยันผลตรวจสอบ)
+ * (Step 1 บันทึกข้อมูลเคลม · Step 2 รายละเอียดค่าใช้จ่าย · Step 3 สรุปรายการเคลม)
+ *
+ * สเปค : Step 1 กับ Step 2 เป็น Read-only ล้วน (ข้อมูลจาก SmileConnect) มีแค่ตรวจสอบเอกสาร + บล็อก
+ * "แจ้งผลการพิจารณาโรงพยาบาล" ที่แก้ได้ — บล็อกนี้อยู่ทั้ง Step 1 และ Step 2 (ไม่ใช่แค่ Step สุดท้าย)
+ * ส่วนปุ่ม "อนุมัติ" เป็นปุ่มเฉพาะของ Step 3 เท่านั้น (คนละบล็อกกับ "แจ้งผลการพิจารณาโรงพยาบาล")
  */
 const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProps) => {
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
 
-    const { formik, detail, detailLoading, isReadOnly, isSubmitting, handleConfirmReview } =
-        useBillingReviewDetailHook(readOnly);
+    const {
+        formik,
+        detail,
+        detailLoading,
+        isReadOnly,
+        isSubmitting,
+        reviewReason,
+        reviewReasonLoading,
+        canSubmitReview,
+        validateStep1Documents,
+        confirmStep2Amount,
+        handleSubmitReviewResult,
+        handleApprove,
+    } = useBillingReviewDetailHook(readOnly);
     const expenseTotals = useBillingExpenseHook(formik);
+    const variant = useBillingProductVariant(formik.values.medicalTypeId);
 
     const isLastStep = activeStep === steps.length - 1;
 
-    const handleNext = () => {
-        const next = Math.min(activeStep + 1, steps.length - 1);
+    const goToStep = (next: number) => {
         setActiveStep(next);
         setFurthestStep((prev) => Math.max(prev, next));
     };
 
     const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
+    const handleNext = async () => {
+        if (activeStep === 0) {
+            if (!validateStep1Documents()) return;
+            goToStep(1);
+            return;
+        }
+        if (activeStep === 1) {
+            const ok = await confirmStep2Amount(expenseTotals.totalClaimedAmount);
+            if (!ok) return;
+            goToStep(2);
+        }
+    };
+
+    /** ปุ่ม "ยืนยันบันทึกผลพิจารณา" (Step 1, 2) — ส่งค่าที่เลือกในบล็อก "แจ้งผลการพิจารณาโรงพยาบาล" แล้วกลับ Monitor */
     const handleSubmitReview = async () => {
-        const ok = await handleConfirmReview({
-            totalClaimedAmount: expenseTotals.totalClaimedAmount,
-            hasUncoveredWithoutReason: expenseTotals.hasUncoveredWithoutReason,
-            hasDiscountExceedsClaim: expenseTotals.hasDiscountExceedsClaim,
-        });
+        const ok = await handleSubmitReviewResult();
         if (ok) navigate("/billing/hospital");
     };
+
+    /** ปุ่ม "อนุมัติ" (Step 3) */
+    const handleApproveClick = async () => {
+        const ok = await handleApprove();
+        if (ok) navigate("/billing/hospital");
+    };
+
+    const submittedDate = detail?.submittedDate?.toString();
 
     return (
         <LoadingPlaceHolder
@@ -70,20 +109,32 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                         steps={steps}
                         activeStep={activeStep}
                         onStepChange={setActiveStep}
-                        isStepClickable={(index) => index <= furthestStep}
+                        // โหมดดูอย่างเดียว (readOnly): ปุ่ม "ถัดไป" ถูกซ่อน furthestStep จึงค้างที่ 0 เสมอ —
+                        // เปิดให้กดข้าม step ได้อิสระ ไม่งั้นผู้ดูจะไปดู Step 2/3 ไม่ได้เลย
+                        isStepClickable={(index) => isReadOnly || index <= furthestStep}
                     />
 
                     <Box sx={{ marginTop: "20px" }}>
                         {activeStep === 0 ? (
                             <Grid container spacing={2}>
                                 <Grid item xs={12}>
-                                    <BillingClaimInfoSection readOnly={isReadOnly} />
+                                    <BillingContinuousClaimSection
+                                        applicationId={detail?.insured?.applicationId}
+                                        readOnly={isReadOnly}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <BillingTreatmentSection readOnly={isReadOnly} />
+                                    <BillingClaimInfoSection
+                                        hospitalName={detail?.hospitalName}
+                                        submittedDate={submittedDate}
+                                        showStayDays={variant.isIpdLike}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <BillingAttendingDoctorSection readOnly={isReadOnly} />
+                                    <BillingTreatmentSection showIpdFields={variant.isIpdLike} />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <BillingAttendingDoctorSection />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <BillingDocumentTable
@@ -91,17 +142,45 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                     />
                                 </Grid>
+                                <Grid item xs={12}>
+                                    <BillingReviewResultSection
+                                        readOnly={isReadOnly}
+                                        reviewReason={reviewReason}
+                                        reviewReasonLoading={reviewReasonLoading}
+                                    />
+                                </Grid>
                             </Grid>
                         ) : activeStep === 1 ? (
                             <Grid container spacing={2}>
+                                {variant.hasOcrSection && (
+                                    <Grid item xs={12}>
+                                        <BillingOcrReceiptViewer />
+                                    </Grid>
+                                )}
+                                {variant.hasHospitalExpenseSummary && (
+                                    <Grid item xs={12}>
+                                        <BillingHospitalExpenseSummary
+                                            originalBilledAmount={detail?.originalBilledAmount}
+                                        />
+                                    </Grid>
+                                )}
                                 <Grid item xs={12}>
-                                    <BillingExpenseTable readOnly={isReadOnly} />
+                                    <BillingExpenseTable showSimBSelector={variant.hasSimBSelector} />
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <BillTailDiscountCard
+                                    <BillingExpenseSummaryCard
                                         totalClaimedAmount={expenseTotals.totalClaimedAmount}
-                                        netBillableAmount={expenseTotals.netBillableAmount}
+                                        totalDiscountAmount={expenseTotals.totalDiscountAmount}
+                                        totalNonCoveredAmount={expenseTotals.totalNonCoveredAmount}
+                                        netAmount={expenseTotals.netAmount}
+                                        transferAmount={expenseTotals.transferAmount}
+                                    />
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <BillingReviewResultSection
                                         readOnly={isReadOnly}
+                                        reviewReason={reviewReason}
+                                        reviewReasonLoading={reviewReasonLoading}
                                     />
                                 </Grid>
                             </Grid>
@@ -109,18 +188,11 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                             <Grid container spacing={2}>
                                 <Grid item xs={12}>
                                     <BillingSummaryStep3
-                                        claimCode={detail?.claimCode}
                                         hospitalName={detail?.hospitalName}
-                                        claimType={detail?.claimType}
-                                        billingAmount={detail?.originalBilledAmount ?? 0}
-                                        totalClaimedAmount={expenseTotals.totalClaimedAmount}
-                                        totalDiscountAmount={expenseTotals.totalDiscountAmount}
-                                        totalNonCoveredAmount={expenseTotals.totalNonCoveredAmount}
-                                        netBillableAmount={expenseTotals.netBillableAmount}
+                                        submittedDate={submittedDate}
+                                        showStayDays={variant.isIpdLike}
+                                        allowSeparateCompensation={variant.allowSeparateCompensation}
                                     />
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <BillingReviewResultSection readOnly={isReadOnly} />
                                 </Grid>
                             </Grid>
                         )}
@@ -147,20 +219,30 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                 }}
                             >
                                 {!isLastStep && (
-                                    <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
-                                        ถัดไป
-                                    </Button>
+                                    <>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<SaveIcon />}
+                                            disabled={!canSubmitReview || isSubmitting}
+                                            onClick={handleSubmitReview}
+                                        >
+                                            {isSubmitting ? "กำลังบันทึก..." : "ยืนยันบันทึกผลพิจารณา"}
+                                        </Button>
+                                        <Button variant="contained" endIcon={<ArrowForwardIcon />} onClick={handleNext}>
+                                            ถัดไป
+                                        </Button>
+                                    </>
                                 )}
 
                                 {isLastStep && (
                                     <Button
                                         variant="contained"
                                         startIcon={<CheckCircleIcon />}
-                                        disabled={!formik.values.reviewStatusId || isSubmitting}
-                                        onClick={handleSubmitReview}
+                                        disabled={isSubmitting}
+                                        onClick={handleApproveClick}
                                         sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                     >
-                                        {isSubmitting ? "กำลังบันทึก..." : "ยืนยันผลตรวจสอบ"}
+                                        {isSubmitting ? "กำลังบันทึก..." : "อนุมัติ"}
                                     </Button>
                                 )}
                             </Box>

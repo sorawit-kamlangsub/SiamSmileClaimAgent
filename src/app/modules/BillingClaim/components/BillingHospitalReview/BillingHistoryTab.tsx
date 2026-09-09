@@ -9,6 +9,7 @@ import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } fr
 import useBillingHistoryHook from "../../hooks/BillingHospitalReview/BillingHistoryHook";
 import {
     backgroundColorMapBillingStatus,
+    billingReturnStatusLabel,
     billingStatusLabel,
     colorMapBillingStatus,
 } from "../../store/billingStatusHelpers";
@@ -133,7 +134,10 @@ const BillingHistoryTab = ({ currentBillingDetailId }: BillingHistoryTabProps) =
         {
             name: "returnStatus",
             label: "สถานะการส่งกลับ",
-            options: { ...cellAlignOptions({ align: "center" }), customBodyRender: (value) => value ?? "-" },
+            options: {
+                ...cellAlignOptions({ align: "center" }),
+                customBodyRender: (value) => billingReturnStatusLabel(value),
+            },
         },
     ];
 
