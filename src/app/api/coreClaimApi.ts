@@ -651,11 +651,11 @@ export const useGetPreviousClaim = (claimId: string) => {
 
 export const useGetStandardMedicalExpenseByCase = (
     caseId: string,
-    formatTypeId: number | undefined,
-    coverageTypeId: number | undefined,
-    medicalTypeId: number | undefined,
-    isUseOften: boolean,
-    productTypeId: number | undefined,
+    formatTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    medicalTypeId?: number | undefined,
+    isUseOften?: boolean | undefined,
+    productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
     productId?: number | undefined
 ) => {

@@ -482,7 +482,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 (doc): UpsertClaimDecisionCaseDocumentRequest => ({
                     documentId: doc.documentId,
                     documentNo: doc.documentName,
+                    // documentSubTypeId มาจาก GET /document/case/filter (ผ่าน mapDocumentChecks) — BE บังคับ > 0
+                    documentSubTypeId: doc.documentSubTypeId,
                     documentReviewStatusId: doc.checkResult || undefined,
+                    documentReviewRemark: doc.remark || undefined,
                     caseDocumentDetail: [],
                 })
             );

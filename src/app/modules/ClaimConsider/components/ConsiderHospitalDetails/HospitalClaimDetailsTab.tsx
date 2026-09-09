@@ -25,14 +25,14 @@ import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
-import { claimConsiderSelector, setClaimForm } from "../../store/claimConsiderSlice";
+import { claimConsiderSelector, resetState, setClaimForm } from "../../store/claimConsiderSlice";
 import useClaimStepCalculateHook from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
 import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
 import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
-import { swalError } from "../../../_common";
+import { swalError, swalSuccess } from "../../../_common";
 import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
 import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
@@ -52,6 +52,9 @@ const steps = [{ label: "บันทึกข้อมูลเคลม" }, { 
 const HOSPITAL_DECISION_LABEL_OVERRIDES: Partial<Record<number, string>> = { 4: "แจ้งแก้ไข" };
 
 const fmtBaht = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
+
+/** หน้ารายการพิจารณาเคลมโรงพยาบาล — index ของ path นี้คือ ConsiderHospitalMonitorPage */
+const CONSIDER_HOSPITAL_MONITOR_PATH = "/consider/hospital-monitor";
 
 type HospitalClaimDetailsTabProps = {
     /**
@@ -115,6 +118,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
 
+    /** จบงานบนหน้านี้แล้วกลับไปหน้ารายการ — ล้าง state ที่ค้างก่อนออกเสมอ ไม่ให้รั่วไปเคสถัดไป */
+    const leaveToMonitor = () => {
+        dispatch(resetState());
+        navigate(CONSIDER_HOSPITAL_MONITOR_PATH);
+    };
+
     /**
      * "โอนค่าชดเชยรวมกับค่ารักษา" : Default บังคับโอนรวม
      * เลือกโอนแยกได้เฉพาะผลิตภัณฑ์ PH + IPD / Day Case (ชีท IPD row 858 : Enable เฉพาะ PH)
@@ -166,6 +175,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             bankId: payoutAccount.bankId,
             bankName: payoutAccount.bankName,
             bankAccountNo: payoutAccount.accountNo,
+        },
+        // ยืนยันบันทึกผลพิจารณาสำเร็จ → แจ้งผล แล้วกลับหน้ารายการพิจารณาเคลมโรงพยาบาล
+        onConfirmConsiderSuccess: () => {
+            swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                leaveToMonitor()
+            );
         },
     });
 
@@ -415,8 +430,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         aplicationCode={customerDetail?.policyCode ?? ""}
                                         decisionReason={decisionReason}
                                         decisionReasonLoading={decisionReasonLoading}
-                                        // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 5) — CR Ver2
-                                        hiddenDecisionIds={[3, 5]}
+                                        // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 6) — CR Ver2
+                                        hiddenDecisionIds={[3, 6]}
                                         headingText="แจ้งผลการพิจารณาโรงพยาบาล"
                                         labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
                                     />
@@ -482,6 +497,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             variant="outlined"
                             startIcon={<ArrowBackIcon />}
                             onClick={activeStep === 0 ? () => navigate(-1) : handleBack}
+                            sx={{ bgcolor: "#fff" }}
                         >
                             กลับ
                         </Button>
@@ -496,17 +512,16 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 justifyContent: "flex-end",
                             }}
                         >
-                            <Button
-                                variant="outlined"
-                                startIcon={<SaveAsIcon />}
-                                onClick={handleSaveDraft}
-                                disabled={isStep1Loading}
-                            >
-                                บันทึกแบบร่าง
-                            </Button>
-
                             {!isLastStep && (
                                 <>
+                                    <Button
+                                        variant="outlined"
+                                        startIcon={<SaveAsIcon />}
+                                        onClick={handleSaveDraft}
+                                        disabled={isStep1Loading}
+                                    >
+                                        บันทึกแบบร่าง
+                                    </Button>
                                     <Button
                                         variant="contained"
                                         startIcon={<SaveIcon />}

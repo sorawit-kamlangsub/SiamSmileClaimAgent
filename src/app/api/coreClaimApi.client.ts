@@ -8555,6 +8555,7 @@ export interface GetCustomerClaimAdjudicationMonitorDtoResponse {
     claimTransactionTypeName?: string | undefined;
     customerId?: number | undefined;
     totalCount?: number | undefined;
+    caseId?: string | undefined;
 }
 
 export interface GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse {
@@ -9245,12 +9246,12 @@ export interface GetStandardMedicalExpenseByCaseDtoResponse {
     standardMedicalExpenseId?: number | undefined;
     descriptionEN?: string | undefined;
     descriptionTH?: string | undefined;
-    maximumLimit?: number | undefined;
+    maximumLimit?: number;
     standardMedicalExpenseCategoryId?: number | undefined;
     backgroundColorCode?: string | undefined;
     inputToStandardSubCategoryId?: number | undefined;
     bodyPartId?: number | undefined;
-    caseItemId?: string | undefined;
+    caseItemId?: string;
     caseId?: string | undefined;
     quantity?: number | undefined;
     perUnit?: number | undefined;
