@@ -30,7 +30,7 @@ type ExpenseDetailsProps = {
 // เรียก useClaimExpenseDetailHook ที่นี่จุดเดียว (ก่อนหน้านี้ ExpenseRecords เรียกเอง) เพราะการ์ด "สิทธิ์เบิก"
 // ด้านล่างต้องใช้ benefitName จาก hook นี้ ก่อนถึง ExpenseRecords — ส่งผลลัพธ์ทั้งก้อนต่อลงไปแทนเรียกซ้ำ
 const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetailsProps) => {
-    const nplAmount = 100;
+    const nplAmount = detailData?.data?.nplAmount || 0;
     const expenseDetail = useClaimExpenseDetailHook({ detailData, customerDetailData });
     return (
         <>
