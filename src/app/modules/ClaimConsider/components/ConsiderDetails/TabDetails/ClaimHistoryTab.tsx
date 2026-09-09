@@ -34,9 +34,6 @@ import {
     formatDateString,
 } from "../../../../../functionHelpers";
 
-/** BE ยังไม่ส่งสถานะเคลมจริงมาให้ที่ endpoint นี้ — ใช้ "Opened" (claimStatusId 2 ตาม colorMapClaimStatus) คงที่ไปก่อน */
-const DEFAULT_CLAIM_STATUS_ID = 2;
-
 const fmtBaht = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 type ClaimHistoryTabProps = {
@@ -78,8 +75,7 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
             },
         },
         {
-            // BE ยังไม่ส่งข้อมูลลักษณะการเคลม (เหตุ/ความคุ้มครอง/การรักษา) มาให้ที่ endpoint นี้
-            name: "incidentTypeName",
+            name: "displayClaimNature",
             label: "ลักษณะการเคลม",
             options: {
                 ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
@@ -116,32 +112,38 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
             },
         },
         {
-            name: "countCase",
+            name: "isEnableClaimContinue",
             label: "เป็นเคลมต่อเนื่อง",
             options: {
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (value?: number) =>
-                    (value ?? 0) > 1 ? <CheckCircleIcon color="success" fontSize="small" /> : "-",
+                customBodyRender: (value?: boolean) =>
+                    value ? <CheckCircleIcon color="success" fontSize="small" /> : "-",
             },
         },
         {
-            // BE ยังไม่ส่งสถานะเคลมจริงมาให้ที่ endpoint นี้ — ใช้ "Opened" คงที่ไปก่อน
-            name: "claimStatus",
+            name: "claimStatusName",
             label: "สถานะเคลม",
             options: {
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: () => (
-                    <Chip
-                        label="Opened"
-                        size="small"
-                        sx={{
-                            bgcolor: backgroundColorMapClaimStatus[DEFAULT_CLAIM_STATUS_ID],
-                            color: colorMapClaimStatus[DEFAULT_CLAIM_STATUS_ID],
-                            fontWeight: 700,
-                            borderRadius: "16px",
-                        }}
-                    />
-                ),
+                customBodyRenderLite: (rowIndex) => {
+                    const row = items[rowIndex];
+                    const value = row?.claimStatusName;
+                    if (!value) return "-";
+                    const bgColor = row?.claimStatusId ? backgroundColorMapClaimStatus[row?.claimStatusId] : undefined;
+                    const textColor = row?.claimStatusId ? colorMapClaimStatus[row?.claimStatusId] : undefined;
+                    return (
+                        <Chip
+                            label={value}
+                            size="small"
+                            sx={{
+                                backgroundColor: bgColor,
+                                color: textColor,
+                                fontWeight: 700,
+                                borderRadius: "16px",
+                            }}
+                        />
+                    );
+                },
             },
         },
         {

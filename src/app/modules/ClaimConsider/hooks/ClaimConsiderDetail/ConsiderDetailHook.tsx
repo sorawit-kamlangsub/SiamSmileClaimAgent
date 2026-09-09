@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
+    useGetClaimContinue,
     useGetClaimDetailConsider,
     useGetClaimEditDraftRevision,
     useGetCustomerDetailById,
@@ -19,8 +20,9 @@ import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
-import { CoverageType } from "../../../../functionHelpers";
+import { CoverageType, formatDateString } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
+import { ContinuousClaimRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
 /** รวมวันที่+เวลาที่กรอกแยกกันเป็น dayjs เดียว — วันที่มาจาก date picker เวลามาจาก time picker คนละ field */
 const combineDateTime = (
@@ -82,6 +84,29 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         detail?.customerId ?? 0
     );
     const customerDetail = customerDetailData?.data;
+
+    /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม) */
+    const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
+    const { data: claimContinueData } = useGetClaimContinue(customerDetail?.policyCode ?? undefined);
+    const continuousClaimRows: ContinuousClaimRow[] = useMemo(
+        () =>
+            (claimContinueData?.data ?? []).map((item) => ({
+                claimNo: item.claimNo ?? "-",
+                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
+                incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                totalClaimAmount: item.totalCaseAmount ?? 0,
+                totalPaidAmount: item.totalPaidAmount ?? 0,
+                admissionDate: formatDateString(item.admissionDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
+                claimInfo: item.claimDetail ?? "-",
+                diagnosis1: item.icD10Detail ?? "-",
+                remainingLimit: item.remainAmount ?? 0,
+                // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
+                previousCaseNo: "-",
+                previousCaseStatus: "-",
+            })),
+        [claimContinueData]
+    );
+
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const incidentType: ClaimTypeOption[] =
         incidentTypeRaw?.data?.map((item) => ({
@@ -183,6 +208,28 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         },
         onSubmit: () => {},
     });
+
+    /** เปิด/ปิด Modal เลือกเคลมต่อเนื่อง ตามการติ๊ก Checkbox */
+    const handleToggleContinuousClaim = (checked: boolean) => {
+        formik.setFieldValue("isContinuousClaim", checked);
+
+        if (checked) {
+            setContinuousClaimOpen(true);
+            return;
+        }
+
+        formik.setFieldValue("continuousClaim", undefined);
+    };
+
+    const handleSelectContinuousClaim = (row: ContinuousClaimRow) => {
+        formik.setFieldValue("continuousClaim", row);
+        setContinuousClaimOpen(false);
+    };
+
+    const handleClearContinuousClaim = () => {
+        formik.setFieldValue("continuousClaim", undefined);
+        formik.setFieldValue("isContinuousClaim", false);
+    };
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
@@ -470,6 +517,12 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         decisionReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
+        continuousClaimRows,
+        continuousClaimOpen,
+        setContinuousClaimOpen,
+        handleToggleContinuousClaim,
+        handleSelectContinuousClaim,
+        handleClearContinuousClaim,
     };
 };
 

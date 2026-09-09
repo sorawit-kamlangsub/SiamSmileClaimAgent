@@ -52,10 +52,6 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     causeOfIncidentId: number | undefined;
     causeOfIncidentName: string | undefined;
 
-    /** เคลมต่อเนื่อง */
-    isContinuousClaim: boolean;
-    continuousClaim: ContinuousClaimRow | undefined;
-
     /** ข้อมูลการเข้ารับการรักษา */
     hn: string;
     vn: string;

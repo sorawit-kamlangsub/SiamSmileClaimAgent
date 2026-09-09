@@ -18,6 +18,8 @@ import StayDaysSummary from "./StayDaysSummary";
 import { EMPTY_STATE_SX } from "../../../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
 import { useFormikContext } from "formik";
+import ContinuousClaimSection from "../../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimSection";
+import { ContinuousClaimRow } from "../../../ConsiderHospitalDetails/mock/hospitalConsiderMock";
 type RecordClaimDataProps = {
     incidentType: ClaimTypeOption[];
     incidentTypeLoading: boolean;
@@ -25,6 +27,13 @@ type RecordClaimDataProps = {
     causeOfIncident: ChipOption[];
     medicalType: ChipOption[];
     incidentTypeMappingLoading: boolean;
+    /** เคลมต่อเนื่อง */
+    continuousClaimRows: ContinuousClaimRow[];
+    continuousClaimOpen: boolean;
+    onContinuousClaimOpenChange: (open: boolean) => void;
+    onContinuousClaimToggle: (checked: boolean) => void;
+    onContinuousClaimSelect: (row: ContinuousClaimRow) => void;
+    onContinuousClaimClear: () => void;
 };
 const RecordClaimData = ({
     incidentType,
@@ -33,6 +42,12 @@ const RecordClaimData = ({
     causeOfIncident,
     medicalType,
     incidentTypeMappingLoading,
+    continuousClaimRows,
+    continuousClaimOpen,
+    onContinuousClaimOpenChange,
+    onContinuousClaimToggle,
+    onContinuousClaimSelect,
+    onContinuousClaimClear,
 }: RecordClaimDataProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
@@ -55,6 +70,17 @@ const RecordClaimData = ({
                 <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" p={2}>
                     <Grid container spacing={2}>
+                        {/* เคลมต่อเนื่อง */}
+                        <Grid item xs={12}>
+                            <ContinuousClaimSection
+                                rows={continuousClaimRows}
+                                open={continuousClaimOpen}
+                                onOpenChange={onContinuousClaimOpenChange}
+                                onToggle={onContinuousClaimToggle}
+                                onSelect={onContinuousClaimSelect}
+                                onClear={onContinuousClaimClear}
+                            />
+                        </Grid>
                         {/* เหตุของการเคลม */}
                         <Grid item xs={12}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
