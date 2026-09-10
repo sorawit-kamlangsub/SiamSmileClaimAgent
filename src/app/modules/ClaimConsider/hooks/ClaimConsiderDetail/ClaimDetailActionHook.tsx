@@ -4,6 +4,7 @@ import {
     ApproveCasePayableRequest,
     ApproveClaimDecisionDtoRequest,
     SaveClaimEditDraftDtoRequest,
+    SaveClaimEditDraftDtoResponeServiceResponse,
     CaseSaveClaimEditDraftRequest,
     CaseAssessmentSaveClaimEditDraftRequest,
     CaseAdjudicationSaveClaimEditDraftRequest,
@@ -21,6 +22,7 @@ import {
     UpsertClaimDecisionCaseDocumentDetailRequest,
     UpsertClaimDecisionCaseRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
+    CalculateCaseClaimDtoResponse,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
 import { swalError, swalSuccess } from "../../../_common";
@@ -64,6 +66,17 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
      * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
      */
     onConfirmConsiderSuccess?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void;
+    /**
+     * ให้หน้าที่เรียกจัดการผลสำเร็จของการบันทึกแบบร่างเอง (เช่น redirect)
+     * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
+     */
+    onSaveDraftSuccess?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void;
+    /**
+     * แทนที่ผลคำนวณ (calculateResult) ที่อ่านจาก Redux — ใช้กับเคลมโรงพยาบาลที่ต้องปรับยอด
+     * ตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" (calculateCompensationSummary) ก่อนส่ง payload อนุมัติ
+     * ไม่ส่งมา = ใช้ค่าจาก Redux ตามเดิม (เคลมลูกค้า)
+     */
+    calculateOverride?: CalculateCaseClaimDtoResponse | null;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -92,16 +105,23 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     payoutAccount,
     onApproveSuccess,
     onConfirmConsiderSuccess,
+    onSaveDraftSuccess,
+    calculateOverride,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
-    const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
+    const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
+    // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload
+    const calculateResult = calculateOverride ?? calculateResultStore;
     const caseItemId = crypto.randomUUID();
     const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
     const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
     const totalNotCovered = filledItems.reduce((s, i) => s + (i.notCovered || 0), 0);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered;
     const saveClaimEditDraft = useSaveClaimEditDraft(
-        () => swalSuccess("บันทึกแบบร่างสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (response) =>
+            onSaveDraftSuccess
+                ? onSaveDraftSuccess(response)
+                : swalSuccess("บันทึกแบบร่างสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
     );
     const saveClaimDecision = useUpsertClaimDecision(

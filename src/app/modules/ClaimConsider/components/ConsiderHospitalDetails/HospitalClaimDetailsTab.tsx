@@ -2,13 +2,7 @@ import { useState } from "react";
 import {
     Box,
     Button,
-    Chip,
     CircularProgress,
-    Dialog,
-    DialogActions,
-    DialogContent,
-    DialogTitle,
-    Divider,
     FormControlLabel,
     Grid,
     Paper,
@@ -26,32 +20,34 @@ import { useNavigate } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { claimConsiderSelector, resetState, setClaimForm } from "../../store/claimConsiderSlice";
-import useClaimStepCalculateHook from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
+import useHospitalClaimStepCalculateHook from "../../hooks/ClaimConsiderHospital/HospitalClaimStepCalculateHook";
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
 import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
 import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
-import { swalError, swalSuccess } from "../../../_common";
+import { calculateCompensationSummary } from "./SubDetailsTab/ExpensesTabs/_common/calculateCompensationSummary";
+import { swalError, swalLoading, swalSuccess } from "../../../_common";
+import { swalHospitalApproveTransferSuccess } from "../../../_common/customSweetAlert";
 import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
 import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import useHospitalConsiderPayment from "../../hooks/ClaimConsiderHospital/useHospitalConsiderPayment";
 import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
+import ConfirmHospitalCompensationTransferModal from "./ConfirmHospitalCompensationTransferModal";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
 /** เคลมโรงพยาบาล : ปุ่ม "รอแก้ไข" (decisionId 4) ของ ConsiderSection แสดงเป็น "แจ้งแก้ไข" — CR Ver2 ข้อ 2 */
 const HOSPITAL_DECISION_LABEL_OVERRIDES: Partial<Record<number, string>> = { 4: "แจ้งแก้ไข" };
-
-const fmtBaht = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
 /** หน้ารายการพิจารณาเคลมโรงพยาบาล — index ของ path นี้คือ ConsiderHospitalMonitorPage */
 const CONSIDER_HOSPITAL_MONITOR_PATH = "/consider/hospital-monitor";
@@ -118,9 +114,15 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
 
-    /** จบงานบนหน้านี้แล้วกลับไปหน้ารายการ — ล้าง state ที่ค้างก่อนออกเสมอ ไม่ให้รั่วไปเคสถัดไป */
+    /**
+     * จบงานบนหน้านี้แล้วกลับไปหน้า Monitor พิจารณาเคลม - เคลมโรงพยาบาล
+     * ล้างทุกอย่างทันทีก่อนออก ไม่ให้รั่วไปเคสถัดไป : Redux (claimConsider), Formik และ state ของ stepper
+     */
     const leaveToMonitor = () => {
         dispatch(resetState());
+        formik.resetForm();
+        setActiveStep(0);
+        setFurthestStep(0);
         navigate(CONSIDER_HOSPITAL_MONITOR_PATH);
     };
 
@@ -144,8 +146,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         ? bankListData?.data?.find((b) => b.organizeId === customerDetail.bankId)?.organizeName
         : undefined;
 
-    /** บัญชีรับเงินค่าชดเชย : ใช้ค่าที่ผู้ใช้แก้ไขใน Step 3 ถ้ามี ไม่งั้น default จาก customerDetail แล้วค่อย fallback API */
-    const payoutAccount: Step3PayoutAccount = editedPayoutAccount ?? {
+    /**
+     * บัญชีรับเงินค่าชดเชย (default) — 2 แหล่ง :
+     * - customerDetail.bank* : GET /customer/{customerId}/detail (useGetCustomerDetailById) — ใช้ก่อน
+     * - defaultBankAccount   : GET /customer/{policyCode}/bank-account (useGetCustomerBankAccount) — fallback
+     */
+    const defaultPayoutAccount: Step3PayoutAccount = {
         phone: customerDetail?.mobilePhoneNumber ?? undefined,
         accountName: customerDetail?.bankAccountName ?? defaultBankAccount?.bankAccountName ?? undefined,
         bankId: defaultBankAccount?.bankId ?? customerDetail?.bankId ?? undefined,
@@ -153,6 +159,58 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         accountNo: customerDetail?.bankAccountNo ?? defaultBankAccount?.bankAccountNo ?? undefined,
         relationLabel: defaultBankAccount?.bankAccountRelationTypeName ?? undefined,
     };
+
+    /**
+     * ค่าจริงที่ใช้แสดง/โอน : ถ้าผู้ใช้แก้ field ใดใน Step 3 (editedPayoutAccount) ให้ทับเฉพาะ field นั้น
+     * field ที่ไม่ได้แก้ยังใช้ค่า default จาก API
+     */
+    const payoutAccount: Step3PayoutAccount = { ...defaultPayoutAccount, ...editedPayoutAccount };
+
+    /**
+     * ยอดค่าชดเชย/ค่ารักษา ที่ปรับตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" แล้ว (สูตรเดียวกับการ์ด Step 3)
+     * - ไม่ติ๊ก (โอนแยก) → "ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)" = ค่าชดเชยรวมทั้งก้อน
+     * - ติ๊ก (โอนรวม)   → merge เข้ากับ "ส่วนเกิน (ลูกค้าจ่าย)" เท่าที่มี ส่วนที่เกินจากนั้นยังเป็นคงเหลือ
+     * calculateResult ดิบจาก API ไม่รู้เรื่อง split — ต้องคำนวณฝั่ง FE ก่อนเอาไปแสดง/โอน/ยิง payload
+     */
+    const isCompensationMerged = !allowSeparateCompensation || mergeCompensation;
+    const effectiveCompensation = calculateCompensationSummary(
+        {
+            compensateNet: calculateResult?.compensateNet ?? 0,
+            compensateInclude: calculateResult?.compensateInclude ?? 0,
+            compensateRemain: calculateResult?.compensateRemain ?? 0,
+            medicalNet: calculateResult?.medicalNet ?? 0,
+            medicalCoverPay: calculateResult?.medicalCoverPay ?? 0,
+            medicalCompensateInclude: calculateResult?.medicalCompensateInclude ?? 0,
+            medicalPay: calculateResult?.medicalPay ?? 0,
+            medicalUnpay: calculateResult?.medicalUnpay ?? 0,
+        },
+        isCompensationMerged ? "single" : null
+    );
+
+    /** ยอดค่าชดเชยคงเหลือที่ต้องโอนให้ลูกค้าจริง (หลังปรับตามตัวเลือกโอนรวม) */
+    const compensateRemainToCustomer = effectiveCompensation.compensateRemain;
+
+    /**
+     * มีค่าชดเชยคงเหลือต้องโอนให้ลูกค้าแยก → โอนผ่าน POST /Transfer/v1/CreatePayment (claimFund)
+     * แยกจาก /claim/decision/approve จึง "ไม่" แนบบัญชีลูกค้าใน casePayable ของ approve ซ้ำ
+     * (เกิดได้ทั้งกรณีไม่ติ๊กโอนรวม และกรณีติ๊กแต่ค่าชดเชยเกินส่วนเกินจนมีคงเหลือ)
+     */
+    const hasCompensationToTransfer = allowSeparateCompensation && compensateRemainToCustomer > 0;
+
+    /** ยอดที่ปรับแล้ว ส่งแทน calculateResult ดิบให้ payload อนุมัติ (casePayable / caseAdjudication) */
+    const calculateOverride = calculateResult
+        ? {
+              ...calculateResult,
+              compensateInclude: effectiveCompensation.compensateInclude,
+              compensateRemain: effectiveCompensation.compensateRemain,
+              medicalCompensateInclude: effectiveCompensation.medicalCompensateInclude,
+              medicalPay: effectiveCompensation.medicalPay,
+              medicalUnpay: effectiveCompensation.medicalUnpay,
+          }
+        : null;
+
+    /** โอนค่าชดเชยคงเหลือให้ลูกค้าหลังอนุมัติ (claimFund CreatePayment + EncryptText) */
+    const { transferCompensation } = useHospitalConsiderPayment();
 
     const {
         handleSaveDraft,
@@ -170,15 +228,61 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
         // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
         documentChecks: formik.values.documentChecks,
-        // เคลมโรงพยาบาลต้องส่งบัญชีปลายทางใน casePayable (เคลมลูกค้าไม่ส่ง)
-        payoutAccount: {
-            bankId: payoutAccount.bankId,
-            bankName: payoutAccount.bankName,
-            bankAccountNo: payoutAccount.accountNo,
+        // ยอดที่ปรับตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" แล้ว — ให้ payload อนุมัติใช้ยอดนี้แทน calculateResult ดิบ
+        calculateOverride,
+        // ไม่มีค่าชดเชยคงเหลือต้องโอนแยก → ส่งบัญชีปลายทางใน casePayable เหมือนเดิม
+        // มีคงเหลือต้องโอนแยก → ค่าชดเชยไปทาง CreatePayment แล้ว จึงไม่แนบบัญชีลูกค้าใน casePayable ซ้ำ
+        payoutAccount: hasCompensationToTransfer
+            ? undefined
+            : {
+                  bankId: payoutAccount.bankId,
+                  bankName: payoutAccount.bankName,
+                  bankAccountNo: payoutAccount.accountNo,
+              },
+        // บันทึกแบบร่างสำเร็จ → แจ้งผล แล้วกลับหน้า Monitor + ล้างทุกอย่าง
+        onSaveDraftSuccess: () => {
+            swalSuccess("บันทึกแบบร่างสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                leaveToMonitor()
+            );
         },
-        // ยืนยันบันทึกผลพิจารณาสำเร็จ → แจ้งผล แล้วกลับหน้ารายการพิจารณาเคลมโรงพยาบาล
+        // ยืนยันบันทึกผลพิจารณาสำเร็จ → แจ้งผล แล้วกลับหน้า Monitor + ล้างทุกอย่าง
         onConfirmConsiderSuccess: () => {
             swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                leaveToMonitor()
+            );
+        },
+        // อนุมัติสำเร็จ → (ถ้ามีค่าชดเชยคงเหลือ) โอนให้ลูกค้า "ทันที" แล้วแจ้งผล + กลับหน้า Monitor + ล้างทุกอย่าง
+        onApproveSuccess: async (response) => {
+            if (hasCompensationToTransfer && response.data) {
+                // block จอไว้ระหว่างโอน ไม่ให้ผู้ใช้ทำอย่างอื่น
+                swalLoading("กำลังโอนค่าชดเชยให้ลูกค้า", "กรุณารอสักครู่ อย่าปิดหน้าต่างนี้");
+                const result = await transferCompensation({
+                    approveResult: response.data,
+                    payoutAccount,
+                    compensateRemain: compensateRemainToCustomer,
+                });
+                if (!result.isSuccess) {
+                    await swalError(
+                        "อนุมัติสำเร็จ แต่โอนค่าชดเชยไม่สำเร็จ",
+                        result.message ?? "กรุณาตรวจสอบและทำรายการโอนค่าชดเชยให้ลูกค้าอีกครั้งภายหลัง"
+                    );
+                    leaveToMonitor();
+                    return;
+                }
+                // โอนสำเร็จ → แสดงเลขที่ Claim/Case + รหัสการโอนเงิน (CPG) + จำนวนเงิน
+                await swalHospitalApproveTransferSuccess({
+                    claimNo: response.data.claimNo,
+                    caseNo: response.data.caseNo,
+                    paymentCode: result.paymentCode,
+                    transferAmount: compensateRemainToCustomer,
+                    bankName: payoutAccount.bankName,
+                    bankAccountNo: payoutAccount.accountNo,
+                });
+                leaveToMonitor();
+                return;
+            }
+
+            swalSuccess("อนุมัติผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
                 leaveToMonitor()
             );
         },
@@ -189,12 +293,14 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
 
-    /** Step 2 → Step 3 : เรียก /api/calculate/caseclaim แล้วเก็บผลไว้ที่ Redux (calculateResult) */
-    const { isCalculating, handleCalculate } = useClaimStepCalculateHook({
+    /**
+     * Step 2 → Step 3 : เรียก /api/calculate/caseclaim (payload เฉพาะเคลมโรงพยาบาล :
+     * isSimulateCase = true, caseAdjudicationId = undefined) แล้วเก็บผลไว้ที่ Redux (calculateResult)
+     */
+    const { isCalculating, handleCalculate } = useHospitalClaimStepCalculateHook({
         formik,
         customerDetail,
         filledItems,
-        stepsLength: steps.length,
     });
 
     /** ตารางรายการค่ารักษา (Step 3) : จากผล API calculate ไม่ใช่ผลรวมฝั่ง FE */
@@ -233,8 +339,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
           }
         : undefined;
 
-    /** โอนค่าชดเชยแยก (ไม่ติ๊กโอนรวม) → ต้องยืนยันผ่าน Modal ก่อนอนุมัติ */
-    const isSeparateCompensation = allowSeparateCompensation && !mergeCompensation;
+    /** มีค่าชดเชยคงเหลือต้องโอนให้ลูกค้า → ต้องยืนยันผ่าน Modal ก่อนอนุมัติ + โอนผ่าน CreatePayment */
+    const isSeparateCompensation = hasCompensationToTransfer;
 
     /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
     const currentCaseNo = detail?.caseNo ?? "";
@@ -327,13 +433,15 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             return;
         }
         // ปุ่มอนุมัติ → POST /claim/decision/approve (decisionId 2)
+        swalLoading("กำลังอนุมัติรายการ", "กรุณารอสักครู่");
         await submitApproveDecision();
     };
 
-    /** ปุ่ม "ยืนยันการทำรายการ" ใน Modal : ยิง /claim/decision/approve จริง */
+    /** ปุ่ม "ยืนยันการทำรายการ" ใน Modal : ยิง /claim/decision/approve จริง แล้วโอนค่าชดเชยต่อทันทีใน onApproveSuccess */
     const handleConfirmApprove = async () => {
         setConfirmApproveOpen(false);
         // ปุ่มอนุมัติ → POST /claim/decision/approve (decisionId 2)
+        swalLoading("กำลังอนุมัติรายการ", "กรุณารอสักครู่");
         await submitApproveDecision();
     };
 
@@ -557,91 +665,22 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                     </Grid>
                 </Grid>
 
-                {/* Modal ยืนยันการทำรายการ : ก่อนอนุมัติกรณีโอนค่าชดเชยแยก (ชีท IPD row 972-1009) */}
-                <Dialog open={confirmApproveOpen} onClose={() => setConfirmApproveOpen(false)} maxWidth="sm" fullWidth>
-                    <DialogTitle sx={{ fontWeight: 700 }}>ยืนยันการทำรายการ</DialogTitle>
-                    <DialogContent dividers>
-                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                            ตรวจสอบผลการอนุมัติเคลมก่อนส่งรายการ กรุณาตรวจสอบยอดตั้งเบิก ยอดค่าชดเชย
-                            และข้อมูลบัญชีรับเงินให้ถูกต้องก่อนยืนยันการทำรายการ
-                        </Typography>
-
-                        <Box display="flex" justifyContent="space-between" py={0.5}>
-                            <Typography variant="body2">สิทธิ์โรงพยาบาลตั้งเบิกกับบริษัท</Typography>
-                            <Typography variant="body2" fontWeight={700}>
-                                {fmtBaht(step3Summary.medicalPay)}
-                            </Typography>
-                        </Box>
-                        <Box display="flex" justifyContent="space-between" py={0.5}>
-                            <Typography variant="body2">ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)</Typography>
-                            <Typography variant="body2" fontWeight={700} color="#15803d">
-                                {fmtBaht(step3Summary.compensateRemain)}
-                            </Typography>
-                        </Box>
-
-                        {isSeparateCompensation && step3Summary.compensateRemain > 0 && (
-                            <>
-                                <Divider sx={{ my: 1.5 }} />
-
-                                <Box
-                                    sx={{
-                                        display: "flex",
-                                        alignItems: "center",
-                                        gap: 1,
-                                        mb: 0.5,
-                                        flexWrap: "wrap",
-                                    }}
-                                >
-                                    <Typography variant="body2" fontWeight={700}>
-                                        บัญชีรับเงินค่าชดเชย
-                                    </Typography>
-                                    <Chip
-                                        label={payoutAccount.relationLabel ?? "ผู้ชำระเบี้ยในระบบ"}
-                                        size="small"
-                                        color="primary"
-                                        variant="outlined"
-                                    />
-                                </Box>
-                                <Box display="flex" justifyContent="space-between" py={0.25}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ธนาคาร
-                                    </Typography>
-                                    <Typography variant="body2">{payoutAccount.bankName ?? "-"}</Typography>
-                                </Box>
-                                <Box display="flex" justifyContent="space-between" py={0.25}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        เลขที่บัญชี
-                                    </Typography>
-                                    <Typography variant="body2">{payoutAccount.accountNo ?? "-"}</Typography>
-                                </Box>
-                                <Box display="flex" justifyContent="space-between" py={0.25}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        ชื่อบัญชี
-                                    </Typography>
-                                    <Typography variant="body2">{payoutAccount.accountName ?? "-"}</Typography>
-                                </Box>
-                                <Box display="flex" justifyContent="space-between" py={0.25}>
-                                    <Typography variant="body2" color="text.secondary">
-                                        เบอร์โทรศัพท์
-                                    </Typography>
-                                    <Typography variant="body2">{payoutAccount.phone ?? "-"}</Typography>
-                                </Box>
-                            </>
-                        )}
-                    </DialogContent>
-                    <DialogActions sx={{ px: 3, py: 2 }}>
-                        <Button variant="outlined" onClick={() => setConfirmApproveOpen(false)}>
-                            ยกเลิก
-                        </Button>
-                        <Button
-                            variant="contained"
-                            onClick={handleConfirmApprove}
-                            sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
-                        >
-                            ยืนยันการทำรายการ
-                        </Button>
-                    </DialogActions>
-                </Dialog>
+                {/* ยืนยันการทำรายการ : ก่อนอนุมัติ + โอนค่าชดเชยให้ลูกค้า (ชีท IPD row 972-1009) */}
+                <ConfirmHospitalCompensationTransferModal
+                    open={confirmApproveOpen}
+                    onClose={() => setConfirmApproveOpen(false)}
+                    onConfirm={handleConfirmApprove}
+                    customerName={customerDetail?.customerName}
+                    phone={payoutAccount.phone}
+                    payoutAccount={{
+                        bankId: payoutAccount.bankId,
+                        bankName: payoutAccount.bankName,
+                        accountNo: payoutAccount.accountNo,
+                        accountName: payoutAccount.accountName,
+                    }}
+                    hospitalPayableAmount={effectiveCompensation.medicalPay}
+                    transferAmount={compensateRemainToCustomer}
+                />
             </Box>
         </FormikProvider>
     );

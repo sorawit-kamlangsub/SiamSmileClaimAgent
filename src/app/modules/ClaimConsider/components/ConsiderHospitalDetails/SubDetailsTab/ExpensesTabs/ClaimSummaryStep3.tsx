@@ -199,15 +199,24 @@ const ClaimSummaryStep3 = ({
         onMergeChange?.(checked);
     };
 
-    // แก้ไขบัญชีรับเงินค่าชดเชย : เก็บค่าที่แก้ไว้ใน local state (mock — ยังไม่ persist ที่ BE)
+    // แก้ไขบัญชีรับเงินค่าชดเชย : เก็บค่าที่แก้ไว้ใน local state (มีผลเฉพาะรายการนี้)
     const [isEditingAccount, setIsEditingAccount] = useState(false);
     const [accountDraft, setAccountDraft] = useState<Step3PayoutAccount>(payoutAccount ?? {});
     useEffect(() => {
         if (!isEditingAccount) setAccountDraft(payoutAccount ?? {});
     }, [payoutAccount, isEditingAccount]);
 
+    /**
+     * อัปเดต draft + แจ้ง parent ทันทีทุกครั้งที่แก้ field — ไม่ต้องรอกด "เสร็จสิ้น"
+     * (ก่อนหน้านี้ค่าที่กรอกไม่ไหลออกไป payoutAccount จน dialog ยืนยันไม่เห็นค่าที่กรอก)
+     */
+    const emitAccount = (next: Step3PayoutAccount) => {
+        setAccountDraft(next);
+        onPayoutAccountChange?.(next);
+    };
+
     const handleAccountField = (field: keyof Step3PayoutAccount, value: string) => {
-        setAccountDraft((prev) => ({ ...prev, [field]: value }));
+        emitAccount({ ...accountDraft, [field]: value });
     };
 
     // ธนาคารต้องเลือกจาก master เพื่อให้ได้ bankId ไปเป็น toBankId ใน payload อนุมัติ
@@ -219,8 +228,10 @@ const ClaimSummaryStep3 = ({
     };
 
     // บังคับโอนรวมเมื่อไม่ใช่กรณี IPD / Day Case ที่ไม่ใช่ PA
+    // "โอนค่าชดเชยรวมกับค่ารักษา" = merge เท่าที่มีส่วนเกิน (medicalUnpay) ส่วนที่เกินจากส่วนเกิน
+    // ยังเป็น "ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)" → ตรงกับ "single" ไม่ใช่ "all" (all จะบังคับคงเหลือ = 0 เสมอ)
     const isMerged = !allowSeparateCompensation || mergeChecked;
-    const mergeOption: MergeOption = isMerged ? "all" : null;
+    const mergeOption: MergeOption = isMerged ? "single" : null;
 
     const calc = useMemo(
         () =>
@@ -240,8 +251,9 @@ const ClaimSummaryStep3 = ({
         [summary, mergeOption]
     );
 
-    // บัญชีรับเงินค่าชดเชย : แสดงเมื่อมีการโอนแยก (คงเหลือ > 0) และเป็นกรณีที่เลือกโอนแยกได้
-    const showPayoutAccount = allowSeparateCompensation && !isMerged && calc.compensateRemain > 0;
+    // บัญชีรับเงินค่าชดเชย : แสดงเมื่อมีค่าชดเชยคงเหลือต้องโอนให้ลูกค้า (คงเหลือ > 0) และเป็นกรณีที่เลือกโอนแยกได้
+    // — ไม่ว่าจะติ๊ก "โอนรวม" หรือไม่ ถ้าค่าชดเชยเกินส่วนเกินแล้วมีคงเหลือ ก็ต้องมีบัญชีปลายทาง
+    const showPayoutAccount = allowSeparateCompensation && calc.compensateRemain > 0;
 
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
@@ -489,11 +501,11 @@ const ClaimSummaryStep3 = ({
                                     value={bankOptions.find((b) => b.organizeId === accountDraft.bankId) ?? null}
                                     // เซ็ต bankId กับ bankName พร้อมกัน ป้องกัน toBankId ไม่ตรงกับ toBankName
                                     onChange={(_event, option) =>
-                                        setAccountDraft((prev) => ({
-                                            ...prev,
+                                        emitAccount({
+                                            ...accountDraft,
                                             bankId: option?.organizeId,
                                             bankName: option?.organizeName,
-                                        }))
+                                        })
                                     }
                                     renderInput={(params) => <TextField {...params} required label="ธนาคาร" />}
                                 />
