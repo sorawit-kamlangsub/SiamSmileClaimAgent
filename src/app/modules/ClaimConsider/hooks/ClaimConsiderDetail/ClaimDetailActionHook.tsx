@@ -4,6 +4,7 @@ import {
     ApproveCasePayableRequest,
     ApproveClaimDecisionDtoRequest,
     SaveClaimEditDraftDtoRequest,
+    SaveClaimEditDraftDtoResponeServiceResponse,
     CaseSaveClaimEditDraftRequest,
     CaseAssessmentSaveClaimEditDraftRequest,
     CaseAdjudicationSaveClaimEditDraftRequest,
@@ -21,9 +22,11 @@ import {
     UpsertClaimDecisionCaseDocumentDetailRequest,
     UpsertClaimDecisionCaseRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
+    CalculateCaseClaimDtoResponse,
+    CalculateCaseClaim,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
-import { swalError, swalSuccess } from "../../../_common";
+import { customFormatter, swalError, swalSuccess } from "../../../_common";
 import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
@@ -64,6 +67,17 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
      * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
      */
     onConfirmConsiderSuccess?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void;
+    /**
+     * ให้หน้าที่เรียกจัดการผลสำเร็จของการบันทึกแบบร่างเอง (เช่น redirect)
+     * ไม่ส่งมาจะ fallback เป็น swalSuccess แบบเดิม
+     */
+    onSaveDraftSuccess?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void;
+    /**
+     * แทนที่ผลคำนวณ (calculateResult) ที่อ่านจาก Redux — ใช้กับเคลมโรงพยาบาลที่ต้องปรับยอด
+     * ตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" (calculateCompensationSummary) ก่อนส่ง payload อนุมัติ
+     * ไม่ส่งมา = ใช้ค่าจาก Redux ตามเดิม (เคลมลูกค้า)
+     */
+    calculateOverride?: CalculateCaseClaimDtoResponse | null;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -92,16 +106,23 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     payoutAccount,
     onApproveSuccess,
     onConfirmConsiderSuccess,
+    onSaveDraftSuccess,
+    calculateOverride,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
-    const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
+    const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
+    // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload
+    const calculateResult = calculateOverride ?? calculateResultStore;
     const caseItemId = crypto.randomUUID();
     const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
     const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
     const totalNotCovered = filledItems.reduce((s, i) => s + (i.notCovered || 0), 0);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered;
     const saveClaimEditDraft = useSaveClaimEditDraft(
-        () => swalSuccess("บันทึกแบบร่างสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
+        (response) =>
+            onSaveDraftSuccess
+                ? onSaveDraftSuccess(response)
+                : swalSuccess("บันทึกแบบร่างสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
     );
     const saveClaimDecision = useUpsertClaimDecision(
@@ -574,12 +595,41 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         return payable;
     };
 
+    /**
+     * jsonDetail ชุดเดียวกับที่ยิง POST /api/calculate/caseclaim ตอนกด "ถัดไป" step 2
+     * สร้างสด ณ ตอน build payload เพื่อให้ได้ค่า formik / filledItems ล่าสุดที่สุด
+     * DTO ใหม่รับ jsonDetail เป็น "JSON string" → stringify ด้วย customFormatter (Dayjs → "YYYY-MM-DD HH:mm:ss")
+     * ให้ตรงกับรูปแบบที่ /api/calculate/caseclaim ส่ง
+     */
+    const buildApproveJsonDetail = (): CalculateCaseClaim => ({
+        productId: customerDetailData?.data?.productId,
+        coverageTypeId: formik.values.coverageTypeId,
+        medicalTypeId: formik.values.medicalTypeId,
+        incidentTypeId: formik.values.incidentTypeId,
+        occurrenceDate: formik.values.incidentDate,
+        ipdCount: formik.values.ipdDays,
+        icuCount: formik.values.icuDays,
+        continueClaimNo: undefined,
+        expenseList: filledItems.map((item) => ({
+            standardMedicalExpenseId: item.standardMedicalExpenseId,
+            description: item.description,
+            originalAmount: item.claimAmount,
+            discountAmount: item.discount,
+            nonCoverAmount: item.notCovered,
+            reasonId: item.reason,
+            remark: item.remark,
+        })),
+        disabilityList: [],
+    });
+
     const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
         claimDecision: mapClaimDecisionPayload(9),
         calculateCaseCode: calculateResult?.calculateCaseCode,
         isCombinedWithMedicalAll,
         // DTO ประกาศบัญชีปลายทางเป็น required แต่เคลมลูกค้าไม่ต้องส่ง
         casePayable: mapCasePayableForApprove() as ApproveCasePayableRequest,
+        // jsonDetail ชุดเดียวกับ /api/calculate/caseclaim (สร้างสด = ข้อมูลล่าสุด) — DTO ใหม่เป็น JSON string
+        jsonDetail: JSON.stringify(buildApproveJsonDetail(), customFormatter),
     });
 
     const handleApprove = async () => {

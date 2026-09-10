@@ -218,3 +218,79 @@ export const swalConfirmAction = ({
         },
     });
 };
+
+// ---------------------------------------------------------------------------
+// 4) อนุมัติเคลมโรงพยาบาล + โอนค่าชดเชยให้ลูกค้าสำเร็จ
+//    แสดงเลขที่ Claim/Case + รหัสการโอนเงิน (CPG, คัดลอกได้) + จำนวนเงินโอน
+// ---------------------------------------------------------------------------
+interface SwalHospitalApproveTransferSuccessParams {
+    claimNo?: string;
+    caseNo?: string;
+    /** รหัสการโอนเงิน (CPG...) จาก CreatePayment */
+    paymentCode?: string;
+    transferAmount: number;
+    bankName?: string;
+    bankAccountNo?: string;
+    confirmButtonText?: string;
+    onCopyPaymentCode?: () => void;
+}
+
+export const swalHospitalApproveTransferSuccess = ({
+    claimNo,
+    caseNo,
+    paymentCode,
+    transferAmount,
+    bankName,
+    bankAccountNo,
+    confirmButtonText = "ตกลง",
+    onCopyPaymentCode,
+}: SwalHospitalApproveTransferSuccessParams): Promise<SweetAlertResult> => {
+    const row = (label: string, value: string, opts?: { strong?: boolean; color?: string }) => `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;border-top:1px solid #eef0f2">
+            <span style="font-size:13px;color:#6b7280">${label}</span>
+            <span style="font-size:${opts?.strong ? "16px" : "14px"};font-weight:${opts?.strong ? 700 : 600};color:${
+                opts?.color ?? "#111827"
+            }">${value}</span>
+        </div>`;
+
+    const paymentCodeRow = `
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 14px;border-top:1px solid #eef0f2;background:#F7FEE7">
+            <span style="font-size:13px;color:#6b7280">รหัสการโอนเงิน</span>
+            <span style="display:flex;align-items:center;gap:6px">
+                <span style="font-size:16px;font-weight:700;color:#15803d">${paymentCode || "-"}</span>
+                ${
+                    paymentCode
+                        ? `<button type="button" id="swal-copy-payment-code" style="border:none;background:none;cursor:pointer;padding:2px;display:flex;align-items:center">${contentCopyIconSvg(
+                              16,
+                              "#15803d"
+                          )}</button>`
+                        : ""
+                }
+            </span>
+        </div>`;
+
+    const accountText = [bankName, bankAccountNo].filter(Boolean).join(" • ");
+
+    return Swal.fire({
+        icon: "success",
+        title: "อนุมัติและโอนค่าชดเชยสำเร็จ",
+        html: `
+            <p style="color:#374151;margin:6px 0 14px 0;font-size:14px">เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว</p>
+            <div style="border:1px solid #e5e7eb;border-radius:10px;overflow:hidden;text-align:left">
+                ${row("เลขที่ Claim", claimNo || "-")}
+                ${row("เลขที่ Case", caseNo || "-")}
+                ${paymentCodeRow}
+                ${row("จำนวนเงินโอน", `฿ ${formatMoney(transferAmount)}`, { strong: true, color: "#15803d" })}
+                ${accountText ? row("โอนเข้าบัญชี", accountText) : ""}
+            </div>`,
+        confirmButtonText,
+        customClass: { confirmButton: "swal2-styled swal2-ok" },
+        backdrop: "rgba(0,0,0,0.4)",
+        didOpen: () => {
+            document.getElementById("swal-copy-payment-code")?.addEventListener("click", () => {
+                if (paymentCode) navigator.clipboard.writeText(paymentCode);
+                onCopyPaymentCode?.();
+            });
+        },
+    });
+};

@@ -73,7 +73,6 @@ const ClaimHistoryCard: React.FC<ClaimHistoryCardProps> = ({ appId }) => {
                 </Box>
 
                 <Box display="flex" flexWrap="wrap" alignItems="center" gap={1} width={{ xs: "100%", sm: "auto" }}>
-                    {/* ปุ่มซ่อน/แสดงรายการ */}
                     <Button
                         variant="outlined"
                         size="small"
