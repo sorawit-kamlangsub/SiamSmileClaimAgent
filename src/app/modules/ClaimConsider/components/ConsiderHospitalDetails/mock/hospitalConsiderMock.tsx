@@ -227,6 +227,8 @@ export type DocumentCheckRow = {
     documentId: string;
     /** documentSubTypeId จาก overview — ใช้ประกอบลิงก์ไปแนบเอกสารที่ DocStorage */
     documentSubTypeId?: number;
+    /** documentCode (รูปแบบ DOC.....) จาก GET /document/case/filter — ส่งเป็น caseDocument[].documentNo */
+    documentCode?: string;
     documentName: string;
     files: DocumentFile[];
     checkResult: DocumentCheckResult | "";

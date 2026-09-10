@@ -106,6 +106,7 @@ const mapDocumentChecks = (
         return {
             documentId,
             documentSubTypeId: doc.documentSubTypeId,
+            documentCode: doc.documentCode ?? "",
             documentName: doc.claimDocumentTypeName || "-",
             files: [],
             checkResult: review?.checkResult ?? "",
