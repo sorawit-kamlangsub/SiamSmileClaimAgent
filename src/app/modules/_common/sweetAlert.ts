@@ -112,6 +112,24 @@ export const swalToast = (icon: "success" | "warning" | "error" | "info", title:
     });
 };
 
+/**
+ * กล่องโหลดแบบ block ทั้งจอ ปิดเอง/กด ESC ไม่ได้ ไม่มีปุ่ม — ใช้คั่นระหว่างรอ async
+ * ที่ห้ามให้ผู้ใช้ทำอย่างอื่น (เช่น กำลังโอนเงิน) ปิดด้วยการเรียก swal อื่นทับ หรือ Swal.close()
+ * @param title หัวข้อ
+ * @param text  ข้อความ
+ */
+export const swalLoading = (title = "กำลังดำเนินการ", text = "กรุณารอสักครู่") => {
+    return Swal.fire({
+        title,
+        text,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        backdrop: "rgba(0,0,0,0.4)",
+        didOpen: () => Swal.showLoading(),
+    });
+};
+
 export const swalWarningNotOutsideClick = (title: string, text: string, confirmButtonText = "ตกลง") => {
     return Swal.fire({
         title,
