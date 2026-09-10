@@ -85,9 +85,14 @@ type UseClaimExpenseDetailHookProps = {
 // ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
 const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
-    const { filledItems, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
+    const { filledItems, filledItemsCaseId, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
         (s: RootState) => s.claimConsider
     );
+    const caseId = detailData?.data?.caseId;
+    // filledItems เป็น global redux state ข้ามหน้าได้ (ดู docs/modules/ClaimConsider.md) — ตอน remount
+    // เข้าเคสใหม่ resetState() ที่ unmount หน้าเก่าอาจมาไม่ทัน useFormik lazy-init ด้านล่างเสมอ (React
+    // render ก่อน effect) จึงต้องเชื่อ filledItems เฉพาะตอน caseId ที่แปะมาตรงกับเคสที่กำลังดูอยู่จริงเท่านั้น
+    const trustedFilledItems = filledItemsCaseId && filledItemsCaseId === caseId ? filledItems : [];
     const draftRevisionId = viewingDraft?.draftRevisionId;
     // queryKey เดียวกับใน ConsiderDetailHook — React Query แชร์ cache กัน ไม่ยิง request ซ้ำ
     const { data: draftRevision } = useGetClaimEditDraftRevision(draftRevisionId);
@@ -118,10 +123,10 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
     const [notCoveredError, setNotCoveredError] = useState("");
     const [reasonError, setReasonError] = useState("");
     const [showAddPanel, setShowAddPanel] = useState(false);
-    const syncItemsToRedux = (next: ClaimExpenseItem[]) => dispatch(setFilledClaimLineItems(next));
+    const syncItemsToRedux = (next: ClaimExpenseItem[]) => dispatch(setFilledClaimLineItems({ items: next, caseId }));
 
     const formikClaimLine = useFormik<ClaimLineFormValues>({
-        initialValues: { items: filledItems },
+        initialValues: { items: trustedFilledItems },
         onSubmit: () => {},
     });
     const items = formikClaimLine.values.items;
@@ -460,7 +465,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
 
         const filteredItems = filterFilledItems(items);
 
-        dispatch(setFilledClaimLineItems(filteredItems));
+        dispatch(setFilledClaimLineItems({ items: filteredItems, caseId }));
         return true;
     };
     useEffect(() => {
@@ -513,7 +518,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         if (items.length > 0) return;
 
         formikClaimLine.setFieldValue("items", frequentItems);
-        dispatch(setFilledClaimLineItems(frequentItems));
+        dispatch(setFilledClaimLineItems({ items: frequentItems, caseId }));
     }, [frequentItems, isFrequentLoading]);
 
     // ── overlay ยอดจาก "บันทึกแบบร่าง" (กดดูจากแท็บประวัติการทำรายการ) ──
@@ -532,7 +537,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         const categoryLeaves = categories.flatMap((cat) => cat.children.flatMap((sub) => sub.children));
         const merged = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
         formikClaimLine.setFieldValue("items", merged);
-        dispatch(setFilledClaimLineItems(merged));
+        dispatch(setFilledClaimLineItems({ items: merged, caseId }));
         dispatch(setDraftExpenseApplied(draftRevisionId));
     }, [draftRevisionId, draftExpenseAppliedRevisionId, draftRevision, frequentItems, isFrequentLoading, categories]);
 

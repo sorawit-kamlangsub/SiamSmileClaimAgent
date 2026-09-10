@@ -102,6 +102,11 @@ export interface ViewingDraftInfo {
 interface ClaimConsiderState {
     form: ClaimConsiderValues;
     filledItems: ClaimExpenseItem[];
+    /** caseId ที่ filledItems ชุดปัจจุบันเป็นของจริง — resetState() ตอน unmount หน้าเก่ามาไม่ทันเสมอ เพราะ
+     * React render โครงสร้างของหน้าเคสใหม่ (รวม useFormik lazy-init ที่อ่าน filledItems) เสร็จก่อน effect
+     * cleanup ของ instance เก่าจะรันเสมอ (render phase มาก่อน commit/effect phase) ต้องแปะ caseId มากับ
+     * filledItems เองแล้วให้ ClaimExpenseDetailHook เช็คตรงนี้แทนที่จะเชื่อ filledItems เฉย ๆ */
+    filledItemsCaseId: string | null;
     calculateResult: CalculateCaseClaimDtoResponse | null;
     /** adjudication ของ case ที่กำลังพิจารณา ได้จาก /standard-medical-expense/case ส่งต่อให้ payload คำนวณ */
     caseAdjudicationId: string | null;
@@ -153,6 +158,7 @@ const defaultForm: ClaimConsiderValues = {
 const initialState: ClaimConsiderState = {
     form: defaultForm,
     filledItems: [],
+    filledItemsCaseId: null,
     calculateResult: null,
     caseAdjudicationId: null,
     viewingDraft: null,
@@ -169,8 +175,12 @@ const claimConsiderSlice = createSlice({
         resetClaimForm(state) {
             state.form = defaultForm;
         },
-        setFilledClaimLineItems(state, action: PayloadAction<ClaimExpenseItem[]>) {
-            state.filledItems = action.payload;
+        setFilledClaimLineItems(
+            state,
+            action: PayloadAction<{ items: ClaimExpenseItem[]; caseId: string | undefined }>
+        ) {
+            state.filledItems = action.payload.items;
+            state.filledItemsCaseId = action.payload.caseId ?? null;
         },
         updateFilledClaimLineItem(state, action: PayloadAction<ClaimExpenseItem>) {
             const idx = state.filledItems.findIndex((i) => i.id === action.payload.id);
