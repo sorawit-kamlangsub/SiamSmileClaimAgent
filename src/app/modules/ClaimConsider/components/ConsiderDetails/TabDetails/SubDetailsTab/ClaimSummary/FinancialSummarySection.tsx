@@ -1,6 +1,6 @@
 import AccountBalanceWalletOutlinedIcon from "@mui/icons-material/AccountBalanceWalletOutlined";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
-// import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined"; // ใช้เฉพาะตาราง "ค่าชดเชย" ที่คอมเมนต์ออกด้านล่าง
+import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
 import { Box, Checkbox, Divider, FormControlLabel, Grid, Paper, Typography } from "@mui/material";
 import { useMemo } from "react";
@@ -81,7 +81,7 @@ const FinancialSummarySection = ({
     );
 
     const medicalExpenseRows = calculateResult?.medicalExpense ?? [];
-    // const compensationRows = calculateResult?.compensateExpense ?? []; // ใช้เฉพาะตาราง "ค่าชดเชย" ที่คอมเมนต์ออกด้านล่าง
+    const compensationRows = calculateResult?.compensateExpense ?? [];
     const treatmentTableData = [
         ...medicalExpenseRows.map((item) => ({
             benefitName: item.benefitName ?? "-",
@@ -101,10 +101,10 @@ const FinancialSummarySection = ({
             payAmount: medicalExpenseRows.reduce((sum, row) => sum + (row.pay ?? 0), 0),
         },
     ];
-    // const compensationTableData = [
-    //     ...compensationRows.map((item) => ({ description: item.benefitName ?? "-", amount: item.pay ?? 0 })),
-    //     { description: "รวมทั้งหมด", amount: compensationRows.reduce((sum, row) => sum + (row.pay ?? 0), 0) },
-    // ];
+    const compensationTableData = [
+        ...compensationRows.map((item) => ({ description: item.benefitName ?? "-", amount: item.pay ?? 0 })),
+        { description: "รวมทั้งหมด", amount: compensationRows.reduce((sum, row) => sum + (row.pay ?? 0), 0) },
+    ];
 
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
@@ -124,14 +124,14 @@ const FinancialSummarySection = ({
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (value) => fmt(value) },
         },
     ];
-    // const compensationColumns: MUIDataTableColumn[] = [
-    //     { name: "description", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
-    //     {
-    //         name: "amount",
-    //         label: "สิทธิ์เบิก",
-    //         options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (value) => fmt(value) },
-    //     },
-    // ];
+    const compensationColumns: MUIDataTableColumn[] = [
+        { name: "description", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
+        {
+            name: "amount",
+            label: "สิทธิ์เบิก",
+            options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (value) => fmt(value) },
+        },
+    ];
     const getRowStyle = (index: number, rowCount: number) => ({
         backgroundColor: index === rowCount - 1 ? "#3d3d3d" : index % 2 === 0 ? "#ffffff" : "#f9f9f9",
     });
@@ -166,7 +166,7 @@ const FinancialSummarySection = ({
                     />
                 </Paper>
             </Grid>
-            {/* <Grid item xs={12}>
+            <Grid item xs={12}>
                 <HeadingWithColor
                     text="ค่าชดเชย"
                     color="blue"
@@ -193,7 +193,7 @@ const FinancialSummarySection = ({
                         sx={tableSx}
                     />
                 </Paper>
-            </Grid> */}
+            </Grid>
             <Grid item xs={12} md={6}>
                 <HeadingWithColor
                     text="สรุปค่าชดเชย"

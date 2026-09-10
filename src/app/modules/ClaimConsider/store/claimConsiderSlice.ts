@@ -189,10 +189,6 @@ const claimConsiderSlice = createSlice({
             state.viewingDraft = action.payload;
             state.draftExpenseAppliedRevisionId = null; // revision ใหม่ = ต้อง merge รายการค่าใช้จ่ายใหม่
         },
-        clearViewingDraft(state) {
-            state.viewingDraft = null;
-            state.draftExpenseAppliedRevisionId = null;
-        },
         setDraftExpenseApplied(state, action: PayloadAction<string>) {
             state.draftExpenseAppliedRevisionId = action.payload;
         },
@@ -209,7 +205,6 @@ export const {
     setCalculateExpenseResult,
     setCaseAdjudicationId,
     setViewingDraft,
-    clearViewingDraft,
     setDraftExpenseApplied,
     resetState,
 } = claimConsiderSlice.actions;
