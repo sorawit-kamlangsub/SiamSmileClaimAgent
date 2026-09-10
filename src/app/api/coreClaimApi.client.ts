@@ -1139,7 +1139,7 @@ export class ClaimFundClient {
     updateAdditionalTransfer(
         body?: UpdateAdditionalTransferRequestDto | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<UpdateAdditionalTransferRequestDtoServiceResponse> {
+    ): Promise<UpdateAdditionalTransferResponseDtoServiceResponse> {
         let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/UpdateAdditionalTransfer";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -1172,7 +1172,7 @@ export class ClaimFundClient {
 
     protected processUpdateAdditionalTransfer(
         response: AxiosResponse
-    ): Promise<UpdateAdditionalTransferRequestDtoServiceResponse> {
+    ): Promise<UpdateAdditionalTransferResponseDtoServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -1187,7 +1187,7 @@ export class ClaimFundClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<UpdateAdditionalTransferRequestDtoServiceResponse>(result200);
+            return Promise.resolve<UpdateAdditionalTransferResponseDtoServiceResponse>(result200);
         } else if (status === 401) {
             const _responseText = response.data;
             return throwException("Unauthorized", status, _responseText, _headers);
@@ -1198,7 +1198,77 @@ export class ClaimFundClient {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<UpdateAdditionalTransferRequestDtoServiceResponse>(null as any);
+        return Promise.resolve<UpdateAdditionalTransferResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * บันทึกการโอนเงินเพิ่ม
+     * @param body (optional)
+     * @return Success
+     */
+    saveAdditionalTransfer(
+        body?: SaveAdditionalTransferRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<SaveAdditionalTransferResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/AdditionalTransfer/SaveAdditionalTransfer";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processSaveAdditionalTransfer(_response);
+            });
+    }
+
+    protected processSaveAdditionalTransfer(
+        response: AxiosResponse
+    ): Promise<SaveAdditionalTransferResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<SaveAdditionalTransferResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<SaveAdditionalTransferResponseDtoServiceResponse>(null as any);
     }
 
     /**
@@ -6848,6 +6918,7 @@ export interface ApproveClaimDecisionDtoRequest {
     calculateCaseCode?: string;
     isCombinedWithMedicalAll: boolean;
     casePayable: ApproveCasePayableRequest;
+    jsonDetail: string;
 }
 
 export interface BankAccountRelationTypeResponseDto {
@@ -7173,7 +7244,7 @@ export interface CalculateCaseClaim {
 }
 
 export interface CalculateCaseClaimDtoRequest {
-    caseAdjudicationId?: string;
+    caseAdjudicationId?: string | undefined;
     isSimulateCase?: boolean;
     isCheckIncludeCompensate?: boolean;
     isCheckIncludeCompensateAll?: boolean;
@@ -9476,6 +9547,47 @@ export interface ProblemDetails {
     [key: string]: any;
 }
 
+export interface SaveAdditionalTransferRequest {
+    /** รหัสเคลม */
+    caseId?: string;
+    claimNo?: string | undefined;
+    caseNo?: string | undefined;
+    /** ยอดเงินที่โอนเพิ่ */
+    totalNetPaidAmount?: number;
+    /** รหัสธนาคารปลายทาง */
+    toBankId: number;
+    /** ชื่อธนาคารปลายทาง */
+    toBankName: string;
+    /** เลขที่บัญชีปลายทาง */
+    toBankAccountNo: string;
+    /** ชื่อบัญชีปลายทาง */
+    toBankAccountName: string;
+    /** หมายเลขโทรศัพท์ */
+    phoneNumber: string;
+    adjustmentReasonId?: number | undefined;
+    remark?: string | undefined;
+}
+
+export interface SaveAdditionalTransferResponseDto {
+    isSuccess?: boolean;
+    message?: string | undefined;
+    casePayableId?: string | undefined;
+}
+
+export interface SaveAdditionalTransferResponseDtoServiceResponse {
+    data?: SaveAdditionalTransferResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface SaveClaimEditDraftDtoRequest {
     claimId?: string;
     caseId?: string;
@@ -9634,8 +9746,13 @@ export interface UpdateAdditionalTransferRequestDto {
     toBankName?: string | undefined;
 }
 
-export interface UpdateAdditionalTransferRequestDtoServiceResponse {
-    data?: UpdateAdditionalTransferRequestDto;
+export interface UpdateAdditionalTransferResponseDto {
+    isSuccess?: boolean;
+    message?: string | undefined;
+}
+
+export interface UpdateAdditionalTransferResponseDtoServiceResponse {
+    data?: UpdateAdditionalTransferResponseDto;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
