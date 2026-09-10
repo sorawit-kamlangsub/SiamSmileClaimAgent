@@ -481,7 +481,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             .map(
                 (doc): UpsertClaimDecisionCaseDocumentRequest => ({
                     documentId: doc.documentId,
-                    documentNo: doc.documentName,
+                    // documentNo = documentCode (รูปแบบ DOC.....) จาก GET /document/case/filter ไม่ใช่ชื่อเอกสาร
+                    documentNo: doc.documentCode,
                     // documentSubTypeId มาจาก GET /document/case/filter (ผ่าน mapDocumentChecks) — BE บังคับ > 0
                     documentSubTypeId: doc.documentSubTypeId,
                     documentReviewStatusId: doc.checkResult || undefined,
