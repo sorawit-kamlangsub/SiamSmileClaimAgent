@@ -3,17 +3,18 @@ import { Grid } from "@mui/material";
 import HeaderDetails from "../components/ConsiderDetails/HeaderDetails";
 import useConsiderDetailHook from "../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import { useAppDispatch } from "../../../../redux";
-import { clearViewingDraft } from "../store/claimConsiderSlice";
+import { resetState } from "../store/claimConsiderSlice";
 
 const ConsiderDetailPage = () => {
     const dispatch = useAppDispatch();
     const { detailData, detailDataLoading, customerDetailData, customerDetailLoading } = useConsiderDetailHook();
 
-    // safety net เผื่อออกไปหน้าอื่นที่ใช้สไลซ์นี้ร่วมกัน (เช่น หน้าเคลม รพ.) โดยไม่ผ่าน leaveToMonitor()/
-    // resetState() ปกติ — กันไม่ให้แถบ "กำลังดูข้อมูลจากแบบร่าง" ค้างข้ามหน้า
+    // safety net: หน้านี้ unmount ทุกครั้งที่ออกไป monitor (คนละ route) — ต้องเคลียร์สไลซ์ทั้งก้อนที่นี่
+    // ไม่งั้น filledItems/calculateResult/viewingDraft ฯลฯ จะค้างข้ามไปเคสถัดไปที่เปิดใหม่ (mount ใหม่ทั้งชุด
+    // จึงไม่เข้า prevClaimIdRef guard ใน ConsiderDetailHook ที่ดักไว้แค่กรณีสลับ claimId แบบไม่ unmount)
     useEffect(
         () => () => {
-            dispatch(clearViewingDraft());
+            dispatch(resetState());
         },
         [dispatch]
     );

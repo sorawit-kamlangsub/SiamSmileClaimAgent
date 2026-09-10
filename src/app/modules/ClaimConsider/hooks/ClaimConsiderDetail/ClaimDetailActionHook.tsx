@@ -23,9 +23,10 @@ import {
     UpsertClaimDecisionCaseRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
     CalculateCaseClaimDtoResponse,
+    CalculateCaseClaim,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
-import { swalError, swalSuccess } from "../../../_common";
+import { customFormatter, swalError, swalSuccess } from "../../../_common";
 import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
@@ -594,12 +595,41 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         return payable;
     };
 
+    /**
+     * jsonDetail ชุดเดียวกับที่ยิง POST /api/calculate/caseclaim ตอนกด "ถัดไป" step 2
+     * สร้างสด ณ ตอน build payload เพื่อให้ได้ค่า formik / filledItems ล่าสุดที่สุด
+     * DTO ใหม่รับ jsonDetail เป็น "JSON string" → stringify ด้วย customFormatter (Dayjs → "YYYY-MM-DD HH:mm:ss")
+     * ให้ตรงกับรูปแบบที่ /api/calculate/caseclaim ส่ง
+     */
+    const buildApproveJsonDetail = (): CalculateCaseClaim => ({
+        productId: customerDetailData?.data?.productId,
+        coverageTypeId: formik.values.coverageTypeId,
+        medicalTypeId: formik.values.medicalTypeId,
+        incidentTypeId: formik.values.incidentTypeId,
+        occurrenceDate: formik.values.incidentDate,
+        ipdCount: formik.values.ipdDays,
+        icuCount: formik.values.icuDays,
+        continueClaimNo: undefined,
+        expenseList: filledItems.map((item) => ({
+            standardMedicalExpenseId: item.standardMedicalExpenseId,
+            description: item.description,
+            originalAmount: item.claimAmount,
+            discountAmount: item.discount,
+            nonCoverAmount: item.notCovered,
+            reasonId: item.reason,
+            remark: item.remark,
+        })),
+        disabilityList: [],
+    });
+
     const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
         claimDecision: mapClaimDecisionPayload(9),
         calculateCaseCode: calculateResult?.calculateCaseCode,
         isCombinedWithMedicalAll,
         // DTO ประกาศบัญชีปลายทางเป็น required แต่เคลมลูกค้าไม่ต้องส่ง
         casePayable: mapCasePayableForApprove() as ApproveCasePayableRequest,
+        // jsonDetail ชุดเดียวกับ /api/calculate/caseclaim (สร้างสด = ข้อมูลล่าสุด) — DTO ใหม่เป็น JSON string
+        jsonDetail: JSON.stringify(buildApproveJsonDetail(), customFormatter),
     });
 
     const handleApprove = async () => {
