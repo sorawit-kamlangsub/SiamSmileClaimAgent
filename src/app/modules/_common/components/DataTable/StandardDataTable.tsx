@@ -144,7 +144,10 @@ const StandardDataTable = ({
         onRowSelectionChange: onRowSelectedIndex,
         count: totalAmountRecords,
         page: currentPage ? currentPage - 1 : 0,
-        rowsPerPage: recordsPerPage,
+        // ห้ามเป็น 0: บาง response ตอนไม่มีข้อมูลส่ง recordsPerPage เป็น 0 มาจริง ๆ (ไม่ใช่ null/undefined)
+        // ถ้าเป็น 0 mui-datatables จะคำนวณ Math.ceil(count/0) = NaN แล้ว "page >= NaN" เป็น false เสมอ
+        // ทำให้ปุ่มเปลี่ยนหน้าไม่ถูก disable แม้ไม่มีข้อมูล
+        rowsPerPage: recordsPerPage || (rowsPerPage ?? [5, 10, 15, 20, 30, 50])[0],
         rowsPerPageOptions: rowsPerPage ?? [5, 10, 15, 20, 30, 50],
         responsive: "standard",
         rowHover: rowHover,
