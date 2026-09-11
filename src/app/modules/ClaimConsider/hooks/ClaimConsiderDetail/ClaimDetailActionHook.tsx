@@ -221,12 +221,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             decisionDate: dayjs(),
             decisionReasonId: decisionReasonId,
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: considerResult === 2 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: considerResult === 2 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: considerResult === 2 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: considerResult === 2 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: considerResult === 2 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: formik.values.icuDays,
+            approvedAdmissionDate: undefined,
+            approvedAdmissionTime: undefined,
+            approvedDischargeDate: undefined,
+            approvedDischargeTime: undefined,
+            approvedIPDDayCount: 0,
+            approvedICUDayCount: 0,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
             compensateAmount: 0, //ไม่มี
@@ -430,8 +430,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
             approvedDischargeDate: decisionId === 9 ? asDate(dischargeDate) : undefined,
             approvedDischargeTime: decisionId === 9 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : undefined,
+            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : 0,
+            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : 0,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
             compensateAmount: decisionId === 9 ? calculateResult?.compensateInclude : undefined, //ไม่มี
