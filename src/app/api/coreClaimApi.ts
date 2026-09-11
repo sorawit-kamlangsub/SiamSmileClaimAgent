@@ -207,6 +207,7 @@ export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnab
 
 export const useGetClaimContinue = (
     applicationId?: string | undefined,
+    initialClaimId?: string | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,
@@ -214,10 +215,20 @@ export const useGetClaimContinue = (
     recordsPerPage?: number | undefined
 ) => {
     return useQuery(
-        [getClaimContinueQueryKey, applicationId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        [
+            getClaimContinueQueryKey,
+            applicationId,
+            initialClaimId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
         () =>
             coreClaimClient.getClaimContinue(
                 applicationId,
+                initialClaimId,
                 searchDetail,
                 orderingField,
                 ascendingOrder,

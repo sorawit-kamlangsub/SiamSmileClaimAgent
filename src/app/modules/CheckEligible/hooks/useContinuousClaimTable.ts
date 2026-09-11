@@ -13,6 +13,7 @@ const useContinuousClaimTable = (applicationId?: string | undefined) => {
         undefined,
         undefined,
         undefined,
+        undefined,
         paginated.page,
         paginated.recordsPerPage
     );
