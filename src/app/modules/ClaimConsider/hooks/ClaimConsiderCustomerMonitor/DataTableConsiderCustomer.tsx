@@ -21,6 +21,10 @@ import { GetCustomerClaimAdjudicationMonitorDtoResponse } from "../../../../api/
  */
 type MonitorRowWithCaseId = GetCustomerClaimAdjudicationMonitorDtoResponse & { caseId?: string };
 
+/** claimTransactionTypeId ที่ปิดงานแล้ว/ไม่ต้องพิจารณาต่อ — อยู่ระหว่างดำเนินการ(7)/ปฏิเสธ(5)/ยกเลิก(6)
+ * แสดงแค่ปุ่ม "ดูรายละเอียด" ส่วนสถานะอื่น (รอพิจารณา/รอแก้ไข/รอเอกสาร ฯลฯ) ยังแสดงปุ่ม "พิจารณาเคลม" ด้วย */
+const VIEW_ONLY_CLAIM_TRANSACTION_TYPE_IDS = [5, 6, 7];
+
 const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
     const isProductTypeId_PH = appliedFilter.product?.includes(6);
@@ -148,46 +152,40 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             options: {
                 sort: false,
                 customBodyRenderLite: (rowIndex) => {
+                    const row = claimTransactionData?.data?.[rowIndex] as MonitorRowWithCaseId | undefined;
+                    const canConsider =
+                        row?.claimTransactionTypeId === undefined ||
+                        !VIEW_ONLY_CLAIM_TRANSACTION_TYPE_IDS.includes(row.claimTransactionTypeId);
                     return (
                         <>
                             <Grid container sx={{ gap: 1.5 }}>
-                                <Tooltip title="พิจารณาเคลม">
+                                {canConsider && (
+                                    <Tooltip title="พิจารณาเคลม">
+                                        <IconButton
+                                            onClick={() => {
+                                                // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
+                                                // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
+                                                navigate(
+                                                    `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                        row?.caseId ?? ""
+                                                    )}`
+                                                );
+                                            }}
+                                            sx={{
+                                                backgroundColor: "#FFF1CD",
+                                                ":hover": {
+                                                    backgroundColor: "#e7cf95",
+                                                },
+                                            }}
+                                        >
+                                            <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                                <Tooltip title="ดูรายละเอียด">
                                     <IconButton
                                         onClick={() => {
-                                            const row = claimTransactionData?.data?.[rowIndex] as
-                                                | MonitorRowWithCaseId
-                                                | undefined;
-                                            // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
-                                            // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
-                                            navigate(
-                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
-                                                    row?.caseId ?? ""
-                                                )}`
-                                            );
-                                        }}
-                                        sx={{
-                                            backgroundColor: "#FFF1CD",
-                                            ":hover": {
-                                                backgroundColor: "#e7cf95",
-                                            },
-                                        }}
-                                    >
-                                        <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title="ดูรายละเอียดเอกสาร">
-                                    <IconButton
-                                        onClick={() => {
-                                            const row = claimTransactionData?.data?.[rowIndex] as
-                                                | MonitorRowWithCaseId
-                                                | undefined;
-                                            // TODO(caseId): ยังไม่มี route/หน้า customers/:id/:caseId/document ของฝั่งลูกค้า
-                                            // (มีเฉพาะฝั่ง รพ.) — ใส่ caseId segment ไว้ให้ครบ เผื่อเพิ่มหน้าภายหลัง
-                                            navigate(
-                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
-                                                    row?.caseId ?? ""
-                                                )}/document`
-                                            );
+                                            console.log("ดูรายละเอียด", rowIndex);
                                         }}
                                         sx={{
                                             bgcolor: "#E2F2FF",

@@ -1,18 +1,6 @@
-import {
-    Box,
-    FormControl,
-    InputAdornment,
-    MenuItem,
-    Select,
-    TableCell,
-    TableFooter,
-    TableRow,
-    TextField,
-    Typography,
-} from "@mui/material";
+import { Box, TableCell, TableFooter, TableRow, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import PaymentsIcon from "@mui/icons-material/Payments";
-import SearchIcon from "@mui/icons-material/Search";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import RequestQuoteIcon from "@mui/icons-material/RequestQuote";
 import PaidIcon from "@mui/icons-material/Paid";
@@ -21,12 +9,10 @@ import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import { StandardDataTable } from "../../../../_common";
 import CardClaimInfo from "../../_common/CardClaimInfo";
-import usePaymentHistoryTab, {
-    PAYMENT_HISTORY_STATUS_OPTIONS,
-} from "../../../hooks/ClaimConsiderDetail/usePaymentHistoryTab";
+import usePaymentHistoryTab from "../../../hooks/ClaimConsiderDetail/usePaymentHistoryTab";
 import { cellAlignOptions, formatDateString } from "../../../../../functionHelpers";
 
 const fmtBaht = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -37,19 +23,8 @@ type PaymentHistoryTabProps = {
 };
 
 const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
-    const {
-        items,
-        summary,
-        isLoading,
-        searchText,
-        setSearchText,
-        status,
-        setStatus,
-        pagination,
-        setPaginated,
-        filteredTotalBilledAmount,
-        filteredTotalPaidAmount,
-    } = usePaymentHistoryTab(applicationCode);
+    const { items, summary, isLoading, pagination, setPaginated, filteredTotalBilledAmount, filteredTotalPaidAmount } =
+        usePaymentHistoryTab(applicationCode);
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -188,46 +163,13 @@ const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
                 />
             </Box>
 
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: { xs: "column", md: "row" },
-                    gap: 1.5,
-                    mb: 2,
-                }}
-            >
-                <TextField
-                    size="small"
-                    fullWidth
-                    placeholder="ค้นหางวดความคุ้มครอง / แผนความคุ้มครอง / วิธีการชำระ"
-                    value={searchText}
-                    onChange={(e) => setSearchText(e.target.value)}
-                    InputProps={{
-                        startAdornment: (
-                            <InputAdornment position="start">
-                                <SearchIcon fontSize="small" color="action" />
-                            </InputAdornment>
-                        ),
-                    }}
-                />
-                <FormControl size="small" sx={{ minWidth: { xs: "100%", md: 200 } }}>
-                    <Select value={status} onChange={(e) => setStatus(e.target.value as typeof status)}>
-                        {PAYMENT_HISTORY_STATUS_OPTIONS.map((opt) => (
-                            <MenuItem key={opt.value} value={opt.value}>
-                                สถานะ : {opt.label}
-                            </MenuItem>
-                        ))}
-                    </Select>
-                </FormControl>
-            </Box>
-
-            {items.length === 0 ? (
-                <Box sx={{ py: 6, textAlign: "center" }}>
-                    <PaymentsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
-                    <Typography color="text.disabled">ไม่พบข้อมูลการชำระเงิน</Typography>
-                </Box>
-            ) : (
-                <LinearLoading isLoading={isLoading}>
+            <LoadingOverlay isLoading={isLoading} minHeight={300}>
+                {!isLoading && items.length === 0 ? (
+                    <Box sx={{ py: 6, textAlign: "center" }}>
+                        <PaymentsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                        <Typography color="text.disabled">ไม่พบข้อมูลการชำระเงิน</Typography>
+                    </Box>
+                ) : (
                     <StandardDataTable
                         name="paymentHistoryTable"
                         title=""
@@ -253,8 +195,8 @@ const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
                             ),
                         }}
                     />
-                </LinearLoading>
-            )}
+                )}
+            </LoadingOverlay>
         </CustomPaper>
     );
 };

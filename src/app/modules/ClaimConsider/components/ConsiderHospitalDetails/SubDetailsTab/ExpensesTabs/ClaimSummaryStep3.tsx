@@ -33,7 +33,7 @@ import {
 /** 1 แถวของตารางรายการค่ารักษาในหน้าสรุป */
 export type Step3TreatmentRow = {
     benefitName: string;
-    /** รายการเบิก (ยอดสุทธิ) */
+    /** รายการเบิก (สิทธิ์ความคุ้มครอง — coveredAmount) */
     amountNet: number;
     /** สิทธิ์เบิก */
     payAmount: number;
@@ -95,6 +95,12 @@ type ClaimSummaryStep3Props = {
     lastSummaryLine?: "excess" | "compensateRemain";
     /** ปิดปุ่ม "แก้ไขบัญชี" ของ "บัญชีรับเงินค่าชดเชย" — default false = พฤติกรรมเดิม */
     disableAccountEdit?: boolean;
+    /**
+     * แจ้ง parent ว่า "บัญชีรับเงินค่าชดเชย" ยังไม่พร้อมให้กดอนุมัติ — true เมื่อกำลังแก้ไขอยู่
+     * (ยังไม่กด "เสร็จสิ้น") หรือข้อมูลบัญชียังไม่ครบ (เบอร์โทร/ชื่อบัญชี/ธนาคาร/เลขที่บัญชี)
+     * ขณะที่การ์ดนี้แสดงอยู่ (showPayoutAccount) — parent ใช้ gate ปุ่ม "อนุมัติ"
+     */
+    onPayoutAccountBlockingChange?: (isBlocking: boolean) => void;
 };
 
 const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
@@ -190,6 +196,7 @@ const ClaimSummaryStep3 = ({
     hideCompensationTable = false,
     lastSummaryLine = "excess",
     disableAccountEdit = false,
+    onPayoutAccountBlockingChange,
 }: ClaimSummaryStep3Props) => {
     // ติ๊ก "โอนค่าชดเชยรวมกับค่ารักษา" : default = โอนรวม (controlled ได้จาก parent)
     const [mergeCheckedInternal, setMergeCheckedInternal] = useState(true);
@@ -202,6 +209,8 @@ const ClaimSummaryStep3 = ({
     // แก้ไขบัญชีรับเงินค่าชดเชย : เก็บค่าที่แก้ไว้ใน local state (มีผลเฉพาะรายการนี้)
     const [isEditingAccount, setIsEditingAccount] = useState(false);
     const [accountDraft, setAccountDraft] = useState<Step3PayoutAccount>(payoutAccount ?? {});
+    // แสดง error ใต้ช่องเมื่อพยายามกด "เสร็จสิ้น" ทั้งที่กรอกไม่ครบ (เหมือนพฤติกรรม touched ของ formik)
+    const [accountTouched, setAccountTouched] = useState(false);
     useEffect(() => {
         if (!isEditingAccount) setAccountDraft(payoutAccount ?? {});
     }, [payoutAccount, isEditingAccount]);
@@ -223,7 +232,15 @@ const ClaimSummaryStep3 = ({
     const { data: bankListData } = useGetBank();
     const bankOptions = bankListData?.data ?? [];
     const handleToggleEditAccount = () => {
-        if (isEditingAccount) onPayoutAccountChange?.(accountDraft);
+        if (isEditingAccount) {
+            // กด "เสร็จสิ้น" ทั้งที่ข้อมูลบัญชียังไม่ครบ — ไม่ปิดโหมดแก้ไข ให้ขึ้น error ใต้ช่องที่ขาดแทน
+            if (!isPayoutAccountValid) {
+                setAccountTouched(true);
+                return;
+            }
+            onPayoutAccountChange?.(accountDraft);
+            setAccountTouched(false);
+        }
         setIsEditingAccount((prev) => !prev);
     };
 
@@ -255,6 +272,21 @@ const ClaimSummaryStep3 = ({
     // — ไม่ว่าจะติ๊ก "โอนรวม" หรือไม่ ถ้าค่าชดเชยเกินส่วนเกินแล้วมีคงเหลือ ก็ต้องมีบัญชีปลายทาง
     const showPayoutAccount = allowSeparateCompensation && calc.compensateRemain > 0;
 
+    // ช่องบังคับกรอกของ "บัญชีรับเงินค่าชดเชย" — required ทั้ง 4 ช่องตามเครื่องหมาย * บนฟอร์ม
+    const payoutAccountErrors = {
+        phone: accountDraft.phone?.trim() ? undefined : "กรุณากรอกข้อมูล",
+        accountName: accountDraft.accountName?.trim() ? undefined : "กรุณากรอกข้อมูล",
+        bankId: accountDraft.bankId ? undefined : "กรุณาเลือกข้อมูล",
+        accountNo: accountDraft.accountNo?.trim() ? undefined : "กรุณากรอกข้อมูล",
+    };
+    const isPayoutAccountValid = !Object.values(payoutAccountErrors).some(Boolean);
+    // ต้องกันปุ่ม "อนุมัติ" ทั้งตอนที่ยังแก้ไขค้างอยู่ (ยังไม่กด "เสร็จสิ้น") และตอนข้อมูลบัญชียังไม่ครบ
+    const isPayoutAccountBlocking = showPayoutAccount && (isEditingAccount || !isPayoutAccountValid);
+
+    useEffect(() => {
+        onPayoutAccountBlockingChange?.(isPayoutAccountBlocking);
+    }, [isPayoutAccountBlocking]);
+
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
@@ -264,7 +296,7 @@ const ClaimSummaryStep3 = ({
         },
         {
             name: "payAmount",
-            label: "สิทธิ์เบิก",
+            label: "สิทธิ์เบิกตามความคุ้มครอง",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) },
         },
         {
@@ -278,7 +310,7 @@ const ClaimSummaryStep3 = ({
         { name: "description", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
             name: "amount",
-            label: "สิทธิ์เบิก",
+            label: "สิทธิ์เบิกตามความคุ้มครอง",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(Number(v)) },
         },
     ];
@@ -477,6 +509,8 @@ const ClaimSummaryStep3 = ({
                                     value={accountDraft.phone ?? ""}
                                     onChange={(e) => handleAccountField("phone", e.target.value)}
                                     InputProps={{ readOnly: !isEditingAccount }}
+                                    error={accountTouched && !!payoutAccountErrors.phone}
+                                    helperText={accountTouched ? payoutAccountErrors.phone : undefined}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -488,6 +522,8 @@ const ClaimSummaryStep3 = ({
                                     value={accountDraft.accountName ?? ""}
                                     onChange={(e) => handleAccountField("accountName", e.target.value)}
                                     InputProps={{ readOnly: !isEditingAccount }}
+                                    error={accountTouched && !!payoutAccountErrors.accountName}
+                                    helperText={accountTouched ? payoutAccountErrors.accountName : undefined}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -507,7 +543,15 @@ const ClaimSummaryStep3 = ({
                                             bankName: option?.organizeName,
                                         })
                                     }
-                                    renderInput={(params) => <TextField {...params} required label="ธนาคาร" />}
+                                    renderInput={(params) => (
+                                        <TextField
+                                            {...params}
+                                            required
+                                            label="ธนาคาร"
+                                            error={accountTouched && !!payoutAccountErrors.bankId}
+                                            helperText={accountTouched ? payoutAccountErrors.bankId : undefined}
+                                        />
+                                    )}
                                 />
                             </Grid>
                             <Grid item xs={12} sm={6}>
@@ -519,6 +563,8 @@ const ClaimSummaryStep3 = ({
                                     value={accountDraft.accountNo ?? ""}
                                     onChange={(e) => handleAccountField("accountNo", e.target.value)}
                                     InputProps={{ readOnly: !isEditingAccount }}
+                                    error={accountTouched && !!payoutAccountErrors.accountNo}
+                                    helperText={accountTouched ? payoutAccountErrors.accountNo : undefined}
                                 />
                             </Grid>
                         </Grid>

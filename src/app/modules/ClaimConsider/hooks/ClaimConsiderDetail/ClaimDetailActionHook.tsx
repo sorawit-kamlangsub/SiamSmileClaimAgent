@@ -73,6 +73,11 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
      */
     onSaveDraftSuccess?: (response: SaveClaimEditDraftDtoResponeServiceResponse) => void;
     /**
+     * step ของ wizard (1-based) ที่ผู้ใช้อยู่ตอนกด "บันทึกแบบร่าง" — ส่งเป็น draftStep ให้ backend
+     * ไม่ส่งมา = 1 (ผู้เรียกเดิมที่ยังไม่ระบุ step)
+     */
+    draftStep?: number;
+    /**
      * แทนที่ผลคำนวณ (calculateResult) ที่อ่านจาก Redux — ใช้กับเคลมโรงพยาบาลที่ต้องปรับยอด
      * ตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" (calculateCompensationSummary) ก่อนส่ง payload อนุมัติ
      * ไม่ส่งมา = ใช้ค่าจาก Redux ตามเดิม (เคลมลูกค้า)
@@ -108,6 +113,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     onConfirmConsiderSuccess,
     onSaveDraftSuccess,
     calculateOverride,
+    draftStep,
 }: UseClaimDetailActionHookParams<T>) => {
     const { documentScanList } = useAppSelector(claimPHSelector);
     const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
@@ -213,20 +219,25 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             admissionTime,
             dischargeDate,
             dischargeTime,
+            ipdDays,
+            icuDays,
         } = formik.values;
-        if (considerResult === undefined) return undefined;
+        // ฉบับร่างต้องเก็บ ipdDays/icuDays (กรอกใน Step 1 ไม่ใช่ผลอนุมัติ) ได้แม้ยังไม่ได้เลือก "ผลการ
+        // พิจารณา" — เดิม return undefined ทั้งก้อนทันทีที่ considerResult ยังไม่ถูกเลือก ทำให้กด
+        // "บันทึกแบบร่าง" กลางคันแล้วค่าที่กรอกไว้หายไป (decisionId เป็น optional field ใน DTO อยู่แล้ว)
+        if (considerResult === undefined && !ipdDays && !icuDays) return undefined;
 
         return {
             decisionId: considerResult,
-            decisionDate: dayjs(),
+            decisionDate: considerResult !== undefined ? dayjs() : undefined,
             decisionReasonId: decisionReasonId,
             decisionRemark: decisionReasonDetail,
             approvedAdmissionDate: considerResult === 2 ? asDate(admissionDate) : undefined,
             approvedAdmissionTime: considerResult === 2 ? asTimeSpan(admissionTime) : undefined,
             approvedDischargeDate: considerResult === 2 ? asDate(dischargeDate) : undefined,
             approvedDischargeTime: considerResult === 2 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: considerResult === 2 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: formik.values.icuDays,
+            approvedIPDDayCount: ipdDays,
+            approvedICUDayCount: icuDays,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
             compensateAmount: 0, //ไม่มี
@@ -316,6 +327,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
             icD10_2ndId: values.diagnoses?.[1]?.icd10Id,
             icD10_3rdId: values.diagnoses?.[2]?.icd10Id,
+            icD10_4thId: values.diagnoses?.[3]?.icd10Id,
+            icD10_5thId: values.diagnoses?.[4]?.icd10Id,
+            icD10_6thId: values.diagnoses?.[5]?.icd10Id,
             caseAmount: netClaimAmount, //ยอดเบิก
             latestApprovedAmount: 0, //ต้องอนุมัติ
             latestNonCoveredAmount: totalNotCovered,
@@ -344,6 +358,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         accidentPlace: formik.values.accidentPlace,
         accidentDescription: formik.values.detail,
         case: mapCaseForDraft(),
+        draftStep: draftStep ?? 1,
         claimEditDraft: {
             baseClaimVersion: detailData?.data?.claimVersion ?? 0,
             baseCaseVersion: detailData?.data?.caseVersion ?? 0,
@@ -430,8 +445,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
             approvedDischargeDate: decisionId === 9 ? asDate(dischargeDate) : undefined,
             approvedDischargeTime: decisionId === 9 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : undefined,
+            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : 0,
+            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : 0,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
             compensateAmount: decisionId === 9 ? calculateResult?.compensateInclude : undefined, //ไม่มี
@@ -537,6 +552,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
             icD10_2ndId: values.diagnoses?.[1]?.icd10Id,
             icD10_3rdId: values.diagnoses?.[2]?.icd10Id,
+            icD10_4thId: values.diagnoses?.[3]?.icd10Id,
+            icD10_5thId: values.diagnoses?.[4]?.icd10Id,
+            icD10_6thId: values.diagnoses?.[5]?.icd10Id,
             caseAmount: netClaimAmount, //ยอดเบิก
             latestApprovedAmount: calculateResult?.medicalPay, //ต้องอนุมัติ
             latestNonCoveredAmount: totalNotCovered,

@@ -508,6 +508,7 @@ const ClaimPASummaryPage: React.FC = () => {
                     open={openContact}
                     onClose={() => setOpenContact(false)}
                     onAdd={(contact) => dispatch(addContactPA(contact))}
+                    productTypeId={26}
                 />
                 <ConfirmTransferPAModal
                     open={openConfirm}

@@ -772,6 +772,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                 ? "success"
                                 : amountReconciliation.status === "error"
                                 ? "error"
+                                : amountReconciliation.status === "pending"
+                                ? "info"
                                 : "warning"
                         }
                         sx={{ mt: 1.5 }}

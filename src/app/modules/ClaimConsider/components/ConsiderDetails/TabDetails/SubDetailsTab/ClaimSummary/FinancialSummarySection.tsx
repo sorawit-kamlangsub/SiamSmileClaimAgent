@@ -82,10 +82,10 @@ const FinancialSummarySection = ({
 
     const medicalExpenseRows = calculateResult?.medicalExpense ?? [];
     const compensationRows = calculateResult?.compensateExpense ?? [];
+    const totalCoveredAmount = medicalExpenseRows.reduce((sum, row) => sum + (row.cover ?? 0), 0);
     const treatmentTableData = [
         ...medicalExpenseRows.map((item) => ({
             benefitName: item.benefitName ?? "-",
-            amountNet: item.net ?? 0,
             coveredAmount: item.cover ?? 0,
             nonCoveredAmount: item.unCover ?? 0,
             unPayAmount: item.unPay ?? 0,
@@ -94,8 +94,7 @@ const FinancialSummarySection = ({
         {
             groupName: "รวมทั้งหมด",
             benefitName: "",
-            amountNet: medicalExpenseRows.reduce((sum, row) => sum + (row.net ?? 0), 0),
-            coveredAmount: medicalExpenseRows.reduce((sum, row) => sum + (row.cover ?? 0), 0),
+            coveredAmount: totalCoveredAmount,
             nonCoveredAmount: medicalExpenseRows.reduce((sum, row) => sum + (row.unCover ?? 0), 0),
             unPayAmount: medicalExpenseRows.reduce((sum, row) => sum + (row.unPay ?? 0), 0),
             payAmount: medicalExpenseRows.reduce((sum, row) => sum + (row.pay ?? 0), 0),
@@ -109,13 +108,13 @@ const FinancialSummarySection = ({
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
-            name: "amountNet",
+            name: "coveredAmount",
             label: "รายการเบิก",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (value) => fmt(value) },
         },
         {
             name: "payAmount",
-            label: "สิทธิ์เบิก",
+            label: "สิทธิ์เบิกตามความคุ้มครอง",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (value) => fmt(value) },
         },
         {
@@ -128,7 +127,7 @@ const FinancialSummarySection = ({
         { name: "description", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
             name: "amount",
-            label: "สิทธิ์เบิก",
+            label: "สิทธิ์เบิกตามความคุ้มครอง",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (value) => fmt(value) },
         },
     ];
@@ -238,7 +237,7 @@ const FinancialSummarySection = ({
                     sx={{ mb: 1 }}
                 />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                    <SummaryLine label="ยอดเบิกรวม" value={fmt(summary.medicalNet)} />
+                    <SummaryLine label="ยอดเบิกรวม" value={fmt(totalCoveredAmount)} />
                     <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
                     <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(summary.compensateInclude)} />
                     <SummaryLine

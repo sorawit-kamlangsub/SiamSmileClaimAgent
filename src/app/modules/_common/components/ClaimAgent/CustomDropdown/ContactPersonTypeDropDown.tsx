@@ -7,16 +7,18 @@ type ContactPersonTypeDropDownProps = Omit<
 > & {
     filterIds?: number[];
     contactPersonGroupId?: number;
+    productTypeId?: number;
 };
 
 const ContactPersonTypeDropDown = ({
     formik,
     filterIds,
     contactPersonGroupId,
+    productTypeId,
     ...props
 }: ContactPersonTypeDropDownProps) => {
     //contactPersonGroupId : 1 = ph, deadclaim | 2 = pa | 3 = motor
-    const { data, isLoading } = useGetContactPersonType(undefined, contactPersonGroupId);
+    const { data, isLoading } = useGetContactPersonType(undefined, contactPersonGroupId, productTypeId);
 
     let filteredData = filterIds
         ? data?.data?.filter((item: any) => filterIds.includes(item.contactPersonTypeId))
