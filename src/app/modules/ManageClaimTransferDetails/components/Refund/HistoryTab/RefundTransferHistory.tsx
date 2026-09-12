@@ -55,7 +55,12 @@ type RefundTransferHistoryProps = {
 };
 
 const RefundTransferHistory = ({ caseId }: RefundTransferHistoryProps) => {
-    const { data: transferHistoryRes } = useGetRefundTransferHistory(caseId);
+    const {
+        data: transferHistoryRes,
+        isLoading: isPayTransferLoading,
+        isError: isPayTransferError,
+        error: payTransferError,
+    } = useGetRefundTransferHistory(caseId);
     const payTransferDetails = transferHistoryRes?.data?.payTransferDetails ?? [];
 
     const [payTransferPaginated, setPayTransferPaginated] = useState<PaginationSortableDto>({
@@ -66,7 +71,12 @@ const RefundTransferHistory = ({ caseId }: RefundTransferHistoryProps) => {
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: decreaseRes } = useGetRefundDecreaseTransaction(caseId, decreasePaginated);
+    const {
+        data: decreaseRes,
+        isLoading: isDecreaseLoading,
+        isError: isDecreaseError,
+        error: decreaseError,
+    } = useGetRefundDecreaseTransaction(caseId, decreasePaginated);
     const decreaseData = decreaseRes?.data ?? [];
 
     const payTransferColumns = usePayTransferHistoryColumns(payTransferDetails);
@@ -85,6 +95,9 @@ const RefundTransferHistory = ({ caseId }: RefundTransferHistoryProps) => {
                             paginated={payTransferPaginated}
                             setPaginated={setPayTransferPaginated}
                             color="primary"
+                            isLoading={isPayTransferLoading}
+                            isError={isPayTransferError}
+                            error={payTransferError}
                         />
                     </Paper>
                 </Grid>
@@ -98,6 +111,9 @@ const RefundTransferHistory = ({ caseId }: RefundTransferHistoryProps) => {
                             paginated={decreasePaginated}
                             setPaginated={setDecreasePaginated}
                             color="primary"
+                            isLoading={isDecreaseLoading}
+                            isError={isDecreaseError}
+                            error={decreaseError}
                         />
                     </Paper>
                 </Grid>

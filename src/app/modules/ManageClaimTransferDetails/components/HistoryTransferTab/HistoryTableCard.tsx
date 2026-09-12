@@ -2,7 +2,7 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import { PaletteOptions } from "@mui/material/styles";
-import { PaginationResultDto, PaginationSortableDto, StandardDataTable } from "../../../_common";
+import { PaginationResultDto, PaginationSortableDto, ClaimFundStandardDataTable } from "../../../_common";
 
 export interface HistoryTableCardProps {
     title: string;
@@ -12,6 +12,9 @@ export interface HistoryTableCardProps {
     paginated: PaginationSortableDto;
     setPaginated: React.Dispatch<React.SetStateAction<PaginationSortableDto>>;
     color?: keyof PaletteOptions;
+    isLoading?: boolean;
+    isError?: boolean;
+    error?: unknown;
 }
 
 const HistoryTableCard = ({
@@ -22,6 +25,9 @@ const HistoryTableCard = ({
     paginated,
     setPaginated,
     color = "grey",
+    isLoading,
+    isError,
+    error,
 }: HistoryTableCardProps) => {
     // Client-side pagination, same reasoning as ClaimListByClaimSearchTable:
     // the API returns the full matching list in one shot, so we slice it
@@ -50,7 +56,7 @@ const HistoryTableCard = ({
                 <Typography sx={{ fontWeight: 700, color: "#212121" }}>{title}</Typography>
             </Box>
 
-            <StandardDataTable
+            <ClaimFundStandardDataTable
                 name={name}
                 title=""
                 data={pagedData}
@@ -58,6 +64,9 @@ const HistoryTableCard = ({
                 paginated={paginationResult}
                 setPaginated={setPaginated}
                 color={color}
+                isLoading={isLoading}
+                isError={isError}
+                error={error}
             />
         </Box>
     );
