@@ -96,14 +96,13 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     const continuousClaim = formik.values.continuousClaim;
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
-    const { activeStep, setActiveStep, furthestStep, isLastStep, isCalculating, handleNext, handleBack } =
-        useClaimStepCalculateHook({
-            formik,
-            customerDetail,
-            filledItems,
-            stepsLength: steps.length,
-            paymentAmount: detail?.paymentAmount,
-        });
+    const { activeStep, setActiveStep, isLastStep, isCalculating, handleNext, handleBack } = useClaimStepCalculateHook({
+        formik,
+        customerDetail,
+        filledItems,
+        stepsLength: steps.length,
+        paymentAmount: detail?.paymentAmount,
+    });
     return (
         <>
             <FormikProvider value={formik}>
@@ -112,7 +111,9 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                         steps={steps}
                         activeStep={activeStep}
                         onStepChange={setActiveStep}
-                        isStepClickable={(index) => index <= furthestStep}
+                        // มีปุ่ม "ย้อนกลับ"/"ถัดไป" ด้านล่างควบคุม step อยู่แล้ว แถบนี้ให้เป็นแค่ progress
+                        // indicator ไม่ต้องกดข้าม step เองได้
+                        isStepClickable={() => false}
                     />
 
                     <Box sx={{ marginTop: "20px" }}>
@@ -187,14 +188,16 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                 </Grid>
                             </div>
                         )}
-                        <Grid item xs={12} sm={12} md={12} lg={12}>
-                            <ConsiderSection
-                                productId={customerDetail?.productTypeId}
-                                aplicationCode={customerDetail?.policyCode ?? ""}
-                                decisionReason={decisionReason}
-                                decisionReasonLoading={decisionReasonLoading}
-                            />
-                        </Grid>
+                        {!isLastStep && (
+                            <Grid item xs={12} sm={12} md={12} lg={12}>
+                                <ConsiderSection
+                                    productId={customerDetail?.productTypeId}
+                                    aplicationCode={customerDetail?.policyCode ?? ""}
+                                    decisionReason={decisionReason}
+                                    decisionReasonLoading={decisionReasonLoading}
+                                />
+                            </Grid>
+                        )}
                     </Box>
 
                     <Grid container justifyContent="space-between" alignItems="center">

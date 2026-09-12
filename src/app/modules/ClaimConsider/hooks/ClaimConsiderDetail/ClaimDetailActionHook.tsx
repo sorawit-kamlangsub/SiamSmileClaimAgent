@@ -442,8 +442,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
             approvedDischargeDate: decisionId === 9 ? asDate(dischargeDate) : undefined,
             approvedDischargeTime: decisionId === 9 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : undefined,
-            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : undefined,
+            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : 0,
+            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : 0,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
             compensateAmount: decisionId === 9 ? calculateResult?.compensateInclude : undefined, //ไม่มี

@@ -87,7 +87,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
 
     /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม) */
     const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
-    const { data: claimContinueData } = useGetClaimContinue(customerDetail?.policyCode ?? undefined);
+    const { data: claimContinueData } = useGetClaimContinue(
+        customerDetail?.policyCode ?? undefined,
+        claimId?.toString()
+    );
     const continuousClaimRows: ContinuousClaimRow[] = useMemo(
         () =>
             (claimContinueData?.data ?? []).map((item) => ({
@@ -103,6 +106,11 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
                 previousCaseNo: "-",
                 previousCaseStatus: "-",
+                // item.incidentDate เป็น dayjs.Dayjs แค่ตาม type แต่ runtime จริงมาเป็น string ดิบจาก API
+                // (ดู CLAUDE.md) ต้องห่อ dayjs(...) เองก่อน ไม่งั้น formik.values.incidentDate จะได้ string
+                // ไปแทนที่ Dayjs จริง แล้วโค้ดที่เรียก .isValid()/.isAfter() ที่อื่นจะพังตอน render
+                incidentDateRaw: item.incidentDate ? dayjs(item.incidentDate) : undefined,
+                chiefComplaintIdRaw: item.chiefComplaintId,
             })),
         [claimContinueData]
     );
@@ -223,6 +231,9 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
 
     const handleSelectContinuousClaim = (row: ContinuousClaimRow) => {
         formik.setFieldValue("continuousClaim", row);
+        // เลือกเคลมต่อเนื่อง = เหตุเดียวกับเคลมเดิม ดึงวันที่เกิดเหตุ/อาการสำคัญของเคลมเดิมมาเติมให้เลย
+        if (row.incidentDateRaw) formik.setFieldValue("incidentDate", row.incidentDateRaw);
+        if (row.chiefComplaintIdRaw) formik.setFieldValue("chiefComplaintId", row.chiefComplaintIdRaw);
         setContinuousClaimOpen(false);
     };
 

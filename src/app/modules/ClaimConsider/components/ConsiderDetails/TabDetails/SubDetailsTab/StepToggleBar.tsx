@@ -35,6 +35,9 @@ const StepToggleBar = ({ steps, activeStep, onStepChange, isStepClickable }: Ste
             {steps.map((step, index) => {
                 const isActive = index === activeStep;
                 const clickable = canClick(index);
+                // ความเข้ม/จางของสี บอก "ผ่าน step นี้มาหรือยัง" ล้วน ๆ ไม่เกี่ยวกับกดได้/กดไม่ได้ —
+                // แยกออกจาก clickable เพื่อไม่ให้ step ปัจจุบัน/ที่ผ่านมาแล้วดูจางไปตอนปิดการคลิกทั้งแถบ
+                const isReached = index <= activeStep;
 
                 return (
                     <ButtonBase
@@ -50,11 +53,11 @@ const StepToggleBar = ({ steps, activeStep, onStepChange, isStepClickable }: Ste
                             gap: "10px",
                             padding: "10px 20px",
                             borderRadius: "8px",
-                            cursor: clickable ? "pointer" : "not-allowed",
+                            cursor: clickable ? "pointer" : "default",
                             backgroundColor: isActive ? "#FFFFFF" : "transparent",
                             border: isActive ? "1px solid #90CAF9" : "1px solid transparent",
                             boxShadow: isActive ? "0 1px 3px rgba(0,0,0,0.1)" : "none",
-                            opacity: clickable ? 1 : 0.6,
+                            opacity: isReached ? 1 : 0.6,
                             transition: "all 0.15s ease",
                         }}
                     >

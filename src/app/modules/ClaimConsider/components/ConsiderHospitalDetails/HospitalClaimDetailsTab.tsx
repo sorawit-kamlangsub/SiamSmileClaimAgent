@@ -84,7 +84,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const [activeStep, setActiveStep] = useState(0);
-    const [furthestStep, setFurthestStep] = useState(0);
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
 
@@ -150,7 +149,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
         dispatch(resetState());
         setActiveStep(0);
-        setFurthestStep(0);
         setSimBCategory("SimB2");
         setMergeCompensation(true);
         setEditedPayoutAccount(undefined);
@@ -169,7 +167,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         dispatch(resetState());
         formik.resetForm();
         setActiveStep(0);
-        setFurthestStep(0);
         navigate(CONSIDER_HOSPITAL_MONITOR_PATH);
     };
 
@@ -440,7 +437,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
         const next = Math.min(activeStep + 1, steps.length - 1);
         setActiveStep(next);
-        setFurthestStep((prev) => Math.max(prev, next));
     };
 
     /** ยืนยันบันทึกผลพิจารณา (รอแก้ไข / ปฏิเสธ / ยกเลิก) : ต้องผ่าน Validate Step 1 ทั้งหมดก่อน */
@@ -519,7 +515,10 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                     steps={steps}
                     activeStep={activeStep}
                     onStepChange={setActiveStep}
-                    isStepClickable={(index) => index <= furthestStep}
+                    // โหมดแก้ไข: มีปุ่ม "กลับ"/"ถัดไป" ด้านล่างควบคุม step อยู่แล้ว ไม่ต้องกดแถบนี้ข้าม step เอง
+                    // โหมด readOnly: ปุ่ม "ถัดไป" ถูกซ่อน (บรรทัด 617) ต้องเปิดให้กดแถบนี้แทน ไม่งั้นจะไปดู
+                    // step 2/3 ไม่ได้เลย
+                    isStepClickable={() => readOnly}
                 />
 
                 <Box sx={{ marginTop: "20px" }}>

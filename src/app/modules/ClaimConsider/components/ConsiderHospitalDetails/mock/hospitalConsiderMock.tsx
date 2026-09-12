@@ -2,6 +2,7 @@ import { ClaimTypeOption } from "../../../../CreatedClaim/components/CreateClaim
 import { ChipOption } from "../../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { Dayjs } from "dayjs";
 
 /**
  * Mock data สำหรับหน้า "พิจารณาเคลม - เคลมโรงพยาบาล (OPD Half)"
@@ -155,6 +156,11 @@ export type ContinuousClaimRow = {
     /** เลขที่เคสของเคลมเดิม + สถานะ (ใช้แสดงความต่อเนื่องของการรักษา) */
     previousCaseNo: string;
     previousCaseStatus: string;
+
+    /** ค่าดิบ (ไม่ format) ไว้ map ลง formik ตอนเลือกเคลมต่อเนื่อง — incidentDate/chiefComplaint ด้านบน
+     * เป็น string ที่ format ไว้แสดงผลในตารางแล้วเท่านั้น ใช้ set ลง formik โดยตรงไม่ได้ */
+    incidentDateRaw?: Dayjs;
+    chiefComplaintIdRaw?: number;
 };
 
 export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
