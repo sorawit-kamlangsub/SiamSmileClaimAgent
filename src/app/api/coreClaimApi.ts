@@ -103,7 +103,20 @@ export const useGetCustomerSearch = (
     recordsPerPage?: number
 ) => {
     return useQuery(
-        [getCustomerSearchQueryKey, searchIndex, searchDetail, page, recordsPerPage, orderingField, ascendingOrder],
+        [
+            getCustomerSearchQueryKey,
+            searchIndex,
+            isSeachDetail,
+            dateHappen,
+            schoolId,
+            provinceId,
+            incidentTypeId,
+            searchDetail,
+            page,
+            recordsPerPage,
+            orderingField,
+            ascendingOrder,
+        ],
         () =>
             coreClaimClient.getCustomerSearch(
                 searchIndex,
