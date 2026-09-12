@@ -1,8 +1,11 @@
 import { FormikErrors, useFormik } from "formik";
 import { swalConfirm, swalSuccess, swalWarning } from "../../../_common";
 import { useEffect } from "react";
-import dayjs from "dayjs";
-import { useGetRefundDetail, useGetRefundReasons } from "../../../Refund/refundAPI";
+import {
+    useGetRefundDetail,
+    useGetRefundReasons,
+    useGetRefundTransferTypes,
+} from "../../../Refund/refundAPI";
 import { RefundItemsFormValues } from "../../components/Refund/DetailTab/RefundItemsTable";
 import { RefundRecordFormValues } from "../../components/Refund/DetailTab/RefundRecordForm";
 
@@ -45,25 +48,20 @@ const mockDetailData: any = {
 
 const emptyFormValues: RefundDetailFormValues = {
     items: [],
+    refundTransferType: undefined,
+    refundSlipDateTime: null,
     reasonId: undefined,
     note: "",
+    slipFile: [],
 };
 
 const useManageRefundDetailHook = (caseId: string) => {
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetRefundDetail(caseId);
     const { data: refundReasonsRes, isLoading: isReasonLoading } = useGetRefundReasons();
+    const { data: transferTypeRes, isLoading: isTransferTypeLoading } = useGetRefundTransferTypes(3);
 
     // TODO: ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails
     const detailData = refundDetailRes?.data ?? mockDetailData;
-
-    const mapAccount = (account: any) => {
-        if (!account) return undefined;
-        return {
-            ...account,
-            addedDate:
-                account.createdAccoutDetailDate ?? account.createdDate ?? dayjs().format("DD/MM/YYYY"),
-        };
-    };
 
     const mapCaseDetailsRows = (caseDetails: any[]) =>
         (caseDetails ?? []).map((row, index) => ({
@@ -89,8 +87,24 @@ const useManageRefundDetailHook = (caseId: string) => {
         validate: (values) => {
             const errors: FormikErrors<RefundDetailFormValues> = {};
 
+            if (!values.refundTransferType) {
+                errors.refundTransferType = "กรุณาเลือกประเภทการโอน";
+            }
+
+            if (!values.refundSlipDateTime) {
+                errors.refundSlipDateTime = "กรุณาเลือกวันที่/เวลาโอนคืน Slip";
+            }
+
             if (!values.reasonId) {
-                errors.reasonId = "กรุณาเลือกสาเหตุการโอนคืน";
+                errors.reasonId = "กรุณาเลือกสาเหตุที่โอนคืน";
+            }
+
+            if (!values.note?.trim()) {
+                errors.note = "กรุณากรอกหมายเหตุ";
+            }
+
+            if (!values.slipFile || values.slipFile.length === 0) {
+                errors.slipFile = "กรุณาเลือก Slip การโอนคืน";
             }
 
             return errors;
@@ -105,12 +119,15 @@ const useManageRefundDetailHook = (caseId: string) => {
             } else {
                 const payload = {
                     caseId: "CL690400010",
+                    refundType: values.refundTransferType,
+                    slipDateTime: values.refundSlipDateTime?.format("YYYY-MM-DD HH:mm:ss"),
                     items: values.items.map((item) => ({
                         caseNo: item.caseNo,
                         refundAmount: Number(item.additionalAmount ?? 0).toFixed(2),
                     })),
                     refundReasonId: values.reasonId,
                     remark: values.note,
+                    slipFile: values.slipFile,
                 };
                 swalConfirm("ยืนยันการคืนเงิน", "ต้องการยืนยันการคืนเงินใช่หรือไม่", "ยืนยัน", "ยกเลิก").then((res) => {
                     if (res.isConfirmed) {
@@ -126,20 +143,29 @@ const useManageRefundDetailHook = (caseId: string) => {
             formik.resetForm({
                 values: {
                     items: mapCaseDetailsRows(detailData.caseDetails),
+                    refundTransferType: undefined,
+                    refundSlipDateTime: null,
                     reasonId: undefined,
                     note: "",
+                    slipFile: [],
                 },
             });
         }
     }, [detailData]);
 
+    const transferTypeOptions = (transferTypeRes?.data ?? []).map((item: any) => ({
+        id: item.adjustmentReasonId ?? item.id,
+        name: item.adjustmentReasonName ?? item.name,
+    }));
+
     return {
         formik,
         summary: detailData,
-        account: mapAccount(detailData?.account),
         isDetailLoading,
         reasonOptions: refundReasonsRes?.data,
         reasonOptionIsLoading: isReasonLoading,
+        transferTypeOptions,
+        transferTypeOptionIsLoading: isTransferTypeLoading,
     };
 };
 

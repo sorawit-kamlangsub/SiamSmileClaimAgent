@@ -70,6 +70,7 @@ const RefundItemsTable = <T extends RefundItemsFormValues>({ formik }: RefundIte
                 options: {
                     filter: false,
                     sort: false,
+                    setCellProps: () => ({ style: { minWidth: 220 } }),
                     setCellHeaderProps: () => ({ align: "right" as const }),
                     customBodyRenderLite: (dataIndex) => {
                         const amount = formik.values.items?.[dataIndex]?.totalNetPaidAmount ?? 0;
@@ -87,19 +88,21 @@ const RefundItemsTable = <T extends RefundItemsFormValues>({ formik }: RefundIte
                     customBodyRenderLite: (dataIndex) => {
                         const item = formik.values.items?.[dataIndex];
                         return (
-                            <TextField
-                                size="small"
-                                type="text"
-                                placeholder="0.00"
-                                value={item?.additionalAmount || ""}
-                                onChange={(e) => handleAmountChange(dataIndex, e.target.value)}
-                                inputProps={{
-                                    inputMode: "decimal",
-                                    min: 0,
-                                    style: { textAlign: "right" },
-                                }}
-                                fullWidth
-                            />
+                            <Box sx={{ display: "flex", justifyContent: "flex-end" }}>
+                                <TextField
+                                    size="small"
+                                    type="text"
+                                    placeholder="0.00"
+                                    value={item?.additionalAmount || ""}
+                                    onChange={(e) => handleAmountChange(dataIndex, e.target.value)}
+                                    inputProps={{
+                                        inputMode: "decimal",
+                                        min: 0,
+                                        style: { textAlign: "right" },
+                                    }}
+                                    sx={{ width: "110px" }}
+                                />
+                            </Box>
                         );
                     },
                 },

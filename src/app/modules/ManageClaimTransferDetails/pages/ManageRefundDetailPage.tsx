@@ -12,8 +12,15 @@ import RefundTransferHistory from "../components/Refund/HistoryTab/RefundTransfe
 
 const ManageRefundDetailPage = () => {
     const { id = "" } = useParams();
-    const { formik, summary, account, isDetailLoading, reasonOptions, reasonOptionIsLoading } =
-        useManageRefundDetailHook(id);
+    const {
+        formik,
+        summary,
+        isDetailLoading,
+        reasonOptions,
+        reasonOptionIsLoading,
+        transferTypeOptions,
+        transferTypeOptionIsLoading,
+    } = useManageRefundDetailHook(id);
     const [activeTab, setActiveTab] = useState(0);
 
     if (isDetailLoading) {
@@ -44,9 +51,10 @@ const ManageRefundDetailPage = () => {
                         <Grid item>
                             <RefundRecordForm
                                 formik={formik}
-                                account={account}
                                 reasonOptions={reasonOptions}
                                 isLoadingDropdown={reasonOptionIsLoading}
+                                transferTypeOptions={transferTypeOptions}
+                                isTransferTypeLoading={transferTypeOptionIsLoading}
                             />
                         </Grid>
 

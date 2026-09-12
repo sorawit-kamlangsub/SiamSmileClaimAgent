@@ -1,25 +1,32 @@
 import { Box, Grid, Typography } from "@mui/material";
 import { FormikProps } from "formik";
-import ReceivingAccountCard, { ReceivingAccountCardProps } from "../../Adjust/DetailTab/ReceivingAccountCard";
+import { Dayjs } from "dayjs";
+import FormikDateTimePicker from "../../../../_common/components/CustomFormik/FormikDateTimePicker";
 import { FormikDropdown, FormikTextField } from "../../../../_common";
+import RefundSlipFileUpload from "./RefundSlipFileUpload";
 
 export interface RefundRecordFormValues {
+    refundTransferType: number | undefined;
+    refundSlipDateTime: Dayjs | null;
     reasonId: number | undefined;
     note: string;
+    slipFile: File[] | undefined;
 }
 
 export interface RefundRecordFormProps<T extends RefundRecordFormValues> {
     formik: FormikProps<T>;
-    account: ReceivingAccountCardProps;
     reasonOptions: any[];
     isLoadingDropdown: boolean;
+    transferTypeOptions: any[];
+    isTransferTypeLoading: boolean;
 }
 
 const RefundRecordForm = <T extends RefundRecordFormValues>({
     formik,
-    account,
     reasonOptions,
     isLoadingDropdown,
+    transferTypeOptions,
+    isTransferTypeLoading,
 }: RefundRecordFormProps<T>) => {
     return (
         <Box
@@ -30,18 +37,45 @@ const RefundRecordForm = <T extends RefundRecordFormValues>({
                 padding: "20px 24px",
             }}
         >
-            <Typography sx={{ fontWeight: 700, color: "#212121", marginBottom: "16px" }}>บันทึกรายการ</Typography>
+            <Typography sx={{ fontWeight: 700, color: "#212121", marginBottom: "16px" }}>
+                บันทึกรายการคืนเงิน
+            </Typography>
 
-            <Grid container spacing={3}>
+            <Grid container direction="column" spacing={3}>
                 <Grid item xs={12}>
-                    <Typography sx={{ fontSize: "0.85rem", color: "#455A64", marginBottom: "8px" }}>
-                        บัญชีรับสินไหม :
-                    </Typography>
-                    <ReceivingAccountCard {...account} />
+                    <Box sx={{ maxWidth: "350px" }}>
+                        <FormikDropdown
+                            formik={formik}
+                            name="refundTransferType"
+                            label="ประเภทการโอน"
+                            data={transferTypeOptions ?? []}
+                            size="small"
+                            fullWidth
+                            firstItemText="กรุณาเลือกประเภทการโอน"
+                            valueFieldName="id"
+                            displayFieldName="name"
+                            required
+                            isLoading={isTransferTypeLoading}
+                        />
+                    </Box>
                 </Grid>
 
-                <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <Grid item xs={12} sm={6} md={4}>
+                <Grid item xs={12}>
+                    <Box sx={{ maxWidth: "350px" }}>
+                        <FormikDateTimePicker
+                            formik={formik}
+                            name="refundSlipDateTime"
+                            label="วันที่/เวลาโอนคืน Slip"
+                            size="small"
+                            fullWidth
+                            required
+                            InputLabelProps={{ shrink: true }}
+                        />
+                    </Box>
+                </Grid>
+
+                <Grid item xs={12}>
+                    <Box sx={{ maxWidth: "350px" }}>
                         <FormikDropdown
                             formik={formik}
                             name="reasonId"
@@ -49,27 +83,32 @@ const RefundRecordForm = <T extends RefundRecordFormValues>({
                             size="small"
                             fullWidth
                             firstItemText="กรุณาเลือก"
-                            defaultValue={formik.values.reasonId}
-                            label="สาเหตุการโอนคืน"
+                            label="สาเหตุที่โอนคืน"
                             valueFieldName="id"
                             displayFieldName="name"
                             required
                             isLoading={isLoadingDropdown}
                         />
-                    </Grid>
+                    </Box>
                 </Grid>
-                <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <Grid item xs={12} sm={6} md={4}>
+
+                <Grid item xs={12}>
+                    <Box sx={{ maxWidth: "350px" }}>
                         <FormikTextField
                             formik={formik}
                             fullWidth
                             size="small"
                             name="note"
                             label="หมายเหตุ"
-                            multiline
-                            minRows={3}
+                            placeholder="กรุณากรอกหมายเหตุ"
+                            required
+                            InputLabelProps={{ shrink: true }}
                         />
-                    </Grid>
+                    </Box>
+                </Grid>
+
+                <Grid item xs={12}>
+                    <RefundSlipFileUpload formik={formik} name="slipFile" />
                 </Grid>
             </Grid>
         </Box>

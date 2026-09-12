@@ -74,6 +74,29 @@ const getRefundDetailData = (caseId: string) => {
         });
 };
 
+const getRefundTransferTypes = "getRefundTransferTypesKey";
+export const useGetRefundTransferTypes = (adjustmentTypeId = 3) => {
+    return useQuery([getRefundTransferTypes, adjustmentTypeId], () =>
+        getRefundTransferTypesData(adjustmentTypeId)
+    );
+};
+
+const getRefundTransferTypesData = (adjustmentTypeId: number) => {
+    const url = `${apiURL}/Masters/GetAdjustmentReasons?adjustmentTypeId=${adjustmentTypeId}`;
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
 export const useGetRefundReasons = () => {
     return useQuery([getRefundReasons], () => getRefundReasonsData());
 };
