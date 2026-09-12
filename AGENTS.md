@@ -3,7 +3,8 @@
 เริ่มทำงานทุกครั้งโดยอ่านความรู้ใน `.opencode-ai/` ก่อนเสมอ:
 
 1. อ่าน `.opencode-ai/Agent.md` — สารบัญ skill และแนวปฏิบัติของโปรเจค
-2. อ่าน `.opencode-ai/ClaimFundRefundSkill.md` — สถานะงานปัจจุบันของ ClaimAgent
-3. เลือก skill ที่เกี่ยวข้องจาก `.opencode-ai/skills/<name>/SKILL.md` แล้วปฏิบัติตาม
+2. อ่าน `.opencode-ai/AUN.md` — Knowledge Base สไตล์การเขียนโค้ด (อ่าน `§0`–`§2` ก่อนเสมอ แล้วอ่านเฉพาะ section ที่เกี่ยวกับงาน เช่น §4 ฟอร์ม, §5 API, §6 ตาราง)
+3. อ่าน `.opencode-ai/ClaimFundRefundSkill.md` — สถานะงานปัจจุบันของ ClaimAgent
+4. เลือก skill ที่เกี่ยวข้องจาก `.opencode-ai/skills/<name>/SKILL.md` แล้วปฏิบัติตาม
 
 ห้ามข้ามขั้นตอนนี้แม้ภารกิจจะดูง่าย สำหรับทุกงานในโปรเจคนี้.
