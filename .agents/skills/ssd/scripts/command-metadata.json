@@ -1,0 +1,150 @@
+{
+  "frontend-init": {
+    "description": "เริ่มโปรเจค Frontend ใหม่จาก react-ts-template-2023 v1.2.0 — clone, rename, ตั้งค่า env, Jenkins-sensitive files",
+    "argumentHint": "[project name]"
+  },
+  "backend-init": {
+    "description": "เริ่มโปรเจค Backend ใหม่จาก Net60_ApiTemplate_2023 (202306) — rename, namespace, appsettings, Jenkins path",
+    "argumentHint": "[project name]"
+  },
+  "frontend-setup": {
+    "description": "ตั้งค่าโปรเจค React/TypeScript ใหม่ — folder structure, package มาตรฐาน, naming conventions, environment variables",
+    "argumentHint": "[feature]"
+  },
+  "frontend-feature": {
+    "description": "สร้าง feature ใหม่จาก natural language description — components, pages, Redux slice, API client ครบ module เดียว",
+    "argumentHint": "[feature description]"
+  },
+  "react-component": {
+    "description": "มาตรฐาน React functional component — Props typing, hooks, file naming, suffixes",
+    "argumentHint": "[component name]"
+  },
+  "react-form": {
+    "description": "Formik form implementation กับ MUI — validation, submit, error handling",
+    "argumentHint": "[form name]"
+  },
+  "react-state": {
+    "description": "Redux slice creation, dispatch patterns, redux-persist configuration",
+    "argumentHint": "[feature]"
+  },
+  "react-api": {
+    "description": "API client ด้วย Axios + React Query + NSwag — patterns, hooks, error handling",
+    "argumentHint": "[API name]"
+  },
+  "backend-setup": {
+    "description": "ตั้งค่าโปรเจค ASP.NET Core 6 ใหม่ — folder structure, dependencies, middleware",
+    "argumentHint": "[project name]"
+  },
+  "backend-feature": {
+    "description": "สร้าง feature ใหม่จาก natural language description — Service, Controller, DTO ครบ (database-first, ต้องมี EF Core Model ก่อน)",
+    "argumentHint": "[feature description]"
+  },
+  "dotnet-controller": {
+    "description": "ASP.NET API controller patterns — routing, authorization, response format",
+    "argumentHint": "[controller name]"
+  },
+  "dotnet-service": {
+    "description": "Service layer, DTO, AutoMapper — patterns, interfaces, dependency injection",
+    "argumentHint": "[service name]"
+  },
+  "dotnet-infra": {
+    "description": "Serilog logging, Quartz background jobs, RestSharp HTTP clients",
+    "argumentHint": "[feature]"
+  },
+  "dotnet-scaffold": {
+    "description": "EF Core Reverse Engineer ผ่าน CLI — dotnet ef dbcontext scaffold พร้อม SSD conventions (Models/, Data/, AppDbContext, --use-database-names, --data-annotations)",
+    "argumentHint": "[table names or blank for all]"
+  },
+  "dotnet-ef-query": {
+    "description": "EF Core query patterns สำหรับ Service layer — AsNoTracking, Include, pagination (IndexStart/PageSize), transaction, async, Stored Procedure",
+    "argumentHint": "[entity or method name]"
+  },
+  "database": {
+    "description": "EF Core Reverse Engineer, AppDbContext, database naming conventions",
+    "argumentHint": "[entity name]"
+  },
+  "ts-fix-unused": {
+    "description": "แก้ TS6133/TS6196 build errors อัตโนมัติ — // @ts-nocheck สำหรับ NSwag generated files, // @ts-ignore สำหรับ manual code",
+    "argumentHint": "[build:uat | build:dev | build]"
+  },
+  "frontend-review": {
+    "description": "Review React/TypeScript code — checklist ครอบคลุม naming, types, hooks, API, forms",
+    "argumentHint": "[file or feature]"
+  },
+  "backend-review": {
+    "description": "Review C#/.NET code — authorization, naming, XML docs, AutoMapper, response format",
+    "argumentHint": "[file or feature]"
+  },
+  "frontend-refactor": {
+    "description": "Refactor .tsx/.ts files อย่างปลอดภัยพร้อม TypeScript compile check",
+    "argumentHint": "[file or feature]"
+  },
+  "backend-refactor": {
+    "description": "Refactor .cs files อย่างปลอดภัยพร้อม dotnet build check",
+    "argumentHint": "[file or feature]"
+  },
+  "python-review": {
+    "description": "Review Python code — Clean Architecture, HTTP methods, logging, SQLAlchemy, error handling",
+    "argumentHint": "[file or feature]"
+  },
+  "python-refactor": {
+    "description": "Refactor .py files อย่างปลอดภัยพร้อม pytest verification",
+    "argumentHint": "[file or feature]"
+  },
+  "python-starter": {
+    "description": "เริ่มโปรเจค FastAPI ใหม่ด้วย Clean/Hexagonal Architecture — structure, dependencies, patterns",
+    "argumentHint": "[project name]"
+  },
+  "python-feature": {
+    "description": "สร้าง feature/endpoint ใหม่จาก natural language description — Clean Architecture, รองรับ CRUD และ streaming + external service",
+    "argumentHint": "[feature description]"
+  },
+  "git-commit": {
+    "description": "Conventional Commits, Semantic Versioning, breaking changes — เขียน commit message ตามมาตรฐาน SSD",
+    "argumentHint": "[scope]"
+  },
+  "git-flow": {
+    "description": "Git Flow workflow — branch naming, pull request standards, merge strategy",
+    "argumentHint": "[feature or release]"
+  },
+  "contact-skill-gen": {
+    "description": "สร้าง SKILL.md สำหรับ shared libraries และ contact services",
+    "argumentHint": "[library name]"
+  },
+  "bug-auth-redirect": {
+    "description": "แก้ white screen / auth redirect loop — oidc-client-ts, react-ts-template-2023",
+    "argumentHint": ""
+  },
+  "bug-version-checker": {
+    "description": "แก้ version cache race condition — JS chunk cache, version checker",
+    "argumentHint": ""
+  },
+  "python-database": {
+    "description": "PostgreSQL + SQLAlchemy 2.x: naming conventions, ORM models, async session, repository pattern, Alembic migration",
+    "argumentHint": "[entity or table name]"
+  },
+  "release-it-setup": {
+    "description": "ตั้งค่า release-it v17 + @release-it/conventional-changelog สำหรับ GitHub releases",
+    "argumentHint": "[project]"
+  },
+  "frontend-doctor": {
+    "description": "ตรวจสุขภาพโปรเจค React/TypeScript — dependencies, tsconfig, folder structure, window.__CONST__ENV__, Redux typed hooks",
+    "argumentHint": "[project path or .]"
+  },
+  "backend-doctor": {
+    "description": "ตรวจสุขภาพโปรเจค ASP.NET Core — NuGet packages, Program.cs middleware pipeline, appsettings.json, AutoMapper, EF Core",
+    "argumentHint": "[project path or .]"
+  },
+  "python-doctor": {
+    "description": "ตรวจสุขภาพโปรเจค FastAPI Clean Architecture — dependencies, layers, main.py lifespan, DomainError, Alembic",
+    "argumentHint": "[project path or .]"
+  },
+  "python-streaming-doctor": {
+    "description": "ตรวจ production-readiness ของ SSE/streaming endpoint — Nginx buffering, timeout, worker class, resource leak, reconnect, multi-replica scaling",
+    "argumentHint": "[project path or .]"
+  },
+  "db-doctor": {
+    "description": "ตรวจสุขภาพ Database schema — standard columns, datetime2, naming conventions, stored procedure prefix",
+    "argumentHint": "[.sql file, DDL, or project path]"
+  }
+}

@@ -58,16 +58,17 @@ const ClaimHistoryTable: React.FC<Props> = ({ tableId, onContinuousClaim }) => {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (_value, tableMeta) => {
                     const item = claimHistoryData?.data?.[tableMeta.rowIndex] as GetClaimHistoryDtoResponse | undefined;
+                    // แสดงปุ่มเฉพาะเคสที่ backend อนุญาตให้แจ้งเคลมต่อเนื่องเท่านั้น เคสอื่นปล่อยว่าง
+                    if (!item?.isEnableClaimContinue) {
+                        return null;
+                    }
                     return (
                         <Button
                             variant="contained"
                             size="small"
                             color="primary"
                             startIcon={<AddCommentIcon />}
-                            onClick={() => {
-                                if (item) onContinuousClaim(item);
-                            }}
-                            disabled={!item}
+                            onClick={() => onContinuousClaim(item)}
                             sx={{ whiteSpace: "nowrap" }}
                         >
                             แจ้งเคลมต่อเนื่อง

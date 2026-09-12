@@ -10,7 +10,7 @@ import BadgeIcon from "@mui/icons-material/Badge";
 import { backgroundColorMapClaimStatus, colorMapClaimStatus } from "../../../../../functionHelpers";
 
 type ClaimDetailProps = {
-    notificationDate: string | undefined;
+    createdDate: string | undefined;
     transferDate: string | undefined;
     employee: string | undefined;
     branch: string | undefined;
@@ -22,7 +22,7 @@ type ClaimDetailProps = {
 };
 
 const ClaimDetail = ({
-    notificationDate,
+    createdDate,
     transferDate,
     employee,
     branch,
@@ -38,7 +38,7 @@ const ClaimDetail = ({
         {
             icon: <CalendarMonthIcon />,
             label: "วันที่แจ้ง",
-            value: notificationDate,
+            value: createdDate,
         },
         {
             icon: <CalendarMonthIcon />,

@@ -59,19 +59,22 @@ const HeaderCardCustomerDetails = ({
                 sx={{
                     background: "linear-gradient(135deg, #0D3D6B 0%, #1E88C7 100%)",
                     borderRadius: "16px",
-                    padding: "16px 20px",
+                    padding: { xs: "14px 16px", sm: "16px 20px" },
                     position: "relative",
                     overflow: "hidden",
-                    boxShadow: 9,
+                    boxShadow: 1,
                 }}
             >
-                <Grid container spacing={2} alignItems="center" wrap="nowrap">
+                {/* nowrap เฉพาะ lg+ (~1200px) เท่านั้น — แถวเดียวต้องการพื้นที่รวม avatar+name+chips+badge
+                    รวมกันเกิน 1100px จริงๆ ถ้าบังคับ nowrap ตั้งแต่ sm (600px) แบบเดิม ทุกบล็อกจะถูกบีบจนข้อความ
+                    ตัดคำทีละตัวอักษร (ตามที่เจอตอนเปิด 734px) — จอที่แคบกว่า lg จึงให้ wrap ลงหลายแถวแทน */}
+                <Grid container spacing={2} alignItems="center" sx={{ flexWrap: { xs: "wrap", lg: "nowrap" } }}>
                     {/* Avatar + name block */}
                     <Grid item sx={{ flexShrink: 0 }}>
                         <Box
                             sx={{
-                                width: 84,
-                                height: 84,
+                                width: { xs: 64, sm: 84 },
+                                height: { xs: 64, sm: 84 },
                                 borderRadius: "14px",
                                 borderColor: "#FFFFFF",
                                 backgroundColor: "rgba(255, 255, 255, 0.28)",
@@ -82,8 +85,8 @@ const HeaderCardCustomerDetails = ({
                         >
                             <Box
                                 sx={{
-                                    width: 52,
-                                    height: 52,
+                                    width: { xs: 40, sm: 52 },
+                                    height: { xs: 40, sm: 52 },
                                     borderRadius: 12,
                                     backgroundColor: "rgba(255, 255, 255, 1)",
                                     display: "flex",
@@ -91,12 +94,14 @@ const HeaderCardCustomerDetails = ({
                                     justifyContent: "center",
                                 }}
                             >
-                                <PersonIcon sx={{ color: "#0D3D6B", fontSize: 42 }} />
+                                <PersonIcon sx={{ color: "#0D3D6B", fontSize: { xs: 32, sm: 42 } }} />
                             </Box>
                         </Box>
                     </Grid>
 
-                    <Grid item sx={{ flexShrink: 0, minWidth: "260px" }}>
+                    {/* xs={12}: เต็มแถวแยกบรรทัดจนกว่าจะถึง lg (ตรงกับจุดที่ container เปลี่ยนเป็น nowrap ด้านบน)
+                        lg="auto": กว้างตามเนื้อหาเหมือนเดิมไม่แย่งพื้นที่ยืดกับกลุ่ม chips */}
+                    <Grid item xs={12} lg="auto" sx={{ minWidth: { xs: 0, lg: 220 }, flexShrink: { xs: 1, lg: 0 } }}>
                         <Box
                             sx={{
                                 display: "inline-flex",
@@ -111,11 +116,15 @@ const HeaderCardCustomerDetails = ({
                             <VerifiedIcon sx={{ color: "#7FD1F5", fontSize: 16 }} />
                             <Typography sx={{ fontSize: "0.75rem", color: "#FFFFFF" }}>ข้อมูลผู้เอาประกัน</Typography>
                         </Box>
-                        <Typography sx={{ fontSize: "1.3rem", fontWeight: 700, color: "#FFFFFF" }}>{name}</Typography>
-                        <Typography sx={{ fontSize: "0.8rem", color: "#FFFFFF" }}>
+                        <Typography
+                            sx={{ fontSize: { xs: "1.05rem", sm: "1.3rem" }, fontWeight: 700, color: "#FFFFFF" }}
+                        >
+                            {name}
+                        </Typography>
+                        <Typography sx={{ fontSize: "0.8rem", color: "#FFFFFF", wordBreak: "break-word" }}>
                             เลขบัตรประชาชน : {idCardNo}
                         </Typography>
-                        <Typography sx={{ fontSize: "0.8rem", color: "#FFFFFF" }}>
+                        <Typography sx={{ fontSize: "0.8rem", color: "#FFFFFF", wordBreak: "break-word" }}>
                             Application ID :{" "}
                             <Box
                                 component="span"
@@ -131,13 +140,13 @@ const HeaderCardCustomerDetails = ({
                         </Typography>
                     </Grid>
 
-                    {/* Info chips */}
-                    <Grid item xs>
+                    {/* Info chips — เต็มแถวแยกบรรทัดเองจนถึง lg, จากนั้นกลับไปอยู่แถวเดียวกันแบบเดิม */}
+                    <Grid item xs={12} lg>
                         <Grid container spacing={1.5}>
-                            <Grid item xs={4}>
+                            <Grid item xs={6} sm={4}>
                                 <InfoChip label="เบอร์โทรศัพท์" value={phoneNumber} />
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={6} sm={4}>
                                 <InfoChip
                                     label="สถานะ App"
                                     value={
@@ -157,22 +166,23 @@ const HeaderCardCustomerDetails = ({
                                     }
                                 />
                             </Grid>
-                            <Grid item xs={4} />
+                            {/* spacer เว้นช่องให้ครบ 3 คอลัมน์ — ไม่จำเป็นตอน 2 คอลัมน์บนมือถือจึงซ่อนไว้ */}
+                            <Grid item sm={4} sx={{ display: { xs: "none", sm: "block" } }} />
 
-                            <Grid item xs={4}>
+                            <Grid item xs={6} sm={4}>
                                 <InfoChip label="อายุกรมธรรม์" value={policyAgeText} />
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={6} sm={4}>
                                 <InfoChip label="วันที่เริ่มคุ้มครอง" value={coverageStartDate} />
                             </Grid>
-                            <Grid item xs={4}>
+                            <Grid item xs={6} sm={4}>
                                 <InfoChip label="วันที่สิ้นสุดความคุ้มครอง" value={coverageEndDate || "-"} />
                             </Grid>
                         </Grid>
                     </Grid>
 
-                    {/* Plan badge */}
-                    <Grid item sx={{ flexShrink: 0 }}>
+                    {/* Plan badge — เต็มความกว้างจนถึง lg แทนที่จะบีบเบียดอยู่ท้ายแถว */}
+                    <Grid item xs={12} lg="auto" sx={{ flexShrink: 0 }}>
                         <Box
                             sx={{
                                 backgroundColor: "#FFFFFF",
@@ -180,7 +190,9 @@ const HeaderCardCustomerDetails = ({
                                 padding: "8px 20px",
                                 display: "flex",
                                 alignItems: "center",
+                                justifyContent: "center",
                                 gap: "6px",
+                                width: { xs: "100%", lg: "auto" },
                             }}
                         >
                             <ShieldIcon sx={{ color: "#1565C0", fontSize: 20 }} />

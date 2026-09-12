@@ -15,6 +15,7 @@ import PersonIcon from "@mui/icons-material/Person";
 import TrendingUpIcon from "@mui/icons-material/TrendingUp";
 import ReceiptLongOutlinedIcon from "@mui/icons-material/ReceiptLongOutlined";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 
 export const ASideMenuList = () => {
     const layoutReducer = useAppSelector(selectLayout);
@@ -82,6 +83,12 @@ export const ASideMenuList = () => {
 
                 <ParentMenu icon={<MonitorIcon />} text="พิจารณาเคลม" permissions={[]}>
                     <MenuItem path="/consider/monitor" icon="person" text="เคลมลูกค้า" />
+                    <MenuItem path="/consider/hospital-monitor" icon="local_hospital" text="เคลมโรงพยาบาล" />
+                </ParentMenu>
+
+                <ParentMenu icon={<ReceiptLongIcon />} text="วางบิลเคลม" permissions={[]}>
+                    <MenuItem path="/billing/customers" icon="person" text="เคลมลูกค้า" />
+                    <MenuItem path="/billing/hospital" icon="local_hospital" text="เคลมโรงพยาบาล" />
                 </ParentMenu>
                 {/* <ParentMenu icon={<PaymentsIcon />} text="จัดการเงินเคลม" permissions={[]}>
                     <MenuItem path="/payment-monitor" icon={<AddCardIcon />} text="โอนเพิ่ม" />

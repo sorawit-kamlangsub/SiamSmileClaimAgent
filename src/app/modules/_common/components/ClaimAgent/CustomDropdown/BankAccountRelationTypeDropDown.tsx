@@ -7,16 +7,18 @@ type BankAccountRelationTypeDropDownProps = Omit<
 > & {
     filterIds?: number[];
     bankAccountRelationGroupId?: number | undefined;
+    productTypeId?: number | undefined;
 };
 
 const BankAccountRelationTypeDropDown = ({
     formik,
     filterIds,
     bankAccountRelationGroupId,
+    productTypeId,
     ...props
 }: BankAccountRelationTypeDropDownProps) => {
     //bankAccountRelationGroupId : 1 = ph, pa, claimmisc | 2 = motor
-    const { data, isLoading } = useGetBankAccountRelationType(undefined, bankAccountRelationGroupId);
+    const { data, isLoading } = useGetBankAccountRelationType(undefined, bankAccountRelationGroupId, productTypeId);
 
     let filteredData = filterIds
         ? data?.data?.filter((item: any) => filterIds.includes(item.bankAccountRelationTypeId))

@@ -19,7 +19,7 @@ const CardClaimInfo = ({ icon, label, value, iconColor = "#0B7FC7", iconBgColor 
                 position: "relative",
                 overflow: "hidden",
                 width: "100%",
-                boxShadow: 8,
+                boxShadow: 1,
                 display: "flex",
                 alignItems: "center",
                 gap: "12px",

@@ -201,19 +201,16 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                 {/* ── หัวข้อยืนยันการทำรายการ ── */}
                 <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
                     <Box display="flex" gap={1.5} alignItems="flex-start">
-                        <WarningAmberIcon color="warning" />
+                        <WarningAmberIcon color="warning" sx={{ fontSize: 24 }} />
                         <Box>
                             <Typography fontWeight={700} fontSize={17}>
                                 ยืนยันการทำรายการ
                             </Typography>
                             <Typography variant="body2" color="text.secondary">
-                                ตรวจสอบและระบุยอดเงินก่อนยืนยัน
+                                ตรวจสอบยอดเงินก่อนยืนยัน
                             </Typography>
                         </Box>
                     </Box>
-                    {/* <IconButton size="small" onClick={onClose}>
-                        <CloseIcon fontSize="small" />
-                    </IconButton> */}
                 </Box>
 
                 <Divider sx={{ mb: 2 }} />
@@ -236,7 +233,8 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                             จ่ายเกินสิทธิ์
                         </Typography>
                         <Typography variant="body2" sx={{ color: "#8a7418" }}>
-                            สามารถปรับยอดที่เบิกได้และยอดจ่ายเกินสิทธิ์ได้ โดยยอดที่เบิกได้ต้องไม่เกินสิทธิ์เบิก
+                            ลูกค้าจะได้รับเงินเต็มจำนวนตามยอดที่ขอเบิก
+                            โดยส่วนที่เกินสิทธิ์จะถูกบันทึกเป็นรายการจ่ายเกินสิทธิ์ (NPL)
                         </Typography>
                     </Box>
                 </Box>
@@ -268,6 +266,7 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                             fullWidth
                             error={isWithdrawableOverLimit}
                             helperText={isWithdrawableOverLimit ? "ต้องไม่เกินสิทธิ์เบิกสูงสุด" : " "}
+                            InputProps={{ readOnly: true }}
                         />
                     </Box>
                     <Box flex={1} minWidth={180}>
@@ -293,6 +292,7 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                                 },
                             }}
                             helperText=" "
+                            InputProps={{ readOnly: true }}
                         />
                     </Box>
                 </Box>
@@ -315,15 +315,26 @@ const ConfirmExcessLimitTransferDialog: React.FC<ConfirmExcessLimitTransferDialo
                         display: "flex",
                         alignItems: "center",
                         px: 1,
-                        py: 0.5,
-                        shadow: "1px 2px 2px rgba(0, 0, 0, 0.1)",
+                        py: 2,
+                        gap: 1,
+                        boxShadow: "1px 2px 2px rgba(0, 0, 0, 0.1)",
                     }}
                 >
                     <Checkbox checked={agree} onChange={(e) => setAgree(e.target.checked)} color="primary" />
-                    <VerifiedIcon sx={{ color: "#c8792a", fontSize: 20, mr: 0.75, flexShrink: 0 }} />
-                    <Typography variant="body2">
-                        ข้าพเจ้ายืนยันการตรวจสอบข้อมูล และยืนยันการจ่ายเงินเกินสิทธิ์ (NPL)
-                    </Typography>
+                    <VerifiedIcon sx={{ color: "#c8792a", fontSize: 22, flexShrink: 0 }} />
+                    <Box flex={1}>
+                        <Typography variant="body2" fontWeight={700} >
+                            ยืนยันการตรวจสอบและการจ่ายเงินเกินสิทธิ์
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            ข้าพเจ้าได้ตรวจสอบข้อมูล และยืนยันการจ่ายเงินเกินสิทธิ์ (NPL)
+                        </Typography>
+                    </Box>
+                    <Chip
+                        size="small"
+                        label="จำเป็นต้องยืนยัน"
+                        sx={{ bgcolor: "#fdecec", color: "error.main", fontWeight: 600, flexShrink: 0 }}
+                    />
                 </Box>
             </DialogContent>
 

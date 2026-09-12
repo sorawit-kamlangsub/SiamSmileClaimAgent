@@ -31,11 +31,14 @@ export const useClaimHistory = (appIdFromProp?: string, claimId?: string) => {
         () => ({
             totalAmountRecords: claimHistoryData?.totalAmountRecords ?? 0,
             totalAmountPages: claimHistoryData?.totalAmountPages ?? 0,
-            currentPage: claimHistoryData?.currentPage ?? 0,
-            recordsPerPage: claimHistoryData?.recordsPerPage ?? 0,
+            currentPage: claimHistoryData?.currentPage ?? paginated.page,
+            // ห้ามให้เป็น 0 (backend ส่ง recordsPerPage: 0 มาจริง ๆ ตอนไม่มีข้อมูล ไม่ใช่ null/undefined
+            // เลยต้องเช็ค falsy ด้วย || ไม่ใช่ ??): rowsPerPage=0 ทำให้ mui-datatables คำนวณ
+            // Math.ceil(count/0) = NaN แล้ว "page >= NaN" เป็น false เสมอ ปุ่มเปลี่ยนหน้าเลยกดได้แม้ไม่มีข้อมูล
+            recordsPerPage: claimHistoryData?.recordsPerPage || paginated.recordsPerPage,
             pageIndex: claimHistoryData?.pageIndex ?? 0,
         }),
-        [claimHistoryData]
+        [claimHistoryData, paginated.page, paginated.recordsPerPage]
     );
 
     return {

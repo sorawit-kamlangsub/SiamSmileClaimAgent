@@ -37,8 +37,6 @@ const useCheckEligibleToolbar = () => {
             if (!values.claimCause) errors.claimCause = "โปรดระบุ";
             if (!values.coverageType) errors.coverageType = "โปรดระบุ";
             if (values.isContinuous && !values.continuousClaim) {
-                // หมายเหตุ: FormikErrors<T> คาดหวัง error ของ field object เป็น nested object ไม่ใช่ string
-                // ใช้ `as any` cast ตรงนี้เพื่อความง่าย เพราะ SearchToolbar เช็ค error นี้แบบตรง ๆ (ไม่ได้ render ผ่าน FormikDropdown)
                 errors.continuousClaim = "โปรดเลือกเคลมต่อเนื่อง" as any;
             }
             return errors;

@@ -27,6 +27,7 @@ const FormikTextField = ({ name, formik, useFocusError = true, ...textFieldProps
                 onChange={handleChange}
                 onBlur={handleBlur}
                 FormHelperTextProps={{}}
+                InputLabelProps={value ? { shrink: true } : undefined}
                 {...textFieldProps}
             />
         </FormikFocusError>

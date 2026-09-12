@@ -22,6 +22,8 @@ type FormikAutocompleteApiProp = {
     selectedCallback?: (item: any) => void;
     filterSelectedOptions?: boolean;
     useFocusError?: boolean;
+    /** loading จากภายนอก (เช่น รอ prefill ข้อมูล) — รวมกับ loading ของ query ค้นหา */
+    loading?: boolean;
 } & FormControlProps;
 
 const FormikAutocompleteApi = ({
@@ -37,6 +39,7 @@ const FormikAutocompleteApi = ({
     filterSelectedOptions,
     required = false,
     useFocusError = true,
+    loading: externalLoading = false,
     ...formControlProps
 }: FormikAutocompleteApiProp) => {
     const { touched, value, error } = formik.getFieldMeta<string | number | undefined>(name);
@@ -44,7 +47,8 @@ const FormikAutocompleteApi = ({
 
     const [searchText, setSearchText] = useState("");
 
-    const { data: options, isLoading: loading, isError } = useQueryGet(searchText, value);
+    const { data: options, isLoading: queryLoading, isError } = useQueryGet(searchText, value);
+    const loading = queryLoading || externalLoading;
 
     const handleChange = (_event: any, newValue: { [key: string]: any } | null) => {
         if (!newValue) {
@@ -86,7 +90,11 @@ const FormikAutocompleteApi = ({
                     isOptionEqualToValue={(option, value) =>
                         option && value ? option[valueFieldName] === value[valueFieldName] : false
                     }
-                    onInputChange={(_event, value) => {
+                    onInputChange={(_event, value, reason) => {
+                        // MUI ยิง reason="reset" เองตอน mount / ตอน value prop เปลี่ยน โดยส่ง input ว่างมา
+                        // ก่อน option จะโหลดเสร็จ — ห้ามตีความว่าผู้ใช้ล้างค่า ไม่งั้น id ที่ prefill (sync
+                        // มาจาก server) จะโดนล้างทิ้งก่อน option ของมันจะ resolve
+                        if (reason === "reset") return;
                         if (value == "") {
                             setFieldValue(name, null, true);
                             setFieldValue(`${name}_selectedText`, null, true);
