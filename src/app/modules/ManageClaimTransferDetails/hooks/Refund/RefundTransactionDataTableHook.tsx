@@ -15,7 +15,12 @@ const RefundTransactionDataTableHook = ({ caseId }: RefundTransactionDataTableHo
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: transactionData, isLoading: isTransactionLoading } = useGetRefundClaimTransaction(caseId, paginated);
+    const {
+        data: transactionData,
+        isLoading: isTransactionLoading,
+        isError: isTransactionError,
+        error: transactionError,
+    } = useGetRefundClaimTransaction(caseId, paginated);
 
     const pagination: PaginationResultDto = useMemo(
         () => ({
@@ -81,7 +86,15 @@ const RefundTransactionDataTableHook = ({ caseId }: RefundTransactionDataTableHo
         },
     ];
 
-    return { columns, transactionData, isTransactionLoading, pagination, setPaginated };
+    return {
+        columns,
+        transactionData,
+        isTransactionLoading,
+        isTransactionError,
+        transactionError,
+        pagination,
+        setPaginated,
+    };
 };
 
 export default RefundTransactionDataTableHook;

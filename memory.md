@@ -188,6 +188,7 @@ interface RefundTransactionResponseDto {
 - Amount columns must be right-aligned using `setCellHeaderProps` (NOT `customHeadRender`)
 - Status columns use `StatusPill` component
 - Date columns format: `DD/MM/YYYY HH:mm:ss`
+- Empty-table text: default in ClaimFund tables = "กำลังโหลดข้อมูล..." → use `ClaimFundStandardDataTable` (wrapper of StandardDataTable, export จาก `_common` DataTable). DO NOT edit StandardDataTable/ `_common` defaults (shared by other teams).
 
 ## Refund Record Form (page manage/refund/detail "บันทึกรายการคืนเงิน")
 - Fields (per HTML mockup): `refundTransferType` (dropdown จาก `/Masters/GetAdjustmentReasons?adjustmentTypeId=3`, ค่า `{ adjustmentReasonId, adjustmentReasonName }`), `refundSlipDateTime` (FormikDateTimePicker, required), `reasonId` (dropdown จาก `/Masters/GetRefundReasons`), `note` (required), `slipFile` (FormikFileUploader image/pdf, required)
