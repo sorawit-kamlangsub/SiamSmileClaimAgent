@@ -69,6 +69,7 @@ const RefundSlipFileUpload = ({ formik, name = "slipFile" }: RefundSlipFileUploa
             >
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                 <Button
+                    type="button"
                     variant="outlined"
                     size="small"
                     startIcon={<UploadFileIcon />}
