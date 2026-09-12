@@ -6,6 +6,7 @@ import { encodeURLWithParams, PaginationDto } from "../_common";
 const getRefundMonitor = "getRefundMonitorKey";
 const getRefundDetail = "getRefundDetailKey";
 const getRefundReasons = "getRefundReasonsKey";
+const getRefundStatus = "getRefundStatusKey";
 const getRefundClaimTransaction = "getRefundClaimTransactionKey";
 const getRefundTransferHistory = "getRefundTransferHistoryKey";
 const getRefundDecreaseTransaction = "getRefundDecreaseTransactionKey";
@@ -46,7 +47,7 @@ const getRefundMonitorData = ({
             if (res.data.isSuccess) {
                 return res.data;
             } else {
-                throw res.data.message;
+                return { ...res.data, data: [] };
             }
         })
         .catch((err: Error) => {
@@ -117,6 +118,26 @@ const getRefundReasonsData = () => {
         });
 };
 
+export const useGetRefundStatus = (enabled = true) => {
+    return useQuery([getRefundStatus], () => getRefundStatusData(), { enabled });
+};
+
+const getRefundStatusData = () => {
+    const url = `${apiURL}/Masters/GetRefundStatus`;
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
 export const useGetRefundClaimTransaction = (caseId: string, pagination: PaginationDto) => {
     return useQuery([getRefundClaimTransaction, caseId, pagination], () =>
         getRefundClaimTransactionData(caseId, pagination)
@@ -135,7 +156,7 @@ const getRefundClaimTransactionData = (caseId: string, pagination: PaginationDto
             if (res.data.isSuccess) {
                 return res.data;
             } else {
-                throw res.data.message;
+                return { ...res.data, data: [] };
             }
         })
         .catch((err: Error) => {
@@ -157,7 +178,7 @@ const getRefundTransferHistoryData = (caseId: string) => {
             if (res.data.isSuccess) {
                 return res.data;
             } else {
-                throw res.data.message;
+                return { ...res.data, data: { payTransferDetails: [] } };
             }
         })
         .catch((err: Error) => {

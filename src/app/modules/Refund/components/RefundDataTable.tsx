@@ -1,5 +1,5 @@
 import { Grid, Paper } from "@mui/material";
-import { StandardDataTable } from "../../_common";
+import { ClaimFundStandardDataTable } from "../../_common";
 import useRefundDataTableHook from "../hooks/RefundDataTableHook";
 
 const RefundDataTable = () => {
@@ -10,7 +10,7 @@ const RefundDataTable = () => {
             <Grid container>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
                     <Paper elevation={2} sx={{ p: 3, borderRadius: 3 }}>
-                        <StandardDataTable
+                        <ClaimFundStandardDataTable
                             name="refund"
                             columns={columns}
                             data={getRefundMonitorData?.data ?? []}

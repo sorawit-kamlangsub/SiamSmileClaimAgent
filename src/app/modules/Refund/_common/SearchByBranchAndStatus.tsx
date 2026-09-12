@@ -2,6 +2,7 @@ import { Box, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { FormikDropdown } from "../../_common";
 import { useGetBranch, useGetPaymentStatus } from "../../IncreaseLimitTransfer/_common/masterAPI";
+import { useGetRefundStatus } from "../refundAPI";
 import { useEffect } from "react";
 import { useAppDispatch } from "../../../../redux";
 import { resetFilterSearch, setSearchMonitorByFilter } from "../store/refundSlice";
@@ -21,6 +22,7 @@ export interface SearchByBranchAndStatusProps {
     buttonIcon: React.ReactNode;
     buttonText: string;
     onButtonClick: (values: BranchStatusFilterValues) => void;
+    statusSource?: "payment" | "refund";
 }
 
 const defaultValues: BranchStatusFilterValues = {
@@ -33,9 +35,16 @@ const SearchByBranchAndStatus = ({
     buttonIcon,
     buttonText,
     onButtonClick,
+    statusSource = "payment",
 }: SearchByBranchAndStatusProps) => {
     const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
-    const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatus();
+    const isRefundSource = statusSource === "refund";
+    const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatus(
+        isRefundSource ? false : true
+    );
+    const { data: refundStatus, isLoading: refundStatusIsLoading } = useGetRefundStatus(isRefundSource);
+    const statusData = isRefundSource ? refundStatus?.data ?? [] : paymentStatus?.data ?? [];
+    const statusIsLoading = isRefundSource ? refundStatusIsLoading : paymentStatusIsLoading;
     const formik = useFormik<BranchStatusFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -91,10 +100,10 @@ const SearchByBranchAndStatus = ({
                         formik={formik}
                         label="สถานะ"
                         fullWidth
-                        data={paymentStatus?.data ?? []}
+                        data={statusData}
                         valueFieldName="id"
                         displayFieldName="name"
-                        isLoading={paymentStatusIsLoading}
+                        isLoading={statusIsLoading}
                     />
                 </Grid>
 

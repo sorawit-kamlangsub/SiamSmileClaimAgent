@@ -23,6 +23,7 @@ const DialogSearchClaim = ({ buttonText, showRefundStatusHint = false }: DialogS
 
     const handleSearchSuccess = (data: any[]) => {
         if (!data || data.length === 0) {
+            setSearchResult(null);
             return;
         }
 

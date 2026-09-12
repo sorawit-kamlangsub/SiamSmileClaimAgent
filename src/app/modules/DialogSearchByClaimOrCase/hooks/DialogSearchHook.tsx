@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { PaginationSortableDto, swalError } from "../../_common";
+import { NOT_FOUND_MESSAGE, mapErrorMessage, swalError, swalWarning } from "../../_common";
 import { useSearchClaimOrCase } from "../dialogSearchClaimAPI";
 import { useState } from "react";
 
@@ -15,11 +15,15 @@ const useDialogSearchHook = ({ onSearchSuccess }: UseRefundDialogSearchHookProps
     const [dataFromSearch, setDataFromSearch] = useState<any>([]);
 
     const handleSuccess = (res: any) => {
-        setDataFromSearch(res.data);
-        onSearchSuccess?.(res.data);
+        const result = res?.data ?? [];
+        setDataFromSearch(result);
+        if (!result || result.length === 0) {
+            swalWarning("แจ้งเตือน", NOT_FOUND_MESSAGE);
+        }
+        onSearchSuccess?.(result);
     };
     const handleError = (err: string) => {
-        swalError("แจ้งเตือน", err);
+        swalError("แจ้งเตือน", mapErrorMessage(err));
     };
 
     const { mutate: searchByClaimOrCaseMutate, isLoading: searchByClaimOrCaseIsLoading } = useSearchClaimOrCase(

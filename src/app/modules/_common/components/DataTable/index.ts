@@ -5,6 +5,8 @@ import ColumnLastModified from "./ColumnLastModified";
 import StandardDataTable from "./StandardDataTable";
 import ClaimFundStandardDataTable from "./ClaimFundStandardDataTable";
 
+export { mapErrorMessage, NOT_FOUND_MESSAGE } from "./claimFundStandardAlertMessage";
+
 export {
     ClaimFundStandardDataTable,
     ColumnDateTime,

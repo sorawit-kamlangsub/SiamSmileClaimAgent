@@ -18,8 +18,8 @@ export const useSearchClaimOrCase = (
     const queryClient = useQueryClient();
     return useMutation((payload: SearchClaimOrCasePayload) => searchClaimByClaimOrCase(payload), {
         onSuccess: (response) => {
-            if (!response.isSuccess) {
-                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            if (!response?.isSuccess) {
+                onErrorCallback(response?.message || response?.exceptionMessage || "เกิดข้อผิดพลาด โปรดลองใหม่อีกครั้ง");
             } else {
                 onSuccessCallBack(response);
             }
@@ -27,7 +27,7 @@ export const useSearchClaimOrCase = (
             queryClient.invalidateQueries([getClaimByClaimOrCase]);
         },
         onError: (error: Error) => {
-            onErrorCallback && onErrorCallback(error.message);
+            onErrorCallback && onErrorCallback(error?.message || "เกิดข้อผิดพลาด โปรดลองใหม่อีกครั้ง");
             queryClient.invalidateQueries([getClaimByClaimOrCase]);
         },
     });
@@ -38,13 +38,6 @@ const searchClaimByClaimOrCase = (payload: SearchClaimOrCasePayload) => {
     return axios
         .get(url)
         .then((res) => {
-            if (res.data.isSuccess) {
-                return res.data;
-            } else {
-                throw res.data.message;
-            }
-        })
-        .catch((err: Error) => {
-            throw err.message;
+            return res.data;
         });
 };

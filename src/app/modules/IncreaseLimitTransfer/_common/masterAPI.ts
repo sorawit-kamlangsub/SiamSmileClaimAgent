@@ -29,8 +29,8 @@ const getBranchData = () => {
         });
 };
 
-export const useGetPaymentStatus = () => {
-    return useQuery([getPaymentStatus], () => getPaymentStatusData());
+export const useGetPaymentStatus = (enabled = true) => {
+    return useQuery([getPaymentStatus], () => getPaymentStatusData(), { enabled });
 };
 
 const getPaymentStatusData = () => {

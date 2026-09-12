@@ -18,6 +18,7 @@ const RefundPage = () => {
                     <SearchByBranchAndStatus
                         buttonIcon={<CurrencyExchangeIcon />}
                         buttonText="โอนคืน"
+                        statusSource="refund"
                         onButtonClick={handleSearch}
                     />
                 </Grid>
