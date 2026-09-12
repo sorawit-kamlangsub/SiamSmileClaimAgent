@@ -1,7 +1,17 @@
 import { Box, Button, FormHelperText, FormLabel, Typography } from "@mui/material";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { FormikProps } from "formik";
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
+
+const FILE_TYPE_ERROR = "กรุณาอัปโหลดเฉพาะไฟล์รูปภาพหรือ PDF เท่านั้น";
+
+const ALLOWED_MIME = ["image/jpeg", "image/png", "image/gif", "image/bmp", "application/pdf"];
+
+const isAllowedFile = (file: File): boolean => {
+    const allowedMime = ALLOWED_MIME.includes(file.type);
+    const allowedExtension = /\.(jpe?g|png|gif|bmp|pdf)$/i.test(file.name);
+    return allowedMime || allowedExtension;
+};
 
 type RefundSlipFileUploadProps = {
     formik: FormikProps<any>;
@@ -10,14 +20,25 @@ type RefundSlipFileUploadProps = {
 
 const RefundSlipFileUpload = ({ formik, name = "slipFile" }: RefundSlipFileUploadProps) => {
     const inputRef = useRef<HTMLInputElement>(null);
+    const [fileTypeError, setFileTypeError] = useState<string | null>(null);
     const { touched, error, value } = formik.getFieldMeta<File[] | undefined>(name);
     const file = value?.[0];
 
     const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const selected = event.target.files?.[0];
-        formik.setFieldValue(name, selected ? [selected] : [], true);
-        formik.setFieldTouched(name, true, true);
         event.target.value = "";
+        if (!selected) return;
+
+        if (!isAllowedFile(selected)) {
+            setFileTypeError(FILE_TYPE_ERROR);
+            formik.setFieldValue(name, [], true);
+            formik.setFieldTouched(name, true, true);
+            return;
+        }
+
+        setFileTypeError(null);
+        formik.setFieldValue(name, [selected], true);
+        formik.setFieldTouched(name, true, true);
     };
 
     return (
@@ -75,11 +96,11 @@ const RefundSlipFileUpload = ({ formik, name = "slipFile" }: RefundSlipFileUploa
                 onChange={handleChange}
             />
             </Box>
-            {touched && !!error && (
+            {fileTypeError ?? (touched && !!error ? error : null) ? (
                 <FormHelperText error sx={{ marginTop: "6px", marginLeft: "4px" }}>
-                    {error}
+                    {fileTypeError ?? error}
                 </FormHelperText>
-            )}
+            ) : null}
         </Box>
     );
 };
