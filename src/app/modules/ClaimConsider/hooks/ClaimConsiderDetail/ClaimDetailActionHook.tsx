@@ -205,15 +205,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
     /** CaseAdjudication: ผลการพิจารณา (อนุมัติ/ปฏิเสธ) */
     const mapCaseAdjudicationForDraft = (): CaseAdjudicationSaveClaimEditDraftRequest | undefined => {
-        const {
-            considerResult,
-            decisionReasonId,
-            decisionReasonDetail,
-            admissionDate,
-            admissionTime,
-            dischargeDate,
-            dischargeTime,
-        } = formik.values;
+        const { considerResult, decisionReasonId, decisionReasonDetail } = formik.values;
         if (considerResult === undefined) return undefined;
 
         return {
