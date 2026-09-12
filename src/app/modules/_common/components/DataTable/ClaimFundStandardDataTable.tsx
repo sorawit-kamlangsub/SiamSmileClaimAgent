@@ -1,5 +1,5 @@
 import { PaletteOptions, SxProps, Theme } from "@mui/material";
-import { MUIDataTableColumn } from "mui-datatables";
+import { MUIDataTableColumn, MUIDataTableOptions } from "mui-datatables";
 import React, { useEffect, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../types";
 import StandardDataTable from "./StandardDataTable";
@@ -41,6 +41,7 @@ type ClaimFundStandardDataTableProps = {
     displayToolbar?: boolean;
     displayFooter?: boolean;
     sx?: SxProps<Theme>;
+    options?: MUIDataTableOptions;
 };
 
 const ClaimFundStandardDataTable = ({
@@ -59,6 +60,7 @@ const ClaimFundStandardDataTable = ({
     displayToolbar,
     displayFooter,
     sx,
+    options,
 }: ClaimFundStandardDataTableProps) => {
     const [minDelayReached, setMinDelayReached] = useState(false);
 
@@ -87,6 +89,7 @@ const ClaimFundStandardDataTable = ({
             displayFooter={displayFooter}
             sx={sx}
             options={{
+                ...options,
                 textLabels: {
                     body: {
                         noMatch: noMatch,
