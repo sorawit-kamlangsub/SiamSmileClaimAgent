@@ -26,6 +26,40 @@ const useClaimListByClaimSearchDataTableHook = ({
 }: ClaimListByClaimSearchDataTableHookProps) => {
     const columns: MUIDataTableColumn[] = [
         {
+            name: "claimCase",
+            label: "เลขที่ CC",
+            options: { sort: false, filter: false },
+        },
+        {
+            name: "customerName",
+            label: "ชื่อผู้เอาประกัน",
+            options: { sort: false, filter: false },
+        },
+        {
+            name: "coverageType",
+            label: "ประเภทความคุ้มครอง",
+            options: { sort: false, filter: false },
+        },
+        {
+            name: "createdClaimDate",
+            label: "วันที่สร้างเคลม",
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (dataIndex) =>
+                    dayjs(data[dataIndex].createdClaimDate).format("DD/MM/YYYY HH:mm:ss"),
+            },
+        },
+        {
+            name: "caseAmount",
+            label: "จำนวนเงิน",
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (dataIndex) => numberWithCommas(data[dataIndex].caseAmount ?? 0),
+            },
+        },
+        {
             name: "",
             label: "เลือก",
             options: {
@@ -58,40 +92,6 @@ const useClaimListByClaimSearchDataTableHook = ({
                         </Button>
                     );
                 },
-            },
-        },
-        {
-            name: "claimCase",
-            label: "เลขที่ CC",
-            options: { sort: false, filter: false },
-        },
-        {
-            name: "customerName",
-            label: "ชื่อผู้เอาประกัน",
-            options: { sort: false, filter: false },
-        },
-        {
-            name: "coverageType",
-            label: "ประเภทความคุ้มครอง",
-            options: { sort: false, filter: false },
-        },
-        {
-            name: "createdClaimDate",
-            label: "วันที่สร้างเคลม",
-            options: {
-                sort: false,
-                filter: false,
-                customBodyRenderLite: (dataIndex) =>
-                    dayjs(data[dataIndex].createdClaimDate).format("DD/MM/YYYY HH:mm:ss"),
-            },
-        },
-        {
-            name: "caseAmount",
-            label: "จำนวนเงิน",
-            options: {
-                sort: false,
-                filter: false,
-                customBodyRenderLite: (dataIndex) => numberWithCommas(data[dataIndex].caseAmount ?? 0),
             },
         },
     ];

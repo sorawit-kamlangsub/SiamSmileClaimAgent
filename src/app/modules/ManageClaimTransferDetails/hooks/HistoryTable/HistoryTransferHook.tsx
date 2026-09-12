@@ -13,19 +13,7 @@ export interface PayTransferDetail {
     toBankAccountName: string;
 }
 
-const amountHeadRender = (columnMeta: { label: string }) => (
-    <Box
-        sx={{
-            textAlign: "end",
-            p: 2,
-            width: "100%",
-            borderBottom: "1px solid #E0E0E0",
-            boxSizing: "border-box",
-        }}
-    >
-        {columnMeta.label}
-    </Box>
-);
+const rightAlignedHeadCellProps = () => ({ align: "right" as const });
 
 export const usePayTransferHistoryColumns = (data: PayTransferDetail[]): MUIDataTableColumn[] => [
     {
@@ -51,9 +39,7 @@ export const usePayTransferHistoryColumns = (data: PayTransferDetail[]): MUIData
         options: {
             filter: false,
             sort: false,
-            customHeadRender: (columnMeta) => {
-                return amountHeadRender({ label: columnMeta.label ?? "" });
-            },
+            setCellHeaderProps: rightAlignedHeadCellProps,
             customBodyRenderLite: (rowIndex) => {
                 const amount = data[rowIndex]?.totalNetPaidAmount ?? 0;
                 return <Box sx={{ textAlign: "end" }}>{numberWithCommas(amount)}</Box>;
@@ -99,9 +85,7 @@ export const useRefundHistoryColumns = (data: PayTransferDetail[]): MUIDataTable
         options: {
             filter: false,
             sort: false,
-            customHeadRender: (columnMeta) => {
-                return amountHeadRender({ label: columnMeta.label ?? "" });
-            },
+            setCellHeaderProps: rightAlignedHeadCellProps,
             customBodyRenderLite: (rowIndex) => {
                 const amount = data[rowIndex]?.totalNetPaidAmount ?? 0;
                 return <Box sx={{ textAlign: "end" }}>{numberWithCommas(amount)}</Box>;

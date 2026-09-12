@@ -12,9 +12,10 @@ import ClaimListByClaimSearchTable from "./ClaimListByClaimSearchTable";
 
 type DialogSearchClaimProps = {
     buttonText: string;
+    showRefundStatusHint?: boolean;
 };
 
-const DialogSearchClaim = ({ buttonText }: DialogSearchClaimProps) => {
+const DialogSearchClaim = ({ buttonText, showRefundStatusHint = false }: DialogSearchClaimProps) => {
     const { dialogRefund } = useAppSelector((state) => state.refund);
     const [searchResult, setSearchResult] = useState<any>(null);
     const dispatch = useAppDispatch();
@@ -107,13 +108,27 @@ const DialogSearchClaim = ({ buttonText }: DialogSearchClaimProps) => {
                         </IconButton>
                     </Box>
 
-                    <Box sx={{ display: "flex", gap: "12px" }}>
-                        <FormikTextField
-                            formik={formik}
-                            name="searchDetail"
-                            label="กรุณากรอกเลขที่ CPG / CL"
-                            fullWidth
-                        />
+                    <Box sx={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                        <Box sx={{ flexGrow: 1 }}>
+                            <FormikTextField
+                                formik={formik}
+                                name="searchDetail"
+                                label="กรุณากรอกเลขที่ CPG / CL"
+                                fullWidth
+                            />
+                            {showRefundStatusHint && (
+                                <Typography
+                                    sx={{
+                                        marginTop: "6px",
+                                        fontSize: "0.75rem",
+                                        color: "#C62828",
+                                        lineHeight: 1.4,
+                                    }}
+                                >
+                                    * โอนครั้งแรกต้องมีสถานะ "ปกติ" หากค้างอยู่ที่ "อยู่ระหว่างการโอนเงิน" จะไม่สามารถคืนเงินได้
+                                </Typography>
+                            )}
+                        </Box>
                         <Button
                             variant="contained"
                             onClick={() => {
@@ -124,6 +139,8 @@ const DialogSearchClaim = ({ buttonText }: DialogSearchClaimProps) => {
                                 textTransform: "none",
                                 whiteSpace: "nowrap",
                                 paddingX: "24px",
+                                minWidth: "100px",
+                                height: "56px",
                                 "&:hover": { backgroundColor: "#0A3D70" },
                             }}
                         >

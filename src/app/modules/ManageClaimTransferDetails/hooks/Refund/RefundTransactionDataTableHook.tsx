@@ -1,33 +1,31 @@
 import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetTransactionHistory } from "../../adjustClaimAPI";
+import { useGetRefundClaimTransaction } from "../../../Refund/refundAPI";
 import { Box } from "@mui/material";
 import { numberWithCommas } from "../../../../functionHelpers";
 import { useMemo, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
-type TransactionClaimDetailHookProps = {
+
+type RefundTransactionDataTableHookProps = {
     caseId: string;
 };
 
-const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps) => {
+const RefundTransactionDataTableHook = ({ caseId }: RefundTransactionDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetTransactionHistory(
-        caseId,
-        paginated
-    );
+    const { data: transactionData, isLoading: isTransactionLoading } = useGetRefundClaimTransaction(caseId, paginated);
 
     const pagination: PaginationResultDto = useMemo(
         () => ({
-            totalAmountRecords: historyTransactionData?.totalAmountRecords ?? 0,
-            totalAmountPages: historyTransactionData?.totalAmountPages ?? 0,
-            currentPage: historyTransactionData?.currentPage ?? 0,
-            recordsPerPage: historyTransactionData?.recordsPerPage ?? 0,
-            pageIndex: historyTransactionData?.pageIndex ?? 0,
+            totalAmountRecords: transactionData?.totalAmountRecords ?? 0,
+            totalAmountPages: transactionData?.totalAmountPages ?? 0,
+            currentPage: transactionData?.currentPage ?? 0,
+            recordsPerPage: transactionData?.recordsPerPage ?? 0,
+            pageIndex: transactionData?.pageIndex ?? 0,
         }),
-        [historyTransactionData]
+        [transactionData]
     );
 
     const columns: MUIDataTableColumn[] = [
@@ -38,10 +36,8 @@ const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps)
                 filter: false,
                 sort: false,
                 customBodyRenderLite: (rowIndex) => {
-                    const formatDate = historyTransactionData?.data?.[rowIndex]?.transactionDate
-                        ? dayjs(historyTransactionData?.data?.[rowIndex]?.transactionDate).format("DD/MM/YYYY HH:mm:ss")
-                        : "-";
-                    return formatDate;
+                    const d = transactionData?.data?.[rowIndex]?.transactionDate;
+                    return d ? dayjs(d).format("DD/MM/YYYY HH:mm:ss") : "-";
                 },
             },
         },
@@ -69,13 +65,23 @@ const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps)
                 sort: false,
                 setCellHeaderProps: () => ({ align: "right" as const }),
                 customBodyRenderLite: (rowIndex) => {
-                    const amount = historyTransactionData?.data?.[rowIndex]?.amountTotal ?? 0;
+                    const amount = transactionData?.data?.[rowIndex]?.amountTotal ?? 0;
                     return <Box sx={{ textAlign: "end" }}>{numberWithCommas(amount)}</Box>;
                 },
             },
         },
+        {
+            name: "remark",
+            label: "หมายเหตุ",
+            options: {
+                filter: false,
+                sort: false,
+                customBodyRenderLite: (rowIndex) => transactionData?.data?.[rowIndex]?.remark ?? "-",
+            },
+        },
     ];
-    return { columns, historyTransactionData, isHistoryTransactionLoading, pagination, setPaginated };
+
+    return { columns, transactionData, isTransactionLoading, pagination, setPaginated };
 };
 
-export default TransactionClaimDetailHook;
+export default RefundTransactionDataTableHook;

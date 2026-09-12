@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
+import { PaletteOptions } from "@mui/material/styles";
 import { PaginationResultDto, PaginationSortableDto, StandardDataTable } from "../../../_common";
 
 export interface HistoryTableCardProps {
@@ -10,9 +11,18 @@ export interface HistoryTableCardProps {
     data: any[];
     paginated: PaginationSortableDto;
     setPaginated: React.Dispatch<React.SetStateAction<PaginationSortableDto>>;
+    color?: keyof PaletteOptions;
 }
 
-const HistoryTableCard = ({ title, name, columns, data, paginated, setPaginated }: HistoryTableCardProps) => {
+const HistoryTableCard = ({
+    title,
+    name,
+    columns,
+    data,
+    paginated,
+    setPaginated,
+    color = "grey",
+}: HistoryTableCardProps) => {
     // Client-side pagination, same reasoning as ClaimListByClaimSearchTable:
     // the API returns the full matching list in one shot, so we slice it
     // here to match the current page/recordsPerPage.
@@ -47,7 +57,7 @@ const HistoryTableCard = ({ title, name, columns, data, paginated, setPaginated 
                 columns={columns}
                 paginated={paginationResult}
                 setPaginated={setPaginated}
-                color="grey"
+                color={color}
             />
         </Box>
     );

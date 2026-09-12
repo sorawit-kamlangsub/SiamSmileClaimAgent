@@ -1,14 +1,10 @@
 import { Grid, Paper } from "@mui/material";
+import { StandardDataTable } from "../../_common";
 import useRefundDataTableHook from "../hooks/RefundDataTableHook";
-import { PaginationSortableDto, StandardDataTable } from "../../_common";
-import { useState } from "react";
 
 const RefundDataTable = () => {
-    const { columns, dataMock } = useRefundDataTableHook();
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 5,
-    });
+    const { columns, getRefundMonitorData, isGetRefundLoading, pagination, setPaginated } =
+        useRefundDataTableHook();
     return (
         <>
             <Grid container>
@@ -17,10 +13,11 @@ const RefundDataTable = () => {
                         <StandardDataTable
                             name="refund"
                             columns={columns}
-                            data={dataMock ?? []}
+                            data={getRefundMonitorData?.data ?? []}
                             color="primary"
-                            paginated={paginated}
+                            paginated={pagination}
                             setPaginated={setPaginated}
+                            isLoading={isGetRefundLoading}
                         />
                     </Paper>
                 </Grid>
