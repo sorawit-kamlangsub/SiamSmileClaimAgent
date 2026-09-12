@@ -1,15 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-    Box,
-    Button,
-    CircularProgress,
-    FormControlLabel,
-    Grid,
-    Paper,
-    Radio,
-    RadioGroup,
-    Typography,
-} from "@mui/material";
+import { Box, Button, FormControlLabel, Grid, Paper, Radio, RadioGroup, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -44,6 +34,7 @@ import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
 import ConfirmHospitalCompensationTransferModal from "./ConfirmHospitalCompensationTransferModal";
 import DraftViewingBanner from "../ConsiderDetails/TabDetails/SubDetailsTab/DraftViewingBanner";
+import LoadingOverlay from "../../../_common/components/CustomComponent/LoadingOverlay";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
@@ -524,33 +515,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                 <Box sx={{ marginTop: "20px" }}>
                     <DraftViewingBanner />
                     {activeStep === 0 ? (
-                        <Box sx={{ position: "relative" }}>
-                            {isStep1Loading && (
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        zIndex: 20,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 1.5,
-                                        bgcolor: "rgba(255, 255, 255, 0.65)",
-                                        borderRadius: 2,
-                                    }}
-                                >
-                                    <CircularProgress />
-                                    <Typography variant="body2" color="text.secondary">
-                                        กำลังโหลดข้อมูลเคลม...
-                                    </Typography>
-                                </Box>
-                            )}
-                            <Grid
-                                container
-                                spacing={2}
-                                sx={isStep1Loading ? { pointerEvents: "none", opacity: 0.5 } : undefined}
-                            >
+                        <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
+                            <Grid container spacing={2}>
                                 {continuousClaim && (
                                     <Grid item xs={12}>
                                         <ContinuousClaimBanner
@@ -604,7 +570,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     />
                                 </Grid>
                             </Grid>
-                        </Box>
+                        </LoadingOverlay>
                     ) : activeStep === 1 ? (
                         <Grid container spacing={2}>
                             {claimListTypeConfig.hasSimBSelector && (

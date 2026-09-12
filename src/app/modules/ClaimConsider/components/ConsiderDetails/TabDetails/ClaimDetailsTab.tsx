@@ -14,6 +14,7 @@ import {
 } from "../../../../../api/coreClaimApi.client";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import ConsiderSection from "./SubDetailsTab/ConsiderSection";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import ExpenseDetails from "./SubDetailsTab/ExpenseDetails";
 import useClaimDetailActionHook from "../../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import useConsiderDetailHook from "../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
@@ -64,6 +65,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         coverageType,
         medicalType,
         incidentTypeMappingLoading,
+        isStep1Loading,
         decisionReason,
         decisionReasonLoading,
         attachedDocuments,
@@ -119,7 +121,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                     <Box sx={{ marginTop: "20px" }}>
                         <DraftViewingBanner />
                         {activeStep === 0 && (
-                            <div>
+                            <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
                                 <Grid container spacing={2}>
                                     {continuousClaim && (
                                         <Grid item xs={12}>
@@ -159,7 +161,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                         />
                                     </Grid>
                                 </Grid>
-                            </div>
+                            </LoadingOverlay>
                         )}
                         {activeStep === 1 && (
                             <div>

@@ -7,7 +7,10 @@ import {
     useGetCustomerDetailById,
 } from "../../../../api/coreClaimApi";
 import {
+    useGetAllHospital,
+    useGetChiefComplaint,
     useGetDecisionReason,
+    useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
 } from "../../../../api/coreClaimMastersApi";
@@ -122,6 +125,12 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             name: item.incidentTypeNameTH ?? "",
             icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
         })) ?? [];
+
+    // master list ที่ dropdown ใน RecordClaimData ใช้ — เรียกที่นี่ด้วย (query key เดียวกัน dedupe ไม่ยิงซ้ำ)
+    // เพื่อรวมสถานะ loading ไว้ gate ทั้ง Step 1 (เหมือน useHospitalConsiderDetailHook)
+    const { isLoading: hospitalListLoading } = useGetAllHospital();
+    const { isLoading: chiefComplaintListLoading } = useGetChiefComplaint();
+    const { isLoading: icd10ListLoading } = useGetICD10();
 
     const formik = useFormik<ClaimConsiderValues>({
         initialValues: { ...form },
@@ -512,6 +521,33 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         formik.values.considerResult
     );
 
+    /**
+     * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
+     * (เหมือน useHospitalConsiderDetailHook) — นับเฉพาะ query ที่ป้อนค่า default ให้ field ในฟอร์ม
+     */
+    const rawStep1Loading =
+        detailDataLoading ||
+        customerDetailLoading ||
+        incidentTypeLoading ||
+        incidentTypeMappingLoading ||
+        hospitalListLoading ||
+        chiefComplaintListLoading ||
+        icd10ListLoading;
+
+    /**
+     * เพดานเวลา : ถ้า API get ข้อมูลไม่สำเร็จ (error / retry ค้าง) ไม่รอเกิน 8 วิ — ปลดล็อกฟอร์มให้กรอกมือ
+     * field ไหนไม่มีข้อมูล default ก็ปล่อยว่างให้ผู้ใช้กรอกเอง
+     */
+    const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+    useEffect(() => {
+        setLoadingTimedOut(false);
+        if (!rawStep1Loading) return;
+        const timer = window.setTimeout(() => setLoadingTimedOut(true), 8000);
+        return () => window.clearTimeout(timer);
+    }, [claimId, rawStep1Loading]);
+
+    const isStep1Loading = rawStep1Loading && !loadingTimedOut;
+
     return {
         formik,
         detailData,
@@ -524,6 +560,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         incidentTypeMappingLoading,
         incidentType,
         incidentTypeLoading,
+        isStep1Loading,
         decisionReason,
         decisionReasonLoading,
         attachedDocuments,
