@@ -26,6 +26,7 @@ export const useGetRefundMonitorWithFilter = ({
     return useQuery([branceId, refundStatusId, pagination, getRefundMonitor], () =>
         getRefundMonitorData({ branceId, refundStatusId, pagination })
     , {
+        enabled: !!refundStatusId,
         refetchOnMount: "always",
         cacheTime: 0,
     });
