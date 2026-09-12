@@ -2,21 +2,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
-import { CoverageType, MedicalType, formatDateString } from "../../../../functionHelpers";
-import {
-    useGetCaseReviewOverview,
-    useGetClaimContinue,
-    useGetClaimDetailConsider,
-    useGetCustomerDetailById,
-    useGetDocumentByCaseId,
-} from "../../../../api/coreClaimApi";
-import { GetDocumentByCaseIdDtoResponse } from "../../../../api/coreClaimApi.client";
-import { useGetDocumentListByIds } from "../../../../api/docstorageApi";
+import { CoverageType, MedicalType } from "../../../../functionHelpers";
+import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import {
     useGetAllHospital,
     useGetChiefComplaint,
     useGetDecisionReason,
-    useGetDocumentReviewStatus,
     useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
@@ -28,14 +19,13 @@ import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
 import { parseTimeSpan } from "../../store/draftRevisionMappers";
 import {
     CLAIM_LIST_TYPE_CONFIG,
-    ContinuousClaimRow,
     DOCUMENT_CHECK_RESULTS,
-    DOCUMENT_CHECK_RESULT_COLORS,
-    DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
-    DocumentCheckResultOption,
     DocumentCheckRow,
     parseClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+import useHospitalDocumentVerifyHook from "./HospitalDocumentVerifyHook";
+import useHospitalContinuousClaimHook from "./HospitalContinuousClaimHook";
+import useHospitalDraftViewingHook from "./HospitalDraftViewingHook";
 
 /**
  * ค่าของฟอร์ม "บันทึกข้อมูลเคลม" ของเคลมโรงพยาบาล
@@ -72,48 +62,6 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     documentChecks: DocumentCheckRow[];
 }
 
-/** ข้อมูลเอกสารจาก DocStorage (GET /document/documentid/list) ที่ตาราง "ตรวจสอบเอกสาร" ใช้แสดง */
-export type DocStorageDocInfo = {
-    /** ชื่อเอกสาร = documentTypeName */
-    documentName: string;
-    /** จำนวนไฟล์ที่แนบจริงใน DocStorage */
-    fileCount: number;
-    /** ข้อมูลสำหรับประกอบลิงก์ไปแนบเอกสารที่หน้า DocStorage (ปุ่ม "สแกนเอกสาร") */
-    documentCode: string;
-    mainIndex: string;
-    searchIndex: string;
-};
-
-/** ผลการตรวจ/หมายเหตุที่เคยบันทึกไว้ (จาก overview) ต่อ documentId */
-type DocumentReviewInfo = { checkResult: DocumentCheckRow["checkResult"]; remark: string };
-
-/**
- * map รายการเอกสารของเคส (GET /document/case/filter — useGetDocumentByCaseId, claimSourceId 3)
- * -> แถวตาราง "ตรวจสอบเอกสาร"
- *
- * - documentId / documentSubTypeId / ชื่อเอกสาร (claimDocumentTypeName) มาจาก endpoint นี้
- * - ผลการตรวจ + หมายเหตุที่เคยบันทึก merge จาก overview ด้วย documentId
- * - `files` ปล่อยว่างไว้เสมอ — จำนวนไฟล์มาจาก GET /document/documentid/list, รายการไฟล์มาจาก
- *   GET /document/{documentId}/documentFile (ตอนเปิด modal)
- */
-const mapDocumentChecks = (
-    documents: GetDocumentByCaseIdDtoResponse[],
-    reviewByDocId: Record<string, DocumentReviewInfo>
-): DocumentCheckRow[] =>
-    documents.map((doc) => {
-        const documentId = doc.documentId ?? doc.caseDocumentId ?? "";
-        const review = reviewByDocId[documentId];
-        return {
-            documentId,
-            documentSubTypeId: doc.documentSubTypeId,
-            documentCode: doc.documentCode ?? "",
-            documentName: doc.claimDocumentTypeName || "-",
-            files: [],
-            checkResult: review?.checkResult ?? "",
-            remark: review?.remark ?? "",
-        };
-    });
-
 /**
  * ค่าเริ่มต้นของฟอร์ม
  *
@@ -145,7 +93,11 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     totalDays: 0,
     hospitalId: undefined,
     hospitalName: undefined,
-    diagnoses: [{}, {}, {}],
+    // เคลมโรงพยาบาลให้กรอกได้ 6 ตำแหน่ง (RecordClaimData render ตาม diagnoses.length) — ตำแหน่ง 4-6
+    // ไม่มี field ปลายทางใน backend ให้ส่ง (GetClaimDetailConsider/SaveClaimEditDraft/
+    // UpsertClaimDecision มีแค่ icD10_1stId/2ndId/3rdId) กรอกแล้วจะไม่ถูกบันทึกจนกว่า backend จะเพิ่ม
+    // field ให้ (ทีมรับทราบแล้ว ตัดสินใจเพิ่ม UI รอไว้ก่อน)
+    diagnoses: [{}, {}, {}, {}, {}, {}],
     accidentPlace: undefined,
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
@@ -176,9 +128,6 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
 const CLAIM_SOURCE_CONSIDER = 2;
-
-/** claimSourceId ของเคลมโรงพยาบาล (ใช้ดึงรายการเอกสารของเคส — GET /document/case/filter) */
-const CLAIM_SOURCE_HOSPITAL = 3;
 
 /** decisionId ของผลการพิจารณา "รอแก้ไข" (ต้องกรอกรายละเอียดการรอแก้ไข) */
 const DECISION_REVISION = 4;
@@ -286,8 +235,9 @@ const useHospitalConsiderDetailHook = () => {
     const claimId = id ? atob(id) : undefined;
     // route hospital/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
     const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
+    /** เอกลักษณ์ของเคสที่กำลังเปิดอยู่ — ใช้ตรวจว่าเปลี่ยนเคสหรือไม่ (route ใช้ element เดิมเสมอ ไม่ remount) */
+    const caseKey = claimId && caseId ? `${claimId}:${caseId}` : undefined;
     const [searchParams] = useSearchParams();
-    const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
 
     /**
      * ประเภทรายการเคลมของเคสนี้ (ตอนนี้อ่านจาก Query String เพราะ BE ยังไม่ส่งมา)
@@ -303,91 +253,6 @@ const useHospitalConsiderDetailHook = () => {
         detail?.customerId ?? undefined
     );
     const customerDetail = customerDetailData?.data;
-
-    /**
-     * รายการเอกสารของเคส (ป้อนตาราง "ตรวจสอบเอกสาร") — GET /document/case/filter (claimSourceId 3)
-     * ชื่อเอกสาร (claimDocumentTypeName) + documentId มาจาก endpoint นี้
-     * รอ productTypeId ให้พร้อมก่อนค่อยยิง (กัน query ยิงซ้ำเพราะ productTypeId เปลี่ยนใน key)
-     */
-    const productTypeId = customerDetail?.productTypeId;
-    const { data: caseDocumentData, isLoading: caseDocumentLoading } = useGetDocumentByCaseId(
-        productTypeId && detail?.caseId ? detail.caseId : "",
-        productTypeId,
-        CLAIM_SOURCE_HOSPITAL,
-        undefined,
-        undefined,
-        undefined,
-        1,
-        100
-    );
-    const caseDocuments = useMemo(() => caseDocumentData?.data ?? [], [caseDocumentData]);
-
-    /** ผลการตรวจ/หมายเหตุที่เคยบันทึกไว้ — GET /document/case/{caseId}/overview (merge ด้วย documentId) */
-    const { data: caseReviewOverviewData, isLoading: caseReviewOverviewLoading } = useGetCaseReviewOverview(
-        detail?.caseId ?? undefined
-    );
-    const reviewByDocId = useMemo<Record<string, DocumentReviewInfo>>(() => {
-        const map: Record<string, DocumentReviewInfo> = {};
-        (caseReviewOverviewData?.data?.documentReview?.documents ?? []).forEach((doc) => {
-            if (doc.documentId) {
-                map[doc.documentId] = {
-                    checkResult: doc.documentReviewStatusId || "",
-                    remark: doc.documentReviewRemark || doc.documentRemark || "",
-                };
-            }
-        });
-        return map;
-    }, [caseReviewOverviewData]);
-
-    /**
-     * เอกสารจริงใน DocStorage ของทุก documentId ในเคสนี้ (GET /document/documentid/list)
-     * ตาราง "ตรวจสอบเอกสาร" ใช้ fileCount จาก endpoint นี้ + ข้อมูลประกอบลิงก์แนบเอกสาร
-     * และใช้ fileCount เป็นเงื่อนไขเปิด modal ดูรายละเอียด (0 = ไม่มีเอกสารแนบ เปิดไม่ได้)
-     */
-    const documentIds = useMemo(
-        () => caseDocuments.map((doc) => doc.documentId).filter((id): id is string => !!id),
-        [caseDocuments]
-    );
-    const { data: documentStorageListData, isLoading: documentStorageListLoading } =
-        useGetDocumentListByIds(documentIds);
-    const documentInfoByDocId = useMemo<Record<string, DocStorageDocInfo>>(() => {
-        const map: Record<string, DocStorageDocInfo> = {};
-        (documentStorageListData?.data ?? []).forEach((doc) => {
-            if (doc.documentId) {
-                map[doc.documentId] = {
-                    documentName: doc.documentTypeName || "-",
-                    fileCount: doc.fileCount ?? 0,
-                    documentCode: doc.documentCode ?? "",
-                    mainIndex: doc.mainIndex ?? "",
-                    searchIndex: doc.searchIndex ?? "",
-                };
-            }
-        });
-        return map;
-    }, [documentStorageListData]);
-
-    /** รายการเคลมต่อเนื่อง (สำหรับ Modal เลือกเคลมเดิม + แถบสรุป) */
-    const { data: claimContinueData, isLoading: continuousClaimRowsLoading } = useGetClaimContinue(
-        customerDetail?.policyCode ?? undefined
-    );
-    const continuousClaimRows: ContinuousClaimRow[] = useMemo(
-        () =>
-            (claimContinueData?.data ?? []).map((item) => ({
-                claimNo: item.claimNo ?? "-",
-                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
-                incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
-                totalClaimAmount: item.totalCaseAmount ?? 0,
-                totalPaidAmount: item.totalPaidAmount ?? 0,
-                admissionDate: formatDateString(item.admissionDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
-                claimInfo: item.claimDetail ?? "-",
-                diagnosis1: item.icD10Detail ?? "-",
-                remainingLimit: item.remainAmount ?? 0,
-                // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
-                previousCaseNo: "-",
-                previousCaseStatus: "-",
-            })),
-        [claimContinueData]
-    );
 
     // master list ที่ dropdown ใน RecordClaimData ใช้ — เรียกที่นี่ด้วย (query key เดียวกัน dedupe ไม่ยิงซ้ำ)
     // เพื่อรวมสถานะ loading ไว้ gate ทั้ง Step 1
@@ -409,6 +274,56 @@ const useHospitalConsiderDetailHook = () => {
         validate: validateHospitalConsider,
         onSubmit: () => undefined,
     });
+
+    const hasSyncedMainRef = useRef(false); // incidentType, coverageType, date/time, diagnoses, remark
+    const hasSyncedMedicalRef = useRef(false); // medicalType, causeOfIncident (รอ coverageTypeId sync ก่อน)
+    const prevIncidentTypeIdRef = useRef<number | undefined>(undefined);
+    const prevCoverageTypeIdRef = useRef<number | undefined>(undefined);
+
+    /**
+     * เปลี่ยนเคส (claimId/caseId เปลี่ยน) : รีเซ็ตฟอร์ม + flag sync ทั้งหมด "ระหว่าง render" ทันที
+     *
+     * route "hospital/:id/:caseId" ใช้ element เดียวกันเสมอ ไม่ unmount/remount ใหม่เวลาเปลี่ยนเคส —
+     * ต้องรีเซ็ตตรงนี้แบบ synchronous (ไม่ใช้ useEffect) เพราะถ้ารีเซ็ตช้าไปแค่ 1 render, ตัวแปร
+     * activeIncidentTypeId ด้านล่างจะเผลออ่าน formik.values.incidentTypeId ของเคสเก่า (ที่ detail
+     * เปลี่ยนเป็นเคสใหม่แล้วแต่ formik ยังไม่ทันรีเซ็ต) ไปคำนวณ coverageType/medicalType ผิดเคส แล้ว
+     * ติด hasSyncedMainRef เป็น true ค้างไปเลย ทำให้ step 1 sync ค่าที่ถูกต้องของเคสใหม่ไม่ได้อีก
+     * (จะเห็นว่า "เหตุของการเคลม" ขึ้นถูก แต่ "ประเภทความคุ้มครอง"/"ประเภทการรักษา" ไม่ขึ้น)
+     *
+     * hasSyncedDocumentsRef ของตาราง "ตรวจสอบเอกสาร" รีเซ็ตแยกเองใน useHospitalDocumentVerifyHook
+     * (เทียบ caseKey เดียวกันนี้) — formik.resetForm() ที่นี่เคลียร์ documentChecks กลับเป็น []
+     * ให้ก่อนแล้ว sub-hook แค่ต้องรู้ว่าต้อง sync ใหม่
+     */
+    const syncedCaseKeyRef = useRef(caseKey);
+    if (syncedCaseKeyRef.current !== caseKey) {
+        syncedCaseKeyRef.current = caseKey;
+        hasSyncedMainRef.current = false;
+        hasSyncedMedicalRef.current = false;
+        prevIncidentTypeIdRef.current = undefined;
+        prevCoverageTypeIdRef.current = undefined;
+        formik.resetForm({ values: buildInitialValues() });
+    }
+
+    const {
+        caseDocumentLoading,
+        caseReviewOverviewLoading,
+        documentInfoByDocId,
+        documentStorageListLoading,
+        handleDocumentCheckChange,
+        handleDocumentScan,
+        documentCheckResultOptions,
+        documentCheckResultOptionsLoading,
+    } = useHospitalDocumentVerifyHook(formik, caseKey, detail?.caseId, customerDetail?.productTypeId);
+
+    const {
+        continuousClaimRows,
+        continuousClaimRowsLoading,
+        continuousClaimOpen,
+        setContinuousClaimOpen,
+        handleToggleContinuousClaim,
+        handleSelectContinuousClaim,
+        handleClearContinuousClaim,
+    } = useHospitalContinuousClaimHook(formik, customerDetail?.policyCode);
 
     /**
      * ตรวจฟอร์ม Step 1 ทั้งหมดก่อนกด "ถัดไป" หรือ "ยืนยันบันทึกผลพิจารณา"
@@ -500,23 +415,6 @@ const useHospitalConsiderDetailHook = () => {
         [incidentTypeMapping, formik.values.coverageTypeId]
     );
 
-    const hasSyncedMainRef = useRef(false); // incidentType, coverageType, date/time, diagnoses, remark
-    const hasSyncedMedicalRef = useRef(false); // medicalType, causeOfIncident (รอ coverageTypeId sync ก่อน)
-    const hasSyncedDocumentsRef = useRef(false); // documentChecks (ตาราง "ตรวจสอบเอกสาร")
-    const prevIncidentTypeIdRef = useRef(formik.values.incidentTypeId);
-    const prevCoverageTypeIdRef = useRef(formik.values.coverageTypeId);
-
-    // ---- sync: ตาราง "ตรวจสอบเอกสาร" จากรายการเอกสารของเคส (ครั้งเดียว ไม่ทับค่าที่ผู้ใช้แก้) ----
-    // รอ overview resolve ก่อน เพื่อ prefill ผลการตรวจ/หมายเหตุที่เคยบันทึกไว้ (merge ด้วย documentId)
-    useEffect(() => {
-        if (hasSyncedDocumentsRef.current) return;
-        if (!caseDocumentData?.data) return;
-        if (caseReviewOverviewLoading) return;
-
-        formik.setFieldValue("documentChecks", mapDocumentChecks(caseDocuments, reviewByDocId), false);
-        hasSyncedDocumentsRef.current = true;
-    }, [caseDocumentData, caseDocuments, caseReviewOverviewLoading, reviewByDocId]);
-
     // ---- phase 1: sync incidentType, coverageType, date/time, diagnoses, remark ----
     useEffect(() => {
         if (!detail || hasSyncedMainRef.current) return;
@@ -578,6 +476,10 @@ const useHospitalConsiderDetailHook = () => {
                 { icd10Id: detail.icD10_1stId ?? undefined, icd10Detail: undefined },
                 { icd10Id: detail.icD10_2ndId ?? undefined, icd10Detail: undefined },
                 { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
+                // ตำแหน่ง 4-6 : backend ยังไม่มี icD10_4thId/5thId/6thId ให้ sync กลับมา ปล่อยว่างให้กรอกมือ
+                {},
+                {},
+                {},
             ],
             false
         );
@@ -625,6 +527,19 @@ const useHospitalConsiderDetailHook = () => {
         hasSyncedMedicalRef.current = true;
     }, [detail, medicalType, causeOfIncident]);
 
+    useHospitalDraftViewingHook(
+        formik,
+        caseKey,
+        detail,
+        incidentType,
+        coverageType,
+        incidentTypeMapping,
+        hasSyncedMainRef,
+        hasSyncedMedicalRef,
+        prevIncidentTypeIdRef,
+        prevCoverageTypeIdRef
+    );
+
     // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
     useEffect(() => {
         if (!hasSyncedMainRef.current) return;
@@ -648,69 +563,9 @@ const useHospitalConsiderDetailHook = () => {
         prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
     }, [formik.values.coverageTypeId]);
 
-    /** เปิด/ปิด Modal เลือกเคลมต่อเนื่อง ตามการติ๊ก Checkbox */
-    const handleToggleContinuousClaim = (checked: boolean) => {
-        formik.setFieldValue("isContinuousClaim", checked);
-
-        if (checked) {
-            setContinuousClaimOpen(true);
-            return;
-        }
-
-        formik.setFieldValue("continuousClaim", undefined);
-    };
-
-    const handleSelectContinuousClaim = (row: ContinuousClaimRow) => {
-        formik.setFieldValue("continuousClaim", row);
-        setContinuousClaimOpen(false);
-    };
-
-    const handleClearContinuousClaim = () => {
-        formik.setFieldValue("continuousClaim", undefined);
-        formik.setFieldValue("isContinuousClaim", false);
-    };
-
-    /** อัปเดตผลการตรวจ / หมายเหตุ ของเอกสารแต่ละรายการ */
-    const handleDocumentCheckChange = <TField extends keyof DocumentCheckRow>(
-        rowIndex: number,
-        field: TField,
-        value: DocumentCheckRow[TField]
-    ) => {
-        const nextRows = formik.values.documentChecks.map((row, index) =>
-            index === rowIndex ? { ...row, [field]: value } : row
-        );
-
-        formik.setFieldValue("documentChecks", nextRows);
-    };
-
-    /**
-     * สแกน/ค้นหาเอกสารแถวนั้นใหม่ : ล้างผลตรวจเดิมเฉพาะแถวนั้น เพื่อบังคับให้ตรวจซ้ำ (CR Ver2 ข้อ 4)
-     * ไม่ล้างหมายเหตุ — คงค่าเดิมไว้ตาม behavior เดิมของระบบ
-     */
-    const handleDocumentScan = (rowIndex: number) => {
-        handleDocumentCheckChange(rowIndex, "checkResult", "");
-    };
-
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
         formik.values.considerResult
-    );
-
-    /** ตัวเลือกผลการตรวจเอกสาร (ผ่าน / ไม่ผ่าน / รอเอกสารเพิ่มเติม) จาก Master API */
-    const { data: documentReviewStatusRaw, isLoading: documentCheckResultOptionsLoading } =
-        useGetDocumentReviewStatus();
-    const documentCheckResultOptions: DocumentCheckResultOption[] = useMemo(
-        () =>
-            [...(documentReviewStatusRaw?.data ?? [])]
-                .sort((a, b) => (a.indexId ?? 0) - (b.indexId ?? 0))
-                .map((item) => ({
-                    value: item.documentReviewStatusId ?? 0,
-                    label: item.documentReviewStatusName ?? "",
-                    color:
-                        DOCUMENT_CHECK_RESULT_COLORS[item.documentReviewStatusId ?? 0] ??
-                        DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
-                })),
-        [documentReviewStatusRaw]
     );
 
     /**

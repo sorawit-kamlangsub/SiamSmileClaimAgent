@@ -12,7 +12,14 @@ import { useParams, useSearchParams } from "react-router-dom";
 import HeaderCardCustomerDetails from "../components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
 import ClaimDetail from "../components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
 import HospitalClaimDetailsTab from "../components/ConsiderHospitalDetails/HospitalClaimDetailsTab";
-import { CLAIM_LIST_TYPE_CONFIG, parseClaimListType } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+import ClaimTransationTab from "../components/ConsiderDetails/TabDetails/ClaimTransationTab";
+import PolicyBenefitTab from "../components/ConsiderDetails/TabDetails/PolicyBenefitTab";
+import ClaimHistoryTab from "../components/ConsiderDetails/TabDetails/ClaimHistoryTab";
+import PaymentHistoryTab from "../components/ConsiderDetails/TabDetails/PaymentHistoryTab";
+import {
+    CLAIM_LIST_TYPE_CONFIG,
+    parseClaimListType,
+} from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../api/coreClaimApi";
 import { calculatePolicyAgeText, formatDateString } from "../../../functionHelpers";
 
@@ -72,9 +79,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                         <Grid item xs={12} sx={{ mb: 2 }}>
                             <HeaderCardCustomerDetails
                                 name={customerDetail?.customerName ?? "-"}
-                                idCardNo={
-                                    customerDetail?.cardTypeId === 2 ? customerDetail?.cardDetail ?? "-" : "-"
-                                }
+                                idCardNo={customerDetail?.cardTypeId === 2 ? customerDetail?.cardDetail ?? "-" : "-"}
                                 applicationId={customerDetail?.policyCode ?? "-"}
                                 phoneNumber={customerDetail?.mobilePhoneNumber ?? "-"}
                                 appStatus={customerDetail?.appStatus ?? "-"}
@@ -126,29 +131,10 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                                 iconPosition="start"
                                 label="ประวัติการทำรายการ"
                                 value={"2"}
-                                disabled
                             />
-                            <Tab
-                                icon={<VerifiedUserIcon />}
-                                iconPosition="start"
-                                label="ความคุ้มครอง"
-                                value={"3"}
-                                disabled
-                            />
-                            <Tab
-                                icon={<AssignmentIcon />}
-                                iconPosition="start"
-                                label="ประวัติการเคลม"
-                                value={"4"}
-                                disabled
-                            />
-                            <Tab
-                                icon={<PaymentsIcon />}
-                                iconPosition="start"
-                                label="การชำระเงิน"
-                                value={"5"}
-                                disabled
-                            />
+                            <Tab icon={<VerifiedUserIcon />} iconPosition="start" label="ความคุ้มครอง" value={"3"} />
+                            <Tab icon={<AssignmentIcon />} iconPosition="start" label="ประวัติการเคลม" value={"4"} />
+                            <Tab icon={<PaymentsIcon />} iconPosition="start" label="การชำระเงิน" value={"5"} />
                             <Tab
                                 icon={<StickyNote2Icon />}
                                 iconPosition="start"
@@ -170,6 +156,18 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                 <Grid item xs={12}>
                     <TabPanel value="1">
                         <HospitalClaimDetailsTab readOnly={readOnly} />
+                    </TabPanel>
+                    <TabPanel value="2">
+                        <ClaimTransationTab onViewDraft={() => setTabValue("1")} />
+                    </TabPanel>
+                    <TabPanel value="3">
+                        <PolicyBenefitTab customerDetailData={customerDetailData} />
+                    </TabPanel>
+                    <TabPanel value="4">
+                        <ClaimHistoryTab applicationId={customerDetail?.policyCode} />
+                    </TabPanel>
+                    <TabPanel value="5">
+                        <PaymentHistoryTab applicationCode={customerDetail?.policyCode} />
                     </TabPanel>
                 </Grid>
             </TabContext>

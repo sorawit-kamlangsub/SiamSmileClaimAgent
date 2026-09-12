@@ -166,7 +166,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
 
         if (activeStep === 1) {
             const totals = sumClaimExpenseItems(filledItems);
-            const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount: paymentAmount ?? 0 });
+            const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
             if (reconciliation.status === "error") {
                 swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
                 return;

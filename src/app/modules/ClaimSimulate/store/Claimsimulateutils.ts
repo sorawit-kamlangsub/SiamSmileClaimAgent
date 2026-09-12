@@ -103,7 +103,7 @@ export const sumClaimExpenseItems = (items: ClaimExpenseAmountLike[]): ClaimExpe
     totalNotCovered: items.reduce((sum, item) => sum + (item.notCovered || 0), 0),
 });
 
-export type ClaimAmountReconciliationStatus = "ok" | "warningExgratia" | "warningDeficit" | "error";
+export type ClaimAmountReconciliationStatus = "ok" | "pending" | "warningExgratia" | "warningDeficit" | "error";
 
 export interface ClaimAmountReconciliationResult {
     status: ClaimAmountReconciliationStatus;
@@ -111,8 +111,13 @@ export interface ClaimAmountReconciliationResult {
 }
 
 export interface ClaimAmountReconciliationInput extends ClaimExpenseTotals {
-    /** ยอดที่จ่ายจริง — มาจาก detail.paymentAmount (ตัวเดียวกับการ์ด "สรุปรายการแจ้งโอน") */
-    paymentAmount: number;
+    /**
+     * ยอดที่จ่ายจริง — มาจาก detail.paymentAmount (ตัวเดียวกับการ์ด "สรุปรายการแจ้งโอน")
+     * undefined/null = ยังไม่มีข้อมูลยอดโอน (ยังไม่ถึงขั้นตอนแจ้งโอน) — ต้องแยกจาก 0 ที่แปลว่าผู้ใช้ยืนยันแล้วว่าไม่ได้โอน
+     * เพราะไม่งั้นจะขึ้น "ส่วนต่างที่ไม่มีเหตุผลรองรับ" ทั้งที่ยังไม่ถึงเวลาต้องกรอกยอดโอน
+     * (backend ส่ง null มาได้แม้ type จะประกาศแค่ number | undefined เพราะ field เป็น nullable ฝั่ง DB)
+     */
+    paymentAmount: number | undefined | null;
 }
 
 const fmtBaht = (v: number) => v.toLocaleString("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -131,6 +136,13 @@ export const getClaimAmountReconciliation = ({
     totalNotCovered,
     paymentAmount,
 }: ClaimAmountReconciliationInput): ClaimAmountReconciliationResult => {
+    if (paymentAmount === undefined || paymentAmount === null) {
+        return {
+            status: "pending",
+            message: "ยังไม่มีข้อมูลยอดเงินโอน ระบบจะตรวจสอบส่วนต่างหลังบันทึกยอดที่จ่ายจริง",
+        };
+    }
+
     const netReceipt = Math.round((totalReceipt - totalDiscount) * 100) / 100;
     const accounted = Math.round((paymentAmount + totalNotCovered) * 100) / 100;
     const diff = Math.round((accounted - netReceipt) * 100) / 100;

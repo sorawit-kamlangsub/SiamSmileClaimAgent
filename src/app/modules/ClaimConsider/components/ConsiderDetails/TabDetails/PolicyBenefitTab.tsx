@@ -8,14 +8,19 @@ import LinearLoading from "../../../../_common/components/CustomComponent/Linear
 import { StandardDataTable } from "../../../../_common";
 import { TableRow, TableCell } from "@mui/material";
 import { useMemo } from "react";
+import { useGetCustomerDetailById } from "../../../../../api/coreClaimApi";
 const renderPricePerUnit = (pricePerUnit: number | null, pricePerUnitName: string | null) => {
     if (pricePerUnit === null || pricePerUnit === undefined) return "-";
     const formatted = numberWithCommas(pricePerUnit, 0);
     return pricePerUnitName ? `${formatted} ${pricePerUnitName}` : formatted;
 };
 
-const PolicyBenefitTab = () => {
-    const { benefit, benefitLoading } = usePolicyBenefitHook();
+type PolicyBenefitTabProps = {
+    customerDetailData?: ReturnType<typeof useGetCustomerDetailById>["data"];
+};
+
+const PolicyBenefitTab = ({ customerDetailData }: PolicyBenefitTabProps) => {
+    const { benefit, benefitLoading } = usePolicyBenefitHook(customerDetailData);
 
     // const rows = benefit?.data || [];
     const rows = useMemo(() => {

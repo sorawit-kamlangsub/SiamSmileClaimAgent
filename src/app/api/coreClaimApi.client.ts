@@ -2812,6 +2812,7 @@ export class CoreClaimClient {
     /**
      * API สำหรับ Get ข้อมูล การเคลมต่อเนื่อง
      * @param applicationId (optional)
+     * @param initialClaimId (optional)
      * @param searchDetail (optional)
      * @param orderingField (optional)
      * @param ascendingOrder (optional)
@@ -2821,6 +2822,7 @@ export class CoreClaimClient {
      */
     getClaimContinue(
         applicationId?: string | undefined,
+        initialClaimId?: string | undefined,
         searchDetail?: string | undefined,
         orderingField?: string | undefined,
         ascendingOrder?: boolean | undefined,
@@ -2831,6 +2833,9 @@ export class CoreClaimClient {
         let url_ = this.baseUrl + "/claim/continue/filter?";
         if (applicationId === null) throw new Error("The parameter 'applicationId' cannot be null.");
         else if (applicationId !== undefined) url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
+        if (initialClaimId === null) throw new Error("The parameter 'initialClaimId' cannot be null.");
+        else if (initialClaimId !== undefined)
+            url_ += "initialClaimId=" + encodeURIComponent("" + initialClaimId) + "&";
         if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
         else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
         if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
@@ -7542,6 +7547,9 @@ export interface CaseSaveClaimEditDraftRequest {
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
+    icD10_4thId?: number | undefined;
+    icD10_5thId?: number | undefined;
+    icD10_6thId?: number | undefined;
     medicalTypeId?: number | undefined;
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
@@ -7782,6 +7790,9 @@ export interface ClaimEditDraftCasePayloadDto {
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
+    icD10_4thId?: number | undefined;
+    icD10_5thId?: number | undefined;
+    icD10_6thId?: number | undefined;
     medicalTypeId?: number | undefined;
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
@@ -8273,6 +8284,7 @@ export interface GetClaimContinueDtoResponse {
     claimNo?: string | undefined;
     caseId?: string | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
+    chiefComplaintId?: number | undefined;
     chiefComplaint?: string | undefined;
     chiefComplaintCustom?: string | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
@@ -9875,6 +9887,7 @@ export interface UpsertClaimDecisionCaseDocumentRequest {
 }
 
 export interface UpsertClaimDecisionCaseItemAdjudicationRequest {
+    caseItemId?: string;
     standardMedicalExpenseId?: number | undefined;
     netCaseAmount?: number;
     eligibleAmount?: number;
@@ -9921,6 +9934,9 @@ export interface UpsertClaimDecisionCaseRequest {
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
+    icD10_4thId?: number | undefined;
+    icD10_5thId?: number | undefined;
+    icD10_6thId?: number | undefined;
     medicalTypeId?: number | undefined;
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
