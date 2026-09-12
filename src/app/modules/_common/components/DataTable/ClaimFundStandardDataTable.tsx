@@ -37,6 +37,7 @@ type ClaimFundStandardDataTableProps = {
     setPaginated?: React.Dispatch<React.SetStateAction<PaginationSortableDto>>;
     color?: keyof PaletteOptions;
     noMatchText?: string;
+    delayNoMatch?: boolean;
     displayToolbar?: boolean;
     displayFooter?: boolean;
     sx?: SxProps<Theme>;
@@ -54,6 +55,7 @@ const ClaimFundStandardDataTable = ({
     setPaginated,
     color,
     noMatchText,
+    delayNoMatch = true,
     displayToolbar,
     displayFooter,
     sx,
@@ -67,7 +69,7 @@ const ClaimFundStandardDataTable = ({
 
     const noMatch = isError
         ? mapErrorMessage(error)
-        : isLoading || !minDelayReached
+        : isLoading || (delayNoMatch && !minDelayReached)
         ? "กำลังโหลดข้อมูล..."
         : noMatchText ?? "ไม่พบข้อมูล";
 

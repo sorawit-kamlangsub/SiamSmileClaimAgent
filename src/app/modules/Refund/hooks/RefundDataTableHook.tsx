@@ -8,17 +8,18 @@ import { useMemo, useState } from "react";
 import { useAppSelector } from "../../../../redux";
 import dayjs from "dayjs";
 
-const statusColorMap: Record<string, { bg: string; text: string }> = {
-    รอดำเนินการ: { bg: "#FFF3E0", text: "#EF6C00" },
-    คืนเงินสำเร็จ: { bg: "#E8F5E9", text: "#2E7D32" },
-    ยกเลิกการคืนเงิน: { bg: "#FDECEA", text: "#C62828" },
-    ปฏิเสธการคืนเงิน: { bg: "#FDECEA", text: "#C62828" },
-};
-
 const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
 
-const StatusPill = ({ status }: { status: string }) => {
-    const { bg, text } = statusColorMap[status] ?? defaultStatusColor;
+type StatusColor = { bg: string; text: string };
+
+const statusColorMapById: Record<number, StatusColor> = {
+    2: { bg: "#FFF3E0", text: "#EF6C00" },
+    3: { bg: "#E8F5E9", text: "#2E7D32" },
+    4: { bg: "#FDECEA", text: "#C62828" },
+};
+
+const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
+    const { bg, text } = color;
     return (
         <Box
             sx={{
@@ -77,11 +78,11 @@ const useRefundDataTableHook = () => {
     };
 
     const columns: MUIDataTableColumn[] = [
-        {
-            name: "refundNo",
-            label: "เลขที่ Refund",
-            options: { sort: false, filter: false },
-        },
+        // {
+        //     name: "refundNo",
+        //     label: "เลขที่ Refund",
+        //     options: { sort: false, filter: false },
+        // },
         {
             name: "claimNo",
             label: "เลขที่ CL",
@@ -153,7 +154,9 @@ const useRefundDataTableHook = () => {
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
                     const row = getRefundMonitorData?.data?.[dataIndex];
-                    return <StatusPill status={row?.refundStatusNameTH ?? row?.status ?? "-"} />;
+                    const status = row?.refundStatusNameTH ?? row?.status ?? "-";
+                    const color = statusColorMapById[row?.refundStatusId] ?? defaultStatusColor;
+                    return <StatusPill status={status} color={color} />;
                 },
             },
         },
@@ -166,7 +169,15 @@ const useRefundDataTableHook = () => {
                 customBodyRenderLite: (dataIndex) => {
                     const row = getRefundMonitorData?.data?.[dataIndex];
 
-                    if (row?.status === "ปฏิเสธการคืนเงิน" || row?.status === "ยกเลิกการคืนเงิน") {
+                    if (row?.refundStatusId === 2) {
+                        return (
+                            <IconButton size="small" onClick={() => handleView(row)}>
+                                <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
+                            </IconButton>
+                        );
+                    }
+
+                    if (row?.refundStatusId === 4) {
                         return (
                             <IconButton size="small" onClick={() => handleReject(row)}>
                                 <CancelIcon sx={{ color: "#E53935", fontSize: 20 }} />
@@ -174,11 +185,7 @@ const useRefundDataTableHook = () => {
                         );
                     }
 
-                    return (
-                        <IconButton size="small" onClick={() => handleView(row)}>
-                            <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
-                        </IconButton>
-                    );
+                    return <>-</>;
                 },
             },
         },

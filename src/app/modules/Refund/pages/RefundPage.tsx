@@ -26,7 +26,7 @@ const RefundPage = () => {
                     <RefundDataTable />
                 </Grid>
             </Grid>
-            <DialogSearchClaim buttonText="โอนคืน" showRefundStatusHint />
+            <DialogSearchClaim buttonText="โอนคืน" showRefundStatusHint searchLabel="กรุณากรอกเลขที่ CL / CC*" />
         </>
     );
 };

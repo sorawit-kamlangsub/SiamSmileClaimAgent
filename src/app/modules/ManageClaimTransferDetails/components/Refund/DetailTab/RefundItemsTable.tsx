@@ -38,7 +38,7 @@ const RefundItemsTable = <T extends RefundItemsFormValues>({ formik }: RefundIte
     );
 
     const handleAmountChange = (index: number, rawValue: string) => {
-        const value = rawValue.replace(/,/g, "");
+        let value = rawValue.replace(/,/g, "").replace(/^0+(?=\d)/, "");
         if (value !== "" && !DOUBLE_INPUT_REGEX.test(value)) {
             return;
         }
@@ -53,7 +53,9 @@ const RefundItemsTable = <T extends RefundItemsFormValues>({ formik }: RefundIte
                 options: {
                     filter: false,
                     sort: false,
-                    customBodyRenderLite: (dataIndex) => <Box>{dataIndex + 1}</Box>,
+                    customBodyRenderLite: (dataIndex) => (
+                        <Box sx={{ textAlign: "center" }}>{dataIndex + 1}</Box>
+                    ),
                 },
             },
             {

@@ -1,8 +1,11 @@
 import { Grid, Paper } from "@mui/material";
 import { ClaimFundStandardDataTable } from "../../_common";
+import { useAppSelector } from "../../../../redux";
 import useRefundDataTableHook from "../hooks/RefundDataTableHook";
 
 const RefundDataTable = () => {
+    const { searchMonitor } = useAppSelector((state) => state.refund);
+    const isStatusSelected = !!searchMonitor.paymentStatusId;
     const { columns, getRefundMonitorData, isGetRefundLoading, pagination, setPaginated } =
         useRefundDataTableHook();
     return (
@@ -17,7 +20,8 @@ const RefundDataTable = () => {
                             color="primary"
                             paginated={pagination}
                             setPaginated={setPaginated}
-                            isLoading={isGetRefundLoading}
+                            isLoading={isStatusSelected ? isGetRefundLoading : false}
+                            delayNoMatch={isStatusSelected}
                         />
                     </Paper>
                 </Grid>

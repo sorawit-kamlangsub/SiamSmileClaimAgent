@@ -13,9 +13,14 @@ import ClaimListByClaimSearchTable from "./ClaimListByClaimSearchTable";
 type DialogSearchClaimProps = {
     buttonText: string;
     showRefundStatusHint?: boolean;
+    searchLabel?: string;
 };
 
-const DialogSearchClaim = ({ buttonText, showRefundStatusHint = false }: DialogSearchClaimProps) => {
+const DialogSearchClaim = ({
+    buttonText,
+    showRefundStatusHint = false,
+    searchLabel = "กรุณากรอกเลขที่ CPG / CL",
+}: DialogSearchClaimProps) => {
     const { dialogRefund } = useAppSelector((state) => state.refund);
     const [searchResult, setSearchResult] = useState<any>(null);
     const dispatch = useAppDispatch();
@@ -114,7 +119,7 @@ const DialogSearchClaim = ({ buttonText, showRefundStatusHint = false }: DialogS
                             <FormikTextField
                                 formik={formik}
                                 name="searchDetail"
-                                label="กรุณากรอกเลขที่ CPG / CL"
+                                label={searchLabel}
                                 fullWidth
                             />
                             {showRefundStatusHint && (

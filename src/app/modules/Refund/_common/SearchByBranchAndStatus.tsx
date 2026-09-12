@@ -105,6 +105,7 @@ const SearchByBranchAndStatus = ({
                         displayFieldName="name"
                         isLoading={statusIsLoading}
                         firstItemText="กรุณาเลือกสถานะ"
+                        disableFirstItem
                     />
                 </Grid>
 

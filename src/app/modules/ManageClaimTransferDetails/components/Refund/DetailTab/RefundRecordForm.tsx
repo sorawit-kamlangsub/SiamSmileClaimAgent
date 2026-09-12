@@ -52,6 +52,7 @@ const RefundRecordForm = <T extends RefundRecordFormValues>({
                             size="small"
                             fullWidth
                             firstItemText="กรุณาเลือกประเภทการโอน"
+                            disableFirstItem
                             valueFieldName="id"
                             displayFieldName="name"
                             required
@@ -83,6 +84,7 @@ const RefundRecordForm = <T extends RefundRecordFormValues>({
                             size="small"
                             fullWidth
                             firstItemText="กรุณาเลือก"
+                            disableFirstItem
                             label="สาเหตุที่โอนคืน"
                             valueFieldName="id"
                             displayFieldName="name"
