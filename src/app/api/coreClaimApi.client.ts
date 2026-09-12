@@ -8803,6 +8803,7 @@ export interface GetCustomerSearchByPolicyCodeDtoResponse {
     productId?: number | undefined;
     productCategoryCode?: string | undefined;
     productCategoryName?: string | undefined;
+    memberNo?: string | undefined;
 }
 
 export interface GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse {

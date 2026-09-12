@@ -766,7 +766,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                     {!isDisability && !isDeath && !isContinuousDeath && (
                         <Grid item xs={12} ref={registerFieldRef("transferAmount")}>
                             <Box display="flex" alignItems="center" gap={2} flexWrap="wrap">
-                                <Grid item xs={12} sm={5.9} md={2.9}>
+                                <Grid item xs={12} sm={5.9} md={2.9} mt={1}>
                                     <FormikTextNumber
                                         name="transferAmount"
                                         label="จำนวนเงิน"

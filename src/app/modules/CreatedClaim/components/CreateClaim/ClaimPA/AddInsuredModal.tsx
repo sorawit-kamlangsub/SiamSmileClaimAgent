@@ -64,6 +64,7 @@ interface SearchResult {
     customerCode?: string; // เพิ่ม
     productId?: number; // เพิ่ม
     productCategoryCode?: string; // เพิ่ม
+    memberNo?: string; // เพิ่ม
 }
 
 interface Props {
@@ -75,10 +76,11 @@ interface Props {
 const mapCoverageStatus = (appStatusId?: number) => (appStatusId === 1 ? "คุ้มครอง" : "ไม่คุ้มครอง");
 
 const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): SearchResult => {
-    const extraDetails: InsuredDetailItem[] = [];
-    if (dto.schoolName) extraDetails.push({ label: "สถานศึกษา", value: dto.schoolName });
-    if (dto.customerCode) extraDetails.push({ label: "เลขบัตรประกันนักเรียน", value: dto.customerCode });
-    if (dto.mobilePhoneNumber) extraDetails.push({ label: "เบอร์โทรศัพท์", value: dto.mobilePhoneNumber });
+    const extraDetails: InsuredDetailItem[] = [
+        { label: "สถานศึกษา", value: dto.schoolName || "-" },
+        { label: "เลขบัตรประกันนักเรียน", value: dto.memberNo || "-" },
+        //{ label: "เบอร์โทรศัพท์", value: dto.mobilePhoneNumber || "-" },
+    ];
 
     return {
         id: dto.id ?? 0,
@@ -95,6 +97,7 @@ const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): Searc
         customerCode: dto.customerCode,
         productId: dto.productId,
         productCategoryCode: dto.productCategoryCode,
+        memberNo: dto.memberNo,
     };
 };
 
@@ -192,6 +195,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
                 customerCode: selectedInsured.customerCode,
                 productId: selectedInsured.productId,
                 productCategoryCode: selectedInsured.productCategoryCode,
+                memberNo: selectedInsured.memberNo,
                 tempClaimId,
             } as any)
         );
@@ -347,7 +351,13 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     ];
 
     return (
-        <Dialog open={open} fullScreen={fullScreen} maxWidth="md" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <Dialog
+            open={open}
+            fullScreen={fullScreen}
+            maxWidth="md"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3, overflowY: "hidden" } }}
+        >
             <DialogTitle>
                 <Grid container alignItems="center" justifyContent="space-between" flexWrap="nowrap">
                     <Box display="flex" alignItems="flex-start" gap={1.5}>

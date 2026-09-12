@@ -269,11 +269,17 @@ export const useGetProvince = (provinceId?: number | undefined) => {
 //bankAccountRelationGroupId : 1 = ph, pa, claimmisc | 2 = motor
 export const useGetBankAccountRelationType = (
     bankAccountRelationTypeId?: number | undefined,
-    bankAccountRelationGroupId?: number | undefined
+    bankAccountRelationGroupId?: number | undefined,
+    productTypeId?: number | undefined
 ) => {
     return useQuery(
-        [getBankAccountRelationTypeQueryKey, bankAccountRelationTypeId, bankAccountRelationGroupId],
-        () => coreClaimMastersClient.getBankAccountRelationType(bankAccountRelationTypeId, bankAccountRelationGroupId),
+        [getBankAccountRelationTypeQueryKey, bankAccountRelationTypeId, bankAccountRelationGroupId, productTypeId],
+        () =>
+            coreClaimMastersClient.getBankAccountRelationType(
+                bankAccountRelationTypeId,
+                bankAccountRelationGroupId,
+                productTypeId
+            ),
         {
             refetchOnWindowFocus: true,
         }
@@ -283,11 +289,12 @@ export const useGetBankAccountRelationType = (
 //contactPersonGroupId : 1 = ph, deadclaim | 2 = pa | 3 = motor
 export const useGetContactPersonType = (
     contactPersonTypeId?: number | undefined,
-    contactPersonGroupId?: number | undefined
+    contactPersonGroupId?: number | undefined,
+    productTypeId?: number | undefined
 ) => {
     return useQuery(
-        [getContactPersonTypeQueryKey, contactPersonTypeId, contactPersonGroupId],
-        () => coreClaimMastersClient.getContactPersonType(contactPersonTypeId, contactPersonGroupId),
+        [getContactPersonTypeQueryKey, contactPersonTypeId, contactPersonGroupId, productTypeId],
+        () => coreClaimMastersClient.getContactPersonType(contactPersonTypeId, contactPersonGroupId, productTypeId),
         {
             refetchOnWindowFocus: true,
         }
