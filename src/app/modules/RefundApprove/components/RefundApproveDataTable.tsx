@@ -23,7 +23,7 @@ const RefundApproveDataTable = ({ filter, hasSearched, searchKey }: RefundApprov
                 color="primary"
                 paginated={pagination}
                 setPaginated={setPaginated}
-                isLoading={isLoading}
+                isLoading={hasSearched ? isLoading : false}
                 delayNoMatch={hasSearched}
             />
         </>

@@ -40,3 +40,23 @@
 
 ## เดินหน้าแบบตรงไปตรงมา
 - อ่านด้วย `read` → แก้ด้วย `edit` (oldString จาก read แท้) — อย่าใช้ bash เป็นแหล่ง byte
+
+## ความรู้ที่เจอระหว่างงาน (ถ้าเจอซ้ำให้ใช้แบบนี้)
+
+### @tanstack/react-query v4 — `isLoading` เป็น `true` ถ้า query ถูก disabled ยังไม่เคย fetch
+- ใน v4 `isLoading = (status === 'loading')` ซึ่งมีค่า true ตั้งแต่ mount ถ้ายังไม่มี data แม้ `enabled: false` (ต่างจาก v5 ที่ `isLoading = isPending && isFetching`)
+- ผล: monitor table ที่ยิง query แบบ conditional (`enabled: hasSearched` / `!!statusId`) จะขึ้น "กำลังโหลดข้อมูล..." ทั้งที่ยังไม่ได้ค้นหา
+- **ทางแก้ (ตามแบบ RefundDataTable): gate `isLoading` ที่ส่งให้ table ด้วยเงื่อนไขเดียวกับ `enabled`**
+
+```tsx
+// RefundApprove/RefundDataTable ใช้ pattern นี้
+<ClaimFundStandardDataTable
+    ...
+    isLoading={hasSearched ? isLoading : false}   // แทนที่จะส่ง isLoading ตรงๆ
+    delayNoMatch={hasSearched}
+/>
+```
+
+- เมื่อยังไม่ search (`hasSearched=false`): `isLoading=false` → `ClaimFundStandardDataTable` แสดง default `noMatchText` = **"ไม่พบข้อมูล"**
+- เมื่อ search แล้ว: `isLoading` ตามจริง → ขึ้น "กำลังโหลดข้อมูล..." ระหว่าง fetch ตามปกติ
+- กรณี `enabled` ไม่ได้ใช้และ query fire ทันที (ไม่มี gate) จะไม่เกิดปัญหานี้
