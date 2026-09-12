@@ -20,7 +20,6 @@ const TransferRecordForm = <T extends TransferRecordFormValues>({
     formik,
     account,
     reasonOptions,
-    onChangeAccount,
     isLoadingDropdown,
 }: TransferRecordFormProps<T>) => {
     return (

@@ -100,6 +100,7 @@ const useManageAdjustDetailHook = (clNo: string) => {
         isDetailLoading,
         reasonOptions: reasonOptionsData?.data,
         reasonOptionIsLoading,
+        isAdjustLoading,
     };
 };
 

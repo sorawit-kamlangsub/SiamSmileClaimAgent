@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL } from "../../../Const";
+import { APIGW_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
-const apiURL = `${API_CLAIM_FUND_URL}/api/ClaimFund`;
+const apiURL = `${APIGW_URL}/claim/core/ClaimFund`;
 
 const getAdjustDetail = "getClaimAdjustDetailKey";
 const getAdjustReasonOptions = "getAdjustReasonOptionsKey";
@@ -120,12 +120,14 @@ const getTransactionHistoryData = (caseId: string, pagination: PaginationSortabl
         });
 };
 
-export const useGetTransferHistory = (caseId: string) => {
-    return useQuery([getAdjustHistoryTransaction, caseId], () => getTransferHistoryData(caseId), { enabled: !!caseId });
+export const useGetTransferHistory = (caseId: string, paginated: PaginationSortableDto) => {
+    return useQuery([getAdjustHistoryTransaction, caseId, paginated], () => getTransferHistoryData(caseId, paginated), {
+        enabled: !!caseId,
+    });
 };
 
-const getTransferHistoryData = (caseId: string) => {
-    const url = encodeURLWithParams(`${apiURL}/AdditionalTransfer/TransferHistory`, { caseId });
+const getTransferHistoryData = (caseId: string, paginated: PaginationSortableDto) => {
+    const url = encodeURLWithParams(`${apiURL}/AdditionalTransfer/TransferHistory`, { caseId, paginated });
     return axios
         .get(url)
         .then((res) => {

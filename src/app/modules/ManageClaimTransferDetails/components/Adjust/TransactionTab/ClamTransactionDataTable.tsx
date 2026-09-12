@@ -1,6 +1,5 @@
-import { useMemo, useState } from "react";
 import TransactionClaimDetailHook from "../../../hooks/Adjust/TransactionClaimDetailHook";
-import { PaginationResultDto, PaginationSortableDto, StandardDataTable } from "../../../../_common";
+import { StandardDataTable } from "../../../../_common";
 import { Paper } from "@mui/material";
 
 type ClamTransactionDataTableProps = {

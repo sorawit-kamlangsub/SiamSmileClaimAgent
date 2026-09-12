@@ -6,15 +6,11 @@ import { PaginationSortableDto } from "../../../_common";
 import { usePayTransferHistoryColumns, useRefundHistoryColumns } from "../../hooks/HistoryTable/HistoryTransferHook";
 
 const TransferHistory = () => {
-    const { transferHistoryData, isTransferHistoryLoading } = useTransferHistoryHook();
+    const { transferHistoryData, pagination, setPaginated, isTransferHistoryLoading } = useTransferHistoryHook();
 
     const payTransferDetails = transferHistoryData?.data?.payTransferDetails ?? [];
     const refundHistoryDetails = transferHistoryData?.data?.refundHistoryDetails ?? [];
 
-    const [payTransferPaginated, setPayTransferPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 10,
-    });
     const [refundPaginated, setRefundPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -41,12 +37,13 @@ const TransferHistory = () => {
                             name="payTransferHistory"
                             columns={payTransferColumns}
                             data={payTransferDetails}
-                            paginated={payTransferPaginated}
-                            setPaginated={setPayTransferPaginated}
+                            paginated={pagination}
+                            setPaginated={setPaginated}
                         />
                     </Paper>
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} sx={{ mt: 2 }}>
+                    {/* TODO Wait for API */}
                     <Paper elevation={2} sx={{ borderRadius: 4, p: 1 }}>
                         <HistoryTableCard
                             title="ประวัติการคืนเงิน"

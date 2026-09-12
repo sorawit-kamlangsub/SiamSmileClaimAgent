@@ -5,6 +5,7 @@ import AdjustTransferDataTable from "../components/AdjustTransferDataTable";
 import DialogSearchClaim from "../../DialogSearchByClaimOrCase/components/DialogSearchClaim";
 import { useAppDispatch } from "../../../../redux";
 import { setIsOpenDialog } from "../../Refund/store/refundSlice";
+import BankEditDetailDialog from "../components/BankEditDetailDialog";
 
 const AdjustTransferPage = () => {
     const dispatch = useAppDispatch();
@@ -27,6 +28,7 @@ const AdjustTransferPage = () => {
             </Grid>
 
             <DialogSearchClaim buttonText="โอนเพิ่ม" />
+            <BankEditDetailDialog />
         </>
     );
 };

@@ -1,12 +1,11 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL, APIGW_URL } from "../../../../Const";
+import { APIGW_URL } from "../../../../Const";
 
 const getBranch = "getBranchKey";
 const getPaymentStatus = "getPaymentStatusKey";
 
 const coreClaimURL = `${APIGW_URL}/claim/core`;
-const ClaimFundMasterURL = `${API_CLAIM_FUND_URL}/api/ClaimFund/Masters`;
 
 export const useGetBranch = () => {
     return useQuery([getBranch], () => getBranchData());
@@ -34,7 +33,7 @@ export const useGetPaymentStatus = () => {
 };
 
 const getPaymentStatusData = () => {
-    const url = `${ClaimFundMasterURL}/GetPaymentStatuses`;
+    const url = `${coreClaimURL}/ClaimFund/Masters/GetPaymentStatuses`;
 
     return axios
         .get(url)

@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL, APIGW_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
-const apiURL = `${API_CLAIM_FUND_URL}`;
+const apiURL = `${APIGW_URL}/claim/core/ClaimFund`;
 
 const getClaimByClaimOrCase = "getClaimByClaimOrCaseKey";
 
@@ -34,7 +34,7 @@ export const useSearchClaimOrCase = (
 };
 
 const searchClaimByClaimOrCase = (payload: SearchClaimOrCasePayload) => {
-    const url = encodeURLWithParams(`${apiURL}/api/ClaimFund/Setting/SearchClaimOrCase`, payload);
+    const url = encodeURLWithParams(`${apiURL}/Setting/SearchClaimOrCase`, payload);
     return axios
         .get(url)
         .then((res) => {

@@ -12,13 +12,13 @@ import TransferHistory from "../components/HistoryTransferTab/TransferHistory";
 
 const ManageAdjustDetailPage = () => {
     const { id = "" } = useParams();
-    const { formik, summary, account, isDetailLoading, reasonOptions, reasonOptionIsLoading } =
+    const { formik, summary, account, isDetailLoading, reasonOptions, reasonOptionIsLoading, isAdjustLoading } =
         useManageAdjustDetailHook(id);
     const [activeTab, setActiveTab] = useState(0);
 
     if (isDetailLoading) {
         return (
-            <Backdrop open={isDetailLoading || reasonOptionIsLoading} style={{ zIndex: 9999 }}>
+            <Backdrop open={isDetailLoading || reasonOptionIsLoading || isAdjustLoading} style={{ zIndex: 9999 }}>
                 <CircularProgress color="inherit" />
             </Backdrop>
         );
@@ -47,7 +47,6 @@ const ManageAdjustDetailPage = () => {
                                 account={account}
                                 reasonOptions={reasonOptions}
                                 isLoadingDropdown={reasonOptionIsLoading}
-                                onChangeAccount={() => console.log("open account search dialog")}
                             />
                         </Grid>
 
