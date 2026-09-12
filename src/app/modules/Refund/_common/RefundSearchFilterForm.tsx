@@ -10,8 +10,13 @@ import { useGetRefundStatus } from "../refundAPI";
 
 const currentDate = dayjs();
 
+const monitorSearchTypeData = [
+    { id: "CL", name: "เลขที่ CL" },
+    { id: "CC", name: "เลขที่ CC" },
+];
+
 export interface RefundSearchFilterValues {
-    searchBy: number | undefined;
+    searchBy: string | undefined;
     searchText: string;
     branchId: number | undefined;
     statusId: number | undefined;
@@ -25,7 +30,7 @@ export interface RefundSearchFilterFormProps {
 }
 
 const defaultValues: RefundSearchFilterValues = {
-    searchBy: undefined,
+    searchBy: "CL",
     searchText: "",
     branchId: undefined,
     statusId: undefined,
@@ -110,9 +115,9 @@ const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterF
                         name="searchBy"
                         formik={formik}
                         label="ค้นหาจาก"
-                        data={[]}
-                        valueFieldName=""
-                        displayFieldName=""
+                        data={monitorSearchTypeData}
+                        valueFieldName="id"
+                        displayFieldName="name"
                         fullWidth
                     />
                 </Grid>
@@ -121,7 +126,7 @@ const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterF
                     <FormikTextField
                         name="searchText"
                         formik={formik}
-                        label="คำค้นหาเลขที่ CPG/CL"
+                        label="คำค้นหาเลขที่ CL/CC"
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
