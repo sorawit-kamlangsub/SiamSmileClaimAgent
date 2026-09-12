@@ -68,10 +68,15 @@ const useHospitalDraftViewingHook = (
         if (payload.case?.vn !== undefined) draftValues.vn = payload.case.vn;
 
         // diagnoses : mapper กลางคืนแค่ 3 ตำแหน่ง (ฟิลด์ร่วมกับเคลมลูกค้า ที่มีแค่ icD10_1st/2nd/3rdId)
-        // แต่ฟอร์มเคลมโรงพยาบาลมี 6 ช่อง ต้องเติมให้ครบ ไม่งั้น formik.setValues จะทำให้ array สั้นลง
-        // เหลือ 3 (ช่อง 4-6 หายไปจาก UI ทันทีที่ดูฉบับร่าง)
+        // แต่ฟอร์มเคลมโรงพยาบาลมี 6 ช่อง ต้องเติมตำแหน่ง 4-6 เอง ไม่งั้น formik.setValues จะทำให้ array
+        // สั้นลงเหลือ 3 (ช่อง 4-6 หายไปจาก UI ทันทีที่ดูฉบับร่าง) — ดึงจาก payload.case ตรงๆ เหมือน hn/an/vn
         if (draftValues.diagnoses) {
-            draftValues.diagnoses = [...draftValues.diagnoses, {}, {}, {}];
+            draftValues.diagnoses = [
+                ...draftValues.diagnoses,
+                { icd10Id: payload.case?.icD10_4thId ?? undefined, icd10Detail: undefined },
+                { icd10Id: payload.case?.icD10_5thId ?? undefined, icd10Detail: undefined },
+                { icd10Id: payload.case?.icD10_6thId ?? undefined, icd10Detail: undefined },
+            ];
         }
 
         // ต้องอัปเดต 2 ref นี้ก่อน setValues ไม่งั้น cascade-reset effect (ใน useHospitalConsiderDetailHook)

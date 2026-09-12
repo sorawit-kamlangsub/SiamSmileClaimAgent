@@ -93,10 +93,9 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     totalDays: 0,
     hospitalId: undefined,
     hospitalName: undefined,
-    // เคลมโรงพยาบาลให้กรอกได้ 6 ตำแหน่ง (RecordClaimData render ตาม diagnoses.length) — ตำแหน่ง 4-6
-    // ไม่มี field ปลายทางใน backend ให้ส่ง (GetClaimDetailConsider/SaveClaimEditDraft/
-    // UpsertClaimDecision มีแค่ icD10_1stId/2ndId/3rdId) กรอกแล้วจะไม่ถูกบันทึกจนกว่า backend จะเพิ่ม
-    // field ให้ (ทีมรับทราบแล้ว ตัดสินใจเพิ่ม UI รอไว้ก่อน)
+    // เคลมโรงพยาบาลให้กรอกได้ 6 ตำแหน่ง (RecordClaimData render ตาม diagnoses.length)
+    // SaveClaimEditDraft/UpsertClaimDecision ส่ง icD10_1stId..6thId ครบแล้ว (ดู ClaimDetailActionHook)
+    // มีแค่ GetClaimDetailConsider (ค่าที่ดึงกลับมา prefill ฟอร์ม) ที่ยังตอบกลับแค่ 1st/2nd/3rd
     diagnoses: [{}, {}, {}, {}, {}, {}],
     accidentPlace: undefined,
     chiefComplaintId: undefined,
@@ -476,10 +475,9 @@ const useHospitalConsiderDetailHook = () => {
                 { icd10Id: detail.icD10_1stId ?? undefined, icd10Detail: undefined },
                 { icd10Id: detail.icD10_2ndId ?? undefined, icd10Detail: undefined },
                 { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
-                // ตำแหน่ง 4-6 : backend ยังไม่มี icD10_4thId/5thId/6thId ให้ sync กลับมา ปล่อยว่างให้กรอกมือ
-                {},
-                {},
-                {},
+                { icd10Id: detail.icD10_4thId ?? undefined, icd10Detail: undefined },
+                { icd10Id: detail.icD10_5thId ?? undefined, icd10Detail: undefined },
+                { icd10Id: detail.icD10_6thId ?? undefined, icd10Detail: undefined },
             ],
             false
         );

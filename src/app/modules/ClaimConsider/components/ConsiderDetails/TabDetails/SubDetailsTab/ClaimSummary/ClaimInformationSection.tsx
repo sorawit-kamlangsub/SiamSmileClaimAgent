@@ -16,7 +16,7 @@ const formatTime = (date: Dayjs | undefined) =>
     date && dayjs(date).isValid() ? dayjs(date).format("HH:mm") : undefined;
 
 const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationSectionProps) => {
-    const [diagnosis1, diagnosis2, diagnosis3] = values.diagnoses ?? [];
+    const [diagnosis1, diagnosis2, diagnosis3, diagnosis4, diagnosis5, diagnosis6] = values.diagnoses ?? [];
 
     // resolve ชื่อจาก id เอง แทนการอ่าน values.hospitalName/chiefComplaintId_selectedText/diagnoses[n].icd10Detail
     // ตรงๆ — ฟิลด์เหล่านั้นมีแค่ตอนผู้ใช้เพิ่งเลือกเองใน Step 1 เท่านั้น ตอน sync ค่าจาก server (เคสปกติของหน้านี้)
@@ -53,6 +53,16 @@ const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationS
             <CustomDisplayText label="คำวินิจฉัย 1" value={getIcd10Name(diagnosis1)} xs={12} md={12} />
             <CustomDisplayText label="คำวินิจฉัย 2" value={getIcd10Name(diagnosis2)} xs={12} md={12} />
             <CustomDisplayText label="คำวินิจฉัย 3" value={getIcd10Name(diagnosis3)} xs={12} md={12} />
+            {/* ตำแหน่ง 4-6 มีเฉพาะฟอร์มเคลมโรงพยาบาล (diagnoses 6 ช่อง) — เคลมอื่น diagnoses มีแค่ 3 ช่อง จึง undefined */}
+            {diagnosis4 !== undefined && (
+                <CustomDisplayText label="คำวินิจฉัย 4" value={getIcd10Name(diagnosis4)} xs={12} md={12} />
+            )}
+            {diagnosis5 !== undefined && (
+                <CustomDisplayText label="คำวินิจฉัย 5" value={getIcd10Name(diagnosis5)} xs={12} md={12} />
+            )}
+            {diagnosis6 !== undefined && (
+                <CustomDisplayText label="คำวินิจฉัย 6" value={getIcd10Name(diagnosis6)} xs={12} md={12} />
+            )}
             <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
         </Grid>
     );

@@ -4397,118 +4397,69 @@ export class IClaimClient {
 
     /**
      * API สำหรับ Get ข้อมูล เช็คสิทธิ์ความคุ้มครอง
-     * @param hospitalCode (optional)
-     * @param claimType (optional)
-     * @param episodeType (optional)
-     * @param incurredDate (optional)
-     * @param incurredTime (optional)
+     * @param searchIndex (optional)
+     * @param isSeachDetail (optional)
      * @param incidentDate (optional)
-     * @param incidentTime (optional)
-     * @param claimFromMotorcycle (optional)
-     * @param searchOptionId (optional)
-     * @param userName (optional)
-     * @param cIDPassport (optional)
-     * @param iD (optional)
-     * @param insurerCode (optional)
-     * @param policyNumber (optional)
-     * @param causeOfAccident (optional)
-     * @param applicationCode (optional)
-     * @param name (optional)
-     * @param surName (optional)
-     * @param birthDate (optional)
+     * @param schoolId (optional)
+     * @param provinceId (optional)
+     * @param incidentTypeId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
      * @return Success
      */
     checkEligible(
-        iClaimToken: string,
-        hospitalCode?: string | undefined,
-        claimType?: string | undefined,
-        episodeType?: string | undefined,
-        incurredDate?: dayjs.Dayjs | undefined,
-        incurredTime?: dayjs.Dayjs | undefined,
+        searchIndex?: number | undefined,
+        isSeachDetail?: boolean | undefined,
         incidentDate?: dayjs.Dayjs | undefined,
-        incidentTime?: dayjs.Dayjs | undefined,
-        claimFromMotorcycle?: boolean | undefined,
-        searchOptionId?: number | undefined,
-        userName?: string | undefined,
-        cIDPassport?: string | undefined,
-        iD?: string | undefined,
-        insurerCode?: string | undefined,
-        policyNumber?: string | undefined,
-        causeOfAccident?: string | undefined,
-        applicationCode?: string | undefined,
-        name?: string | undefined,
-        surName?: string | undefined,
-        birthDate?: dayjs.Dayjs | undefined,
+        schoolId?: number | undefined,
+        provinceId?: number | undefined,
+        incidentTypeId?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
         cancelToken?: CancelToken | undefined
-    ): Promise<CheckEligibleDtoResponseListServiceResponse> {
+    ): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/IClaim/check-eligible?";
-        if (hospitalCode === null) throw new Error("The parameter 'hospitalCode' cannot be null.");
-        else if (hospitalCode !== undefined) url_ += "HospitalCode=" + encodeURIComponent("" + hospitalCode) + "&";
-        if (claimType === null) throw new Error("The parameter 'claimType' cannot be null.");
-        else if (claimType !== undefined) url_ += "ClaimType=" + encodeURIComponent("" + claimType) + "&";
-        if (episodeType === null) throw new Error("The parameter 'episodeType' cannot be null.");
-        else if (episodeType !== undefined) url_ += "EpisodeType=" + encodeURIComponent("" + episodeType) + "&";
-        if (incurredDate === null) throw new Error("The parameter 'incurredDate' cannot be null.");
-        else if (incurredDate !== undefined)
-            url_ +=
-                "IncurredDate=" +
-                encodeURIComponent(incurredDate ? "" + incurredDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
-                "&";
-        if (incurredTime === null) throw new Error("The parameter 'incurredTime' cannot be null.");
-        else if (incurredTime !== undefined)
-            url_ +=
-                "IncurredTime=" +
-                encodeURIComponent(incurredTime ? "" + incurredTime.format("YYYY-MM-DDTHH:mm:ss") : "") +
-                "&";
+        if (searchIndex === null) throw new Error("The parameter 'searchIndex' cannot be null.");
+        else if (searchIndex !== undefined) url_ += "searchIndex=" + encodeURIComponent("" + searchIndex) + "&";
+        if (isSeachDetail === null) throw new Error("The parameter 'isSeachDetail' cannot be null.");
+        else if (isSeachDetail !== undefined) url_ += "isSeachDetail=" + encodeURIComponent("" + isSeachDetail) + "&";
         if (incidentDate === null) throw new Error("The parameter 'incidentDate' cannot be null.");
         else if (incidentDate !== undefined)
             url_ +=
-                "IncidentDate=" +
+                "incidentDate=" +
                 encodeURIComponent(incidentDate ? "" + incidentDate.format("YYYY-MM-DDTHH:mm:ss") : "") +
                 "&";
-        if (incidentTime === null) throw new Error("The parameter 'incidentTime' cannot be null.");
-        else if (incidentTime !== undefined)
-            url_ +=
-                "IncidentTime=" +
-                encodeURIComponent(incidentTime ? "" + incidentTime.format("YYYY-MM-DDTHH:mm:ss") : "") +
-                "&";
-        if (claimFromMotorcycle === null) throw new Error("The parameter 'claimFromMotorcycle' cannot be null.");
-        else if (claimFromMotorcycle !== undefined)
-            url_ += "ClaimFromMotorcycle=" + encodeURIComponent("" + claimFromMotorcycle) + "&";
-        if (searchOptionId === null) throw new Error("The parameter 'searchOptionId' cannot be null.");
-        else if (searchOptionId !== undefined)
-            url_ += "SearchOptionId=" + encodeURIComponent("" + searchOptionId) + "&";
-        if (userName === null) throw new Error("The parameter 'userName' cannot be null.");
-        else if (userName !== undefined) url_ += "UserName=" + encodeURIComponent("" + userName) + "&";
-        if (cIDPassport === null) throw new Error("The parameter 'cIDPassport' cannot be null.");
-        else if (cIDPassport !== undefined) url_ += "CIDPassport=" + encodeURIComponent("" + cIDPassport) + "&";
-        if (iD === null) throw new Error("The parameter 'iD' cannot be null.");
-        else if (iD !== undefined) url_ += "ID=" + encodeURIComponent("" + iD) + "&";
-        if (insurerCode === null) throw new Error("The parameter 'insurerCode' cannot be null.");
-        else if (insurerCode !== undefined) url_ += "InsurerCode=" + encodeURIComponent("" + insurerCode) + "&";
-        if (policyNumber === null) throw new Error("The parameter 'policyNumber' cannot be null.");
-        else if (policyNumber !== undefined) url_ += "PolicyNumber=" + encodeURIComponent("" + policyNumber) + "&";
-        if (causeOfAccident === null) throw new Error("The parameter 'causeOfAccident' cannot be null.");
-        else if (causeOfAccident !== undefined)
-            url_ += "CauseOfAccident=" + encodeURIComponent("" + causeOfAccident) + "&";
-        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
-        else if (applicationCode !== undefined)
-            url_ += "ApplicationCode=" + encodeURIComponent("" + applicationCode) + "&";
-        if (name === null) throw new Error("The parameter 'name' cannot be null.");
-        else if (name !== undefined) url_ += "Name=" + encodeURIComponent("" + name) + "&";
-        if (surName === null) throw new Error("The parameter 'surName' cannot be null.");
-        else if (surName !== undefined) url_ += "SurName=" + encodeURIComponent("" + surName) + "&";
-        if (birthDate === null) throw new Error("The parameter 'birthDate' cannot be null.");
-        else if (birthDate !== undefined)
-            url_ +=
-                "BirthDate=" + encodeURIComponent(birthDate ? "" + birthDate.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (schoolId === null) throw new Error("The parameter 'schoolId' cannot be null.");
+        else if (schoolId !== undefined) url_ += "schoolId=" + encodeURIComponent("" + schoolId) + "&";
+        if (provinceId === null) throw new Error("The parameter 'provinceId' cannot be null.");
+        else if (provinceId !== undefined) url_ += "provinceId=" + encodeURIComponent("" + provinceId) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
             method: "GET",
             url: url_,
             headers: {
-                IClaimToken: iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
                 Accept: "text/plain",
             },
             cancelToken,
@@ -4528,7 +4479,7 @@ export class IClaimClient {
             });
     }
 
-    protected processCheckEligible(response: AxiosResponse): Promise<CheckEligibleDtoResponseListServiceResponse> {
+    protected processCheckEligible(response: AxiosResponse): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
         const status = response.status;
         let _headers: any = {};
         if (response.headers && typeof response.headers === "object") {
@@ -4543,12 +4494,76 @@ export class IClaimClient {
             let result200: any = null;
             let resultData200 = _responseText;
             result200 = resultData200;
-            return Promise.resolve<CheckEligibleDtoResponseListServiceResponse>(result200);
+            return Promise.resolve<GetCustomerSearchDtoResponseListServiceResponse>(result200);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
-        return Promise.resolve<CheckEligibleDtoResponseListServiceResponse>(null as any);
+        return Promise.resolve<GetCustomerSearchDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับรวมข้อมูล Customer และ Benefit ตามประเภทการรักษา OPD หรือ IPD
+     * @param body (optional)
+     * @return Success
+     */
+    checkEligibleCustomer(
+        body?: CustomerCheckEligibleDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CustomerCheckEligibleDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/IClaim/customer/checkeligible";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCheckEligibleCustomer(_response);
+            });
+    }
+
+    protected processCheckEligibleCustomer(
+        response: AxiosResponse
+    ): Promise<CustomerCheckEligibleDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CustomerCheckEligibleDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CustomerCheckEligibleDtoResponseListServiceResponse>(null as any);
     }
 }
 
@@ -6204,11 +6219,13 @@ export class MastersClient {
      * API สำหรับ Get ข้อมูล BankAccountRelationType (ประเภทความสัมพันธ์ของบัญชีธนาคาร) BankAccountRelationGroupId : 1 = PH , PA , ClaimMisc : 2 = Motor
      * @param bankAccountRelationTypeId (optional)
      * @param bankAccountRelationGroupId (optional)
+     * @param productTypeId (optional)
      * @return Success
      */
     getBankAccountRelationType(
         bankAccountRelationTypeId?: number | undefined,
         bankAccountRelationGroupId?: number | undefined,
+        productTypeId?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetBankAccountRelationTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/bankaccount/relation/type?";
@@ -6220,6 +6237,8 @@ export class MastersClient {
             throw new Error("The parameter 'bankAccountRelationGroupId' cannot be null.");
         else if (bankAccountRelationGroupId !== undefined)
             url_ += "bankAccountRelationGroupId=" + encodeURIComponent("" + bankAccountRelationGroupId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -6274,11 +6293,13 @@ export class MastersClient {
      * API สำหรับ Get ข้อมูล ContactPersonType (ประเภทผู้ติดต่อ) ContactPersonGroupId : 1 = PH , DeathClaim : 2 = PA, 3 = Motor
      * @param contactPersonTypeId (optional)
      * @param contactPersonGroupId (optional)
+     * @param productTypeId (optional)
      * @return Success
      */
     getContactPersonType(
         contactPersonTypeId?: number | undefined,
         contactPersonGroupId?: number | undefined,
+        productTypeId?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetContactPersonTypeDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/contactperson/type?";
@@ -6288,6 +6309,8 @@ export class MastersClient {
         if (contactPersonGroupId === null) throw new Error("The parameter 'contactPersonGroupId' cannot be null.");
         else if (contactPersonGroupId !== undefined)
             url_ += "contactPersonGroupId=" + encodeURIComponent("" + contactPersonGroupId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -7615,22 +7638,6 @@ export interface CaseV2Request {
     beneficiaries?: BeneficiaryV2Request[] | undefined;
 }
 
-export interface CheckEligibleDtoResponse {}
-
-export interface CheckEligibleDtoResponseListServiceResponse {
-    data?: CheckEligibleDtoResponse[] | undefined;
-    isSuccess?: boolean;
-    message?: string | undefined;
-    code?: number | undefined;
-    exceptionMessage?: any | undefined;
-    serverDateTime?: dayjs.Dayjs;
-    totalAmountRecords?: number | undefined;
-    totalAmountPages?: number | undefined;
-    currentPage?: number | undefined;
-    recordsPerPage?: number | undefined;
-    pageIndex?: number | undefined;
-}
-
 /** ผลการพิจารณาล่าสุดของ Case พร้อมเหตุผลและยอดเงินที่เกี่ยวข้อง */
 export interface ClaimDecisionOverviewDtoResponse {
     caseAdjudicationId?: string;
@@ -7904,6 +7911,60 @@ export interface CreateCoreClaimV2DtoRequest {
     createdByUserCode?: string | undefined;
     createdByUserName?: string | undefined;
     claims: ClaimV2Request[];
+}
+
+export interface CustomerCheckEligibleCustomerDto {
+    id?: number;
+    cardTypeId?: number | undefined;
+    cardDetail?: string | undefined;
+    customerName?: string | undefined;
+    productTypeId?: number | undefined;
+    productTypeName?: string | undefined;
+    policyCode?: string | undefined;
+    customerCode?: string | undefined;
+    appStatusId?: number | undefined;
+    coverageFrom?: dayjs.Dayjs | undefined;
+    coverageTo?: dayjs.Dayjs | undefined;
+    productName?: string | undefined;
+    schoolName?: string | undefined;
+    totalCount?: number | undefined;
+    mobilePhoneNumber?: string | undefined;
+    productId?: number | undefined;
+    productCategoryCode?: string | undefined;
+    productCategoryName?: string | undefined;
+    titleName?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    birthDate?: dayjs.Dayjs | undefined;
+    appStatus?: string | undefined;
+}
+
+export interface CustomerCheckEligibleDtoRequest {
+    type?: string | undefined;
+    searchIndex?: number;
+    searchDetail?: string | undefined;
+    incidentDate?: dayjs.Dayjs | undefined;
+    incidentTypeId?: number | undefined;
+    isContinue?: boolean | undefined;
+}
+
+export interface CustomerCheckEligibleDtoResponse {
+    customer?: CustomerCheckEligibleCustomerDto;
+    benefits?: GetCustomerBenefitDetailSearchDtoResponse[] | undefined;
+}
+
+export interface CustomerCheckEligibleDtoResponseListServiceResponse {
+    data?: CustomerCheckEligibleDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
 }
 
 export interface DisabilityExpenseList {
@@ -8338,6 +8399,9 @@ export interface GetClaimDetailConsiderDtoResponse {
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
     icD10_3rdId?: number | undefined;
+    icD10_4thId?: number | undefined;
+    icD10_5thId?: number | undefined;
+    icD10_6thId?: number | undefined;
     remark?: string | undefined;
     customerId?: number | undefined;
     createdDate?: dayjs.Dayjs | undefined;
@@ -9329,12 +9393,12 @@ export interface GetStandardMedicalExpenseByCaseDtoResponse {
     standardMedicalExpenseId?: number | undefined;
     descriptionEN?: string | undefined;
     descriptionTH?: string | undefined;
-    maximumLimit?: number;
+    maximumLimit?: number | undefined;
     standardMedicalExpenseCategoryId?: number | undefined;
     backgroundColorCode?: string | undefined;
     inputToStandardSubCategoryId?: number | undefined;
     bodyPartId?: number | undefined;
-    caseItemId?: string;
+    caseItemId?: string | undefined;
     caseId?: string | undefined;
     quantity?: number | undefined;
     perUnit?: number | undefined;

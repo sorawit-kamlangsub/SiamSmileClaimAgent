@@ -327,6 +327,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
             icD10_2ndId: values.diagnoses?.[1]?.icd10Id,
             icD10_3rdId: values.diagnoses?.[2]?.icd10Id,
+            icD10_4thId: values.diagnoses?.[3]?.icd10Id,
+            icD10_5thId: values.diagnoses?.[4]?.icd10Id,
+            icD10_6thId: values.diagnoses?.[5]?.icd10Id,
             caseAmount: netClaimAmount, //ยอดเบิก
             latestApprovedAmount: 0, //ต้องอนุมัติ
             latestNonCoveredAmount: totalNotCovered,
@@ -549,6 +552,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
             icD10_2ndId: values.diagnoses?.[1]?.icd10Id,
             icD10_3rdId: values.diagnoses?.[2]?.icd10Id,
+            icD10_4thId: values.diagnoses?.[3]?.icd10Id,
+            icD10_5thId: values.diagnoses?.[4]?.icd10Id,
+            icD10_6thId: values.diagnoses?.[5]?.icd10Id,
             caseAmount: netClaimAmount, //ยอดเบิก
             latestApprovedAmount: calculateResult?.medicalPay, //ต้องอนุมัติ
             latestNonCoveredAmount: totalNotCovered,
