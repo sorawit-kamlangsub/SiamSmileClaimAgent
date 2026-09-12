@@ -28,10 +28,11 @@ interface Props {
     open: boolean;
     onClose: () => void;
     onAdd?: (contact: ContactInfo) => void;
+    productTypeId?: number;
 }
 
 // ─── id ของ "อื่นๆ" ตาม API ──────────────────────────────────────────────────
-const OTHER_CONTACT_TYPE_ID = 12;
+const OTHER_CONTACT_TYPE_ID = 13;
 
 interface AddContactFormValues {
     relationship: number | undefined;
@@ -58,7 +59,7 @@ const FieldIcon: React.FC<{ children: React.ReactNode }> = ({ children }) => (
     </Avatar>
 );
 
-const AddContactModal: React.FC<Props> = ({ open, onClose, onAdd }) => {
+const AddContactModal: React.FC<Props> = ({ open, onClose, onAdd, productTypeId }) => {
     const dispatch = useAppDispatch();
     const theme = useTheme();
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
@@ -147,7 +148,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose, onAdd }) => {
                                     fullWidth
                                     size="small"
                                     required
-                                    contactPersonGroupId={1}
+                                    productTypeId={productTypeId}
                                     // FormikDropdown set relationship_selectedText อัตโนมัติ
                                 />
                             </Box>

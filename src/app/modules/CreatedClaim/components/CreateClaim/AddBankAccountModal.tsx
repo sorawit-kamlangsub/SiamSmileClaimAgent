@@ -149,7 +149,7 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose, productTypeId }) 
                             <Box flex={1}>
                                 <BankAccountRelationTypeDropDown
                                     name="relationship"
-                                    bankAccountRelationGroupId={1}
+                                    productTypeId={productTypeId}
                                     formik={formik}
                                     firstItemText="-- โปรดระบุ --"
                                     fullWidth
@@ -224,9 +224,15 @@ const AddBankAccountModal: React.FC<Props> = ({ open, onClose, productTypeId }) 
                                     }}
                                     required
                                 />
-                                <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5, display: "block" }}>
-                                    กรอกชื่อบัญชีตามหน้าสมุดบัญชี
-                                </Typography>
+                                {!(formik.touched.accountName && formik.errors.accountName) && (
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ mt: 0.5, display: "block" }}
+                                    >
+                                        กรอกชื่อบัญชีตามหน้าสมุดบัญชี
+                                    </Typography>
+                                )}
                             </Box>
                         </Box>
                     </Grid>

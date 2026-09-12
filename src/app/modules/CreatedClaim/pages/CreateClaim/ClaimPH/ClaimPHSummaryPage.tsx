@@ -418,7 +418,7 @@ const ClaimPHSummaryPage: React.FC = () => {
                 </Grid>
                 {/* ── Modals ── */}
                 <AddBankAccountModal open={openBank} onClose={() => setOpenBank(false)} productTypeId={6} />
-                <AddContactModal open={openContact} onClose={() => setOpenContact(false)} />
+                <AddContactModal open={openContact} onClose={() => setOpenContact(false)} productTypeId={6} />
                 <ConfirmTransferPHModal
                     open={openConfirm}
                     onClose={() => setOpenConfirm(false)}
