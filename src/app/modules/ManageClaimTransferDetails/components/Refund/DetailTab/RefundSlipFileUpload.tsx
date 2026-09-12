@@ -37,8 +37,9 @@ const RefundSlipFileUpload = ({ formik, name = "slipFile" }: RefundSlipFileUploa
         }
 
         setFileTypeError(null);
-        formik.setFieldValue(name, [selected], true);
-        formik.setFieldTouched(name, true, true);
+        formik.setFieldValue(name, [selected], false);
+        formik.setFieldError(name, undefined);
+        formik.setFieldTouched(name, true, false);
     };
 
     return (
