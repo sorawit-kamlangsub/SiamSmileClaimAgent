@@ -16,6 +16,14 @@ const statusColorMapById: Record<number, StatusColor> = {
     2: { bg: "#FFF3E0", text: "#EF6C00" },
     3: { bg: "#E8F5E9", text: "#2E7D32" },
     4: { bg: "#FDECEA", text: "#C62828" },
+    5: { bg: "#FDECEA", text: "#C62828" },
+};
+
+const refundStatusNameMapById: Record<number, string> = {
+    2: "รอดำเนินการ",
+    3: "คืนเงินสำเร็จ",
+    4: "ปฏิเสธการคืนเงิน",
+    5: "ยกเลิกการคืนเงิน",
 };
 
 export type RefundApproveDataTableHookProps = {
@@ -158,7 +166,11 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
                     const row = data[dataIndex];
-                    const status = row?.refundStatusNameTH ?? row?.status ?? "-";
+                    const status =
+                        row?.refundStatusNameTH ??
+                        refundStatusNameMapById[row?.refundStatusId] ??
+                        row?.status ??
+                        "-";
                     const color = statusColorMapById[row?.refundStatusId] ?? defaultStatusColor;
                     return <StatusPill status={status} color={color} />;
                 },
