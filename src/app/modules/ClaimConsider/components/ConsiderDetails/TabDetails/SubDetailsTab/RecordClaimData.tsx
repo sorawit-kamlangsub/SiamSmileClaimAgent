@@ -57,6 +57,9 @@ const RecordClaimData = ({
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    // เลือกเคลมต่อเนื่องแล้ว = วันที่เกิดเหตุ/อาการสำคัญถูกล็อคตามเคลมเดิม (ดู handleSelectContinuousClaim)
+    // ห้ามแก้จนกว่าจะเอาติ๊ก "เป็นเคลมต่อเนื่อง" ออก
+    const isContinuousClaimLocked = !!values.continuousClaim;
     // const isManualIPD =
     //     values.coverageTypeId === CoverageType.Medical &&
     //     (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
@@ -177,6 +180,7 @@ const RecordClaimData = ({
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
+                                    disabled={isContinuousClaimLocked}
                                 />
                             </Box>
                         </Grid>
@@ -271,6 +275,7 @@ const RecordClaimData = ({
                                     formik={formik}
                                     size="small"
                                     required
+                                    disabled={isContinuousClaimLocked}
                                 />
                             </Box>
                         </Grid>

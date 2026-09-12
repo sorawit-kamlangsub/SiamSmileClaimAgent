@@ -21,7 +21,7 @@ import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRev
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType, formatDateString } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
@@ -226,6 +226,19 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         onSubmit: () => {},
     });
 
+    /**
+     * ค่า incidentDate/chiefComplaintId ก่อนล็อคตามเคลมต่อเนื่อง — เก็บไว้ครั้งแรกที่เลือกเท่านั้น
+     * (ไม่ทับซ้ำถ้าผู้ใช้เปลี่ยนเคลมต่อเนื่องที่เลือกอีกรอบ) เพื่อคืนค่าเดิมเมื่อเอาติ๊กออก
+     */
+    const preContinuousClaimValuesRef = useRef<{ incidentDate?: Dayjs; chiefComplaintId?: number } | null>(null);
+
+    const restorePreContinuousClaimValues = () => {
+        if (!preContinuousClaimValuesRef.current) return;
+        formik.setFieldValue("incidentDate", preContinuousClaimValuesRef.current.incidentDate);
+        formik.setFieldValue("chiefComplaintId", preContinuousClaimValuesRef.current.chiefComplaintId);
+        preContinuousClaimValuesRef.current = null;
+    };
+
     /** เปิด/ปิด Modal เลือกเคลมต่อเนื่อง ตามการติ๊ก Checkbox */
     const handleToggleContinuousClaim = (checked: boolean) => {
         formik.setFieldValue("isContinuousClaim", checked);
@@ -235,18 +248,27 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             return;
         }
 
+        restorePreContinuousClaimValues();
         formik.setFieldValue("continuousClaim", undefined);
     };
 
     const handleSelectContinuousClaim = (row: ContinuousClaimRow) => {
+        if (!preContinuousClaimValuesRef.current) {
+            preContinuousClaimValuesRef.current = {
+                incidentDate: formik.values.incidentDate,
+                chiefComplaintId: formik.values.chiefComplaintId,
+            };
+        }
         formik.setFieldValue("continuousClaim", row);
         // เลือกเคลมต่อเนื่อง = เหตุเดียวกับเคลมเดิม ดึงวันที่เกิดเหตุ/อาการสำคัญของเคลมเดิมมาเติมให้เลย
+        // (ล็อค 2 field นี้ไว้ไม่ให้แก้ — ดู RecordClaimData ที่ disabled ตาม values.continuousClaim)
         if (row.incidentDateRaw) formik.setFieldValue("incidentDate", row.incidentDateRaw);
         if (row.chiefComplaintIdRaw) formik.setFieldValue("chiefComplaintId", row.chiefComplaintIdRaw);
         setContinuousClaimOpen(false);
     };
 
     const handleClearContinuousClaim = () => {
+        restorePreContinuousClaimValues();
         formik.setFieldValue("continuousClaim", undefined);
         formik.setFieldValue("isContinuousClaim", false);
     };
