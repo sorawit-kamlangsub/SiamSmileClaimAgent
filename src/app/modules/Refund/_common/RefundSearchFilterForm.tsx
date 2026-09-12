@@ -104,7 +104,7 @@ const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterF
                 </Grid>
             </Grid>
 
-            <Grid container spacing={2} sx={{ marginTop: "4px" }} alignItems="flex-start">
+            <Grid container spacing={2} sx={{ marginTop: "4px" }}>
                 <Grid item xs={12} sm={4} md={3}>
                     <FormikDropdown
                         name="searchBy"
@@ -132,7 +132,7 @@ const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterF
                     />
                 </Grid>
 
-                <Grid item xs={12} sm={6} md={3}>
+                <Grid item xs={12} sm={6} md={3} sx={{ display: "flex", alignItems: "center" }}>
                     <Button
                         type="submit"
                         fullWidth
