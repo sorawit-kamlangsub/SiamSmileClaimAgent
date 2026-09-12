@@ -24,6 +24,13 @@ export interface RefundItemsTableProps<T extends RefundItemsFormValues> {
 
 const DOUBLE_INPUT_REGEX = /^\d*\.?\d{0,2}$/;
 
+const formatWithCommas = (value: string): string => {
+    if (!value) return "";
+    const [intPart, decimalPart] = value.split(".");
+    const intWithCommas = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return decimalPart !== undefined ? `${intWithCommas}.${decimalPart}` : intWithCommas;
+};
+
 const RefundItemsTable = <T extends RefundItemsFormValues>({ formik }: RefundItemsTableProps<T>) => {
     const totalAdditionalAmount = useMemo(
         () => formik.values.items.reduce((sum, item) => sum + (Number(item.additionalAmount) || 0), 0),
@@ -93,7 +100,7 @@ const RefundItemsTable = <T extends RefundItemsFormValues>({ formik }: RefundIte
                                     size="small"
                                     type="text"
                                     placeholder="0.00"
-                                    value={item?.additionalAmount || ""}
+                                    value={formatWithCommas(String(item?.additionalAmount ?? ""))}
                                     onChange={(e) => handleAmountChange(dataIndex, e.target.value)}
                                     inputProps={{
                                         inputMode: "decimal",
