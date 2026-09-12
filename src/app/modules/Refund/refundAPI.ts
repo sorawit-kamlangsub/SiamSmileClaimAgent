@@ -16,30 +16,40 @@ export type GetRefundMonitorFilterType = {
     branceId: number | undefined | null;
     refundStatusId: number | undefined | null;
     pagination: PaginationDto;
+    searchDetail?: string | undefined | null;
+    searchKey?: number;
+    enabled?: boolean;
 };
 
 export const useGetRefundMonitorWithFilter = ({
     branceId,
     refundStatusId,
     pagination,
+    searchDetail,
+    searchKey,
+    enabled,
 }: GetRefundMonitorFilterType) => {
-    return useQuery([branceId, refundStatusId, pagination, getRefundMonitor], () =>
-        getRefundMonitorData({ branceId, refundStatusId, pagination })
-    , {
-        enabled: !!refundStatusId,
-        refetchOnMount: "always",
-        cacheTime: 0,
-    });
+    return useQuery(
+        [branceId, refundStatusId, pagination, searchDetail, searchKey, getRefundMonitor],
+        () => getRefundMonitorData({ branceId, refundStatusId, pagination, searchDetail }),
+        {
+            enabled: enabled ?? !!refundStatusId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
 };
 
 const getRefundMonitorData = ({
     branceId = null,
     refundStatusId = null,
     pagination,
+    searchDetail,
 }: GetRefundMonitorFilterType) => {
     const formBody = {
         branceId,
         refundStatusId,
+        ...(searchDetail ? { searchDetail } : {}),
     };
     const url = encodeURLWithParams(`${apiURL}/Refund/RefundMonitor`, {
         Page: pagination.page ?? 1,

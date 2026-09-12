@@ -18,21 +18,25 @@
   - import เฉพาะ: `useGetBranch` (IncreaseLimitTransfer/masterAPI) + `useGetRefundStatus` (Refund/refundAPI)
   - export: `RefundSearchFilterValues` (`searchBy`, `searchText`, `branchId`, `statusId`, `transferDateFrom/To`) + `RefundSearchFilterFormProps` (`initialValues?`, `onSubmit`)
   - มี dropdown สาขา / สถานะ refund / ช่วงวันที่, ปุ่มค้นหา
-- `RefundApprovePage.tsx` → ใช้ `RefundSearchFilterForm` แล้ว
+- **`refundAPI.ts`** → ขยาย `GetRefundMonitorFilterType` เพิ่ม `searchDetail?`, `searchKey?`, `enabled?` และรวมเข้า query key — **ทุกกดค้นหา (searchKey เปลี่ยน) call API ใหม่เสมอ** ส่วน `enabled` default เท่าเดิม (`!!refundStatusId`) จึงไม่กระทบ `RefundDataTableHook` เดิม
+  - `getRefundMonitorData` POST body เพิ่ม `searchDetail` เฉพาะเมื่อมีค่า (ไม่ส่งถ้า null/empty)
+- **`RefundApprovePage.tsx`** → ใช้ `RefundSearchFilterForm` แล้ว
   - state: `filter: RefundSearchFilterValues | undefined`, `hasSearched: boolean`, `searchKey: number`
   - `handleSearch` = setFilter + hasSearched=true + `searchKey+1` → **ทุกกดค้นหา call API ใหม่ (searchKey ใน query key)**
-  - ใช้ `useGetRefundApproveMonitor({ branceId: filter.branchId, refundStatusId: filter.statusId, searchDetail: filter.searchText, pagination, enabled, searchKey })`
+- **`RefundApprove/hooks/RefundApproveDataTableHook.tsx`** → เลิกใช้ mock dataMock เปลี่ยนเป็นยิง `useGetRefundMonitorWithFilter` จริง
+  - รับ props `{ filter, hasSearched, searchKey }` (import type จาก `Refund/_common/RefundSearchFilterForm`)
+  - mapping: `searchText→searchDetail`, `branchId→branceId`, `statusId→refundStatusId`
+  - columns แสดงผลจาก response จริง; actions: status 2 → ดำเนินการ, status 3 → ดูรายละเอียด
+- **`RefundApprove/components/RefundApproveDataTable.tsx`** → รับ props `{ filter, hasSearched, searchKey }` ส่งต่อให้ hook
+  - ใช้ `ClaimFundStandardDataTable` + `delayNoMatch={hasSearched}`
 
-### ค้าง ⏳ (ไฟล์ 2 ไฟล์ยังอ้าง shared type)
-- `RefundApprove/components/RefundApproveDataTable.tsx` — import `ClaimSearchFilterValues` จาก `.../IncreaseLimitTransfer/_common/ClaimSearchFilterForm`
-- `RefundApprove/hooks/RefundApproveDataTableHook.tsx` — import เดียวกันกับข้างบน
+### ค้าง ⏳ (งานต่อไป)
+- ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
+- typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)
 
-ต้องเปลี่ยน: import type → `RefundSearchFilterValues` จาก `../../Refund/_common/RefundSearchFilterForm` และ mapping prop ตามหน้า (searchText→searchDetail, branchId→branceId, statusId→refundStatusId)
-
-### ขั้นตอนต่อไป
-1. `read` 2 ไฟล์นั้น (components + hooks) ด้วย `read` tool
-2. `edit` oldString = import line จริงจาก read ข้างบน
-3. `npx tsc --noEmit` สำหรับ typecheck
+### ขั้นตอนต่อไป (ถ้าทำต่องาน)
+1. เปิด dialog / navigate เมื่อกด action ใน `RefundApproveDataTableHook`
+2. `npx tsc --noEmit` สำหรับ typecheck
 
 ## เดินหน้าแบบตรงไปตรงมา
 - อ่านด้วย `read` → แก้ด้วย `edit` (oldString จาก read แท้) — อย่าใช้ bash เป็นแหล่ง byte

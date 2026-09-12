@@ -1,22 +1,30 @@
-import { useState } from "react";
-import { PaginationSortableDto, StandardDataTable } from "../../_common";
+import { ClaimFundStandardDataTable } from "../../_common";
 import useRefundApproveDataTableHook from "../hooks/RefundApproveDataTableHook";
+import { RefundSearchFilterValues } from "../../Refund/_common/RefundSearchFilterForm";
 
-const RefundApproveDataTable = () => {
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 5,
+type RefundApproveDataTableProps = {
+    filter: RefundSearchFilterValues | undefined;
+    hasSearched: boolean;
+    searchKey: number;
+};
+
+const RefundApproveDataTable = ({ filter, hasSearched, searchKey }: RefundApproveDataTableProps) => {
+    const { columns, data, isLoading, pagination, setPaginated } = useRefundApproveDataTableHook({
+        filter,
+        hasSearched,
+        searchKey,
     });
-    const { columns, dataMock } = useRefundApproveDataTableHook();
     return (
         <>
-            <StandardDataTable
+            <ClaimFundStandardDataTable
                 name="refundApprove"
                 columns={columns}
-                data={dataMock ?? []}
+                data={data ?? []}
                 color="primary"
-                paginated={paginated}
+                paginated={pagination}
                 setPaginated={setPaginated}
+                isLoading={isLoading}
+                delayNoMatch={hasSearched}
             />
         </>
     );
