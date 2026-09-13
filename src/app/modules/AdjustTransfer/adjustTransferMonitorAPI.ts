@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { API_CLAIM_FUND_URL } from "../../../Const";
+import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
-const apiURL = `${API_CLAIM_FUND_URL}/api/ClaimFund/AdditionalTransfer`;
+const apiURL = `${APIGW_CLAIM_FUND_API_URL}/AdditionalTransfer`;
 
 const getClaimAdjustMonitor = "getClaimAdjustMonitorKey";
 
