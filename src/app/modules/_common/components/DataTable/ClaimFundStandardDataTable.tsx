@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../types";
 import StandardDataTable from "./StandardDataTable";
 
-const LOADING_NO_DATA_DELAY_MS = 3000;
+const LOADING_NO_DATA_DELAY_MS = 30000;
 
 const mapErrorMessage = (err: unknown): string => {
     const message =
