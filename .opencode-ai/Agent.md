@@ -7,6 +7,7 @@
 - รายละเอียดสถานะงานปัจจุบัน ดูได้ที่ `ClaimFundRefundSkill.md`
 - สไตล์การเขียนโค้ด ดูได้ที่ `AUN.md` (อ่าน `§0`–`§2` เสมอ แล้วอ่านเฉพาะ section ที่เกี่ยวกับงาน)
 - กฎเตือนตัวเองไม่ให้ฟุ้งซ่าน → อ่าน `FOCUS.md` (หลัก 6 ข้อ ทวนก่อนลงมือทุกครั้ง)
+- **งานโอนเงินเคลมเพิ่ม (ขยายวงเงิน / IncreaseLimitTransfer) → อ่าน `ClaimFundAdditionalTransfer.md` ก่อนเสมอ**
 
 ## สารบัญ Skill (.opencode-ai/skills)
 
