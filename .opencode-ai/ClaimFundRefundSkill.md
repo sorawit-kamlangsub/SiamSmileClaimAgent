@@ -40,11 +40,17 @@
   - `RefundApproveDataTable.tsx`: ส่ง `isError`/`error` ต่อจาก hook → `ClaimFundStandardDataTable` (ถ้า `isError` จะแสดงข้อความ error แทน noMatch)
   - `getRefundApproveMonitorData`: เปลี่ยนลอจิก error — `isSuccess:false` เดิมคืน `{...res.data, data:[]}` เงียบ (ขึ้น "ไม่พบข้อมูล") → เปลี่ยนเป็น throw `res.data.message`; catch สำคัญเอา `response.data?.message` ก่อน `err.message` แล้วค่อย fallback เป็น ""
   - **อย่าลืม:** อย่า `throw err.message` ตรง ๆ จาก `catch (err: Error)` เพราะ axios HTTP error จะได้แค่ "Request failed with status code 404" เสมอ — ต้องขุด `err.response.data.message` ก่อนเสมอ
-- **Timeout API monitor อนุมัติคืนเงิน = 30 วิ** — `.post(url, body, { timeout: 3000 })` เฉพาะ `getRefundApproveMonitorData` (หน้า Refund ยังไม่ได้ตั้ง)
+- **Timeout API monitor อนุมัติคืนเงิน = 30 วิ** — `.post(url, body, { timeout: 30000 })` เฉพาะ `getRefundApproveMonitorData` (หน้า Refund ยังไม่ได้ตั้ง)
 - **ส่งช่วงวันที่โอนคืน (`transferDateFrom`/`transferDateTo`) เฉพาะ monitor อนุมัติคืนเงิน (RefundApproveMonitor)** — contract ยืนยันกับ user แล้ว
   - `GetRefundMonitorFilterType` เพิ่ม `transferDateFrom?`/`transferDateTo?` (type `Dayjs`)
   - `getRefundApproveMonitorData`: ใส่ใน POST body **เฉพาะเมื่อมีค่า โดย field name ใน body = `fromDate`/`toDate`** (ไม่ใช่ `transferDateFrom/To`) `format("YYYY-MM-DD")` (เหมือน `searchDetail` — null/undefined = ไม่ส่ง) — ใส่ใน query key ด้วย (กดค้นหาใหม่ call ใหม่)
   - `RefundApproveDataTableHook`: ส่ง `filter?.transferDateFrom/To` ต่อจาก `RefundSearchFilterForm` (filter form default = วันนี้ทั้ง From และ To)
+- **คอลัมน์ "เลขที่ CPG" → "เลขที่ CL"** — `RefundApproveDataTableHook` column `claimNo` label เปลี่ยนเป็น "เลขที่ CL" (เลขที่ CL = claimNo แบบเดียวกับหน้า Refund)
+- **ข้อมูลต่อหน้าเริ่มที่ 10 (หน้า monitor อนุมัติคืนเงิน + หน้า Refund)**
+  - `RefundApproveDataTableHook`: default state `recordsPerPage` 5 → **10** (ส่ง API + dropdown เริ่มที่ 10)
+  - **ต้นตอที่แก้ไปแล้วยังเห็น 5:** `pagination` memo ใช้ `recordsPerPage: getRefundMonitorData?.recordsPerPage ?? 0` — ตอนยังไม่มี API response (หลังโหลดหน้าก่อนค้นหา) ค่าเป็น 0 → `StandardDataTable` เผลอ fallback ไป `rowsPerPageOptions[0]` = 5
+  - **ทางแก้:** เปลี่ยน fallback เป็น `?? paginated.recordsPerPage` + ใส่ `paginated` ใน deps ของ `useMemo` — ทำทั้ง `RefundApproveDataTableHook` และ `Refund/RefundDataTableHook` (ฝั่ง Refund set state เป็น 10 อยู่แล้ว แก้แค่ memo)
+  - ไม่แก้ใน `ClaimFundStandardDataTable`/`StandardDataTable` เพราะ default `[5,10,...]` เป็น shared ที่กระทบทุกตาราง ClaimFund — ถ้า user อยากให้ทั่วระบบค่อยว่าใหม่
 
 ### ค้าง ⏳ (งานต่อไป)
 - ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
