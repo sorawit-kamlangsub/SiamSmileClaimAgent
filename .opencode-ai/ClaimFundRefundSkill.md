@@ -75,4 +75,4 @@
 
 - เมื่อยังไม่ search (`hasSearched=false`): `isLoading=false` → `ClaimFundStandardDataTable` แสดง default `noMatchText` = **"ไม่พบข้อมูล"**
 - เมื่อ search แล้ว: `isLoading` ตามจริง → ขึ้น "กำลังโหลดข้อมูล..." ระหว่าง fetch ตามปกติ
-- กรณี `enabled` ไม่ได้ใช้และ query fire ทันที (ไม่มี gate) จะไม่เกิดปัญหานี้
+- กรณี `enabled` ไม่ได้ใช้และ query fire ทันที (ไม่มี gate) จะไม่เกิดปัญหานี้ 
