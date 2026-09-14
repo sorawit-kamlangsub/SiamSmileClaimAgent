@@ -63,7 +63,12 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
         page: 1,
         recordsPerPage: 5,
     });
-    const { data: getRefundMonitorData, isLoading: isGetRefundLoading } = useGetRefundApproveMonitorWithFilter({
+    const {
+        data: getRefundMonitorData,
+        isLoading: isGetRefundLoading,
+        isError: isGetRefundError,
+        error: getRefundError,
+    } = useGetRefundApproveMonitorWithFilter({
         branceId: filter?.branchId ?? null,
         refundStatusId: filter?.statusId ?? null,
         searchDetail: filter?.searchText,
@@ -207,7 +212,7 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
         },
     ];
 
-    return { columns, data, isLoading: isGetRefundLoading, pagination, setPaginated };
+    return { columns, data, isLoading: isGetRefundLoading, isError: isGetRefundError, error: getRefundError, pagination, setPaginated };
 };
 
 export default useRefundApproveDataTableHook;

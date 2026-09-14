@@ -9,7 +9,7 @@ type RefundApproveDataTableProps = {
 };
 
 const RefundApproveDataTable = ({ filter, hasSearched, searchKey }: RefundApproveDataTableProps) => {
-    const { columns, data, isLoading, pagination, setPaginated } = useRefundApproveDataTableHook({
+    const { columns, data, isLoading, isError, error, pagination, setPaginated } = useRefundApproveDataTableHook({
         filter,
         hasSearched,
         searchKey,
@@ -24,6 +24,8 @@ const RefundApproveDataTable = ({ filter, hasSearched, searchKey }: RefundApprov
                 paginated={pagination}
                 setPaginated={setPaginated}
                 isLoading={hasSearched ? isLoading : false}
+                isError={hasSearched ? isError : false}
+                error={error}
                 noMatchText={NOT_FOUND_MESSAGE}
                 delayNoMatch={false}
             />

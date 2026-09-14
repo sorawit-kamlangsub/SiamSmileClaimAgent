@@ -105,16 +105,16 @@ const getRefundApproveMonitorData = ({
         recordsPerPage: pagination.recordsPerPage ?? 10,
     });
     return axios
-        .post(url, formBody)
+        .post(url, formBody, { timeout: 30000 })
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;
-            } else {
-                return { ...res.data, data: [] };
             }
+            throw new Error(res.data.message ?? "");
         })
-        .catch((err: Error) => {
-            throw err.message;
+        .catch((err) => {
+            const error = err as { response?: { data?: { message?: string } }; message?: string };
+            throw error.response?.data?.message ?? error.message ?? "";
         });
 };
 

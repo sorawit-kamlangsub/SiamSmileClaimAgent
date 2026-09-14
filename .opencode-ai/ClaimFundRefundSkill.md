@@ -30,6 +30,18 @@
 - **`RefundApprove/components/RefundApproveDataTable.tsx`** → รับ props `{ filter, hasSearched, searchKey }` ส่งต่อให้ hook
   - ใช้ `ClaimFundStandardDataTable` + `delayNoMatch={hasSearched}`
 
+### เสร็จแล้วเพิ่มเติม (session รอบหลัง) ✅
+- **ตาราง monitor อนุมัติคืนเงิน (RefundApprove) → switch ไปใช้ API `Refund/RefundApproveMonitor`** (เดิมใช้ `Refund/RefundMonitor` ร่วมกับหน้า Refund)
+  - `refundAPI.ts`: เพิ่ม key `getRefundApproveMonitorKey` + `useGetRefundApproveMonitorWithFilter` + `getRefundApproveMonitorData` — contract เดียวกับ `RefundMonitor` (POST body `branceId`/`refundStatusId`/`searchDetail` + query `Page`/`recordsPerPage`, response pagination เดิม) — `RefundMonitor` และ hook เดิมคงไว้ให้หน้า Refund ใช้ต่อ
+  - `RefundApproveDataTableHook.tsx`: import สลับเป็น `useGetRefundApproveMonitorWithFilter`
+- **Empty state (โหลดเสร็จแล้ว `data=[]`) → ขึ้น "ไม่พบข้อมูล" ทันที**
+  - `RefundApproveDataTable.tsx`: ใช้ `noMatchText={NOT_FOUND_MESSAGE}` (constant จาก `claimFundStandardAlertMessage.ts`) + `delayNoMatch={false}` — เลิกแสดง "กำลังโหลดข้อมูล..." ค้างอีก 30 วิ (pitfall จาก `LOADING_NO_DATA_DELAY_MS` ใน `ClaimFundStandardDataTable`: effect reset timer ตอน `isLoading` เปลี่ยน → `minDelayReached` มา 30 วิหลังโหลดเสร็จ)
+- **Error display 404 / error อื่น → เข้า table ผ่าน `mapErrorMessage` กลางของ ClaimFund**
+  - `RefundApproveDataTable.tsx`: ส่ง `isError`/`error` ต่อจาก hook → `ClaimFundStandardDataTable` (ถ้า `isError` จะแสดงข้อความ error แทน noMatch)
+  - `getRefundApproveMonitorData`: เปลี่ยนลอจิก error — `isSuccess:false` เดิมคืน `{...res.data, data:[]}` เงียบ (ขึ้น "ไม่พบข้อมูล") → เปลี่ยนเป็น throw `res.data.message`; catch สำคัญเอา `response.data?.message` ก่อน `err.message` แล้วค่อย fallback เป็น ""
+  - **อย่าลืม:** อย่า `throw err.message` ตรง ๆ จาก `catch (err: Error)` เพราะ axios HTTP error จะได้แค่ "Request failed with status code 404" เสมอ — ต้องขุด `err.response.data.message` ก่อนเสมอ
+- **Timeout API monitor อนุมัติคืนเงิน = 30 วิ** — `.post(url, body, { timeout: 3000 })` เฉพาะ `getRefundApproveMonitorData` (หน้า Refund ยังไม่ได้ตั้ง)
+
 ### ค้าง ⏳ (งานต่อไป)
 - ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
 - typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)
