@@ -48,20 +48,20 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
         isLoading: claimTransactionDataLoading,
         isError: claimTransactionDataError,
     } = useGetCustomerClaimAdjudicationMonitor(
-            appliedFilter.isSearch,
-            appliedFilter.dateType,
-            appliedFilter.dateFrom,
-            appliedFilter.dateTo,
-            isProductTypeId_PH,
-            isProductTypeId_PA,
-            appliedFilter.statusId,
-            appliedFilter.searchFrom,
-            appliedFilter.searchDetail,
-            undefined,
-            undefined,
-            paginated.page,
-            paginated.recordsPerPage
-        );
+        appliedFilter.isSearch,
+        appliedFilter.dateType,
+        appliedFilter.dateFrom,
+        appliedFilter.dateTo,
+        isProductTypeId_PH,
+        isProductTypeId_PA,
+        appliedFilter.statusId,
+        appliedFilter.searchFrom,
+        appliedFilter.searchDetail,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
     const pagination: PaginationResultDto = useMemo(
         () => ({
             totalAmountRecords: claimTransactionData?.totalAmountRecords ?? 0,
