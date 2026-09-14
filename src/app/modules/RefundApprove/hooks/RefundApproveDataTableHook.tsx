@@ -105,7 +105,7 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
     const columns: MUIDataTableColumn[] = [
         {
             name: "claimNo",
-            label: "เลขที่ CPG",
+            label: "เลขที่ CL",
             options: {
                 sort: false,
                 filter: false,
