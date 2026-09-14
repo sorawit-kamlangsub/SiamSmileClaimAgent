@@ -175,7 +175,10 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
 
             if (activeStep === 1) {
                 const totals = sumClaimExpenseItems(filledItems);
-                const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount: paymentAmount ?? 0 });
+                // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
+                // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ
+                // ทั้งที่ควรเป็น "pending" (ดู ClaimAmountReconciliationInput.paymentAmount)
+                const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
                 if (reconciliation.status === "error") {
                     swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
                     return;

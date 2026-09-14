@@ -165,10 +165,12 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
             description: item.descriptionTH ?? "",
-            receiptAmount: undefined,
-            claimAmount: item.originalAmount ?? undefined,
+            // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — สิทธิ์เบิก/ยอดไม่คุ้มครองเป็นค่าที่ User
+            // ต้องพิจารณากรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
+            receiptAmount: item.originalAmount ?? undefined,
+            claimAmount: undefined,
             discount: item.discountAmount ?? undefined,
-            notCovered: item.nonCoveredAmount ?? undefined,
+            notCovered: undefined,
             // API อาจส่ง 0 เมื่อไม่มีสาเหตุ : normalize เป็น undefined กัน payload ส่ง reasonId = 0
             reason: item.nonCoveredReasonId || undefined,
             remark: item.remark ?? undefined,
@@ -275,13 +277,16 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
 
     // ยอดที่จ่ายจริง = paymentAmount ตัวเดียวกับการ์ด "สรุปรายการแจ้งโอน" (ExpenseDetails.tsx) — ไม่ใช่
     // ค่าที่คำนวณจากรายการค่ารักษาฝั่ง FE เอง เพราะ netClaimAmount ไม่ได้ถูก cap ด้วยยอดใบเสร็จ/สิทธิ์เบิก
-    const paymentAmount = detailData?.data?.paymentAmount ?? 0;
+    // undefined (ยังไม่ถึงขั้นตอนแจ้งโอน) ใช้ ?? 0 เฉพาะตอนแสดงผลการ์ด — ต้องส่งค่าดิบเข้า reconciliation
+    // เพื่อไม่ให้ขึ้น warningDeficit ก่อนมีข้อมูลยอดโอนจริง
+    const rawPaymentAmount = detailData?.data?.paymentAmount;
+    const paymentAmount = rawPaymentAmount ?? 0;
     const amountReconciliation = getClaimAmountReconciliation({
         totalReceipt,
         totalClaim,
         totalDiscount,
         totalNotCovered,
-        paymentAmount,
+        paymentAmount: rawPaymentAmount,
     });
     const filterFilledItems = (items: ClaimExpenseItem[]) =>
         items.filter((item) => {

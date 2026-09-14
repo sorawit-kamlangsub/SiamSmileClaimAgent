@@ -7,7 +7,10 @@ import {
     useGetCustomerDetailById,
 } from "../../../../api/coreClaimApi";
 import {
+    useGetAllHospital,
+    useGetChiefComplaint,
     useGetDecisionReason,
+    useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
 } from "../../../../api/coreClaimMastersApi";
@@ -18,7 +21,7 @@ import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRev
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
-import dayjs from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import { CoverageType, formatDateString, safeAtob } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
@@ -123,6 +126,12 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             icon: INCIDENT_ICON_MAP[item.incidentTypeId ?? 0],
         })) ?? [];
 
+    // master list ที่ dropdown ใน RecordClaimData ใช้ — เรียกที่นี่ด้วย (query key เดียวกัน dedupe ไม่ยิงซ้ำ)
+    // เพื่อรวมสถานะ loading ไว้ gate ทั้ง Step 1 (เหมือน useHospitalConsiderDetailHook)
+    const { isLoading: hospitalListLoading } = useGetAllHospital();
+    const { isLoading: chiefComplaintListLoading } = useGetChiefComplaint();
+    const { isLoading: icd10ListLoading } = useGetICD10();
+
     const formik = useFormik<ClaimConsiderValues>({
         initialValues: { ...form },
         validate: (values) => {
@@ -217,6 +226,19 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         onSubmit: () => {},
     });
 
+    /**
+     * ค่า incidentDate/chiefComplaintId ก่อนล็อคตามเคลมต่อเนื่อง — เก็บไว้ครั้งแรกที่เลือกเท่านั้น
+     * (ไม่ทับซ้ำถ้าผู้ใช้เปลี่ยนเคลมต่อเนื่องที่เลือกอีกรอบ) เพื่อคืนค่าเดิมเมื่อเอาติ๊กออก
+     */
+    const preContinuousClaimValuesRef = useRef<{ incidentDate?: Dayjs; chiefComplaintId?: number } | null>(null);
+
+    const restorePreContinuousClaimValues = () => {
+        if (!preContinuousClaimValuesRef.current) return;
+        formik.setFieldValue("incidentDate", preContinuousClaimValuesRef.current.incidentDate);
+        formik.setFieldValue("chiefComplaintId", preContinuousClaimValuesRef.current.chiefComplaintId);
+        preContinuousClaimValuesRef.current = null;
+    };
+
     /** เปิด/ปิด Modal เลือกเคลมต่อเนื่อง ตามการติ๊ก Checkbox */
     const handleToggleContinuousClaim = (checked: boolean) => {
         formik.setFieldValue("isContinuousClaim", checked);
@@ -226,18 +248,27 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             return;
         }
 
+        restorePreContinuousClaimValues();
         formik.setFieldValue("continuousClaim", undefined);
     };
 
     const handleSelectContinuousClaim = (row: ContinuousClaimRow) => {
+        if (!preContinuousClaimValuesRef.current) {
+            preContinuousClaimValuesRef.current = {
+                incidentDate: formik.values.incidentDate,
+                chiefComplaintId: formik.values.chiefComplaintId,
+            };
+        }
         formik.setFieldValue("continuousClaim", row);
         // เลือกเคลมต่อเนื่อง = เหตุเดียวกับเคลมเดิม ดึงวันที่เกิดเหตุ/อาการสำคัญของเคลมเดิมมาเติมให้เลย
+        // (ล็อค 2 field นี้ไว้ไม่ให้แก้ — ดู RecordClaimData ที่ disabled ตาม values.continuousClaim)
         if (row.incidentDateRaw) formik.setFieldValue("incidentDate", row.incidentDateRaw);
         if (row.chiefComplaintIdRaw) formik.setFieldValue("chiefComplaintId", row.chiefComplaintIdRaw);
         setContinuousClaimOpen(false);
     };
 
     const handleClearContinuousClaim = () => {
+        restorePreContinuousClaimValues();
         formik.setFieldValue("continuousClaim", undefined);
         formik.setFieldValue("isContinuousClaim", false);
     };
@@ -512,6 +543,33 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         formik.values.considerResult
     );
 
+    /**
+     * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
+     * (เหมือน useHospitalConsiderDetailHook) — นับเฉพาะ query ที่ป้อนค่า default ให้ field ในฟอร์ม
+     */
+    const rawStep1Loading =
+        detailDataLoading ||
+        customerDetailLoading ||
+        incidentTypeLoading ||
+        incidentTypeMappingLoading ||
+        hospitalListLoading ||
+        chiefComplaintListLoading ||
+        icd10ListLoading;
+
+    /**
+     * เพดานเวลา : ถ้า API get ข้อมูลไม่สำเร็จ (error / retry ค้าง) ไม่รอเกิน 8 วิ — ปลดล็อกฟอร์มให้กรอกมือ
+     * field ไหนไม่มีข้อมูล default ก็ปล่อยว่างให้ผู้ใช้กรอกเอง
+     */
+    const [loadingTimedOut, setLoadingTimedOut] = useState(false);
+    useEffect(() => {
+        setLoadingTimedOut(false);
+        if (!rawStep1Loading) return;
+        const timer = window.setTimeout(() => setLoadingTimedOut(true), 8000);
+        return () => window.clearTimeout(timer);
+    }, [claimId, rawStep1Loading]);
+
+    const isStep1Loading = rawStep1Loading && !loadingTimedOut;
+
     return {
         formik,
         detailData,
@@ -524,6 +582,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         incidentTypeMappingLoading,
         incidentType,
         incidentTypeLoading,
+        isStep1Loading,
         decisionReason,
         decisionReasonLoading,
         attachedDocuments,

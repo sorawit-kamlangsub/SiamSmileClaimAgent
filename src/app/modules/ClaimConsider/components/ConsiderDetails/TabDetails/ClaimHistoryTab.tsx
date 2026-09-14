@@ -23,7 +23,7 @@ import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import { StandardDataTable } from "../../../../_common";
 import CardClaimInfo from "../../_common/CardClaimInfo";
 import useClaimHistoryTab, { CLAIM_HISTORY_SORT_OPTIONS } from "../../../hooks/ClaimConsiderDetail/useClaimHistoryTab";
@@ -259,24 +259,24 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
                 </FormControl>
             </Box>
 
-            {items.length === 0 ? (
-                <Box sx={{ py: 6, textAlign: "center" }}>
-                    {isError ? (
-                        <>
-                            <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 1 }} />
-                            <Typography color="error.main">
-                                ไม่สามารถโหลดประวัติการเคลมได้ กรุณาลองใหม่อีกครั้ง
-                            </Typography>
-                        </>
-                    ) : (
-                        <>
-                            <HistoryToggleOffIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
-                            <Typography color="text.disabled">ไม่พบประวัติการเคลม</Typography>
-                        </>
-                    )}
-                </Box>
-            ) : (
-                <LinearLoading isLoading={isLoading}>
+            <LoadingOverlay isLoading={isLoading} minHeight={300}>
+                {!isLoading && items.length === 0 ? (
+                    <Box sx={{ py: 6, textAlign: "center" }}>
+                        {isError ? (
+                            <>
+                                <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 1 }} />
+                                <Typography color="error.main">
+                                    ไม่สามารถโหลดประวัติการเคลมได้ กรุณาลองใหม่อีกครั้ง
+                                </Typography>
+                            </>
+                        ) : (
+                            <>
+                                <HistoryToggleOffIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                                <Typography color="text.disabled">ไม่พบประวัติการเคลม</Typography>
+                            </>
+                        )}
+                    </Box>
+                ) : (
                     <StandardDataTable
                         name="claimHistoryTable"
                         title=""
@@ -289,8 +289,8 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
                         setPaginated={setPaginated}
                         displayToolbar={false}
                     />
-                </LinearLoading>
-            )}
+                )}
+            </LoadingOverlay>
         </CustomPaper>
     );
 };

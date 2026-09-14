@@ -4,7 +4,7 @@ import CustomPaper from "../../../../_common/components/CustomComponent/CustomPa
 import usePolicyBenefitHook from "../../../hooks/ClaimConsiderDetail/PolicyBenefitHook";
 import { MUIDataTableColumn } from "mui-datatables";
 import { cellAlignOptions, numberWithCommas } from "../../../../../functionHelpers";
-import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import { StandardDataTable } from "../../../../_common";
 import { Alert, TableRow, TableCell } from "@mui/material";
 import { useMemo } from "react";
@@ -92,7 +92,7 @@ const PolicyBenefitTab = ({ customerDetail }: PolicyBenefitTabProps) => {
                     ไม่สามารถโหลดรายการความคุ้มครองได้ กรุณาลองใหม่อีกครั้ง
                 </Alert>
             )}
-            <LinearLoading isLoading={benefitLoading}>
+            <LoadingOverlay isLoading={benefitLoading} minHeight={300}>
                 <StandardDataTable
                     name="benefitTable"
                     title=""
@@ -144,7 +144,7 @@ const PolicyBenefitTab = ({ customerDetail }: PolicyBenefitTabProps) => {
                     }}
                     displayFooter={false}
                 />
-            </LinearLoading>
+            </LoadingOverlay>
         </CustomPaper>
     );
 };

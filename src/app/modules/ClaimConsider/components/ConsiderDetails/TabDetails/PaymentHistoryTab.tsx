@@ -10,7 +10,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import { StandardDataTable } from "../../../../_common";
 import CardClaimInfo from "../../_common/CardClaimInfo";
 import usePaymentHistoryTab from "../../../hooks/ClaimConsiderDetail/usePaymentHistoryTab";
@@ -172,24 +172,24 @@ const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
                 />
             </Box>
 
-            {items.length === 0 ? (
-                <Box sx={{ py: 6, textAlign: "center" }}>
-                    {isError ? (
-                        <>
-                            <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 1 }} />
-                            <Typography color="error.main">
-                                ไม่สามารถโหลดข้อมูลการชำระเงินได้ กรุณาลองใหม่อีกครั้ง
-                            </Typography>
-                        </>
-                    ) : (
-                        <>
-                            <PaymentsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
-                            <Typography color="text.disabled">ไม่พบข้อมูลการชำระเงิน</Typography>
-                        </>
-                    )}
-                </Box>
-            ) : (
-                <LinearLoading isLoading={isLoading}>
+            <LoadingOverlay isLoading={isLoading} minHeight={300}>
+                {!isLoading && items.length === 0 ? (
+                    <Box sx={{ py: 6, textAlign: "center" }}>
+                        {isError ? (
+                            <>
+                                <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 1 }} />
+                                <Typography color="error.main">
+                                    ไม่สามารถโหลดข้อมูลการชำระเงินได้ กรุณาลองใหม่อีกครั้ง
+                                </Typography>
+                            </>
+                        ) : (
+                            <>
+                                <PaymentsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                                <Typography color="text.disabled">ไม่พบข้อมูลการชำระเงิน</Typography>
+                            </>
+                        )}
+                    </Box>
+                ) : (
                     <StandardDataTable
                         name="paymentHistoryTable"
                         title=""
@@ -215,8 +215,8 @@ const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
                             ),
                         }}
                     />
-                </LinearLoading>
-            )}
+                )}
+            </LoadingOverlay>
         </CustomPaper>
     );
 };

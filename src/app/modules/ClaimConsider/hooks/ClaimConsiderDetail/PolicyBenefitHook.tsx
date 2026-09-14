@@ -10,6 +10,8 @@ type UsePolicyBenefitHookParams = {
  * useConsiderDetailHook ซ้ำเอง — เดิมยิง query/formik ทั้งชุดซ้ำอีกรอบ (รวม useGetClaimDetailConsider,
  * useGetCustomerDetailById ฯลฯ) แค่เพื่อเอา productTypeId/policyCode/productId/customerTypeCode
  * ทำให้เปลืองและ resolve คนละจังหวะกับตัวหลัก — ตอนสลับเคลม ตารางความคุ้มครองอาจโชว์ของเคลมเก่าค้างชั่วขณะ
+ * (develop ทำ refactor เดียวกันแบบรับ customerDetailData ทั้งก้อน — คงรูปแบบรับ customerDetail
+ * ที่ unwrap แล้วไว้ตามเดิม เพื่อให้ตรงกับ ClaimHistoryTab/PaymentHistoryTab ที่รับ derived value ไม่ใช่ raw response)
  */
 const usePolicyBenefitHook = ({ customerDetail }: UsePolicyBenefitHookParams) => {
     const {

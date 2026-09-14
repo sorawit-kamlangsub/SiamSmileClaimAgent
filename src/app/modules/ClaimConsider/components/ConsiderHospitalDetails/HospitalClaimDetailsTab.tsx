@@ -1,22 +1,12 @@
-import { useState } from "react";
-import {
-    Box,
-    Button,
-    CircularProgress,
-    FormControlLabel,
-    Grid,
-    Paper,
-    Radio,
-    RadioGroup,
-    Typography,
-} from "@mui/material";
+import { useEffect, useState } from "react";
+import { Box, Button, FormControlLabel, Grid, Paper, Radio, RadioGroup, Typography } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import { FormikProvider } from "formik";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { claimConsiderSelector, resetState, setClaimForm } from "../../store/claimConsiderSlice";
@@ -43,6 +33,8 @@ import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
 import ConfirmHospitalCompensationTransferModal from "./ConfirmHospitalCompensationTransferModal";
+import DraftViewingBanner from "../ConsiderDetails/TabDetails/SubDetailsTab/DraftViewingBanner";
+import LoadingOverlay from "../../../_common/components/CustomComponent/LoadingOverlay";
 
 const steps = [{ label: "บันทึกข้อมูลเคลม" }, { label: "รายละเอียดค่าใช้จ่าย" }, { label: "สรุปรายการเคลม" }];
 
@@ -51,6 +43,19 @@ const HOSPITAL_DECISION_LABEL_OVERRIDES: Partial<Record<number, string>> = { 4: 
 
 /** หน้ารายการพิจารณาเคลมโรงพยาบาล — index ของ path นี้คือ ConsiderHospitalMonitorPage */
 const CONSIDER_HOSPITAL_MONITOR_PATH = "/consider/hospital-monitor";
+
+/**
+ * เคสที่ Redux (claimConsider) เป็นของอยู่ตอนนี้ — เก็บที่ module scope (ไม่ใช่ useRef) เพราะต้องรอด
+ * ข้าม unmount/remount ของ component นี้เอง ซึ่งเกิดบ่อยกว่าที่คิด : MUI <TabPanel> unmount children
+ * ของ tab ที่ไม่ active ทุกครั้ง (ดู node_modules/@mui/lab .../TabPanel.js — children เป็น
+ * `value === context.value && children`) สลับ tab "ข้อมูลการเคลม" ↔ "ประวัติการทำรายการ" จึง
+ * unmount/remount HospitalClaimDetailsTab ทุกรอบ ถ้าใช้ useRef ธรรมดา ref จะรีเซ็ตกลับทุกครั้งที่
+ * สลับ tab กลับมา ทำให้เข้าใจผิดว่าเป็นเคสใหม่แล้ว dispatch(resetState()) ทับ viewingDraft ที่เพิ่งกด
+ * "ดูฉบับร่าง" ไว้ตอนอยู่ tab อื่นหายไปทันที (นี่คือสาเหตุที่กด "ดูฉบับร่าง" แล้วดูเหมือนไม่มีอะไรเกิดขึ้น)
+ * รีเซ็ตธรรมชาติตอน reload หน้าเว็บ (module ถูกโหลดใหม่) เหมือน local state ปกติ ไม่ต้องเคลียร์เอง
+ */
+let reduxOwnerCaseKey: string | undefined;
+let hasClaimedReduxOnce = false;
 
 type HospitalClaimDetailsTabProps = {
     /**
@@ -107,8 +112,40 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const [mergeCompensation, setMergeCompensation] = useState(true);
     /** ข้อมูลบัญชีรับเงินค่าชดเชยตามที่ผู้ใช้แก้ไขใน Step 3 (มีผลเฉพาะรายการนี้) */
     const [editedPayoutAccount, setEditedPayoutAccount] = useState<Step3PayoutAccount>();
+    /**
+     * "บัญชีรับเงินค่าชดเชย" ยังไม่พร้อมให้อนุมัติ — true ระหว่างแก้ไขค้าง (ยังไม่กด "เสร็จสิ้น")
+     * หรือข้อมูลบัญชียังไม่ครบ (มาจาก ClaimSummaryStep3.onPayoutAccountBlockingChange) — ใช้ปิดปุ่ม "อนุมัติ"
+     */
+    const [isPayoutAccountBlocking, setIsPayoutAccountBlocking] = useState(false);
     /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+
+    /**
+     * mount ใหม่ที่ Redux เป็นของเคสอื่น (ผ่านหน้า Monitor) หรือเปลี่ยนเคสในอินสแตนซ์เดิม
+     * (route ใช้ element เดิมไม่ remount) : รีเซ็ต state ของ stepper/step3 + Redux (claimConsider)
+     *
+     * เช็คกับ reduxOwnerCaseKey (module-level) แทนการเช็คแค่ "mount ใหม่หรือเปล่า" เพราะ mount ใหม่
+     * ไม่ได้แปลว่า Redux เป็นของเคสอื่นเสมอไป — สลับ tab "ข้อมูลการเคลม" ↔ "ประวัติการทำรายการ" ก็ทำให้
+     * component นี้ mount ใหม่เหมือนกัน (MUI TabPanel unmount tab ที่ไม่ active) ถ้ารีเซ็ตทุกครั้งที่
+     * mount โดยไม่เช็คเคส จะไปทับ viewingDraft ที่เพิ่งกด "ดูฉบับร่าง" ไว้ตอนอยู่ tab อื่นหายทันที
+     * ในทางกลับกัน ถ้าไม่รีเซ็ตเลยตอน mount ใหม่ (เข้าใจผิดว่า instance ใหม่ = state สะอาดเสมอ) Redux
+     * ของเคสก่อนหน้าจะค้างข้ามมาเคสใหม่ตอนกด "กลับ" ไป Monitor (ไม่ผ่าน leaveToMonitor) แล้วคลิกเคสอื่น
+     */
+    const { id: routeClaimId, caseId: routeCaseIdEncoded } = useParams();
+    const caseKey = routeClaimId && routeCaseIdEncoded ? `${routeClaimId}:${routeCaseIdEncoded}` : undefined;
+    useEffect(() => {
+        if (hasClaimedReduxOnce && reduxOwnerCaseKey === caseKey) return;
+        hasClaimedReduxOnce = true;
+        reduxOwnerCaseKey = caseKey;
+
+        dispatch(resetState());
+        setActiveStep(0);
+        setSimBCategory("SimB2");
+        setMergeCompensation(true);
+        setEditedPayoutAccount(undefined);
+        setIsPayoutAccountBlocking(false);
+        setConfirmApproveOpen(false);
+    }, [caseKey, dispatch]);
 
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
@@ -220,8 +257,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         customerDetailData,
         // "โอนค่าชดเชยรวมกับค่ารักษา" (ติ๊ก = โอนรวม) → payload อนุมัติ isCombinedWithMedicalAll
         isCombinedWithMedicalAll: mergeCompensation,
+        // step ของ wizard (1-based) ที่กดบันทึกแบบร่างจริง — activeStep เป็น 0-based
+        draftStep: activeStep + 1,
         caseFields: {
             hn: formik.values.hn || undefined,
+            an: formik.values.an || undefined,
             vn: formik.values.vn || undefined,
         },
         // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
@@ -301,10 +341,14 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         filledItems,
     });
 
-    /** ตารางรายการค่ารักษา (Step 3) : จากผล API calculate ไม่ใช่ผลรวมฝั่ง FE */
+    /**
+     * ตารางรายการค่ารักษา (Step 3) : จากผล API calculate ไม่ใช่ผลรวมฝั่ง FE
+     * "รายการเบิก" ใช้ cover (สิทธิ์ความคุ้มครอง) ไม่ใช่ net (ยอดสุทธิที่ยื่นเบิก) —
+     * ผลรวมแถว "รวมทั้งหมด" ใน ClaimSummaryStep3 reduce จาก field นี้ จึงเปลี่ยนตามไปด้วย
+     */
     const step3TreatmentRows = (calculateResult?.medicalExpense ?? []).map((item) => ({
         benefitName: item.benefitName ?? "-",
-        amountNet: item.net ?? 0,
+        amountNet: item.cover ?? 0,
         payAmount: item.pay ?? 0,
         unPayAmount: item.unPay ?? 0,
     }));
@@ -423,6 +467,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             swalError("ไม่สามารถอนุมัติได้", "ระบบยังคำนวณยอดไม่เสร็จ กรุณากลับไป Step 2 แล้วกดถัดไปอีกครั้ง");
             return;
         }
+        // "บัญชีรับเงินค่าชดเชย" ยังแก้ไขค้างอยู่ หรือกรอกข้อมูลไม่ครบ — กันไว้อีกชั้นเผื่อปุ่มไม่ทัน disable
+        if (isPayoutAccountBlocking) {
+            swalError("ไม่สามารถอนุมัติได้", 'กรุณากรอกข้อมูล "บัญชีรับเงินค่าชดเชย" ให้ครบและกดเสร็จสิ้นก่อนอนุมัติ');
+            return;
+        }
         // ชีท IPD row 972 : เปิด Modal ยืนยันการทำรายการก่อนยิง /decision "เฉพาะ" กรณี UnChecked
         // โอนค่าชดเชยรวมกับค่ารักษา (โอนค่าชดเชยแยก) ; กรณีอื่นอนุมัติตรง
         if (isSeparateCompensation) {
@@ -464,34 +513,10 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                 />
 
                 <Box sx={{ marginTop: "20px" }}>
+                    <DraftViewingBanner />
                     {activeStep === 0 ? (
-                        <Box sx={{ position: "relative" }}>
-                            {isStep1Loading && (
-                                <Box
-                                    sx={{
-                                        position: "absolute",
-                                        inset: 0,
-                                        zIndex: 20,
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        alignItems: "center",
-                                        justifyContent: "center",
-                                        gap: 1.5,
-                                        bgcolor: "rgba(255, 255, 255, 0.65)",
-                                        borderRadius: 2,
-                                    }}
-                                >
-                                    <CircularProgress />
-                                    <Typography variant="body2" color="text.secondary">
-                                        กำลังโหลดข้อมูลเคลม...
-                                    </Typography>
-                                </Box>
-                            )}
-                            <Grid
-                                container
-                                spacing={2}
-                                sx={isStep1Loading ? { pointerEvents: "none", opacity: 0.5 } : undefined}
-                            >
+                        <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
+                            <Grid container spacing={2}>
                                 {continuousClaim && (
                                     <Grid item xs={12}>
                                         <ContinuousClaimBanner
@@ -545,7 +570,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     />
                                 </Grid>
                             </Grid>
-                        </Box>
+                        </LoadingOverlay>
                     ) : activeStep === 1 ? (
                         <Grid container spacing={2}>
                             {claimListTypeConfig.hasSimBSelector && (
@@ -593,6 +618,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     onMergeChange={setMergeCompensation}
                                     payoutAccount={payoutAccount}
                                     onPayoutAccountChange={setEditedPayoutAccount}
+                                    onPayoutAccountBlockingChange={setIsPayoutAccountBlocking}
                                 />
                             </Grid>
                         </Grid>
@@ -656,6 +682,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     variant="contained"
                                     startIcon={<CheckCircleIcon />}
                                     onClick={handleApprove}
+                                    disabled={isPayoutAccountBlocking}
                                     sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                 >
                                     อนุมัติ

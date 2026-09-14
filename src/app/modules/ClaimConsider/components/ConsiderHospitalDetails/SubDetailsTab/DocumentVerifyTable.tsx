@@ -29,10 +29,8 @@ import {
     DocumentCheckResultOption,
     DocumentCheckRow,
 } from "../mock/hospitalConsiderMock";
-import {
-    DocStorageDocInfo,
-    HospitalConsiderValues,
-} from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
+import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
+import { DocStorageDocInfo } from "../../../hooks/ClaimConsiderHospital/HospitalDocumentVerifyHook";
 import DocumentFileViewer from "./DocumentFileViewer";
 
 /** ค่าเริ่มต้นเมื่อยังไม่มีข้อมูล DocStorage ของ documentId นั้น */
