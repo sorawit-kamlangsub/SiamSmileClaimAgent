@@ -1,6 +1,7 @@
 import { FormikErrors, useFormik } from "formik";
 import { swalConfirm, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     CreateCaseRefundPayload,
     useCreateCaseRefund,
@@ -58,6 +59,7 @@ const emptyFormValues: RefundDetailFormValues = {
 };
 
 const useManageRefundDetailHook = (caseId: string) => {
+    const navigate = useNavigate();
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetRefundDetail(caseId);
     const { data: refundReasonsRes, isLoading: isReasonLoading } = useGetRefundReasons();
     const { data: transferTypeRes, isLoading: isTransferTypeLoading } = useGetRefundTransferTypes(3);
@@ -77,6 +79,7 @@ const useManageRefundDetailHook = (caseId: string) => {
 
     const handleSaveSuccess = () => {
         swalSuccess("ทำรายการสำเร็จ", "บันทึกคำขอคืนเงินสำเร็จ");
+        navigate("/manage/refund");
     };
 
     const handleSaveError = (err: string) => {

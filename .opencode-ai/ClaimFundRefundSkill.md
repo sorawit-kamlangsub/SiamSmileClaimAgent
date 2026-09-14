@@ -65,6 +65,7 @@
   - `remark` = `values.note`
   - `decreaseAmount` = **ผลรวม** `additionalAmount` ทั้งตาราง (เดิม validate ใช้แค่ `items[0]` → เปลี่ยนเป็น sum ทุกแถว)
 - ยังคงลอจิก validate เดิม + `swalConfirm`; `slipFile` ยังเป็น required ที่ฟอร์ม **แต่ body ไม่มี field ไฟล์** (API ยังไม่เปิดรับ — ถ้า backend รับ slip แยกค่อยต่อ)
+- **หลังบันทึกสำเร็จ → `navigate("/manage/refund")`** (หน้า monitor คืนเงิน `RefundPage`; route parent `/manage/refund` มี child `refund` เป็น index + `detail/:id`) — เติม `useNavigate` ใน `ManageRefundDetailHook`, เรียกใน `handleSaveSuccess`
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ pre-existing จาก AdjustTransfer/BankStatus/ManageTransfer)
 
 ### ค้าง ⏳ (งานต่อไป)
