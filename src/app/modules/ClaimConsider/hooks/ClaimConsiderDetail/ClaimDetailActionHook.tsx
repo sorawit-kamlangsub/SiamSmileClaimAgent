@@ -108,6 +108,22 @@ const DECISION_REASON_TO_REJECT_REASON_ID: Record<number, number> = {
 const mapDecisionReasonIdToRejectReasonId = (decisionReasonId: number | undefined): number | undefined =>
     decisionReasonId !== undefined ? DECISION_REASON_TO_REJECT_REASON_ID[decisionReasonId] : undefined;
 
+/**
+ * decisionReasonId กับ cancelReasonId (ฟิลด์ที่ case ต้องการตอนส่ง considerResult = 6 "ยกเลิก")
+ * เป็นคนละ Master กันเหมือนกรณี reject — map ผ่านชื่อสาเหตุที่ตรงกัน ห้ามใช้ตัว map ของ reject ปนกัน
+ * เพราะ id ฝั่ง decisionReason ของ "ยกเลิก" (12-16) กับ "ปฏิเสธ" (17-22) เป็นคนละช่วงกัน
+ */
+const DECISION_REASON_TO_CANCEL_REASON_ID: Record<number, number> = {
+    12: 2, // ผู้เอาประกันขอยกเลิกเคลม
+    13: 3, // โรงพยาบาลยกเลิกรายการ
+    14: 4, // แจ้งเคลมซ้ำ
+    15: 5, // บันทึกข้อมูลผิดรายการ
+    16: 6, // ไม่ประสงค์ดำเนินการต่อ
+};
+
+const mapDecisionReasonIdToCancelReasonId = (decisionReasonId: number | undefined): number | undefined =>
+    decisionReasonId !== undefined ? DECISION_REASON_TO_CANCEL_REASON_ID[decisionReasonId] : undefined;
+
 /** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
 const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
@@ -364,6 +380,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDraft(),
+            cancelReasonId:
+                values.considerResult === 6 ? mapDecisionReasonIdToCancelReasonId(values.decisionReasonId) : undefined,
+            cancelDate: values.considerResult === 6 ? dayjs() : undefined,
         };
     };
 
@@ -589,6 +608,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDecision(),
+            cancelReasonId:
+                values.considerResult === 6 ? mapDecisionReasonIdToCancelReasonId(values.decisionReasonId) : undefined,
+            cancelDate: values.considerResult === 6 ? dayjs() : undefined,
         };
     };
 
