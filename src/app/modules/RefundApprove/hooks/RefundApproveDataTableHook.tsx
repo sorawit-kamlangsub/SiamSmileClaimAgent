@@ -61,7 +61,7 @@ const formatAmount = (value: number) =>
 const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: RefundApproveDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
-        recordsPerPage: 5,
+        recordsPerPage: 10,
     });
     const {
         data: getRefundMonitorData,
@@ -84,10 +84,10 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
             totalAmountRecords: getRefundMonitorData?.totalAmountRecords ?? 0,
             totalAmountPages: getRefundMonitorData?.totalAmountPages ?? 0,
             currentPage: getRefundMonitorData?.currentPage ?? 0,
-            recordsPerPage: getRefundMonitorData?.recordsPerPage ?? 0,
+            recordsPerPage: getRefundMonitorData?.recordsPerPage ?? paginated.recordsPerPage,
             pageIndex: getRefundMonitorData?.pageIndex ?? 0,
         }),
-        [getRefundMonitorData]
+        [getRefundMonitorData, paginated]
     );
 
     const data = getRefundMonitorData?.data ?? [];

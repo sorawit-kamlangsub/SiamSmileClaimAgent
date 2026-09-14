@@ -61,10 +61,10 @@ const useRefundDataTableHook = () => {
             totalAmountRecords: getRefundMonitorData?.totalAmountRecords ?? 0,
             totalAmountPages: getRefundMonitorData?.totalAmountPages ?? 0,
             currentPage: getRefundMonitorData?.currentPage ?? 0,
-            recordsPerPage: getRefundMonitorData?.recordsPerPage ?? 0,
+            recordsPerPage: getRefundMonitorData?.recordsPerPage ?? paginated.recordsPerPage,
             pageIndex: getRefundMonitorData?.pageIndex ?? 0,
         }),
-        [getRefundMonitorData]
+        [getRefundMonitorData, paginated]
     );
 
     const handleView = (row: any) => {
