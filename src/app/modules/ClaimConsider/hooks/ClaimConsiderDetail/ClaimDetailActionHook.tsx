@@ -357,6 +357,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
+            chiefComplaintCustom: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -394,7 +395,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         incidentDate: asDate(formik.values.incidentDate),
         incidentTime: asTimeSpan(formik.values.incidentTime),
         accidentPlace: formik.values.accidentPlace,
-        accidentDescription: formik.values.detail,
+        accidentDescription: undefined, //ไม่มี
         case: mapCaseForDraft(),
         draftStep: draftStep ?? 1,
         claimEditDraft: {
@@ -585,6 +586,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
+            chiefComplaintCustom: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -622,7 +624,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         incidentDate: asDate(formik.values.incidentDate),
         incidentTime: asTimeSpan(formik.values.incidentTime),
         accidentPlace: formik.values.accidentPlace,
-        accidentDescription: formik.values.detail,
+        accidentDescription: undefined, //ไม่มี
         case: mapCaseForDecision(overrideDecisionId),
     });
 
