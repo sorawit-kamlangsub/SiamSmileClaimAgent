@@ -9,6 +9,8 @@
 - กฎเตือนตัวเองไม่ให้ฟุ้งซ่าน → อ่าน `FOCUS.md` (หลัก 6 ข้อ ทวนก่อนลงมือทุกครั้ง)
 - **งานโอนเงินเคลมเพิ่ม (ขยายวงเงิน / IncreaseLimitTransfer) → อ่าน `ClaimFundAdditionalTransfer.md` ก่อนเสมอ**
 - **งานสอบถามธนาคาร (BankStatus / Inquiry) → อ่าน `ClaimFundInquiry.md` ก่อนเสมอ**
+- **API PayTransfer / โอนเงินจ่ายเคลม (`Transfer/v1/*`, `Setting`, `Notification`) → อ่าน `ClaimFundPayTransfer.md` (swagger host เก่า)`**
+- **API กลุ่ม `ClaimFund` บน APIGW (`/api/ClaimFund/*`: Refund/Inquiry/AdditionalTransfer/FailedPayTransfer/Setting/Masters) → อ่าน `ClaimFundApi.md` (swagger CoreClaim_api / dev tunnel)`**
 
 ## สารบัญ Skill (.opencode-ai/skills)
 

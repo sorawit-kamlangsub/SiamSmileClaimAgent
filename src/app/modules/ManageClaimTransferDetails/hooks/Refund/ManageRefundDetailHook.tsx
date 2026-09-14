@@ -1,7 +1,9 @@
 import { FormikErrors, useFormik } from "formik";
-import { swalConfirm, swalSuccess, swalWarning } from "../../../_common";
+import { swalConfirm, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { useEffect } from "react";
 import {
+    CreateCaseRefundPayload,
+    useCreateCaseRefund,
     useGetRefundDetail,
     useGetRefundReasons,
     useGetRefundTransferTypes,
@@ -77,10 +79,11 @@ const useManageRefundDetailHook = (caseId: string) => {
         swalSuccess("ทำรายการสำเร็จ", "บันทึกคำขอคืนเงินสำเร็จ");
     };
 
-    // TODO: เรียกใช้ useSaveRefund เมื่อ backend พร้อม
-    const mutate = (_payload: any) => {
-        handleSaveSuccess();
+    const handleSaveError = (err: string) => {
+        swalError("แจ้งเตือน", err);
     };
+
+    const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError);
 
     const formik = useFormik<RefundDetailFormValues>({
         initialValues: emptyFormValues,
@@ -110,28 +113,25 @@ const useManageRefundDetailHook = (caseId: string) => {
             return errors;
         },
         onSubmit: (values) => {
-            const refundAmount = Number(values.items?.[0]?.additionalAmount ?? 0);
+            const refundAmount = values.items.reduce((sum, item) => sum + (Number(item.additionalAmount) || 0), 0);
 
             if (refundAmount === 0) {
                 swalWarning("แจ้งเตือน", "กรุณากรอกจำนวนเงินที่ต้องการโอนคืน");
             } else if (refundAmount > Number(detailData?.totalNetPaidAmount ?? 0)) {
                 swalWarning("แจ้งเตือน", "ยอดโอนคืนต้องไม่เกินจำนวนเงินที่โอนแล้วของเคส");
             } else {
-                const payload = {
-                    caseId: "CL690400010",
-                    refundType: values.refundTransferType,
-                    slipDateTime: values.refundSlipDateTime?.format("YYYY-MM-DD HH:mm:ss"),
-                    items: values.items.map((item) => ({
-                        caseNo: item.caseNo,
-                        refundAmount: Number(item.additionalAmount ?? 0).toFixed(2),
-                    })),
-                    refundReasonId: values.reasonId,
+                const payload: CreateCaseRefundPayload = {
+                    adjustmentTypeId: values.refundTransferType as number,
+                    refundReasonId: values.reasonId as number,
+                    cacseId: caseId,
+                    claimId: detailData?.claimId,
+                    refundDate: values.refundSlipDateTime?.format("YYYY-MM-DDTHH:mm:ss") ?? "",
                     remark: values.note,
-                    slipFile: values.slipFile,
+                    decreaseAmount: refundAmount,
                 };
                 swalConfirm("ยืนยันการคืนเงิน", "ต้องการยืนยันการคืนเงินใช่หรือไม่", "ยืนยัน", "ยกเลิก").then((res) => {
                     if (res.isConfirmed) {
-                        mutate(payload);
+                        saveCaseRefundMutate(payload);
                     }
                 });
             }

@@ -52,6 +52,21 @@
   - **ทางแก้:** เปลี่ยน fallback เป็น `?? paginated.recordsPerPage` + ใส่ `paginated` ใน deps ของ `useMemo` — ทำทั้ง `RefundApproveDataTableHook` และ `Refund/RefundDataTableHook` (ฝั่ง Refund set state เป็น 10 อยู่แล้ว แก้แค่ memo)
   - ไม่แก้ใน `ClaimFundStandardDataTable`/`StandardDataTable` เพราะ default `[5,10,...]` เป็น shared ที่กระทบทุกตาราง ClaimFund — ถ้า user อยากให้ทั่วระบบค่อยว่าใหม่
 
+### เสร็จแล้ว: หน้า `/manage/refund/detail` — เชื่อม API `Refund/CreateCaseRefund` ✅
+- ปุ่ม "แจ้งคืนเงิน" (`ManageRefundDetailPage.tsx` → `formik.handleSubmit()`) ยิง API จริงแทน mock แล้ว:
+  - `Refund/refundAPI.ts`: เพิ่ม `useCreateCaseRefund(onSuccess, onError)` + `createCaseRefund()` → `POST {APIGW_CLAIM_FUND_API_URL}/Refund/CreateCaseRefund` (mirror `useSaveAdjustTransfer` ใน `adjustClaimAPI.ts`)
+  - `ManageRefundDetailHook.tsx`: เลิก mock `mutate` → `const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError)` (success=`swalSuccess`, error=`swalError`)
+- Mapping body `CreateCaseRefundPayload` (ยืนยันกับ user แล้ว):
+  - `adjustmentTypeId` = `values.refundTransferType` (dropdown ประเภทการโอน)
+  - `refundReasonId` = `values.reasonId` (dropdown สาเหตุที่โอนคืน)
+  - `cacseId` = route param `id` (caseId) — **แก้จากเดิมที่ hardcode `"CL690400010"`**
+  - `claimId` = `detailData?.claimId` (จาก response `SaveRefundDetails`; mock ยังไม่มี field นี้)
+  - `refundDate` = `values.refundSlipDateTime` format `YYYY-MM-DDTHH:mm:ss`
+  - `remark` = `values.note`
+  - `decreaseAmount` = **ผลรวม** `additionalAmount` ทั้งตาราง (เดิม validate ใช้แค่ `items[0]` → เปลี่ยนเป็น sum ทุกแถว)
+- ยังคงลอจิก validate เดิม + `swalConfirm`; `slipFile` ยังเป็น required ที่ฟอร์ม **แต่ body ไม่มี field ไฟล์** (API ยังไม่เปิดรับ — ถ้า backend รับ slip แยกค่อยต่อ)
+- typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ pre-existing จาก AdjustTransfer/BankStatus/ManageTransfer)
+
 ### ค้าง ⏳ (งานต่อไป)
 - ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
 - typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)

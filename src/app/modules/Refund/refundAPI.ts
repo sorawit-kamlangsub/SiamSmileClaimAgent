@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
 import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationDto } from "../_common";
@@ -289,6 +289,52 @@ const getRefundDecreaseTransactionData = (caseId: string, pagination: Pagination
     });
     return axios
         .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+export interface CreateCaseRefundPayload {
+    adjustmentTypeId: number;
+    refundReasonId: number;
+    cacseId: string;
+    claimId?: string;
+    refundDate: string;
+    remark: string;
+    decreaseAmount: number;
+}
+
+export const useCreateCaseRefund = (
+    onSuccessCallBack: (response: any) => void,
+    onErrorCallback: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((payload: CreateCaseRefundPayload) => createCaseRefund(payload), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+            queryClient.invalidateQueries([getRefundDetail]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback && onErrorCallback(error.message);
+        },
+    });
+};
+
+const createCaseRefund = (payload: CreateCaseRefundPayload) => {
+    const url = `${apiURL}/Refund/CreateCaseRefund`;
+    return axios
+        .post(url, payload)
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;
