@@ -26,7 +26,7 @@
 | `AdjustTransfer/adjustTransferMonitorAPI.ts` | `${API_CLAIM_FUND_URL}/api/ClaimFund` | `/AdditionalTransfer/...` |
 | `ManageClaimTransferDetails/adjustClaimAPI.ts` | `${API_CLAIM_FUND_URL}/api/ClaimFund` | `.../AdditionalTransfer/...` |
 | `api/claimFundApi.ts` | `${API_CLAIM_FUND_URL}/api` | `/Transfer/v1/...` |
-| `BankStatus/bankStatusCheckAPI.ts` | `${API_CLAIM_FUND_URL}/api/ClaimFund` | `/Inquiry/...` |
+| `BankStatus/bankStatusCheckAPI.ts` | **ย้อนกลับแล้ว (คำสั่งรอบหลัง)** — ไม่ใช้ APIGW; กลับใช้ `${API_CLAIM_FUND_URL}/api/ClaimFund` (host เก่า `claimfundapi.uatsiamsmile.com`) → `/Inquiry/...` |
 | `ManageTransfer/repayAPI.ts` | `${API_CLAIM_FUND_URL}` (host root) | `/FailTransfer/...` |
 | `Survey/surveyAPI.ts` | **ข้อยกเว้น** — คงไว้ `API_CLAIM_FUND_URL/api` (host เก่า) ตามคำสั่ง เหมือน master สาขา | `/Notification/...`,`/Transfer/v1/PaymentDetails` |
 | `ManageClaimFund/manageClaimFundAPI.ts` | `${API_CLAIM_FUND_URL}/api/ClaimFund` | `/Setting/...` |
