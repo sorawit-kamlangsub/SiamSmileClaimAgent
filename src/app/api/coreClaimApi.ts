@@ -53,9 +53,11 @@ const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
  * ทำไมต้องมี : global staleTime = 5 นาที ถ้าไม่ invalidate ผู้ใช้ที่บันทึกแล้วกลับเข้ารายการเดิม
  * ภายใน 5 นาทีจะเห็นข้อมูล "ก่อนบันทึก" จาก cache จนกว่าจะ refresh ทั้งหน้า
  *
- * ทำไมใช้ refetchType "none" : query รายละเอียด/ค่ารักษา/เอกสาร ยัง active อยู่ตอนกดบันทึก และผู้ใช้
- * กำลังจะออกจากหน้าอยู่แล้ว การ refetch ตรงนั้นเป็น request ที่เสียเปล่าบนหน้าที่หนักที่สุด — แค่มาร์ค
- * ว่า stale ก็พอ รอบ mount ถัดไปจะยิงใหม่เอง (refetchOnMount ไม่ได้ถูก override จึงเป็น true ตาม default)
+ * ใช้ refetchType default ("active") ไม่ใช่ "none" — เดิมใช้ "none" โดยหวังว่า refetchOnMount default
+ * จะยิงใหม่เองตอน mount รอบถัดไป แต่ query พวกนี้มัก active อยู่ต่อเนื่อง (ผู้ใช้ไม่ได้ unmount component
+ * หลังกดบันทึก เช่น สลับ tab ในหน้าเดียวกัน) ทำให้ "รอบ mount ถัดไป" ไม่เกิดขึ้นจริง และข้อมูลเก่าค้างอยู่
+ * "active" จะ refetch ทันทีเฉพาะ query ที่มีคน mount อยู่ตอนนี้ ส่วน query ที่ inactive จะแค่ mark stale
+ * ตามปกติ (ไม่มี request เสียเปล่า)
  *
  * หมายเหตุรูปแบบ key : key ในไฟล์นี้เป็น array ซ้อน array เช่น [["getClaimDetailConsider"], claimId]
  * จึงต้องส่ง filter เป็น [key] ไม่ใช่ key เปล่าๆ ไม่งั้นจะเทียบ string กับ array แล้วไม่ match อะไรเลย
@@ -69,7 +71,7 @@ const invalidateClaimConsiderQueries = (queryClient: QueryClient) => {
         getCustomerClaimAdjudicationMonitorQueryKey,
         getHospitalClaimAdjudicationMonitorQueryKey,
         getDashboardCustomerConsiderQueryKey,
-    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey], { refetchType: "none" }));
+    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey]));
 };
 
 export const useCalculateCaseClaim = (
