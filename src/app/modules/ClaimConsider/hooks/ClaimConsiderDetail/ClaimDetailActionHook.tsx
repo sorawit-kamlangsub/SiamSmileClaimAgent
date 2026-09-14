@@ -91,6 +91,23 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
  */
 const DEFAULT_NON_COVERED_REASON_ID = 1;
 
+/**
+ * decisionReasonId (Master "สาเหตุผลการพิจารณา" ที่ ConsiderSection ใช้เลือกตอนปฏิเสธ) กับ
+ * rejectReasonId (ฟิลด์ที่ caseAdjudication ต้องการตอนส่ง considerResult/decisionId = 5 "ปฏิเสธ")
+ * เป็นคนละ Master กัน คนละชุด id — ต้อง map ผ่านชื่อสาเหตุที่ตรงกันก่อนส่ง ห้ามส่ง decisionReasonId ตรงๆ
+ */
+const DECISION_REASON_TO_REJECT_REASON_ID: Record<number, number> = {
+    17: 2, // อยู่ในระยะรอคอย
+    18: 3, // เป็นข้อยกเว้นของกรมธรรม์
+    19: 4, // เป็นโรคยกเว้นของกรมธรรม์
+    20: 5, // ไม่มีความคุ้มครอง
+    21: 6, // เต็มสิทธิ์ความคุ้มครอง
+    22: 7, // เกินระยะดำเนินการ
+};
+
+const mapDecisionReasonIdToRejectReasonId = (decisionReasonId: number | undefined): number | undefined =>
+    decisionReasonId !== undefined ? DECISION_REASON_TO_REJECT_REASON_ID[decisionReasonId] : undefined;
+
 /** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
 const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 
@@ -251,7 +268,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: considerResult === 5 ? decisionReasonId : undefined,
+            rejectReasonId: considerResult === 5 ? mapDecisionReasonIdToRejectReasonId(decisionReasonId) : undefined,
             rejectDate: considerResult === 5 ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDraft(), // TODO: ไม่มีใน formik/detailData ตอนนี้
@@ -460,7 +477,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: decisionId === 5 ? decisionReasonId : undefined,
+            rejectReasonId: decisionId === 5 ? mapDecisionReasonIdToRejectReasonId(decisionReasonId) : undefined,
             rejectDate: decisionId === 5 ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDecision(), // TODO: ไม่มีใน formik/detailData ตอนนี้
