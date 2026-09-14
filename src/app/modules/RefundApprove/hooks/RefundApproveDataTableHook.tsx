@@ -72,6 +72,8 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
         branceId: filter?.branchId ?? null,
         refundStatusId: filter?.statusId ?? null,
         searchDetail: filter?.searchText,
+        transferDateFrom: filter?.transferDateFrom,
+        transferDateTo: filter?.transferDateTo,
         searchKey,
         pagination: paginated,
         enabled: hasSearched,

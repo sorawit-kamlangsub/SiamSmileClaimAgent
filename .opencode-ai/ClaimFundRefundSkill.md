@@ -41,6 +41,10 @@
   - `getRefundApproveMonitorData`: เปลี่ยนลอจิก error — `isSuccess:false` เดิมคืน `{...res.data, data:[]}` เงียบ (ขึ้น "ไม่พบข้อมูล") → เปลี่ยนเป็น throw `res.data.message`; catch สำคัญเอา `response.data?.message` ก่อน `err.message` แล้วค่อย fallback เป็น ""
   - **อย่าลืม:** อย่า `throw err.message` ตรง ๆ จาก `catch (err: Error)` เพราะ axios HTTP error จะได้แค่ "Request failed with status code 404" เสมอ — ต้องขุด `err.response.data.message` ก่อนเสมอ
 - **Timeout API monitor อนุมัติคืนเงิน = 30 วิ** — `.post(url, body, { timeout: 3000 })` เฉพาะ `getRefundApproveMonitorData` (หน้า Refund ยังไม่ได้ตั้ง)
+- **ส่งช่วงวันที่โอนคืน (`transferDateFrom`/`transferDateTo`) เฉพาะ monitor อนุมัติคืนเงิน (RefundApproveMonitor)** — contract ยืนยันกับ user แล้ว
+  - `GetRefundMonitorFilterType` เพิ่ม `transferDateFrom?`/`transferDateTo?` (type `Dayjs`)
+  - `getRefundApproveMonitorData`: ใส่ใน POST body **เฉพาะเมื่อมีค่า โดย field name ใน body = `fromDate`/`toDate`** (ไม่ใช่ `transferDateFrom/To`) `format("YYYY-MM-DD")` (เหมือน `searchDetail` — null/undefined = ไม่ส่ง) — ใส่ใน query key ด้วย (กดค้นหาใหม่ call ใหม่)
+  - `RefundApproveDataTableHook`: ส่ง `filter?.transferDateFrom/To` ต่อจาก `RefundSearchFilterForm` (filter form default = วันนี้ทั้ง From และ To)
 
 ### ค้าง ⏳ (งานต่อไป)
 - ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page

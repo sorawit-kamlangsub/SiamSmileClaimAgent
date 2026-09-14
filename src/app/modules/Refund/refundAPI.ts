@@ -1,5 +1,6 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
+import { Dayjs } from "dayjs";
 import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationDto } from "../_common";
 
@@ -18,6 +19,8 @@ export type GetRefundMonitorFilterType = {
     refundStatusId: number | undefined | null;
     pagination: PaginationDto;
     searchDetail?: string | undefined | null;
+    transferDateFrom?: Dayjs | undefined | null;
+    transferDateTo?: Dayjs | undefined | null;
     searchKey?: number;
     enabled?: boolean;
 };
@@ -75,12 +78,31 @@ export const useGetRefundApproveMonitorWithFilter = ({
     refundStatusId,
     pagination,
     searchDetail,
+    transferDateFrom,
+    transferDateTo,
     searchKey,
     enabled,
 }: GetRefundMonitorFilterType) => {
     return useQuery(
-        [branceId, refundStatusId, pagination, searchDetail, searchKey, getRefundApproveMonitor],
-        () => getRefundApproveMonitorData({ branceId, refundStatusId, pagination, searchDetail }),
+        [
+            branceId,
+            refundStatusId,
+            pagination,
+            searchDetail,
+            transferDateFrom,
+            transferDateTo,
+            searchKey,
+            getRefundApproveMonitor,
+        ],
+        () =>
+            getRefundApproveMonitorData({
+                branceId,
+                refundStatusId,
+                pagination,
+                searchDetail,
+                transferDateFrom,
+                transferDateTo,
+            }),
         {
             enabled: enabled ?? !!refundStatusId,
             refetchOnMount: "always",
@@ -94,11 +116,15 @@ const getRefundApproveMonitorData = ({
     refundStatusId = null,
     pagination,
     searchDetail,
+    transferDateFrom,
+    transferDateTo,
 }: GetRefundMonitorFilterType) => {
     const formBody = {
         branceId,
         refundStatusId,
         ...(searchDetail ? { searchDetail } : {}),
+        ...(transferDateFrom ? { fromDate: transferDateFrom.format("YYYY-MM-DD") } : {}),
+        ...(transferDateTo ? { toDate: transferDateTo.format("YYYY-MM-DD") } : {}),
     };
     const url = encodeURLWithParams(`${apiURL}/Refund/RefundApproveMonitor`, {
         Page: pagination.page ?? 1,
