@@ -113,7 +113,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
     // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload
     const calculateResult = calculateOverride ?? calculateResultStore;
-    const caseItemId = crypto.randomUUID();
+    // caseItemId ต้อง unique ต่อแถว — ใช้ index เดียวกันจับคู่ caseItem กับ caseItemAdjudication ของมัน
+    // (mapCaseItemForDraft/mapCaseItemAdjudicationForDraft map จาก filledItems ลำดับเดียวกันโดยไม่มี filter)
+    const caseItemIds = filledItems.map(() => crypto.randomUUID());
     const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
     const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
     const totalNotCovered = filledItems.reduce((s, i) => s + (i.notCovered || 0), 0);
@@ -153,12 +155,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
     const getNetAmount = (item: ClaimExpenseItem) => (item.claimAmount ?? 0) - (item.discount ?? 0);
     const mapCaseItemForDraft = (): CaseItemSaveClaimEditDraftRequest[] => {
-        return filledItems.map((item): CaseItemSaveClaimEditDraftRequest => {
+        return filledItems.map((item, idx): CaseItemSaveClaimEditDraftRequest => {
             const nonCovered = Number(item.notCovered ?? 0);
             const reasonId = Number(item.reason ?? 0);
 
             return {
-                caseItemId: caseItemId,
+                caseItemId: caseItemIds[idx],
                 inputToStandardMappingId: item.inputToStandardMappingId,
                 standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
                 quantity: 1,
@@ -175,10 +177,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
     const mapCaseItemAdjudicationForDraft = (): CaseItemAdjudicationSaveClaimEditDraftRequest[] => {
         return filledItems.map(
-            (item): CaseItemAdjudicationSaveClaimEditDraftRequest => ({
+            (item, idx): CaseItemAdjudicationSaveClaimEditDraftRequest => ({
                 caseItemAdjusication: crypto.randomUUID(),
                 standardMedicalExpenseId: item.standardMedicalExpenseId,
-                caseItemId: caseItemId,
+                caseItemId: caseItemIds[idx],
                 netCaseAmount: getNetAmount(item),
                 eligibleAmount: getNetAmount(item) - (item.notCovered ?? 0),
                 approvedAmount: getNetAmount(item) - (item.notCovered ?? 0),
