@@ -57,7 +57,11 @@ const useClaimHistoryTab = (applicationId?: string) => {
 
     const sortBy = (paginated.orderingField as ClaimHistorySortField) ?? "incidentDate";
 
-    const { data: claimHistoryData, isLoading } = useGetClaimHistory(
+    const {
+        data: claimHistoryData,
+        isLoading,
+        isError,
+    } = useGetClaimHistory(
         applicationId,
         searchText.trim() || undefined,
         ORDERING_FIELD_MAP[sortBy],
@@ -102,6 +106,7 @@ const useClaimHistoryTab = (applicationId?: string) => {
         items,
         summary,
         isLoading,
+        isError,
         searchText,
         setSearchText: handleSearchTextChange,
         sortBy,

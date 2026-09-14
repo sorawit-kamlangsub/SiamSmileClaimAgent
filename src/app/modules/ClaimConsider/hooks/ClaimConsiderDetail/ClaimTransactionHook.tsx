@@ -10,7 +10,11 @@ const useClaimTransactionHook = () => {
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: transaction, isLoading: transactionLoading } = useGetClaimTransactionLog(
+    const {
+        data: transaction,
+        isLoading: transactionLoading,
+        isError: transactionError,
+    } = useGetClaimTransactionLog(
         claimId ?? "",
         undefined,
         undefined,
@@ -31,6 +35,7 @@ const useClaimTransactionHook = () => {
     return {
         transaction,
         transactionLoading,
+        transactionError,
         pagination,
         setPaginated,
     };

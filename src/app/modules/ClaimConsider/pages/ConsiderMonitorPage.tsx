@@ -19,7 +19,7 @@ const ConsiderMonitorPage = () => {
         isSearch: true,
         path: "customers",
     });
-    const { dashboardData, dashboardDataLoading } = useDashboardHook(appliedFilter);
+    const { dashboardData, dashboardDataLoading, dashboardDataError } = useDashboardHook(appliedFilter);
     const handleSearch = () => {
         setAppliedFilter({
             isSearch: true,
@@ -51,7 +51,11 @@ const ConsiderMonitorPage = () => {
         <>
             <Grid container spacing={2} sx={{ py: 2 }}>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <ConsiderCustomerHeader dashboardData={dashboardData} dashboardDataLoading={dashboardDataLoading} />
+                    <ConsiderCustomerHeader
+                        dashboardData={dashboardData}
+                        dashboardDataLoading={dashboardDataLoading}
+                        dashboardDataError={dashboardDataError}
+                    />
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} sx={{ py: 2 }}>
                     <ConsiderCustomerMonitorFilter

@@ -43,8 +43,11 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
         setPaginated((prev) => ({ ...prev, page: 1 }));
     }
 
-    const { data: claimTransactionData, isLoading: claimTransactionDataLoading } =
-        useGetCustomerClaimAdjudicationMonitor(
+    const {
+        data: claimTransactionData,
+        isLoading: claimTransactionDataLoading,
+        isError: claimTransactionDataError,
+    } = useGetCustomerClaimAdjudicationMonitor(
             appliedFilter.isSearch,
             appliedFilter.dateType,
             appliedFilter.dateFrom,
@@ -208,7 +211,14 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             },
         },
     ];
-    return { column, claimTransactionData, claimTransactionDataLoading, setPaginated, pagination };
+    return {
+        column,
+        claimTransactionData,
+        claimTransactionDataLoading,
+        claimTransactionDataError,
+        setPaginated,
+        pagination,
+    };
 };
 
 export default useDataTableConsiderCustomerHook;

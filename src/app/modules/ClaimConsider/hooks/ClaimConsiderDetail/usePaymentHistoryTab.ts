@@ -16,7 +16,11 @@ const usePaymentHistoryTab = (applicationCode?: string) => {
         recordsPerPage: 15,
     });
 
-    const { data: dcrData, isLoading } = useGetDCR(
+    const {
+        data: dcrData,
+        isLoading,
+        isError,
+    } = useGetDCR(
         applicationCode,
         undefined,
         paginated.orderingField,
@@ -53,6 +57,7 @@ const usePaymentHistoryTab = (applicationCode?: string) => {
         items,
         summary,
         isLoading,
+        isError,
         pagination,
         setPaginated,
         // Total ท้ายตาราง — รวมจากรายการที่แสดงอยู่ (items ของหน้าปัจจุบัน) เหมือน summary ด้านบน

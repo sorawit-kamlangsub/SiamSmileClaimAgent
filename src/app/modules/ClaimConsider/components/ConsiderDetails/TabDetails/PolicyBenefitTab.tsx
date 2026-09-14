@@ -6,7 +6,7 @@ import { MUIDataTableColumn } from "mui-datatables";
 import { cellAlignOptions, numberWithCommas } from "../../../../../functionHelpers";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 import { StandardDataTable } from "../../../../_common";
-import { TableRow, TableCell } from "@mui/material";
+import { Alert, TableRow, TableCell } from "@mui/material";
 import { useMemo } from "react";
 const renderPricePerUnit = (pricePerUnit: number | null, pricePerUnitName: string | null) => {
     if (pricePerUnit === null || pricePerUnit === undefined) return "-";
@@ -15,7 +15,7 @@ const renderPricePerUnit = (pricePerUnit: number | null, pricePerUnitName: strin
 };
 
 const PolicyBenefitTab = () => {
-    const { benefit, benefitLoading } = usePolicyBenefitHook();
+    const { benefit, benefitLoading, benefitError } = usePolicyBenefitHook();
 
     // const rows = benefit?.data || [];
     const rows = useMemo(() => {
@@ -82,6 +82,11 @@ const PolicyBenefitTab = () => {
     return (
         <CustomPaper>
             <HeadingWithColor icon={<GppGoodIcon sx={{ fontSize: 27 }} />} text="รายการความคุ้มครอง" color="blue" />
+            {benefitError && (
+                <Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
+                    ไม่สามารถโหลดรายการความคุ้มครองได้ กรุณาลองใหม่อีกครั้ง
+                </Alert>
+            )}
             <LinearLoading isLoading={benefitLoading}>
                 <StandardDataTable
                     name="benefitTable"

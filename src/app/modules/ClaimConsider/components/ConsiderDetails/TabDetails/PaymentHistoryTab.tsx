@@ -7,6 +7,7 @@ import PaidIcon from "@mui/icons-material/Paid";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import PendingActionsIcon from "@mui/icons-material/PendingActions";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
@@ -23,8 +24,16 @@ type PaymentHistoryTabProps = {
 };
 
 const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
-    const { items, summary, isLoading, pagination, setPaginated, filteredTotalBilledAmount, filteredTotalPaidAmount } =
-        usePaymentHistoryTab(applicationCode);
+    const {
+        items,
+        summary,
+        isLoading,
+        isError,
+        pagination,
+        setPaginated,
+        filteredTotalBilledAmount,
+        filteredTotalPaidAmount,
+    } = usePaymentHistoryTab(applicationCode);
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -165,8 +174,19 @@ const PaymentHistoryTab = ({ applicationCode }: PaymentHistoryTabProps) => {
 
             {items.length === 0 ? (
                 <Box sx={{ py: 6, textAlign: "center" }}>
-                    <PaymentsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
-                    <Typography color="text.disabled">ไม่พบข้อมูลการชำระเงิน</Typography>
+                    {isError ? (
+                        <>
+                            <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 1 }} />
+                            <Typography color="error.main">
+                                ไม่สามารถโหลดข้อมูลการชำระเงินได้ กรุณาลองใหม่อีกครั้ง
+                            </Typography>
+                        </>
+                    ) : (
+                        <>
+                            <PaymentsIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                            <Typography color="text.disabled">ไม่พบข้อมูลการชำระเงิน</Typography>
+                        </>
+                    )}
                 </Box>
             ) : (
                 <LinearLoading isLoading={isLoading}>
