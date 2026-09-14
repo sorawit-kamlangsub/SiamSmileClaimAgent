@@ -1,32 +1,79 @@
 import { MUIDataTableColumn } from "mui-datatables";
 import { Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
-
-import { useCallback, useEffect, useState } from "react";
-import { useGetDocumentType } from "../../../../api/coreClaimApi";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useGetDocumentByCaseId, useGetDocumentType } from "../../../../api/coreClaimApi";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../functionHelpers";
 import CustomPaper from "../../../_common/components/CustomComponent/CustomPaper";
 import { StandardDataTable } from "../../../_common";
 import { claimPHSelector, setDocument, setDocumentDetailById } from "../../store/claimPHSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { DOC_STORAGE_URL } from "../../../../../Const";
-import { CaseDocumentDetailV2Request, GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentV2Request, GetDocumentSubTypeDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDocumentById } from "../../../../api/docstorageApi";
 import { HeadingWithColor } from "../../../_common/components/CustomComponent/HeadingWithColor";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 
+// ประเภทเอกสาร (type)
+// 1  บัตรประชาชน
+// 2  แบบฟอร์ม A
+// 3  แบบฟอร์ม B
+// 4  ใบแจ้งหนี้
+// 5  รายละเอียดใบแจ้งหนี้
+// 6  ผลการตรวจ LAB, EKG, X-ray และอื่นๆ
+// 7  ชุดรวมเอกสาร
+// 8  อื่นๆ
+// 9  ใบแจ้งปฏิเสธสินไหม
+// 10 คู่สัญญาโรงพยาบาล
+// 11 เอกสารประกอบการพิจารณาเคลม
+
+type DocumentTypeKey =
+    | "บัตรประชาชน"
+    | "แบบฟอร์ม A"
+    | "แบบฟอร์ม B"
+    | "ใบแจ้งหนี้"
+    | "รายละเอียดใบแจ้งหนี้"
+    | "ผลการตรวจ LAB, EKG, X-ray และอื่นๆ"
+    | "ชุดรวมเอกสาร"
+    | "อื่นๆ"
+    | "ใบแจ้งปฏิเสธสินไหม"
+    | "คู่สัญญาโรงพยาบาล"
+    | "เอกสารประกอบการพิจารณาเคลม";
+
+export const documentTypeId: Record<DocumentTypeKey, number> = {
+    บัตรประชาชน: 1,
+    "แบบฟอร์ม A": 2,
+    "แบบฟอร์ม B": 3,
+    ใบแจ้งหนี้: 4,
+    รายละเอียดใบแจ้งหนี้: 5,
+    "ผลการตรวจ LAB, EKG, X-ray และอื่นๆ": 6,
+    ชุดรวมเอกสาร: 7,
+    อื่นๆ: 8,
+    ใบแจ้งปฏิเสธสินไหม: 9,
+    คู่สัญญาโรงพยาบาล: 10,
+    เอกสารประกอบการพิจารณาเคลม: 11,
+};
+
 type DocumentScanTableProps = {
-    productId?: number | undefined;
+    productTypeId: number;
     aplicationCode?: string | undefined;
-    documentTypeId?: number | undefined;
+    documentType?: DocumentTypeKey | undefined;
+    Header?: string;
     rejectClaim?: boolean;
-    onAttachedDocumentsChange?: (docs: CaseDocumentDetailV2Request[]) => void;
+    /** caseId ของเคสที่กำลังพิจารณา — ถ้าส่งมาจะดึงเอกสารที่ลูกค้าแนบไว้จริงมาทับแถวของ master (ไม่ส่ง = พฤติกรรมเดิม) */
+    caseId?: string;
+    claimSourceId?: number;
+    onAttachedDocumentsChange?: (docs: CaseDocumentV2Request[]) => void;
 };
 
 const DocumentScanTable = ({
     aplicationCode,
-    documentTypeId,
+    documentType = "เอกสารประกอบการพิจารณาเคลม",
     rejectClaim,
+    productTypeId,
+    Header,
+    caseId,
+    claimSourceId,
     onAttachedDocumentsChange,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
@@ -37,40 +84,91 @@ const DocumentScanTable = ({
         setFileCountByDocId((prev) => (prev[documentId] === fileCount ? prev : { ...prev, [documentId]: fileCount }));
     }, []);
 
-    const documentSubType = (): number => {
-        if (documentTypeId === 15 && !rejectClaim) {
-            //เอกสารประกอบการพิจารณาเคลม
-            return 220;
-        } else if (documentTypeId === 15 && rejectClaim) {
-            return 338;
-        }
-        return 0;
-    };
-
-    const { data, isLoading } = useGetDocumentType(
+    const { data, isLoading: isMasterLoading } = useGetDocumentType(
         {
-            documentTypeId: documentTypeId ?? 0,
+            documentTypeId: documentTypeId[documentType],
             documentPrefix: "DOC",
-            documentSubTypeIdList: [documentSubType()],
+            productTypeId: productTypeId,
         },
         isEnabled
     );
-    const enrichedData = data?.data || [];
+
+    // ดึงเอกสารที่ลูกค้าแนบไว้จริงของเคสนี้ (documentId ตัวจริงที่เก็บไฟล์) มา merge ทับรายการ master
+    // ด้านบน — ถ้าไม่ส่ง caseId มา (เช่นตอนสแกนเอกสารปฏิเสธ/ตอนสร้างเคลมที่ยังไม่มี caseId) query
+    // จะไม่ยิงเลยเพราะ enabled: !!caseId ใน useGetDocumentByCaseId ทำให้พฤติกรรมเดิมไม่เปลี่ยน
+    //
+    // รอ productTypeId ให้พร้อมก่อนค่อยส่ง caseId จริงเข้าไป : ที่ ClaimDetailsTab caseId มาจาก
+    // detail?.caseId (พร้อมทันทีที่โหลดรายละเอียดเคลมเสร็จ) ส่วน productTypeId มาจาก
+    // customerDetail?.productTypeId ?? 0 ซึ่ง customerDetail ต้องรอ detail.customerId ก่อนถึงยิง
+    // จึงมาถึงทีหลังเสมอ ถ้าไม่ guard ตรงนี้ query จะยิงรอบแรกด้วย productTypeId=0 ก่อน แล้วพอ
+    // customerDetail มาค่อยยิงซ้ำอีกรอบด้วยค่าจริง (query key เปลี่ยนเพราะ productTypeId อยู่ในคีย์)
+    const { data: caseDocumentData, isLoading: isCaseDocumentLoading } = useGetDocumentByCaseId(
+        productTypeId ? caseId ?? "" : "",
+        productTypeId,
+        claimSourceId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        100
+    );
+
+    // useGetDocumentByCaseId เป็น enabled: !!caseId — ถ้าไม่ส่ง caseId มา (เช่นตารางเอกสารประกอบการปฏิเสธ)
+    // query นี้ถูก disable ถาวรและไม่เคยยิงเลย แต่ react-query v4 ให้ query ที่ disable ตั้งแต่แรกค้างสถานะ
+    // isLoading=true ตลอดไป (ไม่มีทาง resolve เป็น false) ถ้ารวมเข้า isLoading ตรงๆ ตารางจะค้างที่
+    // LinearProgress ตลอดกาลทั้งที่ master list โหลดเสร็จแล้ว จึงต้องนับ isCaseDocumentLoading เฉพาะตอน
+    // query นี้ enabled จริงเท่านั้น
+    const isCaseDocumentEnabled = !!productTypeId && !!caseId;
+    const isLoading = isMasterLoading || (isCaseDocumentEnabled && isCaseDocumentLoading);
+
+    // match ด้วย documentSubTypeId — แถว master ที่ลูกค้าแนบเอกสารมาแล้วจะถูกทับด้วย documentId/
+    // documentCode ตัวจริงของเคส ส่วนเอกสารที่ลูกค้าแนบเป็นประเภทที่ไม่อยู่ใน master ของ productTypeId
+    // นี้ (หาคู่ไม่เจอ) จะต่อท้ายไว้แทนที่จะทิ้ง
+    const enrichedData: GetDocumentSubTypeDtoResponse[] = useMemo(() => {
+        const masterRows = data?.data ?? [];
+        const caseRows = caseDocumentData?.data ?? [];
+        const usedCaseRowIndexes = new Set<number>();
+
+        const merged = masterRows.map((masterRow) => {
+            const caseRowIndex = caseRows.findIndex(
+                (caseRow, idx) =>
+                    !usedCaseRowIndexes.has(idx) && caseRow.documentSubTypeId === masterRow.documentSubTypeId
+            );
+            if (caseRowIndex === -1) return masterRow;
+            usedCaseRowIndexes.add(caseRowIndex);
+            const caseRow = caseRows[caseRowIndex];
+            return { ...masterRow, documentId: caseRow.documentId, documentCode: caseRow.documentCode };
+        });
+
+        const extraCaseRows: GetDocumentSubTypeDtoResponse[] = caseRows
+            .filter((_caseRow, idx) => !usedCaseRowIndexes.has(idx))
+            .map((caseRow) => ({
+                documentId: caseRow.documentId,
+                documentCode: caseRow.documentCode,
+                documentSubTypeId: caseRow.documentSubTypeId,
+                documentSubTypeName: caseRow.claimDocumentTypeName,
+                documentTypeId: caseRow.claimDocumentTypeId,
+            }));
+
+        return [...merged, ...extraCaseRows];
+    }, [data, caseDocumentData]);
 
     useEffect(() => {
         if (enrichedData.length > 0) {
             dispatch(setDocument(enrichedData));
         }
-    }, [data]);
+    }, [enrichedData]);
 
     useEffect(() => {
         if (!onAttachedDocumentsChange) return;
 
-        const attachedDocs: CaseDocumentDetailV2Request[] = enrichedData
+        const attachedDocs: CaseDocumentV2Request[] = enrichedData
             .filter((d) => (fileCountByDocId[d.documentId ?? ""] ?? 0) > 0)
             .map((d) => ({
                 documentId: d.documentId,
                 documentNo: d.documentCode,
+                documentSubTypeId: d.documentSubTypeId,
+                claimDocumentTypeId: d.documentTypeId ?? documentTypeId[documentType],
             }));
 
         onAttachedDocumentsChange(attachedDocs);
@@ -98,7 +196,7 @@ const DocumentScanTable = ({
             options: {
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const { documentId, documentCode } = enrichedData[tableMeta.rowIndex] || {};
+                    const { documentId, documentCode, documentSubTypeId } = enrichedData[tableMeta.rowIndex] || {};
                     const prefixcode =
                         aplicationCode !== undefined &&
                         aplicationCode !== null &&
@@ -120,10 +218,9 @@ const DocumentScanTable = ({
                                     <Button
                                         size="small"
                                         variant="contained"
-                                        sx={{ width: documentTypeId === 4 ? "170px" : "150px" }}
-                                        // fullWidth
+                                        sx={{ width: "170px" }}
                                         onClick={() => {
-                                            const url = `${DOC_STORAGE_URL}/document/scan?documentId=${documentId}&documentCode=${documentCode}&documentSubType=${documentSubType()}&mainIndex=${prefixcode}&searchIndex=${prefixcode}`;
+                                            const url = `${DOC_STORAGE_URL}/document/scan?documentId=${documentId}&documentCode=${documentCode}&documentSubType=${documentSubTypeId}&mainIndex=${prefixcode}&searchIndex=${prefixcode}`;
                                             handleClickLink(url);
                                         }}
                                     >
@@ -144,7 +241,7 @@ const DocumentScanTable = ({
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
                 customBodyRender: (_value, tableMeta) => {
-                    const docData = data?.data?.[tableMeta.rowIndex] || {};
+                    const docData = enrichedData[tableMeta.rowIndex] || {};
 
                     return <FileCount docData={docData} onFileCountChange={handleFileCountChange} />;
                 },
@@ -179,50 +276,27 @@ const DocumentScanTable = ({
     ];
     return (
         <>
-            {documentTypeId === 15 ? (
-                <CustomPaper sx={{ mt: 1 }}>
-                    <HeadingWithColor
-                        text={rejectClaim ? "เอกสารประกอบการปฏิเสธ" : "สแกนเอกสาร"}
-                        color="blue"
-                        icon={<AttachFileIcon sx={{ fontSize: 27 }} />}
+            <CustomPaper sx={{ mt: 1 }}>
+                {!!Header && (
+                    <HeadingWithColor text={Header} color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
+                )}
+                {isLoading ? (
+                    <LinearProgress sx={{ height: "5px" }} />
+                ) : (
+                    <StandardDataTable
+                        name="scanDocumentTable"
+                        title=""
+                        data={enrichedData}
+                        isLoading={isLoading}
+                        columns={columns}
+                        color="primary"
+                        columnHeaderAlign="center"
+                        displayToolbar={false}
+                        displayFooter={false}
+                        options={defaultOptionStandardDataTable}
                     />
-                    {isLoading ? (
-                        <LinearProgress sx={{ height: "5px" }} />
-                    ) : (
-                        <StandardDataTable
-                            name="scanDocumentTable"
-                            title=""
-                            data={enrichedData}
-                            isLoading={isLoading}
-                            columns={columns}
-                            color="primary"
-                            columnHeaderAlign="center"
-                            displayToolbar={false}
-                            displayFooter={false}
-                            options={defaultOptionStandardDataTable}
-                        />
-                    )}
-                </CustomPaper>
-            ) : (
-                <>
-                    {isLoading ? (
-                        <LinearProgress sx={{ height: "5px" }} />
-                    ) : (
-                        <StandardDataTable
-                            name="scanDocumentTable"
-                            title=""
-                            data={enrichedData}
-                            isLoading={isLoading}
-                            columns={columns}
-                            color="primary"
-                            columnHeaderAlign="center"
-                            displayToolbar={false}
-                            displayFooter={false}
-                            options={defaultOptionStandardDataTable}
-                        />
-                    )}
-                </>
-            )}
+                )}
+            </CustomPaper>
         </>
     );
 };
@@ -240,7 +314,11 @@ const FileCount = ({ docData, onFileCountChange }: FileCountProps) => {
     const { data: documentData, refetch } = useGetDocumentById(documentId ?? "");
 
     useEffect(() => {
-        dispatch(setDocumentDetailById({ ...docData, docDetail: documentData?.data ?? {} }));
+        // รอผล query จริงก่อนค่อย dispatch — เดิม effect นี้ยิงทันทีตอน mount ด้วย docDetail ว่างเปล่า
+        // (documentData ยังเป็น undefined) แล้วยิงซ้ำอีกครั้งตอน query resolve จริง กลายเป็น 2 dispatch/แถวเอกสาร
+        // พอมีหลายแถวพร้อมกันในหน้ารายละเอียดค่าใช้จ่าย จะยิง action รัวๆ เกินจำเป็นตอนโหลดหน้า
+        if (!documentData) return;
+        dispatch(setDocumentDetailById({ ...docData, docDetail: documentData.data ?? {} }));
     }, [documentData]);
 
     useEffect(() => {

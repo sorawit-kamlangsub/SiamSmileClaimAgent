@@ -1,11 +1,12 @@
 import { Box, Grid, Paper, Typography } from "@mui/material";
-import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import ArticleIcon from "@mui/icons-material/Article";
-import ClaimTypeSelector from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
+import ClaimTypeSelector, {
+    ClaimTypeOption,
+} from "../../../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { CoverageType, MedicalType } from "../../../../../../functionHelpers";
-import ChipSelector from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
+import ChipSelector, { ChipOption } from "../../../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import FormikDatePicker from "../../../../../_common/components/CustomFormik/FormikDatePicker";
 import dayjs from "dayjs";
 import HospitalDropdown from "../../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
@@ -15,17 +16,40 @@ import FormikTimePicker from "../../../../../_common/components/CustomFormik/For
 import { FormikTextField } from "../../../../../_common";
 import StayDaysSummary from "./StayDaysSummary";
 import { EMPTY_STATE_SX } from "../../../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
-
-const RecordClaimData = () => {
-    const {
-        formik,
-        incidentTypeLoading,
-        coverageType,
-        causeOfIncident,
-        incidentTypeMappingLoading,
-        incidentType,
-        medicalType,
-    } = useConsiderDetailHook();
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useFormikContext } from "formik";
+import ContinuousClaimSection from "../../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimSection";
+import { ContinuousClaimRow } from "../../../ConsiderHospitalDetails/mock/hospitalConsiderMock";
+type RecordClaimDataProps = {
+    incidentType: ClaimTypeOption[];
+    incidentTypeLoading: boolean;
+    coverageType: ClaimTypeOption[];
+    causeOfIncident: ChipOption[];
+    medicalType: ChipOption[];
+    incidentTypeMappingLoading: boolean;
+    /** เคลมต่อเนื่อง */
+    continuousClaimRows: ContinuousClaimRow[];
+    continuousClaimOpen: boolean;
+    onContinuousClaimOpenChange: (open: boolean) => void;
+    onContinuousClaimToggle: (checked: boolean) => void;
+    onContinuousClaimSelect: (row: ContinuousClaimRow) => void;
+    onContinuousClaimClear: () => void;
+};
+const RecordClaimData = ({
+    incidentType,
+    incidentTypeLoading,
+    coverageType,
+    causeOfIncident,
+    medicalType,
+    incidentTypeMappingLoading,
+    continuousClaimRows,
+    continuousClaimOpen,
+    onContinuousClaimOpenChange,
+    onContinuousClaimToggle,
+    onContinuousClaimSelect,
+    onContinuousClaimClear,
+}: RecordClaimDataProps) => {
+    const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
@@ -33,29 +57,15 @@ const RecordClaimData = () => {
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    // เลือกเคลมต่อเนื่องแล้ว = วันที่เกิดเหตุ/อาการสำคัญถูกล็อคตามเคลมเดิม (ดู handleSelectContinuousClaim)
+    // ห้ามแก้จนกว่าจะเอาติ๊ก "เป็นเคลมต่อเนื่อง" ออก
+    const isContinuousClaimLocked = !!values.continuousClaim;
     // const isManualIPD =
     //     values.coverageTypeId === CoverageType.Medical &&
     //     (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     // const isOPD = values.medicalTypeId === MedicalType.OPD;
-    const MEDICAL_TYPE_LABEL_BY_CONDITION: Record<string, string> = {
-        death: "สาเหตุการเสียชีวิต",
-        medical: "ประเภทการรักษา",
-        disability: "สาเหตุการทุพพลภาพ/สูญเสียอวัยวะ",
-        default: "ตัวเลือกเพิ่มเติม",
-    };
-    const medicalTypeLabel = isDeath
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.death
-        : isMedical
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.medical
-        : isDisability
-        ? MEDICAL_TYPE_LABEL_BY_CONDITION.disability
-        : MEDICAL_TYPE_LABEL_BY_CONDITION.default;
     const handleStayDaysChange = (field: "ipdDays" | "icuDays", value: number) => {
         formik.setFieldValue(field, value);
-
-        const ipdDays = field === "ipdDays" ? value : formik.values.ipdDays;
-        const icuDays = field === "icuDays" ? value : formik.values.icuDays;
-        formik.setFieldValue("totalDays", ipdDays + icuDays);
     };
     return (
         <>
@@ -63,6 +73,17 @@ const RecordClaimData = () => {
                 <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" p={2}>
                     <Grid container spacing={2}>
+                        {/* เคลมต่อเนื่อง */}
+                        <Grid item xs={12}>
+                            <ContinuousClaimSection
+                                rows={continuousClaimRows}
+                                open={continuousClaimOpen}
+                                onOpenChange={onContinuousClaimOpenChange}
+                                onToggle={onContinuousClaimToggle}
+                                onSelect={onContinuousClaimSelect}
+                                onClear={onContinuousClaimClear}
+                            />
+                        </Grid>
                         {/* เหตุของการเคลม */}
                         <Grid item xs={12}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
@@ -98,7 +119,7 @@ const RecordClaimData = () => {
                         </Grid>
                         <Grid item xs={12}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
-                                {medicalTypeLabel}{" "}
+                                {"ประเภทการรักษา"}{" "}
                                 <Typography component="span" color="error">
                                     *
                                 </Typography>
@@ -127,10 +148,10 @@ const RecordClaimData = () => {
                         </Grid>
                         {/* วันที่ต่างๆ */}
                         <Grid item xs={12} sm={6} md={3}>
-                            <Box data-field-name="notificationDate">
+                            <Box data-field-name="createdDate">
                                 <FormikDatePicker
-                                    name="notificationDate"
-                                    label="วันที่รับแจ้ง"
+                                    name="createdDate"
+                                    label="วันที่แจ้ง"
                                     formik={formik}
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
@@ -159,18 +180,21 @@ const RecordClaimData = () => {
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
+                                    disabled={isContinuousClaimLocked}
                                 />
                             </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                            <FormikTimePicker
-                                name="incidentTime"
-                                label="เวลาที่เกิดเหตุ"
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                actions={["accept"]}
-                                required
-                            />
+                            <Box data-field-name="incidentTime">
+                                <FormikTimePicker
+                                    name="incidentTime"
+                                    label="เวลาที่เกิดเหตุ"
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    actions={["accept"]}
+                                    required
+                                />
+                            </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
                             <Box data-field-name="admissionDate">
@@ -185,14 +209,16 @@ const RecordClaimData = () => {
                             </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                            <FormikTimePicker
-                                name="admissionTime"
-                                label="เวลาที่เข้า รพ."
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                actions={["accept"]}
-                                required
-                            />
+                            <Box data-field-name="admissionTime">
+                                <FormikTimePicker
+                                    name="admissionTime"
+                                    label="เวลาที่เข้า รพ."
+                                    formik={formik}
+                                    slotProps={{ textField: { size: "small" } }}
+                                    actions={["accept"]}
+                                    required
+                                />
+                            </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
                             <Box data-field-name="dischargeDate">
@@ -207,35 +233,28 @@ const RecordClaimData = () => {
                             </Box>
                         </Grid>
                         <Grid item xs={12} sm={6} md={3}>
-                            <FormikTimePicker
-                                name="dischargeTime"
-                                label="เวลาที่ออก รพ."
-                                formik={formik}
-                                slotProps={{ textField: { size: "small" } }}
-                                actions={["accept"]}
-                                required
-                            />
-                        </Grid>
-                        {/* <Grid item xs={12} sm={6} md={4}>
-                            <Box data-field-name="deathDate">
-                                <FormikDatePicker
-                                    name="deathDate"
-                                    label="วันที่เสียชีวิต"
+                            <Box data-field-name="dischargeTime">
+                                <FormikTimePicker
+                                    name="dischargeTime"
+                                    label="เวลาที่ออก รพ."
                                     formik={formik}
                                     slotProps={{ textField: { size: "small" } }}
-                                    maxDate={dayjs()}
+                                    actions={["accept"]}
                                     required
                                 />
                             </Box>
-                        </Grid> */}
+                        </Grid>
                         {isIPD && (
-                            <Grid item xs={12} lg={12}>
+                            <Grid item xs={12} lg={12} data-field-name="ipdDays">
                                 <StayDaysSummary
                                     values={{
                                         ipdDays: formik.values.ipdDays,
                                         icuDays: formik.values.icuDays,
-                                        totalDays: formik.values.totalDays,
                                     }}
+                                    admissionDate={formik.values.admissionDate}
+                                    admissionTime={formik.values.admissionTime}
+                                    dischargeDate={formik.values.dischargeDate}
+                                    dischargeTime={formik.values.dischargeTime}
                                     onChange={handleStayDaysChange}
                                     required={values.medicalTypeId === MedicalType.IPD}
                                 />
@@ -256,6 +275,7 @@ const RecordClaimData = () => {
                                     formik={formik}
                                     size="small"
                                     required
+                                    disabled={isContinuousClaimLocked}
                                 />
                             </Box>
                         </Grid>

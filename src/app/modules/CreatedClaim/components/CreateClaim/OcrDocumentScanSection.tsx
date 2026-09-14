@@ -132,7 +132,7 @@ export type OcrDocumentScanSectionProps<T extends OcrRequiredFields> = {
 
 const PROJECT_ID = 1;
 
-const DOC_STORAGE_SUB_TYPE_ID_FALLBACK = 220;
+const DOC_STORAGE_SUB_TYPE_ID_FALLBACK = 530;
 
 const ACCEPT_IMAGE_PDF = "image/png,image/jpeg,.jpg,.jpeg,.png,.pdf";
 

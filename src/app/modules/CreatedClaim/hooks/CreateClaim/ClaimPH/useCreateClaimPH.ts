@@ -100,6 +100,8 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                             dischargeDate: isIPD ? form.dischargeDate : undefined,
 
                             caseAmount: form.transferAmount,
+                            nplAmount: form.nplAmount,
+
                             latestApprovedAmount: 0,
                             latestNonCoveredAmount: 0,
                             latestPatientPayAmount: 0,
@@ -125,7 +127,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                             registrations: [
                                 {
-                                    notificationDate: isDeath || isDisability ? form.notificationDate : dayjs(),
+                                    notificationDate: isDeath || isDisability ? form.notificationDate : undefined,
                                     notifyBy: userProfile?.fullName,
                                     initialCoverageTypeId: form.coverageTypeId,
                                     initialCaseAmount: form.transferAmount,
@@ -161,17 +163,14 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                             disabilities: isDisability ? mapOrganLossToDisabilityRequests(organLossItems) : [],
 
-                            documents: [
-                                {
-                                    documentSubTypeId: 220,
-                                    details: isMedicalAll
-                                        ? form.ocrDocument
-                                        : documentScanList.map((d) => ({
-                                              documentId: d.documentId,
-                                              documentNo: d.documentCode,
-                                          })),
-                                },
-                            ],
+                            documents: isMedicalAll
+                                ? form.ocrDocument ?? []
+                                : documentScanList.map((d) => ({
+                                      documentId: d.documentId,
+                                      documentNo: d.documentCode,
+                                      documentSubTypeId: d.documentSubTypeId,
+                                      claimDocumentTypeId: d.documentTypeId,
+                                  })),
 
                             contacts:
                                 isDeath || isDisability
@@ -267,6 +266,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                         claimCase: item?.caseNo,
                         claimNo: item?.claimNo,
                         payeeTypeId: 4, //beneficiary
+                        paymentTypeId: 2, //CasePayment
                     };
                 })
             );
@@ -294,6 +294,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     claimCase: item?.caseNo,
                     claimNo: item?.claimNo,
                     payeeTypeId: 2, //Customer
+                    paymentTypeId: 2, //CasePayment
                 },
             ];
         }

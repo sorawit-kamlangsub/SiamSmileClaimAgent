@@ -49,16 +49,8 @@ export const useMonitorToolbarForm = () => {
                     errors.searchDetail = SEARCH_TYPE_MESSAGES[values.searchTypeId];
                 }
             }
-            if (values.isAdvancedSearch) {
-                if (!values.dateHappen) {
-                    errors.dateHappen = req;
-                }
-                if (!values.provinceId) {
-                    errors.provinceId = req;
-                }
-                if (!values.schoolId) {
-                    errors.schoolId = req;
-                }
+            if (values.isAdvancedSearch && values.provinceId && !values.schoolId) {
+                errors.schoolId = req;
             }
 
             return errors;

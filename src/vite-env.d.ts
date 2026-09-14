@@ -163,4 +163,8 @@ export interface ImportMetaEnv {
      */
     readonly VITE_DOCSTORAGE_API_URL: string;
 
+    /**
+     * URL ของ NPLManagement
+     */
+    readonly VITE_NPL_URL: string;
 }

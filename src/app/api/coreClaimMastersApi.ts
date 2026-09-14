@@ -34,6 +34,10 @@ const getDeductionSourceQueryKey = ["getDeductionSource"];
 const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
+const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
+const getDocumentReviewStatusQueryKey = ["getDocumentReviewStatus"];
+const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
+const getBenefitQueryKey = ["getBenefit"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -81,10 +85,12 @@ export const useGetIncidentTypeMapping = (
     incidentTypeId?: number | undefined,
     claimSourceId?: number | undefined,
     productTypeId?: number | undefined,
-    productCategoryCode?: string,
+    productCategoryCode?: string | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    causeOfIncidentId?: number | undefined
+    causeOfIncidentId?: number | undefined,
+    isClaimContinue?: boolean | undefined,
+    initialClaimId?: string | undefined
 ) => {
     return useQuery(
         [
@@ -96,6 +102,8 @@ export const useGetIncidentTypeMapping = (
             coverageTypeId,
             medicalTypeId,
             causeOfIncidentId,
+            isClaimContinue,
+            initialClaimId,
         ],
         () =>
             coreClaimMastersClient.getIncidentTypeMapping(
@@ -105,7 +113,9 @@ export const useGetIncidentTypeMapping = (
                 productCategoryCode,
                 coverageTypeId,
                 medicalTypeId,
-                causeOfIncidentId
+                causeOfIncidentId,
+                isClaimContinue,
+                initialClaimId
             ),
         {
             enabled: !!incidentTypeId,
@@ -214,13 +224,13 @@ export const useGetICD10Filter = (
     const { data, isLoading, ...rest } = useGetICD10();
 
     return useMemo(() => {
-        if (isLoading) return { data, isLoading, ...rest } as UseQueryResult<GetICD10DtoResponse[], unknown>;
+        const all = data?.data ?? [];
+        const selected = all.find((item) => item.icD10Id == defaultId);
+        const filteredData = all.filter((item) => item.icD10Detail?.includes(key)).slice(0, 10);
 
-        const selectedHospital = data?.data?.find((item) => item.icD10Id == defaultId);
-        const filteredData = data?.data?.filter((item) => item.icD10Detail?.includes(key)).slice(0, 10);
-
-        if (selectedHospital && !filteredData?.includes(selectedHospital)) {
-            filteredData?.unshift(selectedHospital);
+        // คงรายการที่ prefill (icD10Id == defaultId) ไว้เสมอ ไม่ให้หลุดเพราะ slice(0, 10)
+        if (selected && !filteredData.some((item) => item.icD10Id === selected.icD10Id)) {
+            filteredData.unshift(selected);
         }
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetICD10DtoResponse[], unknown>;
@@ -259,11 +269,17 @@ export const useGetProvince = (provinceId?: number | undefined) => {
 //bankAccountRelationGroupId : 1 = ph, pa, claimmisc | 2 = motor
 export const useGetBankAccountRelationType = (
     bankAccountRelationTypeId?: number | undefined,
-    bankAccountRelationGroupId?: number | undefined
+    bankAccountRelationGroupId?: number | undefined,
+    productTypeId?: number | undefined
 ) => {
     return useQuery(
-        [getBankAccountRelationTypeQueryKey, bankAccountRelationTypeId, bankAccountRelationGroupId],
-        () => coreClaimMastersClient.getBankAccountRelationType(bankAccountRelationTypeId, bankAccountRelationGroupId),
+        [getBankAccountRelationTypeQueryKey, bankAccountRelationTypeId, bankAccountRelationGroupId, productTypeId],
+        () =>
+            coreClaimMastersClient.getBankAccountRelationType(
+                bankAccountRelationTypeId,
+                bankAccountRelationGroupId,
+                productTypeId
+            ),
         {
             refetchOnWindowFocus: true,
         }
@@ -273,11 +289,12 @@ export const useGetBankAccountRelationType = (
 //contactPersonGroupId : 1 = ph, deadclaim | 2 = pa | 3 = motor
 export const useGetContactPersonType = (
     contactPersonTypeId?: number | undefined,
-    contactPersonGroupId?: number | undefined
+    contactPersonGroupId?: number | undefined,
+    productTypeId?: number | undefined
 ) => {
     return useQuery(
-        [getContactPersonTypeQueryKey, contactPersonTypeId, contactPersonGroupId],
-        () => coreClaimMastersClient.getContactPersonType(contactPersonTypeId, contactPersonGroupId),
+        [getContactPersonTypeQueryKey, contactPersonTypeId, contactPersonGroupId, productTypeId],
+        () => coreClaimMastersClient.getContactPersonType(contactPersonTypeId, contactPersonGroupId, productTypeId),
         {
             refetchOnWindowFocus: true,
         }
@@ -322,14 +339,13 @@ export const useGetHospitalDetailAllFilter = (
     const { data, isLoading, ...rest } = useGetAllHospital();
 
     return useMemo(() => {
-        if (isLoading) return { data, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;
-        // as UseQueryResult<HospitalDetailRequestDto, unknown>;
+        const all = data?.data ?? [];
+        const selectedHospital = all.find((item) => item.organizeId == defaultId);
+        const filteredData = all.filter((item) => item.organizeName?.includes(key)).slice(0, 10);
 
-        const selectedHospital = data?.data?.find((item) => item.organizeId == defaultId);
-        const filteredData = data?.data?.filter((item) => item.organizeName?.includes(key)).slice(0, 10);
-
-        if (selectedHospital && !filteredData?.includes(selectedHospital)) {
-            filteredData?.unshift(selectedHospital);
+        // คงรายการที่ prefill (organizeId == defaultId) ไว้เสมอ ไม่ให้หลุดเพราะ slice(0, 10)
+        if (selectedHospital && !filteredData.some((item) => item.organizeId === selectedHospital.organizeId)) {
+            filteredData.unshift(selectedHospital);
         }
 
         return { data: filteredData, isLoading, ...rest } as UseQueryResult<GetOrganizeDtoResponse[], unknown>;
@@ -435,12 +451,69 @@ export const useGetDecision = (decisionId?: number | undefined) => {
     });
 };
 
-export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionTypeId?: number | undefined) => {
+export const useGetDocumentReviewStatus = (documentReviewStatusId?: number | undefined) => {
     return useQuery(
-        [getDecisionReasonQueryKey, decisionReasonId, decisionTypeId],
-        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionTypeId),
+        [getDocumentReviewStatusQueryKey, documentReviewStatusId],
+        () => coreClaimMastersClient.getDocumentReviewStatus(documentReviewStatusId),
         {
-            enabled: !!decisionTypeId,
+            cacheTime: 1000 * 60 * 60 * 24,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDecisionReason = (decisionReasonId?: number | undefined, decisionId?: number | undefined) => {
+    return useQuery(
+        [getDecisionReasonQueryKey, decisionReasonId, decisionId],
+        () => coreClaimMastersClient.getDecisionReason(decisionReasonId, decisionId),
+        {
+            enabled: !!decisionId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetInsuranceCompany = (
+    organizeId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getInsuranceCompanyQueryKey, organizeId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            coreClaimMastersClient.getInsuranceCompany(
+                organizeId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetClaimTransactionType = (claimTransactionTypeId?: number | undefined) => {
+    return useQuery(
+        [getClaimTransactionTypeQueryKey, claimTransactionTypeId],
+        () => coreClaimMastersClient.getClaimTransactionType(claimTransactionTypeId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetBenefit = (benefitId?: number | undefined, benefitIdList?: number[] | undefined) => {
+    return useQuery(
+        [getBenefitQueryKey, benefitId, benefitIdList],
+        () => coreClaimMastersClient.getBenefit(benefitId, benefitIdList),
+        {
+            enabled: benefitId !== undefined || !!benefitIdList?.length,
             refetchOnWindowFocus: false,
         }
     );

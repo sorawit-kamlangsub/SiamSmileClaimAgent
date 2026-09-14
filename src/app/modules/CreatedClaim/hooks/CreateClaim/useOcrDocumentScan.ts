@@ -5,7 +5,7 @@ import {
     OcrDocumentScanResult,
     RequiredDocsConfig,
 } from "../../components/CreateClaim/OcrDocumentScanSection";
-import { CaseDocumentDetailV2Request } from "../../../../api/coreClaimApi.client";
+import { CaseDocumentDetailV2Request, CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import dayjs from "dayjs";
 
 const COVERAGE_TYPE_DOCS_MAP: Record<number, RequiredDocsConfig> = {
@@ -15,14 +15,28 @@ const COVERAGE_TYPE_DOCS_MAP: Record<number, RequiredDocsConfig> = {
 
 const NO_REQUIRED_DOCS: RequiredDocsConfig = { idCard: false, receipt: false, medCert: false };
 
+const CASE_DOCUMENT_SUB_TYPE_ID = 530;
+
+// เอกสารจาก OCR scan ล็อกเป็นประเภท "เอกสารประกอบการพิจารณาเคลม" (ดู documentTypeId ใน DocumentScanTable)
+const OCR_CLAIM_DOCUMENT_TYPE_ID = 11;
+
 const ocrDocumentPayload = (
     ocrResult: OcrDocumentScanResult,
     documentIds: DocStorageDocumentIds
-): CaseDocumentDetailV2Request[] => {
-    const list: CaseDocumentDetailV2Request[] = [];
-    if (ocrResult.idCard) {
+): CaseDocumentV2Request[] => {
+    const list: CaseDocumentV2Request[] = [];
+
+    const pushDoc = (documentId: string | undefined, detail: CaseDocumentDetailV2Request) => {
         list.push({
-            documentId: documentIds[OCR_DOCUMENT_TYPE_ID.idCard],
+            documentId,
+            documentSubTypeId: CASE_DOCUMENT_SUB_TYPE_ID,
+            claimDocumentTypeId: OCR_CLAIM_DOCUMENT_TYPE_ID,
+            details: [detail],
+        });
+    };
+
+    if (ocrResult.idCard) {
+        pushDoc(documentIds[OCR_DOCUMENT_TYPE_ID.idCard], {
             firstName: ocrResult.idCard.firstName,
             lastName: ocrResult.idCard.lastName,
             fullName: ocrResult.idCard.fullName,
@@ -32,8 +46,7 @@ const ocrDocumentPayload = (
     }
 
     if (ocrResult.passport) {
-        list.push({
-            documentId: documentIds[OCR_DOCUMENT_TYPE_ID.passport],
+        pushDoc(documentIds[OCR_DOCUMENT_TYPE_ID.passport], {
             fullName: ocrResult.passport.fullName,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.passport,
             ocrResult: JSON.stringify(ocrResult.passport.result),
@@ -41,8 +54,7 @@ const ocrDocumentPayload = (
     }
 
     if (ocrResult.alienCard) {
-        list.push({
-            documentId: documentIds[OCR_DOCUMENT_TYPE_ID.alienCard],
+        pushDoc(documentIds[OCR_DOCUMENT_TYPE_ID.alienCard], {
             fullName: ocrResult.alienCard.fullName,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.alienCard,
             ocrResult: JSON.stringify(ocrResult.alienCard.result),
@@ -50,12 +62,11 @@ const ocrDocumentPayload = (
     }
 
     if (ocrResult.receipt) {
-        list.push({
-            documentId: documentIds[OCR_DOCUMENT_TYPE_ID.receipt],
+        pushDoc(documentIds[OCR_DOCUMENT_TYPE_ID.receipt], {
             fullName: ocrResult.receipt.patientName,
             hospitalName: ocrResult.receipt.hospitalName,
             receiptNumber: ocrResult.receipt.receiptNo,
-            receiptAdmissionDate: ocrResult.receipt.receiptDate ? dayjs(ocrResult.receipt.receiptDate) : undefined, //รอปรับ database ใหม่ ชื่อฟิลด์ยังไม่ถูก
+            receiptAdmissionDate: ocrResult.receipt.receiptDate ? dayjs(ocrResult.receipt.receiptDate) : undefined,
             receiptAmount: ocrResult.receipt.netAmount,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.receipt,
             ocrResult: JSON.stringify(ocrResult.receipt.result),
@@ -63,17 +74,17 @@ const ocrDocumentPayload = (
     }
 
     if (ocrResult.medCert) {
-        list.push({
-            documentId: documentIds[OCR_DOCUMENT_TYPE_ID.medCert],
+        pushDoc(documentIds[OCR_DOCUMENT_TYPE_ID.medCert], {
             fullName: ocrResult.medCert.patientName,
             hospitalName: ocrResult.medCert.hospitalName,
-            //receiptAdmissionDate: ocrResult.medCert.admitDate ? dayjs(ocrResult.medCert.admitDate) : undefined,
             ocrDocumentTypeId: OCR_DOCUMENT_TYPE_ID.medCert,
             ocrResult: JSON.stringify(ocrResult.medCert.result),
         });
     }
+
     return list;
 };
+
 export const useOcrDocumentScan = () => {
     const [isOcrDocsValid, setIsOcrDocsValid] = useState(true);
     const [ocrResult, setOcrResult] = useState<OcrDocumentScanResult>({});

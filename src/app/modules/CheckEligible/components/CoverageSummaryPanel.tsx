@@ -1,13 +1,22 @@
-import React from "react";
-import { Box, Typography, Divider, Skeleton, Grid, Stack } from "@mui/material";
+import React, { useState } from "react";
+import { Box, Typography, Divider, Skeleton, Grid, Stack, Button } from "@mui/material";
 import ShieldIcon from "@mui/icons-material/Shield";
 import CustomPaper from "../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../_common/components/CustomComponent/HeadingWithColor";
 import { checkeligibleSelector } from "../store/checkeligibleSlice";
 import { useAppSelector } from "../../../../redux";
 import { formatDateString } from "../../../functionHelpers";
-import { GetCustomerBenefitDetailSearchDtoResponse } from "../../../api/coreClaimApi.client";
+import {
+    GetClaimHistoryDtoResponse,
+    GetCustomerBenefitDetailSearchDtoResponse,
+} from "../../../api/coreClaimApi.client";
 import { BenefitIcon } from "./BenefitIcon";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
+import HistoryIcon from "@mui/icons-material/History";
+import ViewClaimDetailModal from "../../CreatedClaim/components/CreateClaim/ViewClaimDetailModal";
+import { useGetCaseByClaimId, useGetClaimHistory } from "../../../api/coreClaimApi";
+import { PaginationResultDto, PaginationSortableDto } from "../../_common";
+import ClaimHistoryModalMore, { ClaimHistoryItemExtended } from "./ClaimHistoryModalMore";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -29,6 +38,7 @@ type BenefitDisplay = {
 type Props = {
     benefitData?: GetCustomerBenefitDetailSearchDtoResponse[];
     isLoading?: boolean;
+    applicationId?: string;
 };
 
 // ─── Mapper ───────────────────────────────────────────────────────────────────
@@ -50,6 +60,22 @@ const mapBenefitData = (data: GetCustomerBenefitDetailSearchDtoResponse[]): Bene
         productName: item.productName ?? undefined,
         coverageFrom: item.coverageFrom?.toString(),
         coverageTo: item.coverageTo?.toString(),
+    }));
+};
+
+const resolveClaimTypeCode = (claimType?: string): ClaimHistoryItemExtended["claimTypeCode"] => {
+    const value = (claimType ?? "").toLowerCase();
+    if (value.includes("death") || value.includes("dismember") || value.includes("เสียชีวิต")) return "DeathClaim";
+    if (value.includes("continuous") || value.includes("ต่อเนื่อง")) return "Continuous";
+    return "Normal";
+};
+
+const mapClaimHistoryData = (data: GetClaimHistoryDtoResponse[]): ClaimHistoryItemExtended[] => {
+    return data.map((item) => ({
+        ...item,
+        uncoveredAmount:
+            item.nonCoveredAmount ?? Math.max(0, (item.totalCaseAmount ?? 0) - (item.paidAmount ?? 0)),
+        claimTypeCode: resolveClaimTypeCode(item.claimType),
     }));
 };
 
@@ -171,7 +197,7 @@ const BenefitSkeleton: React.FC = () => (
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading }) => {
+const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading, applicationId }) => {
     const { CheckeLigibleDetails, isSearchCheckeLigibleDetails } = useAppSelector(checkeligibleSelector);
 
     const benefits: BenefitDisplay[] = benefitData ? mapBenefitData(benefitData) : [];
@@ -184,11 +210,103 @@ const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading }) => {
 
     const continuousClaim = CheckeLigibleDetails.continuousClaim;
 
+    const [selectedHistoryClaim, setSelectedHistoryClaim] = useState<GetClaimHistoryDtoResponse>();
+    const [openHistoryModal, setOpenHistoryModal] = useState(false);
+    const [openDetailCase, setOpenDetailCase] = useState(false);
+    const [historyPaginated, setHistoryPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 10,
+    });
+
+    const { data: claimHistoryData } = useGetClaimHistory(
+        applicationId,
+        undefined,
+        undefined,
+        undefined,
+        historyPaginated.page,
+        historyPaginated.recordsPerPage
+    );
+    const historyItems = mapClaimHistoryData(claimHistoryData?.data ?? []);
+
+    const historyPagination: PaginationResultDto = {
+        totalAmountRecords: claimHistoryData?.totalAmountRecords ?? 0,
+        totalAmountPages: claimHistoryData?.totalAmountPages ?? 0,
+        currentPage: claimHistoryData?.currentPage ?? 0,
+        recordsPerPage: claimHistoryData?.recordsPerPage ?? 0,
+        pageIndex: claimHistoryData?.pageIndex ?? 0,
+    };
+
+    const { data: caseData, isLoading: caseDataisLoading } = useGetCaseByClaimId(
+        selectedHistoryClaim?.claimId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        10
+    );
+
+    const handleDetailClick = (item: GetClaimHistoryDtoResponse) => {
+        setSelectedHistoryClaim(item);
+        setOpenDetailCase(true);
+    };
+
     return (
         <Box>
             {CheckeLigibleDetails.isContinuous && continuousClaim && (
                 <CustomPaper>
-                    <HeadingWithColor text="รายละเอียดเคลม (กรณีเคลมต่อเนื่อง)" />
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            flexWrap: "wrap",
+                            gap: 1,
+                            borderLeft: "4px solid #1a5da8",
+                            px: 2,
+                            py: 1,
+                            mb: 2,
+                            borderRadius: "0 4px 4px 0",
+                            bgcolor: "#eaf5ff",
+                        }}
+                    >
+                        <Box display="flex" alignItems="center" gap={1}>
+                            <FactCheckIcon sx={{ color: "#1a5da8", fontSize: 22 }} />
+                            <Typography fontWeight={700} color="#1a5da8">
+                                รายการเคลมต่อเนื่องที่เลือก
+                            </Typography>
+                        </Box>
+
+                        <Box display="flex" alignItems="center" gap={1}>
+                            {/* <Box
+                                sx={{
+                                    bgcolor: "#eaf5ff",
+                                    color: "#1a5da8",
+                                    borderRadius: "16px",
+                                    px: 1.5,
+                                    py: 0,
+                                    fontSize: 13,
+                                    fontWeight: 700,
+                                    whiteSpace: "nowrap",
+                                }}
+                            >
+                                1 รายการที่เลือก
+                            </Box> */}
+                            <Button
+                                variant="outlined"
+                                size="small"
+                                startIcon={<HistoryIcon fontSize="small" />}
+                                sx={{
+                                    textTransform: "none",
+                                    borderRadius: "8px",
+                                    whiteSpace: "nowrap",
+                                    bgcolor: "#fff",
+                                }}
+                                onClick={() => setOpenHistoryModal(true)}
+                            >
+                                ดูประวัติการเคลม
+                            </Button>
+                        </Box>
+                    </Box>
                     <Box
                         sx={{
                             border: "1px solid",
@@ -226,7 +344,11 @@ const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading }) => {
                                         <Typography component="span" fontSize={14} color="text.secondary">
                                             ยอดเบิกรวม :
                                         </Typography>{" "}
-                                        -
+                                        {continuousClaim.totalCaseAmount !== undefined
+                                            ? continuousClaim.totalCaseAmount.toLocaleString("th-TH", {
+                                                  minimumFractionDigits: 2,
+                                              })
+                                            : "-"}
                                     </Typography>
                                 </Stack>
                             </Grid>
@@ -250,7 +372,11 @@ const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading }) => {
                                         <Typography component="span" fontSize={14} color="text.secondary">
                                             ยอดจ่ายรวม :
                                         </Typography>{" "}
-                                        -
+                                        {continuousClaim.totalPaidAmount !== undefined
+                                            ? continuousClaim.totalPaidAmount.toLocaleString("th-TH", {
+                                                  minimumFractionDigits: 2,
+                                              })
+                                            : "-"}
                                     </Typography>
                                 </Stack>
                             </Grid>
@@ -313,6 +439,20 @@ const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading }) => {
 
                 <Box sx={{ background: "#1a5da8", py: 0.7, px: 1, borderRadius: "0 0 4px 4px" }} />
             </CustomPaper>
+            <ClaimHistoryModalMore
+                open={openHistoryModal}
+                onClose={() => setOpenHistoryModal(false)}
+                items={historyItems}
+                handleDetailClick={handleDetailClick}
+                paginated={historyPagination}
+                setPaginated={setHistoryPaginated}
+            />
+            <ViewClaimDetailModal
+                open={openDetailCase}
+                onClose={() => setOpenDetailCase(false)}
+                caseData={caseData?.data ?? []}
+                isLoading={caseDataisLoading}
+            />
         </Box>
     );
 };

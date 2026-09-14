@@ -32,6 +32,11 @@ export const defaultSearchFromOptions = [
     { value: 8, label: "ชื่อสถานศึกษา" },
 ];
 
+export const getSearchFromOptions = (isHospital = false) =>
+    defaultSearchFromOptions.map((option) =>
+        option.value === 8 ? { ...option, label: isHospital ? "ชื่อสถานพยาบาล" : "ชื่อสถานศึกษา" } : option
+    );
+
 export const productMultipleSelectData = [
     { value: 6, label: "PH" },
     { value: 26, label: "PA" },

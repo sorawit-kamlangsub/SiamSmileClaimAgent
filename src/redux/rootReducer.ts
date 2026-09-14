@@ -28,4 +28,5 @@ export const rootReducer = combineReducers({
     repay: repaySlice,
     refund: refundSlice,
     adjust: adjustSlice,
+    // billingClaim: ไม่มี redux slice แล้ว — ใช้ react-query cache ของ hospitalBillingApi.ts แทน
 });

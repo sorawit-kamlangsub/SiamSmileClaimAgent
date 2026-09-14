@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import HourglassTopIcon from "@mui/icons-material/HourglassTop";
@@ -9,8 +9,10 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
-import useConsiderDetailHook from "../../../../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { useFormikContext } from "formik";
+import { GetDecisionReasonDtoResponse } from "../../../../../../api/coreClaimApi.client";
 
 type ConsiderType = "pendingDocument" | "revision" | "rejected" | "cancelled";
 
@@ -55,7 +57,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "rejected",
-        decisionId: 6,
+        decisionId: 5,
         label: "ปฏิเสธ",
         icon: <BlockIcon fontSize="small" />,
         color: "#D76451",
@@ -68,7 +70,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "cancelled",
-        decisionId: 5,
+        decisionId: 6,
         label: "ยกเลิก",
         icon: <CancelIcon fontSize="small" />,
         color: "#D92D2D",
@@ -83,14 +85,51 @@ const statusOptions: StatusOption[] = [
 type ConsiderSectionProps = {
     productId?: number | undefined;
     aplicationCode?: string | undefined;
+    decisionReason: { data?: GetDecisionReasonDtoResponse[] } | undefined;
+    decisionReasonLoading: boolean;
+    /**
+     * decisionId ของผลการพิจารณาที่ไม่ต้องแสดงปุ่มในหน้านี้
+     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3, "ยกเลิก" = 5)
+     */
+    hiddenDecisionIds?: number[];
+    /** override หัวข้อ section — default "ผลการพิจารณา" (เคลมโรงพยาบาลใช้ "แจ้งผลการพิจารณาโรงพยาบาล") */
+    headingText?: string;
+    /** override label ปุ่ม/หัวข้อรายละเอียดของแต่ละ decisionId (เช่น เคลมโรงพยาบาล "รอแก้ไข" → "แจ้งแก้ไข") */
+    labelOverrides?: Partial<Record<number, string>>;
 };
 
-const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) => {
-    const { formik, decisionReason, decisionReasonLoading } = useConsiderDetailHook();
-    const [detail, setDetail] = useState("");
+const ConsiderSection = ({
+    productId,
+    aplicationCode,
+    decisionReason,
+    decisionReasonLoading,
+    hiddenDecisionIds,
+    headingText,
+    labelOverrides,
+}: ConsiderSectionProps) => {
+    const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
 
-    const selectedStatus = statusOptions.find((status) => status.decisionId === formik.values.considerResult);
+    const visibleStatusOptions = statusOptions.filter((status) => !hiddenDecisionIds?.includes(status.decisionId));
+    const labelOf = (status: StatusOption) => labelOverrides?.[status.decisionId] ?? status.label;
+
+    // ผลการพิจารณาที่เลือกไว้เดิมกลายเป็นตัวเลือกที่ถูกซ่อน (เช่น เปลี่ยน hiddenDecisionIds ภายหลัง) : ล้างค่าเพื่อไม่ให้ค้าง
+    useEffect(() => {
+        if (formik.values.considerResult === undefined) return;
+        const stillVisible = visibleStatusOptions.some((status) => status.decisionId === formik.values.considerResult);
+        if (stillVisible) return;
+
+        formik.setFieldValue("considerResult", undefined, false);
+        formik.setFieldValue("decisionReasonId", undefined, false);
+        formik.setFieldValue("decisionReasonDetail", "", false);
+    }, [hiddenDecisionIds, formik.values.considerResult]);
+
+    const reasonMeta = formik.getFieldMeta<number | undefined>("decisionReasonId");
+    const detailMeta = formik.getFieldMeta<string | undefined>("decisionReasonDetail");
+    const reasonHasError = !!reasonMeta.touched && !!reasonMeta.error;
+    const detailHasError = !!detailMeta.touched && !!detailMeta.error;
+
+    const selectedStatus = visibleStatusOptions.find((status) => status.decisionId === formik.values.considerResult);
     const selectStatus = (status: StatusOption) => {
         formik.setFieldValue("considerResult", status.decisionId, false);
         formik.setFieldValue("decisionReasonId", undefined, false);
@@ -106,15 +145,24 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
 
     return (
         <CustomPaper>
-            <HeadingWithColor icon={<FactCheckIcon sx={{ fontSize: 27 }} />} text="ผลการพิจารณา" color="blue" />
+            <HeadingWithColor
+                icon={<FactCheckIcon sx={{ fontSize: 27 }} />}
+                text={headingText ?? "ผลการพิจารณา"}
+                color="blue"
+            />
 
             <Box aria-label="เลือกผลการพิจารณา" role="radiogroup" sx={{ mt: 2.5 }}>
                 <Grid container spacing={{ xs: 1.25, sm: 2 }}>
-                    {statusOptions.map((status) => {
+                    {visibleStatusOptions.map((status) => {
                         const isSelected = status.decisionId === formik.values.considerResult;
 
                         return (
-                            <Grid item xs={6} lg={3} key={status.value}>
+                            <Grid
+                                item
+                                xs={6}
+                                lg={Math.max(3, Math.floor(12 / visibleStatusOptions.length))}
+                                key={status.value}
+                            >
                                 <Button
                                     fullWidth
                                     aria-checked={isSelected}
@@ -142,7 +190,7 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
                                         },
                                     }}
                                 >
-                                    {status.label}
+                                    {labelOf(status)}
                                 </Button>
                             </Grid>
                         );
@@ -184,7 +232,7 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
                             {selectedStatus.icon}
                         </Box>
                         <Box>
-                            <Typography fontWeight={600}>{selectedStatus.label}</Typography>
+                            <Typography fontWeight={600}>{labelOf(selectedStatus)}</Typography>
                             <Typography
                                 sx={{
                                     mt: 0.25,
@@ -199,39 +247,50 @@ const ConsiderSection = ({ productId, aplicationCode }: ConsiderSectionProps) =>
                     </Box>
 
                     <Box sx={{ p: { xs: 2, sm: 3 } }}>
-                        <TextField
-                            select
-                            required
-                            fullWidth
-                            label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
-                            value={formik.values.decisionReasonId || ""}
-                            onChange={(event) => formik.setFieldValue("decisionReasonId", Number(event.target.value))}
-                        >
-                            {(decisionReason?.data ?? []).map((item) => (
-                                <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
-                                    {item.decisionReasonName}
-                                </MenuItem>
-                            ))}
-                        </TextField>
+                        <Box data-field-name="decisionReasonId">
+                            <TextField
+                                select
+                                required
+                                fullWidth
+                                label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
+                                value={formik.values.decisionReasonId || ""}
+                                onChange={(event) =>
+                                    formik.setFieldValue("decisionReasonId", Number(event.target.value))
+                                }
+                                onBlur={() => formik.setFieldTouched("decisionReasonId", true)}
+                                error={reasonHasError}
+                                helperText={reasonHasError ? reasonMeta.error : undefined}
+                            >
+                                {(decisionReason?.data ?? []).map((item) => (
+                                    <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
+                                        {item.decisionReasonName}
+                                    </MenuItem>
+                                ))}
+                            </TextField>
+                        </Box>
 
-                        <TextField
-                            required
-                            fullWidth
-                            multiline
-                            minRows={4}
-                            label={selectedStatus.detailLabel}
-                            placeholder={selectedStatus.detailPlaceholder}
-                            value={detail}
-                            onChange={(event) => setDetail(event.target.value)}
-                            sx={{ mt: 2 }}
-                        />
+                        <Box data-field-name="decisionReasonDetail" sx={{ mt: 2 }}>
+                            <TextField
+                                required
+                                fullWidth
+                                multiline
+                                minRows={4}
+                                label={selectedStatus.detailLabel}
+                                placeholder={selectedStatus.detailPlaceholder}
+                                value={formik.values.decisionReasonDetail || ""}
+                                onChange={(event) => formik.setFieldValue("decisionReasonDetail", event.target.value)}
+                                onBlur={() => formik.setFieldTouched("decisionReasonDetail", true)}
+                                error={detailHasError}
+                                helperText={detailHasError ? detailMeta.error : undefined}
+                            />
+                        </Box>
 
                         {selectedStatus.requiresAttachment && (
                             <DocumentScanTable
-                                productId={productId}
-                                documentTypeId={15}
+                                productTypeId={productId ?? 0}
+                                documentType="ใบแจ้งปฏิเสธสินไหม"
                                 aplicationCode={aplicationCode ?? ""}
-                                rejectClaim
+                                Header="เอกสารประกอบการปฏิเสธ"
                             />
                         )}
                     </Box>

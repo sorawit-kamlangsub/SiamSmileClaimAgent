@@ -74,6 +74,7 @@ const FormikTextNumber = ({
     inputProps = {
         inputMode: "decimal",
     },
+    InputProps,
     ...props
 }: FormikTextNumberProps) => {
     const { value, error, touched, initialValue } = formik.getFieldMeta<number | undefined>(name);
@@ -112,6 +113,7 @@ const FormikTextNumber = ({
                     inputRef: props.inputRef,
                     onBlur: handleBlur,
                     size: "small",
+                    ...InputProps,
                 }}
                 inputProps={inputProps}
                 {...textFieldProps}

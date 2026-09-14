@@ -11,12 +11,13 @@ import { useState } from "react";
 import dayjs from "dayjs";
 
 const ConsiderMonitorPage = () => {
-    const { formik, statusOptions, decisionDataLoading } = useSearchFilterHook();
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook();
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
         dateFrom: dayjs(),
         dateTo: dayjs(),
         isSearch: true,
+        path: "customers",
     });
     const { dashboardData, dashboardDataLoading } = useDashboardHook(appliedFilter);
     const handleSearch = () => {
@@ -29,6 +30,7 @@ const ConsiderMonitorPage = () => {
             searchFrom: formik.values.searchFrom,
             searchDetail: formik.values.searchDetail,
             statusId: formik.values.statusId,
+            path: "customers",
         });
     };
     const handleClear = () => {
@@ -42,6 +44,7 @@ const ConsiderMonitorPage = () => {
             searchFrom: undefined,
             searchDetail: "",
             statusId: 0,
+            path: "customers",
         });
     };
     return (
@@ -55,7 +58,7 @@ const ConsiderMonitorPage = () => {
                         formik={formik}
                         statusOptions={statusOptions}
                         onSearch={handleSearch}
-                        decisionDataLoading={decisionDataLoading}
+                        claimTransactionTypeDataLoading={claimTransactionTypeDataLoading}
                         onClear={handleClear}
                     />
                 </Grid>
