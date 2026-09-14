@@ -232,8 +232,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: considerResult === 6 ? decisionReasonId : undefined,
-            rejectDate: considerResult === 6 ? dayjs() : undefined,
+            rejectReasonId: considerResult === 5 ? decisionReasonId : undefined,
+            rejectDate: considerResult === 5 ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDraft(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
