@@ -4,7 +4,6 @@ import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
 const apiURL = `${APIGW_CLAIM_FUND_API_URL}`;
-
 const getClaimByClaimOrCase = "getClaimByClaimOrCaseKey";
 
 interface SearchClaimOrCasePayload extends PaginationSortableDto {

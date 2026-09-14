@@ -3,7 +3,6 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 
 const claimFundAPI_URL = APIGW_CLAIM_FUND_API_URL;
-
 const getCurrentSettingHistoryKey = "getCurrentSetting";
 
 export const useGetCurrentSettingHistory = () => {

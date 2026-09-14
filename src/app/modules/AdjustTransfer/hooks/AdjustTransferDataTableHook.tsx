@@ -6,8 +6,9 @@ import { useGetClaimAdjustMonitorWithFilter } from "../adjustTransferMonitorAPI"
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { useMemo, useState } from "react";
 import { numberWithCommas } from "../../../functionHelpers";
-import { useAppSelector } from "../../../../redux";
+import { useAppDispatch, useAppSelector } from "../../../../redux";
 import dayjs from "dayjs";
+import { setOpenDialogAdjustDetail, setSelectedRowForEdit } from "../store/adjustTransferMonitorSlice";
 
 const statusColorMap: Record<number, { bg: string; text: string }> = {
     2: { bg: "#FFF3E0", text: "#EF6C00" },
@@ -47,6 +48,7 @@ const StatusPill = ({
 
 const useAdjustTransferDataTableHook = () => {
     const { searchMonitor } = useAppSelector((state) => state.refund);
+    const dispatch = useAppDispatch();
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -61,10 +63,15 @@ const useAdjustTransferDataTableHook = () => {
     //     console.log("view", row);
     // };
 
-    // const handleEdit = (row: AdditionalTransferRow) => {
-    //     // TODO: open edit dialog for a failed transfer (e.g. fix account no. and retry)
-    //     console.log("edit", row);
-    // };
+    const handleEdit = (row: { caseId: string; totalNetPaidAmount: number }) => {
+        dispatch(
+            setSelectedRowForEdit({
+                paymentId: "588DD869-9E5C-46EB-8A0C-9C7C8328AB62",
+                amount: row.totalNetPaidAmount ?? 0,
+            })
+        );
+        dispatch(setOpenDialogAdjustDetail({ isOpen: true }));
+    };
 
     const pagination: PaginationResultDto = useMemo(
         () => ({
@@ -178,7 +185,12 @@ const useAdjustTransferDataTableHook = () => {
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
                             {row.paymentStatusId === 5 && (
-                                <IconButton size="small" onClick={() => {}}>
+                                <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                        handleEdit(row);
+                                    }}
+                                >
                                     <EditIcon sx={{ color: "#B8860B", fontSize: 20 }} />
                                 </IconButton>
                             )}
