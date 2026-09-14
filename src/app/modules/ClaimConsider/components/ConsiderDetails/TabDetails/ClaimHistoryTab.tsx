@@ -237,7 +237,7 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
                 <TextField
                     size="small"
                     fullWidth
-                    placeholder="ค้นหาเลขที่เคลม / ชื่อสถานพยาบาล"
+                    placeholder="ค้นหาเลขที่เคลม"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     InputProps={{
