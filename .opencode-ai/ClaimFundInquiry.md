@@ -3,6 +3,12 @@
 > **เวลาทำงานเกี่ยวกับสอบถามธนาคาร (BankStatus / Inquiry) ต้องเปิดไฟล์นี้มาอ่านก่อนทุกครั้ง**
 > ห้ามข้ามแม้ภารกิจจะดูง่าย ทุกงานของโมดูล `BankStatus` + API `/Inquiry/...` และ `/PayTransfer/inquirytransectionbank`
 
+> ## ⛔ กฎตายตัว (decision ของ user — ห้าม agent แก้ base เอง)
+> **โมดูลสอบถามธนาคาร "ไม่ย้าย" ไป `VITE_APIGW_CLAIM_FUND_API_URL` — ให้ใช้ `VITE_CLAIM_FUND_API_URL` (= `https://claimfundapi.uatsiamsmile.com`) ถาวร**
+> - `Inquiry` endpoints: base = `${API_CLAIM_FUND_URL}/api/ClaimFund` (⚠️ env ไม่มี suffix นี้ในตัว — ต้องต่อเอง)
+> - `inquirytransectionbank`: base = `${APIGW_URL}/pay` (คนละ host, คงเดิม)
+> - **user แก้โค้ดเอง** — agent ห้ามแก้/แกว่งค่า base ของ `bankStatusCheckAPI.ts` เอง นอกเสียจาก user ขอแก้ filename อื่นในโมดูลนี้
+
 ---
 
 ## โครงสร้างโมดูล (route `/manage/bank/status`)
@@ -33,7 +39,9 @@
 
 ## สถานะงาน / โน้ตความรู้
 
-- ✅ **ย้าย base Inquiry endpoints กลับไปใช้ host เก่า `VITE_CLAIM_FUND_API_URL` = `https://claimfundapi.uatsiamsmile.com`** (เดิมหลังงาน migration ใช้ `VITE_APIGW_CLAIM_FUND_API_URL`) — เปลี่ยนเฉพาะ `.ts:6` `claimFundAPI_URL = \`${API_CLAIM_FUND_URL}/api/ClaimFund\``; `payTransferGWAPI_URL` คง `${APIGW_URL}/pay` ไว้ตามเดิม
+- ✅ **decision (ถาวร): สอบถามธนาคารใช้ api เดิม `VITE_CLAIM_FUND_API_URL` = `https://claimfundapi.uatsiamsmile.com` — "ไม่ย้าย" ไป APIGW**
+  - `Inquiry` endpoints: base `${API_CLAIM_FUND_URL}/api/ClaimFund`; `payTransferGWAPI_URL` = `${APIGW_URL}/pay` คงเดิม
+  - **user แก้โค้ดเอง** — โค้ดถูกแกว่งกลับเป็น `APIGW_CLAIM_FUND_API_URL` หลายรอบ → agent ห้ามแก้/แกว่ง base ไฟล์นี้เอง
 - ❗ **`catch (err: Error) { throw err.message; }` อยู่ทุก API ในไฟล์นี้** — ปัญหาเดียวกับที่เจอตอน Refund: axios HTTP error (404/5xx) `err.message` จะได้แค่ "Request failed with status code 404" เสมอ ทิ้ง `response.data.message` → ถ้าเป็นงาน error display ต้องแก้ให้ขุด `err.response?.data?.message` ก่อน (ดูทางแก้จาก `getRefundApproveMonitorData` ใน `refundAPI.ts`)
 - ❗ `useSentToBank` บริหาร `isSuccess:false` เองผ่าน callback (ไม่ throw) — ส่วนอีก 2 ตัว `isSuccess:false` จะ `throw res.data.message` ตามมาตรฐานโปรเจค
 - typecheck error เดิมของโมดูลนี้: `TransactionStatusDataTableHook.tsx:29` → `rowIndex` ประกาศแต่ไม่ได้ใช้ (TS6133) — ยังไม่ได้แก้
@@ -42,4 +50,4 @@
 ---
 
 ## ไฟล์ที่เกี่ยวข้องข้ามโมดูล
-- `ClaimFundAdditionalTransfer.md` — บันทึกไว้ว่า `bankStatusCheckAPI.ts` ย้าย base จาก host เก่า → `VITE_APIGW_CLAIM_FUND_API_URL` แล้ว (ผ่านงานโอนเงินเคลมเพิ่ม)
+- `ClaimFundAdditionalTransfer.md` — มีตาราง migration host เดิมระบุ `BankStatus` ว่าย้ายไป APIGW แล้ว — **decision (ปัจจุบัน): BankStatus "ไม่ย้าย" ใช้ `VITE_CLAIM_FUND_API_URL` ถาวร** (user จัดการเอง — ไม่เหมือนไฟล์อื่นในตารางนั้น)
