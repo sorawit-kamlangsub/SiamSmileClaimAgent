@@ -631,7 +631,14 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         await approveClaimDecision.mutateAsync(payload);
     };
 
-    return { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving: approveClaimDecision.isLoading };
+    return {
+        handleSaveDraft,
+        handleConfirmConsider,
+        handleApprove,
+        isApproving: approveClaimDecision.isLoading,
+        isSavingDraft: saveClaimEditDraft.isLoading,
+        isSavingDecision: saveClaimDecision.isLoading,
+    };
 };
 
 export default useClaimDetailActionHook;
