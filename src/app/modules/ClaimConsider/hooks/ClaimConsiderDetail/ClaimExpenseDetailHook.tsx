@@ -385,32 +385,25 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             maximumLimit: selectedItem.maximumLimit,
         });
 
+        // ทั้งสามเงื่อนไขนี้แยกกันไม่ได้ (discount/notCovered/amount ไม่ติดลบเสมอ ดังนั้น discount+notCovered > amount
+        // เป็นจริงทุกครั้งที่เงื่อนไขเดี่ยวข้อใดข้อหนึ่งเป็นจริง) ต้องใช้ if/else-if ไล่จากกรณีเฉพาะไปกรณีรวม
+        // ไม่งั้น setDiscountError/setNotCoveredError ที่เรียกทีหลังจะทับข้อความของกรณีเฉพาะทิ้งเสมอ
         let hasError = false;
-        if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
+        if (discount > amount && notCovered <= 0) {
             setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
+            setNotCoveredError("");
             hasError = true;
-        } else {
-            setDiscountError("");
-        }
-        if (notCovered > amount && (notCovered == 0 || notCovered == undefined)) {
+        } else if (notCovered > amount && discount <= 0) {
             setNotCoveredError("ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก");
+            setDiscountError("");
             hasError = true;
-        } else {
-            setNotCoveredError("");
-        }
-        if (discount + notCovered > amount) {
-            setNotCoveredError("ยอดไม่คุ้มครองรวมส่วนลดต้องไม่มากกว่ายอดเบิก");
+        } else if (discount + notCovered > amount) {
             setDiscountError("ส่วนลดรวมยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก");
+            setNotCoveredError("ยอดไม่คุ้มครองรวมส่วนลดต้องไม่มากกว่ายอดเบิก");
             hasError = true;
         } else {
+            setDiscountError("");
             setNotCoveredError("");
-            setDiscountError("");
-        }
-        if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
-            setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
-            hasError = true;
-        } else {
-            setDiscountError("");
         }
         // ยอดไม่คุ้มครอง > 0 ต้องระบุสาเหตุ
         if (hasMissingReasonError({ claimAmount: amount, discount, notCovered, reason })) {

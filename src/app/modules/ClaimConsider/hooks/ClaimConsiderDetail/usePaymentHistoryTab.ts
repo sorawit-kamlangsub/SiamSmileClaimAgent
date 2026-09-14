@@ -1,6 +1,11 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 import { useGetDCR } from "../../../../api/coreClaimApi";
+
+const DEFAULT_PAGINATED: PaginationSortableDto = {
+    page: 1,
+    recordsPerPage: 15,
+};
 
 /**
  * ต่อ useGetDCR ของจริงแล้ว (src/app/api/coreClaimApi.ts) — ตารางใช้ข้อมูลจริงทั้งหมด
@@ -11,10 +16,15 @@ import { useGetDCR } from "../../../../api/coreClaimApi";
  * ในตาราง (items ของหน้าปัจจุบัน) ไม่ใช่ยอดรวมข้ามทุกหน้า
  */
 const usePaymentHistoryTab = (applicationCode?: string) => {
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 15,
-    });
+    const [paginated, setPaginated] = useState<PaginationSortableDto>(DEFAULT_PAGINATED);
+
+    // PaymentHistoryTab ไม่ถูก unmount ตอนสลับไปดูอีกเคลม (ClaimDetailsTab ไม่ unmount เช่นกัน — ดู
+    // ConsiderDetailHook.tsx) ถ้าไม่รีเซ็ต paginated ตรงนี้ด้วย page ของเคลมก่อนหน้าจะติดมาที่เคลมใหม่
+    const prevApplicationCodeRef = useRef(applicationCode);
+    if (prevApplicationCodeRef.current !== applicationCode) {
+        prevApplicationCodeRef.current = applicationCode;
+        setPaginated(DEFAULT_PAGINATED);
+    }
 
     const {
         data: dcrData,
