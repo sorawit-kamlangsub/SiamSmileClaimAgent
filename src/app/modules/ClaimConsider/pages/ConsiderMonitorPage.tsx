@@ -21,11 +21,15 @@ const ConsiderMonitorPage = () => {
     });
     const { dashboardData, dashboardDataLoading, dashboardDataError } = useDashboardHook(appliedFilter);
     const handleSearch = () => {
+        // ห้ามให้ dateFrom/dateTo เป็น undefined — useGetDashboardCustomerConsider ต้องมีวันที่ครบถึงจะ enabled
+        // แต่ useGetCustomerClaimAdjudicationMonitor ไม่ต้อง ถ้าผู้ใช้ล้างช่องวันที่ก่อนกดค้นหา dashboard จะ
+        // ค้างข้อมูลเก่า (query ถูก disable) ในขณะที่ตารางยิงค้นหาแบบไม่มีวันที่ต่อ ทำให้เห็นข้อมูลคนละช่วงกัน
+        // จึง fallback กลับไปใช้วันที่ที่ applied อยู่เดิมแทนการปล่อยว่าง
         setAppliedFilter({
             isSearch: true,
             dateType: formik.values.dateType,
-            dateFrom: formik.values.dateFrom ?? undefined,
-            dateTo: formik.values.dateTo ?? undefined,
+            dateFrom: formik.values.dateFrom ?? appliedFilter.dateFrom,
+            dateTo: formik.values.dateTo ?? appliedFilter.dateTo,
             product: formik.values.product,
             searchFrom: formik.values.searchFrom,
             searchDetail: formik.values.searchDetail,
