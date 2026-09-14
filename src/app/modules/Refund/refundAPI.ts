@@ -4,6 +4,7 @@ import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationDto } from "../_common";
 
 const getRefundMonitor = "getRefundMonitorKey";
+const getRefundApproveMonitor = "getRefundApproveMonitorKey";
 const getRefundDetail = "getRefundDetailKey";
 const getRefundReasons = "getRefundReasonsKey";
 const getRefundStatus = "getRefundStatusKey";
@@ -52,6 +53,54 @@ const getRefundMonitorData = ({
         ...(searchDetail ? { searchDetail } : {}),
     };
     const url = encodeURLWithParams(`${apiURL}/Refund/RefundMonitor`, {
+        Page: pagination.page ?? 1,
+        recordsPerPage: pagination.recordsPerPage ?? 10,
+    });
+    return axios
+        .post(url, formBody)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                return { ...res.data, data: [] };
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+export const useGetRefundApproveMonitorWithFilter = ({
+    branceId,
+    refundStatusId,
+    pagination,
+    searchDetail,
+    searchKey,
+    enabled,
+}: GetRefundMonitorFilterType) => {
+    return useQuery(
+        [branceId, refundStatusId, pagination, searchDetail, searchKey, getRefundApproveMonitor],
+        () => getRefundApproveMonitorData({ branceId, refundStatusId, pagination, searchDetail }),
+        {
+            enabled: enabled ?? !!refundStatusId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+const getRefundApproveMonitorData = ({
+    branceId = null,
+    refundStatusId = null,
+    pagination,
+    searchDetail,
+}: GetRefundMonitorFilterType) => {
+    const formBody = {
+        branceId,
+        refundStatusId,
+        ...(searchDetail ? { searchDetail } : {}),
+    };
+    const url = encodeURLWithParams(`${apiURL}/Refund/RefundApproveMonitor`, {
         Page: pagination.page ?? 1,
         recordsPerPage: pagination.recordsPerPage ?? 10,
     });

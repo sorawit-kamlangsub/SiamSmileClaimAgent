@@ -2,7 +2,7 @@ import { Box, IconButton, Link, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
-import { useGetRefundMonitorWithFilter } from "../../Refund/refundAPI";
+import { useGetRefundApproveMonitorWithFilter } from "../../Refund/refundAPI";
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
@@ -63,7 +63,7 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
         page: 1,
         recordsPerPage: 5,
     });
-    const { data: getRefundMonitorData, isLoading: isGetRefundLoading } = useGetRefundMonitorWithFilter({
+    const { data: getRefundMonitorData, isLoading: isGetRefundLoading } = useGetRefundApproveMonitorWithFilter({
         branceId: filter?.branchId ?? null,
         refundStatusId: filter?.statusId ?? null,
         searchDetail: filter?.searchText,
