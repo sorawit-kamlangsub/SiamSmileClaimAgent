@@ -1,4 +1,4 @@
-import { ClaimFundStandardDataTable } from "../../_common";
+import { ClaimFundStandardDataTable, NOT_FOUND_MESSAGE } from "../../_common";
 import useRefundApproveDataTableHook from "../hooks/RefundApproveDataTableHook";
 import { RefundSearchFilterValues } from "../../Refund/_common/RefundSearchFilterForm";
 
@@ -24,7 +24,8 @@ const RefundApproveDataTable = ({ filter, hasSearched, searchKey }: RefundApprov
                 paginated={pagination}
                 setPaginated={setPaginated}
                 isLoading={hasSearched ? isLoading : false}
-                delayNoMatch={hasSearched}
+                noMatchText={NOT_FOUND_MESSAGE}
+                delayNoMatch={false}
             />
         </>
     );
