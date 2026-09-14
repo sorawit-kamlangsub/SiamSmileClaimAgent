@@ -4,7 +4,7 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { AppliedFilter } from "./SearchFilterHook";
 import {
     backgroundColorMapClaimTransactionType,
@@ -34,9 +34,14 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
         recordsPerPage: 10,
     });
 
-    useEffect(() => {
+    // รีเซ็ต page ระหว่าง render (ไม่ใช่ useEffect) — ถ้ารอ useEffect, render รอบที่ appliedFilter เปลี่ยนใหม่
+    // จะยังยิง query ด้วย filter ใหม่ + page เก่าไปก่อน 1 ครั้ง (เช่น filter ใหม่มีแค่หน้าเดียวแต่ page ค้างที่ 3)
+    // แล้วค่อยถูกแก้เป็น page 1 ในรอบถัดไป ทำให้มี request เกิน/ผิดเกิดขึ้นจริง
+    const prevAppliedFilterRef = React.useRef(appliedFilter);
+    if (prevAppliedFilterRef.current !== appliedFilter) {
+        prevAppliedFilterRef.current = appliedFilter;
         setPaginated((prev) => ({ ...prev, page: 1 }));
-    }, [appliedFilter]);
+    }
 
     const { data: claimTransactionData, isLoading: claimTransactionDataLoading } =
         useGetCustomerClaimAdjudicationMonitor(
