@@ -30,6 +30,7 @@ type ApproveRefundCaseDetail = {
 };
 
 type ApproveRefundDetail = {
+    caseRefundId?: string;
     claimNo?: string;
     customerName?: string;
     createdBy?: string;
@@ -61,6 +62,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
+    const caseRefundId = detail?.caseRefundId ?? "";
     const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
 
     const formik = useFormik<ApproveRefundDialogFormValues>({
@@ -74,7 +76,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
         },
         onSubmit: (values) => {
             console.log("reject refund", {
-                caseId,
+                caseRefundId,
                 refundNo: row?.refundNo,
                 rejectReasonId: values.rejectReasonId,
                 note: values.note,
@@ -91,7 +93,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 
     const handleApproveClick = () => {
         console.log("approve refund", {
-            caseId,
+            caseRefundId,
             refundNo: row?.refundNo,
         });
         onClose();
