@@ -87,7 +87,7 @@
 - ข้อมูล: `useGetRefundDetail(caseId)` → `GET {apiURL}/Refund/SaveRefundDetails?caseId=` (enabled=!!caseId) — **response ยังไม่ typed (any)** → dialog ประกาศ type ท้องถิ่น `ApproveRefundDetail`/`ApproveRefundCaseDetail` + cast; สาเหตุปฏิเสธจาก `useGetRefundReasons()` → `/Masters/GetRefundReasons` (data = `{id,name}[]` cast เหมือนกัน)
 - Mapping (ยืนยันกับ user แล้ว): รหัสรายการ=`row.refundNo` (badge), เลขที่ CPG=`row.claimNo`, สาขา=`row.branceName`, ชื่อ-สกุล=`detail.customerName ?? row.customerName`, ผู้ทำรายการ=`detail.createdByUserName`, จำนวนเคลม=`caseDetails.length`, โอนคืนรวมเฉลี่ย=sum(`caseDetails[].additionalAmount`) (fallback `row.refundAmount`), แจ้งโอน=sum(`totalNetPaidAmount`), คงเหลือ=แจ้งโอน-โอนคืน
 - ปุ่ม "คลิกดูภาพ Slip การโอนเงิน" → `window.open("/slip/{refundNo}", "_blank")` (basename ของ router = "/"); disabled ถ้าไม่มี refundNo
-- ตารางย่อย = MUI `<Table>` ภายใน dialog (เลขที่ CL=row.claimNo, เลขที่ CC=item.caseNo, แจ้งโอน/โอนคืน/คงเหลือ, วันที่โอน=`-`) + แถว "รวม"; mockup มี "ข้อมูลต่อหน้า/1-1 จาก 1" ใส่เป็น static text (dialog ไม่ได้ทำ pagination จริง)
+- **ตารางย่อยถูกลบออกแล้ว (user สั่ง "เอาตาราง ออก")** — เหลือ info-grid (ตัด "รหัสรายการ" badge ออกด้วย ตาม user) + select สาเหตุปฏิเสธ + หมายเหตุ + ปุ่ม ปฏิเสธ/อนุมัติ; ค่ายอดรวม (แจ้งโอน/โอนคืนรวม/คงเหลือ) ยังคำนวณจาก `caseDetails` ผ่าน `totals` (useMemo) ไว้ใน info-grid; `row.refundNo` ยังใช้กับปุ่ม Slip กับ console.log
 - รูปแบบ per AUN: tall dialog (Paper height 90vh + overflow hidden), header icon tile + Close สีแดง; ปุ่ม ปฏิเสธ=outlined error (กด trigger formik validation), อนุมัติ=contained เขียว; กดแล้ว console.log + ปิด dialog (ยังไม่ refresh ตาราง)
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ 6 pre-existing)
 

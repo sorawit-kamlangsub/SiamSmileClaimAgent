@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, Grid, IconButton, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogContent, DialogTitle, Grid, IconButton, Typography } from "@mui/material";
 import ImageIcon from "@mui/icons-material/Image";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
@@ -163,24 +163,6 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                     <>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>รหัสรายการ :</Typography>
-                                <Box
-                                    sx={{
-                                        display: "inline-block",
-                                        mt: 0.5,
-                                        backgroundColor: "#E3F2FD",
-                                        color: "#0D4C8C",
-                                        border: "1px solid #90CAF9",
-                                        borderRadius: "6px",
-                                        px: "12px",
-                                        py: "4px",
-                                        fontWeight: 500,
-                                    }}
-                                >
-                                    {row?.refundNo ?? "-"}
-                                </Box>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่ CPG :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 500 }}>{row?.claimNo ?? "-"}</Typography>
                             </Grid>
@@ -225,57 +207,6 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                                 </Typography>
                             </Grid>
                         </Grid>
-
-                        <TableContainer sx={{ mt: 2, border: "1px solid #E0E0E0", borderRadius: 2 }}>
-                            <Table size="small">
-                                <TableHead>
-                                    <TableRow sx={{ backgroundColor: "#F5F7FA" }}>
-                                        <TableCell sx={{ fontWeight: 600 }}>เลขที่ CL</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>เลขที่ CC</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>ชื่อ - สกุล ผู้เอาประกัน</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>แจ้งโอน</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>โอนคืน</TableCell>
-                                        <TableCell sx={{ fontWeight: 600, textAlign: "right" }}>คงเหลือ</TableCell>
-                                        <TableCell sx={{ fontWeight: 600 }}>วันที่/เวลา โอนคืน</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
-                                    {(caseDetails ?? []).map((item, index) => {
-                                        const notify = Number(item.totalNetPaidAmount) || 0;
-                                        const refund = Number(item.additionalAmount) || 0;
-                                        return (
-                                            <TableRow key={`${item.caseId ?? item.caseNo}-${index}`}>
-                                                <TableCell>{row?.claimNo ?? "-"}</TableCell>
-                                                <TableCell>{item.caseNo ?? "-"}</TableCell>
-                                                <TableCell>{item.customerName ?? "-"}</TableCell>
-                                                <TableCell sx={{ textAlign: "right" }}>{formatNumber(notify)}</TableCell>
-                                                <TableCell sx={{ textAlign: "right" }}>{formatNumber(refund)}</TableCell>
-                                                <TableCell sx={{ textAlign: "right" }}>{formatNumber(notify - refund)}</TableCell>
-                                                <TableCell>-</TableCell>
-                                            </TableRow>
-                                        );
-                                    })}
-                                    {caseDetails?.length ? (
-                                        <TableRow>
-                                            <TableCell colSpan={3} sx={{ textAlign: "right", color: "#0D4C8C", fontWeight: 700 }}>
-                                                รวม :
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: "right", color: "#0D4C8C", fontWeight: 700 }}>
-                                                {formatNumber(totals.notify)}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: "right", color: "#0D4C8C", fontWeight: 700 }}>
-                                                {formatNumber(totals.refund)}
-                                            </TableCell>
-                                            <TableCell sx={{ textAlign: "right", color: "#0D4C8C", fontWeight: 700 }}>
-                                                {formatNumber(totals.remain)}
-                                            </TableCell>
-                                            <TableCell />
-                                        </TableRow>
-                                    ) : null}
-                                </TableBody>
-                            </Table>
-                        </TableContainer>
-                        <Typography sx={{ py: 1, fontSize: "0.8rem", color: "#78909C" }}>ข้อมูลต่อหน้า 10 • 1-1 จาก 1</Typography>
                     </>
                 )}
 
@@ -299,7 +230,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                     </Grid>
                 </Grid>
 
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 2, py: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, py: 2 }}>
                     <Button variant="outlined" color="error" onClick={() => formik.handleSubmit()}>
                         ปฏิเสธ
                     </Button>
