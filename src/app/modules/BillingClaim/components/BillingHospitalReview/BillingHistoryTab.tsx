@@ -39,8 +39,8 @@ const BillingHistoryTab = ({ currentBillingDetailId }: BillingHistoryTabProps) =
             },
         },
         {
-            name: "externalBillingId",
-            label: "เลขที่อ้างอิงจาก SmileConnect",
+            name: "billingRequestId",
+            label: "เลขที่คำขอวางบิลจาก SmileConnect",
             options: { ...cellAlignOptions({ align: "left" }), customBodyRender: (value) => value ?? "-" },
         },
         {

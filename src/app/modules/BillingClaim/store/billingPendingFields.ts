@@ -32,7 +32,6 @@ export const PENDING_BE_FIELDS = {
     simBCategory: "BillingReviewDataDto.simBCategory (ประเภทรายการค่าใช้จ่าย Sim B1/B2)",
     insuranceExcess: "BillingExpenseDto.isInsuranceExcess / insuranceCompanyName",
     ocrReceiptFiles: "BillingReviewDataDto.ocrReceiptFiles (ไฟล์ + สถานะ OCR ใบแจ้งค่ารักษา)",
-    hospitalExpenseSummary: "BillingTotalsDto ฝั่งโรงพยาบาล (ยอดเบิก/ส่วนลด/สุทธิ จาก SmileConnect ก่อนพิจารณา)",
     benefitBreakdown: "endpoint คำนวณสิทธิ์เบิกรายการค่ารักษาราย Benefit (billing-scoped)",
     compensationSummary: "endpoint คำนวณค่าชดเชย/สรุปค่าใช้จ่ายโรงพยาบาล (billing-scoped)",
     payoutAccount: "BillingReviewDataDto.payoutAccount (บัญชีรับเงินค่าชดเชย)",

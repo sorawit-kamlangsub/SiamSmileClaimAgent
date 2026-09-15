@@ -56,7 +56,7 @@ const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: 
     const { data: reviewStatusRaw, isLoading: reviewStatusLoading } = useGetDocumentReviewStatus();
     const reviewStatusOptions = [...(reviewStatusRaw?.data ?? [])].sort((a, b) => (a.indexId ?? 0) - (b.indexId ?? 0));
 
-    const { getDocInfo, getFileCount } = useBillingDocumentHook(rows);
+    const { getDocInfo, getFileCount, getRawFileCount } = useBillingDocumentHook(rows);
 
     const { error: documentsError, touched: documentsTouched } =
         formik.getFieldMeta<BillingDocumentFormItem[]>("documents");
@@ -147,7 +147,9 @@ const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: 
                 filter: false,
                 sort: false,
                 ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => getFileCount(rows[tableMeta.rowIndex]),
+                // `undefined` = ไม่ทราบจำนวน (ต่างจาก 0 = ไม่มีไฟล์) — hospital-billing-fe.md ข้อ 3
+                customBodyRender: (_value, tableMeta) =>
+                    getRawFileCount(rows[tableMeta.rowIndex]) ?? "ไม่ทราบจำนวนไฟล์",
             },
         },
         {

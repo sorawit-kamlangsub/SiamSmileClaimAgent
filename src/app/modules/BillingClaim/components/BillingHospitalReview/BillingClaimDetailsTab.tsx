@@ -159,9 +159,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                 )}
                                 {variant.hasHospitalExpenseSummary && (
                                     <Grid item xs={12}>
-                                        <BillingHospitalExpenseSummary
-                                            originalBilledAmount={detail?.originalBilledAmount}
-                                        />
+                                        <BillingHospitalExpenseSummary totals={detail?.totals} />
                                     </Grid>
                                 )}
                                 <Grid item xs={12}>

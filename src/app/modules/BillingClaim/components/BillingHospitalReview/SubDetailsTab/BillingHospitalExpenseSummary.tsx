@@ -5,19 +5,24 @@ import CustomPaper from "../../../../_common/components/CustomComponent/CustomPa
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
 import { numberWithCommas } from "../../../../../functionHelpers";
+import { BillingTotalsDto } from "../../../../../api/coreClaimApi.client";
 import { PENDING_BE } from "../../../store/billingPendingFields";
 
 type BillingHospitalExpenseSummaryProps = {
-    /** `detail.originalBilledAmount` — ยอดรวมที่โรงพยาบาลส่งมาจาก SmileConnect */
-    originalBilledAmount: number | undefined;
+    /** `detail.totals` — ยอดของ BillingDetail (สถานะ 1 = คำนวณจาก source snapshot, hospital-billing-fe.md ข้อ 5/6) */
+    totals: BillingTotalsDto | undefined;
 };
+
+const displayAmount = (value: number | undefined) => (value !== undefined ? numberWithCommas(value, 2) : PENDING_BE);
 
 /**
  * Step 2 : "รายการค่ารักษา(จากโรงพยาบาล)" (variant A/OPD Half เท่านั้น) — ข้อมูลก่อนพิจารณา อ้างอิงตาม
- * SmileConnect ล้วน `BillingDetailDto` มีแค่ `originalBilledAmount` (ยอดรวม) — ยังไม่มีฟิลด์ "ส่วนลดทั้งหมด"
- * แยกจากยอดรวม จึง derive "ยอดเบิกสุทธิ" ไม่ได้ (PENDING_BE_FIELDS.hospitalExpenseSummary)
+ * SmileConnect ล้วน ใช้ `detail.totals` (BE/SmileConnect คำนวณให้แล้ว ห้ามคำนวณเองฝั่ง FE, hospital-billing-fe.md
+ * ข้อ 6) : ยอดเบิกทั้งหมด = `totalClaimedAmount`, ส่วนลดทั้งหมด = `totalDiscountAmount` (รายบรรทัด),
+ * ส่วนลดบริษัทประกัน/ลูกค้า = `insuranceDiscountAmount`/`customerDiscountAmount`, ยอดเบิกสุทธิ =
+ * `netBillableAmount` — ทั้งสามค่าหลังนี้เป็นค่าจาก SmileConnect ตรง ๆ ไม่ใช่ยอดที่คำนวณทับใน Step 2
  */
-const BillingHospitalExpenseSummary = ({ originalBilledAmount }: BillingHospitalExpenseSummaryProps) => (
+const BillingHospitalExpenseSummary = ({ totals }: BillingHospitalExpenseSummaryProps) => (
     <CustomPaper>
         <HeadingWithColor
             icon={<LocalHospitalIcon sx={{ fontSize: 27 }} />}
@@ -25,12 +30,11 @@ const BillingHospitalExpenseSummary = ({ originalBilledAmount }: BillingHospital
             color="blue"
         />
         <Grid container spacing={2}>
-            <CustomDisplayText
-                label="ยอดเบิกทั้งหมด"
-                value={originalBilledAmount !== undefined ? numberWithCommas(originalBilledAmount, 2) : PENDING_BE}
-            />
-            <CustomDisplayText label="ส่วนลดทั้งหมด" value={PENDING_BE} />
-            <CustomDisplayText label="ยอดเบิกสุทธิ" value={PENDING_BE} />
+            <CustomDisplayText label="ยอดเบิกทั้งหมด" value={displayAmount(totals?.totalClaimedAmount)} />
+            <CustomDisplayText label="ส่วนลดทั้งหมด" value={displayAmount(totals?.totalDiscountAmount)} />
+            <CustomDisplayText label="ส่วนลดบริษัทประกัน" value={displayAmount(totals?.insuranceDiscountAmount)} />
+            <CustomDisplayText label="ส่วนลดลูกค้า" value={displayAmount(totals?.customerDiscountAmount)} />
+            <CustomDisplayText label="ยอดเบิกสุทธิ" value={displayAmount(totals?.netBillableAmount)} />
         </Grid>
     </CustomPaper>
 );

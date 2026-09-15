@@ -5,7 +5,10 @@ documents and expense line items, then confirms a review result that the backend
 immutable review revision for that billing round. **Real backend** — see
 [api-inventory.md](../api-inventory.md) (`hospitalBillingApi.ts` section) for the wrapper hooks,
 and the source handoff (`hospital-billing-frontend-structure-handoff-2026-09-08.md`, 2026-09-08
-restructure) for the base contract.
+restructure; updated by `hospital-billing-fe.md` revision 2026-09-14) for the base contract.
+The 2026-09-14 revision is a **breaking contract change**: `externalBillingId`→`billingRequestId`,
+`billingNo`→`billingRequestCode`, and `previousBillingDetailId` / `originalBilledAmount` /
+`ssEndDiscountAmount` were dropped from the HTTP response — no fallback reads the old names.
 
 Routes: `/billing/*` — see [routes.md](../routes.md). Menu: ParentMenu "วางบิลเคลม" in
 `ASideMenuList.tsx`, submenu "เคลมลูกค้า" (placeholder) + "เคลมโรงพยาบาล" (built).
@@ -253,11 +256,16 @@ grids, per the new spec's "Field ทั้งหมดใน Section นี้ �
 ในรูปแบบ Read-only" instruction repeated on every Step 1/2 section.
 
 Despite that, `BillingReviewFormValues` still carries every field those inputs used to bind to
-(`hn`, `vn`, `medicalLicenseNo`, `expenses[].claimAmount`, `ssEndDiscountAmount`, …) — **do not
-delete them**. `toReviewDataDto` builds the submit payload from the *whole* form, not a diff/PATCH
+(`hn`, `vn`, `medicalLicenseNo`, `expenses[].claimAmount`, …) — **do not delete them**.
+`toReviewDataDto` builds the submit payload from the *whole* form, not a diff/PATCH
 (`BillingReviewDataDto` has no partial-update variant), so the form is effectively an echo-back
 buffer: whatever loaded via `toFormValues` must round-trip back unchanged on submit, or the
 backend receives a payload that silently blanks fields the reviewer never touched.
+
+`ssEndDiscountAmount` used to be one such field but was dropped entirely — the 2026-09-14 contract
+revision removed it from `BillingReviewDataDto`/`BillingTotalsDto`; ยอดเบิกสุทธิ now comes straight
+from SmileConnect via `detail.totals.netBillableAmount`/`insuranceDiscountAmount`/
+`customerDiscountAmount`, never computed on FE.
 
 The new spec also added several fields with **no matching DTO field at all** (เคลมต่อเนื่อง
 selection, วันที่เอกสารครบ, ข้อบ่งชี้การ Admit, วันนอน IPD/ICU, Sim B category, …). Those were
@@ -278,7 +286,7 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 | Product type (PA/PH) | Header, Step 3 บัญชีรับเงินค่าชดเชย gate | `BillingDetailDto.productTypeId` | `useBillingProductVariant` hardcodes `false` for both `isPA`/`isPH` |
 | Claim list variant (OPD Half/Full/IPD) | Whole review page | `BillingDetailDto.claimListTypeId` | `?type=` query param (`BILLING_CLAIM_LIST_TYPE_CONFIG`) |
 | ข้อมูลสถานศึกษา | Header (PA only) | `BillingDetailDto` school block | `HeaderCardSchoolDetails` never renders (`isPA` false) |
-| เลขบัตรประชาชน / เบอร์โทรศัพท์ / สถานะ App | Header ข้อมูลผู้เอาประกัน | `BillingInsuredDto.idCardNo`/`phoneNumber`/`appStatus` | `PENDING_BE` |
+| เลขบัตรประชาชน / เบอร์โทรศัพท์ / สถานะ App | Header ข้อมูลผู้เอาประกัน | `BillingInsuredDto.idCard`/`phone`/`appStatus` — handoff ข้อ 5 (2026-09-14) lists `idCard`/`phone` as already added, but the live swagger this module was regenerated against still doesn't return them; `appStatus` was never in any handoff revision | `PENDING_BE` |
 | สถานะเคลม (CL) | Header | separate claim-status field (today shows the *billing* status — see risk 7.8 in the design conversation) | `billingStatusLabel(detail.statusId)` |
 | วันที่เอกสารครบ | Step 1 รายละเอียดเคลม | `BillingClaimDto.documentCompleteDate` | form field defaults to today, no DTO round-trip |
 | ข้อบ่งชี้การ Admit | Step 1 ข้อมูลการเข้ารับการรักษา (IPD) | `BillingClaimDto.admitIndication` | `PENDING_BE` |
@@ -287,7 +295,6 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 | ประเภทรายการค่าใช้จ่าย (Sim B1/B2) | Step 2 (variant B/C) | `BillingReviewDataDto.simBCategory` | disabled toggle, form default `SimB2` |
 | เป็นส่วนเกินจากบริษัทประกัน + บริษัทประกัน | Step 2 ตาราง (variant B/C) | `BillingExpenseDto.isInsuranceExcess`/`insuranceCompanyName` | `PENDING_BE` |
 | OCR ใบแจ้งค่ารักษา (ไฟล์/สถานะ) | Step 2 (variant A) | `BillingReviewDataDto.ocrReceiptFiles` | disabled shell, empty list |
-| รายการค่ารักษา(จากโรงพยาบาล) — ส่วนลด/สุทธิ | Step 2 (variant A) | separate discount field alongside `originalBilledAmount` | `originalBilledAmount` shown as ยอดเบิกทั้งหมด; ส่วนลด/สุทธิ = `PENDING_BE` |
 | รายการค่ารักษา Benefit breakdown | Step 3 | billing-scoped calculation endpoint (`useCalculateCaseClaim` needs a `productId` billing doesn't have — don't try to call it) | `ClaimSummaryStep3` gets `treatmentRows={[]}` |
 | สรุปค่าชดเชย / สรุปค่าใช้จ่ายโรงพยาบาล | Step 3 | same billing-scoped calculation endpoint | derived from `useBillingExpenseHook` real totals only (no compensation) |
 | บัญชีรับเงินค่าชดเชย | Step 3 (PH + IPD) | `BillingReviewDataDto.payoutAccount` | never renders (`allowSeparateCompensation` false until `isPH` is real) |

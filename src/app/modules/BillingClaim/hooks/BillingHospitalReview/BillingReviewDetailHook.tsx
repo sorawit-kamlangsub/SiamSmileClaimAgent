@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useFormik } from "formik";
 import {
     useGetHospitalBillingDetail,
@@ -10,6 +10,7 @@ import { useGetDecisionReason } from "../../../../api/coreClaimMastersApi";
 import { SubmitHospitalBillingDto } from "../../../../api/coreClaimApi.client";
 import { swalConfirm, swalError, swalSuccess, swalToast, swalWarning } from "../../../_common";
 import { round2, toFormValues, toReviewDataDto } from "../../store/billingMappers";
+import { billingReturnStatusLabel } from "../../store/billingStatusHelpers";
 import {
     BILLING_DECISION_ID,
     BILLING_STATUS,
@@ -51,7 +52,6 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     physicianName: "",
     expenses: [],
     documents: [],
-    ssEndDiscountAmount: 0,
     reviewStatusId: undefined,
     reviewReasonId: undefined,
     reviewRemark: "",
@@ -79,6 +79,7 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
  */
 const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const billingDetailId = id ? atob(id) : "";
 
     const {
@@ -110,18 +111,17 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     /** แก้ไขได้เฉพาะ statusId = 1 (รอตรวจสอบ) — สถานะอื่นเป็นการดูย้อนหลังอย่างเดียว (handoff ข้อ 1) */
     const isReadOnly = readOnlyProp || detail?.statusId !== BILLING_STATUS.pendingReview;
 
-    /** requestId : 1 ค่าต่อ 1 ความตั้งใจบันทึก — retry คำขอเดิมต้องใช้ค่าเดิมซ้ำ (handoff ข้อ 7) */
+    /**
+     * requestId : 1 ค่าต่อ 1 ความตั้งใจบันทึก — retry คำขอเดิมต้องใช้ค่าเดิมซ้ำ (handoff ข้อ 7)
+     *
+     * `lastBodyKeyRef` เก็บ body ครั้งก่อน (ไม่รวม requestId เอง) ไว้เทียบตอน submit ครั้งถัดไป: ถ้า body
+     * เหมือนเดิมทุกค่า = retry คำขอเดิม (ใช้ requestId เดิมซ้ำ) ถ้าต่างกัน = ความตั้งใจบันทึกใหม่ (สร้าง
+     * requestId ใหม่) — ครอบคลุมทุก field ที่แก้ได้ ไม่ผูกกับ field ใด field หนึ่งเป็นการเฉพาะ
+     */
     const requestIdRef = useRef<string>();
+    const lastBodyKeyRef = useRef<string>();
     const submitMutation = useSubmitHospitalBilling();
     const [isSubmitting, setIsSubmitting] = useState(false);
-
-    /**
-     * ผู้ใช้เปลี่ยนใจ (สถานะ/สาเหตุ/รายละเอียดที่จะบันทึก) หลัง submit ครั้งก่อนไม่สำเร็จ = ความตั้งใจบันทึก
-     * ใหม่ ต้องขึ้น requestId ใหม่เสมอ ไม่ให้ retry คำขอเดิมด้วย payload ที่เปลี่ยนไปแล้ว
-     */
-    useEffect(() => {
-        requestIdRef.current = undefined;
-    }, [formik.values.reviewStatusId, formik.values.reviewReasonId, formik.values.reviewRemark]);
 
     /**
      * สถานะ 2/4/5 ต้องระบุสาเหตุ — 2/5 ใช้ decisionId+decisionReasonId (Decision master), 4 ใช้
@@ -159,12 +159,13 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     };
 
     /**
-     * gate ปุ่ม "ถัดไป" ของ Step 2 — เทียบผลรวมยอดรายการค่ารักษากับยอดสุทธิที่โรงพยาบาลส่งมา
-     * (`detail.originalBilledAmount` — ยืนยันกับ BA ตามข้อ 7.4 ว่าใช่ฟิลด์นี้จริง) เท่ากันไปต่อได้เงียบ ๆ
-     * ไม่เท่ากันแจ้งเตือนแต่ยังกดยืนยันไปต่อได้ (ไม่ block)
+     * gate ปุ่ม "ถัดไป" ของ Step 2 — เทียบผลรวมยอดรายการค่ารักษากับยอดเบิกจากโรงพยาบาล
+     * (`detail.totals.totalClaimedAmount` — ยอด `sum(expenses.claimAmount)` ของ source snapshot ตอนรับงาน,
+     * hospital-billing-fe.md ข้อ 5/6; `originalBilledAmount` ถูกถอดออกจาก contract แล้ว ห้ามใช้)
+     * เท่ากันไปต่อได้เงียบ ๆ ไม่เท่ากันแจ้งเตือนแต่ยังกดยืนยันไปต่อได้ (ไม่ block)
      */
     const confirmStep2Amount = async (totalReceiptAmount: number): Promise<boolean> => {
-        const billed = round2(detail?.originalBilledAmount);
+        const billed = round2(detail?.totals?.totalClaimedAmount);
         const diff = round2(totalReceiptAmount) - billed;
         if (diff === 0) return true;
 
@@ -210,8 +211,6 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             return false;
         }
 
-        if (!requestIdRef.current) requestIdRef.current = crypto.randomUUID();
-
         /**
          * matrix สาเหตุตาม hospital-billing-frontend-structure-handoff ("สถานะและเหตุผล"):
          * 2/5 ส่ง decisionId+decisionReasonId, 4 ส่ง rejectReasonId เท่านั้น, 3 ไม่ส่งทั้งสามตัว
@@ -219,8 +218,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         const isRejected = statusId === BILLING_STATUS.rejected;
         const usesDecisionReason = statusNeedsReason && !isRejected; // 2, 5
 
-        const body: SubmitHospitalBillingDto = {
-            requestId: requestIdRef.current,
+        const bodyFields: Omit<SubmitHospitalBillingDto, "requestId"> = {
             expectedVersion: detail.version,
             expectedCaseVersion: detail.caseVersion,
             expectedClaimVersion: detail.claimVersion,
@@ -234,6 +232,16 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             reviewRemark: formik.values.reviewRemark || undefined,
             data: toReviewDataDto(formik.values),
         };
+        const bodyKey = JSON.stringify(bodyFields);
+
+        // retry คำขอเดิม (body เหมือนทุกค่ากับครั้งก่อน) ใช้ requestId เดิมซ้ำ — ค่าใดก็ตามเปลี่ยนไปถือเป็น
+        // ความตั้งใจบันทึกใหม่ ต้องขึ้น requestId ใหม่ (handoff ข้อ 7)
+        if (!requestIdRef.current || bodyKey !== lastBodyKeyRef.current) {
+            requestIdRef.current = crypto.randomUUID();
+        }
+        lastBodyKeyRef.current = bodyKey;
+
+        const body: SubmitHospitalBillingDto = { requestId: requestIdRef.current, ...bodyFields };
 
         setIsSubmitting(true);
         try {
@@ -243,14 +251,18 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
                 return false;
             }
 
-            requestIdRef.current = undefined; // สำเร็จแล้ว — ความตั้งใจบันทึกครั้งถัดไปต้องใช้ requestId ใหม่
+            // สำเร็จแล้ว — ความตั้งใจบันทึกครั้งถัดไปต้องใช้ requestId ใหม่เสมอ
+            requestIdRef.current = undefined;
+            lastBodyKeyRef.current = undefined;
 
             if (statusId === BILLING_STATUS.passed) {
-                await swalToast("success", "อนุมัติรายการสำเร็จ — ระบบสร้างรายการวางบิลใหม่ให้อัตโนมัติ");
+                await swalToast("success", "บันทึกผลตรวจ “ผ่าน” สำเร็จ");
             } else {
+                // `returnStatus = "Published"` หมายถึง RabbitMQ รับ event แล้วเท่านั้น ไม่ใช่ SmileConnect
+                // ประมวลผลสำเร็จ (handoff ข้อ 7) ห้ามอ้างว่า "ส่งกลับสำเร็จ" หรือ "SmileConnect รับแล้ว"
                 await swalSuccess(
-                    "บันทึกคำขอส่งกลับสำเร็จ",
-                    "ระบบบันทึกคำขอไว้แล้ว (สถานะ Pending) — ยังไม่ยืนยันการส่ง/รับที่ SmileConnect"
+                    "บันทึกผลตรวจสำเร็จ",
+                    `สถานะคำขอส่งกลับ: ${billingReturnStatusLabel(response.data?.returnStatus)}`
                 );
             }
             return true;
@@ -262,8 +274,23 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
                     "มีการเปลี่ยนแปลงรายการนี้จากที่อื่นแล้ว ระบบจะโหลดข้อมูลล่าสุดให้ตรวจทานก่อนส่งอีกครั้ง"
                 );
                 resyncAfterConflict();
-                requestIdRef.current = undefined; // แก้ payload หลังโหลดใหม่ = ความตั้งใจบันทึกใหม่ ต้องใช้ requestId ใหม่
+                // แก้ payload หลังโหลดใหม่ = ความตั้งใจบันทึกใหม่ ต้องใช้ requestId ใหม่เสมอ (handoff ข้อ 7)
+                requestIdRef.current = undefined;
+                lastBodyKeyRef.current = undefined;
                 await refetchDetail();
+            } else if (normalized.isNotFound) {
+                await swalError(
+                    "บันทึกไม่สำเร็จ",
+                    "ไม่พบรายการวางบิลนี้ หรือข้อมูลที่จำเป็นไม่พร้อม กรุณากลับไปที่รายการแล้วลองใหม่"
+                );
+                navigate("/billing/hospital");
+            } else if (normalized.isRetryable) {
+                // 500 / network / timeout — ผลบันทึกอาจสำเร็จแล้ว คง requestId + body เดิมไว้ (ไม่แตะ ref
+                // ทั้งสองตัว) ให้กด "ยืนยัน" ซ้ำเพื่อ retry คำขอเดิมได้ (handoff ข้อ 7/10)
+                swalError(
+                    "บันทึกไม่สำเร็จ",
+                    "เกิดข้อผิดพลาดที่ระบบ ผลบันทึกอาจสำเร็จแล้วหรือยังไม่สำเร็จ กรุณากดยืนยันอีกครั้งเพื่อลองส่งคำขอเดิม"
+                );
             } else {
                 swalError("บันทึกไม่สำเร็จ", normalized.message);
             }

@@ -31,6 +31,11 @@ export const BILLING_CLAIM_TYPE_LABEL = "เคลมโรงพยาบาล
  * decisionId ของ Decision master ที่ผูกกับผลตรวจสอบวางบิลแต่ละสถานะ
  * เลขชุดเดียวกับ ConsiderSection ของ ClaimConsider (3 รอเอกสาร / 4 รอแก้ไข / 5 ปฏิเสธ / 6 ยกเลิก)
  * TODO: ยืนยันเลข decisionId กับ BE — handoff ไม่ได้ระบุไว้
+ *
+ * TODO(billing-reject-reason): สถานะ "ปฏิเสธ" (4) ใช้ entry นี้ (decisionId=5) เพื่อดึงรายการเหตุผลมาโชว์
+ * บนจอชั่วคราวเท่านั้น — hospital-billing-fe.md ข้อ 9 ระบุว่า `rejectReasonId` เป็นคนละ master กับ
+ * DecisionReason และ repository ยังไม่มี HTTP endpoint อ่าน RejectReason ห้าม reuse master นี้ถาวร
+ * เมื่อ BE เพิ่ม endpoint ให้ย้าย status 4 ไปเรียก master ใหม่แยกจาก BILLING_DECISION_ID
  */
 export const BILLING_DECISION_ID: Partial<Record<BillingStatusId, number>> = {
     [BILLING_STATUS.needsCorrection]: 4,
@@ -214,10 +219,9 @@ export interface BillingReviewFormValues {
     medicalLicenseNo: string;
     physicianName: string;
 
-    // expenses / documents / ส่วนลดท้ายบิล
+    // expenses / documents
     expenses: BillingExpenseFormItem[];
     documents: BillingDocumentFormItem[];
-    ssEndDiscountAmount: number;
 
     // Step 3 — ผลการตรวจสอบ
     reviewStatusId: BillingStatusId | undefined;

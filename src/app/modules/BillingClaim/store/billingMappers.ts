@@ -95,7 +95,6 @@ export const toFormValues = (data: BillingReviewDataDto): BillingReviewFormValue
 
         expenses: (data.expenses ?? []).map(toExpenseFormItem),
         documents: (data.documents ?? []).map(toDocumentFormItem),
-        ssEndDiscountAmount: data.ssEndDiscountAmount ?? 0,
 
         reviewStatusId: undefined,
         reviewReasonId: undefined,
@@ -178,5 +177,4 @@ export const toReviewDataDto = (values: BillingReviewFormValues): BillingReviewD
     },
     expenses: values.expenses.map(toExpenseDto),
     documents: values.documents.map(toDocumentDto),
-    ssEndDiscountAmount: round2(values.ssEndDiscountAmount),
 });
