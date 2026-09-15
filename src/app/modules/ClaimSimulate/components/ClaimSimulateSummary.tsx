@@ -173,7 +173,6 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
         openConfirm,
         isCalculating,
         handleConfirmCalculate,
-        handleConfirm,
         handleCloseConfirm,
     } = useClaimSimulatePage();
 
@@ -602,7 +601,7 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
                 </Button>
             </Box>
 
-            <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} onConfirm={handleConfirm} />
+            <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} />
         </Box>
     );
 };
