@@ -52,7 +52,7 @@ const FieldLabel = ({ children, required }: { children: React.ReactNode; require
 const BankEditDetailDialog = () => {
     const dispatch = useAppDispatch();
     const { selectRowForEdit, dialogEditAdjustTransferDetail } = useAppSelector((state) => state.adjust);
-    const { formik, dataDetail, isAdditionalTransferAccountDetailLoading } = useAdditionalTransferAccountDetailHook({
+    const { formik, dataDetail } = useAdditionalTransferAccountDetailHook({
         paymentId: selectRowForEdit.paymentId,
     });
     const avatarBank = setBankLogo(dataDetail?.toBankId);
