@@ -1,6 +1,8 @@
 import { Box, Grid } from "@mui/material";
 import { useState } from "react";
 import RefundApproveDataTable from "../components/RefundApproveDataTable";
+import ApproveRefundDialog from "../components/ApproveRefundDialog";
+import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 import RefundSearchFilterForm, {
     RefundSearchFilterValues,
 } from "../../Refund/_common/RefundSearchFilterForm";
@@ -9,6 +11,7 @@ const RefundApprovePage = () => {
     const [filter, setFilter] = useState<RefundSearchFilterValues | undefined>(undefined);
     const [hasSearched, setHasSearched] = useState(false);
     const [searchKey, setSearchKey] = useState(0);
+    const [approveRow, setApproveRow] = useState<RefundApproveMonitorRow | null>(null);
 
     const handleSearch = (values: RefundSearchFilterValues) => {
         setFilter(values);
@@ -30,9 +33,15 @@ const RefundApprovePage = () => {
                         backgroundColor: "#FFFFFF",
                     }}
                 >
-                    <RefundApproveDataTable filter={filter} hasSearched={hasSearched} searchKey={searchKey} />
+                    <RefundApproveDataTable
+                        filter={filter}
+                        hasSearched={hasSearched}
+                        searchKey={searchKey}
+                        onEdit={setApproveRow}
+                    />
                 </Box>
             </Grid>
+            <ApproveRefundDialog open={approveRow !== null} row={approveRow} onClose={() => setApproveRow(null)} />
         </Grid>
     );
 };

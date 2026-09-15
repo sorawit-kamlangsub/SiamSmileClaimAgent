@@ -1,18 +1,20 @@
 import { ClaimFundStandardDataTable, NOT_FOUND_MESSAGE } from "../../_common";
-import useRefundApproveDataTableHook from "../hooks/RefundApproveDataTableHook";
+import useRefundApproveDataTableHook, { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 import { RefundSearchFilterValues } from "../../Refund/_common/RefundSearchFilterForm";
 
 type RefundApproveDataTableProps = {
     filter: RefundSearchFilterValues | undefined;
     hasSearched: boolean;
     searchKey: number;
+    onEdit?: (row: RefundApproveMonitorRow) => void;
 };
 
-const RefundApproveDataTable = ({ filter, hasSearched, searchKey }: RefundApproveDataTableProps) => {
+const RefundApproveDataTable = ({ filter, hasSearched, searchKey, onEdit }: RefundApproveDataTableProps) => {
     const { columns, data, isLoading, isError, error, pagination, setPaginated } = useRefundApproveDataTableHook({
         filter,
         hasSearched,
         searchKey,
+        onEdit,
     });
     return (
         <>

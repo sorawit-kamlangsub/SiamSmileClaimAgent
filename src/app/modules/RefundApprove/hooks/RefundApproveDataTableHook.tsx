@@ -26,10 +26,27 @@ const refundStatusNameMapById: Record<number, string> = {
     5: "ยกเลิกการคืนเงิน",
 };
 
+export type RefundApproveMonitorRow = {
+    caseId?: string;
+    claimId?: string;
+    refundNo?: string;
+    claimNo?: string;
+    caseNo?: string;
+    branceName?: string;
+    customerName?: string;
+    createdDate?: string;
+    totalNetPaidAmount?: number;
+    refundAmount?: number;
+    refundStatusId?: number;
+    refundStatusNameTH?: string;
+    remark?: string;
+};
+
 export type RefundApproveDataTableHookProps = {
     filter: RefundSearchFilterValues | undefined;
     hasSearched: boolean;
     searchKey: number;
+    onEdit?: (row: RefundApproveMonitorRow) => void;
 };
 
 const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
@@ -58,7 +75,7 @@ const formatAmount = (value: number) =>
         maximumFractionDigits: 2,
     });
 
-const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: RefundApproveDataTableHookProps) => {
+const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit }: RefundApproveDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -97,9 +114,10 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
         console.log("view", row);
     };
 
-    const handleEdit = (row: any) => {
-        // TODO: open the "ดำเนินการ" (process/edit) dialog for a pending row
-        console.log("edit", row);
+    const handleEdit = (row: RefundApproveMonitorRow) => {
+        if (onEdit) {
+            onEdit(row);
+        }
     };
 
     const columns: MUIDataTableColumn[] = [

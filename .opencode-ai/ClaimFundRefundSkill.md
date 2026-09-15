@@ -78,8 +78,18 @@
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ pre-existing จาก AdjustTransfer/BankStatus/ManageTransfer)
 
 ### ค้าง ⏳ (งานต่อไป)
-- ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
+- ปุ่ม "ดูรายละเอียด" (status 3, `handleView` ใน `RefundApproveDataTableHook`) ยัง TODO (console.log) — รอเชื่อม view dialog / detail page
+- ปุ่ม อนุมัติ/ปฏิเสธ ใน `ApproveRefundDialog` ยังเป็น TODO (console.log) — ยังไม่มี API contract; select สาเหตุปฏิเสธ + หมายเหตุ + validation (required) ครบแล้ว
 - typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)
+
+### เสร็จแล้วเพิ่มเติม: Dialog "อนุมัติคืนเงิน" (RefundApprove monitor) ✅
+- ปุ่ม `FactCheckIcon` (แถว status=2 "รอดำเนินการ") เปิด dialog ผ่าน `onEdit` callback → ใหม่ `RefundApprove/components/ApproveRefundDialog.tsx` (ส่งเป็น `ApproveRefundDialog` จาก `RefundApprovePage` ด้วย `approveRow` state)
+- ข้อมูล: `useGetRefundDetail(caseId)` → `GET {apiURL}/Refund/SaveRefundDetails?caseId=` (enabled=!!caseId) — **response ยังไม่ typed (any)** → dialog ประกาศ type ท้องถิ่น `ApproveRefundDetail`/`ApproveRefundCaseDetail` + cast; สาเหตุปฏิเสธจาก `useGetRefundReasons()` → `/Masters/GetRefundReasons` (data = `{id,name}[]` cast เหมือนกัน)
+- Mapping (ยืนยันกับ user แล้ว): รหัสรายการ=`row.refundNo` (badge), เลขที่ CPG=`row.claimNo`, สาขา=`row.branceName`, ชื่อ-สกุล=`detail.customerName ?? row.customerName`, ผู้ทำรายการ=`detail.createdByUserName`, จำนวนเคลม=`caseDetails.length`, โอนคืนรวมเฉลี่ย=sum(`caseDetails[].additionalAmount`) (fallback `row.refundAmount`), แจ้งโอน=sum(`totalNetPaidAmount`), คงเหลือ=แจ้งโอน-โอนคืน
+- ปุ่ม "คลิกดูภาพ Slip การโอนเงิน" → `window.open("/slip/{refundNo}", "_blank")` (basename ของ router = "/"); disabled ถ้าไม่มี refundNo
+- ตารางย่อย = MUI `<Table>` ภายใน dialog (เลขที่ CL=row.claimNo, เลขที่ CC=item.caseNo, แจ้งโอน/โอนคืน/คงเหลือ, วันที่โอน=`-`) + แถว "รวม"; mockup มี "ข้อมูลต่อหน้า/1-1 จาก 1" ใส่เป็น static text (dialog ไม่ได้ทำ pagination จริง)
+- รูปแบบ per AUN: tall dialog (Paper height 90vh + overflow hidden), header icon tile + Close สีแดง; ปุ่ม ปฏิเสธ=outlined error (กด trigger formik validation), อนุมัติ=contained เขียว; กดแล้ว console.log + ปิด dialog (ยังไม่ refresh ตาราง)
+- typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ 6 pre-existing)
 
 ### เสร็จแล้วเพิ่มเติม: กรองตัวเลือกสาขาตามสิทธิ์ employee_branchid ✅
 - ที่มา: `employee_branchid` จาก userinfo (`https://authlogin.uatsiamsmile.com/connect/userinfo`) — `loadUserInfo: true` ใน oidc config จึงอยู่ใน `user.profile` อยู่แล้ว
@@ -110,7 +120,7 @@
 - **ลบ mock ในหน้า refund detail** (`ManageRefundDetailHook.tsx`): มี `mockDetailData: any` + `const detailData = refundDetailRes?.data ?? mockDetailData` + TODO "ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails" — เมื่อ API คืน `data.caseDetails` จริงแล้วให้ลบ mock, TODO comment, และ `any` (`mapCaseDetailsRows(caseDetails: any[])` → type จริง)
 - **callback type `any` ใน refundAPI** (`onSuccessCallBack: (response: any)`, `reasonOptions: any[]` ฯลฯ) — ถ้าจะ clean ให้ใช้ type จาก contract จริง
 - **`onClNoClick` ใน `ClaimSummaryHeader` ยัง `console.log`** (หน้า refund detail) — ควร navigate ไปหน้า CL detail จริง
-- **ปุ่มดำเนินการ/ดูรายละเอียดใน `RefundApproveDataTableHook` ยัง TODO (console.log)** — เชื่อม dialog/detail ต่อ
+- **ปุ่ม "ดูรายละเอียด" (status 3) ใน `RefundApproveDataTableHook` ยัง TODO (console.log)** — ปุ่มดำเนินการ (status 2) เชื่อม `ApproveRefundDialog` แล้ว (ดู section ข้างบน); เหลือ view dialog + API อนุมัติ/ปฏิเสธจริง
 
 ### ขั้นตอนต่อไป (ถ้าทำต่องาน)
 1. เปิด dialog / navigate เมื่อกด action ใน `RefundApproveDataTableHook`
