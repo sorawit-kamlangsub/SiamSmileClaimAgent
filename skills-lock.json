@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "ssd": {
+      "source": "Pratchaya0/SSD-Agent-Skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ssd/SKILL.md",
+      "computedHash": "e91a642281f33426cf3dce95d3f62c229f9ab5162a386ccd4e2f1ac5881a6a58"
+    }
+  }
+}
