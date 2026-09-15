@@ -9,6 +9,7 @@ import {
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    GetEmployeeClaimPaymentLimitResponseServiceResponse,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
     UpsertClaimDecisionDtoRequest,
@@ -26,6 +27,7 @@ const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"
 const getClaimContinueQueryKey = ["getClaimContinue"];
 const getDocumentSubTypeQueryKey = ["getDocumentSubType"];
 const getClaimHistoryQueryKey = ["getClaimHistory"];
+const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
@@ -268,6 +270,7 @@ export const useGetClaimHistory = (
         () =>
             coreClaimClient.getClaimHistory(
                 applicationId,
+                undefined,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
@@ -277,6 +280,16 @@ export const useGetClaimHistory = (
         {
             enabled: !!applicationId,
             refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetEmployeeClaimPaymentLimit = (userId: number, requestedTransferAmount: number) => {
+    return useQuery<GetEmployeeClaimPaymentLimitResponseServiceResponse, Error>(
+        [getEmployeeClaimPaymentLimitQueryKey, userId, requestedTransferAmount],
+        () => coreClaimClient.getEmployeeClaimPaymentLimit(userId, requestedTransferAmount),
+        {
+            refetchOnWindowFocus: false,
         }
     );
 };

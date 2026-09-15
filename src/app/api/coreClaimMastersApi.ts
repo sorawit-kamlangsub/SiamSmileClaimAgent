@@ -31,7 +31,6 @@ const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPar
 const getPaymentStatusQueryKey = ["getPaymentStatus"];
 const getBranchQueryKey = ["getBranch"];
 const getDeductionSourceQueryKey = ["getDeductionSource"];
-const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
 const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
@@ -429,16 +428,6 @@ export const useGetDeductionSource = (deductionSourceId?: number | undefined) =>
     return useQuery(
         [getDeductionSourceQueryKey, deductionSourceId],
         () => coreClaimMastersClient.getDeductionSource(deductionSourceId),
-        {
-            refetchOnWindowFocus: false,
-        }
-    );
-};
-
-export const useGetEmployeeClaimPaymentLimit = (userId: number) => {
-    return useQuery(
-        [getEmployeeClaimPaymentLimitQueryKey, userId],
-        () => coreClaimMastersClient.employeePaymentLimit(userId),
         {
             refetchOnWindowFocus: false,
         }

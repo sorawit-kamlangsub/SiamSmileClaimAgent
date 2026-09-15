@@ -3027,6 +3027,71 @@ export class CoreClaimClient {
     }
 
     /**
+     * ตรวจวงเงินรายวันก่อนบันทึก Case โดยใช้วันที่ปัจจุบันของ Server ไม่จองวงเงิน
+     * @return Success
+     */
+    getEmployeeClaimPaymentLimit(
+        userId: number,
+        requestedTransferAmount: number,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
+        let url_ = this.baseUrl + "/employee-payment-limit/{userId}?";
+        if (userId === undefined || userId === null) throw new Error("The parameter 'userId' must be defined.");
+        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
+        if (requestedTransferAmount === undefined || requestedTransferAmount === null)
+            throw new Error("The parameter 'requestedTransferAmount' must be defined and cannot be null.");
+        else url_ += "RequestedTransferAmount=" + encodeURIComponent("" + requestedTransferAmount) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetEmployeeClaimPaymentLimit(_response);
+            });
+    }
+
+    protected processGetEmployeeClaimPaymentLimit(
+        response: AxiosResponse
+    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Calculate ข้อมูล Case Claim
      * @param body (optional)
      * @return Success
@@ -3506,6 +3571,7 @@ export class CoreClaimClient {
     /**
      * API สำหรับ Get ข้อมูล ประวัติการเคลม
      * @param applicationId (optional)
+     * @param incidentTypeId (optional)
      * @param searchDetail (optional)
      * @param orderingField (optional)
      * @param ascendingOrder (optional)
@@ -3515,6 +3581,7 @@ export class CoreClaimClient {
      */
     getClaimHistory(
         applicationId?: string | undefined,
+        incidentTypeId?: number | undefined,
         searchDetail?: string | undefined,
         orderingField?: string | undefined,
         ascendingOrder?: boolean | undefined,
@@ -3525,6 +3592,9 @@ export class CoreClaimClient {
         let url_ = this.baseUrl + "/claim/history/filter?";
         if (applicationId === null) throw new Error("The parameter 'applicationId' cannot be null.");
         else if (applicationId !== undefined) url_ += "applicationId=" + encodeURIComponent("" + applicationId) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
         if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
         else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
         if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
@@ -5184,6 +5254,7 @@ export class IClaimClient {
      * @param ascendingOrder (optional)
      * @param page (optional)
      * @param recordsPerPage (optional)
+     * @param iClaimToken (optional)
      * @return Success
      */
     checkEligible(
@@ -5198,6 +5269,7 @@ export class IClaimClient {
         ascendingOrder?: boolean | undefined,
         page?: number | undefined,
         recordsPerPage?: number | undefined,
+        iClaimToken?: string | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetCustomerSearchDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/IClaim/check-eligible?";
@@ -5236,6 +5308,7 @@ export class IClaimClient {
             method: "GET",
             url: url_,
             headers: {
+                IClaimToken: iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
                 Accept: "text/plain",
             },
             cancelToken,
@@ -5280,10 +5353,12 @@ export class IClaimClient {
 
     /**
      * API สำหรับรวมข้อมูล Customer และ Benefit ตามประเภทการรักษา OPD หรือ IPD
+     * @param iClaimToken (optional)
      * @param body (optional)
      * @return Success
      */
     checkEligibleCustomer(
+        iClaimToken?: string | undefined,
         body?: CustomerCheckEligibleDtoRequest | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<CustomerCheckEligibleDtoResponseListServiceResponse> {
@@ -5297,6 +5372,7 @@ export class IClaimClient {
             method: "POST",
             url: url_,
             headers: {
+                IClaimToken: iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
                 "Content-Type": "application/json-patch+json",
                 Accept: "text/plain",
             },
@@ -5340,6 +5416,73 @@ export class IClaimClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<CustomerCheckEligibleDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับตรวจสอบประวัติ Claim ของผู้เอาประกัน
+     * @param iClaimToken (optional)
+     * @param body (optional)
+     * @return Success
+     */
+    checkClaimHistory(
+        iClaimToken?: string | undefined,
+        body?: CheckClaimHistoryDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CheckClaimHistoryDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/IClaim/claim/history/check";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                IClaimToken: iClaimToken !== undefined && iClaimToken !== null ? "" + iClaimToken : "",
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCheckClaimHistory(_response);
+            });
+    }
+
+    protected processCheckClaimHistory(
+        response: AxiosResponse
+    ): Promise<CheckClaimHistoryDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CheckClaimHistoryDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CheckClaimHistoryDtoResponseListServiceResponse>(null as any);
     }
 }
 
@@ -6801,67 +6944,6 @@ export class MastersClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetDecisionReasonDtoResponseListServiceResponse>(null as any);
-    }
-
-    /**
-     * API สำหรับ Get ข้อมูล EmployeeClaimPaymentLimit (วงเงินผู้คีย์เคลม)
-     * @return Success
-     */
-    employeePaymentLimit(
-        userId: number,
-        cancelToken?: CancelToken | undefined
-    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
-        let url_ = this.baseUrl + "/Masters/employee-payment-limit/{userId}";
-        if (userId === undefined || userId === null) throw new Error("The parameter 'userId' must be defined.");
-        url_ = url_.replace("{userId}", encodeURIComponent("" + userId));
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processEmployeePaymentLimit(_response);
-            });
-    }
-
-    protected processEmployeePaymentLimit(
-        response: AxiosResponse
-    ): Promise<GetEmployeeClaimPaymentLimitResponseServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(result200);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<GetEmployeeClaimPaymentLimitResponseServiceResponse>(null as any);
     }
 
     /**
@@ -8412,6 +8494,38 @@ export interface CaseV2Request {
     beneficiaries?: BeneficiaryV2Request[] | undefined;
 }
 
+/** Request สำหรับค้น Customer แล้วส่ง PolicyCode ไปค้น Claim History */
+export interface CheckClaimHistoryDtoRequest {
+    searchOption: string;
+    cidPassport?: string | undefined;
+    id?: string | undefined;
+    certNo?: string | undefined;
+    policyNumber?: string | undefined;
+    priviledgeCardNo?: string | undefined;
+    hospitalCode: string;
+    userName: string;
+}
+
+/** Customer และประวัติ Claim ที่ค้นด้วย PolicyCode สำหรับ IClaim */
+export interface CheckClaimHistoryDtoResponse {
+    customer?: CustomerCheckEligibleCustomerDto;
+    history?: GetClaimHistoryDtoResponse[] | undefined;
+}
+
+export interface CheckClaimHistoryDtoResponseListServiceResponse {
+    data?: CheckClaimHistoryDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 /** ผลการพิจารณาล่าสุดของ Case พร้อมเหตุผลและยอดเงินที่เกี่ยวข้อง */
 export interface ClaimDecisionOverviewDtoResponse {
     caseAdjudicationId?: string;
@@ -9243,6 +9357,7 @@ export interface GetClaimHistoryDtoResponse {
     claimId?: string;
     claimNo?: string | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
+    incidentTime?: TimeSpan;
     lastestChiefComplaint?: string | undefined;
     totalCaseAmount?: number | undefined;
     paidAmount?: number | undefined;
@@ -9260,6 +9375,9 @@ export interface GetClaimHistoryDtoResponse {
     displayClaimNature?: string | undefined;
     claimStatusId?: number | undefined;
     claimStatusName?: string | undefined;
+    causeOfIncidentId?: number | undefined;
+    accidentDescription?: string | undefined;
+    icD10Code?: string | undefined;
     totalCount?: number | undefined;
 }
 
@@ -9902,8 +10020,12 @@ export interface GetEmployeeClaimPaymentLimitResponse {
     employeeClaimPaymentLimitId?: string;
     userId?: number;
     paymentLimit?: number;
-    totalNetPaidAmount?: number;
-    remainingLimit?: number;
+    usedAmount?: number;
+    remainingAmount?: number;
+    requestedTransferAmount?: number;
+    remainingAfterRequestAmount?: number;
+    isLimitSufficient?: boolean;
+    validationMessage?: string | undefined;
 }
 
 export interface GetEmployeeClaimPaymentLimitResponseServiceResponse {
