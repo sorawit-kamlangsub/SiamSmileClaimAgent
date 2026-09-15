@@ -105,6 +105,15 @@
 - **รอบเพิ่มเติม (user สั่ง):** ถ้าไม่ใช่สำนักงานใหญ่ ให้เอาตัวเลือก "ทั้งหมด" ออกด้วย — เพิ่ม `useIsHeadOfficeBranch()` ใน `branchPermission.ts`, `RefundSearchFilterForm`/`SearchByBranchAndStatus` เปลี่ยน `firstItemText` เป็น `isHeadOfficeBranch ? "ทั้งหมด" : undefined`, `BranchAutocomplete` ใช้ `!withAllOption || !isHeadOfficeBranch` เป็นเงื่อนไขไม่เพิ่ม option "ทั้งหมด" (`ClaimSearchFilterForm` ไม่มี firstItemText อยู่แล้ว ไม่ต้องแก้)
 - ข้อควรระวัง: เป็น UI-level filter เท่านั้น backend ยังคือ security boundary — ถ้าจะกันข้อมูลข้ามสาขาจริงต้องบังคับฝั่ง API ด้วย
 
+### จดจำ — สไตล์ Dialog (user ไฟน์จูนแล้ว ใช้กับ Dialog ต่อไปประมาณนี้)
+- **Paper ความสูงกระชับ ไม่ใช่ tall dialog เสมอไป**: `PaperProps={{ sx: { height: "50vh", overflow: "hidden", borderRadius: 3 } }}` — เนื้อหาน้อยอย่ากล่อง 90vh แล้ว `justifyContent: "center"` เพราะจะเกิดช่องว่างสีขาวบน-ล่างเยอะมาก (user เห็นชัดว่าอึดอัด)
+- **`DialogContent` ไม่ center แนวตั้ง**: `sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "flex-start", pt: 2, pb: 0 }}` — content ชิดบน, padding บนเล็กน้อย, **pb = 0** (ลบพื้นที่สีขาวด้านล่างทิ้ง)
+- **`DialogTitle`**: flex + ช่อง icon กลม (`width/height: 32, borderRadius: "50%"`, bg `#E3F2FD`, icon/symbol `#1565C0`) + หัวข้อ bold + ปุ่มปิด X สีแดงกลม (`bg #FDECEC`, text `#E53935`)
+- **Section header** ("ข้อมูลรายละเอียด" ฯลฯ): `fontWeight: 600, fontSize: "1rem", color: "#0D4C8C"`
+- **ค่าข้อมูลใน info-grid**: `sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}` (น้ำเงิน — user เคยสั่ง "เหมือนชาวบ้าน" แล้ว**กลับใจให้เป็นน้ำเงินเหมือนเดิม**)
+- **ปุ่ม action**: `Box sx={{ display: "flex", justifyContent: "center", gap: 2, py: 2 }}` — ปุ่มกลาง dialog (ขวา → กลาง), ปฏิเสธ = `variant="outlined" color="error"`, อนุมัติ = contained เขียว (`#2E7D32`)
+- **ตลอดงานนี้**: เปลี่ยนจาก `justifyContent: "center"` → `"flex-start"` + อย่างอื่น ๆ `flex-end`/`center` ตามที่ user ไล่สั่ง — เวลาเจอ dialog ใหม่ให้เริ่มจากสไตล์นี้ แล้วปรับตามคำขอทีละนิด
+
 ### เสร็จแล้วเพิ่มเติม: ตัวเลือกสาขาแบบ AutoComplete (พิมพ์ค้นหาได้) -> ใช้ทั้งหน้า ClaimFund ✅
 - Component: `_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete.tsx` (มีอยู่แล้วจากงาน ExtraPayment) — ห่อ `FormikAutocomplete` (MUI Autocomplete) + `useGetBranch` + `withAllOption` ("ทั้งหมด" เฉพาะสำนักงานใหญ่เท่านั้น)
 - **branch ใช้ API `VITE_APIGW_BASEURL` (`https://apigw.uatsiamsmile.com`)**: `useGetBranch` ที่ `IncreaseLimitTransfer/_common/masterAPI.ts` → `GET ${APIGW_URL}/claim/core/Masters/branch` (APIGW_URL = VITE_APIGW_BASEURL ใน `Const.ts`) — `BranchAutocomplete` import สลับจาก `api/coreClaimMastersApi.ts` (เดิมใช้ VITE_API_URL) มาเป็น masterAPI hook (กรองสิทธิ์สาขาเหมือนเดิมทั้งคู่)
