@@ -398,3 +398,55 @@ const createCaseRefund = (payload: CreateCaseRefundPayload) => {
             throw error;
         });
 };
+
+type CaseRefundApproveUpdateStatusPayload = {
+    caseRefundId: string;
+    caseRefundStatusId: number;
+    caseRefundRejectReasonId?: number;
+    caseRefundRejectReasonRemark?: string;
+};
+
+const updateCaseRefundApproveStatus = (payload: CaseRefundApproveUpdateStatusPayload) => {
+    const url = `${apiURL}/Refund/CaseRefundApproveUpdateStatus`;
+    return axios
+        .post(url, payload)
+        .then((res) => {
+            if (res.data.isSuccess && res.data.data?.isSuccess !== false) {
+                return res.data;
+            }
+            const isWarning = !!res.data.isSuccess && res.data.data?.isSuccess === false;
+            const error = new Error(res.data.data?.message ?? res.data.message ?? "");
+            (error as Error & { isWarning?: boolean }).isWarning = isWarning;
+            throw error;
+        })
+        .catch((err) => {
+            const error = err as Error & { response?: { data?: { message?: string } } };
+            if (error.response) {
+                throw new Error(error.response.data?.message ?? error.message ?? "");
+            }
+            throw error;
+        });
+};
+
+export const useCaseRefundApproveUpdateStatus = (
+    onSuccessCallback: (response: any) => void,
+    onErrorCallback: (error: string) => void,
+    onWarningCallback?: (error: string) => void
+) => {
+    return useMutation(
+        (payload: CaseRefundApproveUpdateStatusPayload) => updateCaseRefundApproveStatus(payload),
+        {
+            onSuccess: (response) => {
+                onSuccessCallback(response);
+            },
+            onError: (error: Error) => {
+                const err = error as Error & { isWarning?: boolean };
+                if (err.isWarning) {
+                    onWarningCallback?.(err.message);
+                } else {
+                    onErrorCallback(err.message);
+                }
+            },
+        }
+    );
+};
