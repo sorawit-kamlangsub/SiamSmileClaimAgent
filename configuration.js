@@ -6,7 +6,7 @@ window.__CONST__ENV__ = {
   "VITE_APP_CONTACT_URL": "https://www.siamsmile.co.th",
   "VITE_VERSION_CHECKER_CONFIRM": "true",
   "VITE_VERSION_CHECKER_CHECK_INTEVAL_MIN": "15",
-  "VITE_BASE_URL": "https://claimagent.uatsiamsmile.com",
+  "VITE_BASE_URL": "https://sorawit-kamlangsub.github.io/SiamSmileClaimAgent",
   "VITE_API_URL": "https://apigw.uatsiamsmile.com/claim/core",
   "VITE_APIGW_BASEURL": "https://apigw.uatsiamsmile.com",
   "VITE_SSO_ISSUER": "https://authlogin.uatsiamsmile.com",
