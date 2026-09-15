@@ -36,6 +36,7 @@
   - `RefundApproveDataTableHook.tsx`: import สลับเป็น `useGetRefundApproveMonitorWithFilter`
 - **Empty state (โหลดเสร็จแล้ว `data=[]`) → ขึ้น "ไม่พบข้อมูล" ทันที**
   - `RefundApproveDataTable.tsx`: ใช้ `noMatchText={NOT_FOUND_MESSAGE}` (constant จาก `claimFundStandardAlertMessage.ts`) + `delayNoMatch={false}` — เลิกแสดง "กำลังโหลดข้อมูล..." ค้างอีก 30 วิ (pitfall จาก `LOADING_NO_DATA_DELAY_MS` ใน `ClaimFundStandardDataTable`: effect reset timer ตอน `isLoading` เปลี่ยน → `minDelayReached` มา 30 วิหลังโหลดเสร็จ)
+  - **`RefundDataTable.tsx` (หน้า monitor คืนเงิน `/manage/refund`) แก้ตามด้วย (รอบล่าสุด): เลิกใช้ `delayNoMatch={isStatusSelected}` → `delayNoMatch={false}` + `noMatchText={NOT_FOUND_MESSAGE}`** — เลือกสถานะแล้ว api ตอบ `data: []` ขึ้น "ไม่พบข้อมูล" ทันที
 - **Error display 404 / error อื่น → เข้า table ผ่าน `mapErrorMessage` กลางของ ClaimFund**
   - `RefundApproveDataTable.tsx`: ส่ง `isError`/`error` ต่อจาก hook → `ClaimFundStandardDataTable` (ถ้า `isError` จะแสดงข้อความ error แทน noMatch)
   - `getRefundApproveMonitorData`: เปลี่ยนลอจิก error — `isSuccess:false` เดิมคืน `{...res.data, data:[]}` เงียบ (ขึ้น "ไม่พบข้อมูล") → เปลี่ยนเป็น throw `res.data.message`; catch สำคัญเอา `response.data?.message` ก่อน `err.message` แล้วค่อย fallback เป็น ""

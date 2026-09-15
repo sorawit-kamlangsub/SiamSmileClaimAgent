@@ -24,7 +24,7 @@ export interface SearchByBranchAndStatusProps {
     buttonText: string;
     onButtonClick: (values: BranchStatusFilterValues) => void;
     statusSource?: "payment" | "refund";
-    alignButtonEnd?: boolean;
+    floatingButton?: boolean;
 }
 
 const defaultValues: BranchStatusFilterValues = {
@@ -38,7 +38,7 @@ const SearchByBranchAndStatus = ({
     buttonText,
     onButtonClick,
     statusSource = "payment",
-    alignButtonEnd = false,
+    floatingButton = false,
 }: SearchByBranchAndStatusProps) => {
     const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
     const isHeadOfficeBranch = useIsHeadOfficeBranch();
@@ -72,63 +72,63 @@ const SearchByBranchAndStatus = ({
         };
     }, [formik.values]);
 
+    const actionButtonSx = {
+        backgroundColor: "#0D4C8C",
+        textTransform: "none",
+        "&:hover": { backgroundColor: "#0A3D70" },
+    };
+
     return (
-        <Box
-            component="form"
-            onSubmit={formik.handleSubmit}
-            sx={{
-                border: "1px solid #E0E0E0",
-                borderRadius: "12px",
-                padding: "16px 20px",
-                backgroundColor: "#FFFFFF",
-            }}
-        >
-            <Grid container spacing={2} alignItems="center">
-                <Grid item xs={12} sm={4} md={3}>
-                    <FormikDropdown
-                        name="branch"
-                        formik={formik}
-                        label="สาขา"
-                        fullWidth
-                        data={branchData?.data ?? []}
-                        valueFieldName="branchId"
-                        displayFieldName="branchName"
-                        isLoading={branchDataIsLoading}
-                        firstItemText={isHeadOfficeBranch ? "ทั้งหมด" : undefined}
-                    />
-                </Grid>
+        <Box>
+            <Box
+                component="form"
+                onSubmit={formik.handleSubmit}
+                sx={{
+                    border: "1px solid #E0E0E0",
+                    borderRadius: "12px",
+                    padding: "16px 20px",
+                    backgroundColor: "#FFFFFF",
+                }}
+            >
+                <Grid container spacing={2} alignItems="center">
+                    <Grid item xs={12} sm={4} md={3}>
+                        <FormikDropdown
+                            name="branch"
+                            formik={formik}
+                            label="สาขา"
+                            fullWidth
+                            data={branchData?.data ?? []}
+                            valueFieldName="branchId"
+                            displayFieldName="branchName"
+                            isLoading={branchDataIsLoading}
+                            firstItemText={isHeadOfficeBranch ? "ทั้งหมด" : undefined}
+                        />
+                    </Grid>
 
-                <Grid item xs={12} sm={4} md={3}>
-                    <FormikDropdown
-                        name="status"
-                        formik={formik}
-                        label="สถานะ"
-                        fullWidth
-                        data={statusData}
-                        valueFieldName="id"
-                        displayFieldName="name"
-                        isLoading={statusIsLoading}
-                        firstItemText="กรุณาเลือกสถานะ"
-                        disableFirstItem
-                    />
-                </Grid>
+                    <Grid item xs={12} sm={4} md={3}>
+                        <FormikDropdown
+                            name="status"
+                            formik={formik}
+                            label="สถานะ"
+                            fullWidth
+                            data={statusData}
+                            valueFieldName="id"
+                            displayFieldName="name"
+                            isLoading={statusIsLoading}
+                            firstItemText="กรุณาเลือกสถานะ"
+                            disableFirstItem
+                        />
+                    </Grid>
 
-                <Grid item xs={12} sm={4} md={2} sx={{ display: "flex", alignItems: "center", marginLeft: alignButtonEnd ? "auto" : undefined }}>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        startIcon={buttonIcon}
-                        sx={{
-                            backgroundColor: "#0D4C8C",
-                            textTransform: "none",
-                            "&:hover": { backgroundColor: "#0A3D70" },
-                        }}
-                    >
-                        {buttonText}
-                    </Button>
+                    {!floatingButton && (
+                        <Grid item xs={12} sm={4} md={2}>
+                            <Button type="submit" fullWidth variant="contained" startIcon={buttonIcon} sx={actionButtonSx}>
+                                {buttonText}
+                            </Button>
+                        </Grid>
+                    )}
                 </Grid>
-            </Grid>
+            </Box>
         </Box>
     );
 };
