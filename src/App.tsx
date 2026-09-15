@@ -79,7 +79,7 @@ function App() {
     const routeObjects = CombineRouteConfig.map((route) => createRouteObject(route, queryClient));
 
     const router = createBrowserRouter(routeObjects, {
-        basename: "/",
+        basename: import.meta.env.BASE_URL,
     });
 
     return <RouterProvider router={router} />;
