@@ -159,8 +159,8 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                     <>
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่ CPG :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 500 }}>{row?.claimNo ?? "-"}</Typography>
+                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่เคลม :</Typography>
+                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{row?.claimNo ?? "-"}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่เคส :</Typography>
