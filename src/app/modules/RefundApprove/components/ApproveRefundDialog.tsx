@@ -5,7 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
 import { useEffect } from "react";
 import { FormikDropdown, FormikTextField } from "../../_common";
-import { useGetCaseRefundApproveDetail, useGetRefundReasons } from "../../Refund/refundAPI";
+import { useGetCaseRefundApproveDetail, useGetCaseRefundRejectReasons } from "../../Refund/refundAPI";
 import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 
 type ApproveRefundDialogProps = {
@@ -57,7 +57,7 @@ const formatNumber = (value: number | undefined | null) =>
 const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) => {
     const caseId = row?.caseId ?? "";
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
-    const { data: refundReasonsRes } = useGetRefundReasons();
+    const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
     const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];

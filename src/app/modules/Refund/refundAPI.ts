@@ -214,6 +214,27 @@ export const useGetRefundReasons = () => {
     return useQuery([getRefundReasons], () => getRefundReasonsData());
 };
 
+const getCaseRefundRejectReasons = "getCaseRefundRejectReasonsKey";
+export const useGetCaseRefundRejectReasons = () => {
+    return useQuery([getCaseRefundRejectReasons], () => getCaseRefundRejectReasonsData());
+};
+
+const getCaseRefundRejectReasonsData = () => {
+    const url = `${apiURL}/Masters/GetCaseRefundRejectReasons`;
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
 const getRefundReasonsData = () => {
     const url = `${apiURL}/Masters/GetRefundReasons`;
     return axios
