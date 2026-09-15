@@ -3,7 +3,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import { useGetCaseRefundApproveDetail, useGetRefundReasons } from "../../Refund/refundAPI";
 import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
@@ -33,6 +33,8 @@ type ApproveRefundDetail = {
     customerName?: string;
     createdBy?: string;
     countItem?: number;
+    refundCount?: number;
+    remainingAmount?: number;
     totalNetPaidAmount?: number;
     totalRefundAmount?: number;
     claimId?: string;
@@ -58,14 +60,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const { data: refundReasonsRes } = useGetRefundReasons();
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
-    const caseDetails = detail?.caseDetails ?? [];
     const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
-
-    const totals = useMemo(() => {
-        const notify = (caseDetails ?? []).reduce((sum, item) => sum + (Number(item.totalNetPaidAmount) || 0), 0);
-        const refund = (caseDetails ?? []).reduce((sum, item) => sum + (Number(item.additionalAmount) || 0), 0);
-        return { notify, refund, remain: notify - refund };
-    }, [caseDetails]);
 
     const formik = useFormik<ApproveRefundDialogFormValues>({
         initialValues: defaultValues,
@@ -168,8 +163,14 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                                 <Typography sx={{ mt: 0.5, fontWeight: 500 }}>{row?.claimNo ?? "-"}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
+                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่เคส :</Typography>
+                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{row?.caseNo ?? "-"}</Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>สาขา :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{row?.branceName ?? "-"}</Typography>
+                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                    {row?.branceName ?? "-"}
+                                </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>ชื่อ - สกุล ผู้เอาประกัน :</Typography>
@@ -184,21 +185,31 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>จำนวนเงินคืน :</Typography>
+                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>จำนวนเคลมคืนเงิน :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(detail?.totalRefundAmount)}
+                                    {detail?.refundCount ?? "-"}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(caseDetails?.length ? totals.notify : row?.totalNetPaidAmount)}
+                                    {formatNumber(detail?.remainingAmount)}
+                                </Typography>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4}>
+                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>โอนคืนรวม :</Typography>
+                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                    {formatNumber(detail?.totalRefundAmount)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>คงเหลือ :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(caseDetails?.length ? totals.remain : undefined)}
+                                    {formatNumber(
+                                        detail?.remainingAmount != null && detail?.totalRefundAmount != null
+                                            ? detail.remainingAmount - detail.totalRefundAmount
+                                            : undefined
+                                    )}
                                 </Typography>
                             </Grid>
                         </Grid>
