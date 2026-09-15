@@ -147,6 +147,11 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey }: Refun
             options: { sort: false, filter: false },
         },
         {
+            name: "branceName",
+            label: "สาขา",
+            options: { sort: false, filter: false },
+        },
+        {
             name: "totalNetPaidAmount",
             label: "จำนวนเงิน",
             options: {
