@@ -113,15 +113,6 @@ export type BillingExpenseFormItem = BillingExpenseDto & {
 /** เอกสารแก้ได้เฉพาะ `reviewStatusId` / `note` — field อื่นเป็นข้อมูลอ่านอย่างเดียวจาก BE (handoff ข้อ 5) */
 export type BillingDocumentFormItem = BillingDocumentDto & { _rowKey: string };
 
-/** แถวตาราง "เอกสารประกอบการปฏิเสธ" — ยังไม่มี endpoint/DTO จริง (PENDING_BE_FIELDS.rejectionDocumentType) */
-export type BillingRejectionDocumentFormItem = {
-    _rowKey: string;
-    documentSubTypeId?: number;
-    documentSubTypeName?: string;
-    documentId?: string;
-    fileCount?: number;
-};
-
 /**
  * ประเภทรายการเคลมของหน้าวางบิลโรงพยาบาล (Sheet 2-4 ของสเปค) — วันนี้ derive จาก query param `?type=`
  * เพราะ `BillingDetailDto` ยังไม่มีฟิลด์บอกประเภทโดยตรง (PENDING_BE_FIELDS.claimListTypeId)
@@ -228,8 +219,6 @@ export interface BillingReviewFormValues {
     /** สาเหตุของผลตรวจสอบ — mapper เป็นตัวตัดสินว่าส่งเป็น rejectReasonId (สถานะ 4) หรือ decisionReasonId (2/5) */
     reviewReasonId: number | undefined;
     reviewRemark: string;
-    /** เอกสารประกอบการปฏิเสธ (แสดงเมื่อ reviewStatusId = rejected) — ยังไม่มี endpoint จริง */
-    rejectionDocuments: BillingRejectionDocumentFormItem[];
 
     /*
      * ฟิลด์ต่อจากนี้เป็น FE-only ทั้งหมด — เพิ่มเพื่อรองรับ UI ตามสเปคใหม่ที่ contract ปัจจุบันยังไม่มีข้อมูล

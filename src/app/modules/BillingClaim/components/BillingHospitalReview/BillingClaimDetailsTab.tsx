@@ -42,7 +42,6 @@ type BillingClaimDetailsTabProps = {
 const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProps) => {
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
-    const [furthestStep, setFurthestStep] = useState(0);
 
     const {
         formik,
@@ -63,23 +62,18 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
 
     const isLastStep = activeStep === steps.length - 1;
 
-    const goToStep = (next: number) => {
-        setActiveStep(next);
-        setFurthestStep((prev) => Math.max(prev, next));
-    };
-
     const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
     const handleNext = async () => {
         if (activeStep === 0) {
             if (!validateStep1Documents()) return;
-            goToStep(1);
+            setActiveStep(1);
             return;
         }
         if (activeStep === 1) {
             const ok = await confirmStep2Amount(expenseTotals.totalClaimedAmount);
             if (!ok) return;
-            goToStep(2);
+            setActiveStep(2);
         }
     };
 
@@ -109,9 +103,9 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                         steps={steps}
                         activeStep={activeStep}
                         onStepChange={setActiveStep}
-                        // โหมดดูอย่างเดียว (readOnly): ปุ่ม "ถัดไป" ถูกซ่อน furthestStep จึงค้างที่ 0 เสมอ —
-                        // เปิดให้กดข้าม step ได้อิสระ ไม่งั้นผู้ดูจะไปดู Step 2/3 ไม่ได้เลย
-                        isStepClickable={(index) => isReadOnly || index <= furthestStep}
+                        // โหมดแก้ไข: มีปุ่ม "กลับ"/"ถัดไป" ด้านล่างควบคุม step อยู่แล้ว ไม่ต้องกดแถบนี้ข้าม step เอง
+                        // โหมด readOnly: ปุ่ม "ถัดไป" ถูกซ่อน ต้องเปิดให้กดแถบนี้แทน ไม่งั้นจะไปดู step 2/3 ไม่ได้เลย
+                        isStepClickable={() => isReadOnly}
                     />
 
                     <Box sx={{ marginTop: "20px" }}>
@@ -147,6 +141,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
+                                        aplicationCode={detail?.insured?.applicationId}
                                     />
                                 </Grid>
                             </Grid>
@@ -179,6 +174,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
+                                        aplicationCode={detail?.insured?.applicationId}
                                     />
                                 </Grid>
                             </Grid>

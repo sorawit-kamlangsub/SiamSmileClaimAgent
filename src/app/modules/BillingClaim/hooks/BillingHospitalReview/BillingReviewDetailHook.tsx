@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useFormik } from "formik";
+import { useAppDispatch } from "../../../../../redux";
 import {
     useGetHospitalBillingDetail,
     useSubmitHospitalBilling,
@@ -17,6 +18,7 @@ import {
     BillingReviewFormValues,
     BillingStatusId,
 } from "../../store/billingClaim.types";
+import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import useBillingDocumentHook from "./BillingDocumentHook";
 
 const EMPTY_FORM_VALUES: BillingReviewFormValues = {
@@ -55,7 +57,6 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     reviewStatusId: undefined,
     reviewReasonId: undefined,
     reviewRemark: "",
-    rejectionDocuments: [],
     isContinuousClaim: false,
     continuousClaim: undefined,
     documentCompleteDate: undefined,
@@ -78,6 +79,7 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
  * - "อนุมัติ" (Step 3) → `validateApprove()` ผ่านแล้วค่อย `submitReview(BILLING_STATUS.passed)`
  */
 const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
+    const dispatch = useAppDispatch();
     const { id } = useParams();
     const navigate = useNavigate();
     const billingDetailId = id ? atob(id) : "";
@@ -101,6 +103,11 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         if (!detail?.data || hasSyncedRef.current) return;
         formik.setValues(toFormValues(detail.data), false);
         hasSyncedRef.current = true;
+        // ปลดล็อก useGetDocumentType (DocumentScanTable "เอกสารประกอบการปฏิเสธ") — gate ด้วย
+        // claimPHSlice.isEnabled ซึ่ง default false และไม่มีใครใน flow นี้ set ให้เดิม ทำให้ query โดน
+        // disable ค้างตลอดไป (react-query v4 ทำให้ isLoading ค้าง true ตลอดกาล ไม่เคยยิง GET เลยสักครั้ง)
+        // เคลมลูกค้า/เคลมโรงพยาบาล (ConsiderDetailHook/HospitalConsiderDetailHook) set ค่านี้ตรงจุดเดียวกัน
+        dispatch(setEnabled(true));
     }, [detail]);
 
     /** เปิด sync ใหม่หลัง refetch จาก 409 (ข้อมูลเปลี่ยนไป ต้องโหลดค่าล่าสุดมาแทนของเดิม) */

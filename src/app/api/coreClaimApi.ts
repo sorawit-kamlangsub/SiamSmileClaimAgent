@@ -203,7 +203,13 @@ export const useCreateCoreClaim = (
     });
 };
 
-export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean) => {
+/**
+ * `alwaysFresh` (default false = พฤติกรรมเดิม cache ตลอดไปด้วย cacheTime/staleTime: Infinity — เหมาะกับ
+ * master list ของ document type ทั่วไปที่ไม่เปลี่ยนตามเคส) — ต้องเปิดเป็น true สำหรับ documentTypeId ที่
+ * endpoint คืน documentCode เฉพาะเคส (เช่น "ใบแจ้งปฏิเสธสินไหม") ไม่งั้นสอง case ที่ productTypeId ตรงกันจะ
+ * ได้ documentCode เดิมค้างจาก cache ตลอดไป (เอกสารไม่ตรงเคสที่กำลังพิจารณาอยู่)
+ */
+export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean, alwaysFresh = false) => {
     return useQuery(
         [getDocumentSubTypeQueryKey, request],
         async () => {
@@ -211,11 +217,11 @@ export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnab
             return response;
         },
         {
-            cacheTime: Infinity,
-            staleTime: Infinity,
+            cacheTime: alwaysFresh ? 0 : Infinity,
+            staleTime: alwaysFresh ? 0 : Infinity,
             enabled: !!(isEnabled && request.documentTypeId),
             refetchOnWindowFocus: false,
-            refetchOnMount: false,
+            refetchOnMount: alwaysFresh ? "always" : false,
         }
     );
 };

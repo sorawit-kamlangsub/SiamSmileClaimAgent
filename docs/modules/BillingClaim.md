@@ -89,7 +89,11 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
   **Step 1 and Step 2 only** (not Step 3 — spec moved that block off the last step and gave Step 3
   its own "อนุมัติ" button instead). Only 2 outcomes here: รอแก้ไข / ปฏิเสธ (อนุมัติ isn't a button
   in this block anymore) + conditional สาเหตุ dropdown + รายละเอียด (required for รอแก้ไข only) +
-  เอกสารประกอบการปฏิเสธ table (shown when ปฏิเสธ is selected)
+  "เอกสารประกอบการปฏิเสธ" (shown when ปฏิเสธ is selected) — reuses `DocumentScanTable`
+  (`CreatedClaim/.../DocumentScanTable`) the same way `ConsiderSection` does, `productTypeId={0}`
+  since `BillingDetailDto` still has no real product type (see Known gaps), with
+  `alwaysFreshMasterList` so it always GETs fresh instead of caching the master row forever across
+  different cases
 
 ### Reused as-is
 
@@ -106,14 +110,14 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
   Formik context, safe to reuse directly for "เคลมต่อเนื่อง"
 - `ClaimSummaryStep3` (`ClaimConsider/.../ExpensesTabs/`) — the รายการค่ารักษา (benefit
   breakdown) / สรุปค่าชดเชย / สรุปค่าใช้จ่ายโรงพยาบาล / บัญชีรับเงินค่าชดเชย block on Step 3.
-  Reused via **3 additive props** (default = old behaviour, so `ClaimConsider`'s own hospital
+  Reused via **2 additive props** (default = old behaviour, so `ClaimConsider`'s own hospital
   review page is unaffected): `hideCompensationTable` (billing has no per-line compensation
-  table), `lastSummaryLine: "compensateRemain"` (billing's spec ends the "สรุปค่าใช้จ่ายโรงพยาบาล"
-  card with "ค่าชดเชยคงเหลือ (โอนให้ลูกค้า)", not the "ส่วนเกิน (ลูกค้าจ่าย)" line
-  `ClaimConsider` uses), `disableAccountEdit` (spec: ปุ่มแก้ไขบัญชี *Disable). Billing calls it
-  with `treatmentRows=[]` and `compensationRows=[]` — no per-benefit/compensation breakdown exists
-  yet (see Known gaps) — and derives `summary.medicalNet`/`medicalPay` from
-  `useBillingExpenseHook`'s real totals
+  table), `disableAccountEdit` (spec: ปุ่มแก้ไขบัญชี *Disable). The "สรุปค่าใช้จ่ายโรงพยาบาล" card's
+  last line uses the same formula as `ClaimConsider`'s hospital review page — "ส่วนเกิน
+  (ลูกค้าจ่าย)" (`lastSummaryLine` left at its "excess" default; billing no longer overrides it to
+  "compensateRemain"). Billing calls it with `treatmentRows=[]` and `compensationRows=[]` — no
+  per-benefit/compensation breakdown exists yet (see Known gaps) — and derives
+  `summary.medicalNet`/`medicalPay` from `useBillingExpenseHook`'s real totals
 
 ### Deliberately NOT reused
 
@@ -300,7 +304,7 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 | บัญชีรับเงินค่าชดเชย | Step 3 (PH + IPD) | `BillingReviewDataDto.payoutAccount` | never renders (`allowSeparateCompensation` false until `isPH` is real) |
 | เคลมต่อเนื่อง default จาก SmileConnect | Step 1 | `BillingReviewDataDto.continuousClaim` | checkbox starts unchecked; picking one manually via the dialog still works |
 | Step 3 ตารางสแกนเอกสาร | Step 3 | `BillingDetailDto` doesn't expose this document set | `BillingScanDocumentTable` gets `rows=[]` |
-| เอกสารประกอบการปฏิเสธ (ประเภทเอกสาร master) | Step 1/2 บล็อกปฏิเสธ | `useGetDocumentType` needs a `productTypeId` billing doesn't have | table renders empty, สแกน button disabled |
+| เอกสารประกอบการปฏิเสธ (ประเภทเอกสาร master) | Step 1/2 บล็อกปฏิเสธ | `useGetDocumentType` needs a real `productTypeId`, billing sends `0` | real `DocumentScanTable`, but master list for `productTypeId=0` likely returns no rows until BE adds the field — swap the hardcoded `0` for the real value once available |
 
 Also unchanged from before this rewrite:
 
