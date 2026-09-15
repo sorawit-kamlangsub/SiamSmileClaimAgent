@@ -291,6 +291,10 @@ const ConsiderSection = ({
                                 documentType="ใบแจ้งปฏิเสธสินไหม"
                                 aplicationCode={aplicationCode ?? ""}
                                 Header="เอกสารประกอบการปฏิเสธ"
+                                // documentCode ที่ endpoint คืนผูกกับเคสนี้โดยเฉพาะ (ไม่ได้ส่ง caseId มา merge
+                                // ทับ) ต้อง cache ตลอดไปไม่ได้ ไม่งั้นเคสอื่นที่ productTypeId เดียวกันจะเห็น
+                                // เอกสารของเคสก่อนหน้าค้างอยู่
+                                alwaysFreshMasterList
                             />
                         )}
                     </Box>

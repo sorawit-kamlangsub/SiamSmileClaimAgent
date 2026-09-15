@@ -1,16 +1,12 @@
-import { Box, Button, Grid, MenuItem, TextField, Tooltip, Typography } from "@mui/material";
+import { Box, Button, Grid, MenuItem, TextField, Typography } from "@mui/material";
 import FormatListBulletedIcon from "@mui/icons-material/FormatListBulleted";
 import BlockIcon from "@mui/icons-material/Block";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import { MUIDataTableColumn } from "mui-datatables";
 import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import { StandardDataTable } from "../../../../_common";
-import { cellAlignOptions, defaultOptionStandardDataTable } from "../../../../../functionHelpers";
+import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { GetDecisionReasonDtoResponse } from "../../../../../api/coreClaimApi.client";
-import { PENDING_BE_TOOLTIP } from "../../../store/billingPendingFields";
 import {
     BILLING_DECISION_ID,
     BILLING_STATUS,
@@ -58,6 +54,9 @@ type BillingReviewResultSectionProps = {
     /** ตัวเลือกสาเหตุตามสถานะที่เลือก — จาก useGetDecisionReason(undefined, decisionId) */
     reviewReason?: { data?: GetDecisionReasonDtoResponse[] };
     reviewReasonLoading?: boolean;
+    /** ผูกกับ "เอกสารประกอบการปฏิเสธ" (DocumentScanTable) — ตามสเปคเดียวกับ ConsiderSection ฝั่งพิจารณาเคลม */
+    productId?: number | undefined;
+    aplicationCode?: string | undefined;
 };
 
 /**
@@ -68,73 +67,18 @@ const BillingReviewResultSection = ({
     readOnly = false,
     reviewReason,
     reviewReasonLoading = false,
+    productId,
+    aplicationCode,
 }: BillingReviewResultSectionProps) => {
     const formik = useFormikContext<BillingReviewFormValues>();
     const selected = RESULT_OPTIONS.find((opt) => opt.value === formik.values.reviewStatusId);
     const needsReason = selected ? BILLING_DECISION_ID[selected.value] !== undefined : false;
-    const rejectionDocuments = formik.values.rejectionDocuments;
 
     const selectStatus = (value: BillingStatusId) => {
         formik.setFieldValue("reviewStatusId", value);
         // เปลี่ยนสถานะ = สาเหตุของสถานะก่อนหน้าไม่เกี่ยวข้องแล้ว (คนละชุดตัวเลือก) ต้องล้างทุกครั้ง
         formik.setFieldValue("reviewReasonId", undefined);
     };
-
-    const rejectionDocumentColumns: MUIDataTableColumn[] = [
-        {
-            name: "documentSubTypeName",
-            label: "ประเภทเอกสาร",
-            options: { filter: false, sort: false, ...cellAlignOptions({ align: "left" }) },
-        },
-        {
-            name: "_scan",
-            label: "สแกนเอกสาร",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                // PENDING-BE: PENDING_BE_FIELDS.rejectionDocumentType — ยังไม่มี master/endpoint ให้ยิงจริง
-                customBodyRender: () => (
-                    <Tooltip title={PENDING_BE_TOOLTIP} arrow>
-                        <span>
-                            <Button size="small" variant="contained" disabled sx={{ width: 140 }}>
-                                สแกนเอกสาร
-                            </Button>
-                        </span>
-                    </Tooltip>
-                ),
-            },
-        },
-        {
-            name: "fileCount",
-            label: "จำนวนเอกสาร",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (value: number | undefined) => value ?? 0,
-            },
-        },
-        {
-            name: "_view",
-            label: "รายละเอียด",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const hasFile = (rejectionDocuments[tableMeta.rowIndex]?.fileCount ?? 0) > 0;
-                    return (
-                        <Tooltip title={hasFile ? "ดูรายละเอียด" : "ยังไม่มีเอกสาร"} arrow>
-                            <span>
-                                <VisibilityIcon color={hasFile ? "primary" : "disabled"} fontSize="small" />
-                            </span>
-                        </Tooltip>
-                    );
-                },
-            },
-        },
-    ];
 
     return (
         <CustomPaper>
@@ -145,7 +89,7 @@ const BillingReviewResultSection = ({
             />
 
             <Box role="radiogroup" aria-label="เลือกผลการพิจารณาโรงพยาบาล" sx={{ mt: 2.5 }}>
-                <Grid container spacing={{ xs: 1.25, sm: 2 }}>
+                <Grid container spacing={{ xs: 1.25, sm: 2 }} justifyContent="center">
                     {RESULT_OPTIONS.map((option) => {
                         const isSelected = option.value === formik.values.reviewStatusId;
                         return (
@@ -199,7 +143,7 @@ const BillingReviewResultSection = ({
                             required
                             fullWidth
                             disabled={readOnly}
-                            label={reviewReasonLoading ? "กำลังโหลด..." : `${selected.reasonLabel} *`}
+                            label={reviewReasonLoading ? "กำลังโหลด..." : `${selected.reasonLabel}`}
                             value={formik.values.reviewReasonId || ""}
                             onChange={(e) => formik.setFieldValue("reviewReasonId", Number(e.target.value))}
                             sx={{ bgcolor: "#fff", mb: 2 }}
@@ -219,7 +163,7 @@ const BillingReviewResultSection = ({
                         disabled={readOnly}
                         required={selected.remarkRequired}
                         error={selected.remarkRequired && !formik.values.reviewRemark}
-                        label={selected.remarkRequired ? `${selected.remarkLabel} *` : selected.remarkLabel}
+                        label={selected.remarkRequired ? `${selected.remarkLabel}` : selected.remarkLabel}
                         placeholder="ระบุรายละเอียดผลการพิจารณา"
                         value={formik.values.reviewRemark}
                         onChange={(e) => formik.setFieldValue("reviewRemark", e.target.value)}
@@ -228,22 +172,16 @@ const BillingReviewResultSection = ({
                     />
 
                     {selected.value === BILLING_STATUS.rejected && (
-                        <Box sx={{ mt: 2 }}>
-                            <Typography fontWeight={600} sx={{ mb: 1 }}>
-                                เอกสารประกอบการปฏิเสธ
-                            </Typography>
-                            <StandardDataTable
-                                name="billingRejectionDocumentTable"
-                                title=""
-                                data={rejectionDocuments}
-                                columns={rejectionDocumentColumns}
-                                color="primary"
-                                columnHeaderAlign="center"
-                                displayToolbar={false}
-                                displayFooter={false}
-                                options={defaultOptionStandardDataTable}
-                            />
-                        </Box>
+                        <DocumentScanTable
+                            productTypeId={productId ?? 0}
+                            documentType="ใบแจ้งปฏิเสธสินไหม"
+                            aplicationCode={aplicationCode ?? ""}
+                            Header="เอกสารประกอบการปฏิเสธ"
+                            // documentCode ที่ endpoint คืนผูกกับเคสนี้โดยเฉพาะ (ไม่ได้ส่ง caseId มา merge
+                            // ทับ) ต้อง cache ตลอดไปไม่ได้ ไม่งั้นเคสอื่นที่ productTypeId เดียวกันจะเห็น
+                            // เอกสารของเคสก่อนหน้าค้างอยู่ — ดู ConsiderSection.tsx จุดเดียวกัน
+                            alwaysFreshMasterList
+                        />
                     )}
                 </Box>
             )}

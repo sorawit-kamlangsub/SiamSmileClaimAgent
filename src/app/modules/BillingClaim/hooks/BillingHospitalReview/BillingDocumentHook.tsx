@@ -23,9 +23,10 @@ const EMPTY_DOC_INFO: DocStorageDocInfo = {
  * เติมข้อมูลจริงจาก DocStorage (GET /document/documentid/list) ให้ตาราง "ตรวจสอบเอกสาร"
  *
  * `BillingDocumentDto` มี `documentId` + `fileCount` อยู่แล้ว แต่ `fileCount` ของ DocStorage เป็นค่าล่าสุด
- * กว่า (billing DTO อาจไม่ sync ทันทีหลัง รพ. แนบเอกสารเพิ่ม) จึงใช้ DocStorage เป็นหลัก fallback ไปที่
- * DTO เมื่อยังไม่มีข้อมูล (`fileCount == null` ของ DTO เดิม = "ไม่ทราบจำนวน" ไม่ใช่ 0 — แต่สเปคใหม่ให้แสดง 0
- * เมื่อไม่มีไฟล์ จึง normalize เป็น 0 ที่นี่)
+ * กว่า (billing DTO อาจไม่ sync ทันทีหลัง รพ. แนบเอกสารเพิ่ม) จึงใช้ DocStorage เป็นหลัก fallback ไปที่ DTO
+ * เมื่อยังไม่มีข้อมูล — `fileCount: null` ของ DTO หมายถึง "ไม่ทราบจำนวน" ไม่ใช่ 0 (hospital-billing-fe.md
+ * ข้อ 3) จึงแยก `getRawFileCount` (คง `undefined` ไว้ให้ UI แสดง "ไม่ทราบจำนวนไฟล์") ออกจาก `getFileCount`
+ * (normalize เป็น 0 สำหรับใช้ gate ตรวจสอบ `> 0` เท่านั้น)
  */
 const useBillingDocumentHook = (documents: BillingDocumentFormItem[]) => {
     const documentIds = useMemo(
@@ -54,10 +55,14 @@ const useBillingDocumentHook = (documents: BillingDocumentFormItem[]) => {
     const getDocInfo = (documentId: string | undefined): DocStorageDocInfo =>
         (documentId && documentInfoByDocId[documentId]) || EMPTY_DOC_INFO;
 
-    const getFileCount = (row: BillingDocumentFormItem): number => {
+    /** ค่าจำนวนไฟล์ดิบสำหรับแสดงผล — คง `undefined` ไว้เมื่อทั้ง DocStorage และ DTO ไม่ทราบจำนวน (≠ 0) */
+    const getRawFileCount = (row: BillingDocumentFormItem): number | undefined => {
         const fromStorage = row.documentId ? documentInfoByDocId[row.documentId]?.fileCount : undefined;
-        return fromStorage ?? row.fileCount ?? 0;
+        return fromStorage ?? row.fileCount ?? undefined;
     };
+
+    /** ค่าจำนวนไฟล์ normalize เป็น 0 — ใช้เฉพาะ gate ตรวจสอบ `> 0` ห้ามใช้แสดงผลตรง ๆ (ดู getRawFileCount) */
+    const getFileCount = (row: BillingDocumentFormItem): number => getRawFileCount(row) ?? 0;
 
     /** ทุกแถวที่มีไฟล์ (fileCount > 0) ต้องมีผลการตรวจแล้ว — gate ปุ่ม "ถัดไป" ของ Step 1 */
     const hasAnyMissingResult = () =>
@@ -82,6 +87,7 @@ const useBillingDocumentHook = (documents: BillingDocumentFormItem[]) => {
         documentInfoLoading,
         getDocInfo,
         getFileCount,
+        getRawFileCount,
         hasAnyMissingResult,
         hasAnyNotPassed,
         hasMissingRequiredNote,

@@ -95,12 +95,10 @@ export const toFormValues = (data: BillingReviewDataDto): BillingReviewFormValue
 
         expenses: (data.expenses ?? []).map(toExpenseFormItem),
         documents: (data.documents ?? []).map(toDocumentFormItem),
-        ssEndDiscountAmount: data.ssEndDiscountAmount ?? 0,
 
         reviewStatusId: undefined,
         reviewReasonId: undefined,
         reviewRemark: "",
-        rejectionDocuments: [],
 
         // ฟิลด์ FE-only (ดู comment บน BillingReviewFormValues) — ยังไม่มีค่าจาก BE ให้ sync จึงใช้ default
         isContinuousClaim: false,
@@ -140,7 +138,7 @@ const toDocumentDto = (item: BillingDocumentFormItem): BillingDocumentDto => ({
  *
  * จงใจไม่ map ฟิลด์ FE-only ต่อไปนี้ขึ้น BE เพราะ `BillingReviewDataDto`/`BillingExpenseDto`/`BillingDocumentDto`
  * ยังไม่มี field รองรับ (ดู PENDING_BE_FIELDS ที่ billingPendingFields.ts) : isContinuousClaim, continuousClaim,
- * documentCompleteDate, admitIndication, ipdDays, icuDays, simBCategory, mergeCompensation, rejectionDocuments,
+ * documentCompleteDate, admitIndication, ipdDays, icuDays, simBCategory, mergeCompensation,
  * รวมถึง `_receiptAmount`/`_entitlementAmount`/`_isInsuranceExcess`/`_insuranceCompanyName` บนแต่ละแถว expenses
  * — ฟิลด์เหล่านี้อยู่ในฟอร์มเพื่อให้ UI bind ค่าได้เท่านั้น ยังไม่ round-trip ขึ้น BE จนกว่า contract จะรองรับ
  */
@@ -178,5 +176,4 @@ export const toReviewDataDto = (values: BillingReviewFormValues): BillingReviewD
     },
     expenses: values.expenses.map(toExpenseDto),
     documents: values.documents.map(toDocumentDto),
-    ssEndDiscountAmount: round2(values.ssEndDiscountAmount),
 });
