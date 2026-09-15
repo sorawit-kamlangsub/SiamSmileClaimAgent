@@ -7,6 +7,7 @@
 - **กฎ 2 ข้อที่ทำให้งานสำเร็จ (แทนที่จะวนลูป):**
   1. `read` tool เท่านั้น → เอา `oldString` มาจาก output ของ `read` ตรงตัว (byte-for-byte)
   2. ห้ามเอาค่า byte ใด ๆ จาก bash/git มาใส่ใน `edit` — git diff/bash มักถูกแทน CRLF/LF และ byte-corrupt จน `edit` ไปไม่ถึง
+- **กฎ 1 ข้อเรื่องความเร็ว (ใช้ทุกงาน ไม่จำกัดเฉพาะ RefundApprove):** ตอบ/ลงมือเร็ว — ห้ามทวนคำถามซ้ำ ห้ามเดา ห้ามขยาย scope เกินที่สั่ง; เสร็จแล้วสรุปสั้น 2-3 บรรทัด จบรอคำสั่ง
 
 ## สถานะงาน: Refund decoupling (ย้าย search form ออกจาก shared module)
 
