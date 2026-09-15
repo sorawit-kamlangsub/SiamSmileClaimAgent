@@ -69,6 +69,11 @@
 - **ดัก `isSuccess === false` หลังกดแจ้งคืนเงิน + แสดง message จาก API** (รองรับ HTTP 200 ที่ `isSuccess:false` เช่น `"เกิดข้อผิดพลาด รายการอยู่อยู่ระหว่างรออนุมัติ"`):
   - ต้นตอ: `createCaseRefund` เดิม `throw res.data.message` (string) แล้ว `.catch` อ่าน `err.message` จาก string → ได้ `undefined` → message หาย ผู้ใช้ไม่เห็นอะไรหลังกดแจ้งคืนเงิน
   - แก้ใน `refundAPI.ts`: `throw new Error(res.data.message ?? "")` + `.catch` ขุด `err.response.data.message` ก่อนแล้ว fallback `err.message` (pattern เดียวกับ `getRefundApproveMonitorData`) → `useCreateCaseRefund.onError` ได้ `error.message` จริง → `handleSaveError` → `swalError` แสดง message API
+- **ดัก `data.isSuccess === false` (ชั้นในของ envelope) หลังกดแจ้งคืนเงิน → แสดงเป็น warning Icon ! สีส้ม (`swalWarning`)** (ตัวอย่าง envelope: `data: { caseAdjustmentId: null, isSuccess: false, message: "รายการอยู่อยู่ระหว่างรออนุมัติ" }` แต่ `data` ระดับบน `isSuccess: true`):
+  - วิธีแยก: `isWarning = res.data.isSuccess === true && res.data.data?.isSuccess === false` — ระดับบน success แต่ชั้นใน fail = business warning (orange `!`); ระดับบน fail = error (แดง)
+  - แก้ใน `refundAPI.ts`: `createCaseRefund` throw `Error` ที่ attach `isWarning` flag แล้ว `.catch` rethrow เดิมตอนไม่มี `.response` (ไม่ swallow flag); `useCreateCaseRefund` เพิ่ม param 3 (`onWarningCallback?`) ตรวจ `err.isWarning` → แยกไป warning
+  - `ManageRefundDetailHook.tsx`: เพิ่ม `handleSaveWarning` = `swalWarning("แจ้งเตือน", err)` ส่งเป็น callback ตัวที่ 3 — ตัวอย่าง case นี้จะโชว์ "รายการอยู่อยู่ระหว่างรออนุมัติ" แบบ warning
+  - clean อีก: ตัด branch `!response.isSuccess` ใน `onSuccess` (dead code หลัง refactor — createCaseRefund throw ทั้ง fail ชั้นนอก/ในแล้ว)
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ pre-existing จาก AdjustTransfer/BankStatus/ManageTransfer)
 
 ### ค้าง ⏳ (งานต่อไป)
@@ -77,7 +82,6 @@
 
 ### งานที่ควรทำถัดไป (Note ไว้ — ทำได้เลยโดยไม่ต้องรอสั่ง)
 - **ลบ mock ในหน้า refund detail** (`ManageRefundDetailHook.tsx`): มี `mockDetailData: any` + `const detailData = refundDetailRes?.data ?? mockDetailData` + TODO "ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails" — เมื่อ API คืน `data.caseDetails` จริงแล้วให้ลบ mock, TODO comment, และ `any` (`mapCaseDetailsRows(caseDetails: any[])` → type จริง)
-- **`useCreateCaseRefund.onSuccess` มี branch `!response.isSuccess` ที่กลายเป็น dead code** หลังแก้รอบนี้ (createCaseRefund throw แล้ว) — พิจารณา clean
 - **callback type `any` ใน refundAPI** (`onSuccessCallBack: (response: any)`, `reasonOptions: any[]` ฯลฯ) — ถ้าจะ clean ให้ใช้ type จาก contract จริง
 - **`onClNoClick` ใน `ClaimSummaryHeader` ยัง `console.log`** (หน้า refund detail) — ควร navigate ไปหน้า CL detail จริง
 - **ปุ่มดำเนินการ/ดูรายละเอียดใน `RefundApproveDataTableHook` ยัง TODO (console.log)** — เชื่อม dialog/detail ต่อ

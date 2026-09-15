@@ -313,20 +313,22 @@ export interface CreateCaseRefundPayload {
 
 export const useCreateCaseRefund = (
     onSuccessCallBack: (response: any) => void,
-    onErrorCallback: (error: string) => void
+    onErrorCallback: (error: string) => void,
+    onWarningCallback?: (error: string) => void
 ) => {
     const queryClient = useQueryClient();
     return useMutation((payload: CreateCaseRefundPayload) => createCaseRefund(payload), {
         onSuccess: (response) => {
-            if (!response.isSuccess) {
-                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
-            } else {
-                onSuccessCallBack(response);
-            }
+            onSuccessCallBack(response);
             queryClient.invalidateQueries([getRefundDetail]);
         },
         onError: (error: Error) => {
-            onErrorCallback && onErrorCallback(error.message);
+            const err = error as Error & { isWarning?: boolean };
+            if (err.isWarning) {
+                onWarningCallback?.(err.message);
+            } else {
+                onErrorCallback && onErrorCallback(err.message);
+            }
         },
     });
 };
@@ -336,13 +338,19 @@ const createCaseRefund = (payload: CreateCaseRefundPayload) => {
     return axios
         .post(url, payload)
         .then((res) => {
-            if (res.data.isSuccess) {
+            if (res.data.isSuccess && res.data.data?.isSuccess !== false) {
                 return res.data;
             }
-            throw new Error(res.data.message ?? "");
+            const isWarning = !!res.data.isSuccess && res.data.data?.isSuccess === false;
+            const error = new Error(res.data.data?.message ?? res.data.message ?? "");
+            (error as Error & { isWarning?: boolean }).isWarning = isWarning;
+            throw error;
         })
         .catch((err) => {
             const error = err as Error & { response?: { data?: { message?: string } } };
-            throw new Error(error.response?.data?.message ?? error.message ?? "");
+            if (error.response) {
+                throw new Error(error.response.data?.message ?? error.message ?? "");
+            }
+            throw error;
         });
 };

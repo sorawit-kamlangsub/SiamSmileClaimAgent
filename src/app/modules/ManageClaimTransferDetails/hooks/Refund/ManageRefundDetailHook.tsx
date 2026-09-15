@@ -86,7 +86,11 @@ const useManageRefundDetailHook = (caseId: string) => {
         swalError("แจ้งเตือน", err);
     };
 
-    const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError);
+    const handleSaveWarning = (err: string) => {
+        swalWarning("แจ้งเตือน", err);
+    };
+
+    const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError, handleSaveWarning);
 
     const formik = useFormik<RefundDetailFormValues>({
         initialValues: emptyFormValues,
