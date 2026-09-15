@@ -8,6 +8,7 @@ import useAdditionalTransferAccountDetailHook from "../hooks/AdditionalTransferA
 import { useAppDispatch, useAppSelector } from "../../../../redux";
 import { setOpenDialogAdjustDetail } from "../store/adjustTransferMonitorSlice";
 import { FormikDropdown } from "../../_common";
+import { useGetBank } from "../../../api/coreClaimMastersApi";
 
 export interface ExistingAccountInfo {
     logoUrl?: string;
@@ -56,7 +57,7 @@ const BankEditDetailDialog = () => {
         paymentId: selectRowForEdit.paymentId,
     });
     const avatarBank = setBankLogo(dataDetail?.toBankId);
-
+    const { data: bankData, isLoading: isBankDataLoading } = useGetBank();
     const handleCloseDialog = () => {
         dispatch(setOpenDialogAdjustDetail({ isOpen: false }));
     };
@@ -157,8 +158,8 @@ const BankEditDetailDialog = () => {
                         name="relationship"
                         data={[]}
                         firstItemText="กรุณาเลือก"
-                        displayFieldName=""
-                        valueFieldName=""
+                        displayFieldName="organizeName"
+                        valueFieldName="organizeId"
                         fullWidth
                     />
                 </Box>
@@ -169,10 +170,10 @@ const BankEditDetailDialog = () => {
                         formik={formik}
                         label=""
                         name="bankId"
-                        data={[]}
+                        data={bankData?.data ?? []}
                         firstItemText="กรุณาเลือก"
-                        displayFieldName=""
-                        valueFieldName=""
+                        displayFieldName="organizeName"
+                        valueFieldName="organizeId"
                         fullWidth
                     />
                 </Box>
