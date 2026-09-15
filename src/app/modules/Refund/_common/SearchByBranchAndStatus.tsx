@@ -1,9 +1,9 @@
 import { Box, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { FormikDropdown } from "../../_common";
-import { useGetBranch, useGetPaymentStatus } from "../../IncreaseLimitTransfer/_common/masterAPI";
+import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
+import { useGetPaymentStatus } from "../../IncreaseLimitTransfer/_common/masterAPI";
 import { useGetRefundStatus } from "../refundAPI";
-import { useIsHeadOfficeBranch } from "../../_common/branchPermission";
 import { useEffect } from "react";
 import { useAppDispatch } from "../../../../redux";
 import { resetFilterSearch, setSearchMonitorByFilter } from "../store/refundSlice";
@@ -40,8 +40,6 @@ const SearchByBranchAndStatus = ({
     statusSource = "payment",
     floatingButton = false,
 }: SearchByBranchAndStatusProps) => {
-    const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
-    const isHeadOfficeBranch = useIsHeadOfficeBranch();
     const isRefundSource = statusSource === "refund";
     const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatus(
         isRefundSource ? false : true
@@ -92,17 +90,7 @@ const SearchByBranchAndStatus = ({
             >
                 <Grid container spacing={2} alignItems="center">
                     <Grid item xs={12} sm={4} md={3}>
-                        <FormikDropdown
-                            name="branch"
-                            formik={formik}
-                            label="สาขา"
-                            fullWidth
-                            data={branchData?.data ?? []}
-                            valueFieldName="branchId"
-                            displayFieldName="branchName"
-                            isLoading={branchDataIsLoading}
-                            firstItemText={isHeadOfficeBranch ? "ทั้งหมด" : undefined}
-                        />
+                        <BranchAutocomplete name="branch" formik={formik} withAllOption />
                     </Grid>
 
                     <Grid item xs={12} sm={4} md={3}>

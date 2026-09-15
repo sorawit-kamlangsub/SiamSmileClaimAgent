@@ -95,6 +95,17 @@
 - **รอบเพิ่มเติม (user สั่ง):** ถ้าไม่ใช่สำนักงานใหญ่ ให้เอาตัวเลือก "ทั้งหมด" ออกด้วย — เพิ่ม `useIsHeadOfficeBranch()` ใน `branchPermission.ts`, `RefundSearchFilterForm`/`SearchByBranchAndStatus` เปลี่ยน `firstItemText` เป็น `isHeadOfficeBranch ? "ทั้งหมด" : undefined`, `BranchAutocomplete` ใช้ `!withAllOption || !isHeadOfficeBranch` เป็นเงื่อนไขไม่เพิ่ม option "ทั้งหมด" (`ClaimSearchFilterForm` ไม่มี firstItemText อยู่แล้ว ไม่ต้องแก้)
 - ข้อควรระวัง: เป็น UI-level filter เท่านั้น backend ยังคือ security boundary — ถ้าจะกันข้อมูลข้ามสาขาจริงต้องบังคับฝั่ง API ด้วย
 
+### เสร็จแล้วเพิ่มเติม: ตัวเลือกสาขาแบบ AutoComplete (พิมพ์ค้นหาได้) -> ใช้ทั้งหน้า ClaimFund ✅
+- Component: `_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete.tsx` (มีอยู่แล้วจากงาน ExtraPayment) — ห่อ `FormikAutocomplete` (MUI Autocomplete) + `useGetBranch` + `withAllOption` ("ทั้งหมด" เฉพาะสำนักงานใหญ่เท่านั้น)
+- **branch ใช้ API `VITE_APIGW_BASEURL` (`https://apigw.uatsiamsmile.com`)**: `useGetBranch` ที่ `IncreaseLimitTransfer/_common/masterAPI.ts` → `GET ${APIGW_URL}/claim/core/Masters/branch` (APIGW_URL = VITE_APIGW_BASEURL ใน `Const.ts`) — `BranchAutocomplete` import สลับจาก `api/coreClaimMastersApi.ts` (เดิมใช้ VITE_API_URL) มาเป็น masterAPI hook (กรองสิทธิ์สาขาเหมือนเดิมทั้งคู่)
+- เอาไปใช้แทน `FormikDropdown` สาขาแล้วทุกจุด:
+  - `Refund/_common/SearchByBranchAndStatus.tsx` → `<BranchAutocomplete name="branch" formik={formik} withAllOption />` (ครอบ RefundPage + AdjustTransferPage)
+  - `Refund/_common/RefundSearchFilterForm.tsx` → `<BranchAutocomplete name="branchId" formik={formik} withAllOption />` (RefundApprovePage)
+  - `IncreaseLimitTransfer/_common/ClaimSearchFilterForm.tsx` → `<BranchAutocomplete name="branchId" formik={formik} />` (ไม่มี withAllOption เพราะเดิมก็ไม่มี "ทั้งหมด" อยู่แล้ว)
+  - `ExtraPayment/ExtraPaymentListPage.tsx` → มีจากเดิมแล้ว (`withAllOption`)
+- import path ระวังอักษร "ฺ" (phinthu) นำหน้าไฟล์: `../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete`
+- **สมมติฐาน (เสี่ยงต่อ contract):** เดิม dropdown เลือก "ทั้งหมด" = value `undefined` (firstItemText sentinel -1) แต่ autocomplete ให้ `branchId: 0` แทน → ส่งไป monitor API เป็น 0 (ตาม convention เดียวกับ ExtraPayment ที่ใช้ 0 = ทั้งหมด) — ถ้า API monitor คืนค่าว่างตอน `branceId=0` ให้ map 0→undefined ที่ extender/dispatch
+
 ### งานที่ควรทำถัดไป (Note ไว้ — ทำได้เลยโดยไม่ต้องรอสั่ง)
 - **ลบ mock ในหน้า refund detail** (`ManageRefundDetailHook.tsx`): มี `mockDetailData: any` + `const detailData = refundDetailRes?.data ?? mockDetailData` + TODO "ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails" — เมื่อ API คืน `data.caseDetails` จริงแล้วให้ลบ mock, TODO comment, และ `any` (`mapCaseDetailsRows(caseDetails: any[])` → type จริง)
 - **callback type `any` ใน refundAPI** (`onSuccessCallBack: (response: any)`, `reasonOptions: any[]` ฯลฯ) — ถ้าจะ clean ให้ใช้ type จาก contract จริง

@@ -4,8 +4,8 @@ import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
+import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
 import dayjs, { Dayjs } from "dayjs";
-import { useGetBranch } from "./masterAPI";
 
 const currentDate = dayjs();
 
@@ -33,7 +33,6 @@ const defaultValues: ClaimSearchFilterValues = {
 };
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
-    const { data: branchData, isLoading: branchIsLoading } = useGetBranch();
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -103,16 +102,7 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
 
             <Grid container spacing={2} sx={{ marginTop: "4px" }}>
                 <Grid item xs={12} sm={6} md={3}>
-                    <FormikDropdown
-                        name="branchId"
-                        formik={formik}
-                        label="สาขา"
-                        data={branchData?.data ?? []}
-                        valueFieldName="branchId"
-                        displayFieldName="branchName"
-                        fullWidth
-                        isLoading={branchIsLoading}
-                    />
+                    <BranchAutocomplete name="branchId" formik={formik} />
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>

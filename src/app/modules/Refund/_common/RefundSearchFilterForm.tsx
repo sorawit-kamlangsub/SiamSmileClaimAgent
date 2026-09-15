@@ -4,10 +4,9 @@ import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
+import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
 import dayjs, { Dayjs } from "dayjs";
-import { useGetBranch } from "../../IncreaseLimitTransfer/_common/masterAPI";
 import { useGetRefundStatus } from "../refundAPI";
-import { useIsHeadOfficeBranch } from "../../_common/branchPermission";
 
 const currentDate = dayjs();
 
@@ -40,9 +39,7 @@ const defaultValues: RefundSearchFilterValues = {
 };
 
 const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterFormProps) => {
-    const { data: branchData, isLoading: branchIsLoading } = useGetBranch();
     const { data: refundStatusData, isLoading: refundStatusIsLoading } = useGetRefundStatus();
-    const isHeadOfficeBranch = useIsHeadOfficeBranch();
     const formik = useFormik<RefundSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -63,17 +60,7 @@ const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterF
         >
             <Grid container spacing={2} alignItems="flex-end">
                 <Grid item xs={12} sm={6} md={3}>
-                    <FormikDropdown
-                        name="branchId"
-                        formik={formik}
-                        label="สาขา"
-                        data={branchData?.data ?? []}
-                        valueFieldName="branchId"
-                        displayFieldName="branchName"
-                        fullWidth
-                        isLoading={branchIsLoading}
-                        firstItemText={isHeadOfficeBranch ? "ทั้งหมด" : undefined}
-                    />
+                    <BranchAutocomplete name="branchId" formik={formik} withAllOption />
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
