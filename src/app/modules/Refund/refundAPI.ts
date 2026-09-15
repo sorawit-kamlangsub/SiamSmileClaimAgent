@@ -7,6 +7,7 @@ import { encodeURLWithParams, PaginationDto } from "../_common";
 const getRefundMonitor = "getRefundMonitorKey";
 const getRefundApproveMonitor = "getRefundApproveMonitorKey";
 const getRefundDetail = "getRefundDetailKey";
+const getCaseRefundApproveDetail = "getCaseRefundApproveDetailKey";
 const getRefundReasons = "getRefundReasonsKey";
 const getRefundStatus = "getRefundStatusKey";
 const getRefundClaimTransaction = "getRefundClaimTransactionKey";
@@ -150,6 +151,28 @@ export const useGetRefundDetail = (caseId: string) => {
 
 const getRefundDetailData = (caseId: string) => {
     const url = encodeURLWithParams(`${apiURL}/Refund/SaveRefundDetails`, { caseId });
+    return axios
+        .get(url)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            } else {
+                throw res.data.message;
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+export const useGetCaseRefundApproveDetail = (caseRefundId: string) => {
+    return useQuery([getCaseRefundApproveDetail, caseRefundId], () => getCaseRefundApproveDetailData(caseRefundId), {
+        enabled: !!caseRefundId,
+    });
+};
+
+const getCaseRefundApproveDetailData = (caseRefundId: string) => {
+    const url = encodeURLWithParams(`${apiURL}/Refund/CaseRefundApproveDetail`, { caseRefundId });
     return axios
         .get(url)
         .then((res) => {

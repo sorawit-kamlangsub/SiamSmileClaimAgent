@@ -5,7 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
 import { useEffect, useMemo } from "react";
 import { FormikDropdown, FormikTextField } from "../../_common";
-import { useGetRefundDetail, useGetRefundReasons } from "../../Refund/refundAPI";
+import { useGetCaseRefundApproveDetail, useGetRefundReasons } from "../../Refund/refundAPI";
 import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 
 type ApproveRefundDialogProps = {
@@ -31,9 +31,10 @@ type ApproveRefundCaseDetail = {
 type ApproveRefundDetail = {
     claimNo?: string;
     customerName?: string;
-    createdByUserName?: string;
+    createdBy?: string;
     countItem?: number;
     totalNetPaidAmount?: number;
+    totalRefundAmount?: number;
     claimId?: string;
     caseDetails?: ApproveRefundCaseDetail[];
 };
@@ -53,7 +54,7 @@ const formatNumber = (value: number | undefined | null) =>
 
 const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) => {
     const caseId = row?.caseId ?? "";
-    const { data: refundDetailRes, isLoading: isDetailLoading } = useGetRefundDetail(caseId);
+    const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
     const { data: refundReasonsRes } = useGetRefundReasons();
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
@@ -112,7 +113,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
             onClose={onClose}
             maxWidth="md"
             fullWidth
-            PaperProps={{ sx: { height: "90vh", overflow: "hidden", borderRadius: 3 } }}
+            PaperProps={{ sx: { height: "65vh", overflow: "hidden", borderRadius: 3 } }}
         >
             <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, p: "16px 24px", borderBottom: "1px solid #E0E0E0" }}>
                 <Box
@@ -141,7 +142,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", py: "300px" }}>
+            <DialogContent sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", pt: "15px", pb: 0 }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>ข้อมูลรายละเอียด</Typography>
                     <Button
@@ -179,25 +180,19 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>ผู้ทำรายการ :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {detail?.createdByUserName ?? "-"}
+                                    {detail?.createdBy ?? "-"}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>จำนวนเคลมคืนเงิน :</Typography>
+                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>จำนวนเงินคืน :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {caseDetails?.length ? caseDetails.length : "-"}
+                                    {formatNumber(detail?.totalRefundAmount)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
                                     {formatNumber(caseDetails?.length ? totals.notify : row?.totalNetPaidAmount)}
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>โอนคืนรวม :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(caseDetails?.length ? totals.refund : row?.refundAmount)}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
