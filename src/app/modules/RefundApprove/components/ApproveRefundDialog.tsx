@@ -4,9 +4,13 @@ import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
 import { useEffect } from "react";
-import { FormikDropdown, FormikTextField } from "../../_common";
+import { FormikDropdown, FormikTextField, swalError, swalSuccess, swalWarning } from "../../_common";
 import { swalConfirmAction } from "../../_common/customSweetAlert";
-import { useGetCaseRefundApproveDetail, useGetCaseRefundRejectReasons } from "../../Refund/refundAPI";
+import {
+    useCaseRefundApproveUpdateStatus,
+    useGetCaseRefundApproveDetail,
+    useGetCaseRefundRejectReasons,
+} from "../../Refund/refundAPI";
 import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 
 type ApproveRefundDialogProps = {
@@ -62,8 +66,27 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
-    const caseRefundId = detail?.caseRefundId ?? "";
+    const caseRefundId = detail?.caseRefundId ?? caseId;
     const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
+
+    const handleUpdateStatusSuccess = () => {
+        swalSuccess("ทำรายการสำเร็จ", "ทำรายการสำเร็จ");
+        onClose();
+    };
+
+    const handleUpdateStatusError = (error: string) => {
+        swalError("แจ้งเตือน", error);
+    };
+
+    const handleUpdateStatusWarning = (error: string) => {
+        swalWarning("แจ้งเตือน", error);
+    };
+
+    const { mutate: updateStatusMutate } = useCaseRefundApproveUpdateStatus(
+        handleUpdateStatusSuccess,
+        handleUpdateStatusError,
+        handleUpdateStatusWarning
+    );
 
     const formik = useFormik<ApproveRefundDialogFormValues>({
         initialValues: defaultValues,
@@ -75,13 +98,12 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
             return errors;
         },
         onSubmit: (values) => {
-            console.log("reject refund", {
+            updateStatusMutate({
                 caseRefundId,
-                refundNo: row?.refundNo,
-                rejectReasonId: values.rejectReasonId,
-                note: values.note,
+                caseRefundStatusId: 4,
+                caseRefundRejectReasonId: values.rejectReasonId,
+                caseRefundRejectReasonRemark: values.note,
             });
-            onClose();
         },
     });
 
@@ -91,12 +113,19 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
         }
     }, [open, row?.caseId]);
 
-    const handleApproveClick = () => {
-        console.log("approve refund", {
-            caseRefundId,
-            refundNo: row?.refundNo,
+    const handleApproveClick = async () => {
+        const result = await swalConfirmAction({
+            title: "ยืนยันการอนุมัติคืนเงิน?",
+            text: "ต้องการอนุมัติการคืนเงินหรือไม่",
+            confirmButtonText: "ยืนยัน",
+            cancelButtonText: "ยกเลิก",
         });
-        onClose();
+        if (result.isConfirmed) {
+            updateStatusMutate({
+                caseRefundId,
+                caseRefundStatusId: 3,
+            });
+        }
     };
 
     const handleOpenSlip = () => {
@@ -255,13 +284,19 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </Grid>
 
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 2, py: 2 }}>
-                    <Button variant="outlined" color="error" onClick={handleRejectClick}>
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={handleRejectClick}
+                        disabled={isDetailLoading || !caseRefundId}
+                    >
                         ปฏิเสธ
                     </Button>
                     <Button
                         variant="contained"
                         startIcon={<SyncAltIcon />}
                         onClick={handleApproveClick}
+                        disabled={isDetailLoading || !caseRefundId}
                         sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
                     >
                         อนุมัติ

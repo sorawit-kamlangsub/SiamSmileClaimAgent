@@ -433,20 +433,21 @@ export const useCaseRefundApproveUpdateStatus = (
     onErrorCallback: (error: string) => void,
     onWarningCallback?: (error: string) => void
 ) => {
-    return useMutation(
-        (payload: CaseRefundApproveUpdateStatusPayload) => updateCaseRefundApproveStatus(payload),
-        {
-            onSuccess: (response) => {
-                onSuccessCallback(response);
-            },
-            onError: (error: Error) => {
-                const err = error as Error & { isWarning?: boolean };
-                if (err.isWarning) {
-                    onWarningCallback?.(err.message);
-                } else {
-                    onErrorCallback(err.message);
-                }
-            },
-        }
-    );
+    const queryClient = useQueryClient();
+    return useMutation((payload: CaseRefundApproveUpdateStatusPayload) => updateCaseRefundApproveStatus(payload), {
+        onSuccess: (response) => {
+            onSuccessCallback(response);
+            queryClient.invalidateQueries({
+                predicate: (query) => query.queryKey.includes(getRefundApproveMonitor),
+            });
+        },
+        onError: (error: Error) => {
+            const err = error as Error & { isWarning?: boolean };
+            if (err.isWarning) {
+                onWarningCallback?.(err.message);
+            } else {
+                onErrorCallback(err.message);
+            }
+        },
+    });
 };
