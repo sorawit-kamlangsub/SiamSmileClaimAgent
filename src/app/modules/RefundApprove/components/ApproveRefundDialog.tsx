@@ -141,7 +141,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ minHeight: 0 }}>
+            <DialogContent sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", py: "300px" }}>
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>ข้อมูลรายละเอียด</Typography>
                     <Button
