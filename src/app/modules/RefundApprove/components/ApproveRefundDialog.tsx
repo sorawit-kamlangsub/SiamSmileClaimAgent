@@ -105,7 +105,6 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     return (
         <Dialog
             open={open}
-            onClose={onClose}
             maxWidth="md"
             fullWidth
             PaperProps={{ sx: { height: "54vh", overflow: "hidden", borderRadius: 3 } }}
