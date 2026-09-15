@@ -67,7 +67,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
         validate: (values) => {
             const errors: FormikErrors<ApproveRefundDialogFormValues> = {};
             if (!values.rejectReasonId) {
-                errors.rejectReasonId = "กรุณาเลือกสาเหตุปฎิเสธ";
+                errors.rejectReasonId = "กรุณาเลือกสาเหตุปฏิเสธ";
             }
             return errors;
         },
