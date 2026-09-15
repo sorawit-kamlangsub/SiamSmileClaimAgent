@@ -5,6 +5,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
 import { useEffect } from "react";
 import { FormikDropdown, FormikTextField } from "../../_common";
+import { swalConfirmAction } from "../../_common/customSweetAlert";
 import { useGetCaseRefundApproveDetail, useGetCaseRefundRejectReasons } from "../../Refund/refundAPI";
 import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 
@@ -99,6 +100,23 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const handleOpenSlip = () => {
         if (row?.refundNo) {
             window.open(`/slip/${row.refundNo}`, "_blank", "noopener,noreferrer");
+        }
+    };
+
+    const handleRejectClick = async () => {
+        const errors = await formik.validateForm();
+        if (errors.rejectReasonId) {
+            formik.handleSubmit();
+            return;
+        }
+        const result = await swalConfirmAction({
+            title: "ยืนยันปฏิเสธการโอนคืน?",
+            text: "ต้องการปฏิเสธการโอนคืนหรือไม่",
+            confirmButtonText: "ยืนยัน",
+            cancelButtonText: "ยกเลิก",
+        });
+        if (result.isConfirmed) {
+            formik.handleSubmit();
         }
     };
 
@@ -235,7 +253,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </Grid>
 
                 <Box sx={{ display: "flex", justifyContent: "center", gap: 2, py: 2 }}>
-                    <Button variant="outlined" color="error" onClick={() => formik.handleSubmit()}>
+                    <Button variant="outlined" color="error" onClick={handleRejectClick}>
                         ปฏิเสธ
                     </Button>
                     <Button
