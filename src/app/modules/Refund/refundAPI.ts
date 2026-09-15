@@ -338,11 +338,11 @@ const createCaseRefund = (payload: CreateCaseRefundPayload) => {
         .then((res) => {
             if (res.data.isSuccess) {
                 return res.data;
-            } else {
-                throw res.data.message;
             }
+            throw new Error(res.data.message ?? "");
         })
-        .catch((err: Error) => {
-            throw err.message;
+        .catch((err) => {
+            const error = err as Error & { response?: { data?: { message?: string } } };
+            throw new Error(error.response?.data?.message ?? error.message ?? "");
         });
 };

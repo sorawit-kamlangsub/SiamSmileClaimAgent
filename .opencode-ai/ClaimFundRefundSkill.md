@@ -66,11 +66,21 @@
   - `decreaseAmount` = **ผลรวม** `additionalAmount` ทั้งตาราง (เดิม validate ใช้แค่ `items[0]` → เปลี่ยนเป็น sum ทุกแถว)
 - ยังคงลอจิก validate เดิม + `swalConfirm`; `slipFile` ยังเป็น required ที่ฟอร์ม **แต่ body ไม่มี field ไฟล์** (API ยังไม่เปิดรับ — ถ้า backend รับ slip แยกค่อยต่อ)
 - **หลังบันทึกสำเร็จ → `navigate("/manage/refund")`** (หน้า monitor คืนเงิน `RefundPage`; route parent `/manage/refund` มี child `refund` เป็น index + `detail/:id`) — เติม `useNavigate` ใน `ManageRefundDetailHook`, เรียกใน `handleSaveSuccess`
+- **ดัก `isSuccess === false` หลังกดแจ้งคืนเงิน + แสดง message จาก API** (รองรับ HTTP 200 ที่ `isSuccess:false` เช่น `"เกิดข้อผิดพลาด รายการอยู่อยู่ระหว่างรออนุมัติ"`):
+  - ต้นตอ: `createCaseRefund` เดิม `throw res.data.message` (string) แล้ว `.catch` อ่าน `err.message` จาก string → ได้ `undefined` → message หาย ผู้ใช้ไม่เห็นอะไรหลังกดแจ้งคืนเงิน
+  - แก้ใน `refundAPI.ts`: `throw new Error(res.data.message ?? "")` + `.catch` ขุด `err.response.data.message` ก่อนแล้ว fallback `err.message` (pattern เดียวกับ `getRefundApproveMonitorData`) → `useCreateCaseRefund.onError` ได้ `error.message` จริง → `handleSaveError` → `swalError` แสดง message API
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ pre-existing จาก AdjustTransfer/BankStatus/ManageTransfer)
 
 ### ค้าง ⏳ (งานต่อไป)
 - ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
 - typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)
+
+### งานที่ควรทำถัดไป (Note ไว้ — ทำได้เลยโดยไม่ต้องรอสั่ง)
+- **ลบ mock ในหน้า refund detail** (`ManageRefundDetailHook.tsx`): มี `mockDetailData: any` + `const detailData = refundDetailRes?.data ?? mockDetailData` + TODO "ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails" — เมื่อ API คืน `data.caseDetails` จริงแล้วให้ลบ mock, TODO comment, และ `any` (`mapCaseDetailsRows(caseDetails: any[])` → type จริง)
+- **`useCreateCaseRefund.onSuccess` มี branch `!response.isSuccess` ที่กลายเป็น dead code** หลังแก้รอบนี้ (createCaseRefund throw แล้ว) — พิจารณา clean
+- **callback type `any` ใน refundAPI** (`onSuccessCallBack: (response: any)`, `reasonOptions: any[]` ฯลฯ) — ถ้าจะ clean ให้ใช้ type จาก contract จริง
+- **`onClNoClick` ใน `ClaimSummaryHeader` ยัง `console.log`** (หน้า refund detail) — ควร navigate ไปหน้า CL detail จริง
+- **ปุ่มดำเนินการ/ดูรายละเอียดใน `RefundApproveDataTableHook` ยัง TODO (console.log)** — เชื่อม dialog/detail ต่อ
 
 ### ขั้นตอนต่อไป (ถ้าทำต่องาน)
 1. เปิด dialog / navigate เมื่อกด action ใน `RefundApproveDataTableHook`
