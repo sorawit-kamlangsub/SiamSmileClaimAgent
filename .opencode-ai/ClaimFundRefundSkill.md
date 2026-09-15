@@ -80,6 +80,20 @@
 - ปุ่มดำเนินการ/ดูรายละเอียดในตารางยังเป็น TODO (console.log) — รอเชื่อม dialog/detail page
 - typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)
 
+### เสร็จแล้วเพิ่มเติม: กรองตัวเลือกสาขาตามสิทธิ์ employee_branchid ✅
+- ที่มา: `employee_branchid` จาก userinfo (`https://authlogin.uatsiamsmile.com/connect/userinfo`) — `loadUserInfo: true` ใน oidc config จึงอยู่ใน `user.profile` อยู่แล้ว
+- กฎ (ถาม user แล้ว): ถ้า `employee_branchid = 70` (สำนักงานใหญ่) → เห็นสาขาทั้งหมด; ไม่ใช่ 70 → เห็นเฉพาะสาขาที่ตรงกับ `employee_branchid`; claim หาย (undefined/null) → **ไม่เห็นสาขาไหนเลย** (dropdown ว่าง)
+- ไฟล์ที่แก้:
+  - `Const.ts`: เพิ่ม `HEAD_OFFICE_BRANCH_ID = 70`
+  - `_auth/auth.d.ts`: `CustomClaims.employee_branchid` + `UserProperties.employeeBranchId`
+  - `_auth/components/AuthProvider.tsx`: map `employeeBranchId = Number(profile.employee_branchid)` (normalize เป็น number, null/undefined → undefined)
+  - **ใหม่ `_common/branchPermission.ts`**: `useBranchByUserPermission<T extends { branchId?: number }>(branches)` — hook เดียวที่ใช้ `useAuth` กรองตามกฎข้างบน
+  - `IncreaseLimitTransfer/_common/masterAPI.ts` `useGetBranch`: กรองผ่าน hook แล้ว wrap `data.data` กลับ (ครอบ RefundSearchFilterForm, SearchByBranchAndStatus, ClaimSearchFilterForm)
+  - `api/coreClaimMastersApi.ts` `useGetBranch`: กรองเหมือนกัน (ครอบ `BranchAutocomplete` ฝั่ง ExtraPayment ด้วย — USER เลือกเอาด้วย)
+- typecheck: ผ่าน
+- **รอบเพิ่มเติม (user สั่ง):** ถ้าไม่ใช่สำนักงานใหญ่ ให้เอาตัวเลือก "ทั้งหมด" ออกด้วย — เพิ่ม `useIsHeadOfficeBranch()` ใน `branchPermission.ts`, `RefundSearchFilterForm`/`SearchByBranchAndStatus` เปลี่ยน `firstItemText` เป็น `isHeadOfficeBranch ? "ทั้งหมด" : undefined`, `BranchAutocomplete` ใช้ `!withAllOption || !isHeadOfficeBranch` เป็นเงื่อนไขไม่เพิ่ม option "ทั้งหมด" (`ClaimSearchFilterForm` ไม่มี firstItemText อยู่แล้ว ไม่ต้องแก้)
+- ข้อควรระวัง: เป็น UI-level filter เท่านั้น backend ยังคือ security boundary — ถ้าจะกันข้อมูลข้ามสาขาจริงต้องบังคับฝั่ง API ด้วย
+
 ### งานที่ควรทำถัดไป (Note ไว้ — ทำได้เลยโดยไม่ต้องรอสั่ง)
 - **ลบ mock ในหน้า refund detail** (`ManageRefundDetailHook.tsx`): มี `mockDetailData: any` + `const detailData = refundDetailRes?.data ?? mockDetailData` + TODO "ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails" — เมื่อ API คืน `data.caseDetails` จริงแล้วให้ลบ mock, TODO comment, และ `any` (`mapCaseDetailsRows(caseDetails: any[])` → type จริง)
 - **callback type `any` ใน refundAPI** (`onSuccessCallBack: (response: any)`, `reasonOptions: any[]` ฯลฯ) — ถ้าจะ clean ให้ใช้ type จาก contract จริง

@@ -3,6 +3,7 @@ import { useFormik } from "formik";
 import { FormikDropdown } from "../../_common";
 import { useGetBranch, useGetPaymentStatus } from "../../IncreaseLimitTransfer/_common/masterAPI";
 import { useGetRefundStatus } from "../refundAPI";
+import { useIsHeadOfficeBranch } from "../../_common/branchPermission";
 import { useEffect } from "react";
 import { useAppDispatch } from "../../../../redux";
 import { resetFilterSearch, setSearchMonitorByFilter } from "../store/refundSlice";
@@ -38,6 +39,7 @@ const SearchByBranchAndStatus = ({
     statusSource = "payment",
 }: SearchByBranchAndStatusProps) => {
     const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
+    const isHeadOfficeBranch = useIsHeadOfficeBranch();
     const isRefundSource = statusSource === "refund";
     const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatus(
         isRefundSource ? false : true
@@ -90,7 +92,7 @@ const SearchByBranchAndStatus = ({
                         valueFieldName="branchId"
                         displayFieldName="branchName"
                         isLoading={branchDataIsLoading}
-                        firstItemText="ทั้งหมด"
+                        firstItemText={isHeadOfficeBranch ? "ทั้งหมด" : undefined}
                     />
                 </Grid>
 

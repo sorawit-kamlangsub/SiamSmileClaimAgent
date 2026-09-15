@@ -7,6 +7,7 @@ import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePi
 import dayjs, { Dayjs } from "dayjs";
 import { useGetBranch } from "../../IncreaseLimitTransfer/_common/masterAPI";
 import { useGetRefundStatus } from "../refundAPI";
+import { useIsHeadOfficeBranch } from "../../_common/branchPermission";
 
 const currentDate = dayjs();
 
@@ -41,6 +42,7 @@ const defaultValues: RefundSearchFilterValues = {
 const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterFormProps) => {
     const { data: branchData, isLoading: branchIsLoading } = useGetBranch();
     const { data: refundStatusData, isLoading: refundStatusIsLoading } = useGetRefundStatus();
+    const isHeadOfficeBranch = useIsHeadOfficeBranch();
     const formik = useFormik<RefundSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -70,7 +72,7 @@ const RefundSearchFilterForm = ({ initialValues, onSubmit }: RefundSearchFilterF
                         displayFieldName="branchName"
                         fullWidth
                         isLoading={branchIsLoading}
-                        firstItemText="ทั้งหมด"
+                        firstItemText={isHeadOfficeBranch ? "ทั้งหมด" : undefined}
                     />
                 </Grid>
 
