@@ -24,6 +24,7 @@ export interface SearchByBranchAndStatusProps {
     buttonText: string;
     onButtonClick: (values: BranchStatusFilterValues) => void;
     statusSource?: "payment" | "refund";
+    alignButtonEnd?: boolean;
 }
 
 const defaultValues: BranchStatusFilterValues = {
@@ -37,6 +38,7 @@ const SearchByBranchAndStatus = ({
     buttonText,
     onButtonClick,
     statusSource = "payment",
+    alignButtonEnd = false,
 }: SearchByBranchAndStatusProps) => {
     const { data: branchData, isLoading: branchDataIsLoading } = useGetBranch();
     const isHeadOfficeBranch = useIsHeadOfficeBranch();
@@ -111,7 +113,7 @@ const SearchByBranchAndStatus = ({
                     />
                 </Grid>
 
-                <Grid item xs={12} sm={4} md={2}>
+                <Grid item xs={12} sm={4} md={2} sx={{ display: "flex", alignItems: "center", marginLeft: alignButtonEnd ? "auto" : undefined }}>
                     <Button
                         type="submit"
                         fullWidth
