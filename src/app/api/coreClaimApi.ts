@@ -694,39 +694,42 @@ export const useGetPreviousClaim = (claimId: string) => {
 
 export const useGetStandardMedicalExpenseByCase = (
     caseId: string,
+    productTypeId: number,
     formatTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    isUseOften?: boolean | undefined,
-    productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    productId?: number | undefined
+    productId?: number | undefined,
+    applicationCode?: string | undefined,
+    customerTypeCode?: string | undefined
 ) => {
     return useQuery(
         [
             getStandardMedicalExpenseByCaseQueryKey,
             caseId,
+            productTypeId,
             formatTypeId,
             coverageTypeId,
             medicalTypeId,
-            isUseOften,
-            productTypeId,
             causeOfIncidentId,
             productId,
+            applicationCode,
+            customerTypeCode,
         ],
         () =>
             coreClaimClient.getStandardMedicalExpenseByCase(
                 caseId,
+                productTypeId,
                 formatTypeId,
                 coverageTypeId,
                 medicalTypeId,
-                isUseOften,
-                productTypeId,
                 causeOfIncidentId,
-                productId
+                productId,
+                applicationCode,
+                customerTypeCode
             ),
         {
-            enabled: !!caseId,
+            enabled: !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );

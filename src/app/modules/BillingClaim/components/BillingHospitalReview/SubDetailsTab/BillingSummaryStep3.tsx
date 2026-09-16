@@ -74,7 +74,10 @@ const BillingSummaryStep3 = ({
                         value={fmtTime(values.dischargeTime?.toString()) ?? "-"}
                     />
                     <CustomDisplayText label="สถานพยาบาล" value={hospitalName} />
-                    <CustomDisplayText label="อาการสำคัญ" value={values.chiefComplaintId_selectedText} />
+                    <CustomDisplayText
+                        label="อาการสำคัญ"
+                        value={values.chiefComplaintId_selectedText || labels.chiefComplaintName}
+                    />
                     <CustomDisplayText label="คำวินิจฉัย 1" value={labels.diagnosis1Name} />
                     <CustomDisplayText label="คำวินิจฉัย 2" value={labels.diagnosis2Name ?? "-"} />
                     <CustomDisplayText label="คำวินิจฉัย 3" value={labels.diagnosis3Name ?? "-"} />

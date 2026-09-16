@@ -4497,27 +4497,31 @@ export class CoreClaimClient {
      * @param formatTypeId (optional)
      * @param coverageTypeId (optional)
      * @param medicalTypeId (optional)
-     * @param isUseOften (optional)
-     * @param productTypeId (optional)
      * @param causeOfIncidentId (optional)
      * @param productId (optional)
+     * @param applicationCode (optional)
+     * @param customerTypeCode (optional)
      * @return Success
      */
     getStandardMedicalExpenseByCase(
         caseId: string,
+        productTypeId: number,
         formatTypeId?: number | undefined,
         coverageTypeId?: number | undefined,
         medicalTypeId?: number | undefined,
-        isUseOften?: boolean | undefined,
-        productTypeId?: number | undefined,
         causeOfIncidentId?: number | undefined,
         productId?: number | undefined,
+        applicationCode?: string | undefined,
+        customerTypeCode?: string | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetStandardMedicalExpenseByCaseDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/standard-medical-expense/case?";
         if (caseId === undefined || caseId === null)
             throw new Error("The parameter 'caseId' must be defined and cannot be null.");
         else url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (productTypeId === undefined || productTypeId === null)
+            throw new Error("The parameter 'productTypeId' must be defined and cannot be null.");
+        else url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
         if (formatTypeId === null) throw new Error("The parameter 'formatTypeId' cannot be null.");
         else if (formatTypeId !== undefined) url_ += "formatTypeId=" + encodeURIComponent("" + formatTypeId) + "&";
         if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
@@ -4525,15 +4529,17 @@ export class CoreClaimClient {
             url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
         if (medicalTypeId === null) throw new Error("The parameter 'medicalTypeId' cannot be null.");
         else if (medicalTypeId !== undefined) url_ += "medicalTypeId=" + encodeURIComponent("" + medicalTypeId) + "&";
-        if (isUseOften === null) throw new Error("The parameter 'isUseOften' cannot be null.");
-        else if (isUseOften !== undefined) url_ += "isUseOften=" + encodeURIComponent("" + isUseOften) + "&";
-        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
-        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
         if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
         else if (causeOfIncidentId !== undefined)
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
         if (productId === null) throw new Error("The parameter 'productId' cannot be null.");
         else if (productId !== undefined) url_ += "productId=" + encodeURIComponent("" + productId) + "&";
+        if (applicationCode === null) throw new Error("The parameter 'applicationCode' cannot be null.");
+        else if (applicationCode !== undefined)
+            url_ += "applicationCode=" + encodeURIComponent("" + applicationCode) + "&";
+        if (customerTypeCode === null) throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        else if (customerTypeCode !== undefined)
+            url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -9312,6 +9318,8 @@ export interface GetClaimDetailConsiderDtoResponse {
     isProcedurePerformed?: boolean | undefined;
     medicalLicenseNo?: string | undefined;
     physicianName?: string | undefined;
+    ipdDayCount?: number | undefined;
+    icuDayCount?: number | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {

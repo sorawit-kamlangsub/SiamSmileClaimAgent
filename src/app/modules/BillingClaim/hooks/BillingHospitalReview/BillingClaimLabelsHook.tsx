@@ -11,7 +11,13 @@ const CLAIM_SOURCE_CONSIDER = 2;
 
 type LabelInput = Pick<
     BillingReviewFormValues,
-    "incidentTypeId" | "coverageTypeId" | "medicalTypeId" | "diagnosis1Id" | "diagnosis2Id" | "diagnosis3Id"
+    | "incidentTypeId"
+    | "coverageTypeId"
+    | "medicalTypeId"
+    | "diagnosis1Id"
+    | "diagnosis2Id"
+    | "diagnosis3Id"
+    | "chiefComplaintId"
 >;
 
 /**
@@ -47,8 +53,9 @@ const useBillingClaimLabels = (values: LabelInput) => {
         diagnosis1Name: findIcd10Name(values.diagnosis1Id),
         diagnosis2Name: findIcd10Name(values.diagnosis2Id),
         diagnosis3Name: findIcd10Name(values.diagnosis3Id),
-        /** สำรอง : ถ้า `chiefComplaintId_selectedText` (จาก `claim.chiefComplaint`) ว่าง ให้ลองหาใน Master */
-        chiefComplaintOptions: chiefComplaintData?.data ?? [],
+        /** สำรอง : ถ้า `chiefComplaintId_selectedText` (จาก `claim.chiefComplaint`) ว่าง ให้หาใน Master จาก `chiefComplaintId` แทน */
+        chiefComplaintName: chiefComplaintData?.data?.find((item) => item.chiefComplaintId === values.chiefComplaintId)
+            ?.detail,
     };
 };
 

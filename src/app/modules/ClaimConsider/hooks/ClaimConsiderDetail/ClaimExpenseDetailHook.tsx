@@ -138,18 +138,20 @@ const useClaimExpenseDetailHook = ({
     });
     const items = formikClaimLine.values.items;
 
-    // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
+    // ── รายการที่ใช้บ่อย ───────────────────────────────────────────────────
+    // BE ตัด isUseOften ออก + เปลี่ยน productTypeId เป็น required param (codegen 2026-09-16)
+    // `?? 0` เป็นแค่ placeholder ให้ผ่าน type ตอน customerDetailData ยังโหลดไม่เสร็จ — `enabled` ใน
+    // useGetStandardMedicalExpenseByCase กัน query ยิงจนกว่า productTypeId จะมีค่าจริงอยู่แล้ว
     const {
         data: frequentData,
         isLoading: isFrequentLoading,
         isFetching: isFrequentFetching,
     } = useGetStandardMedicalExpenseByCase(
         detailData?.data?.caseId ?? "",
+        customerDetailData?.data?.productTypeId ?? 0,
         6, //simb2
         coverageTypeId,
         medicalTypeId,
-        true,
-        customerDetailData?.data?.productTypeId,
         undefined,
         customerDetailData?.data?.productId
     );
