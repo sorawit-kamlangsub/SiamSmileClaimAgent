@@ -413,9 +413,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                             <RadioGroup
                                                 row
                                                 value={values.deathPlaceType}
-                                                onChange={(e) =>
-                                                    setFieldValue("deathPlaceType", Number(e.target.value))
-                                                }
+                                                onChange={(e) => {
+                                                    const nextDeathPlaceType = Number(e.target.value) as DeathPlaceType;
+                                                    setFieldValue("deathPlaceType", nextDeathPlaceType);
+                                                    // สลับสถานที่เสียชีวิตต้องล้างค่าฟิลด์ของตัวเลือกที่ไม่ได้แสดงแล้ว
+                                                    // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับตัวเลือกที่เลือกจริงตอน submit
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Hospital) {
+                                                        setFieldValue("hospitalId", undefined);
+                                                    }
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Other) {
+                                                        setFieldValue("accidentPlace", undefined);
+                                                    }
+                                                }}
                                             >
                                                 <FormControlLabel
                                                     value={DeathPlaceType.Home}
