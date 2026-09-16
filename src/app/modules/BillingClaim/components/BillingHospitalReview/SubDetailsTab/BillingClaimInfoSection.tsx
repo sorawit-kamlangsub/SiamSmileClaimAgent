@@ -61,7 +61,12 @@ const BillingClaimInfoSection = ({
                     </>
                 )}
                 <CustomDisplayText label="สถานพยาบาล" value={hospitalName} />
-                <CustomDisplayText label="อาการสำคัญ" value={values.chiefComplaintId_selectedText} xs={12} md={6} />
+                <CustomDisplayText
+                    label="อาการสำคัญ"
+                    value={values.chiefComplaintId_selectedText || labels.chiefComplaintName}
+                    xs={12}
+                    md={6}
+                />
                 <CustomDisplayText label="การวินิจฉัย 1" value={labels.diagnosis1Name} xs={12} md={6} />
                 <CustomDisplayText label="การวินิจฉัย 2" value={labels.diagnosis2Name} xs={12} md={6} />
                 <CustomDisplayText label="การวินิจฉัย 3" value={labels.diagnosis3Name} xs={12} md={6} />

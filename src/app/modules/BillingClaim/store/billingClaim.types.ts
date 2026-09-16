@@ -98,6 +98,16 @@ export const BILLING_DOCUMENT_REVIEW_STATUS = {
     waiting: 4,
 } as const;
 
+/** สีประจำผลการตรวจเอกสารแต่ละสถานะ (key = documentReviewStatusId) — ชุดสีเดียวกับ DOCUMENT_CHECK_RESULT_COLORS ของหน้าพิจารณาเคลม */
+export const BILLING_DOCUMENT_REVIEW_STATUS_COLOR: Record<number, string> = {
+    [BILLING_DOCUMENT_REVIEW_STATUS.passed]: "#178236",
+    [BILLING_DOCUMENT_REVIEW_STATUS.failed]: "#B32615",
+    [BILLING_DOCUMENT_REVIEW_STATUS.waiting]: "#A87808",
+};
+
+/** สีสำรองเมื่อเจอ documentReviewStatusId ที่ยังไม่ได้กำหนดสี */
+export const BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR = "#5A6B7B";
+
 /** เพิ่มแถวค่ารักษาใหม่ให้ `caseItemId` ว่างไว้ — BE รู้ว่าเป็นแถวใหม่จากตรงนี้ (handoff ข้อ 5) */
 export type BillingExpenseFormItem = BillingExpenseDto & {
     _rowKey: string;

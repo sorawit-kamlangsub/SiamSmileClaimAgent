@@ -28,6 +28,8 @@ import DocumentFileViewer from "../../../../ClaimConsider/components/ConsiderHos
 import useBillingDocumentHook from "../../../hooks/BillingHospitalReview/BillingDocumentHook";
 import {
     BILLING_DOCUMENT_REVIEW_STATUS,
+    BILLING_DOCUMENT_REVIEW_STATUS_COLOR,
+    BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR,
     BillingDocumentFormItem,
     BillingReviewFormValues,
 } from "../../../store/billingClaim.types";
@@ -107,7 +109,9 @@ const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: 
                     const row = rows[tableMeta.rowIndex];
                     const isRequired =
                         !!row.documentSubTypeId && requiredDocumentSubTypeIds.includes(row.documentSubTypeId);
-                    return `${row.documentName ?? "-"}${isRequired ? " *" : ""}`;
+                    // `row.documentName` (DTO) มักเป็น null — ชื่อจริงมาจาก DocStorage (getDocInfo) เป็นหลัก
+                    const documentName = row.documentName || getDocInfo(row.documentId).documentName;
+                    return `${documentName}${isRequired ? " *" : ""}`;
                 },
             },
         },
@@ -206,16 +210,38 @@ const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: 
                                 },
                             }}
                         >
-                            {reviewStatusOptions.map((option) => (
-                                <ToggleButton
-                                    key={option.documentReviewStatusId}
-                                    value={option.documentReviewStatusId ?? 0}
-                                    disableRipple
-                                    sx={{ px: 2, py: 0.75, whiteSpace: "nowrap", textTransform: "none", fontSize: 14 }}
-                                >
-                                    {option.documentReviewStatusName}
-                                </ToggleButton>
-                            ))}
+                            {reviewStatusOptions.map((option) => {
+                                const color =
+                                    (option.documentReviewStatusId !== undefined &&
+                                        BILLING_DOCUMENT_REVIEW_STATUS_COLOR[option.documentReviewStatusId]) ||
+                                    BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR;
+                                return (
+                                    <ToggleButton
+                                        key={option.documentReviewStatusId}
+                                        value={option.documentReviewStatusId ?? 0}
+                                        disableRipple
+                                        sx={{
+                                            px: 2,
+                                            py: 0.75,
+                                            whiteSpace: "nowrap",
+                                            textTransform: "none",
+                                            fontSize: 14,
+                                            color: "#5A6B7B",
+                                            bgcolor: "#fff",
+                                            "&:hover": { bgcolor: `${color}12` },
+                                            "&.Mui-selected": {
+                                                color: "#fff",
+                                                bgcolor: color,
+                                                borderColor: color,
+                                                fontWeight: 700,
+                                                "&:hover": { bgcolor: color },
+                                            },
+                                        }}
+                                    >
+                                        {option.documentReviewStatusName}
+                                    </ToggleButton>
+                                );
+                            })}
                         </ToggleButtonGroup>
                     );
                 },
@@ -278,7 +304,9 @@ const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: 
                 fullWidth
             >
                 <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, flexWrap: "wrap" }}>
-                    <Box sx={{ flex: 1, minWidth: 200 }}>{`เอกสาร : ${viewingRow?.documentName ?? ""}`}</Box>
+                    <Box sx={{ flex: 1, minWidth: 200 }}>
+                        {`เอกสาร : ${viewingRow?.documentName || getDocInfo(viewingRow?.documentId).documentName}`}
+                    </Box>
                     <Button
                         variant="outlined"
                         startIcon={<ArrowBackIcon />}
