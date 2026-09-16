@@ -6,9 +6,9 @@ import { MUIDataTableColumn } from "mui-datatables";
 import { cellAlignOptions, numberWithCommas } from "../../../../../functionHelpers";
 import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import { StandardDataTable } from "../../../../_common";
-import { TableRow, TableCell } from "@mui/material";
+import { Alert, TableRow, TableCell } from "@mui/material";
 import { useMemo } from "react";
-import { useGetCustomerDetailById } from "../../../../../api/coreClaimApi";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 const renderPricePerUnit = (pricePerUnit: number | null, pricePerUnitName: string | null) => {
     if (pricePerUnit === null || pricePerUnit === undefined) return "-";
     const formatted = numberWithCommas(pricePerUnit, 0);
@@ -16,11 +16,11 @@ const renderPricePerUnit = (pricePerUnit: number | null, pricePerUnitName: strin
 };
 
 type PolicyBenefitTabProps = {
-    customerDetailData?: ReturnType<typeof useGetCustomerDetailById>["data"];
+    customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
 };
 
-const PolicyBenefitTab = ({ customerDetailData }: PolicyBenefitTabProps) => {
-    const { benefit, benefitLoading } = usePolicyBenefitHook(customerDetailData);
+const PolicyBenefitTab = ({ customerDetail }: PolicyBenefitTabProps) => {
+    const { benefit, benefitLoading, benefitError } = usePolicyBenefitHook({ customerDetail });
 
     // const rows = benefit?.data || [];
     const rows = useMemo(() => {
@@ -87,6 +87,11 @@ const PolicyBenefitTab = ({ customerDetailData }: PolicyBenefitTabProps) => {
     return (
         <CustomPaper>
             <HeadingWithColor icon={<GppGoodIcon sx={{ fontSize: 27 }} />} text="รายการความคุ้มครอง" color="blue" />
+            {benefitError && (
+                <Alert severity="error" variant="outlined" sx={{ mb: 2 }}>
+                    ไม่สามารถโหลดรายการความคุ้มครองได้ กรุณาลองใหม่อีกครั้ง
+                </Alert>
+            )}
             <LoadingOverlay isLoading={benefitLoading} minHeight={300}>
                 <StandardDataTable
                     name="benefitTable"

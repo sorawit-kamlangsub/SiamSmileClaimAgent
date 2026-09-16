@@ -491,6 +491,11 @@ const useHospitalConsiderDetailHook = () => {
         formik.setFieldValue("hn", detail.hn ?? "", false);
         formik.setFieldValue("vn", detail.vn ?? "", false);
         formik.setFieldValue("an", detail.an ?? "", false);
+        // จำนวนวันนอน IPD/ICU ที่ SmileConnect แจ้งมา — BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16) ไม่มีช่องกรอก
+        // เองในจอนี้เลย (TreatmentInfoSection ไม่มี input ของ ipdDays/icuDays) ต้อง default จากตรงนี้เท่านั้น
+        // ไม่งั้น validateHospitalConsider บังคับ ipdDays >= 1 ตอน medicalTypeId = IPD จะติดค้างกรอกไม่ได้เลย
+        formik.setFieldValue("ipdDays", detail.ipdDayCount ?? 0, false);
+        formik.setFieldValue("icuDays", detail.icuDayCount ?? 0, false);
         formik.setFieldValue("underlyingDisease", detail.underlyingDiseaseDetail ?? "", false);
         formik.setFieldValue("treatmentMethod", detail.treatmentMethod ?? "", false);
         formik.setFieldValue("labResult", detail.investigationResults ?? "", false);
@@ -499,7 +504,10 @@ const useHospitalConsiderDetailHook = () => {
             detail.isProcedurePerformed === true ? "yes" : detail.isProcedurePerformed === false ? "no" : "",
             false
         );
-        // admitIndication / additionalDetail : BE ยังไม่ส่ง default มา ปล่อยว่างให้กรอกมือ
+        // admitIndication : BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16, admissionIndication) — ยังแก้ไขต่อได้ตามเดิม
+        // ไม่เหมือน ipdDays/icuDays เพราะช่องนี้มี input จริงใน TreatmentInfoSection อยู่แล้ว
+        // additionalDetail : BE ยังไม่ส่ง default มา ปล่อยว่างให้กรอกมือ
+        formik.setFieldValue("admitIndication", detail.admissionIndication ?? "", false);
 
         // ---- แพทย์เจ้าของไข้ ----
         formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);

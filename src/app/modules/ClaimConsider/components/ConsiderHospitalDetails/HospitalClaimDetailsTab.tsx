@@ -24,8 +24,8 @@ import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
-import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
 import useHospitalConsiderPayment from "../../hooks/ClaimConsiderHospital/useHospitalConsiderPayment";
+import { hasAmountSumError } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
@@ -326,7 +326,15 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
     });
 
-    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook({ detailData, customerDetailData });
+    /**
+     * เดิมเรียก useClaimExpenseDetailHook ซ้ำอีกชุดแยกจาก instance ที่ TreatmentCostTable ใช้จริง (ผู้ใช้พิมพ์
+     * ค่าแล้วอัปเดตแต่ instance ของ TreatmentCostTable + dispatch ลง Redux `filledItems` เท่านั้น) formik
+     * ของ instance ตรงนี้ไม่มี enableReinitialize จึงค้างค่าตั้งต้น (ตอนเคลมโรงพยาบาล default "สิทธิ์เบิก" เป็น
+     * undefined) ทำให้ gate "อนุมัติ" เช็คยอดผิดชุดข้อมูล ติด error ทั้งที่ตารางบนจอกรอกถูกแล้ว — คำนวณจาก
+     * `filledItems` ใน Redux ตรง ๆ (ค่าเดียวกับที่ตารางเขียนกลับไปจริง) แทน
+     */
+    const hasDiscountError = filledItems.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
+    const hasNotCoveredError = filledItems.some((item) => hasAmountSumError(item));
 
     const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;

@@ -135,8 +135,9 @@ const draftItemKey = (i: { inputToStandardMappingId?: number; standardMedicalExp
  * เพราะ caseItem ของแบบร่างไม่มี code/description/color/maximumLimit/bodyPartId — ถ้าสร้างใหม่ล้วนๆ
  * แถวจะไม่มีชื่อ/สี/เพดานให้แสดง
  *
- * ห้าม match ด้วย caseItemId: ฝั่ง save (ClaimDetailActionHook.tsx) generate uuid ตัวเดียวแล้วใส่ซ้ำทุก
- * แถว ทำให้ caseItemId ในแบบร่างไม่ unique — ต้อง match ด้วย inputToStandardMappingId+standardMedicalExpenseId
+ * ห้าม match ด้วย caseItemId: แบบร่างเก่าที่บันทึกไว้ก่อนแก้ ClaimDetailActionHook.tsx (เคย generate uuid
+ * ตัวเดียวใส่ซ้ำทุกแถว) ยังมี caseItemId ไม่ unique อยู่ — ต้อง match ด้วย inputToStandardMappingId+standardMedicalExpenseId
+ * ต่อไปเพื่อรองรับข้อมูลเก่า แม้แบบร่างใหม่จะมี caseItemId unique ต่อแถวแล้วก็ตาม
  */
 export const mergeDraftCaseItems = (
     frequentItems: ClaimExpenseItem[],

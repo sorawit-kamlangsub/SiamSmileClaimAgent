@@ -1,20 +1,33 @@
-import { useGetCustomerDetailById, useGetPolicyBenefit } from "../../../../api/coreClaimApi";
+import { GetCustomerDetailByIdDtoResponse } from "../../../../api/coreClaimApi.client";
+import { useGetPolicyBenefit } from "../../../../api/coreClaimApi";
+
+type UsePolicyBenefitHookParams = {
+    customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
+};
 
 /**
- * รับ customerDetailData เป็น param แทนที่จะเรียก useConsiderDetailHook() เอง
- * เพื่อให้ reuse ข้ามหน้าพิจารณาเคลมได้ (ลูกค้า/โรงพยาบาล) โดยไม่ลาก formik + Redux sync
- * ของ useConsiderDetailHook (เฉพาะ flow เคลมลูกค้า) ติดมาด้วย
+ * รับ customerDetail จาก parent (HeaderDetails ต่อ useConsiderDetailHook ไว้ให้แล้ว) แทนการเรียก
+ * useConsiderDetailHook ซ้ำเอง — เดิมยิง query/formik ทั้งชุดซ้ำอีกรอบ (รวม useGetClaimDetailConsider,
+ * useGetCustomerDetailById ฯลฯ) แค่เพื่อเอา productTypeId/policyCode/productId/customerTypeCode
+ * ทำให้เปลืองและ resolve คนละจังหวะกับตัวหลัก — ตอนสลับเคลม ตารางความคุ้มครองอาจโชว์ของเคลมเก่าค้างชั่วขณะ
+ * (develop ทำ refactor เดียวกันแบบรับ customerDetailData ทั้งก้อน — คงรูปแบบรับ customerDetail
+ * ที่ unwrap แล้วไว้ตามเดิม เพื่อให้ตรงกับ ClaimHistoryTab/PaymentHistoryTab ที่รับ derived value ไม่ใช่ raw response)
  */
-const usePolicyBenefitHook = (customerDetailData?: ReturnType<typeof useGetCustomerDetailById>["data"]) => {
-    const { data: benefit, isLoading: benefitLoading } = useGetPolicyBenefit(
-        customerDetailData?.data?.productTypeId ?? 0,
-        customerDetailData?.data?.productTypeId === 26 ? customerDetailData?.data?.policyCode : undefined,
-        customerDetailData?.data?.productTypeId === 6 ? customerDetailData?.data?.productId : undefined,
-        customerDetailData?.data?.productTypeId === 26 ? customerDetailData?.data?.customerTypeCode : undefined
+const usePolicyBenefitHook = ({ customerDetail }: UsePolicyBenefitHookParams) => {
+    const {
+        data: benefit,
+        isLoading: benefitLoading,
+        isError: benefitError,
+    } = useGetPolicyBenefit(
+        customerDetail?.productTypeId ?? 0,
+        customerDetail?.productTypeId === 26 ? customerDetail?.policyCode : undefined,
+        customerDetail?.productTypeId === 6 ? customerDetail?.productId : undefined,
+        customerDetail?.productTypeId === 26 ? customerDetail?.customerTypeCode : undefined
     );
     return {
         benefit,
         benefitLoading,
+        benefitError,
     };
 };
 
