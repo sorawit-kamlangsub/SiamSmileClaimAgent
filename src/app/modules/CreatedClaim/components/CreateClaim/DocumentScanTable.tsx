@@ -64,6 +64,12 @@ type DocumentScanTableProps = {
     caseId?: string;
     claimSourceId?: number;
     onAttachedDocumentsChange?: (docs: CaseDocumentV2Request[]) => void;
+    /**
+     * บังคับยิง GET master document type ใหม่ทุกครั้งที่ตารางนี้ mount แทนการ cache ตลอดไป (default false)
+     * ต้องเปิดสำหรับตารางที่ endpoint คืน documentCode เฉพาะเคส (เช่น "เอกสารประกอบการปฏิเสธ" ที่ไม่ได้ส่ง
+     * caseId มา merge ทับ) ไม่งั้นสองเคสที่ productTypeId ตรงกันจะเห็น documentCode ของเคสก่อนหน้าค้างอยู่
+     */
+    alwaysFreshMasterList?: boolean;
 };
 
 const DocumentScanTable = ({
@@ -75,6 +81,7 @@ const DocumentScanTable = ({
     caseId,
     claimSourceId,
     onAttachedDocumentsChange,
+    alwaysFreshMasterList = false,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
     const dispatch = useAppDispatch();
@@ -90,7 +97,8 @@ const DocumentScanTable = ({
             documentPrefix: "DOC",
             productTypeId: productTypeId,
         },
-        isEnabled
+        isEnabled,
+        alwaysFreshMasterList
     );
 
     // ดึงเอกสารที่ลูกค้าแนบไว้จริงของเคสนี้ (documentId ตัวจริงที่เก็บไฟล์) มา merge ทับรายการ master

@@ -79,11 +79,18 @@ interface ClaimLineFormValues {
 type UseClaimExpenseDetailHookProps = {
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+    /** true เฉพาะฝั่ง "บันทึกข้อมูลเคลม - เคลมลูกค้า" (ExpenseDetails.tsx) — เคลมลูกค้ายังใช้ spec เดิมที่ default
+     * originalAmount ลง "สิทธิ์เบิก" ต่างจากเคลมโรงพยาบาลที่ default ลง "ยอดเงินตามใบเสร็จ" (ดู frequentItems ด้านล่าง) */
+    isCustomerClaim?: boolean;
 };
 // รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
 // เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
 // ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
-const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
+const useClaimExpenseDetailHook = ({
+    detailData,
+    customerDetailData,
+    isCustomerClaim,
+}: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
     const { filledItems, filledItemsCaseId, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
         (s: RootState) => s.claimConsider
@@ -165,10 +172,12 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
             description: item.descriptionTH ?? "",
-            // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — สิทธิ์เบิก/ยอดไม่คุ้มครองเป็นค่าที่ User
-            // ต้องพิจารณากรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
-            receiptAmount: item.originalAmount ?? undefined,
-            claimAmount: undefined,
+            // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — ยอดไม่คุ้มครองเป็นค่าที่ User ต้องพิจารณา
+            // กรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
+            // เคลมลูกค้า (isCustomerClaim) ยังใช้ spec เดิม: default originalAmount ลง "สิทธิ์เบิก" ไม่ใช่
+            // "ยอดเงินตามใบเสร็จ" — ต่างจากเคลมโรงพยาบาลที่แก้ไปแล้วใน commit 9c9c930
+            receiptAmount: isCustomerClaim ? undefined : item.originalAmount ?? undefined,
+            claimAmount: isCustomerClaim ? item.originalAmount ?? undefined : undefined,
             discount: item.discountAmount ?? undefined,
             notCovered: undefined,
             // API อาจส่ง 0 เมื่อไม่มีสาเหตุ : normalize เป็น undefined กัน payload ส่ง reasonId = 0
@@ -180,7 +189,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             maximumLimit: item.maximumLimit,
             caseItemId: item.caseItemId,
         }));
-    }, [frequentData]);
+    }, [frequentData, isCustomerClaim]);
 
     /** caseAdjudicationId มาระดับ item — ทุกแถวของ case เดียวกันเป็นค่าเดียวกัน จึงหยิบตัวแรกที่ไม่ว่าง */
     const caseAdjudicationId = useMemo(

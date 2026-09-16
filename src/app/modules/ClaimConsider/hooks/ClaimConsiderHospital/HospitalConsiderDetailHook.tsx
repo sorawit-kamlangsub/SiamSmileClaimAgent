@@ -2,8 +2,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
+import { useAppDispatch } from "../../../../../redux";
 import { CoverageType, MedicalType } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
     useGetAllHospital,
     useGetChiefComplaint,
@@ -230,6 +232,7 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 };
 
 const useHospitalConsiderDetailHook = () => {
+    const dispatch = useAppDispatch();
     const { id, caseId: caseIdEncoded } = useParams();
     const claimId = id ? atob(id) : undefined;
     // route hospital/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
@@ -503,6 +506,12 @@ const useHospitalConsiderDetailHook = () => {
         formik.setFieldValue("doctorName", detail.physicianName ?? "", false);
 
         hasSyncedMainRef.current = true;
+        // ปลดล็อก useGetDocumentType (DocumentScanTable) — gate ด้วย claimPHSlice.isEnabled ซึ่ง default
+        // false และไม่มีใครใน flow เคลมโรงพยาบาล set ให้เดิม ทำให้ query โดน disable ค้างตลอดไป (react-query
+        // v4 ทำให้ isLoading ของ query ที่ disable ตั้งแต่แรกค้างเป็น true ตลอดกาล) ตาราง "เอกสารประกอบการ
+        // ปฏิเสธ" เลยเห็น loading bar ค้าง ไม่เคยยิง GET เลยสักครั้ง — เคลมลูกค้า (ConsiderDetailHook) set
+        // ค่านี้ตรงจุดเดียวกันอยู่แล้ว จึงไม่เจอปัญหานี้
+        dispatch(setEnabled(true));
     }, [detail, incidentType, coverageType]);
 
     // ---- phase 2: sync medicalType/causeOfIncident (รอ coverageTypeId ถูก set จาก phase 1 ก่อน) ----

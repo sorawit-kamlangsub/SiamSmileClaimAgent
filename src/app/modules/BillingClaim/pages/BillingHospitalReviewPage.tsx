@@ -140,9 +140,9 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                         </Tabs>
 
                         <Grid sx={{ ml: "auto", mr: 1, display: "flex", gap: 1 }}>
-                            {detail?.billingNo && (
+                            {detail?.billingRequestCode && (
                                 <Chip
-                                    label={`เลขใบวางบิล รพ (PB) : ${detail.billingNo}`}
+                                    label={`เลขใบวางบิล รพ (PB) : ${detail.billingRequestCode}`}
                                     color="default"
                                     variant="outlined"
                                     sx={{ fontWeight: 700 }}

@@ -1,11 +1,11 @@
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import { Box, Grid, Skeleton, Typography } from "@mui/material";
-import { useGetEmployeeClaimPaymentLimit } from "../../../../api/coreClaimMastersApi";
+import { useGetEmployeeClaimPaymentLimit } from "../../../../api/coreClaimApi";
 import { useAuth } from "../../../_auth";
 
 export const RemainCreditLimit = () => {
     const { userProfile } = useAuth();
-    const { data: employeeClaimPaymentLimit, isLoading } = useGetEmployeeClaimPaymentLimit(userProfile?.userId ?? 0);
+    const { data: employeeClaimPaymentLimit, isLoading } = useGetEmployeeClaimPaymentLimit(userProfile?.userId ?? 0, 0);
     return (
         <>
             <Grid
@@ -42,7 +42,7 @@ export const RemainCreditLimit = () => {
                     ) : (
                         <Typography color={"primary"} sx={{ fontWeight: "bold", fontSize: "18px" }}>
                             THB&nbsp;&nbsp;&nbsp;
-                            {(employeeClaimPaymentLimit?.data?.remainingLimit ?? 0).toLocaleString(undefined, {
+                            {(employeeClaimPaymentLimit?.data?.remainingAmount ?? 0).toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
                                 maximumFractionDigits: 2,
                             })}

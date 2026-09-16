@@ -26,6 +26,9 @@ const getHospitalBillingHistoryQueryKey = ["getHospitalBillingHistory"];
  * GET /billing/hospital/filter — ตาราง list + dashboard counts
  *
  * `statusId` รับเฉพาะ 1 (รอตรวจสอบ) / 2 (รอแก้ไข) / 4 (ไม่ผ่าน) / 5 (ยกเลิก) — ส่ง 3 (ผ่าน) จะได้ 400
+ *
+ * `items[].amount` คือ `totalClaimedAmount` ของ BillingDetail (ผลรวม `expenses[].claimAmount`) ไม่ใช่
+ * `netBillableAmount` (hospital-billing-fe.md ข้อ 4)
  */
 export const useGetHospitalBillingFilter = (
     statusId: number | undefined,
@@ -83,24 +86,45 @@ export const useGetHospitalBillingHistory = (billingDetailId: string | undefined
  * ข้อผิดพลาดจาก POST submit ที่ normalize แล้ว
  *
  * `HospitalBillingClient.processSubmit` throw ค่าที่ parse จาก response body ตรง ๆ (ไม่ใช่ Error) เมื่อ
- * parse สำเร็จ — envelope ที่ throw ออกมามี `code` เป็น HTTP status (ตาม handoff ข้อ 10) จึงต้องเช็คทั้ง
- * `code` (จาก envelope) และ `status` (จาก ApiException เมื่อ parse ไม่สำเร็จ/response ไม่มี body)
+ * parse สำเร็จ — envelope ที่ throw ออกมามี `code` เป็น HTTP status ชนิด number (ตาม handoff ข้อ 10) แต่
+ * axios error ตอน network ขาด/timeout (ไม่มี response เลย) ก็มี `code` เหมือนกันแต่เป็น string เช่น
+ * "ECONNABORTED"/"ERR_NETWORK" จึงต้องแยกชนิดก่อนใช้เป็น httpStatus, และเช็ค `status` (จาก ApiException
+ * เมื่อ parse ไม่สำเร็จ) เป็น fallback
  */
 export type SubmitBillingError = {
     httpStatus?: number;
     message: string;
+    /** 409 — ข้อมูลเปลี่ยนไปจากที่อื่นแล้ว ต้องโหลดใหม่และใช้ requestId ใหม่เมื่อ submit อีกครั้ง (handoff ข้อ 7) */
     isConflict: boolean;
+    /** 404 — รายการไม่พบ/ไม่ active หรือข้อมูลที่จำเป็นไม่พร้อม (handoff ข้อ 10) */
+    isNotFound: boolean;
+    /**
+     * 500 หรือ network/timeout — ผลบันทึกอาจสำเร็จแล้วแต่ยังไม่แน่ชัด (handoff ข้อ 7/10) ต้อง retry ด้วย
+     * `requestId` และ body เดิมทุกค่าภายใต้ผู้ใช้เดิม ห้ามสร้าง `requestId` ใหม่
+     */
+    isRetryable: boolean;
 };
 
 export const normalizeSubmitError = (error: unknown): SubmitBillingError => {
     const asRecord = error as Record<string, unknown> | undefined;
-    const httpStatus = (asRecord?.code as number | undefined) ?? (asRecord?.status as number | undefined);
+    const rawCode = asRecord?.code;
+    const httpStatus =
+        (typeof rawCode === "number" ? rawCode : undefined) ??
+        (typeof asRecord?.status === "number" ? (asRecord.status as number) : undefined);
+    // axios error ที่ไม่มี response เลย (network ขาด/timeout) ถูก rethrow ดิบจาก HospitalBillingClient.submit()
+    const isNetworkOrTimeout = asRecord?.isAxiosError === true && httpStatus === undefined;
     const message =
         (asRecord?.message as string | undefined) ||
         (asRecord?.exceptionMessage as string | undefined) ||
         (error instanceof Error ? error.message : undefined) ||
         "เกิดข้อผิดพลาด ไม่สามารถบันทึกผลตรวจสอบได้";
-    return { httpStatus, message, isConflict: httpStatus === 409 };
+    return {
+        httpStatus,
+        message,
+        isConflict: httpStatus === 409,
+        isNotFound: httpStatus === 404,
+        isRetryable: httpStatus === 500 || isNetworkOrTimeout,
+    };
 };
 
 /**

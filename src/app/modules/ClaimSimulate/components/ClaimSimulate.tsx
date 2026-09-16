@@ -421,7 +421,6 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
         handleIpdDaysChange,
         handleIcuDaysChange,
         handleContinuousChange,
-        handleConfirm,
         handleCloseConfirm,
         // expense table
         filledItems,
@@ -1943,7 +1942,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                     </Grid>
                 )}
                 <InsuredSearchModal />
-                <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} onConfirm={handleConfirm} />
+                <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} />
             </Box>
         </LocalizationProvider>
     );
