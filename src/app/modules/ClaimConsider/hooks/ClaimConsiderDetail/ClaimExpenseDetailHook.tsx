@@ -153,7 +153,9 @@ const useClaimExpenseDetailHook = ({
         coverageTypeId,
         medicalTypeId,
         undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId ?? undefined,
+        customerDetailData?.data?.policyCode,
+        customerDetailData?.data?.customerTypeCode
     );
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
@@ -162,7 +164,7 @@ const useClaimExpenseDetailHook = ({
         medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId ?? undefined
     );
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
