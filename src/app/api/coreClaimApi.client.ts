@@ -9320,6 +9320,7 @@ export interface GetClaimDetailConsiderDtoResponse {
     physicianName?: string | undefined;
     ipdDayCount?: number | undefined;
     icuDayCount?: number | undefined;
+    admissionIndication?: string | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
