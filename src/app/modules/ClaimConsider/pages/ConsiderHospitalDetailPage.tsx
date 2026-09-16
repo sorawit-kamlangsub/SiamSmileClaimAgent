@@ -161,7 +161,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                         <ClaimTransationTab onViewDraft={() => setTabValue("1")} />
                     </TabPanel>
                     <TabPanel value="3">
-                        <PolicyBenefitTab customerDetailData={customerDetailData} />
+                        <PolicyBenefitTab customerDetail={customerDetail} />
                     </TabPanel>
                     <TabPanel value="4">
                         <ClaimHistoryTab applicationId={customerDetail?.policyCode} />

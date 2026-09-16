@@ -23,7 +23,7 @@ import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs, { Dayjs } from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
-import { CoverageType, formatDateString } from "../../../../functionHelpers";
+import { CoverageType, formatDateString, safeAtob } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import { ContinuousClaimRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -66,16 +66,16 @@ const calculateStayDays = (
 };
 
 type UseConsiderDetailHookOptions = {
-    /** true เฉพาะ instance ที่เป็นเจ้าของฟอร์มจริง (ClaimDetailsTab) — hook นี้ถูกเรียกอีก 2 จุด
-     * (ConsiderDetailPage, PolicyBenefitHook) ที่สร้าง formik ของตัวเองแยกต่างหาก ไม่ควร overlay ซ้ำ */
+    /** true เฉพาะ instance ที่เป็นเจ้าของฟอร์มจริง (ClaimDetailsTab) — hook นี้ถูกเรียกอีกจุด
+     * (ConsiderDetailPage) ที่สร้าง formik ของตัวเองแยกต่างหาก ไม่ควร overlay ซ้ำ */
     enableDraftOverlay?: boolean;
 };
 
 const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetailHookOptions = {}) => {
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : undefined;
+    const claimId = safeAtob(id);
     // route customers/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
+    const caseId = safeAtob(caseIdEncoded);
     const dispatch = useAppDispatch();
     const { form, viewingDraft } = useAppSelector(claimConsiderSelector);
     const draftRevisionId = viewingDraft?.draftRevisionId;

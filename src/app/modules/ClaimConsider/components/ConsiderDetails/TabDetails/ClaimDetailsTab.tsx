@@ -77,34 +77,36 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
     } = considerDetail;
-    const { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving } = useClaimDetailActionHook({
-        ...considerDetail,
-        isCombinedWithMedicalAll,
-        // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
-        onApproveSuccess: (response) => {
-            setConfirmApproveOpen(false);
-            setApproveResult({
-                claimNo: response.data?.claimNo ?? detail?.claimNo,
-                caseNo: response.data?.caseNo ?? detail?.caseNo,
-            });
-        },
-        // swalSuccess ไม่ได้ปิด allowOutsideClick — คลิกนอกกล่องก็ถือว่าจบงานแล้ว จึงไม่เช็ค isConfirmed
-        onConfirmConsiderSuccess: () => {
-            swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
-                leaveToMonitor()
-            );
-        },
-    });
+    const { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving, isSavingDraft, isSavingDecision } =
+        useClaimDetailActionHook({
+            ...considerDetail,
+            isCombinedWithMedicalAll,
+            // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
+            onApproveSuccess: (response) => {
+                setConfirmApproveOpen(false);
+                setApproveResult({
+                    claimNo: response.data?.claimNo ?? detail?.claimNo,
+                    caseNo: response.data?.caseNo ?? detail?.caseNo,
+                });
+            },
+            // swalSuccess ไม่ได้ปิด allowOutsideClick — คลิกนอกกล่องก็ถือว่าจบงานแล้ว จึงไม่เช็ค isConfirmed
+            onConfirmConsiderSuccess: () => {
+                swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                    leaveToMonitor()
+                );
+            },
+        });
     const continuousClaim = formik.values.continuousClaim;
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
-    const { activeStep, setActiveStep, isLastStep, isCalculating, handleNext, handleBack } = useClaimStepCalculateHook({
-        formik,
-        customerDetail,
-        filledItems,
-        stepsLength: steps.length,
-        paymentAmount: detail?.paymentAmount,
-    });
+    const { activeStep, setActiveStep, isLastStep, isCalculating, isAdvancing, handleNext, handleBack } =
+        useClaimStepCalculateHook({
+            formik,
+            customerDetail,
+            filledItems,
+            stepsLength: steps.length,
+            paymentAmount: detail?.paymentAmount,
+        });
     return (
         <>
             <FormikProvider value={formik}>
@@ -218,7 +220,12 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                             <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
                                 {!isLastStep && (
                                     <>
-                                        <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<SaveAsIcon />}
+                                            onClick={handleSaveDraft}
+                                            disabled={isSavingDraft}
+                                        >
                                             บันทึกแบบร่าง
                                         </Button>
 
@@ -226,6 +233,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="contained"
                                             startIcon={<SaveIcon />}
                                             disabled={
+                                                isSavingDecision ||
                                                 !formik.values.considerResult ||
                                                 !formik.values.decisionReasonId ||
                                                 !formik.values.decisionReasonDetail
@@ -242,7 +250,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="contained"
                                             endIcon={<ArrowForwardIcon />}
                                             onClick={handleNext}
-                                            disabled={activeStep === 1 && isCalculating}
+                                            disabled={isAdvancing || (activeStep === 1 && isCalculating)}
                                         >
                                             ถัดไป
                                         </Button>

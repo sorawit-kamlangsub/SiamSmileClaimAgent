@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 import { useGetClaimHistory } from "../../../../api/coreClaimApi";
 
@@ -37,14 +37,26 @@ const ORDERING_FIELD_MAP: Record<ClaimHistorySortField, string> = {
  * ส่วนสรุปยอด : "จำนวนรายการ" ใช้ totalAmountRecords จริงจาก response, "เคลมต่อเนื่อง"/"ยอดเบิกสะสม"
  * คำนวณจากแถวในตารางหน้าปัจจุบัน เหลือแค่ "OPD คงเหลือ" ที่ยังเป็นค่า mock เพราะ BE ยังไม่ส่งมาให้
  */
+const DEFAULT_PAGINATED: PaginationSortableDto = {
+    page: 1,
+    recordsPerPage: 10,
+    orderingField: "incidentDate",
+    ascendingOrder: false,
+};
+
 const useClaimHistoryTab = (applicationId?: string) => {
     const [searchText, setSearchText] = useState("");
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 10,
-        orderingField: "incidentDate",
-        ascendingOrder: false,
-    });
+    const [paginated, setPaginated] = useState<PaginationSortableDto>(DEFAULT_PAGINATED);
+
+    // ClaimHistoryTab ไม่ถูก unmount ตอนสลับไปดูอีกเคลม (ClaimDetailsTab ไม่ unmount เช่นกัน — ดู
+    // ConsiderDetailHook.tsx) ถ้าไม่รีเซ็ต searchText/paginated ตรงนี้ด้วย ค่าค้นหา/หน้าของเคลมก่อนหน้า
+    // จะติดมาที่เคลมใหม่ อาจทำให้เห็น "ไม่พบข้อมูล" ทั้งที่เคลมใหม่มีประวัติจริง
+    const prevApplicationIdRef = useRef(applicationId);
+    if (prevApplicationIdRef.current !== applicationId) {
+        prevApplicationIdRef.current = applicationId;
+        setSearchText("");
+        setPaginated(DEFAULT_PAGINATED);
+    }
 
     const handleSearchTextChange = (value: string) => {
         setSearchText(value);
@@ -57,7 +69,11 @@ const useClaimHistoryTab = (applicationId?: string) => {
 
     const sortBy = (paginated.orderingField as ClaimHistorySortField) ?? "incidentDate";
 
-    const { data: claimHistoryData, isLoading } = useGetClaimHistory(
+    const {
+        data: claimHistoryData,
+        isLoading,
+        isError,
+    } = useGetClaimHistory(
         applicationId,
         searchText.trim() || undefined,
         ORDERING_FIELD_MAP[sortBy],
@@ -102,6 +118,7 @@ const useClaimHistoryTab = (applicationId?: string) => {
         items,
         summary,
         isLoading,
+        isError,
         searchText,
         setSearchText: handleSearchTextChange,
         sortBy,

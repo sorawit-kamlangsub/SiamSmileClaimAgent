@@ -77,7 +77,7 @@ const AddContactModal: React.FC<Props> = ({ open, onClose, onAdd, productTypeId 
             if (!v.relationship) e.relationship = "โปรดระบุ";
             if (!v.phone) e.phone = "โปรดระบุ";
             if (!v.name.trim()) e.name = "โปรดระบุ";
-            // ถ้าเลือก "อื่นๆ" (id=12) ต้องกรอก otherNote
+            // ถ้าเลือก "อื่นๆ" (id=13) ต้องกรอก otherNote
             if (v.relationship === OTHER_CONTACT_TYPE_ID && !v.otherNote.trim()) e.otherNote = "โปรดระบุ";
             return e;
         },
