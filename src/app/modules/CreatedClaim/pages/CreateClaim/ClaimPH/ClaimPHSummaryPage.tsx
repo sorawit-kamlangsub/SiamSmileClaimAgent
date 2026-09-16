@@ -258,7 +258,7 @@ const ClaimPHSummaryPage: React.FC = () => {
             icon: "success",
             title: "ทำรายการสำเร็จ",
             html: `
-                <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:1.8;">
+                <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:2.4;">
                     ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
                 </div>
                 ${itemsHtml}
