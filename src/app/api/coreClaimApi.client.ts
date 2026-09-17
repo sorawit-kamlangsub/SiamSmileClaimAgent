@@ -7016,6 +7016,128 @@ export class MastersClient {
     }
 
     /**
+     * API สำหรับ Get ข้อมูล CancelReason (เหตุผลการยกเลิก)
+     * @param cancelReasonId (optional)
+     * @return Success
+     */
+    getCancelReason(
+        cancelReasonId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCancelReasonDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/claim/cancel/reason?";
+        if (cancelReasonId === null) throw new Error("The parameter 'cancelReasonId' cannot be null.");
+        else if (cancelReasonId !== undefined)
+            url_ += "cancelReasonId=" + encodeURIComponent("" + cancelReasonId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCancelReason(_response);
+            });
+    }
+
+    protected processGetCancelReason(response: AxiosResponse): Promise<GetCancelReasonDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetCancelReasonDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetCancelReasonDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล RejectReason (เหตุผลการปฏิเสธ)
+     * @param rejectReasonId (optional)
+     * @return Success
+     */
+    getRejectReason(
+        rejectReasonId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetRejectReasonDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/claim/reject/reason?";
+        if (rejectReasonId === null) throw new Error("The parameter 'rejectReasonId' cannot be null.");
+        else if (rejectReasonId !== undefined)
+            url_ += "rejectReasonId=" + encodeURIComponent("" + rejectReasonId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetRejectReason(_response);
+            });
+    }
+
+    protected processGetRejectReason(response: AxiosResponse): Promise<GetRejectReasonDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetRejectReasonDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetRejectReasonDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล DocumentRecipientType (ประเภทผู้รับเอกสาร)
      * @param documentRecipientTypeId (optional)
      * @return Success
@@ -9153,6 +9275,25 @@ export interface GetBranchDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetCancelReasonDtoResponse {
+    cancelReasonId?: number;
+    cancelReasonName?: string | undefined;
+}
+
+export interface GetCancelReasonDtoResponseListServiceResponse {
+    data?: GetCancelReasonDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetCaseByClaimIdDtoResponse {
     claimId?: string | undefined;
     claimNo?: string | undefined;
@@ -9320,6 +9461,8 @@ export interface GetClaimDetailConsiderDtoResponse {
     physicianName?: string | undefined;
     ipdDayCount?: number | undefined;
     icuDayCount?: number | undefined;
+    admissionIndication?: string | undefined;
+    reservationRemark?: string | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
@@ -10305,6 +10448,25 @@ export interface GetProvinceDtoResponse {
 
 export interface GetProvinceDtoResponseListServiceResponse {
     data?: GetProvinceDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetRejectReasonDtoResponse {
+    rejectReasonId?: number;
+    rejectReasonName?: string | undefined;
+}
+
+export interface GetRejectReasonDtoResponseListServiceResponse {
+    data?: GetRejectReasonDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

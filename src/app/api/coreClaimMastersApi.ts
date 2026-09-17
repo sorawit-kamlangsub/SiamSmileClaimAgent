@@ -35,6 +35,8 @@ const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
 const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
 const getDocumentReviewStatusQueryKey = ["getDocumentReviewStatus"];
+const getCancelReasonQueryKey = ["getCancelReason"];
+const getRejectReasonQueryKey = ["getRejectReason"];
 const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
 const getBenefitQueryKey = ["getBenefit"];
 
@@ -446,6 +448,26 @@ export const useGetDocumentReviewStatus = (documentReviewStatusId?: number | und
         () => coreClaimMastersClient.getDocumentReviewStatus(documentReviewStatusId),
         {
             cacheTime: 1000 * 60 * 60 * 24,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCancelReason = (cancelReasonId?: number | undefined) => {
+    return useQuery(
+        [getCancelReasonQueryKey, cancelReasonId],
+        () => coreClaimMastersClient.getCancelReason(cancelReasonId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetRejectReason = (rejectReasonId?: number | undefined) => {
+    return useQuery(
+        [getRejectReasonQueryKey, rejectReasonId],
+        () => coreClaimMastersClient.getRejectReason(rejectReasonId),
+        {
             refetchOnWindowFocus: false,
         }
     );
