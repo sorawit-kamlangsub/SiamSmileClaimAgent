@@ -111,8 +111,8 @@ const useClaimCpgTransferDataTableHook = ({
 
     const columns: MUIDataTableColumn[] = [
         {
-            name: "cpgNo",
-            label: "เลขที่ CPG",
+            name: "claimNo",
+            label: "เลขที่ CL",
             options: {
                 sort: false,
                 filter: false,
@@ -125,18 +125,10 @@ const useClaimCpgTransferDataTableHook = ({
                             sx={{ color: "#1565C0", fontWeight: 600 }}
                             onClick={() => handleViewRow(row)}
                         >
-                            {row?.cpgNo}
+                            {row?.claimNo}
                         </Link>
                     );
                 },
-            },
-        },
-        {
-            name: "claimNo",
-            label: "เลขที่ CL",
-            options: {
-                sort: false,
-                filter: false,
             },
         },
         {
