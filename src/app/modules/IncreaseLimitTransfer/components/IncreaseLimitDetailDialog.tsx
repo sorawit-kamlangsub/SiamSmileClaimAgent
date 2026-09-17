@@ -152,131 +152,150 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                     </Box>
                 ) : (
                     <>
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                            <DescriptionIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
-                            <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
-                                รายละเอียดเคลม
-                            </Typography>
-                        </Box>
-
-                        <Grid container spacing={2}>
-                            <Grid item xs={12}>
-                                <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>เลข CL :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {detail?.claimNo ?? row?.claimNo ?? "-"}
+                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                                <DescriptionIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
+                                    รายละเอียดเคลม
                                 </Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
-                                    ชื่อผู้เอาประกัน :
-                                </Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#212121" }}>
-                                    {detail?.insuredName ?? "-"}
-                                </Typography>
-                            </Grid>
-                            <Grid item xs={12}>
-                                <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                                    <Typography sx={{ fontSize: "0.9rem", color: "#757575" }}>จำนวนเงิน :</Typography>
-                                    <Typography sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121" }}>
-                                        {formatBaht(detail?.amount)}
+                            </Box>
+                            <Grid container spacing={2}>
+                                <Grid item xs={12}>
+                                    <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>เลข CL :</Typography>
+                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        {detail?.claimNo ?? row?.claimNo ?? "-"}
                                     </Typography>
-                                </Box>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
+                                        ชื่อผู้เอาประกัน :
+                                    </Typography>
+                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#212121" }}>
+                                        {detail?.insuredName ?? "-"}
+                                    </Typography>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                                        <Typography sx={{ fontSize: "0.9rem", color: "#757575" }}>
+                                            จำนวนเงิน :
+                                        </Typography>
+                                        <Typography sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121" }}>
+                                            {formatBaht(detail?.amount)}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
                             </Grid>
-                        </Grid>
+                        </Box>
 
                         <Box sx={{ borderTop: "1px solid #E0E0E0", my: 2 }} />
 
-                        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                            <VerifiedUserIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
-                            <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
-                                อนุมัติวงเงิน
-                            </Typography>
-                        </Box>
-
-                        <Grid container spacing={2}>
-                            <Grid item xs={6}>
-                                <Box sx={{ p: 2, borderRadius: 2, textAlign: "center", backgroundColor: "#EAF2FB" }}>
-                                    <Typography sx={{ fontSize: "0.8rem", color: "#0A55A2" }}>
-                                        วงเงินปัจจุบัน
-                                    </Typography>
-                                    <Typography
-                                        sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#0A55A2" }}
-                                    >
-                                        {formatNumber(detail?.currentLimitAmount)}
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                            <Grid item xs={6}>
-                                <Box sx={{ p: 2, borderRadius: 2, textAlign: "center", backgroundColor: "#FFF6E5" }}>
-                                    <Typography sx={{ fontSize: "0.8rem", color: "#B7791F" }}>
-                                        วงเงินที่ใช้ไป
-                                    </Typography>
-                                    <Typography
-                                        sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#B7791F" }}
-                                    >
-                                        {formatNumber(detail?.usedLimitAmount)}
-                                    </Typography>
-                                </Box>
-                            </Grid>
-                        </Grid>
-
-                        <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#FDECEC" }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <Typography sx={{ fontSize: "0.9rem", color: "#C62828" }}>
-                                    จำนวนคงเหลือ (ภายในวัน) :
-                                </Typography>
-                                <Typography sx={{ fontWeight: 700, color: "#C62828" }}>
-                                    {formatBaht(detail?.remainingLimitAmount)}
+                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                                <VerifiedUserIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
+                                <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
+                                    อนุมัติวงเงิน
                                 </Typography>
                             </Box>
-                        </Box>
 
-                        <Grid container spacing={2} sx={{ mt: 0 }}>
-                            <Grid item xs={12}>
-                                <Typography sx={{ fontSize: "0.85rem", color: "#5F6773", mb: 0.5 }}>
-                                    วงเงินที่ขอเพิ่ม{" "}
-                                    <Box component="span" sx={{ color: "#D62828" }}>
-                                        *
+                            <Grid container spacing={2}>
+                                <Grid item xs={6}>
+                                    <Box
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 2,
+                                            textAlign: "center",
+                                            backgroundColor: "#EAF2FB",
+                                        }}
+                                    >
+                                        <Typography sx={{ fontSize: "0.8rem", color: "#0A55A2" }}>
+                                            วงเงินปัจจุบัน
+                                        </Typography>
+                                        <Typography
+                                            sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#0A55A2" }}
+                                        >
+                                            {formatNumber(detail?.currentLimitAmount)}
+                                        </Typography>
                                     </Box>
-                                </Typography>
-                                <Box
-                                    sx={{
-                                        p: "10px 14px",
-                                        borderRadius: 1.5,
-                                        border: "1px solid #D9DEE5",
-                                        backgroundColor: "#FAFBFD",
-                                        fontWeight: 700,
-                                        fontSize: "1rem",
-                                        color: "#212121",
-                                    }}
-                                >
-                                    {formatBaht(detail?.requestedIncreaseAmount)}
-                                </Box>
+                                </Grid>
+                                <Grid item xs={6}>
+                                    <Box
+                                        sx={{
+                                            p: 2,
+                                            borderRadius: 2,
+                                            textAlign: "center",
+                                            backgroundColor: "#FFF6E5",
+                                        }}
+                                    >
+                                        <Typography sx={{ fontSize: "0.8rem", color: "#B7791F" }}>
+                                            วงเงินที่ใช้ไป
+                                        </Typography>
+                                        <Typography
+                                            sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#B7791F" }}
+                                        >
+                                            {formatNumber(detail?.usedLimitAmount)}
+                                        </Typography>
+                                    </Box>
+                                </Grid>
                             </Grid>
-                            <Grid item xs={12}>
-                                <FormikDropdown
-                                    name="rejectReasonCode"
-                                    formik={formik}
-                                    label="สาเหตุการปฏิเสธ"
-                                    data={rejectReasonOptions}
-                                    valueFieldName="code"
-                                    displayFieldName="name"
-                                    fullWidth
-                                    firstItemText="สาเหตุการปฏิเสธ"
-                                    disableFirstItem
-                                    required
-                                />
-                            </Grid>
-                        </Grid>
 
-                        <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#E6F4EA" }}>
-                            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                <Typography sx={{ fontSize: "0.9rem", color: "#137333" }}>
-                                    วงเงินคงเหลือ (ครั้งใหม่) :
-                                </Typography>
-                                <Typography sx={{ fontWeight: 700, color: "#137333" }}>
-                                    {formatBaht(detail?.newRemainingLimitAmount)}
-                                </Typography>
+                            <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#FDECEC" }}>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <Typography sx={{ fontSize: "0.9rem", color: "#C62828" }}>
+                                        จำนวนคงเหลือ (ภายในวัน) :
+                                    </Typography>
+                                    <Typography sx={{ fontWeight: 700, color: "#C62828" }}>
+                                        {formatBaht(detail?.remainingLimitAmount)}
+                                    </Typography>
+                                </Box>
+                            </Box>
+
+                            <Grid container spacing={2} sx={{ mt: 2 }}>
+                                <Grid item xs={12}>
+                                    <Typography sx={{ fontSize: "0.85rem", color: "#5F6773", mb: 0.5 }}>
+                                        วงเงินที่ขอเพิ่ม{" "}
+                                        <Box component="span" sx={{ color: "#D62828" }}>
+                                            *
+                                        </Box>
+                                    </Typography>
+                                    <Box
+                                        sx={{
+                                            p: "10px 14px",
+                                            borderRadius: 1.5,
+                                            border: "1px solid #D9DEE5",
+                                            backgroundColor: "#FAFBFD",
+                                            fontWeight: 700,
+                                            fontSize: "1rem",
+                                            color: "#212121",
+                                        }}
+                                    >
+                                        {formatBaht(detail?.requestedIncreaseAmount)}
+                                    </Box>
+                                </Grid>
+                                <Grid item xs={12}>
+                                    <FormikDropdown
+                                        name="rejectReasonCode"
+                                        formik={formik}
+                                        label="สาเหตุการปฏิเสธ"
+                                        data={rejectReasonOptions}
+                                        valueFieldName="code"
+                                        displayFieldName="name"
+                                        fullWidth
+                                        firstItemText="สาเหตุการปฏิเสธ"
+                                        disableFirstItem
+                                        required
+                                    />
+                                </Grid>
+                            </Grid>
+
+                            <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#E6F4EA" }}>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <Typography sx={{ fontSize: "0.9rem", color: "#137333" }}>
+                                        วงเงินคงเหลือ (ครั้งใหม่) :
+                                    </Typography>
+                                    <Typography sx={{ fontWeight: 700, color: "#137333" }}>
+                                        {formatBaht(detail?.newRemainingLimitAmount)}
+                                    </Typography>
+                                </Box>
                             </Box>
                         </Box>
 
