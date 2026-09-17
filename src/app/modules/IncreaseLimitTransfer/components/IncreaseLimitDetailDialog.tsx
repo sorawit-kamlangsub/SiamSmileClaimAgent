@@ -160,19 +160,37 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Typography>
                             </Box>
                             <Grid container spacing={2}>
-                                <Grid item xs={12}>
-                                    <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>เลข CL :</Typography>
-                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                        {detail?.claimNo ?? row?.claimNo ?? "-"}
-                                    </Typography>
+                                <Grid item xs={6}>
+                                    <Box
+                                        sx={{
+                                            border: "1px solid #D9DEE5",
+                                            borderRadius: 2,
+                                            p: "10px 14px",
+                                            height: "100%",
+                                        }}
+                                    >
+                                        <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>เลข CL :</Typography>
+                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                            {detail?.claimNo ?? row?.claimNo ?? "-"}
+                                        </Typography>
+                                    </Box>
                                 </Grid>
-                                <Grid item xs={12}>
-                                    <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
-                                        ชื่อผู้เอาประกัน :
-                                    </Typography>
-                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#212121" }}>
-                                        {detail?.insuredName ?? "-"}
-                                    </Typography>
+                                <Grid item xs={6}>
+                                    <Box
+                                        sx={{
+                                            border: "1px solid #D9DEE5",
+                                            borderRadius: 2,
+                                            p: "10px 14px",
+                                            height: "100%",
+                                        }}
+                                    >
+                                        <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
+                                            ชื่อผู้เอาประกัน :
+                                        </Typography>
+                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#212121" }}>
+                                            {detail?.insuredName ?? "-"}
+                                        </Typography>
+                                    </Box>
                                 </Grid>
                                 <Grid item xs={12}>
                                     <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
