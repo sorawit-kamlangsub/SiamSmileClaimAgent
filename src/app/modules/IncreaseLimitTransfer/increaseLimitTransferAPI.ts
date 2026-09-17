@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
@@ -108,4 +108,74 @@ const getIncreaseTransferLimitMonitorsData = ({
             const error = err as { response?: { data?: { message?: string } }; message?: string };
             throw error.response?.data?.message ?? error.message ?? "";
         });
+};
+
+export type UpdateIncreaseTransferLimitStatusDtoRequest = {
+    caseId?: string;
+    claimId?: string;
+    increaseTransferLimitStatusId?: number;
+    /** draft: backend ยังไม่มี field นี้ (mock) — map จาก rejectReasonCode ของ dropdown ชั่วคราว */
+    rejectReasonsId?: string | null;
+};
+
+export type UpdateIncreaseTransferLimitStatusDtoData = {
+    isSuccess?: boolean;
+    message?: string;
+};
+
+export type UpdateIncreaseTransferLimitStatusDtoServiceResponse = {
+    data?: UpdateIncreaseTransferLimitStatusDtoData;
+    isSuccess?: boolean;
+    message?: string;
+    code?: number;
+    exceptionMessage?: string | null;
+    serverDateTime?: string;
+    totalAmountRecords?: number;
+    totalAmountPages?: number;
+    currentPage?: number;
+    recordsPerPage?: number;
+    pageIndex?: number;
+};
+
+const updateIncreaseTransferLimitStatus = (payload: UpdateIncreaseTransferLimitStatusDtoRequest) => {
+    const url = `${apiURL}/UpdateIncreaseTransferLimitStatus`;
+    return axios
+        .post(url, payload)
+        .then((res) => {
+            if (res.data.isSuccess && res.data.data?.isSuccess !== false) {
+                return res.data;
+            }
+            const isWarning = !!res.data.isSuccess && res.data.data?.isSuccess === false;
+            const error = new Error(res.data.data?.message ?? res.data.message ?? "");
+            (error as Error & { isWarning?: boolean }).isWarning = isWarning;
+            throw error;
+        })
+        .catch((err) => {
+            const error = err as Error & { response?: { data?: { message?: string } } };
+            if (error.response) {
+                throw new Error(error.response.data?.message ?? error.message ?? "");
+            }
+            throw error;
+        });
+};
+
+export const useUpdateIncreaseTransferLimitStatus = (
+    onSuccessCallback: (response: UpdateIncreaseTransferLimitStatusDtoServiceResponse) => void,
+    onErrorCallback: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (payload: UpdateIncreaseTransferLimitStatusDtoRequest) => updateIncreaseTransferLimitStatus(payload),
+        {
+            onSuccess: (response) => {
+                onSuccessCallback(response);
+                queryClient.invalidateQueries({
+                    predicate: (query) => query.queryKey.includes(getIncreaseTransferLimitMonitorsKey),
+                });
+            },
+            onError: (error: Error) => {
+                onErrorCallback(error.message);
+            },
+        }
+    );
 };

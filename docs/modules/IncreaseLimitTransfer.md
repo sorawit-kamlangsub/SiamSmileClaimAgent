@@ -25,8 +25,13 @@ search-from dropdowns populated, but real backend not ready; no store. Route:
 แสดง: เลข CL, ชื่อผู้เอาประกัน, จำนวนเงิน (฿), วงเงินปัจจุบัน/ที่ใช้ไป (stat boxes),
 จำนวนคงเหลือ (ภายในวัน) red flat, วงเงินที่ขอเพิ่ม (readonly), สาเหตุการปฏิเสธ select
 (จาก `rejectReasons`), วงเงินคงเหลือ (ครั้งใหม่) green flat. ปุ่ม ปฏิเสธ (disabled จนกว่า
-เลือกสาเหตุ) + อนุมัติ → `swalConfirmAction` → close. ⚠ ยังไม่มี status-update endpoint;
-ปุ่มทำ confirm → close ไม่ได้บันทึก backend จริง.
+เลือกสาเหตุ) + อนุมัติ → `swalConfirmAction` → ส่ง `useUpdateIncreaseTransferLimitStatus`
+(POST `${APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/UpdateIncreaseTransferLimitStatus`):
+อนุมัติส่ง `increaseTransferLimitStatusId: 3` (caseId + claimId), ปฏิเสธส่ง
+`increaseTransferLimitStatusId: 4` + `rejectReasonsId` (draft — map จาก `rejectReasonCode`
+ชั่วคราว, backend ยังไม่มี field นี้). สำเร็จ → `swalSuccess` ด้วย `data.message` จาก response
+(เช่น "อนุมัติขยายวงเงินสำเร็จ") แล้ว close; หลังสำเร็จ refetch monitor list ผ่าน
+`queryClient.invalidateQueries`. ⚠ ยังเป็น mock endpoint (Postman) — contract เป็น placeholder.
 
 ## `_common/` (module-local, non-standard folder name)
 
@@ -70,10 +75,14 @@ its own independent inline `useFormik` instead.
 - `useGetPaymentIncreaseStatus` (`_common/masterAPI.ts`) — GET
   `{APIGW_CLAIM_FUND_API_URL}/Masters/GetPaymentIncreaseStatuses` (base `.../api/ClaimFund`),
   feeds the status dropdown. ⚠ **Mock path** เดียวกับข้างบน.
+- `useUpdateIncreaseTransferLimitStatus` (`increaseLimitTransferAPI.ts`) — POST
+  `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/UpdateIncreaseTransferLimitStatus` (base
+  `.../api/ClaimFund`), เปลี่ยนสถานะอนุมัติ/ปฏิเสธขยายวงเงิน. Response envelope
+  `UpdateIncreaseTransferLimitStatusDtoServiceResponse` (`data: { isSuccess, message }`).
 
 ## Gotchas
 
 ข้อมูลทั้งหมดมาจาก mock endpoint (monitor + status + detail) — ยังไม่มี backend จริง,
-view action ยังเป็น stub (`console.log` + `// TODO`), dialog ปุ่ม ปฏิเสธ/อนุมัติ ยังไม่ส่ง
-backend (ไม่มี status-update endpoint) แค่ confirm → close, `page/` (singular) folder naming,
-dead `ClaimSearchFilterFormHook.tsx`.
+view action ยังเป็น stub (`console.log` + `// TODO`), `rejectReasonsId` ใน payload เป็น
+**draft** (map จาก `rejectReasonCode` ชั่วคราว เพราะ backend ยังไม่มี field นี้), `page/`
+(singular) folder naming, dead `ClaimSearchFilterFormHook.tsx`.

@@ -15,10 +15,13 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { FormikErrors, useFormik } from "formik";
 import { useEffect } from "react";
-import { FormikDropdown, swalSuccess } from "../../_common";
+import { FormikDropdown, swalError, swalSuccess } from "../../_common";
 import { swalConfirmAction } from "../../_common/customSweetAlert";
-import { useGetIncreaseTransferLimitDetail } from "../increaseLimitTransferAPI";
-import type { IncreaseTransferLimitDetailDto } from "../increaseLimitTransferAPI";
+import { useGetIncreaseTransferLimitDetail, useUpdateIncreaseTransferLimitStatus } from "../increaseLimitTransferAPI";
+import type {
+    IncreaseTransferLimitDetailDto,
+    UpdateIncreaseTransferLimitStatusDtoServiceResponse,
+} from "../increaseLimitTransferAPI";
 import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 
 type IncreaseLimitDetailDialogProps = {
@@ -50,7 +53,22 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
     const { data: detailRes, isLoading: isDetailLoading } = useGetIncreaseTransferLimitDetail(caseId);
 
     const detail = detailRes?.data as IncreaseTransferLimitDetailDto | undefined;
+    const claimId = detail?.claimId ?? "";
     const rejectReasonOptions = (detail?.rejectReasons ?? []) as { code: string; name: string }[];
+
+    const handleUpdateStatusSuccess = (response: UpdateIncreaseTransferLimitStatusDtoServiceResponse) => {
+        swalSuccess(response.data?.message ?? "ทำรายการสำเร็จ", "ระบบบันทึกการทำรายการเรียบร้อยแล้ว");
+        onClose();
+    };
+
+    const handleUpdateStatusError = (error: string) => {
+        swalError("แจ้งเตือน", error);
+    };
+
+    const { mutate: updateStatusMutate, isLoading: isUpdatingStatus } = useUpdateIncreaseTransferLimitStatus(
+        handleUpdateStatusSuccess,
+        handleUpdateStatusError
+    );
 
     const formik = useFormik<IncreaseLimitDetailDialogFormValues>({
         initialValues: defaultValues,
@@ -61,10 +79,14 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
             }
             return errors;
         },
-        onSubmit: () => {
-            // mock: ปฏิเสธการขยายวงเงินสำเร็จ (ยังไม่มี endpoint อัปเดตสถานะ)
-            swalSuccess("ปฏิเสธการขยายวงเงินสำเร็จ", "รายการสิ้นสุดและจะไม่มีการโอนเงิน");
-            onClose();
+        onSubmit: (values) => {
+            updateStatusMutate({
+                caseId,
+                claimId,
+                increaseTransferLimitStatusId: 4,
+                // draft: backend ยังไม่มี field rejectReasonsId — map จาก rejectReasonCode ชั่วคราว
+                rejectReasonsId: values.rejectReasonCode,
+            });
         },
     });
 
@@ -82,12 +104,11 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
             cancelButtonText: "ยกเลิก",
         });
         if (result.isConfirmed) {
-            // mock: อนุมัติขยายวงเงินและโอนเงินสำเร็จ (ยังไม่มี endpoint อัปเดตสถานะ)
-            swalSuccess(
-                "อนุมัติขยายวงเงินและโอนเงินสำเร็จ",
-                `ระบบดำเนินการโอนเงินเรียบร้อยแล้ว · เลข CL ${detail?.claimNo ?? "-"}`
-            );
-            onClose();
+            updateStatusMutate({
+                caseId,
+                claimId,
+                increaseTransferLimitStatusId: 3,
+            });
         }
     };
 
@@ -345,7 +366,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 variant="outlined"
                                 color="error"
                                 onClick={handleRejectClick}
-                                disabled={isDetailLoading || !caseId || !formik.values.rejectReasonCode}
+                                disabled={
+                                    isDetailLoading || !caseId || !formik.values.rejectReasonCode || isUpdatingStatus
+                                }
                             >
                                 ปฏิเสธ
                             </Button>
@@ -353,7 +376,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 variant="contained"
                                 startIcon={<AutorenewIcon />}
                                 onClick={handleApproveClick}
-                                disabled={isDetailLoading || !caseId}
+                                disabled={isDetailLoading || !caseId || isUpdatingStatus}
                                 sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
                             >
                                 อนุมัติ
