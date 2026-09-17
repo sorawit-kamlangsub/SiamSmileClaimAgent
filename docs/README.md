@@ -34,3 +34,8 @@ these docs don't repeat that, only add the concrete inventory CLAUDE.md doesn't 
 | Survey / TransferSlips | Public routes (no auth), under `LayoutPublic` | see module docs |
 
 Full detail in each `modules/*.md`.
+
+> ⚠ **Mock API note** — ใช้ base `VITE_APIGW_CLAIM_FUND_API_URL` (= Postman mock ใน `.env`):
+> เส้นที่เพิ่มไปล่าสุดคือ **`/api/ClaimFund/Masters/GetPaymentIncreaseStatuses`**
+> (`useGetPaymentIncreaseStatus` → `{base}/Masters/GetPaymentIncreaseStatuses`, status dropdown
+> หน้า ขยายวงเงิน) — **ยังไม่มี backend จริง** เก็บไว้เป็น placeholder จนกว่าเส้นจริงจะมา.
