@@ -5,6 +5,7 @@ import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
+import { useGetPaymentIncreaseStatus } from "./masterAPI";
 import dayjs, { Dayjs } from "dayjs";
 
 const currentDate = dayjs();
@@ -33,6 +34,8 @@ const defaultValues: ClaimSearchFilterValues = {
 };
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
+    const { data: paymentIncreaseStatusData, isLoading: paymentIncreaseStatusIsLoading } =
+        useGetPaymentIncreaseStatus();
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -61,10 +64,11 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                         name="statusId"
                         formik={formik}
                         label="สถานะ"
-                        data={[]}
-                        valueFieldName=""
-                        displayFieldName=""
+                        data={paymentIncreaseStatusData?.data ?? []}
+                        valueFieldName="id"
+                        displayFieldName="name"
                         fullWidth
+                        isLoading={paymentIncreaseStatusIsLoading}
                     />
                 </Grid>
 
