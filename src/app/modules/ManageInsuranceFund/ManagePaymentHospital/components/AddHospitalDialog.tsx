@@ -17,7 +17,7 @@ const AddHospitalDialog = () => {
     }, []);
 
     return (
-        <Dialog open={addDialog.isOpen} onClose={handleClose} sx={{ borderRadius: "12px" }}>
+        <Dialog open={addDialog.isOpen} onClose={handleClose} maxWidth={"md"} sx={{ borderRadius: "12px" }}>
             <Box>test</Box>
         </Dialog>
     );
