@@ -20,6 +20,7 @@ import {
 } from "../../store/billingClaim.types";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import useBillingDocumentHook from "./BillingDocumentHook";
+import { safeAtob } from "../../../../functionHelpers";
 
 const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     incidentTypeId: undefined,
@@ -82,7 +83,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const dispatch = useAppDispatch();
     const { id } = useParams();
     const navigate = useNavigate();
-    const billingDetailId = id ? atob(id) : "";
+    const billingDetailId = safeAtob(id) ?? "";
 
     const {
         data: detailData,

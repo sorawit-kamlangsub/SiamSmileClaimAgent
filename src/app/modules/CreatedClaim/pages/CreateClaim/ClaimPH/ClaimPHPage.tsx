@@ -11,14 +11,15 @@ import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 import { useClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useClaimPH";
 import ClaimStickyHeader from "../../../components/CreateClaim/ClaimStickyHeader";
 import { useGetPreviousClaim } from "../../../../../api/coreClaimApi";
+import { safeAtob } from "../../../../../functionHelpers";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     const { isContinuous: isContinuousParam, oldClaimId: oldClaimIdEncode } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
-    const realOldClaimId = isContinuous && oldClaimIdEncode ? atob(oldClaimIdEncode) : undefined;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
+    const realOldClaimId = isContinuous ? safeAtob(oldClaimIdEncode) : undefined;
 
     const { oldClaim } = useAppSelector(claimPHSelector);
     const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPH();

@@ -5,7 +5,7 @@ import { createContinuedClaim } from "../../../../../api/coreClaimApi";
 import { CaseDisabilityV2Request, CreateContinuedClaimDtoRequest } from "../../../../../api/coreClaimApi.client";
 import { useAuth } from "../../../../_auth";
 import { BeneficiaryForm, claimPHSelector } from "../../../store/claimPHSlice";
-import { CoverageType, MedicalType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
 
@@ -16,7 +16,7 @@ const generateRequestId = () =>
 
 export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { oldClaimId: oldClaimIdParam } = useParams();
-    const oldClaimId = oldClaimIdParam ? atob(oldClaimIdParam) : "";
+    const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
 
     const { userProfile } = useAuth();
     const { form, bankAccounts, contacts, organLossItems, caseItems, documentScanList } =

@@ -21,7 +21,7 @@ import {
     parseClaimListType,
 } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../api/coreClaimApi";
-import { calculatePolicyAgeText, formatDateString } from "../../../functionHelpers";
+import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
 
 /**
  * หน้า "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล (OPD Half / OPD Full)"
@@ -41,9 +41,9 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
     const [tabValue, setTabValue] = useState("1");
     const [searchParams] = useSearchParams();
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : "";
+    const claimId = safeAtob(id) ?? "";
     // route hospital/:id/:caseId(/document) — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : "";
+    const caseId = safeAtob(caseIdEncoded) ?? "";
 
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId, caseId);
     const detail = detailData?.data;

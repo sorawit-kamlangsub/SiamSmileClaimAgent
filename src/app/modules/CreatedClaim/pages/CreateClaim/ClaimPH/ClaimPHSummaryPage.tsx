@@ -30,12 +30,13 @@ import { useBeneficiaryPH } from "../../../hooks/CreateClaim/ClaimPH/useBenefici
 import BeneficiarySectionPH from "../../../components/CreateClaim/ClaimPH/BeneficiarySectionPH";
 import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
 import { ContactCard } from "../../../components/CreateClaim/ContactCard";
+import { safeAtob } from "../../../../../functionHelpers";
 
 const ClaimPHSummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { form, bankAccounts, contacts, insured, oldClaim } = useAppSelector((state) => state.claimph);
     const { createClaimPH, confirmPayment, isLoading } = useCreateClaimPH();
     const { createClaimPH: createContinuedClaimPH, confirmPayment: confirmContinuedPayment } =

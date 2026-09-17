@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
 import { useAppDispatch } from "../../../../../redux";
-import { CoverageType, MedicalType } from "../../../../functionHelpers";
+import { CoverageType, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
@@ -234,9 +234,9 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 const useHospitalConsiderDetailHook = () => {
     const dispatch = useAppDispatch();
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : undefined;
+    const claimId = safeAtob(id);
     // route hospital/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
+    const caseId = safeAtob(caseIdEncoded);
     /** เอกลักษณ์ของเคสที่กำลังเปิดอยู่ — ใช้ตรวจว่าเปลี่ยนเคสหรือไม่ (route ใช้ element เดิมเสมอ ไม่ remount) */
     const caseKey = claimId && caseId ? `${claimId}:${caseId}` : undefined;
     const [searchParams] = useSearchParams();
