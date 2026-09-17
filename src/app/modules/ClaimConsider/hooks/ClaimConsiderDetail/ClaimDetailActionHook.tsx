@@ -243,10 +243,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             decisionDate: considerResult !== undefined ? dayjs() : undefined,
             decisionReasonId: toDecisionReasonId(considerResult, decisionReasonId),
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: considerResult === 2 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: considerResult === 2 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: considerResult === 2 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: considerResult === 2 ? asTimeSpan(dischargeTime) : undefined,
+            approvedAdmissionDate: considerResult === 9 ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: considerResult === 9 ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: considerResult === 9 ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: considerResult === 9 ? asTimeSpan(dischargeTime) : undefined,
             approvedIPDDayCount: ipdDays,
             approvedICUDayCount: icuDays,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
@@ -602,7 +602,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDecision(overrideDecisionId),
     });
 
-    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง 2 (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
+    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง 9 (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
         const payload = mapClaimDecisionPayload(overrideDecisionId);
         await saveClaimDecision.mutateAsync(payload);
