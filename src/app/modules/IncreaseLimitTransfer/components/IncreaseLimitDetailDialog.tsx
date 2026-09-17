@@ -193,7 +193,16 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12}>
-                                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                                    <Box
+                                        sx={{
+                                            border: "1px solid #D9DEE5",
+                                            borderRadius: 2,
+                                            p: "10px 14px",
+                                            display: "flex",
+                                            alignItems: "baseline",
+                                            gap: 1,
+                                        }}
+                                    >
                                         <Typography sx={{ fontSize: "0.9rem", color: "#757575" }}>
                                             จำนวนเงิน :
                                         </Typography>
