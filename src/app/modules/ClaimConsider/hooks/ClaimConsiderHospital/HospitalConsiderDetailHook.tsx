@@ -577,9 +577,15 @@ const useHospitalConsiderDetailHook = () => {
         prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
     }, [formik.values.coverageTypeId]);
 
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
+    // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
+    const decisionReasonDecisionId =
+        formik.values.considerResult === 5 || formik.values.considerResult === 6
+            ? undefined
+            : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
-        formik.values.considerResult
+        decisionReasonDecisionId
     );
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
     const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
