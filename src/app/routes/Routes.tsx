@@ -35,6 +35,7 @@ import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHos
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
 import BillingCustomerPage from "../modules/BillingClaim/pages/BillingCustomerPage.tsx";
+import ManagePaymentHospital from "../modules/ManageInsuranceFund/ManagePaymentHospital/pages/ManagePaymentHospital.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -298,6 +299,22 @@ const Routes: RouteMapType[] = [
                 element: <BillingHospitalDocumentPage />,
             },
         ],
+    },
+
+    {
+        path: "manage/insuranceFund/dashboard-fund",
+        title: "Dashboard สำรองเงิน",
+        element: <>Dashboard สำรองเงิน</>,
+    },
+    {
+        path: "manage/insuranceFund/transfer-hospital",
+        title: "โอนเงิน รพ.",
+        element: <>โอนเงิน รพ</>,
+    },
+    {
+        path: "manage/insuranceFund/manage-payment-hospital",
+        title: "ตั้งค่าการจ่ายเงิน รพ.",
+        element: <ManagePaymentHospital />,
     },
 ];
 

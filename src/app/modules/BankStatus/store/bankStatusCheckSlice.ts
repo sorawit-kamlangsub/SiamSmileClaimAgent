@@ -17,7 +17,7 @@ export type SetSearchBankStatusPayload = {
 };
 
 const bankStatusCheckSlice = createSlice({
-    name: "bankStatusCheck",
+    name: "managePaymentHospital",
     initialState,
     reducers: {
         setSearchBankStatusBySearchDetail: (state, action: PayloadAction<SetSearchBankStatusPayload>) => {

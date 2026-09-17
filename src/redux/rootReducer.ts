@@ -11,6 +11,7 @@ import extraPaymentSlice from "../app/modules/ExtraPayment/store/extraPaymentSli
 import bankStatusCheckSlice from "../app/modules/BankStatus/store/bankStatusCheckSlice";
 
 import claimConsiderSlice from "../app/modules/ClaimConsider/store/claimConsiderSlice";
+import managePaymentHospitalSlice from "../app/modules/ManageInsuranceFund/ManagePaymentHospital/store/managePaymentHospitalSlice";
 
 export const rootReducer = combineReducers({
     layout: persistReducer(persistConfig, layoutSlice),
@@ -22,5 +23,6 @@ export const rootReducer = combineReducers({
     extraPayment: extraPaymentSlice,
     bankStatusCheck: bankStatusCheckSlice,
     claimConsider: claimConsiderSlice,
+    managePaymentHospital: managePaymentHospitalSlice,
     // billingClaim: ไม่มี redux slice แล้ว — ใช้ react-query cache ของ hospitalBillingApi.ts แทน
 });
