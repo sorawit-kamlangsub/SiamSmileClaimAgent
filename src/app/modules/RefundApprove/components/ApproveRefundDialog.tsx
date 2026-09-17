@@ -114,6 +114,8 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     }, [open, row?.caseId]);
 
     const handleApproveClick = async () => {
+        formik.setFieldError("rejectReasonId", undefined);
+        formik.setFieldTouched("rejectReasonId", false);
         const result = await swalConfirmAction({
             title: "ยืนยันการอนุมัติคืนเงิน?",
             text: "ต้องการอนุมัติการคืนเงินหรือไม่",
