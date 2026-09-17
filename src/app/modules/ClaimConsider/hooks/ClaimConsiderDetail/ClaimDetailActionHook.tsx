@@ -92,37 +92,15 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
 const DEFAULT_NON_COVERED_REASON_ID = 1;
 
 /**
- * decisionReasonId (Master "สาเหตุผลการพิจารณา" ที่ ConsiderSection ใช้เลือกตอนปฏิเสธ) กับ
- * rejectReasonId (ฟิลด์ที่ caseAdjudication ต้องการตอนส่ง considerResult/decisionId = 5 "ปฏิเสธ")
- * เป็นคนละ Master กัน คนละชุด id — ต้อง map ผ่านชื่อสาเหตุที่ตรงกันก่อนส่ง ห้ามส่ง decisionReasonId ตรงๆ
+ * ผลพิจารณา "ปฏิเสธ" (5) / "ยกเลิก" (6) : ConsiderSection เลือกสาเหตุจาก Master RejectReason / CancelReason
+ * โดยตรง ค่าใน decisionReasonId ของฟอร์มจึงเป็น rejectReasonId / cancelReasonId ไม่ใช่ id ของ DecisionReason
  */
-const DECISION_REASON_TO_REJECT_REASON_ID: Record<number, number> = {
-    17: 2, // อยู่ในระยะรอคอย
-    18: 3, // เป็นข้อยกเว้นของกรมธรรม์
-    19: 4, // เป็นโรคยกเว้นของกรมธรรม์
-    20: 5, // ไม่มีความคุ้มครอง
-    21: 6, // เต็มสิทธิ์ความคุ้มครอง
-    22: 7, // เกินระยะดำเนินการ
-};
+const REJECT_DECISION_ID = 5;
+const CANCEL_DECISION_ID = 6;
 
-const mapDecisionReasonIdToRejectReasonId = (decisionReasonId: number | undefined): number | undefined =>
-    decisionReasonId !== undefined ? DECISION_REASON_TO_REJECT_REASON_ID[decisionReasonId] : undefined;
-
-/**
- * decisionReasonId กับ cancelReasonId (ฟิลด์ที่ case ต้องการตอนส่ง considerResult = 6 "ยกเลิก")
- * เป็นคนละ Master กันเหมือนกรณี reject — map ผ่านชื่อสาเหตุที่ตรงกัน ห้ามใช้ตัว map ของ reject ปนกัน
- * เพราะ id ฝั่ง decisionReason ของ "ยกเลิก" (12-16) กับ "ปฏิเสธ" (17-22) เป็นคนละช่วงกัน
- */
-const DECISION_REASON_TO_CANCEL_REASON_ID: Record<number, number> = {
-    12: 2, // ผู้เอาประกันขอยกเลิกเคลม
-    13: 3, // โรงพยาบาลยกเลิกรายการ
-    14: 4, // แจ้งเคลมซ้ำ
-    15: 5, // บันทึกข้อมูลผิดรายการ
-    16: 6, // ไม่ประสงค์ดำเนินการต่อ
-};
-
-const mapDecisionReasonIdToCancelReasonId = (decisionReasonId: number | undefined): number | undefined =>
-    decisionReasonId !== undefined ? DECISION_REASON_TO_CANCEL_REASON_ID[decisionReasonId] : undefined;
+/** decisionReasonId ที่ส่งเข้า caseAdjudication : ปฏิเสธ/ยกเลิกไม่มี DecisionReason (ส่งเป็น rejectReasonId/cancelReasonId แทน) */
+const toDecisionReasonId = (decisionId: number | undefined, reasonId: number | undefined): number | undefined =>
+    decisionId === REJECT_DECISION_ID || decisionId === CANCEL_DECISION_ID ? undefined : reasonId;
 
 /** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
 const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -265,7 +243,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         return {
             decisionId: considerResult,
             decisionDate: considerResult !== undefined ? dayjs() : undefined,
-            decisionReasonId: decisionReasonId,
+            decisionReasonId: toDecisionReasonId(considerResult, decisionReasonId),
             decisionRemark: decisionReasonDetail,
             approvedAdmissionDate: considerResult === 2 ? asDate(admissionDate) : undefined,
             approvedAdmissionTime: considerResult === 2 ? asTimeSpan(admissionTime) : undefined,
@@ -284,8 +262,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: considerResult === 5 ? mapDecisionReasonIdToRejectReasonId(decisionReasonId) : undefined,
-            rejectDate: considerResult === 5 ? dayjs() : undefined,
+            rejectReasonId: considerResult === REJECT_DECISION_ID ? decisionReasonId : undefined,
+            rejectDate: considerResult === REJECT_DECISION_ID ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDraft(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -381,9 +359,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDraft(),
-            cancelReasonId:
-                values.considerResult === 6 ? mapDecisionReasonIdToCancelReasonId(values.decisionReasonId) : undefined,
-            cancelDate: values.considerResult === 6 ? dayjs() : undefined,
+            cancelReasonId: values.considerResult === CANCEL_DECISION_ID ? values.decisionReasonId : undefined,
+            cancelDate: values.considerResult === CANCEL_DECISION_ID ? dayjs() : undefined,
         };
     };
 
@@ -478,7 +455,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         return {
             decisionId: decisionId,
             decisionDate: dayjs(),
-            decisionReasonId: decisionReasonId,
+            decisionReasonId: toDecisionReasonId(decisionId, decisionReasonId),
             decisionRemark: decisionReasonDetail,
             approvedAdmissionDate: decisionId === 9 ? asDate(admissionDate) : undefined,
             approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
@@ -497,8 +474,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: decisionId === 5 ? mapDecisionReasonIdToRejectReasonId(decisionReasonId) : undefined,
-            rejectDate: decisionId === 5 ? dayjs() : undefined,
+            rejectReasonId: decisionId === REJECT_DECISION_ID ? decisionReasonId : undefined,
+            rejectDate: decisionId === REJECT_DECISION_ID ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDecision(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -610,9 +587,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDecision(),
-            cancelReasonId:
-                values.considerResult === 6 ? mapDecisionReasonIdToCancelReasonId(values.decisionReasonId) : undefined,
-            cancelDate: values.considerResult === 6 ? dayjs() : undefined,
+            cancelReasonId: values.considerResult === CANCEL_DECISION_ID ? values.decisionReasonId : undefined,
+            cancelDate: values.considerResult === CANCEL_DECISION_ID ? dayjs() : undefined,
         };
     };
 

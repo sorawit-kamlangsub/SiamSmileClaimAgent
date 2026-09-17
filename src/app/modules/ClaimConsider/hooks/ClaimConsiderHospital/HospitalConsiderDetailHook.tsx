@@ -9,10 +9,12 @@ import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
     useGetAllHospital,
     useGetChiefComplaint,
+    useGetCancelReason,
     useGetDecisionReason,
     useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
+    useGetRejectReason,
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
@@ -579,6 +581,9 @@ const useHospitalConsiderDetailHook = () => {
         undefined,
         formik.values.considerResult
     );
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason();
 
     /**
      * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
@@ -631,6 +636,10 @@ const useHospitalConsiderDetailHook = () => {
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         continuousClaimRows,
         continuousClaimRowsLoading,
         continuousClaimOpen,

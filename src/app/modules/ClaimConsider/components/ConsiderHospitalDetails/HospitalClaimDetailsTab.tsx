@@ -90,6 +90,10 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         continuousClaimRows,
         continuousClaimOpen,
         setContinuousClaimOpen,
@@ -571,6 +575,10 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         aplicationCode={customerDetail?.policyCode ?? ""}
                                         decisionReason={decisionReason}
                                         decisionReasonLoading={decisionReasonLoading}
+                                        rejectReason={rejectReason}
+                                        rejectReasonLoading={rejectReasonLoading}
+                                        cancelReason={cancelReason}
+                                        cancelReasonLoading={cancelReasonLoading}
                                         // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 6) — CR Ver2
                                         hiddenDecisionIds={[3, 6]}
                                         headingText="แจ้งผลการพิจารณาโรงพยาบาล"
