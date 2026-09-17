@@ -37,6 +37,7 @@ export type IncreaseLimitTransferDataTableHookProps = {
     filter: ClaimSearchFilterValues | undefined;
     hasSearched: boolean;
     searchKey: number;
+    onEdit?: (row: IncreaseTransferMonitorRow) => void;
 };
 
 const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
@@ -69,6 +70,7 @@ const useClaimCpgTransferDataTableHook = ({
     filter,
     hasSearched,
     searchKey,
+    onEdit,
 }: IncreaseLimitTransferDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
@@ -105,8 +107,9 @@ const useClaimCpgTransferDataTableHook = ({
     };
 
     const handleEditRow = (row: IncreaseTransferMonitorRow) => {
-        // TODO: open edit/inspect dialog
-        console.log("edit", row);
+        if (onEdit) {
+            onEdit(row);
+        }
     };
 
     const columns: MUIDataTableColumn[] = [

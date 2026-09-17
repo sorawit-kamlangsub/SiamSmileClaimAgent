@@ -15,8 +15,18 @@ search-from dropdowns populated, but real backend not ready; no store. Route:
 ## components/
 
 `ClaimDetailsDataTable.tsx` — `ClaimFundStandardDataTable` wrapper (ไม่ใช่ `StandardDataTable`
-อีกต่อไป); รับ `filter`/`hasSearched`/`searchKey` ส่งต่อให้ hook, loading/error/noMatch แสดง
-เฉพาะหลัง `hasSearched` (แบบ RefundApprove).
+อีกต่อไป); รับ `filter`/`hasSearched`/`searchKey` ส่งต่อให้ hook + `onEdit` callback
+ส่งให้ hook (FactCheckIcon → `onEdit(row)` → page เปิด dialog). loading/error/noMatch
+แสดงเฉพาะหลัง `hasSearched` (แบบ RefundApprove).
+
+`IncreaseLimitDetailDialog.tsx` — dialog ตรวจสอบขยายวงเงิน (mockup "ขยายวงเงิน" modal);
+`maxWidth="xs"` compact layout ตาม mockup, รับ `open`/`row`/`onClose` props
+(mirror `ApproveRefundDialog`). ดึงข้อมูลผ่าน `useGetIncreaseTransferLimitDetail(row.caseId)`.
+แสดง: เลข CL, ชื่อผู้เอาประกัน, จำนวนเงิน (฿), วงเงินปัจจุบัน/ที่ใช้ไป (stat boxes),
+จำนวนคงเหลือ (ภายในวัน) red flat, วงเงินที่ขอเพิ่ม (readonly), สาเหตุการปฏิเสธ select
+(จาก `rejectReasons`), วงเงินคงเหลือ (ครั้งใหม่) green flat. ปุ่ม ปฏิเสธ (disabled จนกว่า
+เลือกสาเหตุ) + อนุมัติ → `swalConfirmAction` → close. ⚠ ยังไม่มี status-update endpoint;
+ปุ่มทำ confirm → close ไม่ได้บันทึก backend จริง.
 
 ## `_common/` (module-local, non-standard folder name)
 
@@ -28,15 +38,18 @@ branch/date ยังไม่ถูกส่งไป API. **Reused cross-modul
 
 `masterAPI.ts` — `useGetBranch`, `useGetPaymentStatus`, `useGetPaymentIncreaseStatus`.
 
-`increaseLimitTransferAPI.ts` — module API file: `useGetIncreaseTransferLimitMonitors`.
+`increaseLimitTransferAPI.ts` — module API file: `useGetIncreaseTransferLimitMonitors` +
+`useGetIncreaseTransferLimitDetail` (detail GET, mock). Response types exported:
+`IncreaseTransferLimitDetailDto`, `IncreaseTransferLimitDetailRejectReasonDto`,
+`IncreaseTransferLimitDetailResponse`.
 
 ## hooks/
 
 `ClaimDetailsDataTableHook.tsx` — calls `useGetIncreaseTransferLimitMonitors` (`enabled:
 hasSearched` + `searchKey` bust, ไม่มี mock ภายในไฟล์); columns: **เลขที่ CL (link ดูรายละเอียด)**,
 เลขที่ CC, วันที่สร้างเคลม, สาขา, จำนวนเงิน, เลขที่บัญชี, ประเภทโอนเงิน, สถานะ (`StatusPill`
-สีตาม `limitStatusId`), สาเหตุ, ดำเนินการ (view/edit stubs `console.log`). **คอลัมน์ เลขที่ CPG
-ถูกเอาออกแล้ว.**
+สีตาม `limitStatusId`), สาเหตุ, ดำเนินการ (view stub + edit = `onEdit(row)` → dialog).
+**คอลัมน์ เลขที่ CPG ถูกเอาออกแล้ว.** FactCheckIcon แสดงเฉพาะ `limitStatusId === 2`.
 `ClaimSearchFilterFormHook.tsx` — **orphaned/unused**, nothing imports it; the actual form has
 its own independent inline `useFormik` instead.
 
@@ -49,12 +62,18 @@ its own independent inline `useFormik` instead.
   `.../api/ClaimFund`), monitor table. ⚠ **Mock path** — `VITE_APIGW_CLAIM_FUND_API_URL` in
   `.env` points at a Postman mock (no real backend yet); treat its response as placeholder,
   not a binding contract until the real endpoint exists.
+- `useGetIncreaseTransferLimitDetail` (`increaseLimitTransferAPI.ts`) — GET
+  `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/IncreaseTransferLimitDetail` (base
+  `.../api/ClaimFund`), detail dialog. ⚠ **Mock path** เดียวกับข้างบน; fields ตรงกับ
+  `IncreaseTransferLimitDetailDto` (caseId, claimNo, insuredName, amount, วงเงินต่างๆ,
+  rejectReasons).
 - `useGetPaymentIncreaseStatus` (`_common/masterAPI.ts`) — GET
   `{APIGW_CLAIM_FUND_API_URL}/Masters/GetPaymentIncreaseStatuses` (base `.../api/ClaimFund`),
   feeds the status dropdown. ⚠ **Mock path** เดียวกับข้างบน.
 
 ## Gotchas
 
-ข้อมูลทั้งหมดมาจาก mock endpoint (monitor + status) — ยังไม่มี backend จริง, view/edit
-actions ยังเป็น stub (`console.log` + `// TODO`), `page/` (singular) folder naming, dead
-`ClaimSearchFilterFormHook.tsx`.
+ข้อมูลทั้งหมดมาจาก mock endpoint (monitor + status + detail) — ยังไม่มี backend จริง,
+view action ยังเป็น stub (`console.log` + `// TODO`), dialog ปุ่ม ปฏิเสธ/อนุมัติ ยังไม่ส่ง
+backend (ไม่มี status-update endpoint) แค่ confirm → close, `page/` (singular) folder naming,
+dead `ClaimSearchFilterFormHook.tsx`.

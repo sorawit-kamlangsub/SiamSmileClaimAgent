@@ -2,11 +2,14 @@ import { Box, Grid } from "@mui/material";
 import { useState } from "react";
 import ClaimSearchFilterForm, { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 import ClaimDetailsDataTable from "../components/ClaimDetailsDataTable";
+import IncreaseLimitDetailDialog from "../components/IncreaseLimitDetailDialog";
+import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 
 const IncreaseLimitTransfer = () => {
     const [filter, setFilter] = useState<ClaimSearchFilterValues | undefined>(undefined);
     const [hasSearched, setHasSearched] = useState(false);
     const [searchKey, setSearchKey] = useState(0);
+    const [detailRow, setDetailRow] = useState<IncreaseTransferMonitorRow | null>(null);
 
     const handleSearch = (values: ClaimSearchFilterValues) => {
         setFilter(values);
@@ -29,10 +32,16 @@ const IncreaseLimitTransfer = () => {
                             backgroundColor: "#FFFFFF",
                         }}
                     >
-                        <ClaimDetailsDataTable filter={filter} hasSearched={hasSearched} searchKey={searchKey} />
+                        <ClaimDetailsDataTable
+                            filter={filter}
+                            hasSearched={hasSearched}
+                            searchKey={searchKey}
+                            onEdit={setDetailRow}
+                        />
                     </Box>
                 </Grid>
             </Grid>
+            <IncreaseLimitDetailDialog open={detailRow !== null} row={detailRow} onClose={() => setDetailRow(null)} />
         </>
     );
 };

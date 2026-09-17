@@ -36,9 +36,12 @@ these docs don't repeat that, only add the concrete inventory CLAUDE.md doesn't 
 Full detail in each `modules/*.md`.
 
 > ⚠ **Mock API note** — ใช้ base `VITE_APIGW_CLAIM_FUND_API_URL` (= Postman mock ใน `.env`):
-> เส้นที่เพิ่มไปเป็น **mock ทั้งคู่** — ยังไม่มี backend จริง เก็บไว้เป็น placeholder จนกว่าเส้นจริงจะมา:
+> เส้นที่เพิ่มไปเป็น **mock ทั้งหมด** — ยังไม่มี backend จริง เก็บไว้เป็น placeholder จนกว่าเส้นจริงจะมา:
 > 1. **`/api/ClaimFund/Masters/GetPaymentIncreaseStatuses`** (`useGetPaymentIncreaseStatus`
 >    → `{base}/Masters/GetPaymentIncreaseStatuses`, status dropdown หน้า ขยายวงเงิน)
 > 2. **`/api/ClaimFund/IncreaseTransfer/IncreaseTransferLimitMonitors`**
 >    (`useGetIncreaseTransferLimitMonitors` → `{base}/IncreaseTransfer/IncreaseTransferLimitMonitors`,
 >    monitor table หน้า ขยายวงเงิน)
+> 3. **`/api/ClaimFund/IncreaseTransfer/IncreaseTransferLimitDetail`**
+>    (`useGetIncreaseTransferLimitDetail` → `{base}/IncreaseTransfer/IncreaseTransferLimitDetail`,
+>    dialog ขยายวงเงิน หน้า ขยายวงเงิน)
