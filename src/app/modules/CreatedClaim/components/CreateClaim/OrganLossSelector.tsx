@@ -268,7 +268,7 @@ export interface OrganLossSelectorProps {
     nonCoveredReason?: GetNonCoveredReasonDtoResponse[];
     isNonCoveredReasonLoading?: boolean;
     priorClaimWarning?: string;
-    customerId: number | undefined;
+    customerId: string | undefined;
     maxTransferAmount?: number;
 }
 
@@ -867,7 +867,7 @@ const SimpleModalBody: React.FC<{
     modal: ModalState;
     patchModal: (patch: Partial<ModalState>) => void;
     modalTotal: number;
-    customerId: number | undefined;
+    customerId: string | undefined;
     onRuleChange: (rule: OrganRuleResult | null) => void;
 }> = ({ modal, patchModal, customerId, onRuleChange }) => {
     const isCombo = isComboOrganKey(modal.key);
@@ -1103,7 +1103,7 @@ const FingerModalBody: React.FC<{
         fingerKey: FingerKey,
         patch: Partial<{ selected: boolean; joints: number; amount: string }>
     ) => void;
-    customerId: number | undefined;
+    customerId: string | undefined;
     onRuleChange: (side: "left" | "right", fingerKey: FingerKey, rule: OrganRuleResult | null) => void;
 }> = ({ modal, setFingerField, customerId, onRuleChange }) => {
     // ── โหลดตาราง bodyPart ของกลุ่มนิ้วนี้ทั้งหมด (ครั้งเดียว ใช้ร่วมกันทุกช่อง) ──
@@ -1163,7 +1163,7 @@ const FingerCell: React.FC<{
     ) => void;
     findFingerBodyPart: (subPartId: number, sideId: number, jointCount: number) => FingerBodyPartOption | undefined;
     isFingerOptionsLoading: boolean;
-    customerId: number | undefined;
+    customerId: string | undefined;
     onRuleChange: (side: "left" | "right", fingerKey: FingerKey, rule: OrganRuleResult | null) => void;
 }> = ({
     modal,

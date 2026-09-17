@@ -55,7 +55,7 @@ selectors in `RecordClaimData`), `useGetSimBCategory`, `useGetSimB`, `useGetChie
 `useGetDisabilityLossPart`, `useGetBodyPartByDisabilityLossPart`, `useGetBranch`,
 `useGetPaymentStatus`, `useGetDeductionSource`, `useGetEmployeeClaimPaymentLimit`,
 `useGetDecision`, `useGetDocumentReviewStatus` (feeds the ผ่าน/ไม่ผ่าน/รอเอกสารเพิ่มเติม toggle
-in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetInsuranceCompany`.
+in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetCancelReason`, `useGetRejectReason`, `useGetInsuranceCompany`.
 
 ## `docstorageApi.ts` — DocStorage API (`DOCSTORAGE_API_URL`)
 

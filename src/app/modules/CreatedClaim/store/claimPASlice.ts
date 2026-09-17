@@ -99,7 +99,7 @@ export interface ClaimInsuredItem {
     idCard: string;
     claimAmount: number;
     applicationId?: string;
-    customerId?: number;
+    customerId?: string;
     productId?: number;
     tempClaimId: string;
     tempCaseId: string;

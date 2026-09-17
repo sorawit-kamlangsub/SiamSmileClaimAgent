@@ -9,10 +9,12 @@ import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
     useGetAllHospital,
     useGetChiefComplaint,
+    useGetCancelReason,
     useGetDecisionReason,
     useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
+    useGetRejectReason,
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
@@ -252,7 +254,7 @@ const useHospitalConsiderDetailHook = () => {
     const detail = detailData?.data;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? undefined
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 
@@ -506,8 +508,9 @@ const useHospitalConsiderDetailHook = () => {
         );
         // admitIndication : BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16, admissionIndication) — ยังแก้ไขต่อได้ตามเดิม
         // ไม่เหมือน ipdDays/icuDays เพราะช่องนี้มี input จริงใน TreatmentInfoSection อยู่แล้ว
-        // additionalDetail : BE ยังไม่ส่ง default มา ปล่อยว่างให้กรอกมือ
         formik.setFieldValue("admitIndication", detail.admissionIndication ?? "", false);
+        // additionalDetail : map จาก reservationRemark (BE ส่งมาใหม่ 2026-09-16) — ยังแก้ไขต่อได้ตามเดิม
+        formik.setFieldValue("additionalDetail", detail.reservationRemark ?? "", false);
 
         // ---- แพทย์เจ้าของไข้ ----
         formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);
@@ -578,10 +581,19 @@ const useHospitalConsiderDetailHook = () => {
         prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
     }, [formik.values.coverageTypeId]);
 
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
+    // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
+    const decisionReasonDecisionId =
+        formik.values.considerResult === 5 || formik.values.considerResult === 6
+            ? undefined
+            : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
-        formik.values.considerResult
+        decisionReasonDecisionId
     );
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason();
 
     /**
      * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
@@ -634,6 +646,10 @@ const useHospitalConsiderDetailHook = () => {
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         continuousClaimRows,
         continuousClaimRowsLoading,
         continuousClaimOpen,

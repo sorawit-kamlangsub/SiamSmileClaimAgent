@@ -18,7 +18,7 @@ const CheckEligibleDetailPage: React.FC = () => {
 
     const decodedCusId = cusId ? atob(cusId) : undefined;
 
-    const customerId = decodedCusId ? parseInt(decodedCusId) : 0;
+    const customerId = decodedCusId || undefined;
 
     const { CheckeLigibleDetails, isSearchCheckeLigibleDetails } = useSelector(checkeligibleSelector);
 

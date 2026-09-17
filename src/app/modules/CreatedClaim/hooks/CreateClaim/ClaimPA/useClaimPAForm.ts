@@ -309,7 +309,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
             const claimEntry: LocalClaimEntry = {
                 tempClaimId,
-                applicationId: applicationId ?? "",
+                policyCode: applicationId ?? "",
                 policyNo: undefined,
                 certificateNo: undefined,
                 customerId,

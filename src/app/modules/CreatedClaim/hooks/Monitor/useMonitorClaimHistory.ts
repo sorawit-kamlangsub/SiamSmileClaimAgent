@@ -32,7 +32,7 @@ export const useMonitorClaimHistory = () => {
         }
     };
 
-    const handleNewClaim = (productTypeId: number, customerId?: number) => {
+    const handleNewClaim = (productTypeId: number, customerId?: string) => {
         const continuous = false;
         const oldClaimId = "0";
 

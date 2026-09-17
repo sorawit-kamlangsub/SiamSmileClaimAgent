@@ -30,10 +30,10 @@ export const useMonitorTable = () => {
     const selectedId =
         selectedRowIndex !== undefined && data?.data?.[selectedRowIndex]?.id != undefined
             ? data.data[selectedRowIndex].id
-            : 0;
+            : undefined;
 
     const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(selectedId);
-    const customerDetailLoading = selectedId! > 0 && claimInfoLoading;
+    const customerDetailLoading = !!selectedId && claimInfoLoading;
     useEffect(() => {
         if (!search.searchDetail) return;
 

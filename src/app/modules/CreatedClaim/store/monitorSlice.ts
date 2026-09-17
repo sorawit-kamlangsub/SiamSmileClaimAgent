@@ -44,7 +44,7 @@ export interface SelectedPolicyInfo {
     provinceName?: string;
     address?: string;
     productTypeId?: number;
-    customerId?: number;
+    customerId?: string;
     mobilePhoneNumber?: string;
     appStatus?: string;
     appStatusId?: number;
