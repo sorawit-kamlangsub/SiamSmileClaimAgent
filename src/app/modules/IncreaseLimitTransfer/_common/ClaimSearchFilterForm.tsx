@@ -110,7 +110,7 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                     <FormikTextField
                         name="searchText"
                         formik={formik}
-                        label="คำค้นหาเลขที่ CPG/CL"
+                        label="คำค้นหาเลขที่ CL/CC"
                         InputProps={{
                             startAdornment: (
                                 <InputAdornment position="start">
