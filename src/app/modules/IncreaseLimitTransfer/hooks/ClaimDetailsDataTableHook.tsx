@@ -220,9 +220,11 @@ const useClaimCpgTransferDataTableHook = ({
                             <IconButton size="small" onClick={() => handleViewRow(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                            <IconButton size="small" onClick={() => handleEditRow(row)}>
-                                <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
-                            </IconButton>
+                            {row?.limitStatusId === 2 && (
+                                <IconButton size="small" onClick={() => handleEditRow(row)}>
+                                    <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
+                                </IconButton>
+                            )}
                         </Box>
                     );
                 },
