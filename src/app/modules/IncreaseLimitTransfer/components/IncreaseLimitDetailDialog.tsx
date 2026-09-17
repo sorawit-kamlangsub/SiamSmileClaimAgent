@@ -307,9 +307,10 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         valueFieldName="code"
                                         displayFieldName="name"
                                         fullWidth
-                                        firstItemText="สาเหตุการปฏิเสธ"
+                                        firstItemText="กรุณาเลือกสาเหตุการปฏิเสธ"
                                         disableFirstItem
                                         required
+                                        disabled={isDetailLoading || !caseId}
                                     />
                                 </Grid>
                             </Grid>
