@@ -453,21 +453,23 @@ export const useGetDocumentReviewStatus = (documentReviewStatusId?: number | und
     );
 };
 
-export const useGetCancelReason = (cancelReasonId?: number | undefined) => {
+export const useGetCancelReason = (cancelReasonId?: number | undefined, enabled = true) => {
     return useQuery(
         [getCancelReasonQueryKey, cancelReasonId],
         () => coreClaimMastersClient.getCancelReason(cancelReasonId),
         {
+            enabled,
             refetchOnWindowFocus: false,
         }
     );
 };
 
-export const useGetRejectReason = (rejectReasonId?: number | undefined) => {
+export const useGetRejectReason = (rejectReasonId?: number | undefined, enabled = true) => {
     return useQuery(
         [getRejectReasonQueryKey, rejectReasonId],
         () => coreClaimMastersClient.getRejectReason(rejectReasonId),
         {
+            enabled,
             refetchOnWindowFocus: false,
         }
     );

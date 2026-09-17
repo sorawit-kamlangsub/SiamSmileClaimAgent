@@ -590,8 +590,14 @@ const useHospitalConsiderDetailHook = () => {
         decisionReasonDecisionId
     );
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
-    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
-    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason();
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.REJECTED
+    );
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.CANCELLED
+    );
 
     /**
      * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
