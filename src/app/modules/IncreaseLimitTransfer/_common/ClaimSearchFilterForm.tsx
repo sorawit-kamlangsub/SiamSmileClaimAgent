@@ -10,6 +10,11 @@ import dayjs, { Dayjs } from "dayjs";
 
 const currentDate = dayjs();
 
+const monitorSearchTypeData = [
+    { id: 1, name: "เลขที่ CL" },
+    { id: 2, name: "เลขที่ CC" },
+];
+
 export interface ClaimSearchFilterValues {
     searchBy: number | undefined;
     searchText: string;
@@ -99,9 +104,9 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                         name="searchBy"
                         formik={formik}
                         label="ค้นหาจาก"
-                        data={[]}
-                        valueFieldName=""
-                        displayFieldName=""
+                        data={monitorSearchTypeData}
+                        valueFieldName="id"
+                        displayFieldName="name"
                         fullWidth
                     />
                 </Grid>
