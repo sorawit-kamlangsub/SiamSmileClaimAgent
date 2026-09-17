@@ -18,7 +18,7 @@ import useBillingProductVariant from "../hooks/BillingHospitalReview/BillingProd
 import { useGetHospitalBillingDetail } from "../../../api/hospitalBillingApi";
 import { billingStatusLabel } from "../store/billingStatusHelpers";
 import { PENDING_BE } from "../store/billingPendingFields";
-import { calculatePolicyAgeText, formatDateString } from "../../../functionHelpers";
+import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
 
 type BillingHospitalReviewPageProps = {
     /** โหมดดูอย่างเดียว : ใช้ตอนเปิดจากปุ่ม "ดูรายละเอียด" ในหน้า Monitor */
@@ -35,7 +35,7 @@ type BillingHospitalReviewPageProps = {
 const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPageProps) => {
     const [tabValue, setTabValue] = useState("1");
     const { id } = useParams();
-    const billingDetailId = id ? atob(id) : "";
+    const billingDetailId = safeAtob(id) ?? "";
 
     const { data: detailData, isLoading } = useGetHospitalBillingDetail(billingDetailId);
     const detail = detailData?.data;

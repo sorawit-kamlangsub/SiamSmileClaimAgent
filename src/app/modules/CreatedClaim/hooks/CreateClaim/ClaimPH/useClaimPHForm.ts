@@ -20,7 +20,7 @@ import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelect
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber, FingerKey } from "../organLoss.types";
-import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { CauseOfIncident, CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 import { useParams } from "react-router-dom";
 interface Options {
@@ -31,7 +31,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { form, oldClaim, insured, documentDetailById, organLossItems } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();

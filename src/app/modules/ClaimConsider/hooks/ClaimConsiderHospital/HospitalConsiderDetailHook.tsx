@@ -3,7 +3,7 @@ import { useParams, useSearchParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
 import { useAppDispatch } from "../../../../../redux";
-import { CoverageType, MedicalType } from "../../../../functionHelpers";
+import { CoverageType, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
@@ -20,6 +20,7 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/comp
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import { parseTimeSpan } from "../../store/draftRevisionMappers";
 import {
     CLAIM_LIST_TYPE_CONFIG,
@@ -132,9 +133,6 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
 const CLAIM_SOURCE_CONSIDER = 2;
 
-/** decisionId ของผลการพิจารณา "รอแก้ไข" (ต้องกรอกรายละเอียดการรอแก้ไข) */
-const DECISION_REVISION = 4;
-
 /** ลำดับช่องที่ใช้เลื่อนหน้าจอไปยัง error แรกเมื่อกด "ถัดไป" / "ยืนยันบันทึกผลพิจารณา" */
 const FIELD_ERROR_ORDER = [
     "incidentTypeId",
@@ -235,7 +233,7 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     // ── ผลการพิจารณา : ตรวจเมื่อผู้ใช้เลือกผลการพิจารณาแล้ว ──
     if (values.considerResult) {
         if (!values.decisionReasonId) errors.decisionReasonId = sel;
-        if (values.considerResult === DECISION_REVISION && !values.decisionReasonDetail?.trim()) {
+        if (values.considerResult === DECISION_ID.REVISION && !values.decisionReasonDetail?.trim()) {
             errors.decisionReasonDetail = req;
         }
     }
@@ -246,9 +244,9 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 const useHospitalConsiderDetailHook = () => {
     const dispatch = useAppDispatch();
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : undefined;
+    const claimId = safeAtob(id);
     // route hospital/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
+    const caseId = safeAtob(caseIdEncoded);
     /** เอกลักษณ์ของเคสที่กำลังเปิดอยู่ — ใช้ตรวจว่าเปลี่ยนเคสหรือไม่ (route ใช้ element เดิมเสมอ ไม่ remount) */
     const caseKey = claimId && caseId ? `${claimId}:${caseId}` : undefined;
     const [searchParams] = useSearchParams();
@@ -594,7 +592,7 @@ const useHospitalConsiderDetailHook = () => {
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
     // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
     const decisionReasonDecisionId =
-        formik.values.considerResult === 5 || formik.values.considerResult === 6
+        formik.values.considerResult === DECISION_ID.REJECTED || formik.values.considerResult === DECISION_ID.CANCELLED
             ? undefined
             : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
@@ -602,8 +600,14 @@ const useHospitalConsiderDetailHook = () => {
         decisionReasonDecisionId
     );
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
-    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
-    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason();
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.REJECTED
+    );
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.CANCELLED
+    );
 
     /**
      * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข

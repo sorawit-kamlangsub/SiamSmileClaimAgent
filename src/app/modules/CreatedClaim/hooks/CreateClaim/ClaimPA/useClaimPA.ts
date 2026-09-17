@@ -15,14 +15,15 @@ import {
     setPendingInsured,
     setSchool,
 } from "../../../store/claimPASlice";
+import { safeAtob } from "../../../../../functionHelpers";
 
 export const useClaimPA = () => {
     const dispatch = useAppDispatch();
     const { appId, refId, oldClaimId, isContinuous } = useParams();
     const { pendingInsured } = useAppSelector(claimPASelector);
 
-    const customerId = refId ? atob(refId) : undefined;
-    const applicationId = appId ? atob(appId) : undefined;
+    const customerId = safeAtob(refId);
+    const applicationId = safeAtob(appId);
 
     const activeCustomerId = pendingInsured?.customerId ?? customerId;
     const activeApplicationId = pendingInsured?.policyCode ?? applicationId;
