@@ -243,10 +243,10 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             decisionDate: considerResult !== undefined ? dayjs() : undefined,
             decisionReasonId: toDecisionReasonId(considerResult, decisionReasonId),
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: considerResult === 9 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: considerResult === 9 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: considerResult === 9 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: considerResult === 9 ? asTimeSpan(dischargeTime) : undefined,
+            approvedAdmissionDate: considerResult === DECISION_ID.APPROVED ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: considerResult === DECISION_ID.APPROVED ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: considerResult === DECISION_ID.APPROVED ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: considerResult === DECISION_ID.APPROVED ? asTimeSpan(dischargeTime) : undefined,
             approvedIPDDayCount: ipdDays,
             approvedICUDayCount: icuDays,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
@@ -455,18 +455,19 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             decisionDate: dayjs(),
             decisionReasonId: toDecisionReasonId(decisionId, decisionReasonId),
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: decisionId === 9 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: decisionId === 9 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: decisionId === 9 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : 0,
-            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : 0,
+            approvedAdmissionDate: decisionId === DECISION_ID.APPROVED ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: decisionId === DECISION_ID.APPROVED ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: decisionId === DECISION_ID.APPROVED ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: decisionId === DECISION_ID.APPROVED ? asTimeSpan(dischargeTime) : undefined,
+            approvedIPDDayCount: decisionId === DECISION_ID.APPROVED ? formik.values.ipdDays : 0,
+            approvedICUDayCount: decisionId === DECISION_ID.APPROVED ? formik.values.icuDays : 0,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
-            compensateAmount: decisionId === 9 ? calculateResult?.compensateInclude : undefined, //ไม่มี
-            approvedMedicalAmount: decisionId === 9 ? calculateResult?.medicalPay : undefined, //ต้องอนุมัติ
-            approvedCompensateAmount: decisionId === 9 ? calculateResult?.compensateRemain : undefined, //ต้องอนุมัติ
-            patientPayAmount: decisionId === 9 ? calculateResult?.medicalUnpay : undefined, //เคลมโรงพยาบาลถึงจะมี
+            compensateAmount: decisionId === DECISION_ID.APPROVED ? calculateResult?.compensateInclude : undefined, //ไม่มี
+            approvedMedicalAmount: decisionId === DECISION_ID.APPROVED ? calculateResult?.medicalPay : undefined, //ต้องอนุมัติ
+            approvedCompensateAmount:
+                decisionId === DECISION_ID.APPROVED ? calculateResult?.compensateRemain : undefined, //ต้องอนุมัติ
+            patientPayAmount: decisionId === DECISION_ID.APPROVED ? calculateResult?.medicalUnpay : undefined, //เคลมโรงพยาบาลถึงจะมี
             isExgratia: false, //ไม่มี
             exgratiaAmount: 0, //ไม่มี
             deductibleAmount: 0, //ไม่มี
@@ -602,7 +603,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDecision(overrideDecisionId),
     });
 
-    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง 9 (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
+    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง DECISION_ID.APPROVED (9) (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
         const payload = mapClaimDecisionPayload(overrideDecisionId);
         await saveClaimDecision.mutateAsync(payload);
@@ -658,7 +659,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     });
 
     const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
-        claimDecision: mapClaimDecisionPayload(9),
+        claimDecision: mapClaimDecisionPayload(DECISION_ID.APPROVED),
         calculateCaseCode: calculateResult?.calculateCaseCode,
         isCombinedWithMedicalAll,
         // DTO ประกาศบัญชีปลายทางเป็น required แต่เคลมลูกค้าไม่ต้องส่ง

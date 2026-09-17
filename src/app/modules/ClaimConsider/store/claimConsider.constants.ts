@@ -3,6 +3,8 @@
  * ใช้ค่าคงที่นี้แทนการเขียนเลขตรงๆ กระจายหลายไฟล์ (ConsiderSection / hook ของหน้า / payload / draft mapper)
  */
 export const DECISION_ID = {
+    /** อนุมัติ — ปุ่ม "อนุมัติ" ส่งเป็น overrideDecisionId */
+    APPROVED: 9,
     /** รอเอกสาร */
     PENDING_DOCUMENT: 3,
     /** รอแก้ไข (เคลมโรงพยาบาลแสดงเป็น "แจ้งแก้ไข") */
