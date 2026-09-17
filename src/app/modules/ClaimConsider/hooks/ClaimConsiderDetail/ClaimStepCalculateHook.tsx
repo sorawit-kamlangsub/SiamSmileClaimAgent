@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FormikErrors, FormikProps, FormikTouched } from "formik";
 import {
     CalculateCaseClaim,
@@ -58,6 +58,8 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     const [isCalculating, setIsCalculating] = useState(false);
     // กันกดปุ่ม "ถัดไป" ซ้ำระหว่างรอ validate/calculate อยู่ (ครอบทั้ง handleNext ไม่ใช่แค่ตอน calculate)
     const [isAdvancing, setIsAdvancing] = useState(false);
+    // state อัปเดตหลัง render ถัดไป คลิกซ้ำเร็วๆ ในเฟรมเดียวกันจะยังอ่านได้ false — ใช้ ref เป็นตัวกันจริง ส่วน state ไว้ disable ปุ่ม
+    const isAdvancingRef = useRef(false);
 
     const onErrorCallback = (error: string) => swalError("Error", error);
     const calculateCaseClaim = useCalculateCaseClaim(() => {}, onErrorCallback);
@@ -165,7 +167,8 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     };
 
     const handleNext = async () => {
-        if (isAdvancing) return;
+        if (isAdvancingRef.current) return;
+        isAdvancingRef.current = true;
         setIsAdvancing(true);
         try {
             if (activeStep === 0) {
@@ -191,6 +194,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
             setFurthestStep((prev) => Math.max(prev, next));
             scrollToStepToggleBar();
         } finally {
+            isAdvancingRef.current = false;
             setIsAdvancing(false);
         }
     };
