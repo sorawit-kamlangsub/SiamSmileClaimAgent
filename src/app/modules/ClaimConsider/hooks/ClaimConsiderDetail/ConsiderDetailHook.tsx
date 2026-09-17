@@ -25,7 +25,7 @@ import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs, { Dayjs } from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
-import { CoverageType, formatDateString, safeAtob } from "../../../../functionHelpers";
+import { CoverageType, formatDateString, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import { ContinuousClaimRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -178,6 +178,12 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
             } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+            } else if (
+                values.medicalTypeId === MedicalType.OPD &&
+                values.admissionDate &&
+                !dayjs(values.dischargeDate).isSame(values.admissionDate, "day")
+            ) {
+                errors.dischargeDate = "OPD วันที่ออกต้องเป็นวันเดียวกับวันที่เข้า";
             }
             if (!values.dischargeTime) errors.dischargeTime = req;
 

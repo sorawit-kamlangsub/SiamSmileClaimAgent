@@ -2732,7 +2732,7 @@ export class CoreClaimClient {
      * @param causeOfIncidentId (optional)
      * @param formatTypeId (optional)
      * @param cusTomerTypeCode (optional)
-     * @param customerCode (optional)
+     * @param customerDetailId (optional)
      * @param claimNo (optional)
      * @return Success
      */
@@ -2746,7 +2746,7 @@ export class CoreClaimClient {
         causeOfIncidentId?: number | undefined,
         formatTypeId?: number | undefined,
         cusTomerTypeCode?: string | undefined,
-        customerCode?: string | undefined,
+        customerDetailId?: string | undefined,
         claimNo?: string | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<GetCustomerBenefitDetailHalfDtoResponseListServiceResponse> {
@@ -2777,8 +2777,9 @@ export class CoreClaimClient {
         if (cusTomerTypeCode === null) throw new Error("The parameter 'cusTomerTypeCode' cannot be null.");
         else if (cusTomerTypeCode !== undefined)
             url_ += "CusTomerTypeCode=" + encodeURIComponent("" + cusTomerTypeCode) + "&";
-        if (customerCode === null) throw new Error("The parameter 'customerCode' cannot be null.");
-        else if (customerCode !== undefined) url_ += "CustomerCode=" + encodeURIComponent("" + customerCode) + "&";
+        if (customerDetailId === null) throw new Error("The parameter 'customerDetailId' cannot be null.");
+        else if (customerDetailId !== undefined)
+            url_ += "CustomerDetailId=" + encodeURIComponent("" + customerDetailId) + "&";
         if (claimNo === null) throw new Error("The parameter 'claimNo' cannot be null.");
         else if (claimNo !== undefined) url_ += "claimNo=" + encodeURIComponent("" + claimNo) + "&";
         url_ = url_.replace(/[?&]$/, "");
@@ -8135,7 +8136,7 @@ export interface BillingHistoryDtoServiceResponse {
 
 export interface BillingInsuredDto {
     name?: string | undefined;
-    applicationId?: string | undefined;
+    policyCode?: string | undefined;
     studentCard?: string | undefined;
     plan?: string | undefined;
     coverageStart?: dayjs.Dayjs | undefined;
@@ -8859,7 +8860,7 @@ export interface ClaimV2Request {
     policyCode: string;
     policyNo?: string | undefined;
     certificateNo?: string | undefined;
-    customerId?: string;
+    customerDetailId?: string;
     customerName: string;
     incidentTypeId?: number | undefined;
     incidentDate?: dayjs.Dayjs;
@@ -8932,7 +8933,6 @@ export interface CreateCoreClaimV2DtoRequest {
 
 export interface CustomerCheckEligibleCustomerDto {
     customerDetailId?: string;
-    id?: string;
     cardTypeId?: number | undefined;
     cardDetail?: string | undefined;
     customerName?: string | undefined;
@@ -9868,7 +9868,6 @@ export interface GetCustomerSearchByPolicyCodeDtoResponseListServiceResponse {
 
 export interface GetCustomerSearchDtoResponse {
     customerDetailId?: string;
-    id?: string;
     cardTypeId?: number | undefined;
     cardDetail?: string | undefined;
     customerName?: string | undefined;
@@ -10381,17 +10380,7 @@ export interface GetPolicyBenefitDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface GetPolicyBenefitSheredDtoResponse {
-    policyCode?: string | undefined;
-    benefitId?: number;
-    benefitCode?: string | undefined;
-    productId?: number;
-    benefitName?: string | undefined;
-    maxPrice?: number | undefined;
-    customerTypeCode?: string | undefined;
-    shortBenefit?: string | undefined;
-    fullBenefitDisplay?: string | undefined;
-}
+export interface GetPolicyBenefitSheredDtoResponse {}
 
 export interface GetPolicyBenefitSheredDtoResponseListServiceResponse {
     data?: GetPolicyBenefitSheredDtoResponse[] | undefined;

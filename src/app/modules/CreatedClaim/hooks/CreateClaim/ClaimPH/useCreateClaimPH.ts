@@ -83,7 +83,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                     policyNo: insured?.policyNo ?? undefined,
                     certificateNo: insured?.certificateNo ?? undefined,
 
-                    customerId: insured?.customerId ?? "",
+                    customerDetailId: insured?.customerId ?? "",
                     customerName: insured?.customerName ?? "-",
 
                     incidentTypeId: form.incidentTypeId,

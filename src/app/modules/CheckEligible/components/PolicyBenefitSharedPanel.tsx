@@ -15,8 +15,7 @@ import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import ThunderstormIcon from "@mui/icons-material/Thunderstorm";
 import CustomBox from "../../_common/components/CustomComponent/CustomBox";
 import LinearLoading from "../../_common/components/CustomComponent/LinearLoading";
-import { useGetPolicyBenefitShered } from "../../../api/coreClaimApi";
-import { GetPolicyBenefitSheredDtoResponse } from "../../../api/coreClaimApi.client";
+import { PolicyBenefitSheredItem, useGetPolicyBenefitShered } from "../../../api/coreClaimApi";
 
 type Props = {
     applicationId?: string;
@@ -46,7 +45,7 @@ const getBenefitIcon = (text: string): SvgIconComponent => {
 const PolicyBenefitSharedPanel: React.FC<Props> = ({ applicationId, customerTypeCode }) => {
     const { data, isLoading } = useGetPolicyBenefitShered(applicationId, customerTypeCode);
 
-    const items: GetPolicyBenefitSheredDtoResponse[] = data?.data ?? [];
+    const items: PolicyBenefitSheredItem[] = data?.data ?? [];
 
     if (!isLoading && items.length === 0) return null;
 
@@ -140,4 +139,3 @@ const PolicyBenefitSharedPanel: React.FC<Props> = ({ applicationId, customerType
 };
 
 export default PolicyBenefitSharedPanel;
-

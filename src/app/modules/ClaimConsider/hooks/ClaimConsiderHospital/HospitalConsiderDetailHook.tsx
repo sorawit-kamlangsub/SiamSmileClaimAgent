@@ -187,7 +187,17 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     if (!values.documentCompleteDate) errors.documentCompleteDate = req;
     if (!values.incidentDate) errors.incidentDate = req;
     if (!values.admissionDate) errors.admissionDate = req;
-    if (!values.dischargeDate) errors.dischargeDate = req;
+    if (!values.dischargeDate) {
+        errors.dischargeDate = req;
+    } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
+        errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+    } else if (
+        values.medicalTypeId === MedicalType.OPD &&
+        values.admissionDate &&
+        !dayjs(values.dischargeDate).isSame(values.admissionDate, "day")
+    ) {
+        errors.dischargeDate = "OPD จำนวนวันนอนต้องเป็น 0 วัน";
+    }
     if (!values.hospitalId) errors.hospitalId = sel;
     if (!values.chiefComplaintId) errors.chiefComplaintId = sel;
 

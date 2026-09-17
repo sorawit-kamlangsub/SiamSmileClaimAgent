@@ -371,7 +371,7 @@ export const useCalculateCaseDisability = (
 
 export const useGetCustomerBenefitDetailHalf = (
     policyCode?: string | undefined,
-    incidentDate?: Dayjs | undefined,
+    incidentDate?: dayjs.Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
@@ -379,7 +379,7 @@ export const useGetCustomerBenefitDetailHalf = (
     causeOfIncidentId?: number | undefined,
     formatTypeId?: number | undefined,
     cusTomerTypeCode?: string | undefined,
-    customerCode?: string | undefined,
+    customerDetailId?: string | undefined,
     claimNo?: string | undefined
 ) => {
     return useQuery(
@@ -394,7 +394,7 @@ export const useGetCustomerBenefitDetailHalf = (
             causeOfIncidentId,
             formatTypeId,
             cusTomerTypeCode,
-            customerCode,
+            customerDetailId,
             claimNo,
         ],
         () =>
@@ -408,7 +408,7 @@ export const useGetCustomerBenefitDetailHalf = (
                 causeOfIncidentId,
                 formatTypeId,
                 cusTomerTypeCode,
-                customerCode,
+                customerDetailId,
                 claimNo
             ),
         {
@@ -461,6 +461,20 @@ export const useGetCustomerSearchByPolicyCode = (
     );
 };
 
+// TODO(backend): GetPolicyBenefitSheredDtoResponse ที่ codegen ได้ตอนนี้ว่างเปล่า (schema ฝั่ง backend มีปัญหา)
+// mock shape เดิมไว้ก่อนตรงนี้ — ลบ interface นี้แล้วใช้ GetPolicyBenefitSheredDtoResponse จาก client ตรงๆ ได้เลยเมื่อ backend แก้แล้ว + codegen ใหม่
+export interface PolicyBenefitSheredItem {
+    policyCode?: string;
+    benefitId?: number;
+    benefitCode?: string;
+    productId?: number;
+    benefitName?: string;
+    maxPrice?: number;
+    customerTypeCode?: string;
+    shortBenefit?: string;
+    fullBenefitDisplay?: string;
+}
+
 export const useGetPolicyBenefitShered = (
     applicaitonCode?: string | undefined,
     customerTypeCode?: string | undefined
@@ -470,6 +484,7 @@ export const useGetPolicyBenefitShered = (
         () => coreClaimClient.getPolicyBenefitShered(applicaitonCode, customerTypeCode),
         {
             enabled: !!applicaitonCode && !!customerTypeCode,
+            select: (res) => ({ ...res, data: res.data as unknown as PolicyBenefitSheredItem[] | undefined }),
         }
     );
 };

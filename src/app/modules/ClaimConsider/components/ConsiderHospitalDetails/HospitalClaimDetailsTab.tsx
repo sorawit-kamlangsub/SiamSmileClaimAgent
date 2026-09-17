@@ -647,7 +647,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             variant="outlined"
                             startIcon={<ArrowBackIcon />}
                             onClick={activeStep === 0 ? () => navigate(-1) : handleBack}
-                            sx={{ bgcolor: "#fff" }}
+                            sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                         >
                             กลับ
                         </Button>
@@ -669,6 +669,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         startIcon={<SaveAsIcon />}
                                         onClick={handleSaveDraft}
                                         disabled={isStep1Loading}
+                                        sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                                     >
                                         บันทึกแบบร่าง
                                     </Button>

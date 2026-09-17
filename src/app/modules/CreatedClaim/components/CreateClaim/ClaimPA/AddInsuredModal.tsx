@@ -205,7 +205,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
             policyCode: selectedInsured.appId,
             policyNo: undefined,
             certificateNo: undefined,
-            customerId: selectedInsured.id,
+            customerDetailId: selectedInsured.id,
             customerName: selectedInsured.customerName,
             incidentTypeId: undefined,
             incidentDate: undefined,

@@ -312,7 +312,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 policyCode: applicationId ?? "",
                 policyNo: undefined,
                 certificateNo: undefined,
-                customerId,
+                customerDetailId: customerId,
                 customerName: customerName ?? "",
                 incidentTypeId: values.incidentTypeId,
                 incidentDate: values.incidentDate,
@@ -553,7 +553,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId,
         formattype,
         effectiveInsured?.customerTypeCode,
-        effectiveInsured?.customerCode,
+        effectiveInsured?.customerDetailId,
         isContinuous ? oldClaim?.claimNo : undefined
     );
 

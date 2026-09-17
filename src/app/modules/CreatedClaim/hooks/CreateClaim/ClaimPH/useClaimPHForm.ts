@@ -381,7 +381,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId,
         formatType,
         undefined,
-        undefined,
+        insured?.customerDetailId,
         isContinuous ? oldClaim?.claimNo : undefined
     );
 

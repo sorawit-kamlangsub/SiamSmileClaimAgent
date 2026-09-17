@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Button, Grid, LinearProgress, RadioGroup, Typography } from "@mui/material";
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import CommentIcon from "@mui/icons-material/Comment";
@@ -47,6 +47,13 @@ const ClaimPHSummaryPage: React.FC = () => {
         handleConfirm(beneficiaries);
     });
     const isDeathDisability = form.coverageTypeId === 4 || form.coverageTypeId === 5;
+
+    // รีเฟรชหน้านี้แล้ว state (in-memory) หายหมด กันหน้าพังด้วยการย้อนกลับไปหน้าก่อนหน้า
+    useEffect(() => {
+        if (!insured) {
+            navigate(-1);
+        }
+    }, []);
 
     // แจ้งเคลมทั่วไป (ไม่ใช่เสียชีวิต/ทุพพลภาพ) : สร้าง CL/CC + โอนเงิน ต่อกันหลังกด "โอนเงิน" ใน ConfirmTransferPHModal
     const transferProcess = useClaimTransferProcess({

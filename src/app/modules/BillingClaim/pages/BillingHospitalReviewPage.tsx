@@ -69,7 +69,7 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                             <HeaderCardCustomerDetails
                                 name={detail?.insured?.name ?? "-"}
                                 idCardNo={PENDING_BE}
-                                applicationId={detail?.insured?.applicationId ?? "-"}
+                                applicationId={detail?.insured?.policyCode ?? "-"}
                                 phoneNumber={PENDING_BE}
                                 appStatus={PENDING_BE}
                                 policyAgeText={calculatePolicyAgeText(detail?.insured?.coverageStart?.toString())}
