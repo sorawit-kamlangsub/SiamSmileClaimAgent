@@ -34,7 +34,7 @@ import { swalError } from "../../../../_common";
 import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPAInfo";
 import { useBeneficiaryPA } from "../../../hooks/CreateClaim/ClaimPA/useBeneficiaryPA";
 import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/BeneficiarySectionPA";
-import { CoverageType } from "../../../../../functionHelpers";
+import { CoverageType, safeAtob } from "../../../../../functionHelpers";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
 import { ContactCard } from "../../../components/CreateClaim/ContactCard";
@@ -44,7 +44,7 @@ const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { appId, refId, isContinuous: isContinuousParam, oldClaimId } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim, editingItemId, oldClaim } = useAppSelector(
         (s) => s.claimpa
     );

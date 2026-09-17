@@ -7,6 +7,7 @@ import {
     TimeSpan,
 } from "../../../api/coreClaimApi.client";
 import { ClaimConsiderValues, ClaimExpenseItem } from "./claimConsiderSlice";
+import { DECISION_ID } from "./claimConsider.constants";
 
 /**
  * TimeSpan จาก NSwag พิมพ์เป็น object แต่ backend ส่งจริงเป็น string "HH:mm:ss" เสมอ (ดู asTimeSpan
@@ -98,7 +99,7 @@ export const mapDraftPayloadToFormValues = ({
     if (c?.hospitalId !== undefined) values.hospitalId = c.hospitalId;
     if (c?.chiefComplaintId !== undefined) values.chiefComplaintId = c.chiefComplaintId;
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
-    if (payload.accidentDescription !== undefined) values.detail = payload.accidentDescription;
+    if (c?.chiefComplaintCustom !== undefined) values.detail = c.chiefComplaintCustom;
 
     if (c?.icD10_1stId !== undefined || c?.icD10_2ndId !== undefined || c?.icD10_3rdId !== undefined) {
         values.diagnoses = [
@@ -112,9 +113,9 @@ export const mapDraftPayloadToFormValues = ({
     if (adjudication?.decisionId !== undefined) values.considerResult = adjudication.decisionId;
     // ปฏิเสธ (5) / ยกเลิก (6) : สาเหตุที่เลือกใน ConsiderSection คือ rejectReasonId / cancelReasonId
     const reasonId =
-        adjudication?.decisionId === 5
+        adjudication?.decisionId === DECISION_ID.REJECTED
             ? adjudication.rejectReasonId
-            : adjudication?.decisionId === 6
+            : adjudication?.decisionId === DECISION_ID.CANCELLED
             ? c?.cancelReasonId
             : adjudication?.decisionReasonId;
     if (reasonId !== undefined) values.decisionReasonId = reasonId;

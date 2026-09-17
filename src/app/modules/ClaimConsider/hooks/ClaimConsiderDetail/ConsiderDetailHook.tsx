@@ -19,13 +19,14 @@ import {
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { claimConsiderSelector, ClaimConsiderValues, resetState, setClaimForm } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRevisionMappers";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs, { Dayjs } from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
-import { CoverageType, formatDateString, safeAtob } from "../../../../functionHelpers";
+import { CoverageType, formatDateString, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import { ContinuousClaimRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -178,6 +179,12 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
             } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+            } else if (
+                values.medicalTypeId === MedicalType.OPD &&
+                values.admissionDate &&
+                !dayjs(values.dischargeDate).isSame(values.admissionDate, "day")
+            ) {
+                errors.dischargeDate = "OPD วันที่ออกต้องเป็นวันเดียวกับวันที่เข้า";
             }
             if (!values.dischargeTime) errors.dischargeTime = req;
 
@@ -543,7 +550,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
     // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
     const decisionReasonDecisionId =
-        formik.values.considerResult === 5 || formik.values.considerResult === 6
+        formik.values.considerResult === DECISION_ID.REJECTED || formik.values.considerResult === DECISION_ID.CANCELLED
             ? undefined
             : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
@@ -551,8 +558,14 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         decisionReasonDecisionId
     );
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
-    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
-    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason();
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.REJECTED
+    );
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.CANCELLED
+    );
 
     /**
      * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข

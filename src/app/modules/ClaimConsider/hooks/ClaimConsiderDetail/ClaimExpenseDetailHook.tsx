@@ -152,7 +152,7 @@ const useClaimExpenseDetailHook = ({
         undefined,
         customerDetailData?.data?.productId ?? undefined,
         customerDetailData?.data?.policyCode,
-        customerDetailData?.data?.customerTypeCode
+        customerDetailData?.data?.productTypeId === 26 ? customerDetailData?.data?.customerTypeCode : undefined
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────

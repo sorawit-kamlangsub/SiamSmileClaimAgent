@@ -11,6 +11,7 @@ import { HeadingWithColor } from "../../../../../_common/components/CustomCompon
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../../../store/claimConsider.constants";
 import { useFormikContext } from "formik";
 import {
     GetCancelReasonDtoResponse,
@@ -37,7 +38,7 @@ type StatusOption = {
 const statusOptions: StatusOption[] = [
     {
         value: "pendingDocument",
-        decisionId: 3,
+        decisionId: DECISION_ID.PENDING_DOCUMENT,
         label: "รอเอกสาร",
         icon: <HourglassTopIcon fontSize="small" />,
         color: "#A87808",
@@ -49,7 +50,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "revision",
-        decisionId: 4,
+        decisionId: DECISION_ID.REVISION,
         label: "รอแก้ไข",
         icon: <FormatListBulletedIcon fontSize="small" />,
         color: "#806033",
@@ -61,7 +62,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "rejected",
-        decisionId: 5,
+        decisionId: DECISION_ID.REJECTED,
         label: "ปฏิเสธ",
         icon: <BlockIcon fontSize="small" />,
         color: "#D76451",
@@ -74,7 +75,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "cancelled",
-        decisionId: 6,
+        decisionId: DECISION_ID.CANCELLED,
         label: "ยกเลิก",
         icon: <CancelIcon fontSize="small" />,
         color: "#D92D2D",
@@ -99,7 +100,7 @@ type ConsiderSectionProps = {
     cancelReasonLoading: boolean;
     /**
      * decisionId ของผลการพิจารณาที่ไม่ต้องแสดงปุ่มในหน้านี้
-     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3, "ยกเลิก" = 5)
+     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3, "ยกเลิก" = 6)
      */
     hiddenDecisionIds?: number[];
     /** override หัวข้อ section — default "ผลการพิจารณา" (เคลมโรงพยาบาลใช้ "แจ้งผลการพิจารณาโรงพยาบาล") */

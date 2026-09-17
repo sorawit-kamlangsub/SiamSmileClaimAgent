@@ -113,7 +113,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                             <Grid container spacing={2}>
                                 <Grid item xs={12}>
                                     <BillingContinuousClaimSection
-                                        applicationId={detail?.insured?.applicationId}
+                                        applicationId={detail?.insured?.policyCode}
                                         readOnly={isReadOnly}
                                     />
                                 </Grid>
@@ -141,7 +141,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
-                                        aplicationCode={detail?.insured?.applicationId}
+                                        aplicationCode={detail?.insured?.policyCode}
                                     />
                                 </Grid>
                             </Grid>
@@ -174,7 +174,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
-                                        aplicationCode={detail?.insured?.applicationId}
+                                        aplicationCode={detail?.insured?.policyCode}
                                     />
                                 </Grid>
                             </Grid>

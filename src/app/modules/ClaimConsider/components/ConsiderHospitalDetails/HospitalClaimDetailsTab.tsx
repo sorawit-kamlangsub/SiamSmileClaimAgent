@@ -14,6 +14,7 @@ import useHospitalClaimStepCalculateHook from "../../hooks/ClaimConsiderHospital
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
 import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { calculateCompensationSummary } from "./SubDetailsTab/ExpensesTabs/_common/calculateCompensationSummary";
@@ -580,7 +581,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         cancelReason={cancelReason}
                                         cancelReasonLoading={cancelReasonLoading}
                                         // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 6) — CR Ver2
-                                        hiddenDecisionIds={[3, 6]}
+                                        hiddenDecisionIds={[DECISION_ID.PENDING_DOCUMENT, DECISION_ID.CANCELLED]}
                                         headingText="แจ้งผลการพิจารณาโรงพยาบาล"
                                         labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
                                     />
@@ -647,7 +648,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             variant="outlined"
                             startIcon={<ArrowBackIcon />}
                             onClick={activeStep === 0 ? () => navigate(-1) : handleBack}
-                            sx={{ bgcolor: "#fff" }}
+                            sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                         >
                             กลับ
                         </Button>
@@ -669,6 +670,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         startIcon={<SaveAsIcon />}
                                         onClick={handleSaveDraft}
                                         disabled={isStep1Loading}
+                                        sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                                     >
                                         บันทึกแบบร่าง
                                     </Button>

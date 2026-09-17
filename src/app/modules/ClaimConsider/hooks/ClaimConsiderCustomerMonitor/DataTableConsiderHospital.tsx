@@ -21,6 +21,9 @@ import { GetHospitalClaimAdjudicationMonitorDtoResponse } from "../../../../api/
  */
 type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string };
 
+// ตาม spec: สถานะ "อยู่ระหว่างดำเนินการ" (7), "ปฏิเสธ" (5) แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
+const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [5, 7];
+
 const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
     const isProductTypeId_PH = appliedFilter.product?.includes(6);
@@ -173,37 +176,37 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
             options: {
                 sort: false,
                 customBodyRenderLite: (rowIndex) => {
+                    const row = claimHospitalData?.data?.[rowIndex] as MonitorRowWithCaseId | undefined;
+                    const showAdjudicateButton = !HIDE_ADJUDICATE_BUTTON_STATUS_IDS.includes(
+                        row?.claimTransactionTypeId ?? -1
+                    );
                     return (
                         <>
                             <Grid container sx={{ gap: 1.5 }}>
-                                <Tooltip title="พิจารณาเคลม">
-                                    <IconButton
-                                        onClick={() => {
-                                            const row = claimHospitalData?.data?.[rowIndex] as
-                                                | MonitorRowWithCaseId
-                                                | undefined;
-                                            navigate(
-                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
-                                                    row?.caseId ?? ""
-                                                )}`
-                                            );
-                                        }}
-                                        sx={{
-                                            backgroundColor: "#FFF1CD",
-                                            ":hover": {
-                                                backgroundColor: "#e7cf95",
-                                            },
-                                        }}
-                                    >
-                                        <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
-                                    </IconButton>
-                                </Tooltip>
+                                {showAdjudicateButton && (
+                                    <Tooltip title="พิจารณาเคลม">
+                                        <IconButton
+                                            onClick={() => {
+                                                navigate(
+                                                    `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                        row?.caseId ?? ""
+                                                    )}`
+                                                );
+                                            }}
+                                            sx={{
+                                                backgroundColor: "#FFF1CD",
+                                                ":hover": {
+                                                    backgroundColor: "#e7cf95",
+                                                },
+                                            }}
+                                        >
+                                            <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
                                 <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
                                         onClick={() => {
-                                            const row = claimHospitalData?.data?.[rowIndex] as
-                                                | MonitorRowWithCaseId
-                                                | undefined;
                                             navigate(
                                                 `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
                                                     row?.caseId ?? ""

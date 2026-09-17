@@ -9,14 +9,14 @@ import InsuredInfoCardPA from "../components/InsuredInfoCardPA";
 import { useGetCustomerBenefitDetailSearch, useGetCustomerDetailById } from "../../../api/coreClaimApi";
 import LinearLoading from "../../_common/components/CustomComponent/LinearLoading";
 import InsuredInfoCardPH from "../components/InsuredInfoCardPH";
-import { isProductType, PRODUCT_TYPE_GROUP } from "../../../functionHelpers";
+import { isProductType, PRODUCT_TYPE_GROUP, safeAtob } from "../../../functionHelpers";
 import PolicyBenefitSharedPanel from "../components/PolicyBenefitSharedPanel";
 
 const CheckEligibleDetailPage: React.FC = () => {
     const { cusId } = useParams<{ cusId: string }>();
     const dispatch = useDispatch();
 
-    const decodedCusId = cusId ? atob(cusId) : undefined;
+    const decodedCusId = safeAtob(cusId);
 
     const customerId = decodedCusId || undefined;
 
