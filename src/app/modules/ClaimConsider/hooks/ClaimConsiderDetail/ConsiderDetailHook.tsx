@@ -9,10 +9,12 @@ import {
 import {
     useGetAllHospital,
     useGetChiefComplaint,
+    useGetCancelReason,
     useGetDecisionReason,
     useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
+    useGetRejectReason,
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
@@ -538,10 +540,19 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         formik.values.dischargeTime,
     ]);
 
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
+    // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
+    const decisionReasonDecisionId =
+        formik.values.considerResult === 5 || formik.values.considerResult === 6
+            ? undefined
+            : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
-        formik.values.considerResult
+        decisionReasonDecisionId
     );
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason();
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason();
 
     /**
      * Step 1 ยังโหลดข้อมูลต้นทาง (ที่ใช้ prefill field) ไม่ครบ — ระหว่างนี้ทั้ง Step แสดง loading + ปิดแก้ไข
@@ -585,6 +596,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         isStep1Loading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
         continuousClaimRows,

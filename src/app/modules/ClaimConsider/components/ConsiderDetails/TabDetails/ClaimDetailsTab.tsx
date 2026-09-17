@@ -68,6 +68,10 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         isStep1Loading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
         continuousClaimRows,
@@ -199,6 +203,10 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                     aplicationCode={customerDetail?.policyCode ?? ""}
                                     decisionReason={decisionReason}
                                     decisionReasonLoading={decisionReasonLoading}
+                                    rejectReason={rejectReason}
+                                    rejectReasonLoading={rejectReasonLoading}
+                                    cancelReason={cancelReason}
+                                    cancelReasonLoading={cancelReasonLoading}
                                 />
                             </Grid>
                         )}

@@ -110,7 +110,14 @@ export const mapDraftPayloadToFormValues = ({
 
     const adjudication = c?.caseAdjudication;
     if (adjudication?.decisionId !== undefined) values.considerResult = adjudication.decisionId;
-    if (adjudication?.decisionReasonId !== undefined) values.decisionReasonId = adjudication.decisionReasonId;
+    // ปฏิเสธ (5) / ยกเลิก (6) : สาเหตุที่เลือกใน ConsiderSection คือ rejectReasonId / cancelReasonId
+    const reasonId =
+        adjudication?.decisionId === 5
+            ? adjudication.rejectReasonId
+            : adjudication?.decisionId === 6
+            ? c?.cancelReasonId
+            : adjudication?.decisionReasonId;
+    if (reasonId !== undefined) values.decisionReasonId = reasonId;
     if (adjudication?.decisionRemark !== undefined) values.decisionReasonDetail = adjudication.decisionRemark;
     if (adjudication?.approvedIPDDayCount !== undefined) values.ipdDays = adjudication.approvedIPDDayCount;
     if (adjudication?.approvedICUDayCount !== undefined) values.icuDays = adjudication.approvedICUDayCount;
