@@ -1,14 +1,24 @@
 import { Box, Grid } from "@mui/material";
-import ClaimSearchFilterForm from "../_common/ClaimSearchFilterForm";
+import { useState } from "react";
+import ClaimSearchFilterForm, { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 import ClaimDetailsDataTable from "../components/ClaimDetailsDataTable";
 
 const IncreaseLimitTransfer = () => {
-    const handleSummit = () => {};
+    const [filter, setFilter] = useState<ClaimSearchFilterValues | undefined>(undefined);
+    const [hasSearched, setHasSearched] = useState(false);
+    const [searchKey, setSearchKey] = useState(0);
+
+    const handleSearch = (values: ClaimSearchFilterValues) => {
+        setFilter(values);
+        setHasSearched(true);
+        setSearchKey((prevKey) => prevKey + 1);
+    };
+
     return (
         <>
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <ClaimSearchFilterForm onSubmit={handleSummit} />
+                    <ClaimSearchFilterForm onSubmit={handleSearch} />
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
                     <Box
@@ -19,7 +29,7 @@ const IncreaseLimitTransfer = () => {
                             backgroundColor: "#FFFFFF",
                         }}
                     >
-                        <ClaimDetailsDataTable />
+                        <ClaimDetailsDataTable filter={filter} hasSearched={hasSearched} searchKey={searchKey} />
                     </Box>
                 </Grid>
             </Grid>
