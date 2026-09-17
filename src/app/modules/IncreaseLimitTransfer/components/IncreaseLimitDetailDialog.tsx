@@ -277,7 +277,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                             </Box>
 
                             <Grid container spacing={2} sx={{ mt: 2 }}>
-                                <Grid item xs={12}>
+                                <Grid item xs={6}>
                                     <Typography sx={{ fontSize: "0.85rem", color: "#5F6773", mb: 0.5 }}>
                                         วงเงินที่ขอเพิ่ม{" "}
                                         <Box component="span" sx={{ color: "#D62828" }}>
@@ -298,7 +298,20 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         {formatBaht(detail?.requestedIncreaseAmount)}
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12}>
+                                <Grid item xs={6}>
+                                    <Typography
+                                        sx={{
+                                            fontSize: "0.65rem",
+                                            color: "#5F6773",
+                                            mb: 0.5,
+                                            visibility: "hidden",
+                                        }}
+                                    >
+                                        วงเงินที่ขอเพิ่ม{" "}
+                                        <Box component="span" sx={{ color: "#D62828" }}>
+                                            *
+                                        </Box>
+                                    </Typography>
                                     <FormikDropdown
                                         name="rejectReasonCode"
                                         formik={formik}
