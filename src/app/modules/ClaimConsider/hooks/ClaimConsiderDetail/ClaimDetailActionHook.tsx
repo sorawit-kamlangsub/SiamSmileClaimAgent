@@ -37,6 +37,7 @@ import {
     ClaimExpenseItem,
     OcrReceiptRequest,
 } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 
 /**
  * รับ formik ของฟอร์มพิจารณาเคลม ค่าเป็นชนิดใดก็ได้ที่ต่อยอดจาก ClaimConsiderValues
@@ -95,12 +96,9 @@ const DEFAULT_NON_COVERED_REASON_ID = 1;
  * ผลพิจารณา "ปฏิเสธ" (5) / "ยกเลิก" (6) : ConsiderSection เลือกสาเหตุจาก Master RejectReason / CancelReason
  * โดยตรง ค่าใน decisionReasonId ของฟอร์มจึงเป็น rejectReasonId / cancelReasonId ไม่ใช่ id ของ DecisionReason
  */
-const REJECT_DECISION_ID = 5;
-const CANCEL_DECISION_ID = 6;
-
 /** decisionReasonId ที่ส่งเข้า caseAdjudication : ปฏิเสธ/ยกเลิกไม่มี DecisionReason (ส่งเป็น rejectReasonId/cancelReasonId แทน) */
 const toDecisionReasonId = (decisionId: number | undefined, reasonId: number | undefined): number | undefined =>
-    decisionId === REJECT_DECISION_ID || decisionId === CANCEL_DECISION_ID ? undefined : reasonId;
+    decisionId === DECISION_ID.REJECTED || decisionId === DECISION_ID.CANCELLED ? undefined : reasonId;
 
 /** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
 const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -262,8 +260,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: considerResult === REJECT_DECISION_ID ? decisionReasonId : undefined,
-            rejectDate: considerResult === REJECT_DECISION_ID ? dayjs() : undefined,
+            rejectReasonId: considerResult === DECISION_ID.REJECTED ? decisionReasonId : undefined,
+            rejectDate: considerResult === DECISION_ID.REJECTED ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDraft(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -359,8 +357,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDraft(),
-            cancelReasonId: values.considerResult === CANCEL_DECISION_ID ? values.decisionReasonId : undefined,
-            cancelDate: values.considerResult === CANCEL_DECISION_ID ? dayjs() : undefined,
+            cancelReasonId: values.considerResult === DECISION_ID.CANCELLED ? values.decisionReasonId : undefined,
+            cancelDate: values.considerResult === DECISION_ID.CANCELLED ? dayjs() : undefined,
         };
     };
 
@@ -378,7 +376,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         claimEditDraft: {
             baseClaimVersion: detailData?.data?.claimVersion ?? 0,
             baseCaseVersion: detailData?.data?.caseVersion ?? 0,
-            claimEditDraftStatusId: formik.values.considerResult === 5 ? 3 : 1, // แบบร่าง
+            claimEditDraftStatusId: formik.values.considerResult === DECISION_ID.REJECTED ? 3 : 1, // แบบร่าง
         },
     };
 
@@ -474,8 +472,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: decisionId === REJECT_DECISION_ID ? decisionReasonId : undefined,
-            rejectDate: decisionId === REJECT_DECISION_ID ? dayjs() : undefined,
+            rejectReasonId: decisionId === DECISION_ID.REJECTED ? decisionReasonId : undefined,
+            rejectDate: decisionId === DECISION_ID.REJECTED ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDecision(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -587,8 +585,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDecision(),
-            cancelReasonId: values.considerResult === CANCEL_DECISION_ID ? values.decisionReasonId : undefined,
-            cancelDate: values.considerResult === CANCEL_DECISION_ID ? dayjs() : undefined,
+            cancelReasonId: values.considerResult === DECISION_ID.CANCELLED ? values.decisionReasonId : undefined,
+            cancelDate: values.considerResult === DECISION_ID.CANCELLED ? dayjs() : undefined,
         };
     };
 

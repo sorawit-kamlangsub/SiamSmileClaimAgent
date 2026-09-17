@@ -19,6 +19,7 @@ import {
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { claimConsiderSelector, ClaimConsiderValues, resetState, setClaimForm } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRevisionMappers";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
@@ -543,7 +544,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
     // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
     const decisionReasonDecisionId =
-        formik.values.considerResult === 5 || formik.values.considerResult === 6
+        formik.values.considerResult === DECISION_ID.REJECTED || formik.values.considerResult === DECISION_ID.CANCELLED
             ? undefined
             : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(

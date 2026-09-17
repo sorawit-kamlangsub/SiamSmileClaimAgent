@@ -20,6 +20,7 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/comp
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import { parseTimeSpan } from "../../store/draftRevisionMappers";
 import {
     CLAIM_LIST_TYPE_CONFIG,
@@ -132,9 +133,6 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
 const CLAIM_SOURCE_CONSIDER = 2;
 
-/** decisionId ของผลการพิจารณา "รอแก้ไข" (ต้องกรอกรายละเอียดการรอแก้ไข) */
-const DECISION_REVISION = 4;
-
 /** ลำดับช่องที่ใช้เลื่อนหน้าจอไปยัง error แรกเมื่อกด "ถัดไป" / "ยืนยันบันทึกผลพิจารณา" */
 const FIELD_ERROR_ORDER = [
     "incidentTypeId",
@@ -225,7 +223,7 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     // ── ผลการพิจารณา : ตรวจเมื่อผู้ใช้เลือกผลการพิจารณาแล้ว ──
     if (values.considerResult) {
         if (!values.decisionReasonId) errors.decisionReasonId = sel;
-        if (values.considerResult === DECISION_REVISION && !values.decisionReasonDetail?.trim()) {
+        if (values.considerResult === DECISION_ID.REVISION && !values.decisionReasonDetail?.trim()) {
             errors.decisionReasonDetail = req;
         }
     }
@@ -584,7 +582,7 @@ const useHospitalConsiderDetailHook = () => {
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
     // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
     const decisionReasonDecisionId =
-        formik.values.considerResult === 5 || formik.values.considerResult === 6
+        formik.values.considerResult === DECISION_ID.REJECTED || formik.values.considerResult === DECISION_ID.CANCELLED
             ? undefined
             : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
