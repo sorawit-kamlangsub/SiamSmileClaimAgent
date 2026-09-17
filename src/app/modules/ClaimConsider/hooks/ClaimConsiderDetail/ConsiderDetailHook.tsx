@@ -86,7 +86,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
     const detail = detailData?.data;
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? 0
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 

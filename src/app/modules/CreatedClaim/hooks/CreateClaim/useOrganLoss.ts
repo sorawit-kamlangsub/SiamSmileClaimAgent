@@ -120,14 +120,14 @@ export const useComboBodyPartOptions = (comboDisabilityLossPartId: number | unde
 };
 
 export const useCalculateDisabilityOptions = (
-    customerId: number | undefined,
+    customerDetailId: string | undefined,
     bodyPartId: number | undefined,
     standardMedicalExpenseId: number | undefined
 ) => {
-    const enabled = !!customerId && !!bodyPartId && !!standardMedicalExpenseId;
+    const enabled = !!customerDetailId && !!bodyPartId && !!standardMedicalExpenseId;
 
     const { data, isLoading: queryIsLoading } = useCalculateCaseDisability(
-        customerId,
+        customerDetailId,
         bodyPartId,
         standardMedicalExpenseId
     );

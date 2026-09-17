@@ -142,11 +142,15 @@ export const useGetCustomerSearch = (
     );
 };
 
-export const useGetCustomerDetailById = (id: number | undefined) => {
-    return useQuery([getCustomerDetailByIdQueryKey, id], () => coreClaimClient.getCustomerDetailById(id as number), {
-        enabled: !!id,
-        refetchOnWindowFocus: false,
-    });
+export const useGetCustomerDetailById = (customerDetailId: string | undefined) => {
+    return useQuery(
+        [getCustomerDetailByIdQueryKey, customerDetailId],
+        () => coreClaimClient.getCustomerDetailById(customerDetailId as string),
+        {
+            enabled: !!customerDetailId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };
 
 export const useGetCustomerBenefitDetailSearch = (
@@ -351,15 +355,15 @@ export const useGetCaseByClaimId = (
 };
 
 export const useCalculateCaseDisability = (
-    customerId?: number | undefined,
+    customerDetailId?: string | undefined,
     bodyPartId?: number | undefined,
     standardMedicalExpenseId?: number | undefined
 ) => {
     return useQuery(
-        [calculateCaseDisabilityQueryKey, customerId, bodyPartId, standardMedicalExpenseId],
-        () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
+        [calculateCaseDisabilityQueryKey, customerDetailId, bodyPartId, standardMedicalExpenseId],
+        () => coreClaimClient.calculateCaseDisability(customerDetailId, bodyPartId, standardMedicalExpenseId),
         {
-            enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
+            enabled: !!customerDetailId && !!bodyPartId && !!standardMedicalExpenseId,
             refetchOnWindowFocus: false,
         }
     );
