@@ -49,7 +49,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
     const detail = detailData?.data;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? undefined
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 

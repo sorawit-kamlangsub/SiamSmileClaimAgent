@@ -21,13 +21,13 @@ export const useClaimPA = () => {
     const { appId, refId, oldClaimId, isContinuous } = useParams();
     const { pendingInsured } = useAppSelector(claimPASelector);
 
-    const customerId = refId ? parseInt(atob(refId)) : undefined;
+    const customerId = refId ? atob(refId) : undefined;
     const applicationId = appId ? atob(appId) : undefined;
 
     const activeCustomerId = pendingInsured?.customerId ?? customerId;
     const activeApplicationId = pendingInsured?.policyCode ?? applicationId;
 
-    const claimInfoQuery = useGetCustomerDetailById(activeCustomerId as number);
+    const claimInfoQuery = useGetCustomerDetailById(activeCustomerId);
     const bankAccountQuery = useGetCustomerBankAccount(applicationId); // บัญชี/เบอร์ผูกกับเคสหลัก ไม่เปลี่ยนตามคนที่เพิ่ม
     const contactQuery = useGetContactPerson(applicationId ?? "", 26);
 

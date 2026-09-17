@@ -13,10 +13,10 @@ export const useClaimPH = () => {
 
     const { appId, refId } = useParams();
 
-    const customerId = refId ? parseInt(atob(refId)) : undefined;
+    const customerId = refId ? atob(refId) : undefined;
     const applicationId = appId ? atob(appId) : undefined;
 
-    const claimInfoQuery = useGetCustomerDetailById(customerId as number);
+    const claimInfoQuery = useGetCustomerDetailById(customerId);
     const bankAccountQuery = useGetCustomerBankAccount(applicationId);
     const contactQuery = useGetContactPerson(applicationId ?? "", 6);
 

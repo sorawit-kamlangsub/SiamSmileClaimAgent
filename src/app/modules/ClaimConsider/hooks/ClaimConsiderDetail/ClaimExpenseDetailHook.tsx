@@ -139,9 +139,6 @@ const useClaimExpenseDetailHook = ({
     const items = formikClaimLine.values.items;
 
     // ── รายการที่ใช้บ่อย ───────────────────────────────────────────────────
-    // BE ตัด isUseOften ออก + เปลี่ยน productTypeId เป็น required param (codegen 2026-09-16)
-    // `?? 0` เป็นแค่ placeholder ให้ผ่าน type ตอน customerDetailData ยังโหลดไม่เสร็จ — `enabled` ใน
-    // useGetStandardMedicalExpenseByCase กัน query ยิงจนกว่า productTypeId จะมีค่าจริงอยู่แล้ว
     const {
         data: frequentData,
         isLoading: isFrequentLoading,
@@ -157,6 +154,7 @@ const useClaimExpenseDetailHook = ({
         customerDetailData?.data?.policyCode,
         customerDetailData?.data?.customerTypeCode
     );
+
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
@@ -166,6 +164,7 @@ const useClaimExpenseDetailHook = ({
         undefined,
         customerDetailData?.data?.productId ?? undefined
     );
+
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
         return raw.map((item, idx) => ({

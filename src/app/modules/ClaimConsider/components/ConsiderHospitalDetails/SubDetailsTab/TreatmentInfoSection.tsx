@@ -14,9 +14,8 @@ const procedureOptions = [
 
 /**
  * Section "ข้อมูลการเข้ารับการรักษา"
- * ค่าเริ่มต้น (HN/VN/AN/U-D/วิธีรักษา/ผล LAB/หัตถการ/ข้อบ่งชี้การ Admit) มาจาก SmileConnect ที่ BE ส่งผ่าน
- * GetClaimDetailConsider แล้ว sync ใน HospitalConsiderDetailHook (phase 1)
- * ยกเว้น "รายละเอียดเพิ่มเติม" ที่ BE ยังไม่ส่ง — กรอกมือ
+ * ค่าเริ่มต้น (HN/VN/AN/U-D/วิธีรักษา/ผล LAB/หัตถการ/ข้อบ่งชี้การ Admit/รายละเอียดเพิ่มเติม) มาจาก SmileConnect
+ * ที่ BE ส่งผ่าน GetClaimDetailConsider แล้ว sync ใน HospitalConsiderDetailHook (phase 1) — ทุกช่องยังแก้ไขต่อได้
  */
 const TreatmentInfoSection = () => {
     const formik = useFormikContext<HospitalConsiderValues>();

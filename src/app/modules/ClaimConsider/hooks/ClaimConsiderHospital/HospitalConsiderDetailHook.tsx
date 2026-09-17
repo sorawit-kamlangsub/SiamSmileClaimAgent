@@ -252,7 +252,7 @@ const useHospitalConsiderDetailHook = () => {
     const detail = detailData?.data;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? undefined
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 
@@ -506,8 +506,9 @@ const useHospitalConsiderDetailHook = () => {
         );
         // admitIndication : BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16, admissionIndication) — ยังแก้ไขต่อได้ตามเดิม
         // ไม่เหมือน ipdDays/icuDays เพราะช่องนี้มี input จริงใน TreatmentInfoSection อยู่แล้ว
-        // additionalDetail : BE ยังไม่ส่ง default มา ปล่อยว่างให้กรอกมือ
         formik.setFieldValue("admitIndication", detail.admissionIndication ?? "", false);
+        // additionalDetail : map จาก reservationRemark (BE ส่งมาใหม่ 2026-09-16) — ยังแก้ไขต่อได้ตามเดิม
+        formik.setFieldValue("additionalDetail", detail.reservationRemark ?? "", false);
 
         // ---- แพทย์เจ้าของไข้ ----
         formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);
