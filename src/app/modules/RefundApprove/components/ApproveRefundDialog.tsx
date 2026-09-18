@@ -163,7 +163,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 open={open}
                 maxWidth="md"
                 fullWidth
-                PaperProps={{ sx: { height: "54vh", overflow: "hidden", borderRadius: 3 } }}
+                PaperProps={{ sx: { height: { xs: "90vh", md: "54vh" }, overflow: "hidden", borderRadius: 3 } }}
             >
             <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, p: "16px 24px", borderBottom: "1px solid #E0E0E0" }}>
                 <Box
@@ -192,7 +192,16 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", pt: "15px", pb: 0 }}>
+            <DialogContent
+                sx={{
+                    minHeight: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: { xs: "flex-start", md: "center" },
+                    pt: "15px",
+                    pb: 0,
+                }}
+            >
                 <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
                     <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>ข้อมูลรายละเอียด</Typography>
                     <Button
