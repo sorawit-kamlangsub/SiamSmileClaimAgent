@@ -67,6 +67,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
     const [openSlipDialog, setOpenSlipDialog] = useState(false);
     const [slipFileUrl, setSlipFileUrl] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const isPdfSlip = slipFileUrl.toLowerCase().endsWith(".pdf");
     const slipSrc = isPdfSlip ? `${slipFileUrl}#zoom=50` : slipFileUrl;
 
@@ -75,15 +76,18 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
     const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
 
     const handleUpdateStatusSuccess = () => {
+        setIsSubmitting(false);
         swalSuccess("ทำรายการสำเร็จ", "ทำรายการสำเร็จ");
         onClose();
     };
 
     const handleUpdateStatusError = (error: string) => {
+        setIsSubmitting(false);
         swalError("แจ้งเตือน", error);
     };
 
     const handleUpdateStatusWarning = (error: string) => {
+        setIsSubmitting(false);
         swalWarning("แจ้งเตือน", error);
     };
 
@@ -103,6 +107,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
             return errors;
         },
         onSubmit: (values) => {
+            setIsSubmitting(true);
             updateStatusMutate({
                 caseRefundId,
                 caseRefundStatusId: 4,
@@ -128,6 +133,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
             cancelButtonText: "ยกเลิก",
         });
         if (result.isConfirmed) {
+            setIsSubmitting(true);
             updateStatusMutate({
                 caseRefundId,
                 caseRefundStatusId: 3,
@@ -194,6 +200,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                 <IconButton
                     size="small"
                     onClick={onClose}
+                    disabled={isSubmitting}
                     sx={{ backgroundColor: "#FDECEC", color: "#E53935", "&:hover": { backgroundColor: "#FBD5D5" } }}
                 >
                     <CloseIcon fontSize="small" />
@@ -215,6 +222,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                         variant="contained"
                         startIcon={<ImageIcon />}
                         onClick={handleOpenSlip}
+                        disabled={isSubmitting}
                         sx={{ backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
                     >
                         คลิกดูภาพ Slip การโอนเงิน
@@ -322,7 +330,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                                 variant="outlined"
                                 color="error"
                                 onClick={handleRejectClick}
-                                disabled={isDetailLoading || !caseRefundId}
+                                disabled={isSubmitting || isDetailLoading || !caseRefundId}
                             >
                                 ปฏิเสธ
                             </Button>
@@ -330,7 +338,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                                 variant="contained"
                                 startIcon={<SyncAltIcon />}
                                 onClick={handleApproveClick}
-                                disabled={isDetailLoading || !caseRefundId}
+                                disabled={isSubmitting || isDetailLoading || !caseRefundId}
                                 sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
                             >
                                 อนุมัติ
