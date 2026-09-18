@@ -65,6 +65,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
     const [openSlipDialog, setOpenSlipDialog] = useState(false);
+    const [slipFileUrl, setSlipFileUrl] = useState("");
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
     const caseRefundId = detail?.caseRefundId ?? caseId;
@@ -133,6 +134,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 
     const handleOpenSlip = () => {
         if (row?.refundNo) {
+            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
             setOpenSlipDialog(true);
         }
     };
@@ -311,8 +313,8 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 <Dialog
             open={openSlipDialog}
             onClose={() => setOpenSlipDialog(false)}
-            sx={{ zIndex: 1400 }}
-            PaperProps={{ sx: { m: 0, borderRadius: 3 } }}
+sx={{ zIndex: 1400 }}
+            PaperProps={{ sx: { m: 0, borderRadius: 3, width: "fit-content", maxWidth: "94vw", maxHeight: "90vh" } }}
         >
             <DialogTitle sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121", pb: 1, textAlign: "center" }}>
                 Slip การโอนเงิน
@@ -320,7 +322,6 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
             <DialogContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, px: 3, pb: 3 }}>
                 <Box
                     sx={{
-                        width: "100%",
                         border: "1px solid #E0E0E0",
                         borderRadius: 2,
                         p: 2,
@@ -329,14 +330,21 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                         alignItems: "center",
                         gap: 1,
                         color: "#9E9E9E",
+                        width: "min(84vw, 840px)",
+                        height: "min(78vh, 950px)",
+                        overflow: "auto",
                     }}
                 >
-                    <Box
-                        component="img"
-                        src="https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691808343613712.jpg"
-                        alt="Slip การโอนเงิน"
-                        sx={{ maxWidth: "80vw", maxHeight: "70vh", width: "auto", height: "auto" }}
-                    />
+                    {slipFileUrl.toLowerCase().endsWith(".pdf") ? (
+                        <Box component="iframe" src={slipFileUrl} title="Slip การโอนเงิน" sx={{ width: "100%", flex: 1, border: "none" }} />
+                    ) : (
+                        <Box
+                            component="img"
+                            src={slipFileUrl}
+                            alt="Slip การโอนเงิน"
+                            sx={{ maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto" }}
+                        />
+                    )}
                 </Box>
                 <Button
                     variant="contained"
