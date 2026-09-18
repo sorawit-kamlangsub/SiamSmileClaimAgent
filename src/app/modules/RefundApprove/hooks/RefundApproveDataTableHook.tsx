@@ -215,23 +215,18 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit 
                 customBodyRenderLite: (dataIndex) => {
                     const row = data[dataIndex];
 
-                    if (row?.refundStatusId === 2) {
-                        return (
-                            <IconButton size="small" onClick={() => handleEdit(row)}>
-                                <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
-                            </IconButton>
-                        );
-                    }
-
-                    if (row?.refundStatusId === 3) {
-                        return (
+                    return (
+                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                             <IconButton size="small" onClick={() => handleView(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                        );
-                    }
-
-                    return <>-</>;
+                            {row?.refundStatusId === 2 && (
+                                <IconButton size="small" onClick={() => handleEdit(row)}>
+                                    <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
+                                </IconButton>
+                            )}
+                        </Box>
+                    );
                 },
             },
         },
