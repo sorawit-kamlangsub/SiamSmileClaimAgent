@@ -202,17 +202,19 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                     pb: 0,
                 }}
             >
+                <Box sx={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 1, mb: 1, mt: 2 }}>
+                    <Button
+                        variant="contained"
+                        startIcon={<ImageIcon />}
+                        onClick={handleOpenSlip}
+                        sx={{ backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
+                    >
+                        คลิกดูภาพ Slip การโอนเงิน
+                    </Button>
+                </Box>
                 <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mb: 2 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1.5, mb: 1.5 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
                         <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>ข้อมูลรายละเอียด</Typography>
-                        <Button
-                            variant="contained"
-                            startIcon={<ImageIcon />}
-                            onClick={handleOpenSlip}
-                            sx={{ backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
-                        >
-                            คลิกดูภาพ Slip การโอนเงิน
-                        </Button>
                     </Box>
 
                 {isDetailLoading ? (
