@@ -14,6 +14,7 @@ import {
 } from "../../../../functionHelpers";
 import { useGetCustomerClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
 import { GetCustomerClaimAdjudicationMonitorDtoResponse } from "../../../../api/coreClaimApi.client";
+import ClaimNoWithContinuousBadge from "../../components/_common/ClaimNoWithContinuousBadge";
 
 /**
  * TODO(caseId): BE ยังไม่ส่ง caseId มากับ monitor list — cast ชั่วคราวจนกว่าจะ `npm run codegen`
@@ -87,6 +88,10 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             label: "ClaimCode",
             options: {
                 ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
+                customBodyRenderLite: (rowIndex) => {
+                    const row = claimTransactionData?.data?.[rowIndex];
+                    return <ClaimNoWithContinuousBadge claimNo={row?.claimNo} caseCount={row?.caseCount} />;
+                },
             },
         },
         {

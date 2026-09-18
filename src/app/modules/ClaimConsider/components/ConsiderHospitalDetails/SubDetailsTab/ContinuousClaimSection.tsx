@@ -38,8 +38,8 @@ const ContinuousClaimSection = ({
 
     const columns: MUIDataTableColumn[] = [
         {
-            name: "claimNo",
-            label: "เลขที่ CL",
+            name: "caseNo",
+            label: "เลขที่ Case",
             options: { filter: false, sort: false, ...cellAlignOptions({ align: "center" }) },
         },
         {
@@ -114,7 +114,7 @@ const ContinuousClaimSection = ({
                         <Tooltip title="เปลี่ยนรายการเคลมเดิม" arrow placement="top">
                             <Chip
                                 icon={<DescriptionOutlinedIcon />}
-                                label={`${selected.claimNo} | เคลมเดิมวันที่ ${selected.incidentDate}`}
+                                label={`${selected.caseNo} | ${selected.incidentDate} | ${selected.chiefComplaint} | หมายเหตุ: ${selected.remark}`}
                                 variant="outlined"
                                 onClick={() => onOpenChange(true)}
                                 onDelete={onClear}
