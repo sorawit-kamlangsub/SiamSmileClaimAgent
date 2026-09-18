@@ -3,7 +3,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FormikDropdown, FormikTextField, swalError, swalSuccess, swalWarning } from "../../_common";
 import { swalConfirmAction } from "../../_common/customSweetAlert";
 import {
@@ -64,6 +64,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const caseId = row?.caseId ?? "";
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
+    const [openSlipDialog, setOpenSlipDialog] = useState(false);
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
     const caseRefundId = detail?.caseRefundId ?? caseId;
@@ -132,7 +133,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 
     const handleOpenSlip = () => {
         if (row?.refundNo) {
-            window.open(`/slip/${row.refundNo}`, "_blank", "noopener,noreferrer");
+            setOpenSlipDialog(true);
         }
     };
 
@@ -154,12 +155,13 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     };
 
     return (
-        <Dialog
-            open={open}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{ sx: { height: "54vh", overflow: "hidden", borderRadius: 3 } }}
-        >
+        <>
+            <Dialog
+                open={open}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{ sx: { height: "54vh", overflow: "hidden", borderRadius: 3 } }}
+            >
             <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, p: "16px 24px", borderBottom: "1px solid #E0E0E0" }}>
                 <Box
                     sx={{
@@ -306,6 +308,48 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </Box>
             </DialogContent>
         </Dialog>
+        <Dialog
+            open={openSlipDialog}
+            onClose={() => setOpenSlipDialog(false)}
+            maxWidth="xs"
+            fullWidth
+            sx={{ zIndex: 1400 }}
+            PaperProps={{ sx: { borderRadius: 3, maxWidth: 380 } }}
+        >
+            <DialogTitle sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121", pb: 1, textAlign: "center" }}>
+                Slip การโอนเงิน
+            </DialogTitle>
+            <DialogContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, px: 3, pb: 3 }}>
+                <Box
+                    sx={{
+                        width: "100%",
+                        border: "1px solid #E0E0E0",
+                        borderRadius: 2,
+                        p: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1,
+                        color: "#9E9E9E",
+                    }}
+                >
+                    <Box
+                        component="img"
+                        src="https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691808343613712.jpg"
+                        alt="Slip การโอนเงิน"
+                        sx={{ maxWidth: "100%", maxHeight: 240, objectFit: "contain" }}
+                    />
+                </Box>
+                <Button
+                    variant="contained"
+                    onClick={() => setOpenSlipDialog(false)}
+                    sx={{ mt: 1, px: 6, backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
+                >
+                    ตกลง
+                </Button>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 };
 
