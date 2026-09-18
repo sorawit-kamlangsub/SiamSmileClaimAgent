@@ -18,7 +18,7 @@ jobs:
           echo "----- UAT files -----"
           ls -la UAT
           echo "----- configuration.js -----"
-          cat UAT/configuration.js      
+          cat uat/configuration.js      
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
