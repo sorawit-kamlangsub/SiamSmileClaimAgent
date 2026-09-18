@@ -4,49 +4,33 @@ import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import PauseCircleIcon from "@mui/icons-material/PauseCircle";
 import BoltIcon from "@mui/icons-material/Bolt";
 import PauseCircleFilledIcon from "@mui/icons-material/PauseCircleFilled";
-import PersonIcon from "@mui/icons-material/Person";
 import { useFormik } from "formik";
 import { MUIDataTableColumn } from "mui-datatables";
-import { PaginationSortableDto, PaginationResultDto } from "../../../_common";
 
-export type HoldStatus = "normal" | "hold" | "userManaged";
-export type ResultType = "autoPayDelay" | "holdPending" | "userManaged";
+// Confirmed: holdStatusId 1 = normal, 2 = hold.
+const HOLD_STATUS_ID_NORMAL = 1;
+const HOLD_STATUS_ID_HOLD = 2;
 
 export interface HospitalPaySettingRow {
-    hospitalId: string;
-    hospitalName: string;
-    isAutoPay: boolean;
+    hospitalPaymentSettingId: string;
+    hospitalName: string | null;
+    isAutoPay: boolean | null;
     delayDays: number;
-    holdStatus: HoldStatus;
-    resultType: ResultType;
-    updatedDate: string;
+    holdStatusId: number | null;
+    holdStatusName: string | null;
+    updatedDate: string | null;
 }
 
 export interface UseHospitalPaySettingsTableHookProps {
     initialRows: HospitalPaySettingRow[];
     onSaveRow: (row: HospitalPaySettingRow) => void;
-    onToggleHold: (hospitalId: string) => void;
-    renderHistory: (hospitalId: string) => React.ReactNode;
+    renderHistory: (hospitalPaymentSettingId: string) => React.ReactNode;
 }
 
-const HoldStatusButton = ({ holdStatus, onClick }: { holdStatus: HoldStatus; onClick: () => void }) => {
-    if (holdStatus === "userManaged") {
-        return (
-            <Box
-                sx={{
-                    backgroundColor: "#EAF4FC",
-                    borderRadius: "8px",
-                    padding: "8px 12px",
-                    fontSize: "0.85rem",
-                    color: "#455A64",
-                }}
-            >
-                ปกติ
-            </Box>
-        );
-    }
+const isHeld = (row: HospitalPaySettingRow) => row.holdStatusId === HOLD_STATUS_ID_HOLD;
 
-    const isHeld = holdStatus === "hold";
+const HoldStatusButton = ({ row, onClick }: { row: HospitalPaySettingRow; onClick: () => void }) => {
+    const held = isHeld(row);
 
     return (
         <Box
@@ -57,43 +41,30 @@ const HoldStatusButton = ({ holdStatus, onClick }: { holdStatus: HoldStatus; onC
                 gap: "6px",
                 borderRadius: "8px",
                 padding: "8px 12px",
-                border: `1px solid ${isHeld ? "#E53935" : "#90CAF9"}`,
-                backgroundColor: isHeld ? "#FDECEA" : "#EAF4FC",
-                color: isHeld ? "#C62828" : "#1565C0",
+                border: `1px solid ${held ? "#E53935" : "#90CAF9"}`,
+                backgroundColor: held ? "#FDECEA" : "#EAF4FC",
+                color: held ? "#C62828" : "#1565C0",
                 cursor: "pointer",
                 fontSize: "0.85rem",
                 fontWeight: 600,
                 whiteSpace: "nowrap",
             }}
         >
-            {isHeld ? <PauseCircleIcon sx={{ fontSize: 16 }} /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
-            {isHeld ? "Hold — กดเพื่อปลด" : "ปกติ — กดเพื่อ Hold"}
+            {held ? <PauseCircleIcon sx={{ fontSize: 16 }} /> : <PlayArrowIcon sx={{ fontSize: 16 }} />}
+            {held ? "Hold — กดเพื่อปลด" : "ปกติ — กดเพื่อ Hold"}
         </Box>
     );
 };
 
-const ResultPill = ({ resultType, delayDays }: { resultType: ResultType; delayDays: number }) => {
-    if (resultType === "autoPayDelay") {
-        return (
-            <Box
-                sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    borderRadius: "8px",
-                    padding: "6px 12px",
-                    backgroundColor: "#E8F5E9",
-                    color: "#2E7D32",
-                    fontSize: "0.85rem",
-                    fontWeight: 600,
-                }}
-            >
-                <BoltIcon sx={{ fontSize: 16 }} />
-                จ่ายอัตโนมัติหลัง {delayDays} วัน
-            </Box>
-        );
-    }
-    if (resultType === "holdPending") {
+// "ผลการตั้งค่า" isn't a field the API returns — derived here from
+// isAutoPay + holdStatusId. Held always wins (regardless of isAutoPay);
+// otherwise auto-pay-on shows the delay countdown, auto-pay-off falls
+// back to "manual". The dedicated "ผู้ใช้งานดำเนินการเอง"-with-locked-Hold-
+// button case from the screenshot is dropped per your confirmation —
+// isAutoPay=false is just rendered as the manual-payment pill here, with
+// the Hold button still interactive like every other row.
+const ResultPill = ({ row }: { row: HospitalPaySettingRow }) => {
+    if (isHeld(row)) {
         return (
             <Box
                 sx={{
@@ -113,6 +84,28 @@ const ResultPill = ({ resultType, delayDays }: { resultType: ResultType; delayDa
             </Box>
         );
     }
+
+    if (row.isAutoPay) {
+        return (
+            <Box
+                sx={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "6px",
+                    borderRadius: "8px",
+                    padding: "6px 12px",
+                    backgroundColor: "#E8F5E9",
+                    color: "#2E7D32",
+                    fontSize: "0.85rem",
+                    fontWeight: 600,
+                }}
+            >
+                <BoltIcon sx={{ fontSize: 16 }} />
+                จ่ายอัตโนมัติหลัง {row.delayDays} วัน
+            </Box>
+        );
+    }
+
     return (
         <Box
             sx={{
@@ -127,7 +120,6 @@ const ResultPill = ({ resultType, delayDays }: { resultType: ResultType; delayDa
                 fontWeight: 600,
             }}
         >
-            <PersonIcon sx={{ fontSize: 16 }} />
             ผู้ใช้งานดำเนินการเอง
         </Box>
     );
@@ -136,15 +128,9 @@ const ResultPill = ({ resultType, delayDays }: { resultType: ResultType; delayDa
 const useHospitalManagementDataTableHook = ({
     initialRows,
     onSaveRow,
-    onToggleHold,
     renderHistory,
 }: UseHospitalPaySettingsTableHookProps) => {
-    // Controls which rows mui-datatables considers "expanded" — driven only
-    // by the "ประวัติ" button in the last column, not the library's default
-    // arrow column (hidden via CSS in the component, since the design has
-    // no arrow column).
     const [expandedIndexes, setExpandedIndexes] = useState<number[]>([]);
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({ page: 1, recordsPerPage: 10 });
 
     const formik = useFormik<{ rows: HospitalPaySettingRow[] }>({
         initialValues: { rows: initialRows },
@@ -154,15 +140,15 @@ const useHospitalManagementDataTableHook = ({
 
     const rows = formik.values.rows;
 
-    // A row's "บันทึก" re-disables itself automatically if the user edits a
-    // value then changes it back to what the API originally returned —
-    // live comparison against initialRows, not a manual "touched" flag.
     const dirtyMap = useMemo(() => {
         const map: Record<string, boolean> = {};
         rows.forEach((row) => {
-            const original = initialRows.find((r) => r.hospitalId === row.hospitalId);
-            map[row.hospitalId] =
-                !!original && (original.isAutoPay !== row.isAutoPay || original.delayDays !== row.delayDays);
+            const original = initialRows.find((r) => r.hospitalPaymentSettingId === row.hospitalPaymentSettingId);
+            map[row.hospitalPaymentSettingId] =
+                !!original &&
+                (original.isAutoPay !== row.isAutoPay ||
+                    original.delayDays !== row.delayDays ||
+                    original.holdStatusId !== row.holdStatusId);
         });
         return map;
     }, [rows, initialRows]);
@@ -176,16 +162,24 @@ const useHospitalManagementDataTableHook = ({
         formik.setFieldValue(`rows.${index}.delayDays`, value === "" ? 0 : Number(value));
     };
 
-    const handleToggleHistory = (index: number) => {
-        setExpandedIndexes((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]));
+    // Local edit only — flips between normal/hold in formik state, same as
+    // isAutoPay/delayDays. It's picked up by dirtyMap and only actually
+    // persists when "บันทึก" is clicked and onSaveRow fires, not immediately.
+    // Switching TO hold also forces isAutoPay off, since auto-pay can't run
+    // while a hospital is held.
+    const handleToggleHold = (index: number) => {
+        const current = rows[index];
+        const willBeHeld = !isHeld(current);
+        const nextHoldStatusId = willBeHeld ? HOLD_STATUS_ID_HOLD : HOLD_STATUS_ID_NORMAL;
+
+        formik.setFieldValue(`rows.${index}.holdStatusId`, nextHoldStatusId);
+        if (willBeHeld) {
+            formik.setFieldValue(`rows.${index}.isAutoPay`, false);
+        }
     };
 
-    const paginationResult: PaginationResultDto = {
-        totalAmountRecords: rows.length,
-        totalAmountPages: 1,
-        currentPage: paginated.page,
-        recordsPerPage: paginated.recordsPerPage,
-        pageIndex: paginated.page ?? 0 - 1,
+    const handleToggleHistory = (index: number) => {
+        setExpandedIndexes((prev) => (prev.includes(index) ? prev.filter((i) => i !== index) : [...prev, index]));
     };
 
     const columns: MUIDataTableColumn[] = [
@@ -199,7 +193,8 @@ const useHospitalManagementDataTableHook = ({
                 customBodyRenderLite: (rowIndex) => (
                     <Box sx={{ display: "flex", alignItems: "center", gap: "8px" }}>
                         <Switch
-                            checked={rows[rowIndex].isAutoPay}
+                            checked={!!rows[rowIndex].isAutoPay}
+                            disabled={isHeld(rows[rowIndex])}
                             onChange={(e) => handleToggleAutoPay(rowIndex, e.target.checked)}
                         />
                         <Typography sx={{ fontSize: "0.85rem", color: "#607D8B" }}>
@@ -230,28 +225,23 @@ const useHospitalManagementDataTableHook = ({
             },
         },
         {
-            name: "holdStatus",
+            name: "holdStatusId",
             label: "สถานะ Hold",
             options: {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => (
-                    <HoldStatusButton
-                        holdStatus={rows[rowIndex].holdStatus}
-                        onClick={() => onToggleHold(rows[rowIndex].hospitalId)}
-                    />
+                    <HoldStatusButton row={rows[rowIndex]} onClick={() => handleToggleHold(rowIndex)} />
                 ),
             },
         },
         {
-            name: "resultType",
+            name: "result",
             label: "ผลการตั้งค่า",
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (rowIndex) => (
-                    <ResultPill resultType={rows[rowIndex].resultType} delayDays={rows[rowIndex].delayDays} />
-                ),
+                customBodyRenderLite: (rowIndex) => <ResultPill row={rows[rowIndex]} />,
             },
         },
         {
@@ -272,7 +262,7 @@ const useHospitalManagementDataTableHook = ({
                             <Button
                                 size="small"
                                 variant="outlined"
-                                disabled={!dirtyMap[row.hospitalId]}
+                                disabled={!dirtyMap[row.hospitalPaymentSettingId]}
                                 onClick={() => onSaveRow(row)}
                                 sx={{ textTransform: "none" }}
                             >
@@ -303,7 +293,7 @@ const useHospitalManagementDataTableHook = ({
         return (
             <tr>
                 <td colSpan={colSpan} style={{ backgroundColor: "#F5F8FC", padding: "16px 24px" }}>
-                    {renderHistory(rows[rowMeta.dataIndex].hospitalId)}
+                    {renderHistory(rows[rowMeta.dataIndex].hospitalPaymentSettingId)}
                 </td>
             </tr>
         );
@@ -312,8 +302,6 @@ const useHospitalManagementDataTableHook = ({
     return {
         rows,
         columns,
-        paginated: paginationResult,
-        setPaginated,
         expandedIndexes,
         renderExpandableRow,
     };

@@ -3,11 +3,16 @@ import useManagePaymentHospitalHook from "../hooks/ManagePaymentHospitalHook";
 import AddHospitalDialog from "../components/AddHospitalDialog";
 import CardHeaderSummaryDetail from "../components/CardHeaderSummaryDetail";
 import SearchHospitalByName from "../../_common/SearchHospitalByName";
+import HospitalPaySettingsTable from "../components/HospitalManagementDataTable";
+import HistorySettingByHospitalId from "../components/HistorySettingByHospitalId";
 
 const ManagePaymentHospital = () => {
     const theme = useTheme();
     const breakpoint = useMediaQuery(theme.breakpoints.down("md"));
-    const { formik, handleOpenDialog } = useManagePaymentHospitalHook();
+    const { formik, handleOpenDialog, hospitalData, isGetHospitalLoading } = useManagePaymentHospitalHook();
+
+    const countAutoPay = hospitalData?.filter((item) => item.holdStatusId === 1).length;
+    const countHolding = hospitalData?.filter((item) => item.holdStatusId === 2).length;
     return (
         <>
             <Grid container spacing={2}>
@@ -35,8 +40,8 @@ const ManagePaymentHospital = () => {
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
                     <CardHeaderSummaryDetail
-                        autoEnabledCount={2}
-                        holdingCount={1}
+                        autoEnabledCount={countAutoPay ?? 0}
+                        holdingCount={countHolding ?? 0}
                         title="กำหนดการจ่ายอัตโนมัติรายสถานพยาบาล"
                         subtitle="เลือกระยะ Delay เป็นจำนวนวันหลังรายการพร้อมจ่าย โดยไม่ผูกกับวันที่ตายตัว"
                     />
@@ -44,6 +49,18 @@ const ManagePaymentHospital = () => {
 
                 <Grid item xs={12} sm={12} md={12} lg={12}>
                     <SearchHospitalByName formik={formik} />
+                </Grid>
+                <Grid item xs={12} sm={12} md={12} lg={12}>
+                    {hospitalData.length > 0 && (
+                        <HospitalPaySettingsTable
+                            initialRows={hospitalData ?? []}
+                            onSaveRow={(row) => {}}
+                            renderHistory={(hospitalId) => (
+                                <HistorySettingByHospitalId hospitalSettingId={hospitalId} />
+                            )}
+                            isLoading={isGetHospitalLoading}
+                        />
+                    )}
                 </Grid>
             </Grid>
 

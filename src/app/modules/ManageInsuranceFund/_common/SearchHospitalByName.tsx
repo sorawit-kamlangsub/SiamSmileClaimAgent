@@ -38,7 +38,7 @@ const SearchHospitalByName = <T extends SearchFormValues>({ formik }: SearchHosp
                         label=""
                         fullWidth
                         size="small"
-                        name="search"
+                        name="searchDetail"
                         placeholder="ค้นหาด้วยชื่อสถานพยาบาล"
                     />
                 </Grid>

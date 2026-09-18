@@ -6,18 +6,21 @@ import useHospitalManagementDataTableHook, { HospitalPaySettingRow } from "../ho
 export interface HospitalPaySettingsTableProps {
     initialRows: HospitalPaySettingRow[];
     onSaveRow: (row: HospitalPaySettingRow) => void;
-    onToggleHold: (hospitalId: string) => void;
     renderHistory: (hospitalId: string) => React.ReactNode;
+    isLoading: boolean;
 }
 
 const HospitalPaySettingsTable = ({
     initialRows,
     onSaveRow,
-    onToggleHold,
     renderHistory,
+    isLoading,
 }: HospitalPaySettingsTableProps) => {
-    const { rows, columns, paginated, setPaginated, expandedIndexes, renderExpandableRow } =
-        useHospitalManagementDataTableHook({ initialRows, onSaveRow, onToggleHold, renderHistory });
+    const { rows, columns, expandedIndexes, renderExpandableRow } = useHospitalManagementDataTableHook({
+        initialRows,
+        onSaveRow,
+        renderHistory,
+    });
 
     return (
         <Box
@@ -56,8 +59,9 @@ const HospitalPaySettingsTable = ({
                 title=""
                 data={rows}
                 columns={columns}
-                paginated={paginated}
-                setPaginated={setPaginated}
+                displayFooter={false}
+                isLoading={isLoading}
+                color="primary"
                 options={{
                     expandableRows: true,
                     expandableRowsHeader: false,
