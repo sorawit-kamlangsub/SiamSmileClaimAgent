@@ -361,7 +361,7 @@ export const useCreateCaseRefund = (
     onWarningCallback?: (error: string) => void
 ) => {
     const queryClient = useQueryClient();
-    return useMutation((payload: CreateCaseRefundPayload) => createCaseRefund(payload), {
+    const mutation = useMutation((payload: CreateCaseRefundPayload) => createCaseRefund(payload), {
         onSuccess: (response) => {
             onSuccessCallBack(response);
             queryClient.invalidateQueries([getRefundDetail]);
@@ -375,6 +375,7 @@ export const useCreateCaseRefund = (
             }
         },
     });
+    return { mutate: mutation.mutate, isLoading: mutation.isLoading };
 };
 
 const createCaseRefund = (payload: CreateCaseRefundPayload) => {

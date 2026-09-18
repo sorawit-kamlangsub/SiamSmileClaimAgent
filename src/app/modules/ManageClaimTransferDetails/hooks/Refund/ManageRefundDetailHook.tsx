@@ -90,7 +90,11 @@ const useManageRefundDetailHook = (caseId: string) => {
         swalWarning("แจ้งเตือน", err);
     };
 
-    const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError, handleSaveWarning);
+    const { mutate: saveCaseRefundMutate, isLoading: isSaveRefundLoading } = useCreateCaseRefund(
+        handleSaveSuccess,
+        handleSaveError,
+        handleSaveWarning
+    );
 
     const formik = useFormik<RefundDetailFormValues>({
         initialValues: emptyFormValues,
@@ -169,6 +173,7 @@ const useManageRefundDetailHook = (caseId: string) => {
         formik,
         summary: detailData,
         isDetailLoading,
+        isSaveRefundLoading,
         reasonOptions: refundReasonsRes?.data,
         reasonOptionIsLoading: isReasonLoading,
         transferTypeOptions,
