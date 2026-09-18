@@ -283,7 +283,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 )}
                 </Box>
 
-                <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 2 }}>
+                <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 2, mb: 0 }}>
                     <Grid container spacing={2} sx={{ mt: 0 }}>
                     <Grid item xs={12} sm={6}>
                         <FormikDropdown
@@ -304,7 +304,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                     </Grid>
                 </Grid>
 
-                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, py: 2 }}>
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, pt: 2, pb: 0 }}>
                     <Button
                         variant="outlined"
                         color="error"
