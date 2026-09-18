@@ -160,6 +160,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                 <IconButton
                     size="small"
                     onClick={onClose}
+                    disabled={isUpdatingStatus}
                     sx={{ backgroundColor: "#FDECEC", color: "#E53935", "&:hover": { backgroundColor: "#FBD5D5" } }}
                 >
                     <CloseIcon fontSize="small" />
