@@ -163,7 +163,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 open={open}
                 maxWidth="md"
                 fullWidth
-                PaperProps={{ sx: { height: { xs: "90vh", md: "60vh" }, overflow: "hidden", borderRadius: 3 } }}
+                PaperProps={{ sx: { height: { xs: "90vh", md: "65vh" }, overflow: "hidden", borderRadius: 3 } }}
             >
             <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, p: "16px 24px", borderBottom: "1px solid #E0E0E0" }}>
                 <Box
@@ -283,7 +283,8 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 )}
                 </Box>
 
-                <Grid container spacing={2} sx={{ mt: 0 }}>
+                <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 2 }}>
+                    <Grid container spacing={2} sx={{ mt: 0 }}>
                     <Grid item xs={12} sm={6}>
                         <FormikDropdown
                             name="rejectReasonId"
@@ -321,6 +322,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                     >
                         อนุมัติ
                     </Button>
+                </Box>
                 </Box>
             </DialogContent>
         </Dialog>
