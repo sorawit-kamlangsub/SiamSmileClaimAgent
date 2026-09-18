@@ -199,7 +199,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                     minHeight: 0,
                     display: "flex",
                     flexDirection: "column",
-                    justifyContent: { xs: "flex-start", md: "center" },
+                    justifyContent: mode === "view" ? "flex-start" : { xs: "flex-start", md: "center" },
                     pt: "15px",
                     pb: 0,
                 }}
