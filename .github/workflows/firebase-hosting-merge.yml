@@ -13,6 +13,12 @@ jobs:
       - uses: actions/checkout@v4
       - run: npm ci  
       - run: npm run build:uat
+      - name: Check built configuration
+        run: |
+          echo "----- UAT files -----"
+          ls -la UAT
+          echo "----- configuration.js -----"
+          cat UAT/configuration.js      
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
