@@ -67,6 +67,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const [openSlipDialog, setOpenSlipDialog] = useState(false);
     const [slipFileUrl, setSlipFileUrl] = useState("");
     const isPdfSlip = slipFileUrl.toLowerCase().endsWith(".pdf");
+    const slipSrc = isPdfSlip ? `${slipFileUrl}#zoom=50` : slipFileUrl;
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
     const caseRefundId = detail?.caseRefundId ?? caseId;
@@ -352,7 +353,7 @@ sx={{ zIndex: 1400 }}
                     }}
                 >
                     {isPdfSlip ? (
-                        <Box component="iframe" src={slipFileUrl} title="Slip การโอนเงิน" sx={{ width: "100%", flex: 1, border: "none" }} />
+                        <Box component="iframe" src={slipSrc} title="Slip การโอนเงิน" sx={{ width: "100%", flex: 1, border: "none" }} />
                     ) : (
                         <Box
                             component="img"
