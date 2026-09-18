@@ -7,7 +7,8 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
 import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
-import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
+// เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+// import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
 import {
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
@@ -74,12 +75,13 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         cancelReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
-        continuousClaimRows,
-        continuousClaimOpen,
-        setContinuousClaimOpen,
-        handleToggleContinuousClaim,
-        handleSelectContinuousClaim,
-        handleClearContinuousClaim,
+        // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+        // continuousClaimRows,
+        // continuousClaimOpen,
+        // setContinuousClaimOpen,
+        // handleToggleContinuousClaim,
+        // handleSelectContinuousClaim,
+        // handleClearContinuousClaim,
     } = considerDetail;
     const { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving, isSavingDraft, isSavingDecision } =
         useClaimDetailActionHook({
@@ -100,7 +102,8 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                 );
             },
         });
-    const continuousClaim = formik.values.continuousClaim;
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const continuousClaim = formik.values.continuousClaim;
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
     const { activeStep, setActiveStep, isLastStep, isCalculating, isAdvancing, handleNext, handleBack } =
@@ -129,6 +132,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                         {activeStep === 0 && (
                             <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
                                 <Grid container spacing={2}>
+                                    {/* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
                                     {continuousClaim && (
                                         <Grid item xs={12}>
                                             <ContinuousClaimBanner
@@ -139,6 +143,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             />
                                         </Grid>
                                     )}
+                                    */}
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
                                         <RecordClaimData
                                             incidentType={incidentType}
@@ -147,12 +152,6 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             causeOfIncident={[]}
                                             medicalType={medicalType}
                                             incidentTypeMappingLoading={incidentTypeMappingLoading}
-                                            continuousClaimRows={continuousClaimRows}
-                                            continuousClaimOpen={continuousClaimOpen}
-                                            onContinuousClaimOpenChange={setContinuousClaimOpen}
-                                            onContinuousClaimToggle={handleToggleContinuousClaim}
-                                            onContinuousClaimSelect={handleSelectContinuousClaim}
-                                            onContinuousClaimClear={handleClearContinuousClaim}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
