@@ -308,13 +308,11 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 </Box>
             </DialogContent>
         </Dialog>
-        <Dialog
+<Dialog
             open={openSlipDialog}
             onClose={() => setOpenSlipDialog(false)}
-            maxWidth="xs"
-            fullWidth
             sx={{ zIndex: 1400 }}
-            PaperProps={{ sx: { borderRadius: 3, maxWidth: 380 } }}
+            PaperProps={{ sx: { m: 0, borderRadius: 3 } }}
         >
             <DialogTitle sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121", pb: 1, textAlign: "center" }}>
                 Slip การโอนเงิน
@@ -337,7 +335,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                         component="img"
                         src="https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691808343613712.jpg"
                         alt="Slip การโอนเงิน"
-                        sx={{ maxWidth: "100%", maxHeight: 240, objectFit: "contain" }}
+                        sx={{ maxWidth: "80vw", maxHeight: "70vh", width: "auto", height: "auto" }}
                     />
                 </Box>
                 <Button
