@@ -234,7 +234,7 @@ export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnab
 
 export const useGetClaimContinue = (
     applicationId?: string | undefined,
-    initialClaimId?: string | undefined,
+    initialCaseId?: string | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,
@@ -245,7 +245,7 @@ export const useGetClaimContinue = (
         [
             getClaimContinueQueryKey,
             applicationId,
-            initialClaimId,
+            initialCaseId,
             searchDetail,
             orderingField,
             ascendingOrder,
@@ -255,7 +255,7 @@ export const useGetClaimContinue = (
         () =>
             coreClaimClient.getClaimContinue(
                 applicationId,
-                initialClaimId,
+                initialCaseId,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
