@@ -11,14 +11,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: npm ci  
-      - run: npm run build:uat
-      - name: Check built configuration
+      - name: Check environment
         run: |
-          echo "----- UAT files -----"
-          ls -la UAT
-          echo "----- configuration.js -----"
-          cat uat/configuration.js      
+          echo "----- .env files -----"
+          ls -la .env*
+          echo "----- .env.uat VITE_BASE_URL -----"
+          grep '^VITE_BASE_URL' .env.uat || true
+      - run: npm ci  
+      - run: npm run build:uat     
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
