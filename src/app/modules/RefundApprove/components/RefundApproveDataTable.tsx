@@ -7,14 +7,16 @@ type RefundApproveDataTableProps = {
     hasSearched: boolean;
     searchKey: number;
     onEdit?: (row: RefundApproveMonitorRow) => void;
+    onView?: (row: RefundApproveMonitorRow) => void;
 };
 
-const RefundApproveDataTable = ({ filter, hasSearched, searchKey, onEdit }: RefundApproveDataTableProps) => {
+const RefundApproveDataTable = ({ filter, hasSearched, searchKey, onEdit, onView }: RefundApproveDataTableProps) => {
     const { columns, data, isLoading, isError, error, pagination, setPaginated } = useRefundApproveDataTableHook({
         filter,
         hasSearched,
         searchKey,
         onEdit,
+        onView,
     });
     return (
         <>

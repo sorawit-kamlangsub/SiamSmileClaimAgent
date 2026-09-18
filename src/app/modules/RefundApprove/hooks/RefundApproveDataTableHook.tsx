@@ -47,6 +47,7 @@ export type RefundApproveDataTableHookProps = {
     hasSearched: boolean;
     searchKey: number;
     onEdit?: (row: RefundApproveMonitorRow) => void;
+    onView?: (row: RefundApproveMonitorRow) => void;
 };
 
 const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
@@ -75,7 +76,7 @@ const formatAmount = (value: number) =>
         maximumFractionDigits: 2,
     });
 
-const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit }: RefundApproveDataTableHookProps) => {
+const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit, onView }: RefundApproveDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -109,9 +110,10 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit 
 
     const data = getRefundMonitorData?.data ?? [];
 
-    const handleView = (row: any) => {
-        // TODO: open view dialog / navigate to detail page
-        console.log("view", row);
+    const handleView = (row: RefundApproveMonitorRow) => {
+        if (onView) {
+            onView(row);
+        }
     };
 
     const handleEdit = (row: RefundApproveMonitorRow) => {

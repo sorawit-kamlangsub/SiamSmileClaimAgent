@@ -17,6 +17,7 @@ type ApproveRefundDialogProps = {
     open: boolean;
     row: RefundApproveMonitorRow | null;
     onClose: () => void;
+    mode?: "approve" | "view";
 };
 
 type ApproveRefundDialogFormValues = {
@@ -60,7 +61,7 @@ const formatNumber = (value: number | undefined | null) =>
               maximumFractionDigits: 2,
           });
 
-const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) => {
+const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRefundDialogProps) => {
     const caseId = row?.caseId ?? "";
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
@@ -257,74 +258,92 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                                     {detail?.refundCount ?? "-"}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(detail?.remainingAmount)}
-                                </Typography>
-                            </Grid>
+                            {mode === "approve" && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
+                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        {formatNumber(detail?.remainingAmount)}
+                                    </Typography>
+                                </Grid>
+                            )}
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>โอนคืนรวม :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
                                     {formatNumber(detail?.totalRefundAmount)}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>คงเหลือ :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(
-                                        detail?.remainingAmount != null && detail?.totalRefundAmount != null
-                                            ? detail.remainingAmount - detail.totalRefundAmount
-                                            : undefined
-                                    )}
-                                </Typography>
-                            </Grid>
+                            {mode === "approve" && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>คงเหลือ :</Typography>
+                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        {formatNumber(
+                                            detail?.remainingAmount != null && detail?.totalRefundAmount != null
+                                                ? detail.remainingAmount - detail.totalRefundAmount
+                                                : undefined
+                                        )}
+                                    </Typography>
+                                </Grid>
+                            )}
                         </Grid>
                     </>
                 )}
                 </Box>
 
-                <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 2, mb: 0 }}>
-                    <Grid container spacing={2} sx={{ mt: 0 }}>
-                    <Grid item xs={12} sm={6}>
-                        <FormikDropdown
-                            name="rejectReasonId"
-                            formik={formik}
-                            label="สาเหตุที่ปฏิเสธ"
-                            data={reasonOptions}
-                            valueFieldName="id"
-                            displayFieldName="name"
-                            fullWidth
-                            firstItemText="กรุณาเลือกสาเหตุที่ปฏิเสธ"
-                            disableFirstItem
-                            required
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <FormikTextField formik={formik} name="note" label="หมายเหตุ" placeholder="หมายเหตุ" fullWidth />
-                    </Grid>
-                </Grid>
+                {mode === "approve" && (
+                    <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 2, mb: 0 }}>
+                        <Grid container spacing={2} sx={{ mt: 0 }}>
+                            <Grid item xs={12} sm={6}>
+                                <FormikDropdown
+                                    name="rejectReasonId"
+                                    formik={formik}
+                                    label="สาเหตุที่ปฏิเสธ"
+                                    data={reasonOptions}
+                                    valueFieldName="id"
+                                    displayFieldName="name"
+                                    fullWidth
+                                    firstItemText="กรุณาเลือกสาเหตุที่ปฏิเสธ"
+                                    disableFirstItem
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <FormikTextField formik={formik} name="note" label="หมายเหตุ" placeholder="หมายเหตุ" fullWidth />
+                            </Grid>
+                        </Grid>
 
-                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, pt: 2, pb: 0 }}>
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleRejectClick}
-                        disabled={isDetailLoading || !caseRefundId}
-                    >
-                        ปฏิเสธ
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<SyncAltIcon />}
-                        onClick={handleApproveClick}
-                        disabled={isDetailLoading || !caseRefundId}
-                        sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
-                    >
-                        อนุมัติ
-                    </Button>
-                </Box>
-                </Box>
+                        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, pt: 2, pb: 0 }}>
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={handleRejectClick}
+                                disabled={isDetailLoading || !caseRefundId}
+                            >
+                                ปฏิเสธ
+                            </Button>
+                            <Button
+                                variant="contained"
+                                startIcon={<SyncAltIcon />}
+                                onClick={handleApproveClick}
+                                disabled={isDetailLoading || !caseRefundId}
+                                sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
+                            >
+                                อนุมัติ
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
+
+                {mode === "view" && (
+                    <Box sx={{ display: "flex", justifyContent: "center", pt: 2, pb: 0 }}>
+                        <Button
+                            variant="contained"
+                            onClick={onClose}
+                            sx={{ px: 6, backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
+                        >
+                            ตกลง
+                        </Button>
+                    </Box>
+                )}
             </DialogContent>
         </Dialog>
 <Dialog
