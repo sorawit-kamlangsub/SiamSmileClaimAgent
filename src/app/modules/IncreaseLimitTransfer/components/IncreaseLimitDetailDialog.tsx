@@ -173,7 +173,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                     </Box>
                 ) : (
                     <>
-                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2 }}>
+                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 1 }}>
                             <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
                                 <DescriptionIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
                                 <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
