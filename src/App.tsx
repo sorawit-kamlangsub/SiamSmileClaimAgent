@@ -79,7 +79,7 @@ function App() {
     const routeObjects = CombineRouteConfig.map((route) => createRouteObject(route, queryClient));
 
     const router = createBrowserRouter(routeObjects, {
-        basename: import.meta.env.VITE_BASE_URL,
+        basename: "/",
     });
 
     return <RouterProvider router={router} />;
