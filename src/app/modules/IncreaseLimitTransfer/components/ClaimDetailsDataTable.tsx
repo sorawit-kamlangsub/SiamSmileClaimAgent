@@ -1,31 +1,37 @@
-import { Grid } from "@mui/material";
-import useClaimCpgTransferDataTableHook from "../hooks/ClaimDetailsDataTableHook";
-import { PaginationSortableDto, StandardDataTable } from "../../_common";
-import { useState } from "react";
+import { ClaimFundStandardDataTable, NOT_FOUND_MESSAGE } from "../../_common";
+import useClaimCpgTransferDataTableHook, { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
+import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 
-const ClaimDetailsDataTable = () => {
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 5,
+type ClaimDetailsDataTableProps = {
+    filter: ClaimSearchFilterValues | undefined;
+    hasSearched: boolean;
+    searchKey: number;
+    onEdit?: (row: IncreaseTransferMonitorRow) => void;
+};
+
+const ClaimDetailsDataTable = ({ filter, hasSearched, searchKey, onEdit }: ClaimDetailsDataTableProps) => {
+    const { columns, data, isLoading, isError, error, pagination, setPaginated } = useClaimCpgTransferDataTableHook({
+        filter,
+        hasSearched,
+        searchKey,
+        onEdit,
     });
-    const { columns, dataMock } = useClaimCpgTransferDataTableHook();
 
     return (
-        <>
-            <Grid container spacing={2}>
-                <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <StandardDataTable
-                        name="cpgTransfer"
-                        title=""
-                        data={dataMock ?? []}
-                        columns={columns}
-                        paginated={paginated}
-                        setPaginated={setPaginated}
-                        color="primary"
-                    />
-                </Grid>
-            </Grid>
-        </>
+        <ClaimFundStandardDataTable
+            name="cpgTransfer"
+            title=""
+            columns={columns}
+            data={data ?? []}
+            color="primary"
+            paginated={pagination}
+            setPaginated={setPaginated}
+            isLoading={hasSearched ? isLoading : false}
+            isError={hasSearched ? isError : false}
+            error={error}
+            noMatchText={NOT_FOUND_MESSAGE}
+            delayNoMatch={false}
+        />
     );
 };
 

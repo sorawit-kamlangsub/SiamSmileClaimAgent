@@ -12,6 +12,7 @@ const RefundApprovePage = () => {
     const [hasSearched, setHasSearched] = useState(false);
     const [searchKey, setSearchKey] = useState(0);
     const [approveRow, setApproveRow] = useState<RefundApproveMonitorRow | null>(null);
+    const [viewRow, setViewRow] = useState<RefundApproveMonitorRow | null>(null);
 
     const handleSearch = (values: RefundSearchFilterValues) => {
         setFilter(values);
@@ -38,10 +39,17 @@ const RefundApprovePage = () => {
                         hasSearched={hasSearched}
                         searchKey={searchKey}
                         onEdit={setApproveRow}
+                        onView={setViewRow}
                     />
                 </Box>
             </Grid>
             <ApproveRefundDialog open={approveRow !== null} row={approveRow} onClose={() => setApproveRow(null)} />
+            <ApproveRefundDialog
+                mode="view"
+                open={viewRow !== null}
+                row={viewRow}
+                onClose={() => setViewRow(null)}
+            />
         </Grid>
     );
 };

@@ -2,63 +2,46 @@ import { Box, IconButton, Link, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
+import { useMemo, useState } from "react";
+import dayjs from "dayjs";
+import { useGetIncreaseTransferLimitMonitors } from "../increaseLimitTransferAPI";
+import { PaginationResultDto, PaginationSortableDto } from "../../_common";
+import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 
-export interface CpgTransferRow {
-    cpgCode: string;
-    claimNo: string;
-    createdDate: string;
-    branch: string;
-    amount: number;
-    accountNo: string;
-    transferType: string;
-    status: "รอตรวจสอบ" | "อนุมัติ" | "ปฏิเสธ";
-    reason: string | null;
-}
+const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
 
-const dataMock: CpgTransferRow[] = [
-    {
-        cpgCode: "CPG690600047",
-        claimNo: "CL6904000962",
-        createdDate: "22/05/2569 06:10:11",
-        branch: "กรุงเทพมหานคร",
-        amount: 7000.0,
-        accountNo: "1821000011",
-        transferType: "โอนเงินเพิ่ม",
-        status: "รอตรวจสอบ",
-        reason: null,
-    },
-    {
-        cpgCode: "CPG690600648",
-        claimNo: "CL6904000784",
-        createdDate: "11/10/2569 12:24:23",
-        branch: "กรุงเทพมหานคร",
-        amount: 1700.0,
-        accountNo: "1821000442",
-        transferType: "โอนเงินครั้งแรก",
-        status: "รอตรวจสอบ",
-        reason: null,
-    },
-    {
-        cpgCode: "CPG690600784",
-        claimNo: "CL6904000318",
-        createdDate: "10/10/2569 11:24:23",
-        branch: "สำนักงานใหญ่",
-        amount: 1000.0,
-        accountNo: "1821000453",
-        transferType: "โอนเงินครั้งแรก",
-        status: "รอตรวจสอบ",
-        reason: null,
-    },
-];
+type StatusColor = { bg: string; text: string };
 
-const StatusPill = ({ status }: { status: CpgTransferRow["status"] }) => {
-    const colorMap: Record<CpgTransferRow["status"], { bg: string; text: string }> = {
-        รอตรวจสอบ: { bg: "#FFF3E0", text: "#EF6C00" },
-        อนุมัติ: { bg: "#E8F5E9", text: "#2E7D32" },
-        ปฏิเสธ: { bg: "#FDECEA", text: "#C62828" },
-    };
-    const { bg, text } = colorMap[status];
+const statusColorMapById: Record<number, StatusColor> = {
+    1: { bg: "#FFF3E0", text: "#EF6C00" },
+    2: { bg: "#E8F5E9", text: "#2E7D32" },
+    3: { bg: "#FDECEA", text: "#C62828" },
+};
 
+export type IncreaseTransferMonitorRow = {
+    caseId?: string;
+    caseNo?: string;
+    claimNo?: string;
+    createdDate?: string;
+    branchName?: string;
+    amount?: number;
+    toAccountNo?: string;
+    transferType?: string;
+    cpgNo?: string;
+    limitStatusId?: number;
+    limitStatusNameTH?: string;
+    reason?: string;
+};
+
+export type IncreaseLimitTransferDataTableHookProps = {
+    filter: ClaimSearchFilterValues | undefined;
+    hasSearched: boolean;
+    searchKey: number;
+    onEdit?: (row: IncreaseTransferMonitorRow) => void;
+};
+
+const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
+    const { bg, text } = color;
     return (
         <Box
             sx={{
@@ -77,26 +60,67 @@ const StatusPill = ({ status }: { status: CpgTransferRow["status"] }) => {
     );
 };
 
-const useClaimCpgTransferDataTableHook = () => {
-    const handleViewRow = (row: CpgTransferRow) => {
+const formatAmount = (value: number) =>
+    value.toLocaleString("th-TH", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+    });
+
+const useClaimCpgTransferDataTableHook = ({
+    filter,
+    hasSearched,
+    searchKey,
+    onEdit,
+}: IncreaseLimitTransferDataTableHookProps) => {
+    const [paginated, setPaginated] = useState<PaginationSortableDto>({
+        page: 1,
+        recordsPerPage: 10,
+    });
+    const {
+        data: getIncreaseTransferLimitMonitors,
+        isLoading: isGetIncreaseTransferLimitLoading,
+        isError: isGetIncreaseTransferLimitError,
+        error: getIncreaseTransferLimitError,
+    } = useGetIncreaseTransferLimitMonitors({
+        searchDetail: filter?.searchText,
+        searchKey,
+        pagination: paginated,
+        enabled: hasSearched,
+    });
+
+    const pagination: PaginationResultDto = useMemo(
+        () => ({
+            totalAmountRecords: getIncreaseTransferLimitMonitors?.totalAmountRecords ?? 0,
+            totalAmountPages: getIncreaseTransferLimitMonitors?.totalAmountPages ?? 0,
+            currentPage: getIncreaseTransferLimitMonitors?.currentPage ?? 0,
+            recordsPerPage: getIncreaseTransferLimitMonitors?.recordsPerPage ?? paginated.recordsPerPage,
+            pageIndex: getIncreaseTransferLimitMonitors?.pageIndex ?? 0,
+        }),
+        [getIncreaseTransferLimitMonitors, paginated]
+    );
+
+    const rows = getIncreaseTransferLimitMonitors?.data ?? [];
+
+    const handleViewRow = (row: IncreaseTransferMonitorRow) => {
         // TODO: open view dialog / navigate to detail page
         console.log("view", row);
     };
 
-    const handleEditRow = (row: CpgTransferRow) => {
-        // TODO: open edit/inspect dialog
-        console.log("edit", row);
+    const handleEditRow = (row: IncreaseTransferMonitorRow) => {
+        if (onEdit) {
+            onEdit(row);
+        }
     };
 
     const columns: MUIDataTableColumn[] = [
         {
-            name: "cpgCode",
-            label: "เลขที่ CPG",
+            name: "claimNo",
+            label: "เลขที่ CL",
             options: {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = dataMock[dataIndex];
+                    const row = rows[dataIndex];
                     return (
                         <Link
                             component="button"
@@ -104,15 +128,15 @@ const useClaimCpgTransferDataTableHook = () => {
                             sx={{ color: "#1565C0", fontWeight: 600 }}
                             onClick={() => handleViewRow(row)}
                         >
-                            {row.cpgCode}
+                            {row?.claimNo}
                         </Link>
                     );
                 },
             },
         },
         {
-            name: "claimNo",
-            label: "เลขที่ CL",
+            name: "caseNo",
+            label: "เลขที่ CC",
             options: {
                 sort: false,
                 filter: false,
@@ -124,10 +148,14 @@ const useClaimCpgTransferDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
+                customBodyRenderLite: (dataIndex) => {
+                    const createdDate = rows[dataIndex]?.createdDate;
+                    return createdDate ? dayjs(createdDate).format("DD/MM/YYYY HH:mm:ss") : "-";
+                },
             },
         },
         {
-            name: "branch",
+            name: "branchName",
             label: "สาขา",
             options: {
                 sort: false,
@@ -140,17 +168,11 @@ const useClaimCpgTransferDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => {
-                    const row = dataMock[dataIndex];
-                    return row.amount.toLocaleString("th-TH", {
-                        minimumFractionDigits: 2,
-                        maximumFractionDigits: 2,
-                    });
-                },
+                customBodyRenderLite: (dataIndex) => formatAmount(rows[dataIndex]?.amount ?? 0),
             },
         },
         {
-            name: "accountNo",
+            name: "toAccountNo",
             label: "เลขที่บัญชี",
             options: {
                 sort: false,
@@ -172,8 +194,10 @@ const useClaimCpgTransferDataTableHook = () => {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = dataMock[dataIndex];
-                    return <StatusPill status={row.status} />;
+                    const row = rows[dataIndex];
+                    const status = row?.limitStatusNameTH ?? "-";
+                    const color = statusColorMapById[row?.limitStatusId ?? -1] ?? defaultStatusColor;
+                    return <StatusPill status={status} color={color} />;
                 },
             },
         },
@@ -183,10 +207,7 @@ const useClaimCpgTransferDataTableHook = () => {
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => {
-                    const row = dataMock[dataIndex];
-                    return row.reason ?? "-";
-                },
+                customBodyRenderLite: (dataIndex) => rows[dataIndex]?.reason ?? "-",
             },
         },
         {
@@ -196,15 +217,17 @@ const useClaimCpgTransferDataTableHook = () => {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = dataMock[dataIndex];
+                    const row = rows[dataIndex];
                     return (
                         <Box sx={{ display: "flex", gap: "4px" }}>
                             <IconButton size="small" onClick={() => handleViewRow(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                            <IconButton size="small" onClick={() => handleEditRow(row)}>
-                                <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
-                            </IconButton>
+                            {row?.limitStatusId === 2 && (
+                                <IconButton size="small" onClick={() => handleEditRow(row)}>
+                                    <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
+                                </IconButton>
+                            )}
                         </Box>
                     );
                 },
@@ -212,7 +235,15 @@ const useClaimCpgTransferDataTableHook = () => {
         },
     ];
 
-    return { columns, dataMock };
+    return {
+        columns,
+        data: rows,
+        isLoading: isGetIncreaseTransferLimitLoading,
+        isError: isGetIncreaseTransferLimitError,
+        error: getIncreaseTransferLimitError,
+        pagination,
+        setPaginated,
+    };
 };
 
 export default useClaimCpgTransferDataTableHook;

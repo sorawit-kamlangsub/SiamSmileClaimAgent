@@ -8,6 +8,7 @@ import useAdditionalTransferAccountDetailHook from "../hooks/AdditionalTransferA
 import { useAppDispatch, useAppSelector } from "../../../../redux";
 import { setOpenDialogAdjustDetail } from "../store/adjustTransferMonitorSlice";
 import { FormikDropdown } from "../../_common";
+import { useGetBank } from "../../../api/coreClaimMastersApi";
 
 export interface ExistingAccountInfo {
     logoUrl?: string;
@@ -37,6 +38,12 @@ export interface EditReceivingAccountDialogProps {
     amount: number;
 }
 
+const relationDropDownDataMock = [
+    { id: 1, label: "ผู้เอาประกัน" },
+    { id: 2, label: "ผู้ชำระเบี้ย" },
+    { id: 3, label: "ผู้รับผลประโยชน์" },
+];
+
 const FieldLabel = ({ children, required }: { children: React.ReactNode; required?: boolean }) => (
     <Typography sx={{ fontSize: "0.85rem", color: "#455A64", marginBottom: "4px" }}>
         {children}
@@ -56,7 +63,7 @@ const BankEditDetailDialog = () => {
         paymentId: selectRowForEdit.paymentId,
     });
     const avatarBank = setBankLogo(dataDetail?.toBankId);
-
+    const { data: bankData } = useGetBank();
     const handleCloseDialog = () => {
         dispatch(setOpenDialogAdjustDetail({ isOpen: false }));
     };
@@ -155,10 +162,10 @@ const BankEditDetailDialog = () => {
                         formik={formik}
                         label=""
                         name="relationship"
-                        data={[]}
+                        data={relationDropDownDataMock ?? []}
                         firstItemText="กรุณาเลือก"
-                        displayFieldName=""
-                        valueFieldName=""
+                        displayFieldName="label"
+                        valueFieldName="id"
                         fullWidth
                     />
                 </Box>
@@ -169,10 +176,10 @@ const BankEditDetailDialog = () => {
                         formik={formik}
                         label=""
                         name="bankId"
-                        data={[]}
+                        data={bankData?.data ?? []}
                         firstItemText="กรุณาเลือก"
-                        displayFieldName=""
-                        valueFieldName=""
+                        displayFieldName="organizeName"
+                        valueFieldName="organizeId"
                         fullWidth
                     />
                 </Box>

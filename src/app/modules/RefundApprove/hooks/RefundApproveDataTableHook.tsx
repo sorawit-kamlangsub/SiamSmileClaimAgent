@@ -47,6 +47,7 @@ export type RefundApproveDataTableHookProps = {
     hasSearched: boolean;
     searchKey: number;
     onEdit?: (row: RefundApproveMonitorRow) => void;
+    onView?: (row: RefundApproveMonitorRow) => void;
 };
 
 const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
@@ -75,7 +76,7 @@ const formatAmount = (value: number) =>
         maximumFractionDigits: 2,
     });
 
-const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit }: RefundApproveDataTableHookProps) => {
+const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit, onView }: RefundApproveDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -109,9 +110,10 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit 
 
     const data = getRefundMonitorData?.data ?? [];
 
-    const handleView = (row: any) => {
-        // TODO: open view dialog / navigate to detail page
-        console.log("view", row);
+    const handleView = (row: RefundApproveMonitorRow) => {
+        if (onView) {
+            onView(row);
+        }
     };
 
     const handleEdit = (row: RefundApproveMonitorRow) => {
@@ -215,23 +217,18 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit 
                 customBodyRenderLite: (dataIndex) => {
                     const row = data[dataIndex];
 
-                    if (row?.refundStatusId === 2) {
-                        return (
-                            <IconButton size="small" onClick={() => handleEdit(row)}>
-                                <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
-                            </IconButton>
-                        );
-                    }
-
-                    if (row?.refundStatusId === 3) {
-                        return (
+                    return (
+                        <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
                             <IconButton size="small" onClick={() => handleView(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                        );
-                    }
-
-                    return <>-</>;
+                            {row?.refundStatusId === 2 && (
+                                <IconButton size="small" onClick={() => handleEdit(row)}>
+                                    <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
+                                </IconButton>
+                            )}
+                        </Box>
+                    );
                 },
             },
         },

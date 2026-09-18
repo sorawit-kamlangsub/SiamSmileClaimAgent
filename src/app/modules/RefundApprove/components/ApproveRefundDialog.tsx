@@ -3,7 +3,7 @@ import ImageIcon from "@mui/icons-material/Image";
 import SyncAltIcon from "@mui/icons-material/SyncAlt";
 import CloseIcon from "@mui/icons-material/Close";
 import { FormikErrors, useFormik } from "formik";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FormikDropdown, FormikTextField, swalError, swalSuccess, swalWarning } from "../../_common";
 import { swalConfirmAction } from "../../_common/customSweetAlert";
 import {
@@ -17,6 +17,7 @@ type ApproveRefundDialogProps = {
     open: boolean;
     row: RefundApproveMonitorRow | null;
     onClose: () => void;
+    mode?: "approve" | "view";
 };
 
 type ApproveRefundDialogFormValues = {
@@ -60,25 +61,33 @@ const formatNumber = (value: number | undefined | null) =>
               maximumFractionDigits: 2,
           });
 
-const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) => {
+const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRefundDialogProps) => {
     const caseId = row?.caseId ?? "";
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
+    const [openSlipDialog, setOpenSlipDialog] = useState(false);
+    const [slipFileUrl, setSlipFileUrl] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const isPdfSlip = slipFileUrl.toLowerCase().endsWith(".pdf");
+    const slipSrc = isPdfSlip ? `${slipFileUrl}#zoom=50` : slipFileUrl;
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
     const caseRefundId = detail?.caseRefundId ?? caseId;
     const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
 
     const handleUpdateStatusSuccess = () => {
+        setIsSubmitting(false);
         swalSuccess("ทำรายการสำเร็จ", "ทำรายการสำเร็จ");
         onClose();
     };
 
     const handleUpdateStatusError = (error: string) => {
+        setIsSubmitting(false);
         swalError("แจ้งเตือน", error);
     };
 
     const handleUpdateStatusWarning = (error: string) => {
+        setIsSubmitting(false);
         swalWarning("แจ้งเตือน", error);
     };
 
@@ -98,6 +107,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
             return errors;
         },
         onSubmit: (values) => {
+            setIsSubmitting(true);
             updateStatusMutate({
                 caseRefundId,
                 caseRefundStatusId: 4,
@@ -114,6 +124,8 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     }, [open, row?.caseId]);
 
     const handleApproveClick = async () => {
+        formik.setFieldError("rejectReasonId", undefined);
+        formik.setFieldTouched("rejectReasonId", false);
         const result = await swalConfirmAction({
             title: "ยืนยันการอนุมัติคืนเงิน?",
             text: "ต้องการอนุมัติการคืนเงินหรือไม่",
@@ -121,6 +133,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
             cancelButtonText: "ยกเลิก",
         });
         if (result.isConfirmed) {
+            setIsSubmitting(true);
             updateStatusMutate({
                 caseRefundId,
                 caseRefundStatusId: 3,
@@ -130,7 +143,8 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 
     const handleOpenSlip = () => {
         if (row?.refundNo) {
-            window.open(`/slip/${row.refundNo}`, "_blank", "noopener,noreferrer");
+            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
+            setOpenSlipDialog(true);
         }
     };
 
@@ -152,12 +166,19 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     };
 
     return (
-        <Dialog
-            open={open}
-            maxWidth="md"
-            fullWidth
-            PaperProps={{ sx: { height: "54vh", overflow: "hidden", borderRadius: 3 } }}
-        >
+        <>
+            <Dialog
+                open={open}
+                maxWidth="md"
+                fullWidth
+                PaperProps={{
+                    sx: {
+                        height: mode === "view" ? {xs: "50vh"} : { xs: "90vh", md: "65vh" },
+                        overflow: "hidden",
+                        borderRadius: 3,
+                    },
+                }}
+            >
             <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, p: "16px 24px", borderBottom: "1px solid #E0E0E0" }}>
                 <Box
                     sx={{
@@ -179,24 +200,38 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                 <IconButton
                     size="small"
                     onClick={onClose}
+                    disabled={isSubmitting}
                     sx={{ backgroundColor: "#FDECEC", color: "#E53935", "&:hover": { backgroundColor: "#FBD5D5" } }}
                 >
                     <CloseIcon fontSize="small" />
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ minHeight: 0, display: "flex", flexDirection: "column", justifyContent: "center", pt: "15px", pb: 0 }}>
-                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 1, mb: 2 }}>
-                    <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>ข้อมูลรายละเอียด</Typography>
+            <DialogContent
+                sx={{
+                    minHeight: 0,
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: mode === "view" ? "flex-start" : { xs: "flex-start", md: "center" },
+                    pt: "15px",
+                    pb: 0,
+                }}
+            >
+                <Box sx={{ display: "flex", justifyContent: "flex-end", flexWrap: "wrap", gap: 1, mb: 1, mt: 2 }}>
                     <Button
                         variant="contained"
                         startIcon={<ImageIcon />}
                         onClick={handleOpenSlip}
+                        disabled={isSubmitting}
                         sx={{ backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
                     >
                         คลิกดูภาพ Slip การโอนเงิน
                     </Button>
                 </Box>
+                <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mb: 2 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                        <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>ข้อมูลรายละเอียด</Typography>
+                    </Box>
 
                 {isDetailLoading ? (
                     <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
@@ -237,73 +272,140 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
                                     {detail?.refundCount ?? "-"}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(detail?.remainingAmount)}
-                                </Typography>
-                            </Grid>
+                            {mode === "approve" && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
+                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        {formatNumber(detail?.remainingAmount)}
+                                    </Typography>
+                                </Grid>
+                            )}
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>โอนคืนรวม :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
                                     {formatNumber(detail?.totalRefundAmount)}
                                 </Typography>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4}>
-                                <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>คงเหลือ :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {formatNumber(
-                                        detail?.remainingAmount != null && detail?.totalRefundAmount != null
-                                            ? detail.remainingAmount - detail.totalRefundAmount
-                                            : undefined
-                                    )}
-                                </Typography>
-                            </Grid>
+                            {mode === "approve" && (
+                                <Grid item xs={12} sm={6} md={4}>
+                                    <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>คงเหลือ :</Typography>
+                                    <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        {formatNumber(
+                                            detail?.remainingAmount != null && detail?.totalRefundAmount != null
+                                                ? detail.remainingAmount - detail.totalRefundAmount
+                                                : undefined
+                                        )}
+                                    </Typography>
+                                </Grid>
+                            )}
                         </Grid>
                     </>
                 )}
-
-                <Grid container spacing={2} sx={{ mt: 0 }}>
-                    <Grid item xs={12} sm={6}>
-                        <FormikDropdown
-                            name="rejectReasonId"
-                            formik={formik}
-                            label="สาเหตุที่ปฏิเสธ"
-                            data={reasonOptions}
-                            valueFieldName="id"
-                            displayFieldName="name"
-                            fullWidth
-                            firstItemText="กรุณาเลือกสาเหตุที่ปฏิเสธ"
-                            disableFirstItem
-                            required
-                        />
-                    </Grid>
-                    <Grid item xs={12} sm={6}>
-                        <FormikTextField formik={formik} name="note" label="หมายเหตุ" placeholder="หมายเหตุ" fullWidth />
-                    </Grid>
-                </Grid>
-
-                <Box sx={{ display: "flex", justifyContent: "center", gap: 2, py: 2 }}>
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        onClick={handleRejectClick}
-                        disabled={isDetailLoading || !caseRefundId}
-                    >
-                        ปฏิเสธ
-                    </Button>
-                    <Button
-                        variant="contained"
-                        startIcon={<SyncAltIcon />}
-                        onClick={handleApproveClick}
-                        disabled={isDetailLoading || !caseRefundId}
-                        sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
-                    >
-                        อนุมัติ
-                    </Button>
                 </Box>
+
+                {mode === "approve" && (
+                    <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, mt: 2, mb: 0 }}>
+                        <Grid container spacing={2} sx={{ mt: 0 }}>
+                            <Grid item xs={12} sm={6}>
+                                <FormikDropdown
+                                    name="rejectReasonId"
+                                    formik={formik}
+                                    label="สาเหตุที่ปฏิเสธ"
+                                    data={reasonOptions}
+                                    valueFieldName="id"
+                                    displayFieldName="name"
+                                    fullWidth
+                                    firstItemText="กรุณาเลือกสาเหตุที่ปฏิเสธ"
+                                    disableFirstItem
+                                    required
+                                />
+                            </Grid>
+                            <Grid item xs={12} sm={6}>
+                                <FormikTextField formik={formik} name="note" label="หมายเหตุ" placeholder="หมายเหตุ" fullWidth />
+                            </Grid>
+                        </Grid>
+
+                        <Box sx={{ display: "flex", justifyContent: "center", gap: 2, pt: 2, pb: 0 }}>
+                            <Button
+                                variant="outlined"
+                                color="error"
+                                onClick={handleRejectClick}
+                                disabled={isSubmitting || isDetailLoading || !caseRefundId}
+                            >
+                                ปฏิเสธ
+                            </Button>
+                            <Button
+                                variant="contained"
+                                startIcon={<SyncAltIcon />}
+                                onClick={handleApproveClick}
+                                disabled={isSubmitting || isDetailLoading || !caseRefundId}
+                                sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
+                            >
+                                อนุมัติ
+                            </Button>
+                        </Box>
+                    </Box>
+                )}
+
+                {mode === "view" && (
+                    <Box sx={{ display: "flex", justifyContent: "center", pt: 2, pb: 0 }}>
+                        <Button
+                            variant="contained"
+                            onClick={onClose}
+                            sx={{ px: 6, backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
+                        >
+                            ตกลง
+                        </Button>
+                    </Box>
+                )}
             </DialogContent>
         </Dialog>
+<Dialog
+            open={openSlipDialog}
+            onClose={() => setOpenSlipDialog(false)}
+sx={{ zIndex: 1400 }}
+            PaperProps={{ sx: { m: 0, borderRadius: 3, width: "fit-content", maxWidth: "94vw", maxHeight: "90vh" } }}
+        >
+            <DialogTitle sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121", pb: 1, textAlign: "center" }}>
+                Slip การโอนเงิน
+            </DialogTitle>
+            <DialogContent sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 1, px: 3, pb: 3 }}>
+                <Box
+                    sx={{
+                        border: "1px solid #E0E0E0",
+                        borderRadius: 2,
+                        p: 2,
+                        display: "flex",
+                        flexDirection: "column",
+                        alignItems: "center",
+                        gap: 1,
+                        color: "#9E9E9E",
+                        ...(isPdfSlip
+                            ? { width: "min(84vw, 840px)", height: "min(78vh, 950px)", overflow: "auto" }
+                            : { maxWidth: "84vw", maxHeight: "78vh", overflow: "hidden" }),
+                    }}
+                >
+                    {isPdfSlip ? (
+                        <Box component="iframe" src={slipSrc} title="Slip การโอนเงิน" sx={{ width: "100%", flex: 1, border: "none" }} />
+                    ) : (
+                        <Box
+                            component="img"
+                            src={slipFileUrl}
+                            alt="Slip การโอนเงิน"
+                            sx={{ maxWidth: "100%", maxHeight: "100%", width: "auto", height: "auto" }}
+                        />
+                    )}
+                </Box>
+                <Button
+                    variant="contained"
+                    onClick={() => setOpenSlipDialog(false)}
+                    sx={{ mt: 1, px: 6, backgroundColor: "#0D4C8C", textTransform: "none", "&:hover": { backgroundColor: "#0A3D70" } }}
+                >
+                    ตกลง
+                </Button>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 };
 

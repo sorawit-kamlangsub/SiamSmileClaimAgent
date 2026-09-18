@@ -16,6 +16,7 @@ const ManageRefundDetailPage = () => {
         formik,
         summary,
         isDetailLoading,
+        isSaveRefundLoading,
         reasonOptions,
         reasonOptionIsLoading,
         transferTypeOptions,
@@ -62,6 +63,7 @@ const ManageRefundDetailPage = () => {
                             <Button
                                 variant="contained"
                                 onClick={() => formik.handleSubmit()}
+                                disabled={isSaveRefundLoading}
                                 sx={{
                                     backgroundColor: "#66BB6A",
                                     textTransform: "none",

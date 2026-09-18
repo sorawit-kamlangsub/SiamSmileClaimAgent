@@ -1,13 +1,19 @@
-import { Box, Button, Grid, InputAdornment, Typography } from "@mui/material";
+import { Box, Button, Grid, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
 import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
+import { useGetPaymentIncreaseStatus } from "./masterAPI";
 import dayjs, { Dayjs } from "dayjs";
 
 const currentDate = dayjs();
+
+const monitorSearchTypeData = [
+    { id: 1, name: "เลขที่ CL" },
+    { id: 2, name: "เลขที่ CC" },
+];
 
 export interface ClaimSearchFilterValues {
     searchBy: number | undefined;
@@ -33,14 +39,14 @@ const defaultValues: ClaimSearchFilterValues = {
 };
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
+    const { data: paymentIncreaseStatusData, isLoading: paymentIncreaseStatusIsLoading } =
+        useGetPaymentIncreaseStatus();
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
             onSubmit(values);
         },
     });
-
-    const fieldLabelSx = { fontSize: "0.8rem", color: "#78909C", marginBottom: "4px" };
 
     return (
         <Box
@@ -54,53 +60,6 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
             }}
         >
             <Grid container spacing={2} alignItems="flex-end">
-                <Grid item xs={12} sm={3} md={2}>
-                    <FormikDropdown
-                        name="searchBy"
-                        formik={formik}
-                        label="ค้นหาจาก"
-                        data={[]}
-                        valueFieldName=""
-                        displayFieldName=""
-                        fullWidth
-                    />
-                </Grid>
-
-                <Grid item xs={12} sm={6} md={4}>
-                    <Typography sx={{ ...fieldLabelSx, visibility: "hidden" }}>.</Typography>
-                    <FormikTextField
-                        name="searchText"
-                        formik={formik}
-                        label="คำค้นหาเลขที่ CPG/CL"
-                        InputProps={{
-                            startAdornment: (
-                                <InputAdornment position="start">
-                                    <PersonSearchIcon sx={{ color: "#9E9E9E", fontSize: 20 }} />
-                                </InputAdornment>
-                            ),
-                        }}
-                    />
-                </Grid>
-
-                <Grid item xs={12} sm={3} md={2} sx={{ display: "flex", alignItems: "center" }}>
-                    <Button
-                        type="submit"
-                        fullWidth
-                        variant="contained"
-                        startIcon={<SearchIcon />}
-                        sx={{
-                            backgroundColor: "#0D4C8C",
-                            textTransform: "none",
-                            "&:hover": { backgroundColor: "#0A3D70" },
-                        }}
-                    >
-                        ค้นหา
-                    </Button>
-                </Grid>
-                <Grid item></Grid>
-            </Grid>
-
-            <Grid container spacing={2} sx={{ marginTop: "4px" }}>
                 <Grid item xs={12} sm={6} md={3}>
                     <BranchAutocomplete name="branchId" formik={formik} />
                 </Grid>
@@ -110,10 +69,11 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                         name="statusId"
                         formik={formik}
                         label="สถานะ"
-                        data={[]}
-                        valueFieldName=""
-                        displayFieldName=""
+                        data={paymentIncreaseStatusData?.data ?? []}
+                        valueFieldName="id"
+                        displayFieldName="name"
                         fullWidth
+                        isLoading={paymentIncreaseStatusIsLoading}
                     />
                 </Grid>
 
@@ -135,6 +95,51 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                         disableFuture
                         fullWidth
                     />
+                </Grid>
+            </Grid>
+
+            <Grid container spacing={2} sx={{ marginTop: "4px" }}>
+                <Grid item xs={12} sm={4} md={3}>
+                    <FormikDropdown
+                        name="searchBy"
+                        formik={formik}
+                        label="ค้นหาจาก"
+                        data={monitorSearchTypeData}
+                        valueFieldName="id"
+                        displayFieldName="name"
+                        fullWidth
+                    />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={6}>
+                    <FormikTextField
+                        name="searchText"
+                        formik={formik}
+                        label="คำค้นหาเลขที่ CL/CC"
+                        InputProps={{
+                            startAdornment: (
+                                <InputAdornment position="start">
+                                    <PersonSearchIcon sx={{ color: "#9E9E9E", fontSize: 20 }} />
+                                </InputAdornment>
+                            ),
+                        }}
+                    />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3} sx={{ display: "flex", alignItems: "center" }}>
+                    <Button
+                        type="submit"
+                        fullWidth
+                        variant="contained"
+                        startIcon={<SearchIcon />}
+                        sx={{
+                            backgroundColor: "#0D4C8C",
+                            textTransform: "none",
+                            "&:hover": { backgroundColor: "#0A3D70" },
+                        }}
+                    >
+                        ค้นหา
+                    </Button>
                 </Grid>
             </Grid>
         </Box>
