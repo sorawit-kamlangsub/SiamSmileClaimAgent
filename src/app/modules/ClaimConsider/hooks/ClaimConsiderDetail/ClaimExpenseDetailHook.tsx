@@ -282,7 +282,9 @@ const useClaimExpenseDetailHook = ({
             value: r.organizeId,
             label: r.organizeName ?? "-",
         }));
-    }, [nonCoveredReasonData]);
+    }, [insuranceCompany]);
+
+    const insuranceCompanyId = detailData?.data?.insuranceCompanyId;
 
     const { totalReceipt, totalClaim, totalDiscount, totalNotCovered } = sumClaimExpenseItems(items);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered; // ยอดเบิกสุทธิ
@@ -600,6 +602,7 @@ const useClaimExpenseDetailHook = ({
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
         insuranceCompanyLoading,
+        insuranceCompanyId,
         filteredCategories,
         isCategoryLoading,
         handleNext,

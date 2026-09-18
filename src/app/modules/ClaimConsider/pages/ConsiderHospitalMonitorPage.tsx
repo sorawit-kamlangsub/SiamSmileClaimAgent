@@ -11,7 +11,7 @@ import dayjs from "dayjs";
 import ConsiderHospitalDataTable from "../components/ConsiderCustomerMonitor/ConsiderHospitalMonitor/ConsiderHospitalDataTable";
 
 const ConsiderHospitalMonitorPage = () => {
-    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook();
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook({ isHospital: true });
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
         dateFrom: dayjs(),

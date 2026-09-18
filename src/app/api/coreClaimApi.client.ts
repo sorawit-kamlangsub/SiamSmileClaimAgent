@@ -9465,6 +9465,7 @@ export interface GetClaimDetailConsiderDtoResponse {
     icuDayCount?: number | undefined;
     admissionIndication?: string | undefined;
     reservationRemark?: string | undefined;
+    insuranceCompanyId?: number | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
@@ -10380,7 +10381,17 @@ export interface GetPolicyBenefitDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
-export interface GetPolicyBenefitSheredDtoResponse {}
+export interface GetPolicyBenefitSheredDtoResponse {
+    policyCode?: string | undefined;
+    benefitId?: number;
+    benefitCode?: string | undefined;
+    productId?: number | undefined;
+    benefitName?: string | undefined;
+    maxPrice?: number | undefined;
+    customerTypeCode?: string | undefined;
+    shortBenefit?: string | undefined;
+    fullBenefitDisplay?: string | undefined;
+}
 
 export interface GetPolicyBenefitSheredDtoResponseListServiceResponse {
     data?: GetPolicyBenefitSheredDtoResponse[] | undefined;

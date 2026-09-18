@@ -22,9 +22,13 @@ export type AppliedFilter = Omit<SearchFilterType, "dateFrom" | "dateTo"> & {
 
 type UseSearchFilterHookParams = {
     onSearch?: (values: SearchFilterType) => void;
+    isHospital?: boolean;
 };
 
-const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
+// DFUAT-038: เคลมโรงพยาบาลไม่มีสถานะ "รอเอกสาร" (3) และ "ยกเลิก" (6) — ซ่อนออกจากตัวกรองสถานะของ Monitor โรงพยาบาล
+const HOSPITAL_EXCLUDED_STATUS_IDS = [3, 6];
+
+const useSearchFilterHook = ({ onSearch, isHospital }: UseSearchFilterHookParams = {}) => {
     const currentDate = dayjs();
     const { data: claimTransactionTypeData, isLoading: claimTransactionTypeDataLoading } = useGetClaimTransactionType();
     const statusOptions = useMemo(
@@ -32,12 +36,15 @@ const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
             { value: 0, label: "ทั้งหมด" },
             ...(claimTransactionTypeData?.data ?? [])
                 .filter((item) => item.claimTransactionTypeId !== 9) // ซ่อนสถานะ "อนุมัติ" (id 9)
+                .filter(
+                    (item) => !isHospital || !HOSPITAL_EXCLUDED_STATUS_IDS.includes(item.claimTransactionTypeId ?? -1)
+                )
                 .map((item) => ({
                     value: item.claimTransactionTypeId ?? 0,
                     label: item.claimTransactionTypeName ?? "",
                 })),
         ],
-        [claimTransactionTypeData]
+        [claimTransactionTypeData, isHospital]
     );
 
     const defaultValues: SearchFilterType = {
