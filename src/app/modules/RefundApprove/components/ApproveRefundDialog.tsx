@@ -66,6 +66,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
     const [openSlipDialog, setOpenSlipDialog] = useState(false);
     const [slipFileUrl, setSlipFileUrl] = useState("");
+    const isPdfSlip = slipFileUrl.toLowerCase().endsWith(".pdf");
 
     const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
     const caseRefundId = detail?.caseRefundId ?? caseId;
@@ -134,7 +135,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 
     const handleOpenSlip = () => {
         if (row?.refundNo) {
-            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
+            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691808343613712.jpg");
             setOpenSlipDialog(true);
         }
     };
@@ -330,12 +331,12 @@ sx={{ zIndex: 1400 }}
                         alignItems: "center",
                         gap: 1,
                         color: "#9E9E9E",
-                        width: "min(84vw, 840px)",
-                        height: "min(78vh, 950px)",
-                        overflow: "auto",
+                        ...(isPdfSlip
+                            ? { width: "min(84vw, 840px)", height: "min(78vh, 950px)", overflow: "auto" }
+                            : { maxWidth: "84vw", maxHeight: "78vh", overflow: "hidden" }),
                     }}
                 >
-                    {slipFileUrl.toLowerCase().endsWith(".pdf") ? (
+                    {isPdfSlip ? (
                         <Box component="iframe" src={slipFileUrl} title="Slip การโอนเงิน" sx={{ width: "100%", flex: 1, border: "none" }} />
                     ) : (
                         <Box
