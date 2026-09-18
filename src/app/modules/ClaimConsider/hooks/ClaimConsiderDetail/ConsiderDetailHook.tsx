@@ -95,12 +95,13 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
     const { data: claimContinueData } = useGetClaimContinue(
         customerDetail?.policyCode ?? undefined,
-        claimId?.toString()
+        caseId?.toString()
     );
     const continuousClaimRows: ContinuousClaimRow[] = useMemo(
         () =>
             (claimContinueData?.data ?? []).map((item) => ({
                 claimNo: item.claimNo ?? "-",
+                caseNo: item.caseNo ?? "-",
                 chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
                 incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
                 totalClaimAmount: item.totalCaseAmount ?? 0,
@@ -109,6 +110,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 claimInfo: item.claimDetail ?? "-",
                 diagnosis1: item.icD10Detail ?? "-",
                 remainingLimit: item.remainAmount ?? 0,
+                remark: item.chiefComplaintCustom ?? "-",
                 // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
                 previousCaseNo: "-",
                 previousCaseStatus: "-",
