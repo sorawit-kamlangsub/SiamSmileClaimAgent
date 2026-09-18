@@ -165,7 +165,13 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                 open={open}
                 maxWidth="md"
                 fullWidth
-                PaperProps={{ sx: { height: { xs: "90vh", md: "65vh" }, overflow: "hidden", borderRadius: 3 } }}
+                PaperProps={{
+                    sx: {
+                        height: mode === "view" ? {xs: "50vh"} : { xs: "90vh", md: "65vh" },
+                        overflow: "hidden",
+                        borderRadius: 3,
+                    },
+                }}
             >
             <DialogTitle sx={{ display: "flex", alignItems: "center", gap: 1.5, p: "16px 24px", borderBottom: "1px solid #E0E0E0" }}>
                 <Box
