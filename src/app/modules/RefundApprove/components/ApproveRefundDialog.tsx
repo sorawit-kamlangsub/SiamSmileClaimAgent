@@ -135,7 +135,7 @@ const ApproveRefundDialog = ({ open, row, onClose }: ApproveRefundDialogProps) =
 
     const handleOpenSlip = () => {
         if (row?.refundNo) {
-            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691808343613712.jpg");
+            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
             setOpenSlipDialog(true);
         }
     };
