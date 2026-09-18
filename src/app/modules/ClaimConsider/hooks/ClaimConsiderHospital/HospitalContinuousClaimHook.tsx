@@ -26,6 +26,7 @@ const useHospitalContinuousClaimHook = (
         () =>
             (claimContinueData?.data ?? []).map((item) => ({
                 claimNo: item.claimNo ?? "-",
+                caseNo: item.caseNo ?? "-",
                 chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
                 incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
                 totalClaimAmount: item.totalCaseAmount ?? 0,
@@ -34,11 +35,9 @@ const useHospitalContinuousClaimHook = (
                 claimInfo: item.claimDetail ?? "-",
                 diagnosis1: item.icD10Detail ?? "-",
                 remainingLimit: item.remainAmount ?? 0,
-                // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
+                remark: item.chiefComplaintCustom ?? "-",
                 previousCaseNo: "-",
                 previousCaseStatus: "-",
-                // ค่าดิบไว้ map ลง formik ตอนเลือกเคลมต่อเนื่อง (incidentDate/chiefComplaint ด้านบน format
-                // ไว้แสดงผลในตารางแล้วเท่านั้น) — เหมือน ConsiderDetailHook ฝั่งเคลมลูกค้า
                 incidentDateRaw: item.incidentDate ? dayjs(item.incidentDate) : undefined,
                 chiefComplaintIdRaw: item.chiefComplaintId,
             })),

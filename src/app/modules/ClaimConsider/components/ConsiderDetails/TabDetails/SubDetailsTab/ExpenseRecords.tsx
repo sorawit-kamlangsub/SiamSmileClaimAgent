@@ -325,6 +325,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
         insuranceCompanyLoading,
+        insuranceCompanyId,
         filteredCategories,
         isCategoryLoading,
         discountError,
@@ -337,7 +338,18 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
 
     // ── ส่วนเกินจากบริษัทประกัน (ยัง UI-only — ต่อ endpoint จริงเมื่อพร้อม) ──
     const [isExcessFromInsurance, setIsExcessFromInsurance] = React.useState(false);
-    const [selectedInsuranceCompany, setSelectedInsuranceCompany] = React.useState("");
+    const [selectedInsuranceCompany, setSelectedInsuranceCompany] = React.useState<number | string>("");
+
+    // ตั้งค่า default ให้ตรงกับ insuranceCompanyId ที่ backend ส่งมา (ถ้ามี) แค่ครั้งแรกที่ข้อมูลมาถึง
+    // — ไม่ทับค่าที่ผู้ใช้แก้ไขเองในภายหลัง
+    const hasAppliedDefaultInsuranceCompany = React.useRef(false);
+    useEffect(() => {
+        if (hasAppliedDefaultInsuranceCompany.current) return;
+        if (insuranceCompanyId === undefined || insuranceCompanyId === null) return;
+        hasAppliedDefaultInsuranceCompany.current = true;
+        setIsExcessFromInsurance(true);
+        setSelectedInsuranceCompany(insuranceCompanyId);
+    }, [insuranceCompanyId]);
 
     const isAddPanelDisabled = isCategoryLoading;
 

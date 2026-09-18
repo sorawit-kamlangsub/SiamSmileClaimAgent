@@ -28,7 +28,8 @@ import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetai
 import useHospitalConsiderPayment from "../../hooks/ClaimConsiderHospital/useHospitalConsiderPayment";
 import { hasAmountSumError } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
-import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
+// เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+// import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
@@ -95,12 +96,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         rejectReasonLoading,
         cancelReason,
         cancelReasonLoading,
-        continuousClaimRows,
-        continuousClaimOpen,
-        setContinuousClaimOpen,
-        handleToggleContinuousClaim,
-        handleSelectContinuousClaim,
-        handleClearContinuousClaim,
+        // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+        // continuousClaimRows,
+        // continuousClaimOpen,
+        // setContinuousClaimOpen,
+        // handleToggleContinuousClaim,
+        // handleSelectContinuousClaim,
+        // handleClearContinuousClaim,
         handleDocumentCheckChange,
         handleDocumentScan,
         documentCheckResultOptions,
@@ -341,7 +343,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const hasDiscountError = filledItems.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
     const hasNotCoveredError = filledItems.some((item) => hasAmountSumError(item));
 
-    const continuousClaim = formik.values.continuousClaim;
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
 
     /**
@@ -398,8 +401,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const isSeparateCompensation = hasCompensationToTransfer;
 
     /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
-    const currentCaseNo = detail?.caseNo ?? "";
-    const currentCaseStatus = detail?.claimStatusName ?? undefined;
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const currentCaseNo = detail?.caseNo ?? "";
+    // const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
     /** จำนวนไฟล์จริงใน DocStorage ของ documentId นั้น (0 = ยังไม่มีเอกสารแนบ) */
     const getFileCount = (documentId: string) => documentInfoByDocId[documentId]?.fileCount ?? 0;
@@ -530,6 +534,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                     {activeStep === 0 ? (
                         <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
                             <Grid container spacing={2}>
+                                {/* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
                                 {continuousClaim && (
                                     <Grid item xs={12}>
                                         <ContinuousClaimBanner
@@ -539,6 +544,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         />
                                     </Grid>
                                 )}
+                                */}
                                 <Grid item xs={12} sx={readOnlySx}>
                                     <RecordClaimData
                                         incidentType={incidentType}
@@ -547,12 +553,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         causeOfIncident={causeOfIncident}
                                         medicalType={medicalType}
                                         incidentTypeMappingLoading={incidentTypeMappingLoading}
-                                        continuousClaimRows={continuousClaimRows}
-                                        continuousClaimOpen={continuousClaimOpen}
-                                        onContinuousClaimOpenChange={setContinuousClaimOpen}
-                                        onContinuousClaimToggle={handleToggleContinuousClaim}
-                                        onContinuousClaimSelect={handleSelectContinuousClaim}
-                                        onContinuousClaimClear={handleClearContinuousClaim}
                                     />
                                 </Grid>
                                 <Grid item xs={12} sx={readOnlySx}>

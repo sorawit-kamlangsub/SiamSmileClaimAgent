@@ -144,6 +144,7 @@ export const MOCK_DECISION_REASONS = [
 /** รายการเคลมที่เลือกได้ใน Modal "เลือกเคลมต่อเนื่อง" */
 export type ContinuousClaimRow = {
     claimNo: string;
+    caseNo: string;
     chiefComplaint: string;
     incidentDate: string;
     totalClaimAmount: number;
@@ -152,6 +153,7 @@ export type ContinuousClaimRow = {
     claimInfo: string;
     diagnosis1: string;
     remainingLimit: number;
+    remark: string;
 
     /** เลขที่เคสของเคลมเดิม + สถานะ (ใช้แสดงความต่อเนื่องของการรักษา) */
     previousCaseNo: string;
@@ -163,34 +165,34 @@ export type ContinuousClaimRow = {
     chiefComplaintIdRaw?: number;
 };
 
-export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
-    {
-        claimNo: "CL6904000193",
-        chiefComplaint: "0024 : ไข้ + ปวดท้อง",
-        incidentDate: "25/03/2569",
-        totalClaimAmount: 2350,
-        totalPaidAmount: 1800,
-        admissionDate: "28/04/2569",
-        claimInfo: "เจ็บป่วย / ค่ารักษา / OPD",
-        diagnosis1: "A050 : Food-borne staphylococcal intoxication | อาหารเป็นพิษ",
-        remainingLimit: 3200,
-        previousCaseNo: "CC6904000193-01",
-        previousCaseStatus: "อนุมัติแล้ว",
-    },
-    {
-        claimNo: "CL6903000021",
-        chiefComplaint: "0031 : ไอ + เจ็บคอ",
-        incidentDate: "11/02/2569",
-        totalClaimAmount: 1500,
-        totalPaidAmount: 1500,
-        admissionDate: "11/02/2569",
-        claimInfo: "เจ็บป่วย / ค่ารักษา / OPD",
-        diagnosis1: "J02.9 : Acute pharyngitis, unspecified | คออักเสบเฉียบพลัน",
-        remainingLimit: 8970,
-        previousCaseNo: "CC6903000021-01",
-        previousCaseStatus: "อนุมัติแล้ว",
-    },
-];
+// export const MOCK_CONTINUOUS_CLAIMS: ContinuousClaimRow[] = [
+//     {
+//         claimNo: "CL6904000193",
+//         chiefComplaint: "0024 : ไข้ + ปวดท้อง",
+//         incidentDate: "25/03/2569",
+//         totalClaimAmount: 2350,
+//         totalPaidAmount: 1800,
+//         admissionDate: "28/04/2569",
+//         claimInfo: "เจ็บป่วย / ค่ารักษา / OPD",
+//         diagnosis1: "A050 : Food-borne staphylococcal intoxication | อาหารเป็นพิษ",
+//         remainingLimit: 3200,
+//         previousCaseNo: "CC6904000193-01",
+//         previousCaseStatus: "อนุมัติแล้ว",
+//     },
+//     {
+//         claimNo: "CL6903000021",
+//         chiefComplaint: "0031 : ไอ + เจ็บคอ",
+//         incidentDate: "11/02/2569",
+//         totalClaimAmount: 1500,
+//         totalPaidAmount: 1500,
+//         admissionDate: "11/02/2569",
+//         claimInfo: "เจ็บป่วย / ค่ารักษา / OPD",
+//         diagnosis1: "J02.9 : Acute pharyngitis, unspecified | คออักเสบเฉียบพลัน",
+//         remainingLimit: 8970,
+//         previousCaseNo: "CC6903000021-01",
+//         previousCaseStatus: "อนุมัติแล้ว",
+//     },
+// ];
 
 /**
  * ผลการตรวจเอกสาร (เลือกได้ 1 สถานะต่อรายการ)
