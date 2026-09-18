@@ -274,7 +274,14 @@ const useClaimExpenseDetailHook = ({
         }));
     }, [nonCoveredReasonData]);
 
-    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany();
+    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        999
+    );
 
     const insuranceCompanyOptions = useMemo(() => {
         const raw = insuranceCompany?.data ?? [];
