@@ -1,7 +1,8 @@
-import { Box, Button, Grid, Typography } from "@mui/material";
+import { Box, Button, Grid, IconButton, Typography } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import { FormikProps } from "formik";
 import { FormikTextField } from "../../_common";
+import { ClearIcon } from "@mui/x-date-pickers";
 
 interface SearchFormValues {
     searchDetail: string;
@@ -40,6 +41,17 @@ const SearchHospitalByName = <T extends SearchFormValues>({ formik }: SearchHosp
                         size="small"
                         name="searchDetail"
                         placeholder="ค้นหาด้วยชื่อสถานพยาบาล"
+                        InputProps={{
+                            endAdornment: formik.values.searchDetail ? (
+                                <IconButton
+                                    size="small"
+                                    aria-label="ล้างคำค้นหา"
+                                    onClick={() => formik.setFieldValue("searchDetail", "")}
+                                >
+                                    <ClearIcon fontSize="small" />
+                                </IconButton>
+                            ) : undefined,
+                        }}
                     />
                 </Grid>
 
