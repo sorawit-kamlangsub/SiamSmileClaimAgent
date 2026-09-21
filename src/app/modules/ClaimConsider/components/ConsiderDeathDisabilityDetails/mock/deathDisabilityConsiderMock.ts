@@ -87,7 +87,3 @@ export const MOCK_DEATH_DISABILITY_BENEFICIARIES: DeathDisabilityBeneficiary[] =
         amount: 120000,
     },
 ];
-
-export const MOCK_DEATH_DISABILITY_REJECT_DOCUMENTS: DeathDisabilityDocument[] = [
-    { documentId: "mock-reject-doc-1", documentTypeName: "เอกสารประกอบการปฏิเสธ", fileCount: 0 },
-];

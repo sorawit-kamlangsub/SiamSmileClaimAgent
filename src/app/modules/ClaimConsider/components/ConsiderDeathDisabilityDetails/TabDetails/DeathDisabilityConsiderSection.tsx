@@ -6,7 +6,6 @@ import BlockIcon from "@mui/icons-material/Block";
 import CancelIcon from "@mui/icons-material/Cancel";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SaveIcon from "@mui/icons-material/Save";
 import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
@@ -17,8 +16,7 @@ import {
     DEATH_DISABILITY_IN_PROGRESS_DECISION_ID,
     DeathDisabilityConsiderValues,
 } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
-import DeathDisabilityDocumentTable from "./DeathDisabilityDocumentTable";
-import { DeathDisabilityDocument } from "../mock/deathDisabilityConsiderMock";
+import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 
 type ReasonOption = { id?: number; name?: string };
 
@@ -97,7 +95,9 @@ const STATUS_OPTIONS: StatusOption[] = [
 type DeathDisabilityConsiderSectionProps = {
     claimNo: string;
     totalTransferAmount: number;
-    rejectDocuments: DeathDisabilityDocument[];
+    /** ใช้กับตารางเอกสารประกอบการปฏิเสธ (DocumentScanTable) เหมือน ConsiderSection ของเคลมลูกค้า */
+    productTypeId: number | undefined;
+    aplicationCode: string | undefined;
     revisionReasonOptions: ReasonOption[];
     revisionReasonLoading: boolean;
     rejectReasonOptions: ReasonOption[];
@@ -114,7 +114,8 @@ type DeathDisabilityConsiderSectionProps = {
 const DeathDisabilityConsiderSection = ({
     claimNo,
     totalTransferAmount,
-    rejectDocuments,
+    productTypeId,
+    aplicationCode,
     revisionReasonOptions,
     revisionReasonLoading,
     rejectReasonOptions,
@@ -365,17 +366,15 @@ const DeathDisabilityConsiderSection = ({
                             )}
 
                             {selected.decisionId === DECISION_ID.REJECTED && (
-                                <Box sx={{ mt: 2, p: 2, border: "1px solid #DCE8F4", borderRadius: 3 }}>
-                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                                        <UploadFileIcon />
-                                        <Typography>เอกสารประกอบการปฏิเสธ</Typography>
-                                    </Box>
-                                    <DeathDisabilityDocumentTable
-                                        name="deathDisabilityRejectDocumentTable"
-                                        rows={rejectDocuments}
-                                        hideDocumentCode
-                                    />
-                                </Box>
+                                <DocumentScanTable
+                                    productTypeId={productTypeId ?? 0}
+                                    documentType="ใบแจ้งปฏิเสธสินไหม"
+                                    aplicationCode={aplicationCode ?? ""}
+                                    Header="เอกสารประกอบการปฏิเสธ"
+                                    // documentCode ที่ endpoint คืนผูกกับเคสนี้โดยเฉพาะ ต้องไม่ cache ข้ามเคส
+                                    // เหมือน ConsiderSection ของเคลมลูกค้า
+                                    alwaysFreshMasterList
+                                />
                             )}
                         </Box>
                     </Box>

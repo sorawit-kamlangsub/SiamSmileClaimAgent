@@ -12,7 +12,6 @@ import {
     MOCK_DEATH_DISABILITY_BENEFICIARIES,
     MOCK_DEATH_DISABILITY_CLAIM_INFO,
     MOCK_DEATH_DISABILITY_EXPENSE,
-    MOCK_DEATH_DISABILITY_REJECT_DOCUMENTS,
 } from "../mock/deathDisabilityConsiderMock";
 import DeathDisabilityClaimInfoSection from "./DeathDisabilityClaimInfoSection";
 import DeathDisabilityExpenseSection from "./DeathDisabilityExpenseSection";
@@ -28,7 +27,7 @@ type DeathDisabilityClaimDetailsTabProps = {
 /**
  * Tab "ข้อมูลการเคลม" ของหน้าพิจารณาเคลม - Death & Disability
  * - สแกนเอกสาร: DocumentScanTable ตัวเดียวกับ ClaimDetailsTab (ดึงเอกสารที่แนบไว้ของ caseId จริง)
- * TODO(death-disability-api): รายละเอียดเคลม (รอ API ใหม่) / ค่าใช้จ่าย / ผู้รับผลประโยชน์ / เอกสารประกอบการปฏิเสธ
+ * TODO(death-disability-api): รายละเอียดเคลม (รอ API ใหม่) / ค่าใช้จ่าย / ผู้รับผลประโยชน์
  * ยังเป็น mock
  */
 const DeathDisabilityClaimDetailsTab = ({ detail, customerDetail }: DeathDisabilityClaimDetailsTabProps) => {
@@ -83,7 +82,8 @@ const DeathDisabilityClaimDetailsTab = ({ detail, customerDetail }: DeathDisabil
                     <DeathDisabilityConsiderSection
                         claimNo={claimNo}
                         totalTransferAmount={totalTransferAmount}
-                        rejectDocuments={MOCK_DEATH_DISABILITY_REJECT_DOCUMENTS}
+                        productTypeId={customerDetail?.productTypeId}
+                        aplicationCode={customerDetail?.policyCode}
                         revisionReasonOptions={revisionReasonOptions}
                         revisionReasonLoading={revisionReasonLoading}
                         rejectReasonOptions={rejectReasonOptions}
