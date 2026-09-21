@@ -27,7 +27,14 @@ const ConsiderDeathDisabilityMonitorFilter = ({
                 <FormikDatePicker formik={formik} name="dateFrom" label="จากวันที่แจ้งเคลม" disableFuture required />
             </Grid>
             <Grid item xs={6} md={2}>
-                <FormikDatePicker formik={formik} name="dateTo" label="ถึงวันที่แจ้งเคลม" disableFuture required />
+                <FormikDatePicker
+                    formik={formik}
+                    name="dateTo"
+                    label="ถึงวันที่แจ้งเคลม"
+                    minDate={formik.values.dateFrom ?? undefined}
+                    disableFuture
+                    required
+                />
             </Grid>
             <Grid item xs={12} md={2}>
                 <FormikCheckboxGroup

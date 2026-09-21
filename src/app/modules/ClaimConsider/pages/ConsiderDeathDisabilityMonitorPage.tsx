@@ -35,7 +35,13 @@ const ConsiderDeathDisabilityMonitorPage = () => {
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>(getInitialAppliedFilter);
     const { dashboardData, dashboardDataLoading, dashboardDataError } = useDeathDisabilityDashboardHook(appliedFilter);
 
-    const handleSearch = () => {
+    const handleSearch = async () => {
+        // ถึงวันที่ < จากวันที่ → โชว์ error ที่ช่องแล้วไม่ค้นหา
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) {
+            formik.setTouched({ dateFrom: true, dateTo: true }, false);
+            return;
+        }
         setAppliedFilter({
             isSearch: true,
             dateType: formik.values.dateType,

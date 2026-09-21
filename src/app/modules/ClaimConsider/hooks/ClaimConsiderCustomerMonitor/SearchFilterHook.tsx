@@ -65,8 +65,11 @@ const useSearchFilterHook = ({ onSearch, isHospital, includedStatusIds }: UseSea
     };
     const formik = useFormik<SearchFilterType>({
         initialValues: defaultValues,
-        validate: () => {
+        validate: (values) => {
             const errors: FormikErrors<SearchFilterType> = {};
+            if (values.dateFrom && values.dateTo && values.dateTo.isBefore(values.dateFrom, "day")) {
+                errors.dateTo = "ถึงวันที่แจ้งเคลมต้องไม่น้อยกว่าจากวันที่แจ้งเคลม";
+            }
             return errors;
         },
         onSubmit: (values) => {
