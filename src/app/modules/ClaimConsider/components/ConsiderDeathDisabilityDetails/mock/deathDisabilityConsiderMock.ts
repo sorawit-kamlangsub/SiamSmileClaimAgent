@@ -6,12 +6,6 @@
  * แล้ว map จาก DTO จริงแทน (Master สาเหตุ รอแก้ไข/ปฏิเสธ/ยกเลิก ใช้ของจริงอยู่แล้ว)
  */
 
-export type DeathDisabilityExpense = {
-    coverageName: string;
-    maxLimit: number;
-    requestedAmount: number;
-};
-
 export type DeathDisabilityBeneficiary = {
     order: number;
     isFromSystem: boolean;
@@ -31,12 +25,6 @@ export type DeathDisabilityDocument = {
     documentCode?: string;
     documentTypeName: string;
     fileCount: number;
-};
-
-export const MOCK_DEATH_DISABILITY_EXPENSE: DeathDisabilityExpense = {
-    coverageName: "เสียชีวิตเนื่องจากอุบัติเหตุทั่วไป / ขับขี่หรือโดยสารรถจักรยานยนต์",
-    maxLimit: 120000,
-    requestedAmount: 120000,
 };
 
 export const MOCK_DEATH_DISABILITY_BENEFICIARIES: DeathDisabilityBeneficiary[] = [
