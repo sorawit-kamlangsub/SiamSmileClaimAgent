@@ -1,6 +1,7 @@
 import { Grid } from "@mui/material";
 import { useState } from "react";
 import dayjs from "dayjs";
+import useDeathDisabilityDashboardHook from "../hooks/ClaimConsiderDeathDisabilityMonitor/DeathDisabilityDashboardHook";
 import ConsiderDeathDisabilityHeader from "../components/ConsiderDeathDisabilityMonitor/ConsiderDeathDisabilityHeader";
 import ConsiderDeathDisabilityMonitorFilter from "../components/ConsiderDeathDisabilityMonitor/ConsiderDeathDisabilityMonitorFilter";
 import ConsiderDeathDisabilityDataTable from "../components/ConsiderDeathDisabilityMonitor/ConsiderDeathDisabilityDataTable";
@@ -37,6 +38,7 @@ const getInitialAppliedFilter = (): AppliedFilter => ({
 const ConsiderDeathDisabilityMonitorPage = () => {
     const { formik } = useSearchFilterHook();
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>(getInitialAppliedFilter);
+    const { dashboardData, dashboardDataLoading, dashboardDataError } = useDeathDisabilityDashboardHook(appliedFilter);
 
     const handleSearch = () => {
         setAppliedFilter({
@@ -59,8 +61,11 @@ const ConsiderDeathDisabilityMonitorPage = () => {
     return (
         <Grid container spacing={2} sx={{ py: 2 }}>
             <Grid item xs={12}>
-                {/* TODO(death-disability-api): ส่ง summary จาก dashboard endpoint เมื่อ BE มี */}
-                <ConsiderDeathDisabilityHeader />
+                <ConsiderDeathDisabilityHeader
+                    dashboardData={dashboardData}
+                    dashboardDataLoading={dashboardDataLoading}
+                    dashboardDataError={dashboardDataError}
+                />
             </Grid>
             <Grid item xs={12} sx={{ py: 2 }}>
                 <ConsiderDeathDisabilityMonitorFilter

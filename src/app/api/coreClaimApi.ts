@@ -37,6 +37,8 @@ const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
+const getDashboardDeathAndDisabilityClaimConsiderQueryKey = ["getDashboardDeathAndDisabilityClaimConsider"];
+const getDeathAndDisabilityClaimAdjudicationMonitorQueryKey = ["getDeathAndDisabilityClaimAdjudicationMonitor"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
@@ -544,6 +546,67 @@ export const useGetCustomerClaimAdjudicationMonitor = (
                 isProductTypeId_PA,
                 decisionId,
                 searchOption,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDashboardDeathAndDisabilityClaimConsider = (
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined
+) => {
+    return useQuery(
+        [getDashboardDeathAndDisabilityClaimConsiderQueryKey, dateFrom, dateTo],
+        () => coreClaimClient.getDashboardDeathAndDisabilityClaimConsider(dateFrom, dateTo),
+        {
+            enabled: !!dateFrom && !!dateTo,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimAdjudicationMonitor = (
+    isSearch?: boolean,
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined,
+    isProductTypeId_PH?: boolean | undefined,
+    isProductTypeId_PA?: boolean | undefined,
+    claimTransactionTypeId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getDeathAndDisabilityClaimAdjudicationMonitorQueryKey,
+            dateFrom,
+            dateTo,
+            isProductTypeId_PH,
+            isProductTypeId_PA,
+            claimTransactionTypeId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getDeathAndDisabilityClaimAdjudicationMonitor(
+                dateFrom,
+                dateTo,
+                isProductTypeId_PH,
+                isProductTypeId_PA,
+                claimTransactionTypeId,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
