@@ -1,10 +1,9 @@
 import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../redux";
 import { setDialogOpen, setManagePaymentHospitalBySearchDetail } from "../store/managePaymentHospitalSlice";
+import { swalError, swalSuccess, swalWarning } from "../../../_common";
+import { useGetHospitalMonitor, useUpdateHospitalSetting } from "../managePaymentHospitalAPI";
 import { useState } from "react";
-import { swalError } from "../../../_common";
-import { useGetHospitalMonitor } from "../managePaymentHospitalAPI";
-import { HospitalPaySettingRow } from "./HospitalManagementDataTableHook";
 
 type SearchDetailType = {
     searchDetail: string;
@@ -12,22 +11,26 @@ type SearchDetailType = {
 
 const useManagePaymentHospitalHook = () => {
     const dispatch = useAppDispatch();
-    const [hospitalData, setHospitalData] = useState<HospitalPaySettingRow[]>([]);
+    const [submittedSearchDetail, setSubmittedSearchDetail] = useState<string>("");
 
     const handleOpenDialog = () => {
         dispatch(setDialogOpen({ isOpen: true }));
     };
 
-    const handleSearchSuccess = (res: any) => {
-        setHospitalData(res?.data ?? []);
+    const handleUpdateSettingSuccess = (res: any) => {
+        if (res?.data?.isSuccess) {
+            swalSuccess("ทำรายการสำเร็จ", "");
+        } else {
+            swalWarning("แจ้งเตือน", res?.data?.message ?? "เกิดข้อผิดพลาด");
+        }
     };
 
     const handleError = (err: string) => {
         swalError("แจ้งเตือน", err ?? "กรุณาตรวจสอบข้อมูล");
     };
 
-    const { mutate: getHospitalMutate, isLoading: isGetHospitalLoading } = useGetHospitalMonitor(
-        handleSearchSuccess,
+    const { mutate: updateHospitalSettingMutate, isLoading: isUpdateHospitalSettingLoading } = useUpdateHospitalSetting(
+        handleUpdateSettingSuccess,
         handleError
     );
 
@@ -37,10 +40,20 @@ const useManagePaymentHospitalHook = () => {
         },
         onSubmit: (values) => {
             dispatch(setManagePaymentHospitalBySearchDetail(values));
-            getHospitalMutate(values);
+            setSubmittedSearchDetail(values.searchDetail);
         },
     });
-    return { hospitalData, handleOpenDialog, formik, isGetHospitalLoading };
+
+    const { data: hospitalData, isLoading: isGetHospitalLoading } = useGetHospitalMonitor(submittedSearchDetail);
+
+    return {
+        hospitalData: hospitalData?.data,
+        handleOpenDialog,
+        formik,
+        isGetHospitalLoading,
+        updateHospitalSettingMutate,
+        isUpdateHospitalSettingLoading,
+    };
 };
 
 export default useManagePaymentHospitalHook;

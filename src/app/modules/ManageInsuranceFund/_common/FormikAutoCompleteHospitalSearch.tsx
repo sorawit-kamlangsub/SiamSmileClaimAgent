@@ -46,20 +46,34 @@ const FormikAutocompleteApi = ({
     const { setFieldValue, setFieldTouched } = formik;
 
     const [searchText, setSearchText] = useState("");
+    const [inputValue, setInputValue] = useState("");
 
     const { data: options, isLoading: queryLoading, isError } = useQueryGet(searchText, value);
     const loading = queryLoading || externalLoading;
 
     const handleChange = (_event: any, newValue: { [key: string]: any } | null) => {
+        // if (!newValue) {
+        //     setFieldValue(name, null, true);
+        //     setFieldValue(`${name}_selectedText`, null, true);
+        //     selectedCallback?.(null);
+        //     return;
+        // }
+
         if (!newValue) {
             setFieldValue(name, null, true);
             setFieldValue(`${name}_selectedText`, null, true);
+            setInputValue("");
             selectedCallback?.(null);
             return;
         }
 
+        // setFieldValue(name, newValue[valueFieldName], true);
+        // setFieldValue(`${name}_selectedText`, newValue[displayFieldName] ?? undefined, true);
+        // selectedCallback?.(newValue);
+
         setFieldValue(name, newValue[valueFieldName], true);
         setFieldValue(`${name}_selectedText`, newValue[displayFieldName] ?? undefined, true);
+        setInputValue(newValue[displayFieldName] ?? "");
         selectedCallback?.(newValue);
     };
 
@@ -95,6 +109,8 @@ const FormikAutocompleteApi = ({
                         // ก่อน option จะโหลดเสร็จ — ห้ามตีความว่าผู้ใช้ล้างค่า ไม่งั้น id ที่ prefill (sync
                         // มาจาก server) จะโดนล้างทิ้งก่อน option ของมันจะ resolve
                         if (reason === "reset") return;
+                        setInputValue(value);
+                        setSearchText(value);
                         if (value == "") {
                             setFieldValue(name, null, true);
                             setFieldValue(`${name}_selectedText`, null, true);
@@ -106,13 +122,13 @@ const FormikAutocompleteApi = ({
                         <TextField
                             {...params}
                             name={name}
-                            disabled={disabled || loading}
+                            disabled={disabled}
                             fullWidth
                             error={(touched && !!error) || isError}
                             onBlur={() => setFieldTouched(name, true, true)}
                             label={label}
                             variant={variant}
-                            value={formik.values[name]}
+                            // value={formik.values[name]}
                             required={required}
                             InputProps={{
                                 ...params.InputProps,

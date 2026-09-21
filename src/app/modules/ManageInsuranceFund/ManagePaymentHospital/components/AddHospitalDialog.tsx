@@ -39,7 +39,7 @@ const AddHospitalDialog = () => {
                             name="hospitalId"
                             fullWidth
                             label="ชื่อสถานพยาบาล"
-                            useQueryGet={useGetHospitalName.bind(this)}
+                            useQueryGet={useGetHospitalName}
                             valueFieldName="orgId"
                             displayFieldName="orgName"
                             selectedCallback={() => {

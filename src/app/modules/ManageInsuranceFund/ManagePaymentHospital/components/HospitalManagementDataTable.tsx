@@ -6,7 +6,7 @@ import useHospitalManagementDataTableHook, { HospitalPaySettingRow } from "../ho
 export interface HospitalPaySettingsTableProps {
     initialRows: HospitalPaySettingRow[];
     onSaveRow: (row: HospitalPaySettingRow) => void;
-    renderHistory: (hospitalId: string) => React.ReactNode;
+    renderHistory: (hospitalId: string, hospitalName: string) => React.ReactNode;
     isLoading: boolean;
 }
 

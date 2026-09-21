@@ -6,6 +6,7 @@ import BoltIcon from "@mui/icons-material/Bolt";
 import PauseCircleFilledIcon from "@mui/icons-material/PauseCircleFilled";
 import { useFormik } from "formik";
 import { MUIDataTableColumn } from "mui-datatables";
+import dayjs from "dayjs";
 
 // Confirmed: holdStatusId 1 = normal, 2 = hold.
 const HOLD_STATUS_ID_NORMAL = 1;
@@ -13,18 +14,18 @@ const HOLD_STATUS_ID_HOLD = 2;
 
 export interface HospitalPaySettingRow {
     hospitalPaymentSettingId: string;
-    hospitalName: string | null;
-    isAutoPay: boolean | null;
+    hospitalName: string;
+    isAutoPay: boolean | undefined;
     delayDays: number;
-    holdStatusId: number | null;
-    holdStatusName: string | null;
-    updatedDate: string | null;
+    holdStatusId: number | undefined;
+    holdStatusName: string | undefined;
+    updatedDate: string | undefined;
 }
 
 export interface UseHospitalPaySettingsTableHookProps {
     initialRows: HospitalPaySettingRow[];
     onSaveRow: (row: HospitalPaySettingRow) => void;
-    renderHistory: (hospitalPaymentSettingId: string) => React.ReactNode;
+    renderHistory: (hospitalPaymentSettingId: string, hospitalName: string) => React.ReactNode;
 }
 
 const isHeld = (row: HospitalPaySettingRow) => row.holdStatusId === HOLD_STATUS_ID_HOLD;
@@ -247,7 +248,16 @@ const useHospitalManagementDataTableHook = ({
         {
             name: "updatedDate",
             label: "อัปเดตล่าสุด",
-            options: { sort: false, filter: false },
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    const formatDate = rows?.[rowIndex]?.updatedDate
+                        ? dayjs(rows?.[rowIndex]?.updatedDate).format("DD/MM/YYYY HH:mm")
+                        : "-";
+                    return formatDate;
+                },
+            },
         },
         {
             name: "",
@@ -293,7 +303,10 @@ const useHospitalManagementDataTableHook = ({
         return (
             <tr>
                 <td colSpan={colSpan} style={{ backgroundColor: "#F5F8FC", padding: "16px 24px" }}>
-                    {renderHistory(rows[rowMeta.dataIndex].hospitalPaymentSettingId)}
+                    {renderHistory(
+                        rows[rowMeta.dataIndex].hospitalPaymentSettingId,
+                        rows[rowMeta.dataIndex].hospitalName
+                    )}
                 </td>
             </tr>
         );

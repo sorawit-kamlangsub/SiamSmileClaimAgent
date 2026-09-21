@@ -5,14 +5,22 @@ import CardHeaderSummaryDetail from "../components/CardHeaderSummaryDetail";
 import SearchHospitalByName from "../../_common/SearchHospitalByName";
 import HospitalPaySettingsTable from "../components/HospitalManagementDataTable";
 import HistorySettingByHospitalId from "../components/HistorySettingByHospitalId";
+import { swalConfirm } from "../../../_common";
 
 const ManagePaymentHospital = () => {
     const theme = useTheme();
     const breakpoint = useMediaQuery(theme.breakpoints.down("md"));
-    const { formik, handleOpenDialog, hospitalData, isGetHospitalLoading } = useManagePaymentHospitalHook();
+    const {
+        formik,
+        handleOpenDialog,
+        hospitalData,
+        isGetHospitalLoading,
+        updateHospitalSettingMutate,
+        isUpdateHospitalSettingLoading,
+    } = useManagePaymentHospitalHook();
 
-    const countAutoPay = hospitalData?.filter((item) => item.holdStatusId === 1).length;
-    const countHolding = hospitalData?.filter((item) => item.holdStatusId === 2).length;
+    const countAutoPay = hospitalData?.filter((item: any) => item.holdStatusId === 1).length;
+    const countHolding = hospitalData?.filter((item: any) => item.holdStatusId === 2).length;
     return (
         <>
             <Grid container spacing={2}>
@@ -51,14 +59,31 @@ const ManagePaymentHospital = () => {
                     <SearchHospitalByName formik={formik} />
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    {hospitalData.length > 0 && (
+                    {hospitalData?.length > 0 && (
                         <HospitalPaySettingsTable
                             initialRows={hospitalData ?? []}
-                            onSaveRow={(row) => {}}
-                            renderHistory={(hospitalId) => (
-                                <HistorySettingByHospitalId hospitalSettingId={hospitalId} />
-                            )}
-                            isLoading={isGetHospitalLoading}
+                            onSaveRow={(row) => {
+                                const payload = {
+                                    hospitalPaymentSettingId: row?.hospitalPaymentSettingId,
+                                    autoPayDelayDays: row?.delayDays,
+                                    holdStatusId: row?.holdStatusId,
+                                    isAutoPay: row?.isAutoPay,
+                                };
+                                swalConfirm("ยืนยันทำรายการ", "", "ยืนยัน", "ยกเลิก").then((res) => {
+                                    if (res.isConfirmed) {
+                                        updateHospitalSettingMutate(payload);
+                                    }
+                                });
+                            }}
+                            renderHistory={(hospitalPaymentSettingId, hospitalName) => {
+                                return (
+                                    <HistorySettingByHospitalId
+                                        hospitalPaymentSettingId={hospitalPaymentSettingId}
+                                        hospitalName={hospitalName}
+                                    />
+                                );
+                            }}
+                            isLoading={isGetHospitalLoading || isUpdateHospitalSettingLoading}
                         />
                     )}
                 </Grid>

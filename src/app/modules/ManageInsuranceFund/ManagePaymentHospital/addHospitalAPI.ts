@@ -17,7 +17,7 @@ type GetOrganizeDto = {
     orgName: string;
 };
 
-export const useGetHospitalName = (orgName: string, _defaultId?: number) => {
+export const useGetHospitalName = (orgName: string) => {
     return useQuery([getHospitalName, orgName], () => getHospitalNameBySearch({ orgName: orgName }), {
         enabled: !!orgName,
         select: (data: GetOrganizeDto[]) => data.slice(0, 10),
@@ -70,18 +70,18 @@ export const useAddHospital = (
 
 const addHospital = (payload: AddHospitalRequestType) => {
     const url = `${claimFundAPI_URL}/HospitalPaymentSetting/Finance/AddHospitalSetting`;
-    return axios.post(url, payload).then((res) => {
-        if (res.data.isSuccess) {
-            if (res.data.data.isSuccess) {
-                return res.data;
+    return axios
+        .post(url, payload)
+        .then((res) => {
+            if (res.data) {
+                if (res.data.isSuccess) {
+                    return res.data;
+                }
             } else {
-                swalWarning("แจ้งเตือน", res.data.data.message);
+                throw Error(res.data?.message);
             }
-        } else {
-            throw Error(res.data.message);
-        }
-    });
-    // .catch((err: Error) => {
-    //     throw err.message;
-    // });
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
 };

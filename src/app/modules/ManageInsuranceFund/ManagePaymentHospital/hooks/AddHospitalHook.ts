@@ -1,5 +1,5 @@
 import { FormikErrors, useFormik } from "formik";
-import { swalConfirm, swalError, swalSuccess } from "../../../_common";
+import { swalConfirm, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { useAddHospital } from "../addHospitalAPI";
 import { setDialogOpen } from "../store/managePaymentHospitalSlice";
 import { useAppDispatch } from "../../../../../redux";
@@ -28,12 +28,16 @@ const useAddHospitalHook = () => {
     const handleCloseDialog = () => {
         dispatch(setDialogOpen({ isOpen: false }));
     };
-    const handleAddSuccess = () => {
-        swalSuccess("ทำรายการสำเร็จ", "", "ยืนยัน").then((res) => {
-            if (res.isConfirmed) {
-                handleCloseDialog();
-            }
-        });
+    const handleAddSuccess = (res: any) => {
+        if (res?.data?.isSuccess) {
+            swalSuccess("ทำรายการสำเร็จ", "", "ยืนยัน").then((res) => {
+                if (res.isConfirmed) {
+                    handleCloseDialog();
+                }
+            });
+        } else {
+            swalWarning("แจ้งเตือน", res.data?.message);
+        }
     };
 
     const handleError = (err: string) => {
