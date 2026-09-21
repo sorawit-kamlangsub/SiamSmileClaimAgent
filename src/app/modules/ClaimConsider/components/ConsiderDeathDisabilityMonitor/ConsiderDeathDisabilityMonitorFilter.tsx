@@ -9,6 +9,7 @@ import StatusFilterToggle from "../_common/StatusFilterToggle";
 type ConsiderDeathDisabilityMonitorFilterProps = {
     formik: FormikProps<SearchFilterType>;
     statusOptions: { value: number; label: string }[];
+    claimTransactionTypeDataLoading?: boolean;
     onSearch: () => void;
     onClear: () => void;
 };
@@ -16,6 +17,7 @@ type ConsiderDeathDisabilityMonitorFilterProps = {
 const ConsiderDeathDisabilityMonitorFilter = ({
     formik,
     statusOptions,
+    claimTransactionTypeDataLoading,
     onSearch,
     onClear,
 }: ConsiderDeathDisabilityMonitorFilterProps) => (
@@ -55,7 +57,13 @@ const ConsiderDeathDisabilityMonitorFilter = ({
                 </Button>
             </Grid>
             <Grid item xs={12}>
-                <StatusFilterToggle formik={formik} label="สถานะรายการ" name="statusId" options={statusOptions} />
+                <StatusFilterToggle
+                    formik={formik}
+                    label="สถานะรายการ"
+                    name="statusId"
+                    options={statusOptions}
+                    disabled={claimTransactionTypeDataLoading}
+                />
             </Grid>
         </Grid>
     </Paper>

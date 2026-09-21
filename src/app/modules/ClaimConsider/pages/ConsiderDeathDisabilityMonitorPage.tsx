@@ -14,18 +14,11 @@ import useSearchFilterHook, {
 const DETAIL_PATH = ".";
 
 /**
- * ตาม spec: ตัวเลือกสถานะของหน้านี้กำหนดตายตัว (ลำดับ + ชื่อ) ไม่ดึงจาก master เพราะ master มีสถานะเกิน
- * (รอเอกสาร(3), รอตรวจสอบการแก้ไข(8)) และใช้ชื่อ "อยู่ระหว่างดำเนินการ" แทน "อยู่ระหว่างทำรายการ"
+ * ตาม spec: สถานะของหน้านี้มีแค่ รอพิจารณา(2)/อยู่ระหว่างดำเนินการ(7)/รอแก้ไข(4)/ปฏิเสธ(5)/ยกเลิก(6)/อนุมัติ(9)
+ * ชื่อสถานะดึงจาก master ClaimTransactionType — ตัด รอเอกสาร(3)/รอตรวจสอบการแก้ไข(8) ออก
+ * ประกาศนอก component ให้ reference คงที่ (อยู่ใน deps ของ useMemo ใน useSearchFilterHook)
  */
-const STATUS_OPTIONS = [
-    { value: 0, label: "ทั้งหมด" },
-    { value: 2, label: "รอพิจารณา" },
-    { value: 7, label: "อยู่ระหว่างทำรายการ" },
-    { value: 4, label: "รอแก้ไข" },
-    { value: 5, label: "ปฏิเสธ" },
-    { value: 6, label: "ยกเลิก" },
-    { value: 9, label: "อนุมัติ" },
-];
+const INCLUDED_STATUS_IDS = [2, 7, 4, 5, 6, 9];
 
 const getInitialAppliedFilter = (): AppliedFilter => ({
     ...getDefaultSearchFilter(dayjs()),
@@ -36,7 +29,9 @@ const getInitialAppliedFilter = (): AppliedFilter => ({
 });
 
 const ConsiderDeathDisabilityMonitorPage = () => {
-    const { formik } = useSearchFilterHook();
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook({
+        includedStatusIds: INCLUDED_STATUS_IDS,
+    });
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>(getInitialAppliedFilter);
     const { dashboardData, dashboardDataLoading, dashboardDataError } = useDeathDisabilityDashboardHook(appliedFilter);
 
@@ -70,7 +65,8 @@ const ConsiderDeathDisabilityMonitorPage = () => {
             <Grid item xs={12} sx={{ py: 2 }}>
                 <ConsiderDeathDisabilityMonitorFilter
                     formik={formik}
-                    statusOptions={STATUS_OPTIONS}
+                    statusOptions={statusOptions}
+                    claimTransactionTypeDataLoading={claimTransactionTypeDataLoading}
                     onSearch={handleSearch}
                     onClear={handleClear}
                 />
