@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Grid } from "@mui/material";
 import { FormikProvider } from "formik";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
 import useDeathDisabilityExpenseHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
 import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
 import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
@@ -9,7 +10,6 @@ import {
     GetCustomerDetailByIdDtoResponse,
     GetDeathAndDisabilityClaimDetailConsiderDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
-import { MOCK_DEATH_DISABILITY_BENEFICIARIES } from "../mock/deathDisabilityConsiderMock";
 import DeathDisabilityClaimInfoSection from "./DeathDisabilityClaimInfoSection";
 import DeathDisabilityExpenseSection from "./DeathDisabilityExpenseSection";
 import DeathDisabilityBeneficiarySection from "./DeathDisabilityBeneficiarySection";
@@ -28,14 +28,15 @@ type DeathDisabilityClaimDetailsTabProps = {
  * - รายละเอียดเคลม: GetDeathAndDisabilityClaimDetailConsider
  * - รายละเอียดค่าใช้จ่าย: GetStandardMedicalExpenseByCase (เหมือนเคลมลูกค้า)
  * - สแกนเอกสาร: DocumentScanTable ตัวเดียวกับ ClaimDetailsTab (ดึงเอกสารที่แนบไว้ของ caseId จริง)
- * TODO(death-disability-api): ผู้รับผลประโยชน์
- * ยังเป็น mock
+ * - ผู้รับผลประโยชน์: GetDeathAndDisabilityBeneficiary
  */
 const DeathDisabilityClaimDetailsTab = ({
     detail,
     detailLoading,
     customerDetail,
 }: DeathDisabilityClaimDetailsTabProps) => {
+    const { expenseItems, expenseLoading } = useDeathDisabilityExpenseHook(detail, customerDetail);
+    const { beneficiaries, beneficiaryLoading, totalPayoutAmount } = useDeathDisabilityBeneficiaryHook(detail);
     const {
         formik,
         revisionReasonOptions,
@@ -45,10 +46,8 @@ const DeathDisabilityClaimDetailsTab = ({
         cancelReasonOptions,
         cancelReasonLoading,
     } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
-    const { expenseItems, expenseLoading } = useDeathDisabilityExpenseHook(detail, customerDetail);
     // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
     const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
-    const totalTransferAmount = MOCK_DEATH_DISABILITY_BENEFICIARIES.reduce((sum, item) => sum + item.amount, 0);
     const claimNo = detail?.claimNo ?? "-";
     const customerName = customerDetail?.customerName ?? "-";
 
@@ -63,7 +62,9 @@ const DeathDisabilityClaimDetailsTab = ({
                 </Grid>
                 <Grid item xs={12}>
                     <DeathDisabilityBeneficiarySection
-                        beneficiaries={MOCK_DEATH_DISABILITY_BENEFICIARIES}
+                        beneficiaries={beneficiaries}
+                        isLoading={beneficiaryLoading}
+                        totalAmount={totalPayoutAmount}
                         claimNo={claimNo}
                         customerName={customerName}
                         onTransferAccountChanged={setTransferAccountChange}
@@ -87,7 +88,7 @@ const DeathDisabilityClaimDetailsTab = ({
                 <Grid item xs={12}>
                     <DeathDisabilityConsiderSection
                         claimNo={claimNo}
-                        totalTransferAmount={totalTransferAmount}
+                        totalTransferAmount={totalPayoutAmount}
                         productTypeId={customerDetail?.productTypeId}
                         aplicationCode={customerDetail?.policyCode}
                         revisionReasonOptions={revisionReasonOptions}

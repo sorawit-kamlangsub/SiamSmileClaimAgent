@@ -2,17 +2,9 @@ import { FormikErrors, useFormik } from "formik";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import { validatePhoneNumber, validateThaiCitizenID } from "../../../_common/commonValidators";
 
-export const BENEFICIARY_DOCUMENT_TYPE = {
-    ID_CARD: "idCard",
-    PASSPORT: "passport",
-} as const;
-
-export type BeneficiaryDocumentType = (typeof BENEFICIARY_DOCUMENT_TYPE)[keyof typeof BENEFICIARY_DOCUMENT_TYPE];
-
 export type EditBeneficiaryValues = {
     relationTypeId: number | undefined;
-    documentType: BeneficiaryDocumentType;
-    /** เลขบัตรประชาชน (ตัวเลขล้วน 13 หลัก) หรือเลข Passport ตาม documentType */
+    /** เลขบัตรประชาชน (ตัวเลขล้วน 13 หลัก) */
     documentNo: string;
     titleId: number | undefined;
     firstName: string;
@@ -27,12 +19,8 @@ export type EditBeneficiaryValues = {
 const validate = (values: EditBeneficiaryValues) => {
     const errors: FormikErrors<EditBeneficiaryValues> = {};
     if (!values.relationTypeId) errors.relationTypeId = "กรุณาเลือกความสัมพันธ์";
-    if (values.documentType === BENEFICIARY_DOCUMENT_TYPE.ID_CARD) {
-        if (!values.documentNo) errors.documentNo = "กรุณาระบุเลขบัตรประชาชน";
-        else if (!validateThaiCitizenID(values.documentNo)) errors.documentNo = "เลขบัตรประชาชนไม่ถูกต้อง";
-    } else if (!values.documentNo.trim()) {
-        errors.documentNo = "กรุณาระบุเลข Passport";
-    }
+    if (!values.documentNo) errors.documentNo = "กรุณาระบุเลขบัตรประชาชน";
+    else if (!validateThaiCitizenID(values.documentNo)) errors.documentNo = "เลขบัตรประชาชนไม่ถูกต้อง";
     if (!values.titleId) errors.titleId = "กรุณาเลือกคำนำหน้าชื่อ";
     if (!values.firstName.trim()) errors.firstName = "กรุณาระบุชื่อ";
     if (!values.lastName.trim()) errors.lastName = "กรุณาระบุนามสกุล";
@@ -61,7 +49,6 @@ const useEditBeneficiaryHook = ({ initialValues, onSaved }: UseEditBeneficiaryHo
     const formik = useFormik<EditBeneficiaryValues>({
         initialValues: {
             relationTypeId: undefined,
-            documentType: BENEFICIARY_DOCUMENT_TYPE.ID_CARD,
             documentNo: "",
             titleId: undefined,
             firstName: "",

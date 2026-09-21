@@ -40,6 +40,7 @@ const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicati
 const getDashboardDeathAndDisabilityClaimConsiderQueryKey = ["getDashboardDeathAndDisabilityClaimConsider"];
 const getDeathAndDisabilityClaimAdjudicationMonitorQueryKey = ["getDeathAndDisabilityClaimAdjudicationMonitor"];
 const getDeathAndDisabilityClaimDetailConsiderQueryKey = ["getDeathAndDisabilityClaimDetailConsider"];
+const getDeathAndDisabilityBeneficiaryQueryKey = ["getDeathAndDisabilityBeneficiary"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
@@ -625,6 +626,17 @@ export const useGetDeathAndDisabilityClaimDetailConsider = (claimId: string, cas
     return useQuery(
         [getDeathAndDisabilityClaimDetailConsiderQueryKey, claimId, caseId],
         () => coreClaimClient.getDeathAndDisabilityClaimDetailConsider(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityBeneficiary = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityBeneficiaryQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityBeneficiary(claimId, caseId),
         {
             enabled: !!claimId && !!caseId,
             refetchOnWindowFocus: false,
