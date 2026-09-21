@@ -1,6 +1,9 @@
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import { safeAtob } from "../../../../functionHelpers";
+import { useAppDispatch } from "../../../../../redux";
+import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 
 /**
  * ข้อมูลหัวหน้าพิจารณาเคลม - Death & Disability: รายละเอียดเคลม + ข้อมูลผู้เอาประกัน
@@ -17,6 +20,15 @@ const useDeathDisabilityDetailHook = () => {
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detailData?.data?.customerDetailId
     );
+
+    // DocumentScanTable ยิง master ประเภทเอกสาร (useGetDocumentType) เฉพาะตอน claimPH.isEnabled = true
+    // เดิม useConsiderDetailHook เป็นคน dispatch ให้ — พอเปลี่ยนมาใช้ hook นี้ต้อง dispatch เอง
+    // ไม่งั้น query master ถูก disable ค้าง isLoading ตลอด ตารางสแกนเอกสารจะติด LinearProgress ไม่แสดงข้อมูล
+    const dispatch = useAppDispatch();
+    const hasDetail = !!detailData?.data;
+    useEffect(() => {
+        if (hasDetail) dispatch(setEnabled(true));
+    }, [hasDetail]);
 
     return { detailData, detailDataLoading, customerDetailData, customerDetailLoading };
 };
