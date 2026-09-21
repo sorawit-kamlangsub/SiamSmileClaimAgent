@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Grid, Skeleton, Typography } from "@mui/material";
+import { Box, Button, Chip, Grid, Skeleton, Typography } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EditIcon from "@mui/icons-material/Edit";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -29,6 +29,9 @@ type DeathDisabilityBeneficiarySectionProps = {
     isLoading: boolean;
     /** ผลรวม payoutAmount ของผู้รับผลประโยชน์ทุกคน */
     totalAmount: number;
+    /** ลำดับ (index) ที่แก้ไขแล้วแต่ยังไม่ได้ยืนยันบันทึก */
+    editedIndexes: number[];
+    onBeneficiaryEdited: (index: number, updated: GetDeathAndDisabilityBeneficiaryDtoResponse) => void;
     claimNo: string;
     customerName: string;
     /** บันทึกใน dialog เปลี่ยนบัญชีสำเร็จ — parent (tab) เก็บไว้แสดง section รายละเอียดการเปลี่ยนบัญชี */
@@ -44,6 +47,8 @@ const DeathDisabilityBeneficiarySection = ({
     beneficiaries,
     isLoading,
     totalAmount,
+    editedIndexes,
+    onBeneficiaryEdited,
     claimNo,
     customerName,
     onTransferAccountChanged,
@@ -97,18 +102,10 @@ const DeathDisabilityBeneficiarySection = ({
                 order={(editingIndex ?? 0) + 1}
                 claimNo={claimNo}
                 customerName={customerName}
-                initialValues={{
-                    relationTypeId: editingBeneficiary?.relationId ?? undefined,
-                    documentNo: editingBeneficiary?.idCard?.replace(/\D/g, "") ?? "",
-                    // DTO ส่ง titleId เป็น string แต่ dropdown ใช้ number
-                    titleId: editingBeneficiary?.titleId ? Number(editingBeneficiary.titleId) : undefined,
-                    firstName: editingBeneficiary?.firstName ?? "",
-                    lastName: editingBeneficiary?.lastName ?? "",
-                    phoneNumber: editingBeneficiary?.phoneNo?.replace(/\D/g, "") ?? "",
-                    bankId: editingBeneficiary?.bankId ?? undefined,
-                    accountNo: editingBeneficiary?.bankAccountNo ?? "",
-                    accountName: editingBeneficiary?.bankAccountName ?? "",
-                    amount: editingBeneficiary?.payoutAmount ?? undefined,
+                beneficiary={editingBeneficiary}
+                onSaved={(updated) => {
+                    if (editingIndex !== undefined) onBeneficiaryEdited(editingIndex, updated);
+                    setEditOpen(false);
                 }}
             />
             {isLoading && <Skeleton variant="rounded" sx={{ mt: 2, height: 140 }} />}
@@ -124,6 +121,13 @@ const DeathDisabilityBeneficiarySection = ({
                 >
                     <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
                         <Typography fontWeight={700}>ผู้รับผลประโยชน์ ลำดับที่ {index + 1}</Typography>
+                        {editedIndexes.includes(index) && (
+                            <Chip
+                                label="แก้ไขแล้ว รอยืนยันบันทึก"
+                                size="small"
+                                sx={{ bgcolor: "#FFF1CD", color: "#A56E07", fontWeight: 600 }}
+                            />
+                        )}
                         <Button
                             variant="outlined"
                             size="small"

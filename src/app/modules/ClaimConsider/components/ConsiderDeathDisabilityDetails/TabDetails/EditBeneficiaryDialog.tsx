@@ -12,9 +12,8 @@ import { FormikDropdown, FormikTextField, FormikTextMaskPhone, FormikTextNumber 
 import FormikTextMaskCardId from "../../../../_common/components/CustomFormik/FormikTextMaskCardId";
 import RelationTypeDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/RelationTypeDropdown";
 import TitlePersonDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/TitlePersonDropdown";
-import useEditBeneficiaryHook, {
-    EditBeneficiaryValues,
-} from "../../../hooks/ClaimConsiderDeathDisabilityDetail/EditBeneficiaryHook";
+import { GetDeathAndDisabilityBeneficiaryDtoResponse } from "../../../../../api/coreClaimApi.client";
+import useEditBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/EditBeneficiaryHook";
 import { DialogHeader, SectionRow, SummaryStrip, dialogActionButtonSx, dialogActionsSx } from "./DialogParts";
 
 type EditBeneficiaryDialogProps = {
@@ -23,14 +22,23 @@ type EditBeneficiaryDialogProps = {
     order: number;
     claimNo: string;
     customerName: string;
-    initialValues: Partial<EditBeneficiaryValues>;
+    beneficiary: GetDeathAndDisabilityBeneficiaryDtoResponse | undefined;
+    /** กดบันทึกข้อมูล — ยังไม่บันทึกจริง parent เก็บไว้ส่งพร้อมผลการพิจารณา */
+    onSaved: (updated: GetDeathAndDisabilityBeneficiaryDtoResponse) => void;
 };
 
 type EditBeneficiaryFormProps = Omit<EditBeneficiaryDialogProps, "open">;
 
 /** แยก component เพื่อให้ form ถูกสร้างใหม่ทุกครั้งที่เปิด dialog (เหมือน ChangeTransferAccountDialog) */
-const EditBeneficiaryForm = ({ onClose, order, claimNo, customerName, initialValues }: EditBeneficiaryFormProps) => {
-    const { formik, bankOptions, bankLoading } = useEditBeneficiaryHook({ initialValues, onSaved: onClose });
+const EditBeneficiaryForm = ({
+    onClose,
+    onSaved,
+    order,
+    claimNo,
+    customerName,
+    beneficiary,
+}: EditBeneficiaryFormProps) => {
+    const { formik, bankOptions, bankLoading } = useEditBeneficiaryHook({ beneficiary, onSaved });
     const amountPreview = (formik.values.amount ?? 0).toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,

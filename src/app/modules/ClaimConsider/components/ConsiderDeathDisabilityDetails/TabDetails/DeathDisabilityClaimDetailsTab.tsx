@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Grid } from "@mui/material";
 import { FormikProvider } from "formik";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
@@ -36,7 +36,14 @@ const DeathDisabilityClaimDetailsTab = ({
     customerDetail,
 }: DeathDisabilityClaimDetailsTabProps) => {
     const { expenseItems, expenseLoading } = useDeathDisabilityExpenseHook(detail, customerDetail);
-    const { beneficiaries, beneficiaryLoading, totalPayoutAmount } = useDeathDisabilityBeneficiaryHook(detail);
+    const {
+        beneficiaries,
+        beneficiaryLoading,
+        totalPayoutAmount,
+        editedIndexes,
+        editedBeneficiaries,
+        updateBeneficiary,
+    } = useDeathDisabilityBeneficiaryHook(detail);
     const {
         formik,
         revisionReasonOptions,
@@ -46,6 +53,18 @@ const DeathDisabilityClaimDetailsTab = ({
         cancelReasonOptions,
         cancelReasonLoading,
     } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
+    // ข้อมูลผู้รับผลประโยชน์ที่แก้ไว้ยังไม่ถูกบันทึกจนกว่าจะกดยืนยันบันทึก — เตือนก่อนปิด/รีเฟรชหน้า
+    // TODO(death-disability-api): ส่ง editedBeneficiaries ไปกับ request บันทึกผลพิจารณา (DeathDisabilityConsiderHook onSubmit)
+    const hasPendingBeneficiaryEdits = editedBeneficiaries.length > 0;
+    useEffect(() => {
+        if (!hasPendingBeneficiaryEdits) return undefined;
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = "";
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [hasPendingBeneficiaryEdits]);
     // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
     const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
     const claimNo = detail?.claimNo ?? "-";
@@ -65,6 +84,8 @@ const DeathDisabilityClaimDetailsTab = ({
                         beneficiaries={beneficiaries}
                         isLoading={beneficiaryLoading}
                         totalAmount={totalPayoutAmount}
+                        editedIndexes={editedIndexes}
+                        onBeneficiaryEdited={updateBeneficiary}
                         claimNo={claimNo}
                         customerName={customerName}
                         onTransferAccountChanged={setTransferAccountChange}
