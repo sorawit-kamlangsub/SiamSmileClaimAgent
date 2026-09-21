@@ -5,12 +5,11 @@ import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/D
 import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
 import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
 import {
-    GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
+    GetDeathAndDisabilityClaimDetailConsiderDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
 import {
     MOCK_DEATH_DISABILITY_BENEFICIARIES,
-    MOCK_DEATH_DISABILITY_CLAIM_INFO,
     MOCK_DEATH_DISABILITY_EXPENSE,
 } from "../mock/deathDisabilityConsiderMock";
 import DeathDisabilityClaimInfoSection from "./DeathDisabilityClaimInfoSection";
@@ -20,17 +19,24 @@ import DeathDisabilityConsiderSection from "./DeathDisabilityConsiderSection";
 import TransferAccountChangeSection from "./TransferAccountChangeSection";
 
 type DeathDisabilityClaimDetailsTabProps = {
-    detail: GetClaimDetailConsiderDtoResponse | undefined;
+    /** รายละเอียดเคลม Death & Disability (GetDeathAndDisabilityClaimDetailConsider) */
+    detail: GetDeathAndDisabilityClaimDetailConsiderDtoResponse | undefined;
+    detailLoading: boolean;
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
 };
 
 /**
  * Tab "ข้อมูลการเคลม" ของหน้าพิจารณาเคลม - Death & Disability
+ * - รายละเอียดเคลม: GetDeathAndDisabilityClaimDetailConsider
  * - สแกนเอกสาร: DocumentScanTable ตัวเดียวกับ ClaimDetailsTab (ดึงเอกสารที่แนบไว้ของ caseId จริง)
- * TODO(death-disability-api): รายละเอียดเคลม (รอ API ใหม่) / ค่าใช้จ่าย / ผู้รับผลประโยชน์
+ * TODO(death-disability-api): ค่าใช้จ่าย / ผู้รับผลประโยชน์
  * ยังเป็น mock
  */
-const DeathDisabilityClaimDetailsTab = ({ detail, customerDetail }: DeathDisabilityClaimDetailsTabProps) => {
+const DeathDisabilityClaimDetailsTab = ({
+    detail,
+    detailLoading,
+    customerDetail,
+}: DeathDisabilityClaimDetailsTabProps) => {
     const {
         formik,
         revisionReasonOptions,
@@ -50,7 +56,7 @@ const DeathDisabilityClaimDetailsTab = ({ detail, customerDetail }: DeathDisabil
         <FormikProvider value={formik}>
             <Grid container spacing={2}>
                 <Grid item xs={12}>
-                    <DeathDisabilityClaimInfoSection info={MOCK_DEATH_DISABILITY_CLAIM_INFO} />
+                    <DeathDisabilityClaimInfoSection info={detail} isLoading={detailLoading} />
                 </Grid>
                 <Grid item xs={12}>
                     <DeathDisabilityExpenseSection expense={MOCK_DEATH_DISABILITY_EXPENSE} />

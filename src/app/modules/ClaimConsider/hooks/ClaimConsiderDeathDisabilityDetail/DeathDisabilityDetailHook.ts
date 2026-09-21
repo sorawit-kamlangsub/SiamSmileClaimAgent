@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import { useGetCustomerDetailById, useGetDeathAndDisabilityClaimDetailConsider } from "../../../../api/coreClaimApi";
 import { safeAtob } from "../../../../functionHelpers";
 import { useAppDispatch } from "../../../../../redux";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 
 /**
- * ข้อมูลหัวหน้าพิจารณาเคลม - Death & Disability: รายละเอียดเคลม + ข้อมูลผู้เอาประกัน
- * ยิงแค่ 2 query ที่ header ใช้ — ไม่ใช้ useConsiderDetailHook ของเคลมลูกค้าเพราะพ่วง formik + master อีกหลายตัว
+ * ข้อมูลหน้าพิจารณาเคลม - Death & Disability: รายละเอียดเคลม (GetDeathAndDisabilityClaimDetailConsider
+ * ใช้ทั้ง header และ tab ข้อมูลการเคลม ไม่ใช้ GetClaimDetailConsider ของเคลมลูกค้าแล้ว) + ข้อมูลผู้เอาประกัน
+ * ยิงแค่ 2 query — ไม่ใช้ useConsiderDetailHook ของเคลมลูกค้าเพราะพ่วง formik + master อีกหลายตัว
  * (สถานพยาบาล/ICD10/อาการสำคัญ/IncidentType/สาเหตุ/เคลมต่อเนื่อง/แบบร่าง) ที่หน้านี้ไม่ได้ใช้
  */
 const useDeathDisabilityDetailHook = () => {
@@ -16,7 +17,10 @@ const useDeathDisabilityDetailHook = () => {
     const claimId = safeAtob(id);
     const caseId = safeAtob(caseIdEncoded);
 
-    const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
+    const { data: detailData, isLoading: detailDataLoading } = useGetDeathAndDisabilityClaimDetailConsider(
+        claimId ?? "",
+        caseId ?? ""
+    );
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detailData?.data?.customerDetailId
     );

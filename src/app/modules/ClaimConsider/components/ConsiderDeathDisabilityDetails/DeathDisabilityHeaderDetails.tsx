@@ -15,7 +15,7 @@ import ClaimTransationTab from "../ConsiderDetails/TabDetails/ClaimTransationTab
 import PolicyBenefitTab from "../ConsiderDetails/TabDetails/PolicyBenefitTab";
 import ClaimHistoryTab from "../ConsiderDetails/TabDetails/ClaimHistoryTab";
 import PaymentHistoryTab from "../ConsiderDetails/TabDetails/PaymentHistoryTab";
-import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import { useGetCustomerDetailById, useGetDeathAndDisabilityClaimDetailConsider } from "../../../../api/coreClaimApi";
 import {
     PRODUCT_TYPE_GROUP,
     calculatePolicyAgeText,
@@ -24,7 +24,7 @@ import {
 } from "../../../../functionHelpers";
 
 type DeathDisabilityHeaderDetailsProps = {
-    detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
+    detailData: ReturnType<typeof useGetDeathAndDisabilityClaimDetailConsider>["data"];
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
     detailDataLoading: boolean;
     customerDetailLoading: boolean;
@@ -143,7 +143,11 @@ const DeathDisabilityHeaderDetails = ({
                 {/* tab 2-5 ใช้ component ตัวเดียวกับหน้าพิจารณาเคลมลูกค้า (HeaderDetails) — tab 6 ยังไม่มีเนื้อหาเหมือนกัน */}
                 <Grid item xs={12}>
                     <TabPanel value="1">
-                        <DeathDisabilityClaimDetailsTab detail={detail} customerDetail={customerDetail} />
+                        <DeathDisabilityClaimDetailsTab
+                            detail={detail}
+                            customerDetail={customerDetail}
+                            detailLoading={detailDataLoading}
+                        />
                     </TabPanel>
                     <TabPanel value="2">
                         <ClaimTransationTab onViewDraft={() => setTabValue("1")} />
