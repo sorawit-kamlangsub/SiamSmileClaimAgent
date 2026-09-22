@@ -1,8 +1,10 @@
 # IncreaseLimitTransfer
 
 `เพิ่มวงเงินโอน` — search + review CPG-to-claim transfer records awaiting inspection/approval
-(first transfer vs. additional transfer types). Table **wired to a mock monitor API** — status +
-search-from dropdowns populated, but real backend not ready; no store. Route:
+(first transfer vs. additional transfer types). Monitor table **wired to the real backend**
+(`IncreaseTransferLimitMonitors`); ยังไม่ map ข้อมูล field (row mapping ยังเป็น DTO เดิม —
+field `limitStatusNameTH`/`reason` ไม่มีใน contract จริง → แสดง "-"). Detail dialog + status
+dropdown ยังเป็น mock; no store. Route:
 `/manage/increase-limit-transfer` — see [routes.md](../routes.md).
 
 ## pages/
@@ -64,9 +66,8 @@ its own independent inline `useFormik` instead.
 
 - `useGetIncreaseTransferLimitMonitors` (`increaseLimitTransferAPI.ts`) — GET
   `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/IncreaseTransferLimitMonitors` (base
-  `.../api/ClaimFund`), monitor table. ⚠ **Mock path** — `VITE_APIGW_CLAIM_FUND_API_URL` in
-  `.env` points at a Postman mock (no real backend yet); treat its response as placeholder,
-  not a binding contract until the real endpoint exists.
+  `.../api/ClaimFund`), monitor table. ✅ **Real API** — เชื่อม backend จริงแล้ว
+  (`VITE_APIGW_CLAIM_FUND_API_URL` ชี้ dev tunnel); ยังไม่ map ข้อมูล field.
 - `useGetIncreaseTransferLimitDetail` (`increaseLimitTransferAPI.ts`) — GET
   `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/IncreaseTransferLimitDetail` (base
   `.../api/ClaimFund`), detail dialog. ⚠ **Mock path** เดียวกับข้างบน; fields ตรงกับ
@@ -82,7 +83,8 @@ its own independent inline `useFormik` instead.
 
 ## Gotchas
 
-ข้อมูลทั้งหมดมาจาก mock endpoint (monitor + status + detail) — ยังไม่มี backend จริง,
-view action ยังเป็น stub (`console.log` + `// TODO`), `rejectReasonsId` ใน payload เป็น
+monitor ต่อ backend จริงแล้ว (`IncreaseTransferLimitMonitors`); detail dialog / status dropdown /
+update-status ยังเป็น mock endpoint — ยังไม่มี backend จริง, view action ยังเป็น stub
+(`console.log` + `// TODO`), `rejectReasonsId` ใน payload เป็น
 **draft** (map จาก `rejectReasonCode` ชั่วคราว เพราะ backend ยังไม่มี field นี้), `page/`
 (singular) folder naming, dead `ClaimSearchFilterFormHook.tsx`.
