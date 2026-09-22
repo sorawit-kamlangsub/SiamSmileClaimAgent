@@ -9,8 +9,9 @@ import { IncreaseTransferLimitMonitorResponseDto } from "../../../api/coreClaimA
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 
-// TODO: field limitStatusId / limitStatusNameTH / reason ยังไม่มีใน response จาก CodeGen
-//       (IncreaseTransferLimitMonitorResponseDto) — คอลัมน์สถานะจะโชว์ "-" จนกว่า backend จะส่ง field มาให้
+// TODO: Response จริงจาก backend มี field transferApprovalStatusId / transferApprovalStatusName / remark / caseTransferApprovalId
+//       แต่ DTO จาก CodeGen (IncreaseTransferLimitMonitorResponseDto) ยังไม่ตรง — ต้องรัน codegen ให้ DTO ได้ field เหล่านี้
+//       ตอนนี้ cast read ไว้ให้คอลัมน์สถานะทำงานก่อน แล้วค่อยลบ cast ทิ้งเมื่อ regen client แล้ว
 const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
 
 type StatusColor = { bg: string; text: string };
@@ -22,6 +23,7 @@ const statusColorMapById: Record<number, StatusColor> = {
 };
 
 export type IncreaseTransferMonitorRow = {
+    caseTransferApprovalId?: string;
     caseId?: string;
     caseNo?: string;
     claimNo?: string;
@@ -30,10 +32,9 @@ export type IncreaseTransferMonitorRow = {
     amount?: number;
     toAccountNo?: string;
     transferType?: string;
-    cpgNo?: string;
-    limitStatusId?: number;
-    limitStatusNameTH?: string;
-    reason?: string;
+    remark?: string;
+    transferApprovalStatusName?: string;
+    transferApprovalStatusId?: number;
 };
 
 export type IncreaseLimitTransferDataTableHookProps = {
@@ -216,13 +217,12 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    // TODO: field limitStatusId / limitStatusNameTH ยังไม่มีใน CodeGen — โชว์ "-" จนกว่า backend จะส่งมา
                     const row = rows[dataIndex] as IncreaseTransferLimitMonitorResponseDto & {
-                        limitStatusId?: number;
-                        limitStatusNameTH?: string;
+                        transferApprovalStatusId?: number;
+                        transferApprovalStatusName?: string;
                     };
-                    const status = row?.limitStatusNameTH ?? "-";
-                    const color = statusColorMapById[row?.limitStatusId ?? -1] ?? defaultStatusColor;
+                    const status = row?.transferApprovalStatusName ?? "-";
+                    const color = statusColorMapById[row?.transferApprovalStatusId ?? -1] ?? defaultStatusColor;
                     return <StatusPill status={status} color={color} />;
                 },
             },
@@ -252,7 +252,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
                             </IconButton>
                             {/* TODO: ปุ่มพิจารณาเปิด detail dialog ที่ยังไม่มี API จาก CodeGen
                                 (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus) */}
-                            {/* {row?.limitStatusId === 2 && (
+                            {/* {row?.transferApprovalStatusId === 2 && (
                                 <IconButton size="small" onClick={() => handleEditRow(row)}>
                                     <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
                                 </IconButton>
