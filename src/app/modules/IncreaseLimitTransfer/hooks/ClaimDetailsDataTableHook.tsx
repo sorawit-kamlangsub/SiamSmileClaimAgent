@@ -193,7 +193,14 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => formatAmount(rows[dataIndex]?.caseAmount ?? 0),
+                customBodyRenderLite: (dataIndex) => (
+                    <Box
+                        sx={{ width: "100%", textAlign: "right" }}
+                        title={rows[dataIndex]?.caseAmount?.toLocaleString("th-TH")}
+                    >
+                        {formatAmount(rows[dataIndex]?.caseAmount ?? 0)}
+                    </Box>
+                ),
             },
         },
         {

@@ -109,7 +109,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
                                             เลขที่ CC :
                                         </Typography>
-                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        <Typography
+                                            sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0"}}
+                                        >
                                             {detail?.caseNo ?? "-"}
                                         </Typography>
                                     </Box>
@@ -145,7 +147,15 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         <Typography sx={{ fontSize: "0.9rem", color: "#757575" }}>
                                             จำนวนเงิน :
                                         </Typography>
-                                        <Typography sx={{ fontSize: "1.1rem", fontWeight: 700, color: "#212121" }}>
+                                        <Typography
+                                            sx={{
+                                                fontSize: "1.1rem",
+                                                fontWeight: 700,
+                                                color: "#212121",
+                                                flex: 1,
+                                                textAlign: "right",
+                                            }}
+                                        >
                                             {formatBaht(detail?.requestedTransferAmount)}
                                         </Typography>
                                     </Box>
@@ -215,17 +225,6 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#F1F8E9" }}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: "0.9rem", color: "#33691E" }}>
-                                        วงเงินคงเหลือ (ครั้งใหม่) :
-                                    </Typography>
-                                    <Typography sx={{ fontWeight: 700, color: "#33691E" }}>
-                                        {formatBaht(detail?.newRemainingLimit)}
-                                    </Typography>
-                                </Box>
-                            </Box>
-
                             <Grid container spacing={2} alignItems="flex-end" sx={{ mt: 0.5 }}>
                                 <Grid item xs={12} sm={6}>
                                     <Box
@@ -286,6 +285,17 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     </TextField>
                                 </Grid>
                             </Grid>
+
+                            <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#F1F8E9" }}>
+                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <Typography sx={{ fontSize: "0.9rem", color: "#33691E" }}>
+                                        วงเงินคงเหลือ (ครั้งใหม่) :
+                                    </Typography>
+                                    <Typography sx={{ fontWeight: 700, color: "#33691E" }}>
+                                        {formatBaht(detail?.newRemainingLimit)}
+                                    </Typography>
+                                </Box>
+                            </Box>
 
                             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2, pb: 2 }}>
                                 {/* TODO: ปุ่มอนุมัติ/ปฏิเสธ ยังไม่ต่อ API (UpdateIncreaseTransferLimitStatus) — ปิดปุ่มไว้ก่อน
