@@ -549,6 +549,66 @@ export class ClaimFundClient {
         return Promise.resolve<SearchClaimOrCaseResponseDtoListServiceResponse>(null as any);
     }
 
+    getCaseTransferApprovalRejectReasonStatus(
+        cancelToken?: CancelToken | undefined
+    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetCaseTransferApprovalRejectReasonStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseTransferApprovalRejectReasonStatus(_response);
+            });
+    }
+
+    protected processGetCaseTransferApprovalRejectReasonStatus(
+        response: AxiosResponse
+    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(null as any);
+    }
+
     /**
      * สถานะการขยายวงเงิน
      * @return Success
@@ -772,6 +832,71 @@ export class ClaimFundClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetIncreaseTransferLimitDetailResponseDtoServiceResponse>(null as any);
+    }
+
+    increaseTransferLimitChangeStatus(
+        body?: IncreaseTransferLimitChangeStatusRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/IncreaseTransferLimitChangeStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processIncreaseTransferLimitChangeStatus(_response);
+            });
+    }
+
+    protected processIncreaseTransferLimitChangeStatus(
+        response: AxiosResponse
+    ): Promise<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse>(null as any);
     }
 
     /**
@@ -7736,6 +7861,25 @@ export interface CaseServicePersonV2Request {
     employeeName?: string | undefined;
 }
 
+export interface CaseTransferApprovalRejectResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface CaseTransferApprovalRejectResponseDtoListServiceResponse {
+    data?: CaseTransferApprovalRejectResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface CaseV2Request {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
@@ -9651,6 +9795,34 @@ export interface IncidentTypeDtoResponse {
 
 export interface IncidentTypeDtoResponseListServiceResponse {
     data?: IncidentTypeDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface IncreaseTransferLimitChangeStatusRequestDto {
+    caseTransferApprovalId?: string;
+    /** สาะนะรายการ */
+    transferApprovalStatusId: number;
+    /** หมายเหตุการอนุมัติ ส่วนเหตุผลปฏิเสธเก็บใน TransactionLog */
+    approvalRemark?: string | undefined;
+    rejectReasonId?: number;
+}
+
+export interface IncreaseTransferLimitChangeStatusResponseDto {
+    isSuccess?: boolean;
+    message?: string | undefined;
+}
+
+export interface IncreaseTransferLimitChangeStatusResponseDtoServiceResponse {
+    data?: IncreaseTransferLimitChangeStatusResponseDto;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

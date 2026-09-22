@@ -17,8 +17,13 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { useState } from "react";
-import { useGetIncreaseTransferLimitDetail } from "../../../api/coreClaimApi";
+import {
+    useGetCaseTransferApprovalRejectReasonStatus,
+    useGetIncreaseTransferLimitDetail,
+    useIncreaseTransferLimitChangeStatus,
+} from "../../../api/coreClaimApi";
 import { GetIncreaseTransferLimitDetailResponseDto } from "../../../api/coreClaimApi.client";
+import { swalConfirm, swalError, swalSuccess } from "../../_common";
 import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 
 type IncreaseLimitDetailDialogProps = {
@@ -40,10 +45,33 @@ const formatBaht = (value: number | undefined | null) => `฿ ${formatNumber(val
 const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDialogProps) => {
     const caseTransferApprovalId = row?.caseTransferApprovalId ?? "";
     const { data: detailRes, isLoading: isDetailLoading } = useGetIncreaseTransferLimitDetail(caseTransferApprovalId);
+    const { data: rejectReasonsData, isLoading: isRejectReasonsLoading } =
+        useGetCaseTransferApprovalRejectReasonStatus();
 
     const detail = detailRes?.data as GetIncreaseTransferLimitDetailResponseDto | undefined;
-    // TODO: Approve/Reject ยังไม่มี API จาก CodeGen (UpdateIncreaseTransferLimitStatus) — ปุ่มเปิด UI ไว้ก่อน ยังไม่ submit
-    const [rejectReason, setRejectReason] = useState("");
+    const [rejectReasonId, setRejectReasonId] = useState<number | undefined>(undefined);
+    const changeStatus = useIncreaseTransferLimitChangeStatus(
+        () => {
+            swalSuccess("ดำเนินการสำเร็จ", "บันทึกการอนุมัติ/ปฏิเสธเรียบร้อยแล้ว");
+            onClose();
+        },
+        (error) => {
+            swalError("เกิดข้อผิดพลาด", error);
+        }
+    );
+
+    const handleApprove = async () => {
+        const confirmed = await swalConfirm("ยืนยันการอนุมัติ", "ยืนยันการอนุมัติการขยายวงเงินรายการนี้หรือไม่?");
+        if (!confirmed) return;
+        changeStatus.mutate({ caseTransferApprovalId, transferApprovalStatusId: 3 });
+    };
+
+    const handleReject = async () => {
+        if (rejectReasonId == null) return;
+        const confirmed = await swalConfirm("ยืนยันการปฏิเสธ", "ยืนยันการปฏิเสธการขยายวงเงินรายการนี้หรือไม่?");
+        if (!confirmed) return;
+        changeStatus.mutate({ caseTransferApprovalId, transferApprovalStatusId: 4, rejectReasonId });
+    };
 
     return (
         <Dialog
@@ -114,7 +142,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
                                             เลขที่ CC :
                                         </Typography>
-                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
+                                        <Typography
+                                            sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0", textAlign: "right" }}
+                                        >
                                             {detail?.caseNo ?? "-"}
                                         </Typography>
                                     </Box>
@@ -271,20 +301,23 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
-                                    {/* TODO: ยังไม่ต่อ API submit (UpdateIncreaseTransferLimitStatus) — option ตรงตาม design จริง */}
                                     <TextField
                                         select
                                         label="สาเหตุการปฏิเสธ"
                                         required
                                         InputLabelProps={{ shrink: true }}
                                         sx={{ "& .MuiFormLabel-asterisk": { color: "#D32F2F" } }}
-                                        value={rejectReason}
-                                        onChange={(event) => setRejectReason(event.target.value)}
+                                        value={rejectReasonId ?? ""}
+                                        onChange={(event) => setRejectReasonId(Number(event.target.value))}
                                         size="small"
                                         fullWidth
+                                        disabled={isRejectReasonsLoading}
                                     >
-                                        <MenuItem value="wrong_calc">คำนวนยอดผิด</MenuItem>
-                                        <MenuItem value="wrong_transfer">โอนผิดคน</MenuItem>
+                                        {rejectReasonsData?.data?.map((reason) => (
+                                            <MenuItem key={reason.id} value={reason.id}>
+                                                {reason.name ?? `เหตุผลที่ ${reason.id}`}
+                                            </MenuItem>
+                                        ))}
                                     </TextField>
                                 </Grid>
                             </Grid>
@@ -301,12 +334,20 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                             </Box>
 
                             <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2, pb: 2 }}>
-                                {/* TODO: ปุ่มอนุมัติ/ปฏิเสธ ยังไม่ต่อ API (UpdateIncreaseTransferLimitStatus) — ปิดปุ่มไว้ก่อน
-                                    เมื่อ API พร้อม: useMutation + onSuccessCallback ตัดสินใจกับ detail */}
-                                <Button variant="contained" disabled sx={{ backgroundColor: "#1B6CB2" }}>
+                                <Button
+                                    variant="contained"
+                                    disabled={changeStatus.isLoading}
+                                    onClick={handleApprove}
+                                    sx={{ backgroundColor: "#1B6CB2" }}
+                                >
                                     อนุมัติ
                                 </Button>
-                                <Button variant="outlined" color="error" disabled>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    disabled={changeStatus.isLoading || rejectReasonId == null}
+                                    onClick={handleReject}
+                                >
                                     ปฏิเสธ
                                 </Button>
                             </Box>

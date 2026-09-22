@@ -10,6 +10,8 @@ import {
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    IncreaseTransferLimitChangeStatusRequestDto,
+    IncreaseTransferLimitChangeStatusResponseDtoServiceResponse,
     IncreaseTransferLimitMonitorRequestDto,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
@@ -53,6 +55,7 @@ const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
 const getIncreaseTransferLimitMonitorsQueryKey = ["getIncreaseTransferLimitMonitors"];
 const getIncreaseTransferLimitDetailQueryKey = ["getIncreaseTransferLimitDetail"];
 const getTransferApprovalStatusQueryKey = ["getTransferApprovalStatus"];
+const getCaseTransferApprovalRejectReasonStatusQueryKey = ["getCaseTransferApprovalRejectReasonStatus"];
 
 export const useGetTransferApprovalStatus = () => {
     return useQuery([getTransferApprovalStatusQueryKey], () => claimFundClient.getTransferApprovalStatus(), {
@@ -107,6 +110,41 @@ export const useGetIncreaseTransferLimitDetail = (caseTransferApprovalId?: strin
             enabled: caseTransferApprovalId !== undefined && caseTransferApprovalId !== "",
             refetchOnMount: "always",
             cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseTransferApprovalRejectReasonStatus = () => {
+    return useQuery(
+        [getCaseTransferApprovalRejectReasonStatusQueryKey],
+        () => claimFundClient.getCaseTransferApprovalRejectReasonStatus(),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useIncreaseTransferLimitChangeStatus = (
+    onSuccessCallback?: (response: IncreaseTransferLimitChangeStatusResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: IncreaseTransferLimitChangeStatusRequestDto) => claimFundClient.increaseTransferLimitChangeStatus(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else {
+                    queryClient.invalidateQueries([getIncreaseTransferLimitMonitorsQueryKey], { refetchType: "all" });
+                    queryClient.invalidateQueries([getIncreaseTransferLimitDetailQueryKey], { refetchType: "all" });
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
         }
     );
 };
