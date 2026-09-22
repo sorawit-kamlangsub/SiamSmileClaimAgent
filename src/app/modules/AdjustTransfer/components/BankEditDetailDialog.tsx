@@ -59,11 +59,11 @@ const FieldLabel = ({ children, required }: { children: React.ReactNode; require
 const BankEditDetailDialog = () => {
     const dispatch = useAppDispatch();
     const { selectRowForEdit, dialogEditAdjustTransferDetail } = useAppSelector((state) => state.adjust);
-    const { formik, dataDetail, isAdditionalTransferAccountDetailLoading } = useAdditionalTransferAccountDetailHook({
+    const { formik, dataDetail } = useAdditionalTransferAccountDetailHook({
         paymentId: selectRowForEdit.paymentId,
     });
     const avatarBank = setBankLogo(dataDetail?.toBankId);
-    const { data: bankData, isLoading: isBankDataLoading } = useGetBank();
+    const { data: bankData } = useGetBank();
     const handleCloseDialog = () => {
         dispatch(setOpenDialogAdjustDetail({ isOpen: false }));
     };

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
 import { encodeURLWithParams } from "../_common";
 
