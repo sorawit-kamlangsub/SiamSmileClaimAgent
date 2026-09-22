@@ -319,6 +319,7 @@ const ConsiderSection = ({
 
                         {selectedStatus.requiresAttachment && (
                             <DocumentScanTable
+                                disablePaper
                                 productTypeId={productId ?? 0}
                                 documentType="ใบแจ้งปฏิเสธสินไหม"
                                 aplicationCode={aplicationCode ?? ""}
