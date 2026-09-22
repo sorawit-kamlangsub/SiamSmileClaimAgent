@@ -5,7 +5,8 @@ import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
-import { useGetPaymentIncreaseStatus } from "./masterAPI";
+// TODO: Master ข้อมูลสถานะขยายวงเงิน (GetPaymentIncreaseStatuses) ยังไม่มี API จาก CodeGen
+// import { useGetPaymentIncreaseStatus } from "./masterAPI";
 import dayjs, { Dayjs } from "dayjs";
 
 const currentDate = dayjs();
@@ -39,8 +40,9 @@ const defaultValues: ClaimSearchFilterValues = {
 };
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
-    const { data: paymentIncreaseStatusData, isLoading: paymentIncreaseStatusIsLoading } =
-        useGetPaymentIncreaseStatus();
+    // TODO: ยังไม่มี API จาก CodeGen ข้อมูลสถานะ (GetPaymentIncreaseStatuses) — กลับมาเมื่อ backend มี API
+    // const { data: paymentIncreaseStatusData, isLoading: paymentIncreaseStatusIsLoading } =
+    //     useGetPaymentIncreaseStatus();
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -65,7 +67,8 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                    <FormikDropdown
+                    {/* TODO: Dropdown สถานะ ยังไม่มี API จาก CodeGen — กลับมาเมื่อมี */}
+                    {/* <FormikDropdown
                         name="statusId"
                         formik={formik}
                         label="สถานะ"
@@ -74,7 +77,7 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                         displayFieldName="name"
                         fullWidth
                         isLoading={paymentIncreaseStatusIsLoading}
-                    />
+                    /> */}
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>

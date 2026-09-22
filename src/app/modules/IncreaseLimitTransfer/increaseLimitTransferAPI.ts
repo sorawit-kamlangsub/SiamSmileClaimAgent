@@ -1,28 +1,34 @@
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
-import { encodeURLWithParams, PaginationSortableDto } from "../_common";
+import { API_URL, APIGW_CLAIM_FUND_API_URL } from "../../../Const";
+import { ClaimFundClient } from "../../api/coreClaimApi.client";
+import { encodeURLWithParams } from "../_common";
 
 const apiURL = `${APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer`;
 const getIncreaseTransferLimitMonitorsKey = "getIncreaseTransferLimitMonitorsKey";
 const getIncreaseTransferLimitDetailKey = "getIncreaseTransferLimitDetailKey";
 
-export type GetIncreaseTransferLimitMonitorsFilterType = {
-    searchDetail?: string | undefined | null;
-    searchKey?: number;
-    enabled?: boolean;
-    pagination: PaginationSortableDto;
-};
+// Monitor ขยายวงเงิน — เปลี่ยนจาก mock axios เป็น API จาก CodeGen (ClaimFundClient)
+const claimFundClient = new ClaimFundClient(API_URL, axios);
 
-export const useGetIncreaseTransferLimitMonitors = ({
-    searchDetail,
-    searchKey,
-    enabled,
-    pagination,
-}: GetIncreaseTransferLimitMonitorsFilterType) => {
+export const useGetIncreaseTransferLimitMonitors = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    enabled?: boolean
+) => {
     return useQuery(
-        [searchDetail, searchKey, pagination, getIncreaseTransferLimitMonitorsKey],
-        () => getIncreaseTransferLimitMonitorsData({ searchDetail, pagination }),
+        [searchDetail, orderingField, ascendingOrder, page, recordsPerPage, getIncreaseTransferLimitMonitorsKey],
+        () =>
+            claimFundClient.increaseTransferLimitMonitors(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
         {
             enabled: enabled ?? true,
             refetchOnMount: "always",
@@ -70,31 +76,6 @@ export const useGetIncreaseTransferLimitDetail = (caseId?: string) => {
 const getIncreaseTransferLimitDetailData = (caseId?: string) => {
     const url = encodeURLWithParams(`${apiURL}/IncreaseTransferLimitDetail`, {
         caseId,
-    });
-    return axios
-        .get(url)
-        .then((res) => {
-            if (res.data.isSuccess) {
-                return res.data;
-            }
-            throw new Error(res.data.message ?? "");
-        })
-        .catch((err) => {
-            const error = err as { response?: { data?: { message?: string } }; message?: string };
-            throw error.response?.data?.message ?? error.message ?? "";
-        });
-};
-
-const getIncreaseTransferLimitMonitorsData = ({
-    searchDetail,
-    pagination,
-}: Omit<GetIncreaseTransferLimitMonitorsFilterType, "searchKey" | "enabled">) => {
-    const url = encodeURLWithParams(`${apiURL}/IncreaseTransferLimitMonitors`, {
-        searchDetail,
-        orderingField: pagination.orderingField,
-        ascendingOrder: pagination.ascendingOrder,
-        Page: pagination.page ?? 1,
-        recordsPerPage: pagination.recordsPerPage ?? 10,
     });
     return axios
         .get(url)
