@@ -36,6 +36,7 @@ import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHosp
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
 import BillingCustomerPage from "../modules/BillingClaim/pages/BillingCustomerPage.tsx";
 import ManagePaymentHospital from "../modules/ManageInsuranceFund/ManagePaymentHospital/pages/ManagePaymentHospital.tsx";
+import ManageTransferHospital from "../modules/ManageInsuranceFund/ManageTransferHospital/page/ManageTransferHospital.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -309,7 +310,7 @@ const Routes: RouteMapType[] = [
     {
         path: "manage/insuranceFund/transfer-hospital",
         title: "โอนเงิน รพ.",
-        element: <>โอนเงิน รพ</>,
+        element: <ManageTransferHospital />,
     },
     {
         path: "manage/insuranceFund/manage-payment-hospital",
