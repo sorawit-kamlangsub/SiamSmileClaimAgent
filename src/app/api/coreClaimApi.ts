@@ -10,6 +10,7 @@ import {
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    IncreaseTransferLimitMonitorRequestDto,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
     UpsertClaimDecisionDtoRequest,
@@ -66,17 +67,27 @@ export const useGetIncreaseTransferLimitMonitors = (
     ascendingOrder?: boolean | undefined,
     page?: number | undefined,
     recordsPerPage?: number | undefined,
+    filter?: IncreaseTransferLimitMonitorRequestDto,
     enabled?: boolean
 ) => {
     return useQuery(
-        [getIncreaseTransferLimitMonitorsQueryKey, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        [
+            getIncreaseTransferLimitMonitorsQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+        ],
         () =>
             claimFundClient.increaseTransferLimitMonitors(
                 searchDetail,
                 orderingField,
                 ascendingOrder,
                 page,
-                recordsPerPage
+                recordsPerPage,
+                filter
             ),
         {
             enabled: enabled ?? true,

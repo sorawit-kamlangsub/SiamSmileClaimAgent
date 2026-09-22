@@ -9,9 +9,6 @@ import { IncreaseTransferLimitMonitorResponseDto } from "../../../api/coreClaimA
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 
-// TODO: Response จริงจาก backend มี field transferApprovalStatusId / transferApprovalStatusName / remark / caseTransferApprovalId
-//       แต่ DTO จาก CodeGen (IncreaseTransferLimitMonitorResponseDto) ยังไม่ตรง — ต้องรัน codegen ให้ DTO ได้ field เหล่านี้
-//       ตอนนี้ cast read ไว้ให้คอลัมน์สถานะทำงานก่อน แล้วค่อยลบ cast ทิ้งเมื่อ regen client แล้ว
 const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
 
 type StatusColor = { bg: string; text: string };
@@ -29,7 +26,7 @@ export type IncreaseTransferMonitorRow = {
     claimNo?: string;
     createdDate?: dayjs.Dayjs | undefined;
     branchName?: string;
-    amount?: number;
+    caseAmount?: number;
     toAccountNo?: string;
     transferType?: string;
     remark?: string;
@@ -107,6 +104,12 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
         paginated.ascendingOrder,
         paginated.page ?? 1,
         paginated.recordsPerPage ?? 10,
+        {
+            branceId: filter?.branchId,
+            transferApprovalStatusId: filter?.statusId,
+            claimCreatedDateFrom: filter?.transferDateFrom,
+            claimCreatedDateTo: filter?.transferDateTo,
+        },
         hasSearched
     );
 
@@ -190,7 +193,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
             options: {
                 sort: false,
                 filter: false,
-                customBodyRenderLite: (dataIndex) => formatAmount(rows[dataIndex]?.amount ?? 0),
+                customBodyRenderLite: (dataIndex) => formatAmount(rows[dataIndex]?.caseAmount ?? 0),
             },
         },
         {
@@ -216,7 +219,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = rows[dataIndex] as IncreaseTransferMonitorRow;
+                    const row = rows[dataIndex];
                     const status = row?.transferApprovalStatusName ?? "-";
                     const color = statusColorMapById[row?.transferApprovalStatusId ?? -1] ?? defaultStatusColor;
                     return <StatusPill status={status} color={color} />;
@@ -240,7 +243,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = rows[dataIndex] as IncreaseTransferMonitorRow;
+                    const row = rows[dataIndex];
                     return (
                         <Box sx={{ display: "flex", gap: "4px" }}>
                             <IconButton size="small" onClick={() => handleViewRow(row)}>

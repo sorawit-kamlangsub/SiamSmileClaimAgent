@@ -553,7 +553,9 @@ export class ClaimFundClient {
      * สถานะการขยายวงเงิน
      * @return Success
      */
-    getTransferApprovalStatus(cancelToken?: CancelToken | undefined): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
+    getTransferApprovalStatus(
+        cancelToken?: CancelToken | undefined
+    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
         let url_ = this.baseUrl + "/ClaimFund/Masters/GetTransferApprovalStatus";
         url_ = url_.replace(/[?&]$/, "");
 
@@ -618,6 +620,7 @@ export class ClaimFundClient {
      * @param ascendingOrder (optional)
      * @param page (optional)
      * @param recordsPerPage (optional)
+     * @param body (optional)
      * @return Success
      */
     increaseTransferLimitMonitors(
@@ -626,6 +629,7 @@ export class ClaimFundClient {
         ascendingOrder?: boolean | undefined,
         page?: number | undefined,
         recordsPerPage?: number | undefined,
+        body?: IncreaseTransferLimitMonitorRequestDto | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<IncreaseTransferLimitMonitorResponseDtoListServiceResponse> {
         let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/IncreaseTransferLimitMonitors?";
@@ -643,10 +647,14 @@ export class ClaimFundClient {
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(body, customFormatter);
+
         let options_: AxiosRequestConfig = {
-            method: "GET",
+            data: content_,
+            method: "POST",
             url: url_,
             headers: {
+                "Content-Type": "application/json-patch+json",
                 Accept: "text/plain",
             },
             cancelToken,
@@ -9647,7 +9655,15 @@ export interface IncidentTypeDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface IncreaseTransferLimitMonitorRequestDto {
+    branceId?: number;
+    transferApprovalStatusId?: number;
+    claimCreatedDateFrom?: dayjs.Dayjs | undefined;
+    claimCreatedDateTo?: dayjs.Dayjs | undefined;
+}
+
 export interface IncreaseTransferLimitMonitorResponseDto {
+    caseTransferApprovalId?: string;
     caseId?: string;
     /** เลขที่ CC */
     caseNo?: string | undefined;
@@ -9658,11 +9674,15 @@ export interface IncreaseTransferLimitMonitorResponseDto {
     /** สาขา */
     branchName?: string | undefined;
     /** จำนวนเงิน */
-    amount?: number | undefined;
+    caseAmount?: number | undefined;
     /** เลขที่บัญชี */
     toAccountNo?: string | undefined;
     /** ประเภทโอนเงิน */
     transferType?: string | undefined;
+    /** สาเหตุ */
+    remark?: string | undefined;
+    transferApprovalStatusName?: string | undefined;
+    transferApprovalStatusId?: number;
 }
 
 export interface IncreaseTransferLimitMonitorResponseDtoListServiceResponse {
