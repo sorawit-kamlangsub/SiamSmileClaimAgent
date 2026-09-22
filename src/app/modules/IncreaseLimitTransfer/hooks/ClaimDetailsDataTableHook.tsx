@@ -1,7 +1,7 @@
 import { Box, IconButton, Link, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-// import FactCheckIcon from "@mui/icons-material/FactCheck";
+import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
 import { useGetIncreaseTransferLimitMonitors } from "../increaseLimitTransferAPI";
@@ -244,19 +244,25 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = rows[dataIndex];
+                    const row = rows[dataIndex] as IncreaseTransferLimitMonitorResponseDto & {
+                        transferApprovalStatusId?: number;
+                    };
                     return (
                         <Box sx={{ display: "flex", gap: "4px" }}>
                             <IconButton size="small" onClick={() => handleViewRow(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                            {/* TODO: ปุ่มพิจารณาเปิด detail dialog ที่ยังไม่มี API จาก CodeGen
-                                (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus) */}
-                            {/* {row?.transferApprovalStatusId === 2 && (
-                                <IconButton size="small" onClick={() => handleEditRow(row)}>
+                            {row?.transferApprovalStatusId === 1 && (
+                                <IconButton
+                                    size="small"
+                                    onClick={() => {
+                                        // TODO: เปิด detail dialog เมื่อมี API จาก CodeGen (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus)
+                                        console.log("edit", row);
+                                    }}
+                                >
                                     <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
                                 </IconButton>
-                            )} */}
+                            )}
                         </Box>
                     );
                 },

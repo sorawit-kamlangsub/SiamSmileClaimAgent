@@ -636,6 +636,75 @@ export class ClaimFundClient {
     }
 
     /**
+     * รายละเอียด ขยายวงเงิน
+     * @param caseTransferApprovalId (optional)
+     * @return Success
+     */
+    getIncreaseTransferLimitDetail(
+        caseTransferApprovalId?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetIncreaseTransferLimitDetailResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/GetIncreaseTransferLimitDetail?";
+        if (caseTransferApprovalId === null) throw new Error("The parameter 'caseTransferApprovalId' cannot be null.");
+        else if (caseTransferApprovalId !== undefined)
+            url_ += "caseTransferApprovalId=" + encodeURIComponent("" + caseTransferApprovalId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetIncreaseTransferLimitDetail(_response);
+            });
+    }
+
+    protected processGetIncreaseTransferLimitDetail(
+        response: AxiosResponse
+    ): Promise<GetIncreaseTransferLimitDetailResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetIncreaseTransferLimitDetailResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetIncreaseTransferLimitDetailResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
      * รายละเอียดบัญชี (แก้ไขการโอนเงิน)
      * @param paymentId (optional)
      * @return Success
@@ -9164,6 +9233,30 @@ export interface GetIncidentTypeMappingDtoResponse {
 
 export interface GetIncidentTypeMappingDtoResponseListServiceResponse {
     data?: GetIncidentTypeMappingDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetIncreaseTransferLimitDetailResponseDto {
+    caseTransferApprovalId?: string;
+    claimNo?: string | undefined;
+    requestedTransferAmount?: number | undefined;
+    paymentLimitAmount?: number | undefined;
+    excessAmount?: number | undefined;
+    remainingLimitAmount?: number | undefined;
+    customerName?: string | undefined;
+}
+
+export interface GetIncreaseTransferLimitDetailResponseDtoServiceResponse {
+    data?: GetIncreaseTransferLimitDetailResponseDto;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
