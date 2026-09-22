@@ -3,6 +3,7 @@ import {
     ApproveClaimDecisionDtoRequest,
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
+    ClaimFundClient,
     CoreClaimClient,
     CreateContinuedClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
@@ -19,6 +20,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { API_URL } from "../../Const";
 
 const coreClaimClient = new CoreClaimClient(API_URL, axios);
+const claimFundClient = new ClaimFundClient(API_URL, axios);
 
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
 const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
@@ -45,6 +47,56 @@ const getHospitalClaimAdjudicationMonitorQueryKey = ["getHospitalClaimAdjudicati
 const getDocumentByCaseIdQueryKey = ["getDocumentByCaseId"];
 const getDCRQueryKey = ["getDCR"];
 const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
+
+// ---- ขยายวงเงิน (ClaimFund / IncreaseTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getIncreaseTransferLimitMonitorsQueryKey = ["getIncreaseTransferLimitMonitors"];
+const getIncreaseTransferLimitDetailQueryKey = ["getIncreaseTransferLimitDetail"];
+const getTransferApprovalStatusQueryKey = ["getTransferApprovalStatus"];
+
+export const useGetTransferApprovalStatus = () => {
+    return useQuery([getTransferApprovalStatusQueryKey], () => claimFundClient.getTransferApprovalStatus(), {
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useGetIncreaseTransferLimitMonitors = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [getIncreaseTransferLimitMonitorsQueryKey, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            claimFundClient.increaseTransferLimitMonitors(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: enabled ?? true,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetIncreaseTransferLimitDetail = (caseTransferApprovalId?: string) => {
+    return useQuery(
+        [getIncreaseTransferLimitDetailQueryKey, caseTransferApprovalId],
+        () => claimFundClient.getIncreaseTransferLimitDetail(caseTransferApprovalId),
+        {
+            enabled: caseTransferApprovalId !== undefined && caseTransferApprovalId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
 
 /**
  * ล้าง cache ของ query ที่ได้รับผลกระทบจากการบันทึก/พิจารณาเคลม (ใช้ร่วมกันทั้งเคลมลูกค้าและเคลม รพ.

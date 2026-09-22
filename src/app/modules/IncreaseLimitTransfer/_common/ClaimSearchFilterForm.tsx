@@ -5,8 +5,7 @@ import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
-// TODO: Master ข้อมูลสถานะขยายวงเงิน (GetPaymentIncreaseStatuses) ยังไม่มี API จาก CodeGen
-// import { useGetPaymentIncreaseStatus } from "./masterAPI";
+import { useGetTransferApprovalStatus } from "../../../api/coreClaimApi";
 import dayjs, { Dayjs } from "dayjs";
 
 const currentDate = dayjs();
@@ -40,9 +39,8 @@ const defaultValues: ClaimSearchFilterValues = {
 };
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
-    // TODO: ยังไม่มี API จาก CodeGen ข้อมูลสถานะ (GetPaymentIncreaseStatuses) — กลับมาเมื่อ backend มี API
-    // const { data: paymentIncreaseStatusData, isLoading: paymentIncreaseStatusIsLoading } =
-    //     useGetPaymentIncreaseStatus();
+    const { data: transferApprovalStatusData, isLoading: isTransferApprovalStatusLoading } =
+        useGetTransferApprovalStatus();
     const formik = useFormik<ClaimSearchFilterValues>({
         initialValues: { ...defaultValues, ...initialValues },
         onSubmit: (values) => {
@@ -67,15 +65,15 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                    {/* TODO: ยังไม่มี API จาก CodeGen (GetPaymentIncreaseStatuses) — ตอนนี้โชว์ DropDown ว่างๆ ไว้ก่อน */}
                     <FormikDropdown
                         name="statusId"
                         formik={formik}
                         label="สถานะ"
-                        data={[]}
+                        data={transferApprovalStatusData?.data ?? []}
                         valueFieldName="id"
                         displayFieldName="name"
                         fullWidth
+                        isLoading={isTransferApprovalStatusLoading}
                     />
                 </Grid>
 

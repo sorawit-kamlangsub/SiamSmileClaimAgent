@@ -4,7 +4,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
-import { useGetIncreaseTransferLimitMonitors } from "../increaseLimitTransferAPI";
+import { useGetIncreaseTransferLimitMonitors } from "../../../api/coreClaimApi";
 import { IncreaseTransferLimitMonitorResponseDto } from "../../../api/coreClaimApi.client";
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
@@ -27,7 +27,7 @@ export type IncreaseTransferMonitorRow = {
     caseId?: string;
     caseNo?: string;
     claimNo?: string;
-    createdDate?: string;
+    createdDate?: dayjs.Dayjs | undefined;
     branchName?: string;
     amount?: number;
     toAccountNo?: string;
@@ -40,10 +40,9 @@ export type IncreaseTransferMonitorRow = {
 export type IncreaseLimitTransferDataTableHookProps = {
     filter: ClaimSearchFilterValues | undefined;
     hasSearched: boolean;
-    // searchKey: number;
     // TODO: Detail dialog ยังไม่มี API จาก CodeGen (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus)
     //       กลับมาเมื่อ backend มี API ครบ
-    // onEdit?: (row: IncreaseTransferMonitorRow) => void;
+    onEdit?: (row: IncreaseTransferMonitorRow) => void;
 };
 
 // const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
@@ -92,7 +91,7 @@ const formatAmount = (value: number) =>
         maximumFractionDigits: 2,
     });
 
-const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimitTransferDataTableHookProps) => {
+const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: IncreaseLimitTransferDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -129,11 +128,11 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
         console.log("view", row);
     };
 
-    // const handleEditRow = (row: IncreaseTransferMonitorRow) => {
-    //     if (onEdit) {
-    //         onEdit(row);
-    //     }
-    // };
+    const handleEditRow = (row: IncreaseTransferMonitorRow) => {
+        if (onEdit) {
+            onEdit(row);
+        }
+    };
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -217,10 +216,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = rows[dataIndex] as IncreaseTransferLimitMonitorResponseDto & {
-                        transferApprovalStatusId?: number;
-                        transferApprovalStatusName?: string;
-                    };
+                    const row = rows[dataIndex] as IncreaseTransferMonitorRow;
                     const status = row?.transferApprovalStatusName ?? "-";
                     const color = statusColorMapById[row?.transferApprovalStatusId ?? -1] ?? defaultStatusColor;
                     return <StatusPill status={status} color={color} />;
@@ -244,22 +240,14 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
-                    const row = rows[dataIndex] as IncreaseTransferLimitMonitorResponseDto & {
-                        transferApprovalStatusId?: number;
-                    };
+                    const row = rows[dataIndex] as IncreaseTransferMonitorRow;
                     return (
                         <Box sx={{ display: "flex", gap: "4px" }}>
                             <IconButton size="small" onClick={() => handleViewRow(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
                             {row?.transferApprovalStatusId === 1 && (
-                                <IconButton
-                                    size="small"
-                                    onClick={() => {
-                                        // TODO: เปิด detail dialog เมื่อมี API จาก CodeGen (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus)
-                                        console.log("edit", row);
-                                    }}
-                                >
+                                <IconButton size="small" onClick={() => handleEditRow(row)}>
                                     <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
                                 </IconButton>
                             )}

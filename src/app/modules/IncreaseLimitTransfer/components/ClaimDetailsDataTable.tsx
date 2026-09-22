@@ -1,16 +1,18 @@
 import { ClaimFundStandardDataTable, NOT_FOUND_MESSAGE } from "../../_common";
-import useClaimCpgTransferDataTableHook from "../hooks/ClaimDetailsDataTableHook";
+import useClaimCpgTransferDataTableHook, { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 
 type ClaimDetailsDataTableProps = {
     filter: ClaimSearchFilterValues | undefined;
     hasSearched: boolean;
+    onEdit?: (row: IncreaseTransferMonitorRow) => void;
 };
 
-const ClaimDetailsDataTable = ({ filter, hasSearched }: ClaimDetailsDataTableProps) => {
+const ClaimDetailsDataTable = ({ filter, hasSearched, onEdit }: ClaimDetailsDataTableProps) => {
     const { columns, data, isLoading, isError, error, pagination, setPaginated } = useClaimCpgTransferDataTableHook({
         filter,
         hasSearched,
+        onEdit,
     });
 
     return (

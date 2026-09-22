@@ -2,21 +2,17 @@ import { Box, Grid } from "@mui/material";
 import { useState } from "react";
 import ClaimSearchFilterForm, { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 import ClaimDetailsDataTable from "../components/ClaimDetailsDataTable";
-// TODO: Detail dialog ยังไม่มี API จาก CodeGen (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus)
-//       กลับมาเปิดใช้เมื่อ backend มี API ครบ
-// import IncreaseLimitDetailDialog from "../components/IncreaseLimitDetailDialog";
-// import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
+import IncreaseLimitDetailDialog from "../components/IncreaseLimitDetailDialog";
+import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 
 const IncreaseLimitTransfer = () => {
     const [filter, setFilter] = useState<ClaimSearchFilterValues | undefined>(undefined);
     const [hasSearched, setHasSearched] = useState(false);
-    // const [searchKey, setSearchKey] = useState(0);
-    // const [detailRow, setDetailRow] = useState<IncreaseTransferMonitorRow | null>(null);
+    const [detailRow, setDetailRow] = useState<IncreaseTransferMonitorRow | null>(null);
 
     const handleSearch = (values: ClaimSearchFilterValues) => {
         setFilter(values);
         setHasSearched(true);
-        // setSearchKey((prevKey) => prevKey + 1);
     };
 
     return (
@@ -34,11 +30,15 @@ const IncreaseLimitTransfer = () => {
                             backgroundColor: "#FFFFFF",
                         }}
                     >
-                        <ClaimDetailsDataTable filter={filter} hasSearched={hasSearched} />
+                        <ClaimDetailsDataTable
+                            filter={filter}
+                            hasSearched={hasSearched}
+                            onEdit={(row) => setDetailRow(row)}
+                        />
                     </Box>
                 </Grid>
             </Grid>
-            {/* <IncreaseLimitDetailDialog open={detailRow !== null} row={detailRow} onClose={() => setDetailRow(null)} /> */}
+            <IncreaseLimitDetailDialog open={detailRow !== null} row={detailRow} onClose={() => setDetailRow(null)} />
         </>
     );
 };
