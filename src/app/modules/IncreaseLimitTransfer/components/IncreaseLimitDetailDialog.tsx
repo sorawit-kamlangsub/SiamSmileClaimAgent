@@ -230,42 +230,40 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 <Grid item xs={12} sm={6}>
                                     <Box
                                         sx={{
+                                            display: "flex",
+                                            alignItems: "center",
+                                            gap: "4px",
+                                            mb: 0.5,
+                                        }}
+                                    >
+                                        <Typography component="span" sx={{ fontSize: "0.85rem", color: "#D32F2F" }}>
+                                            วงเงินที่ขอเพิ่ม
+                                        </Typography>
+                                        <Box
+                                            component="span"
+                                            sx={{
+                                                display: "inline-flex",
+                                                alignItems: "center",
+                                                gap: "4px",
+                                                whiteSpace: "nowrap",
+                                                fontSize: "0.75rem",
+                                            }}
+                                        >
+                                            <LockOutlined sx={{ fontSize: 12, color: "#D32F2F" }} />
+                                            <Typography component="span" sx={{ fontSize: "0.75rem", color: "#212121" }}>
+                                                คำนวณโดยระบบ
+                                            </Typography>
+                                        </Box>
+                                    </Box>
+                                    <Box
+                                        sx={{
                                             border: "1px solid #D9DEE5",
                                             borderRadius: 1,
                                             backgroundColor: "#F5F6F7",
                                             p: "8px 12px",
-                                            height: "100%",
-                                            boxSizing: "border-box",
                                         }}
                                     >
-                                        <Typography
-                                            sx={{
-                                                display: "flex",
-                                                justifyContent: "space-between",
-                                                alignItems: "center",
-                                                gap: 1,
-                                                fontSize: "0.8rem",
-                                                color: "#757575",
-                                            }}
-                                        >
-                                            <span>วงเงินที่ขอเพิ่ม</span>
-                                            <Box
-                                                component="span"
-                                                sx={{
-                                                    display: "inline-flex",
-                                                    alignItems: "center",
-                                                    gap: 0.5,
-                                                    color: "#9E9E9E",
-                                                    whiteSpace: "nowrap",
-                                                }}
-                                            >
-                                                <LockOutlined sx={{ fontSize: 12 }} />
-                                                <span>คำนวณโดยระบบ</span>
-                                            </Box>
-                                        </Typography>
-                                        <Typography
-                                            sx={{ mt: 0.5, fontWeight: 700, fontSize: "1rem", color: "#212121" }}
-                                        >
+                                        <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: "#212121" }}>
                                             {formatBaht(detail?.requestedTransferAmount)}
                                         </Typography>
                                     </Box>

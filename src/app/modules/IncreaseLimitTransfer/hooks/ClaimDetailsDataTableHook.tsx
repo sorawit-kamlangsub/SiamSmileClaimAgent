@@ -14,9 +14,9 @@ const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
 type StatusColor = { bg: string; text: string };
 
 const statusColorMapById: Record<number, StatusColor> = {
-    1: { bg: "#FFF3E0", text: "#EF6C00" },
-    2: { bg: "#E8F5E9", text: "#2E7D32" },
-    3: { bg: "#FDECEA", text: "#C62828" },
+    2: { bg: "#FFF3E0", text: "#EF6C00" },
+    3: { bg: "#E8F5E9", text: "#2E7D32" },
+    4: { bg: "#FDECEA", text: "#C62828" },
 };
 
 export type IncreaseTransferMonitorRow = {
@@ -249,7 +249,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
                             <IconButton size="small" onClick={() => handleViewRow(row)}>
                                 <VisibilityIcon sx={{ color: "#1565C0", fontSize: 20 }} />
                             </IconButton>
-                            {row?.transferApprovalStatusId === 1 && (
+                            {row?.transferApprovalStatusId === 2 && (
                                 <IconButton size="small" onClick={() => handleEditRow(row)}>
                                     <FactCheckIcon sx={{ color: "#8D6E00", fontSize: 20 }} />
                                 </IconButton>
