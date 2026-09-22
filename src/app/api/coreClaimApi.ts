@@ -41,6 +41,7 @@ const getDashboardDeathAndDisabilityClaimConsiderQueryKey = ["getDashboardDeathA
 const getDeathAndDisabilityClaimAdjudicationMonitorQueryKey = ["getDeathAndDisabilityClaimAdjudicationMonitor"];
 const getDeathAndDisabilityClaimDetailConsiderQueryKey = ["getDeathAndDisabilityClaimDetailConsider"];
 const getDeathAndDisabilityBeneficiaryQueryKey = ["getDeathAndDisabilityBeneficiary"];
+const getCaseDisabilityBenefitByCaseIdQueryKey = ["getCaseDisabilityBenefitByCaseId"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
@@ -639,6 +640,47 @@ export const useGetDeathAndDisabilityBeneficiary = (claimId: string, caseId: str
         () => coreClaimClient.getDeathAndDisabilityBeneficiary(claimId, caseId),
         {
             enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCaseDisabilityBenefitByCaseId = (
+    caseId: string,
+    productTypeId?: number | undefined,
+    productId?: number | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined,
+    policyCode?: string | undefined,
+    customerTypeCode?: string | undefined,
+    isEnabled = true
+) => {
+    return useQuery(
+        [
+            getCaseDisabilityBenefitByCaseIdQueryKey,
+            caseId,
+            productTypeId,
+            productId,
+            incidentTypeId,
+            coverageTypeId,
+            causeOfIncidentId,
+            policyCode,
+            customerTypeCode,
+        ],
+        () =>
+            coreClaimClient.getCaseDisabilityBenefitByCaseId(
+                caseId,
+                productTypeId,
+                productId,
+                incidentTypeId,
+                coverageTypeId,
+                causeOfIncidentId,
+                policyCode,
+                customerTypeCode
+            ),
+        {
+            enabled: isEnabled && !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );

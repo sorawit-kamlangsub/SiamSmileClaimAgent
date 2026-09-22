@@ -5,7 +5,10 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import SummarizeIcon from "@mui/icons-material/Summarize";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import { GetStandardMedicalExpenseByCaseDtoResponse } from "../../../../../api/coreClaimApi.client";
+import {
+    DISABILITY_COVERAGE_TYPE_ID,
+    DeathDisabilityExpenseItem,
+} from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
 
 const PRIMARY = "#0D5C9E";
 const CARD_BORDER = "#D6E6F5";
@@ -32,13 +35,41 @@ const IconBadge = ({ children }: { children: React.ReactNode }) => (
 );
 
 type DeathDisabilityExpenseSectionProps = {
-    /** รายการจาก GetStandardMedicalExpenseByCase — 1 แถวต่อ 1 ความคุ้มครอง */
-    items: GetStandardMedicalExpenseByCaseDtoResponse[];
+    /** รายการค่าใช้จ่าย (map จาก GetStandardMedicalExpenseByCase หรือ GetCaseDisabilityBenefitByCaseId) */
+    items: DeathDisabilityExpenseItem[];
     isLoading: boolean;
+    /** productTypeId ของกรมธรรม์ (PH = 6, PA = 26) */
+    productTypeId: number | undefined;
+    /** coverageTypeId ของเคลม (ทุพพลภาพ/สูญเสียอวัยวะ = 4) */
+    coverageTypeId: number | undefined;
+};
+
+const PH_PRODUCT_TYPE_ID = 6;
+
+/**
+ * รายการที่แสดง + หัวการ์ด ตาม spec
+ * - ทุพพลภาพ/สูญเสียอวัยวะ: ทุกรายการใช้หัว "ความคุ้มครอง"
+ * - PH: แสดงเฉพาะความคุ้มครองหลัก (รายการแรก)
+ * - PA: รายการแรก = ความคุ้มครองหลัก, รายการถัดไป = ความคุ้มครองเพิ่มเติม ตามที่ระบุตอนแจ้งเคลม
+ * (ลำดับตามที่ API ส่งมา)
+ */
+const getDisplayItems = (
+    items: DeathDisabilityExpenseItem[],
+    productTypeId: number | undefined,
+    coverageTypeId: number | undefined
+) => {
+    if (coverageTypeId === DISABILITY_COVERAGE_TYPE_ID) {
+        return items.map((item) => ({ item, title: "ความคุ้มครอง" }));
+    }
+    const visibleItems = productTypeId === PH_PRODUCT_TYPE_ID ? items.slice(0, 1) : items;
+    return visibleItems.map((item, index) => ({
+        item,
+        title: index === 0 ? "ความคุ้มครองหลัก" : "ความคุ้มครองเพิ่มเติม",
+    }));
 };
 
 /** การ์ดความคุ้มครอง 1 รายการ: ชื่อความคุ้มครอง + วงเงินสูงสุด + จำนวนเงินที่ต้องการโอน (netCaseAmount) */
-const ExpenseItemCard = ({ item, title }: { item: GetStandardMedicalExpenseByCaseDtoResponse; title: string }) => (
+const ExpenseItemCard = ({ item, title }: { item: DeathDisabilityExpenseItem; title: string }) => (
     <Box sx={{ mt: 2, p: 2.5, border: `1px solid ${CARD_BORDER}`, borderRadius: 3 }}>
         <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             <IconBadge>
@@ -47,7 +78,7 @@ const ExpenseItemCard = ({ item, title }: { item: GetStandardMedicalExpenseByCas
             <Box>
                 <Typography color="text.secondary">{title}</Typography>
                 <Typography fontWeight={700} color={PRIMARY}>
-                    {item.descriptionTH || item.descriptionEN || "-"}
+                    {item.description || "-"}
                 </Typography>
             </Box>
         </Box>
@@ -87,8 +118,15 @@ const ExpenseItemCard = ({ item, title }: { item: GetStandardMedicalExpenseByCas
 );
 
 /** Section "รายละเอียดค่าใช้จ่าย" (read-only) — การ์ดต่อความคุ้มครอง + ยอดเงินรวมทั้งหมด (ผลรวม netCaseAmount) */
-const DeathDisabilityExpenseSection = ({ items, isLoading }: DeathDisabilityExpenseSectionProps) => {
-    const totalAmount = items.reduce((sum, item) => sum + (item.netCaseAmount ?? 0), 0);
+const DeathDisabilityExpenseSection = ({
+    items,
+    isLoading,
+    productTypeId,
+    coverageTypeId,
+}: DeathDisabilityExpenseSectionProps) => {
+    const displayItems = getDisplayItems(items, productTypeId, coverageTypeId);
+    // ยอดรวมคิดจากรายการที่แสดงจริง
+    const totalAmount = displayItems.reduce((sum, { item }) => sum + (item.netCaseAmount ?? 0), 0);
     return (
         <CustomPaper>
             <HeadingWithColor
@@ -97,20 +135,13 @@ const DeathDisabilityExpenseSection = ({ items, isLoading }: DeathDisabilityExpe
                 color="blue"
             />
             {isLoading && <Skeleton variant="rounded" sx={{ mt: 2, height: 160 }} />}
-            {!isLoading && items.length === 0 && (
+            {!isLoading && displayItems.length === 0 && (
                 <Typography color="text.secondary" textAlign="center" sx={{ mt: 2, py: 3 }}>
                     ไม่พบรายการค่าใช้จ่าย
                 </Typography>
             )}
             {!isLoading &&
-                items.map((item, index) => (
-                    <ExpenseItemCard
-                        key={item.caseItemId ?? item.standardMedicalExpenseId ?? index}
-                        item={item}
-                        // รายการแรก = ความคุ้มครองหลัก, รายการถัดไป = ความคุ้มครองเพิ่มเติม (ตามลำดับที่ API ส่งมา)
-                        title={index === 0 ? "ความคุ้มครองหลัก" : "ความคุ้มครองเพิ่มเติม"}
-                    />
-                ))}
+                displayItems.map(({ item, title }) => <ExpenseItemCard key={item.key} item={item} title={title} />)}
             <Box
                 sx={{
                     mt: 2,

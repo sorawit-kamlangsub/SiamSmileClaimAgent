@@ -77,7 +77,12 @@ const DeathDisabilityClaimDetailsTab = ({
                     <DeathDisabilityClaimInfoSection info={detail} isLoading={detailLoading} />
                 </Grid>
                 <Grid item xs={12}>
-                    <DeathDisabilityExpenseSection items={expenseItems} isLoading={expenseLoading} />
+                    <DeathDisabilityExpenseSection
+                        items={expenseItems}
+                        isLoading={expenseLoading}
+                        productTypeId={customerDetail?.productTypeId}
+                        coverageTypeId={detail?.coverageTypeId}
+                    />
                 </Grid>
                 <Grid item xs={12}>
                     <DeathDisabilityBeneficiarySection
