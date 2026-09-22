@@ -34,6 +34,9 @@ type DeathDisabilityBeneficiarySectionProps = {
     onBeneficiaryEdited: (index: number, updated: GetDeathAndDisabilityBeneficiaryDtoResponse) => void;
     claimNo: string;
     customerName: string;
+    /** ใช้กับตารางสแกนเอกสารใน dialog เปลี่ยนบัญชี */
+    productTypeId: number | undefined;
+    aplicationCode: string | undefined;
     /** บันทึกใน dialog เปลี่ยนบัญชีสำเร็จ — parent (tab) เก็บไว้แสดง section รายละเอียดการเปลี่ยนบัญชี */
     onTransferAccountChanged: (change: TransferAccountChange) => void;
 };
@@ -51,6 +54,8 @@ const DeathDisabilityBeneficiarySection = ({
     onBeneficiaryEdited,
     claimNo,
     customerName,
+    productTypeId,
+    aplicationCode,
     onTransferAccountChanged,
 }: DeathDisabilityBeneficiarySectionProps) => {
     const [changeAccountOpen, setChangeAccountOpen] = useState(false);
@@ -59,9 +64,6 @@ const DeathDisabilityBeneficiarySection = ({
     // ลำดับที่ = ตำแหน่งในรายการที่ API ส่งมา (เริ่มที่ 1)
     const [editingIndex, setEditingIndex] = useState<number>();
     const editingBeneficiary = editingIndex !== undefined ? beneficiaries[editingIndex] : undefined;
-    // เติมบัญชีเดิมของผู้รับผลประโยชน์ลำดับแรกไว้ให้ใน dialog เงินสดมอบหน้างาน
-    const firstBeneficiary = beneficiaries[0];
-    const firstBeneficiaryName = firstBeneficiary ? getFullName(firstBeneficiary) : "-";
     return (
         <CustomPaper>
             <HeadingWithColor
@@ -90,11 +92,8 @@ const DeathDisabilityBeneficiarySection = ({
                 claimNo={claimNo}
                 customerName={customerName}
                 amount={totalAmount}
-                initialValues={{
-                    accountNo: firstBeneficiary?.bankAccountNo ?? "",
-                    accountName: firstBeneficiary?.bankAccountName ?? "",
-                    payeeName: firstBeneficiaryName === "-" ? "" : firstBeneficiaryName,
-                }}
+                productTypeId={productTypeId}
+                aplicationCode={aplicationCode}
             />
             <EditBeneficiaryDialog
                 open={editOpen && !!editingBeneficiary}

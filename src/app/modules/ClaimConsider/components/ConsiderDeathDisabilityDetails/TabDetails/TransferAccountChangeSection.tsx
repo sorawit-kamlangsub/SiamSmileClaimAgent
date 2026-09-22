@@ -3,15 +3,25 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
-import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
-import DeathDisabilityDocumentTable from "./DeathDisabilityDocumentTable";
+import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import {
+    TRANSFER_ACCOUNT_DOCUMENT_TYPE,
+    TransferAccountChange,
+} from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
+
+type TransferAccountChangeSectionProps = {
+    change: TransferAccountChange;
+    productTypeId: number | undefined;
+    aplicationCode: string | undefined;
+};
 
 /**
  * Section "รายละเอียดการเปลี่ยนบัญชีปลายทางการโอนเงิน" — แสดงหลังบันทึกใน dialog เงินสดมอบหน้างาน
  * TODO(death-disability-api): ตอนนี้แสดงจากค่าที่กรอกใน dialog — เมื่อต่อ API ให้แสดงจากข้อมูลที่บันทึกแล้วของเคส
- * (รหัสเอกสาร/จำนวนไฟล์จาก document service จริง)
+ * ตารางเอกสารใช้ DocumentScanTable ประเภทเดียวกับใน dialog — ได้ documentCode/ไฟล์ชุดเดียวกันจาก cache
+ * และยังสแกนเพิ่มได้จากตรงนี้
  */
-const TransferAccountChangeSection = ({ change }: { change: TransferAccountChange }) => (
+const TransferAccountChangeSection = ({ change, productTypeId, aplicationCode }: TransferAccountChangeSectionProps) => (
     <CustomPaper>
         <HeadingWithColor
             icon={<AccountBalanceWalletIcon sx={{ fontSize: 27 }} />}
@@ -33,16 +43,11 @@ const TransferAccountChangeSection = ({ change }: { change: TransferAccountChang
             </Alert>
         </Box>
         <Box sx={{ p: 2 }}>
-            <DeathDisabilityDocumentTable
-                name="deathDisabilityTransferAccountDocumentTable"
-                rows={[
-                    {
-                        documentId: "mock-transfer-account-doc",
-                        documentCode: "-",
-                        documentTypeName: "เอกสารประกอบการเปลี่ยนบัญชี",
-                        fileCount: change.attachmentName ? 1 : 0,
-                    },
-                ]}
+            <DocumentScanTable
+                disablePaper
+                productTypeId={productTypeId ?? 0}
+                documentType={TRANSFER_ACCOUNT_DOCUMENT_TYPE}
+                aplicationCode={aplicationCode ?? ""}
             />
         </Box>
     </CustomPaper>

@@ -2,6 +2,9 @@ import { useEffect } from "react";
 import { Grid } from "@mui/material";
 import { useAppDispatch } from "../../../../redux";
 import { resetState } from "../store/claimConsiderSlice";
+import { useRemoveDocumentTypeCache } from "../../../api/coreClaimApi";
+import { documentTypeId } from "../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import { TRANSFER_ACCOUNT_DOCUMENT_TYPE } from "../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
 import useDeathDisabilityDetailHook from "../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityDetailHook";
 import DeathDisabilityHeaderDetails from "../components/ConsiderDeathDisabilityDetails/DeathDisabilityHeaderDetails";
 
@@ -17,6 +20,16 @@ const ConsiderDeathDisabilityDetailPage = () => {
             dispatch(resetState());
         },
         [dispatch]
+    );
+
+    // ตารางสแกนเอกสารประกอบการเปลี่ยนบัญชีแชร์ cache master ใน dialog/section — ล้างตอนออกจากหน้า
+    // ไม่งั้นเคสถัดไปจะได้ documentCode เดิมของเคสนี้
+    const removeDocumentTypeCache = useRemoveDocumentTypeCache();
+    useEffect(
+        () => () => {
+            removeDocumentTypeCache(documentTypeId[TRANSFER_ACCOUNT_DOCUMENT_TYPE]);
+        },
+        []
     );
 
     return (

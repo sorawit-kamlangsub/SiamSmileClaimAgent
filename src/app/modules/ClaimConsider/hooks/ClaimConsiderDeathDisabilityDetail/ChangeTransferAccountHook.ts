@@ -1,9 +1,12 @@
 import { FormikErrors, useFormik } from "formik";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 
-/** ไฟล์แนบที่รับได้ตาม mockup: .jpg .jpeg .png .pdf ไม่เกิน 10MB */
-export const TRANSFER_ACCOUNT_FILE_ACCEPT = ".jpg,.jpeg,.png,.pdf";
-const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
+/**
+ * ประเภทเอกสารของตารางสแกน "เอกสารประกอบการเปลี่ยนบัญชี" (ใน dialog และ section หลังบันทึก ใช้ค่าเดียวกัน)
+ * TODO(death-disability-api): master documentTypeId ยังไม่มีประเภทนี้ — ใช้ "อื่นๆ" ไปก่อน
+ */
+export const TRANSFER_ACCOUNT_DOCUMENT_TYPE = "อื่นๆ";
 
 /** TODO(death-disability-api): ยังไม่มี master ประเภทบัญชี — ใช้ค่าคงที่ไปก่อน */
 export const ACCOUNT_TYPE_OPTIONS = [
@@ -19,7 +22,6 @@ export type ChangeTransferAccountValues = {
     accountNo: string;
     accountName: string;
     payeeName: string;
-    attachment: File | undefined;
 };
 
 const validate = (values: ChangeTransferAccountValues) => {
@@ -31,9 +33,6 @@ const validate = (values: ChangeTransferAccountValues) => {
     else if (!/^\d{10,15}$/.test(values.accountNo)) errors.accountNo = "เลขที่บัญชีต้องเป็นตัวเลข 10-15 หลัก";
     if (!values.accountName.trim()) errors.accountName = "กรุณาระบุชื่อบัญชี";
     if (!values.payeeName.trim()) errors.payeeName = "กรุณาระบุชื่อผู้รับเงินแทน";
-    if (values.attachment && values.attachment.size > MAX_FILE_SIZE_BYTES) {
-        errors.attachment = "ขนาดไฟล์ต้องไม่เกิน 10MB";
-    }
     return errors;
 };
 
@@ -45,19 +44,22 @@ export type TransferAccountChange = {
     accountTypeName: string;
     accountNo: string;
     accountName: string;
-    attachmentName: string | undefined;
+    /** เอกสารประกอบการเปลี่ยนบัญชีที่สแกนแนบแล้ว (จาก DocumentScanTable) */
+    attachedDocuments: CaseDocumentV2Request[];
 };
 
 type UseChangeTransferAccountHookParams = {
-    initialValues: Partial<ChangeTransferAccountValues>;
     onSaved: (change: TransferAccountChange) => void;
+    /** เอกสารที่แนบใน DocumentScanTable ของ dialog — ส่งต่อไปพร้อมผลการเปลี่ยนบัญชี */
+    attachedDocuments: CaseDocumentV2Request[];
 };
 
 /**
  * Form ของ dialog "เปลี่ยนบัญชีปลายทางการโอนเงิน" (ปุ่มเงินสดมอบหน้างาน)
+ * ทุกช่องเริ่มว่าง ให้ผู้ใช้กรอกเอง (ไม่ดึงบัญชีของผู้รับผลประโยชน์มาเติม)
  * TODO(death-disability-api): onSubmit ยังไม่ยิง API — ตอนนี้ validate ผ่านแล้วส่งผลกลับให้ parent แสดงผล
  */
-const useChangeTransferAccountHook = ({ initialValues, onSaved }: UseChangeTransferAccountHookParams) => {
+const useChangeTransferAccountHook = ({ onSaved, attachedDocuments }: UseChangeTransferAccountHookParams) => {
     const { data: bankData, isLoading: bankLoading } = useGetBank();
     const bankOptions = bankData?.data ?? [];
 
@@ -69,8 +71,6 @@ const useChangeTransferAccountHook = ({ initialValues, onSaved }: UseChangeTrans
             accountNo: "",
             accountName: "",
             payeeName: "",
-            attachment: undefined,
-            ...initialValues,
         },
         validate,
         onSubmit: (values) =>
@@ -82,7 +82,7 @@ const useChangeTransferAccountHook = ({ initialValues, onSaved }: UseChangeTrans
                     ACCOUNT_TYPE_OPTIONS.find((option) => option.value === values.accountTypeId)?.label ?? "-",
                 accountNo: values.accountNo,
                 accountName: values.accountName.trim(),
-                attachmentName: values.attachment?.name,
+                attachedDocuments,
             }),
     });
 

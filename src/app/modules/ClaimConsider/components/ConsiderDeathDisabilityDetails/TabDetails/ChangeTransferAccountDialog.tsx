@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useState } from "react";
 import {
     Box,
     Button,
@@ -18,13 +18,13 @@ import InfoIcon from "@mui/icons-material/Info";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import SaveIcon from "@mui/icons-material/Save";
 import { FormikDropdown, FormikTextField } from "../../../../_common";
+import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import { CaseDocumentV2Request } from "../../../../../api/coreClaimApi.client";
 import useChangeTransferAccountHook, {
     ACCOUNT_TYPE_OPTIONS,
-    ChangeTransferAccountValues,
-    TRANSFER_ACCOUNT_FILE_ACCEPT,
+    TRANSFER_ACCOUNT_DOCUMENT_TYPE,
     TransferAccountChange,
 } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
 import {
@@ -48,8 +48,9 @@ type ChangeTransferAccountDialogProps = {
     claimNo: string;
     customerName: string;
     amount: number;
-    /** ค่าเริ่มต้นของฟอร์ม — mockup เติมบัญชีเดิมของผู้รับผลประโยชน์ไว้ให้ */
-    initialValues: Partial<ChangeTransferAccountValues>;
+    /** ใช้กับตารางสแกนเอกสารประกอบการเปลี่ยนบัญชี (DocumentScanTable) */
+    productTypeId: number | undefined;
+    aplicationCode: string | undefined;
 };
 
 type ChangeTransferAccountFormProps = Omit<ChangeTransferAccountDialogProps, "open">;
@@ -64,11 +65,11 @@ const ChangeTransferAccountForm = ({
     claimNo,
     customerName,
     amount,
-    initialValues,
+    productTypeId,
+    aplicationCode,
 }: ChangeTransferAccountFormProps) => {
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const { formik, bankOptions, bankLoading } = useChangeTransferAccountHook({ initialValues, onSaved });
-    const attachmentError = formik.errors.attachment;
+    const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
+    const { formik, bankOptions, bankLoading } = useChangeTransferAccountHook({ onSaved, attachedDocuments });
 
     const summaryItems = [
         { icon: <DescriptionIcon />, label: "เลขที่ CL", value: claimNo },
@@ -177,46 +178,15 @@ const ChangeTransferAccountForm = ({
                     <Typography variant="body2" color="text.secondary" mb={1}>
                         เอกสารประกอบการเปลี่ยนบัญชี (ถ้ามี)
                     </Typography>
-                    {/* TODO(death-disability-api): ยังไม่อัปโหลดจริง — เก็บ File ไว้ใน form เพื่อส่งตอนต่อ API */}
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        hidden
-                        accept={TRANSFER_ACCOUNT_FILE_ACCEPT}
-                        onChange={(event) => {
-                            formik.setFieldValue("attachment", event.target.files?.[0]);
-                            event.target.value = "";
-                        }}
+                    {/* ไม่ใช้ alwaysFreshMasterList — ให้ section หลังบันทึกได้ documentCode/documentId ชุดเดียวกันจาก cache
+                        (หน้า ConsiderDeathDisabilityDetailPage ล้าง cache นี้ตอนออกจากหน้า กันค้างข้ามเคส) */}
+                    <DocumentScanTable
+                        disablePaper
+                        productTypeId={productTypeId ?? 0}
+                        documentType={TRANSFER_ACCOUNT_DOCUMENT_TYPE}
+                        aplicationCode={aplicationCode ?? ""}
+                        onAttachedDocumentsChange={setAttachedDocuments}
                     />
-                    <Box
-                        role="button"
-                        tabIndex={0}
-                        onClick={() => fileInputRef.current?.click()}
-                        onKeyDown={(event) => {
-                            if (event.key === "Enter" || event.key === " ") fileInputRef.current?.click();
-                        }}
-                        sx={{
-                            p: 3,
-                            textAlign: "center",
-                            cursor: "pointer",
-                            border: `2px dashed ${attachmentError ? "#D32F2F" : BORDER}`,
-                            borderRadius: 3,
-                            "&:hover, &:focus-visible": { bgcolor: "#F5F9FD", outline: "none" },
-                        }}
-                    >
-                        <CloudUploadIcon sx={{ fontSize: 40, color: "#1E5BD8" }} />
-                        <Typography variant="body2" color={PRIMARY}>
-                            {formik.values.attachment?.name ?? "อัปโหลดเอกสาร"}
-                        </Typography>
-                        <Typography variant="body2" color="text.secondary" mt={1.5}>
-                            รองรับไฟล์ .jpg, .jpeg, .png, .pdf ขนาดไม่เกิน 10MB
-                        </Typography>
-                    </Box>
-                    {attachmentError && (
-                        <Typography variant="caption" color="error">
-                            {attachmentError}
-                        </Typography>
-                    )}
                 </SectionRow>
             </DialogContent>
 

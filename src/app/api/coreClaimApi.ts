@@ -220,6 +220,20 @@ export const useCreateCoreClaim = (
  * endpoint คืน documentCode เฉพาะเคส (เช่น "ใบแจ้งปฏิเสธสินไหม") ไม่งั้นสอง case ที่ productTypeId ตรงกันจะ
  * ได้ documentCode เดิมค้างจาก cache ตลอดไป (เอกสารไม่ตรงเคสที่กำลังพิจารณาอยู่)
  */
+/**
+ * คืนฟังก์ชันล้าง cache ของ useGetDocumentType ตาม documentTypeId — ใช้กับตารางสแกนเอกสารที่ต้องแชร์ documentCode
+ * ระหว่าง 2 component ในหน้าเดียว (cache ปกติ) แล้วล้างทิ้งตอนออกจากหน้า กัน documentCode ค้างไปเคสถัดไป
+ */
+export const useRemoveDocumentTypeCache = () => {
+    const queryClient = useQueryClient();
+    return (documentTypeId: number) =>
+        queryClient.removeQueries({
+            queryKey: [getDocumentSubTypeQueryKey],
+            predicate: (query) =>
+                (query.queryKey[1] as GetDocumentSubTypeDtoRequest | undefined)?.documentTypeId === documentTypeId,
+        });
+};
+
 export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean, alwaysFresh = false) => {
     return useQuery(
         [getDocumentSubTypeQueryKey, request],

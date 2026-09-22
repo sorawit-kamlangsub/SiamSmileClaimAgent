@@ -93,12 +93,18 @@ const DeathDisabilityClaimDetailsTab = ({
                         onBeneficiaryEdited={updateBeneficiary}
                         claimNo={claimNo}
                         customerName={customerName}
+                        productTypeId={customerDetail?.productTypeId}
+                        aplicationCode={customerDetail?.policyCode}
                         onTransferAccountChanged={setTransferAccountChange}
                     />
                 </Grid>
                 {transferAccountChange && (
                     <Grid item xs={12}>
-                        <TransferAccountChangeSection change={transferAccountChange} />
+                        <TransferAccountChangeSection
+                            change={transferAccountChange}
+                            productTypeId={customerDetail?.productTypeId}
+                            aplicationCode={customerDetail?.policyCode}
+                        />
                     </Grid>
                 )}
                 <Grid item xs={12}>
