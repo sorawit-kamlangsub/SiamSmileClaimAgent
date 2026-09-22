@@ -1,4 +1,4 @@
-import { Box, IconButton, Link } from "@mui/material";
+import { Box, IconButton, Link, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 // import FactCheckIcon from "@mui/icons-material/FactCheck";
@@ -9,18 +9,17 @@ import { IncreaseTransferLimitMonitorResponseDto } from "../../../api/coreClaimA
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 
-// TODO: คอลัมน์สถานะ/สาเหตุ ยังไม่มี field ใน response จาก CodeGen (IncreaseTransferLimitMonitorResponseDto)
-//       กลับมาคืนคอลัมน์นี้เมื่อ backend ต่อ field limitStatusId / limitStatusNameTH / reason ให้แล้ว
-// const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
-//
-// type StatusColor = { bg: string; text: string };
-//
-// const statusColorMapById: Record<number, StatusColor> = {
-//     1: { bg: "#FFF3E0", text: "#EF6C00" },
-//     2: { bg: "#E8F5E9", text: "#2E7D32" },
-//     3: { bg: "#FDECEA", text: "#C62828" },
-// };
-//
+// TODO: field limitStatusId / limitStatusNameTH / reason ยังไม่มีใน response จาก CodeGen
+//       (IncreaseTransferLimitMonitorResponseDto) — คอลัมน์สถานะจะโชว์ "-" จนกว่า backend จะส่ง field มาให้
+const defaultStatusColor = { bg: "#ECEFF1", text: "#607D8B" };
+
+type StatusColor = { bg: string; text: string };
+
+const statusColorMapById: Record<number, StatusColor> = {
+    1: { bg: "#FFF3E0", text: "#EF6C00" },
+    2: { bg: "#E8F5E9", text: "#2E7D32" },
+    3: { bg: "#FDECEA", text: "#C62828" },
+};
 
 export type IncreaseTransferMonitorRow = {
     caseId?: string;
@@ -65,6 +64,26 @@ export type IncreaseLimitTransferDataTableHookProps = {
 //         </Box>
 //     );
 // };
+
+const StatusPill = ({ status, color }: { status: string; color: StatusColor }) => {
+    const { bg, text } = color;
+    return (
+        <Box
+            sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "4px",
+                borderRadius: "20px",
+                padding: "3px 12px",
+                border: `1px solid ${text}`,
+                backgroundColor: bg,
+            }}
+        >
+            <Box sx={{ width: 6, height: 6, borderRadius: "50%", backgroundColor: text }} />
+            <Typography sx={{ fontSize: "0.8rem", fontWeight: 600, color: text }}>{status}</Typography>
+        </Box>
+    );
+};
 
 const formatAmount = (value: number) =>
     value.toLocaleString("th-TH", {
@@ -190,21 +209,25 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched }: IncreaseLimit
                 filter: false,
             },
         },
-        // TODO: คอลัมน์สถานะ/สาเหตุ ยังไม่มี field ใน response จาก CodeGen — กลับมาเมื่อ backend เพิ่ม field ให้
-        // {
-        //     name: "status",
-        //     label: "สถานะ",
-        //     options: {
-        //         sort: false,
-        //         filter: false,
-        //         customBodyRenderLite: (dataIndex) => {
-        //             const row = rows[dataIndex];
-        //             const status = row?.limitStatusNameTH ?? "-";
-        //             const color = statusColorMapById[row?.limitStatusId ?? -1] ?? defaultStatusColor;
-        //             return <StatusPill status={status} color={color} />;
-        //         },
-        //     },
-        // },
+        {
+            name: "status",
+            label: "สถานะ",
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (dataIndex) => {
+                    // TODO: field limitStatusId / limitStatusNameTH ยังไม่มีใน CodeGen — โชว์ "-" จนกว่า backend จะส่งมา
+                    const row = rows[dataIndex] as IncreaseTransferLimitMonitorResponseDto & {
+                        limitStatusId?: number;
+                        limitStatusNameTH?: string;
+                    };
+                    const status = row?.limitStatusNameTH ?? "-";
+                    const color = statusColorMapById[row?.limitStatusId ?? -1] ?? defaultStatusColor;
+                    return <StatusPill status={status} color={color} />;
+                },
+            },
+        },
+        // TODO: คอลัมน์สาเหตุ ยังไม่มี field reason ใน response จาก CodeGen — กลับมาเมื่อ backend เพิ่ม field ให้
         // {
         //     name: "reason",
         //     label: "สาเหตุ",

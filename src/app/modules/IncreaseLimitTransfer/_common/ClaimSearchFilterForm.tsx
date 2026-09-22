@@ -67,17 +67,16 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
-                    {/* TODO: Dropdown สถานะ ยังไม่มี API จาก CodeGen — กลับมาเมื่อมี */}
-                    {/* <FormikDropdown
+                    {/* TODO: ยังไม่มี API จาก CodeGen (GetPaymentIncreaseStatuses) — ตอนนี้โชว์ DropDown ว่างๆ ไว้ก่อน */}
+                    <FormikDropdown
                         name="statusId"
                         formik={formik}
                         label="สถานะ"
-                        data={paymentIncreaseStatusData?.data ?? []}
+                        data={[]}
                         valueFieldName="id"
                         displayFieldName="name"
                         fullWidth
-                        isLoading={paymentIncreaseStatusIsLoading}
-                    /> */}
+                    />
                 </Grid>
 
                 <Grid item xs={12} sm={6} md={3}>
