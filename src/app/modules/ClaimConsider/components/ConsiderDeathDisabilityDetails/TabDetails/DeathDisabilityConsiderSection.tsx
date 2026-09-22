@@ -136,6 +136,10 @@ const DeathDisabilityConsiderSection = ({
     const reasonMeta = formik.getFieldMeta<number | undefined>("decisionReasonId");
     const remarkMeta = formik.getFieldMeta<string>("remark");
     const reasonHasError = !!reasonMeta.touched && !!reasonMeta.error;
+    const detailMeta = formik.getFieldMeta<string>("decisionReasonDetail");
+    const detailHasError = !!detailMeta.touched && !!detailMeta.error;
+    // รายละเอียดบังคับเฉพาะ รอแก้ไข (ปฏิเสธ/ยกเลิก ไม่บังคับ)
+    const isDetailRequired = formik.values.considerResult === DECISION_ID.REVISION;
     const remarkHasError = !!remarkMeta.touched && !!remarkMeta.error;
 
     const selectStatus = (status: StatusOption) => {
@@ -161,15 +165,18 @@ const DeathDisabilityConsiderSection = ({
                 sx={{
                     mt: 2,
                     p: { xs: 2, md: 3 },
-                    border: "1px solid #DCE8F4",
                     borderRadius: 3,
-                    bgcolor: "#F7FAFD",
                 }}
             >
                 <Box
                     role="radiogroup"
                     aria-label="เลือกผลการพิจารณา"
-                    sx={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: { xs: 1.25, sm: 2 } }}
+                    // ปุ่มกว้างเท่ากันเต็มแถว — จอเล็ก 2 คอลัมน์, sm 3 คอลัมน์, md ขึ้นไปครบ 5 ปุ่มในแถวเดียว
+                    sx={{
+                        display: "grid",
+                        gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)", md: "repeat(5, 1fr)" },
+                        gap: { xs: 1.25, sm: 2 },
+                    }}
                 >
                     {STATUS_OPTIONS.map((status) => {
                         const isSelected = status.decisionId === formik.values.considerResult;
@@ -183,15 +190,16 @@ const DeathDisabilityConsiderSection = ({
                                 variant={isSelected ? "contained" : "outlined"}
                                 onClick={() => selectStatus(status)}
                                 sx={{
-                                    minWidth: { xs: 0, sm: 170 },
-                                    // จอเล็กเรียง 2 ปุ่มต่อแถวเต็มความกว้าง แทนปล่อยขนาดไม่เท่ากัน
-                                    flex: { xs: "1 1 calc(50% - 10px)", sm: "0 0 auto" },
-                                    minHeight: 40,
-                                    borderRadius: 5,
+                                    minWidth: 0,
+                                    // ขนาดเดียวกับปุ่มสถานะใน ConsiderSection ของเคลมลูกค้า
+                                    minHeight: { xs: 48, sm: 54 },
+                                    borderRadius: 3,
                                     borderColor: status.color,
                                     color: isSelected ? "#fff" : status.color,
                                     bgcolor: isSelected ? status.color : status.idleBgColor,
+                                    fontSize: { xs: 14, sm: 16 },
                                     fontWeight: 600,
+                                    whiteSpace: "nowrap",
                                     "&:hover": {
                                         borderColor: status.color,
                                         bgcolor: isSelected ? status.color : status.softColor,
@@ -243,7 +251,8 @@ const DeathDisabilityConsiderSection = ({
                             mx: "auto",
                             maxWidth: 980,
                             overflow: "hidden",
-                            border: "1px solid #DCE8F4",
+                            // จางแบบ ConsiderSection ของเคลมลูกค้า — สีสถานะที่ความทึบ ~20%
+                            border: `1px solid ${selected.color}33`,
                             borderRadius: 3,
                             bgcolor: "#fff",
                             boxShadow: "0 2px 8px rgba(13, 92, 158, 0.08)",
@@ -257,19 +266,44 @@ const DeathDisabilityConsiderSection = ({
                                 gap: 1.25,
                                 px: { xs: 2, sm: 2.5 },
                                 py: 1.75,
-                                color: "#0D5C9E",
-                                bgcolor: "#F2F8FD",
-                                borderBottom: "1px solid #E3EDF6",
+                                // สีเดียวกับปุ่มสถานะที่เลือก — เชื่อมปุ่มกับการ์ดให้เห็นว่าเป็นของสถานะไหน
+                                color: selected.color,
+                                bgcolor: selected.softColor,
                             }}
                         >
-                            {selected.icon}
-                            <Typography fontWeight={600}>
-                                {selected.title} : {claimNo}
-                            </Typography>
+                            {/* หัวการ์ด 2 บรรทัดแบบ ConsiderSection ของเคลมลูกค้า: ชื่อสถานะเด่น + คำอธิบายเป็นบรรทัดรอง,
+                                เลขที่ CL เป็น chip สีกลางมุมขวา (ไม่ใช้สีสถานะ เพราะไม่ได้เปลี่ยนตามผลพิจารณา) */}
+                            <Box sx={{ display: "flex", "& svg": { fontSize: { xs: 24, sm: 28 } } }}>
+                                {selected.icon}
+                            </Box>
+                            <Box>
+                                <Typography sx={{ fontSize: { xs: 17, sm: 18 }, fontWeight: 700, lineHeight: 1.3 }}>
+                                    {selected.title}
+                                </Typography>
+                                <Typography
+                                    sx={{
+                                        mt: 0.25,
+                                        color: "text.secondary",
+                                        fontSize: { xs: 12, sm: 13 },
+                                        lineHeight: 1.35,
+                                    }}
+                                >
+                                    {selected.subheaderLabel}
+                                </Typography>
+                            </Box>
                             <Chip
-                                label={selected.subheaderLabel}
+                                label={claimNo}
                                 size="small"
-                                sx={{ ml: "auto", bgcolor: "#DCEEFB", color: "#0D5C9E", fontWeight: 600 }}
+                                variant="outlined"
+                                sx={{
+                                    ml: "auto",
+                                    bgcolor: "#fff",
+                                    color: "text.primary",
+                                    borderColor: "divider",
+                                    fontWeight: 600,
+                                    // จอเล็ก: container เป็น flexWrap — chip ตกลงบรรทัดใหม่ได้ ไม่เบียดชื่อสถานะ
+                                    maxWidth: "100%",
+                                }}
                             />
                         </Box>
 
@@ -297,18 +331,24 @@ const DeathDisabilityConsiderSection = ({
                                             ))}
                                         </TextField>
                                     </Box>
-                                    <TextField
-                                        fullWidth
-                                        multiline
-                                        minRows={3}
-                                        sx={{ mt: 2 }}
-                                        label={selected.reason.detailLabel}
-                                        placeholder={selected.reason.detailLabel}
-                                        value={formik.values.decisionReasonDetail}
-                                        onChange={(event) =>
-                                            formik.setFieldValue("decisionReasonDetail", event.target.value)
-                                        }
-                                    />
+                                    <Box data-field-name="decisionReasonDetail">
+                                        <TextField
+                                            fullWidth
+                                            multiline
+                                            minRows={3}
+                                            required={isDetailRequired}
+                                            sx={{ mt: 2 }}
+                                            label={selected.reason.detailLabel}
+                                            placeholder={selected.reason.detailLabel}
+                                            value={formik.values.decisionReasonDetail}
+                                            onChange={(event) =>
+                                                formik.setFieldValue("decisionReasonDetail", event.target.value)
+                                            }
+                                            onBlur={() => formik.setFieldTouched("decisionReasonDetail", true)}
+                                            error={detailHasError}
+                                            helperText={detailHasError ? detailMeta.error : undefined}
+                                        />
+                                    </Box>
                                 </>
                             )}
 
@@ -367,6 +407,7 @@ const DeathDisabilityConsiderSection = ({
 
                             {selected.decisionId === DECISION_ID.REJECTED && (
                                 <DocumentScanTable
+                                    disablePaper
                                     productTypeId={productTypeId ?? 0}
                                     documentType="ใบแจ้งปฏิเสธสินไหม"
                                     aplicationCode={aplicationCode ?? ""}

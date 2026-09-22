@@ -31,6 +31,9 @@ const validate = (values: DeathDisabilityConsiderValues) => {
     if (REASON_REQUIRED_DECISION_IDS.includes(values.considerResult ?? -1) && !values.decisionReasonId) {
         errors.decisionReasonId = "กรุณาเลือกสาเหตุ";
     }
+    if (values.considerResult === DECISION_ID.REVISION && !values.decisionReasonDetail.trim()) {
+        errors.decisionReasonDetail = "กรุณาระบุรายละเอียดการรอแก้ไข";
+    }
     if (values.considerResult === DEATH_DISABILITY_IN_PROGRESS_DECISION_ID && !values.remark.trim()) {
         errors.remark = "กรุณาระบุหมายเหตุ";
     }
