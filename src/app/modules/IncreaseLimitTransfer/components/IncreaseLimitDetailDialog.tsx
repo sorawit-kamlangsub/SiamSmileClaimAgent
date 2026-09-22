@@ -226,7 +226,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Grid container spacing={2} sx={{ mt: 0.5 }}>
+                            <Grid container spacing={2} alignItems="flex-end" sx={{ mt: 0.5 }}>
                                 <Grid item xs={12} sm={6}>
                                     <Box
                                         sx={{
@@ -269,18 +269,18 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     </Box>
                                 </Grid>
                                 <Grid item xs={12} sm={6}>
-                                    <Typography sx={{ fontSize: "0.8rem", color: "#757575", mb: 0.5 }}>
-                                        สาเหตุการปฏิเสธ <span style={{ color: "#D32F2F" }}>*</span>
-                                    </Typography>
                                     {/* TODO: ยังไม่ต่อ API submit (UpdateIncreaseTransferLimitStatus) — option ตรงตาม design จริง */}
                                     <TextField
                                         select
+                                        label="สาเหตุการปฏิเสธ"
+                                        required
+                                        InputLabelProps={{ shrink: true }}
+                                        sx={{ "& .MuiFormLabel-asterisk": { color: "#D32F2F" } }}
                                         value={rejectReason}
                                         onChange={(event) => setRejectReason(event.target.value)}
                                         size="small"
                                         fullWidth
                                     >
-                                        <MenuItem value="">สาเหตุการปฏิเสธ</MenuItem>
                                         <MenuItem value="wrong_calc">คำนวนยอดผิด</MenuItem>
                                         <MenuItem value="wrong_transfer">โอนผิดคน</MenuItem>
                                     </TextField>
