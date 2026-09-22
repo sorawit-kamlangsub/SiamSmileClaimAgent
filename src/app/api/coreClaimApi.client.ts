@@ -9317,11 +9317,19 @@ export interface GetIncidentTypeMappingDtoResponseListServiceResponse {
 
 export interface GetIncreaseTransferLimitDetailResponseDto {
     caseTransferApprovalId?: string;
-    claimNo?: string | undefined;
+    caseNo?: string | undefined;
+    /** จำนวนเงินจากการบันทึกเคลม */
+    caseAmount?: number | undefined;
+    /** วงเงินที่ใช้ไป */
+    usedAmount?: number | undefined;
+    /** วงเงินคงเหลือ */
+    remainingAmount?: number | undefined;
+    /** วงเงินคงเหลือครั้งใหม่ */
+    newRemainingLimit?: number | undefined;
+    /** ยอดเงินที่ขออนุมัติโอน */
     requestedTransferAmount?: number | undefined;
-    paymentLimitAmount?: number | undefined;
-    excessAmount?: number | undefined;
-    remainingLimitAmount?: number | undefined;
+    /** วงเงินปัจจุบัน */
+    currentLimit?: number | undefined;
     customerName?: string | undefined;
 }
 
