@@ -68,6 +68,7 @@ export const useGetIncreaseTransferLimitMonitors = (
     page?: number | undefined,
     recordsPerPage?: number | undefined,
     filter?: IncreaseTransferLimitMonitorRequestDto,
+    searchTrigger?: number,
     enabled?: boolean
 ) => {
     return useQuery(
@@ -79,6 +80,7 @@ export const useGetIncreaseTransferLimitMonitors = (
             page,
             recordsPerPage,
             filter,
+            searchTrigger,
         ],
         () =>
             claimFundClient.increaseTransferLimitMonitors(

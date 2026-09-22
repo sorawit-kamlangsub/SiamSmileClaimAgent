@@ -46,7 +46,12 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
     const [rejectReason, setRejectReason] = useState("");
 
     return (
-        <Dialog open={open} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 3 } }}>
+        <Dialog
+            open={open}
+            maxWidth="sm"
+            fullWidth
+            PaperProps={{ sx: { borderRadius: 3, maxHeight: "calc(100vh - 32px)" } }}
+        >
             <DialogTitle
                 sx={{
                     display: "flex",
@@ -109,9 +114,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
                                             เลขที่ CC :
                                         </Typography>
-                                        <Typography
-                                            sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0"}}
-                                        >
+                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
                                             {detail?.caseNo ?? "-"}
                                         </Typography>
                                     </Box>

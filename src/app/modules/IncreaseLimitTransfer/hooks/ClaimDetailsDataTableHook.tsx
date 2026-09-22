@@ -37,8 +37,8 @@ export type IncreaseTransferMonitorRow = {
 export type IncreaseLimitTransferDataTableHookProps = {
     filter: ClaimSearchFilterValues | undefined;
     hasSearched: boolean;
-    // TODO: Detail dialog ยังไม่มี API จาก CodeGen (getIncreaseTransferLimitDetail / updateIncreaseTransferLimitStatus)
-    //       กลับมาเมื่อ backend มี API ครบ
+    // TODO: updateIncreaseTransferLimitStatus ยังไม่มี API จาก CodeGen — กลับมาเมื่อ backend มี API ครบ
+    searchTrigger?: number;
     onEdit?: (row: IncreaseTransferMonitorRow) => void;
 };
 
@@ -88,7 +88,12 @@ const formatAmount = (value: number) =>
         maximumFractionDigits: 2,
     });
 
-const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: IncreaseLimitTransferDataTableHookProps) => {
+const useClaimCpgTransferDataTableHook = ({
+    filter,
+    hasSearched,
+    searchTrigger,
+    onEdit,
+}: IncreaseLimitTransferDataTableHookProps) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
@@ -110,6 +115,7 @@ const useClaimCpgTransferDataTableHook = ({ filter, hasSearched, onEdit }: Incre
             claimCreatedDateFrom: filter?.transferDateFrom,
             claimCreatedDateTo: filter?.transferDateTo,
         },
+        searchTrigger ?? 0,
         hasSearched
     );
 

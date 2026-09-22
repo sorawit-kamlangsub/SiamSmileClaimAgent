@@ -8,11 +8,13 @@ import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 const IncreaseLimitTransfer = () => {
     const [filter, setFilter] = useState<ClaimSearchFilterValues | undefined>(undefined);
     const [hasSearched, setHasSearched] = useState(false);
+    const [searchTrigger, setSearchTrigger] = useState(0);
     const [detailRow, setDetailRow] = useState<IncreaseTransferMonitorRow | null>(null);
 
     const handleSearch = (values: ClaimSearchFilterValues) => {
         setFilter(values);
         setHasSearched(true);
+        setSearchTrigger((count) => count + 1);
     };
 
     return (
@@ -33,6 +35,7 @@ const IncreaseLimitTransfer = () => {
                         <ClaimDetailsDataTable
                             filter={filter}
                             hasSearched={hasSearched}
+                            searchTrigger={searchTrigger}
                             onEdit={(row) => setDetailRow(row)}
                         />
                     </Box>
