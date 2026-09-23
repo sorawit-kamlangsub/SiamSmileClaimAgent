@@ -167,7 +167,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         <Typography sx={{ fontSize: "0.8rem", color: "#757575" }}>
                                             ชื่อผู้เอาประกัน :
                                         </Typography>
-                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#212121" }}>
+                                        <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
                                             {detail?.customerName ?? "-"}
                                         </Typography>
                                     </Box>
