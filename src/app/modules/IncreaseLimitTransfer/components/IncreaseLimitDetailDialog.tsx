@@ -149,7 +149,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                             เลขที่ CC :
                                         </Typography>
                                         <Typography
-                                            sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0", textAlign: "right" }}
+                                            sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0", textAlign: "left" }}
                                         >
                                             {detail?.caseNo ?? "-"}
                                         </Typography>
