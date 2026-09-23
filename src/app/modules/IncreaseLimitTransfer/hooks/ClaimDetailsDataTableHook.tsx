@@ -156,7 +156,7 @@ const useClaimCpgTransferDataTableHook = ({
                         <Link
                             component="button"
                             underline="hover"
-                            sx={{ color: "#1565C0", fontWeight: 600 }}
+                            sx={{ color: "#212121", fontWeight: 400 }}
                             onClick={() => handleViewRow(row)}
                         >
                             {row?.claimNo}
