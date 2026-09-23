@@ -82,9 +82,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
     return (
         <Dialog
             open={open}
-            maxWidth="md"
+            maxWidth="sm"
             fullWidth
-            PaperProps={{ sx: { borderRadius: 3, maxHeight: "calc(100vh - 32px)" } }}
+            PaperProps={{ sx: { borderRadius: 3 } }}
         >
             <DialogTitle
                 sx={{
