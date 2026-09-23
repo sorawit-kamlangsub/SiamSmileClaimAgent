@@ -4,6 +4,7 @@ import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
 import { swalSuccess } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
 import useDeathDisabilityExpenseHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
 import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
@@ -103,75 +104,80 @@ const DeathDisabilityClaimDetailsTab = ({
         if (Object.keys(errors).length > 0) return;
         await handleSubmitDecision();
     };
+    // รอข้อมูลของทุก section ที่ดึงจาก API ในแท็บนี้
+    const isTabLoading = detailLoading || expenseLoading || beneficiaryLoading;
     const claimNo = detail?.claimNo ?? "-";
     const customerName = customerDetail?.customerName ?? "-";
 
     return (
         <FormikProvider value={formik}>
-            <Grid container spacing={2}>
-                <Grid item xs={12}>
-                    <DeathDisabilityClaimInfoSection info={detail} isLoading={detailLoading} />
-                </Grid>
-                <Grid item xs={12}>
-                    <DeathDisabilityExpenseSection
-                        items={expenseItems}
-                        isLoading={expenseLoading}
-                        productTypeId={customerDetail?.productTypeId}
-                        coverageTypeId={detail?.coverageTypeId}
-                    />
-                </Grid>
-                <Grid item xs={12}>
-                    <DeathDisabilityBeneficiarySection
-                        beneficiaries={beneficiaries}
-                        isLoading={beneficiaryLoading}
-                        totalAmount={totalPayoutAmount}
-                        editedIndexes={editedIndexes}
-                        onBeneficiaryEdited={updateBeneficiary}
-                        claimNo={claimNo}
-                        customerName={customerName}
-                        productTypeId={customerDetail?.productTypeId}
-                        aplicationCode={customerDetail?.policyCode}
-                        onTransferAccountChanged={setTransferAccountChange}
-                    />
-                </Grid>
-                {transferAccountChange && (
+            {/* overlay เดียวคลุมทุก section — spinner ติดกลางจอ (stickySpinner) เพราะแท็บยาวเกินจอ */}
+            <LoadingOverlay isLoading={isTabLoading} message="กำลังโหลดข้อมูลเคลม..." stickySpinner>
+                <Grid container spacing={2}>
                     <Grid item xs={12}>
-                        <TransferAccountChangeSection
-                            change={transferAccountChange}
+                        <DeathDisabilityClaimInfoSection info={detail} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <DeathDisabilityExpenseSection
+                            items={expenseItems}
+                            isLoading={expenseLoading}
                             productTypeId={customerDetail?.productTypeId}
-                            aplicationCode={customerDetail?.policyCode}
+                            coverageTypeId={detail?.coverageTypeId}
                         />
                     </Grid>
-                )}
-                <Grid item xs={12}>
-                    <DocumentScanTable
-                        productTypeId={customerDetail?.productTypeId ?? 0}
-                        Header="สแกนเอกสาร"
-                        aplicationCode={customerDetail?.policyCode ?? ""}
-                        documentType="เอกสารประกอบการพิจารณาเคลม"
-                        caseId={detail?.caseId}
-                        claimSourceId={detail?.claimSourceId}
-                        onAttachedDocumentsChange={setScanDocuments}
-                    />
+                    <Grid item xs={12}>
+                        <DeathDisabilityBeneficiarySection
+                            beneficiaries={beneficiaries}
+                            isLoading={beneficiaryLoading}
+                            totalAmount={totalPayoutAmount}
+                            editedIndexes={editedIndexes}
+                            onBeneficiaryEdited={updateBeneficiary}
+                            claimNo={claimNo}
+                            customerName={customerName}
+                            productTypeId={customerDetail?.productTypeId}
+                            aplicationCode={customerDetail?.policyCode}
+                            onTransferAccountChanged={setTransferAccountChange}
+                        />
+                    </Grid>
+                    {transferAccountChange && (
+                        <Grid item xs={12}>
+                            <TransferAccountChangeSection
+                                change={transferAccountChange}
+                                productTypeId={customerDetail?.productTypeId}
+                                aplicationCode={customerDetail?.policyCode}
+                            />
+                        </Grid>
+                    )}
+                    <Grid item xs={12}>
+                        <DocumentScanTable
+                            productTypeId={customerDetail?.productTypeId ?? 0}
+                            Header="สแกนเอกสาร"
+                            aplicationCode={customerDetail?.policyCode ?? ""}
+                            documentType="เอกสารประกอบการพิจารณาเคลม"
+                            caseId={detail?.caseId}
+                            claimSourceId={detail?.claimSourceId}
+                            onAttachedDocumentsChange={setScanDocuments}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <DeathDisabilityConsiderSection
+                            claimNo={claimNo}
+                            totalTransferAmount={totalPayoutAmount}
+                            productTypeId={customerDetail?.productTypeId}
+                            aplicationCode={customerDetail?.policyCode}
+                            revisionReasonOptions={revisionReasonOptions}
+                            revisionReasonLoading={revisionReasonLoading}
+                            rejectReasonOptions={rejectReasonOptions}
+                            rejectReasonLoading={rejectReasonLoading}
+                            cancelReasonOptions={cancelReasonOptions}
+                            cancelReasonLoading={cancelReasonLoading}
+                            onConfirm={handleConfirm}
+                            isSubmitting={isSubmitting}
+                            onRejectDocumentsChange={setRejectDocuments}
+                        />
+                    </Grid>
                 </Grid>
-                <Grid item xs={12}>
-                    <DeathDisabilityConsiderSection
-                        claimNo={claimNo}
-                        totalTransferAmount={totalPayoutAmount}
-                        productTypeId={customerDetail?.productTypeId}
-                        aplicationCode={customerDetail?.policyCode}
-                        revisionReasonOptions={revisionReasonOptions}
-                        revisionReasonLoading={revisionReasonLoading}
-                        rejectReasonOptions={rejectReasonOptions}
-                        rejectReasonLoading={rejectReasonLoading}
-                        cancelReasonOptions={cancelReasonOptions}
-                        cancelReasonLoading={cancelReasonLoading}
-                        onConfirm={handleConfirm}
-                        isSubmitting={isSubmitting}
-                        onRejectDocumentsChange={setRejectDocuments}
-                    />
-                </Grid>
-            </Grid>
+            </LoadingOverlay>
         </FormikProvider>
     );
 };

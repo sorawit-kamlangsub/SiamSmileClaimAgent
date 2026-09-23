@@ -1,4 +1,4 @@
-import { Box, Divider, Grid, Skeleton, Typography } from "@mui/material";
+import { Box, Divider, Grid, Typography } from "@mui/material";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -134,7 +134,6 @@ const DeathDisabilityExpenseSection = ({
                 text="รายละเอียดค่าใช้จ่าย"
                 color="blue"
             />
-            {isLoading && <Skeleton variant="rounded" sx={{ mt: 2, height: 160 }} />}
             {!isLoading && displayItems.length === 0 && (
                 <Typography color="text.secondary" textAlign="center" sx={{ mt: 2, py: 3 }}>
                     ไม่พบรายการค่าใช้จ่าย

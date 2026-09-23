@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Chip, Grid, Skeleton, Typography } from "@mui/material";
+import { Box, Button, Chip, Grid, Typography } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EditIcon from "@mui/icons-material/Edit";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -107,7 +107,6 @@ const DeathDisabilityBeneficiarySection = ({
                     setEditOpen(false);
                 }}
             />
-            {isLoading && <Skeleton variant="rounded" sx={{ mt: 2, height: 140 }} />}
             {!isLoading && beneficiaries.length === 0 && (
                 <Typography color="text.secondary" textAlign="center" sx={{ mt: 2, py: 3 }}>
                     ไม่พบข้อมูลผู้รับผลประโยชน์
