@@ -7,7 +7,6 @@ import {
     DialogTitle,
     Grid,
     IconButton,
-    MenuItem,
     TextField,
     Typography,
 } from "@mui/material";
@@ -17,12 +16,11 @@ import DescriptionIcon from "@mui/icons-material/Description";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import { useEffect, useState } from "react";
+import { useGetIncreaseTransferLimitDetail, useIncreaseTransferLimitChangeStatus } from "../../../api/coreClaimApi";
 import {
-    useGetCaseTransferApprovalRejectReasonStatus,
-    useGetIncreaseTransferLimitDetail,
-    useIncreaseTransferLimitChangeStatus,
-} from "../../../api/coreClaimApi";
-import { GetIncreaseTransferLimitDetailResponseDto } from "../../../api/coreClaimApi.client";
+    GetIncreaseTransferLimitDetailResponseDto,
+    IncreaseTransferLimitChangeStatusRequestDto,
+} from "../../../api/coreClaimApi.client";
 import { swalConfirm, swalError, swalSuccess } from "../../_common";
 import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 
@@ -45,14 +43,12 @@ const formatBaht = (value: number | undefined | null) => `฿ ${formatNumber(val
 const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDialogProps) => {
     const caseTransferApprovalId = row?.caseTransferApprovalId ?? "";
     const { data: detailRes, isLoading: isDetailLoading } = useGetIncreaseTransferLimitDetail(caseTransferApprovalId);
-    const { data: rejectReasonsData, isLoading: isRejectReasonsLoading } =
-        useGetCaseTransferApprovalRejectReasonStatus();
 
     const detail = detailRes?.data as GetIncreaseTransferLimitDetailResponseDto | undefined;
-    const [rejectReasonId, setRejectReasonId] = useState<number | undefined>(undefined);
+    const [limitReviewNote, setLimitReviewNote] = useState<string>("");
 
     useEffect(() => {
-        if (!open) setRejectReasonId(undefined);
+        if (!open) setLimitReviewNote("");
     }, [open]);
     const changeStatus = useIncreaseTransferLimitChangeStatus(
         () => {
@@ -64,17 +60,23 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
         }
     );
 
+    const buildChangeStatusBody = (transferApprovalStatusId: number) =>
+        ({
+            caseTransferApprovalId,
+            transferApprovalStatusId,
+            approvalRemark: limitReviewNote,
+        } as IncreaseTransferLimitChangeStatusRequestDto & { approvalRemark?: string });
+
     const handleApprove = async () => {
         const confirmed = await swalConfirm("ยืนยันการอนุมัติ", "ยืนยันการอนุมัติการขยายวงเงินรายการนี้หรือไม่?");
         if (!confirmed) return;
-        changeStatus.mutate({ caseTransferApprovalId, transferApprovalStatusId: 4 });
+        changeStatus.mutate(buildChangeStatusBody(4));
     };
 
     const handleReject = async () => {
-        if (rejectReasonId == null) return;
         const confirmed = await swalConfirm("ยืนยันการปฏิเสธ", "ยืนยันการปฏิเสธการขยายวงเงินรายการนี้หรือไม่?");
         if (!confirmed) return;
-        changeStatus.mutate({ caseTransferApprovalId, transferApprovalStatusId: 3, rejectReasonId });
+        changeStatus.mutate(buildChangeStatusBody(3));
     };
 
     return (
@@ -263,7 +265,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                             </Box>
 
                             <Grid container spacing={2} alignItems="flex-end" sx={{ mt: 0.5 }}>
-                                <Grid item xs={12} sm={6}>
+                                <Grid item xs={12}>
                                     <Box
                                         sx={{
                                             display: "flex",
@@ -304,25 +306,38 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                         </Typography>
                                     </Box>
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
+                                <Grid item xs={12}>
                                     <TextField
-                                        select
-                                        label="สาเหตุการปฏิเสธ"
-                                        required
-                                        InputLabelProps={{ shrink: true }}
-                                        sx={{ "& .MuiFormLabel-asterisk": { color: "#D32F2F" } }}
-                                        value={rejectReasonId ?? ""}
-                                        onChange={(event) => setRejectReasonId(Number(event.target.value))}
-                                        size="small"
+                                        multiline
+                                        rows={2}
+                                        label="หมายเหตุรอตรวจสอบ"
+                                        placeholder="ระบุหมายเหตุเพื่อ Hold รายการไว้รอตรวจสอบ"
+                                        inputProps={{ maxLength: 500 }}
                                         fullWidth
-                                        disabled={isRejectReasonsLoading}
-                                    >
-                                        {rejectReasonsData?.data?.map((reason) => (
-                                            <MenuItem key={reason.id} value={reason.id}>
-                                                {reason.name ?? `เหตุผลที่ ${reason.id}`}
-                                            </MenuItem>
-                                        ))}
-                                    </TextField>
+                                        value={limitReviewNote}
+                                        onChange={(event) => setLimitReviewNote(event.target.value)}
+                                        helperText={
+                                            <Box
+                                                sx={{
+                                                    display: "flex",
+                                                    justifyContent: "space-between",
+                                                    alignItems: "flex-start",
+                                                    gap: 2,
+                                                    width: "100%",
+                                                }}
+                                            >
+                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#757575" }}>
+                                                    ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ ไม่ใช่การปฏิเสธหรือโอนเงิน)
+                                                </Typography>
+                                                <Typography
+                                                    component="span"
+                                                    sx={{ fontSize: "0.75rem", color: "#757575", whiteSpace: "nowrap" }}
+                                                >
+                                                    {limitReviewNote.length}/500
+                                                </Typography>
+                                            </Box>
+                                        }
+                                    />
                                 </Grid>
                             </Grid>
 
@@ -349,7 +364,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 <Button
                                     variant="outlined"
                                     color="error"
-                                    disabled={changeStatus.isLoading || rejectReasonId == null}
+                                    disabled={changeStatus.isLoading}
                                     onClick={handleReject}
                                 >
                                     ปฏิเสธ
