@@ -6,6 +6,7 @@ import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
 import { useGetTransferApprovalStatus } from "../../../api/coreClaimApi";
+import { useAuth } from "../../_auth";
 import dayjs, { Dayjs } from "dayjs";
 
 const currentDate = dayjs();
@@ -29,20 +30,21 @@ export interface ClaimSearchFilterFormProps {
     onSubmit: (values: ClaimSearchFilterValues) => void;
 }
 
-const defaultValues: ClaimSearchFilterValues = {
+const getDefaultValues = (branchId: number | undefined): ClaimSearchFilterValues => ({
     searchBy: undefined,
     searchText: "",
-    branchId: undefined,
+    branchId,
     statusId: undefined,
     transferDateFrom: currentDate,
     transferDateTo: currentDate,
-};
+});
 
 const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFormProps) => {
     const { data: transferApprovalStatusData, isLoading: isTransferApprovalStatusLoading } =
         useGetTransferApprovalStatus();
+    const { userProfile } = useAuth();
     const formik = useFormik<ClaimSearchFilterValues>({
-        initialValues: { ...defaultValues, ...initialValues },
+        initialValues: { ...getDefaultValues(userProfile?.branchId), ...initialValues },
         onSubmit: (values) => {
             onSubmit(values);
         },
