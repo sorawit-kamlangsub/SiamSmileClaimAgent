@@ -68,6 +68,10 @@ type ClaimSummaryStep3Props = {
     compensationRows?: Step3CompensationRow[];
     /** ค่าตั้งต้นจาก API คำนวณ (ยังไม่มี endpoint สำหรับหน้าพิจารณา จึง default 0) */
     summary?: Partial<CompensationSummaryData>;
+    /** ยอดเงินรวมตามใบเสร็จ — Sum ยอดตามใบเสร็จจากโรงพยาบาล (calculateResult.totalReceipt ดิบจาก API ไม่ผ่าน merge) */
+    totalReceipt?: number;
+    /** ค่าใช้จ่ายทั้งหมดสุทธิ — Sum ยอดตามใบเสร็จจากโรงพยาบาล - Discount (calculateResult.totalNetAmount ดิบจาก API ไม่ผ่าน merge) */
+    totalNetAmount?: number;
     /**
      * ให้ผู้ใช้เลือก "โอนค่าชดเชยรวมกับค่ารักษา" ได้เอง (IPD / Day Case ที่ไม่ใช่ PA)
      * false (default) = บังคับโอนรวม : checkbox Checked + Disabled, ค่าชดเชยคงเหลือ = 0, ไม่แสดงบัญชีรับเงินค่าชดเชย
@@ -187,6 +191,8 @@ const ClaimSummaryStep3 = ({
     treatmentRows = [],
     compensationRows = [],
     summary,
+    totalReceipt,
+    totalNetAmount,
     allowSeparateCompensation = false,
     payoutAccount,
     onPayoutAccountChange,
@@ -436,6 +442,12 @@ const ClaimSummaryStep3 = ({
                 />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
                     <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
+                    {totalReceipt !== undefined && (
+                        <SummaryLine label="ยอดเงินรวมตามใบเสร็จ" value={fmt(totalReceipt)} />
+                    )}
+                    {totalNetAmount !== undefined && (
+                        <SummaryLine label="ค่าใช้จ่ายทั้งหมดสุทธิ" value={fmt(totalNetAmount)} />
+                    )}
                     <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(calc.medicalCoverPay)} />
                     <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(calc.compensateInclude)} />
                     <SummaryLine

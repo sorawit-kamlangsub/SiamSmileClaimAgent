@@ -20,8 +20,11 @@ export const PENDING_BE_FIELDS = {
     productTypeId: "BillingDetailDto.productTypeId (แยก PA/PH)",
     claimListTypeId: "BillingDetailDto.claimListTypeId (แยก OPD Half / OPD Full / IPD)",
     schoolDetail: "BillingDetailDto.school (ข้อมูลสถานศึกษา)",
-    insuredIdCardNo: "BillingInsuredDto.idCardNo",
-    insuredPhoneNumber: "BillingInsuredDto.phoneNumber",
+    // idCard/phone มีอยู่จริงในค่า response แล้ว (ยืนยัน 2026-09-22) แต่ swagger schema ของ
+    // BillingInsuredDto ที่ฝั่ง BE ยังไม่ประกาศ 2 ฟิลด์นี้ (additionalProperties: false) —
+    // codegen จึงยังไม่ generate type ให้ ดูรายละเอียดที่ docs/modules/BillingClaim.md "Known gaps"
+    insuredIdCardNo: "BillingInsuredDto.idCard",
+    insuredPhoneNumber: "BillingInsuredDto.phone",
     insuredAppStatus: "BillingInsuredDto.appStatus",
     claimStatus: "BillingDetailDto.claimStatus (สถานะเคลม CL แยกจากสถานะวางบิล)",
     documentCompleteDate: "BillingClaimDto.documentCompleteDate (วันที่เอกสารครบ)",
@@ -38,4 +41,6 @@ export const PENDING_BE_FIELDS = {
     continuousClaimDefault: "BillingReviewDataDto.continuousClaim (ค่า default จาก SmileConnect)",
     scanDocumentStep3: "BillingDetailDto.step3Documents (ตารางสแกนเอกสาร Step 3)",
     rejectionDocumentType: "GetDocumentSubTypeDtoRequest.productTypeId (billing ไม่มี productTypeId ให้ยิง master นี้)",
+    trafficAccident:
+        "BillingClaimDto.trafficAccident (vehicleType/vehicleOther/casualtyStatus/isPoroboExcess/noPoroboReason)",
 } as const;

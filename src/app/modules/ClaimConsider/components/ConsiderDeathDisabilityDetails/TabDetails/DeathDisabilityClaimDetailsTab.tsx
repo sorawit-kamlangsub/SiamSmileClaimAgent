@@ -1,0 +1,185 @@
+import { useEffect, useState } from "react";
+import { Grid } from "@mui/material";
+import { FormikProvider } from "formik";
+import { useNavigate } from "react-router-dom";
+import { swalSuccess } from "../../../../_common";
+import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
+import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
+import useDeathDisabilityExpenseHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
+import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
+import useDeathDisabilityActionHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityActionHook";
+import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
+import {
+    CaseDocumentV2Request,
+    GetCustomerDetailByIdDtoResponse,
+    GetDeathAndDisabilityClaimDetailConsiderDtoResponse,
+} from "../../../../../api/coreClaimApi.client";
+import DeathDisabilityClaimInfoSection from "./DeathDisabilityClaimInfoSection";
+import DeathDisabilityExpenseSection from "./DeathDisabilityExpenseSection";
+import DeathDisabilityBeneficiarySection from "./DeathDisabilityBeneficiarySection";
+import DeathDisabilityConsiderSection from "./DeathDisabilityConsiderSection";
+import TransferAccountChangeSection from "./TransferAccountChangeSection";
+
+const CONSIDER_DEATH_DISABILITY_MONITOR_PATH = "/consider/death-disability-monitor";
+
+type DeathDisabilityClaimDetailsTabProps = {
+    /** รายละเอียดเคลม Death & Disability (GetDeathAndDisabilityClaimDetailConsider) */
+    detail: GetDeathAndDisabilityClaimDetailConsiderDtoResponse | undefined;
+    detailLoading: boolean;
+    customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
+};
+
+/**
+ * Tab "ข้อมูลการเคลม" ของหน้าพิจารณาเคลม - Death & Disability
+ * - รายละเอียดเคลม: GetDeathAndDisabilityClaimDetailConsider
+ * - รายละเอียดค่าใช้จ่าย: GetStandardMedicalExpenseByCase (เหมือนเคลมลูกค้า)
+ * - สแกนเอกสาร: DocumentScanTable ตัวเดียวกับ ClaimDetailsTab (ดึงเอกสารที่แนบไว้ของ caseId จริง)
+ * - ผู้รับผลประโยชน์: GetDeathAndDisabilityBeneficiary
+ */
+const DeathDisabilityClaimDetailsTab = ({
+    detail,
+    detailLoading,
+    customerDetail,
+}: DeathDisabilityClaimDetailsTabProps) => {
+    const { expenseItems, expenseLoading, disabilityBenefits, standardExpenses } = useDeathDisabilityExpenseHook(
+        detail,
+        customerDetail
+    );
+    const {
+        beneficiaries,
+        beneficiaryLoading,
+        totalPayoutAmount,
+        editedIndexes,
+        editedBeneficiaries,
+        updateBeneficiary,
+    } = useDeathDisabilityBeneficiaryHook(detail);
+    const {
+        formik,
+        revisionReasonOptions,
+        revisionReasonLoading,
+        rejectReasonOptions,
+        rejectReasonLoading,
+        cancelReasonOptions,
+        cancelReasonLoading,
+    } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
+    // ข้อมูลผู้รับผลประโยชน์ที่แก้ไว้ยังไม่ถูกบันทึกจนกว่าจะกดยืนยันบันทึก — เตือนก่อนปิด/รีเฟรชหน้า
+    const hasPendingBeneficiaryEdits = editedBeneficiaries.length > 0;
+    useEffect(() => {
+        if (!hasPendingBeneficiaryEdits) return undefined;
+        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+            event.preventDefault();
+            event.returnValue = "";
+        };
+        window.addEventListener("beforeunload", handleBeforeUnload);
+        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+    }, [hasPendingBeneficiaryEdits]);
+    // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
+    const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
+    // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
+    const [scanDocuments, setScanDocuments] = useState<CaseDocumentV2Request[]>([]);
+    const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
+    const navigate = useNavigate();
+    const { handleSubmitDecision, isSubmitting } = useDeathDisabilityActionHook({
+        formik,
+        detail,
+        editedBeneficiaries,
+        totalPayoutAmount,
+        transferAccountChange,
+        scanDocuments,
+        rejectDocuments,
+        disabilityBenefits,
+        standardExpenses,
+        // บันทึกแล้วกลับหน้า monitor Death & Disability
+        onSuccess: () => {
+            swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                navigate(CONSIDER_DEATH_DISABILITY_MONITOR_PATH)
+            );
+        },
+    });
+    /** submitForm = mark touched + นับ submitCount ให้ section โชว์ error แล้วจึงเช็คผล validate ก่อนยิง API */
+    const handleConfirm = async () => {
+        await formik.submitForm();
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) return;
+        await handleSubmitDecision();
+    };
+    // รอข้อมูลของทุก section ที่ดึงจาก API ในแท็บนี้
+    const isTabLoading = detailLoading || expenseLoading || beneficiaryLoading;
+    const claimNo = detail?.claimNo ?? "-";
+    const customerName = customerDetail?.customerName ?? "-";
+
+    return (
+        <FormikProvider value={formik}>
+            {/* overlay เดียวคลุมทุก section — spinner ติดกลางจอ (stickySpinner) เพราะแท็บยาวเกินจอ */}
+            <LoadingOverlay isLoading={isTabLoading} message="กำลังโหลดข้อมูลเคลม..." stickySpinner>
+                <Grid container spacing={2}>
+                    <Grid item xs={12}>
+                        <DeathDisabilityClaimInfoSection info={detail} />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <DeathDisabilityExpenseSection
+                            items={expenseItems}
+                            isLoading={expenseLoading}
+                            productTypeId={customerDetail?.productTypeId}
+                            coverageTypeId={detail?.coverageTypeId}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <DeathDisabilityBeneficiarySection
+                            beneficiaries={beneficiaries}
+                            isLoading={beneficiaryLoading}
+                            totalAmount={totalPayoutAmount}
+                            editedIndexes={editedIndexes}
+                            onBeneficiaryEdited={updateBeneficiary}
+                            claimNo={claimNo}
+                            customerName={customerName}
+                            productTypeId={customerDetail?.productTypeId}
+                            aplicationCode={customerDetail?.policyCode}
+                            onTransferAccountChanged={setTransferAccountChange}
+                        />
+                    </Grid>
+                    {transferAccountChange && (
+                        <Grid item xs={12}>
+                            <TransferAccountChangeSection
+                                change={transferAccountChange}
+                                productTypeId={customerDetail?.productTypeId}
+                                aplicationCode={customerDetail?.policyCode}
+                            />
+                        </Grid>
+                    )}
+                    <Grid item xs={12}>
+                        <DocumentScanTable
+                            productTypeId={customerDetail?.productTypeId ?? 0}
+                            Header="สแกนเอกสาร"
+                            aplicationCode={customerDetail?.policyCode ?? ""}
+                            documentType="เอกสารประกอบการพิจารณาเคลม"
+                            caseId={detail?.caseId}
+                            claimSourceId={detail?.claimSourceId}
+                            onAttachedDocumentsChange={setScanDocuments}
+                        />
+                    </Grid>
+                    <Grid item xs={12}>
+                        <DeathDisabilityConsiderSection
+                            claimNo={claimNo}
+                            totalTransferAmount={totalPayoutAmount}
+                            productTypeId={customerDetail?.productTypeId}
+                            aplicationCode={customerDetail?.policyCode}
+                            revisionReasonOptions={revisionReasonOptions}
+                            revisionReasonLoading={revisionReasonLoading}
+                            rejectReasonOptions={rejectReasonOptions}
+                            rejectReasonLoading={rejectReasonLoading}
+                            cancelReasonOptions={cancelReasonOptions}
+                            cancelReasonLoading={cancelReasonLoading}
+                            onConfirm={handleConfirm}
+                            isSubmitting={isSubmitting}
+                            onRejectDocumentsChange={setRejectDocuments}
+                        />
+                    </Grid>
+                </Grid>
+            </LoadingOverlay>
+        </FormikProvider>
+    );
+};
+
+export default DeathDisabilityClaimDetailsTab;

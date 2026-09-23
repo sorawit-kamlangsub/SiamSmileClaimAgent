@@ -1,7 +1,8 @@
 import { useMemo } from "react";
-import { useGetBranch } from "../../../../../api/coreClaimMastersApi";
+import { useGetBranch } from "../../../../IncreaseLimitTransfer/_common/masterAPI";
 import { FormikAutocomplete } from "../../CustomFormik";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
+import { useIsHeadOfficeBranch } from "../../../branchPermission";
 
 type BranchAutocompleteProps = Omit<
     FormikAutocompleteProps,
@@ -19,12 +20,13 @@ const BranchAutocomplete = ({
     ...props
 }: BranchAutocompleteProps) => {
     const { data, isLoading } = useGetBranch();
+    const isHeadOfficeBranch = useIsHeadOfficeBranch();
 
     const options = useMemo(() => {
         const branches = data?.data ?? [];
-        if (!withAllOption) return branches;
+        if (!withAllOption || !isHeadOfficeBranch) return branches;
         return [{ branchId: 0, branchName: allOptionLabel }, ...branches];
-    }, [data, withAllOption, allOptionLabel]);
+    }, [data, withAllOption, allOptionLabel, isHeadOfficeBranch]);
 
     return (
         <FormikAutocomplete

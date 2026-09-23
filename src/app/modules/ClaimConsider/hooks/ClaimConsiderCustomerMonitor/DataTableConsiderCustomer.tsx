@@ -171,30 +171,30 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
                         !VIEW_ONLY_CLAIM_TRANSACTION_TYPE_IDS.includes(row.claimTransactionTypeId);
                     return (
                         <>
-                            <Grid container sx={{ gap: 1.5 }}>
-                                {canConsider && (
-                                    <Tooltip title="พิจารณาเคลม">
-                                        <IconButton
-                                            onClick={() => {
-                                                // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
-                                                // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
-                                                navigate(
-                                                    `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
-                                                        row?.caseId ?? ""
-                                                    )}`
-                                                );
-                                            }}
-                                            sx={{
-                                                backgroundColor: "#FFF1CD",
-                                                ":hover": {
-                                                    backgroundColor: "#e7cf95",
-                                                },
-                                            }}
-                                        >
-                                            <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
+                            <Grid container sx={{ gap: 1.5 }} wrap="nowrap">
+                                <Tooltip title={canConsider ? "พิจารณาเคลม" : ""}>
+                                    <IconButton
+                                        disabled={!canConsider}
+                                        onClick={() => {
+                                            // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
+                                            // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
+                                            navigate(
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
+                                                )}`
+                                            );
+                                        }}
+                                        sx={{
+                                            visibility: canConsider ? "visible" : "hidden",
+                                            backgroundColor: "#FFF1CD",
+                                            ":hover": {
+                                                backgroundColor: "#e7cf95",
+                                            },
+                                        }}
+                                    >
+                                        <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
+                                    </IconButton>
+                                </Tooltip>
                                 <Tooltip title="ดูรายละเอียด">
                                     <IconButton
                                         onClick={() => {

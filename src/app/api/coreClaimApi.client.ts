@@ -741,6 +741,130 @@ export class ClaimFundClient {
         return Promise.resolve<SearchClaimOrCaseResponseDtoListServiceResponse>(null as any);
     }
 
+    getCaseTransferApprovalRejectReasonStatus(
+        cancelToken?: CancelToken | undefined
+    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetCaseTransferApprovalRejectReasonStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseTransferApprovalRejectReasonStatus(_response);
+            });
+    }
+
+    protected processGetCaseTransferApprovalRejectReasonStatus(
+        response: AxiosResponse
+    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * สถานะการขยายวงเงิน
+     * @return Success
+     */
+    getTransferApprovalStatus(
+        cancelToken?: CancelToken | undefined
+    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetTransferApprovalStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetTransferApprovalStatus(_response);
+            });
+    }
+
+    protected processGetTransferApprovalStatus(
+        response: AxiosResponse
+    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<TransferApprovalStatusResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TransferApprovalStatusResponseDtoListServiceResponse>(null as any);
+    }
+
     /**
      * Monitor ขยายวงเงิน
      * @param searchDetail (optional)
@@ -748,6 +872,7 @@ export class ClaimFundClient {
      * @param ascendingOrder (optional)
      * @param page (optional)
      * @param recordsPerPage (optional)
+     * @param body (optional)
      * @return Success
      */
     increaseTransferLimitMonitors(
@@ -756,6 +881,7 @@ export class ClaimFundClient {
         ascendingOrder?: boolean | undefined,
         page?: number | undefined,
         recordsPerPage?: number | undefined,
+        body?: IncreaseTransferLimitMonitorRequestDto | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<IncreaseTransferLimitMonitorResponseDtoListServiceResponse> {
         let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/IncreaseTransferLimitMonitors?";
@@ -773,10 +899,14 @@ export class ClaimFundClient {
             url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
+        const content_ = JSON.stringify(body, customFormatter);
+
         let options_: AxiosRequestConfig = {
-            method: "GET",
+            data: content_,
+            method: "POST",
             url: url_,
             headers: {
+                "Content-Type": "application/json-patch+json",
                 Accept: "text/plain",
             },
             cancelToken,
@@ -825,6 +955,140 @@ export class ClaimFundClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<IncreaseTransferLimitMonitorResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * รายละเอียด ขยายวงเงิน
+     * @param caseTransferApprovalId (optional)
+     * @return Success
+     */
+    getIncreaseTransferLimitDetail(
+        caseTransferApprovalId?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetIncreaseTransferLimitDetailResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/GetIncreaseTransferLimitDetail?";
+        if (caseTransferApprovalId === null) throw new Error("The parameter 'caseTransferApprovalId' cannot be null.");
+        else if (caseTransferApprovalId !== undefined)
+            url_ += "caseTransferApprovalId=" + encodeURIComponent("" + caseTransferApprovalId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetIncreaseTransferLimitDetail(_response);
+            });
+    }
+
+    protected processGetIncreaseTransferLimitDetail(
+        response: AxiosResponse
+    ): Promise<GetIncreaseTransferLimitDetailResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetIncreaseTransferLimitDetailResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetIncreaseTransferLimitDetailResponseDtoServiceResponse>(null as any);
+    }
+
+    increaseTransferLimitChangeStatus(
+        body?: IncreaseTransferLimitChangeStatusRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/IncreaseTransfer/IncreaseTransferLimitChangeStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processIncreaseTransferLimitChangeStatus(_response);
+            });
+    }
+
+    protected processIncreaseTransferLimitChangeStatus(
+        response: AxiosResponse
+    ): Promise<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<IncreaseTransferLimitChangeStatusResponseDtoServiceResponse>(null as any);
     }
 
     /**
@@ -4733,6 +4997,313 @@ export class CoreClaimClient {
     }
 
     /**
+     * Service สำหรับ Get ข้อมูล Dashboard DeathClaim and Disability Consider (พิจารณาเคลมเสียชีวิตและทุพพลภาพ)
+     * @param dateFrom (optional)
+     * @param dateTo (optional)
+     * @return Success
+     */
+    getDashboardDeathAndDisabilityClaimConsider(
+        dateFrom?: dayjs.Dayjs | undefined,
+        dateTo?: dayjs.Dayjs | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDashboardDeathAndDisabilityClaimConsiderDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/dashboard/death-disability-consider/filter?";
+        if (dateFrom === null) throw new Error("The parameter 'dateFrom' cannot be null.");
+        else if (dateFrom !== undefined)
+            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (dateTo === null) throw new Error("The parameter 'dateTo' cannot be null.");
+        else if (dateTo !== undefined)
+            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDashboardDeathAndDisabilityClaimConsider(_response);
+            });
+    }
+
+    protected processGetDashboardDeathAndDisabilityClaimConsider(
+        response: AxiosResponse
+    ): Promise<GetDashboardDeathAndDisabilityClaimConsiderDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDashboardDeathAndDisabilityClaimConsiderDtoResponseListServiceResponse>(
+                result200
+            );
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDashboardDeathAndDisabilityClaimConsiderDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูล Death and Disability Claim Adjudication Monitor
+     * @param dateFrom (optional)
+     * @param dateTo (optional)
+     * @param isProductTypeId_PH (optional)
+     * @param isProductTypeId_PA (optional)
+     * @param claimTransactionTypeId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    getDeathAndDisabilityClaimAdjudicationMonitor(
+        dateFrom?: dayjs.Dayjs | undefined,
+        dateTo?: dayjs.Dayjs | undefined,
+        isProductTypeId_PH?: boolean | undefined,
+        isProductTypeId_PA?: boolean | undefined,
+        claimTransactionTypeId?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/claim/death-disability-monitor/filter?";
+        if (dateFrom === null) throw new Error("The parameter 'dateFrom' cannot be null.");
+        else if (dateFrom !== undefined)
+            url_ += "dateFrom=" + encodeURIComponent(dateFrom ? "" + dateFrom.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (dateTo === null) throw new Error("The parameter 'dateTo' cannot be null.");
+        else if (dateTo !== undefined)
+            url_ += "dateTo=" + encodeURIComponent(dateTo ? "" + dateTo.format("YYYY-MM-DDTHH:mm:ss") : "") + "&";
+        if (isProductTypeId_PH === null) throw new Error("The parameter 'isProductTypeId_PH' cannot be null.");
+        else if (isProductTypeId_PH !== undefined)
+            url_ += "isProductTypeId_PH=" + encodeURIComponent("" + isProductTypeId_PH) + "&";
+        if (isProductTypeId_PA === null) throw new Error("The parameter 'isProductTypeId_PA' cannot be null.");
+        else if (isProductTypeId_PA !== undefined)
+            url_ += "isProductTypeId_PA=" + encodeURIComponent("" + isProductTypeId_PA) + "&";
+        if (claimTransactionTypeId === null) throw new Error("The parameter 'claimTransactionTypeId' cannot be null.");
+        else if (claimTransactionTypeId !== undefined)
+            url_ += "claimTransactionTypeId=" + encodeURIComponent("" + claimTransactionTypeId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDeathAndDisabilityClaimAdjudicationMonitor(_response);
+            });
+    }
+
+    protected processGetDeathAndDisabilityClaimAdjudicationMonitor(
+        response: AxiosResponse
+    ): Promise<GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponseListServiceResponse>(
+                result200
+            );
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponseListServiceResponse>(
+            null as any
+        );
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูลรายละเอียด Death and Disability Claim สำหรับพิจารณา
+     * @return Success
+     */
+    getDeathAndDisabilityClaimDetailConsider(
+        claimId: string,
+        caseId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDeathAndDisabilityClaimDetailConsiderDtoResponseServiceResponse> {
+        let url_ = this.baseUrl + "/claim/death-disability/detail/consider/{claimId}/{caseId}";
+        if (claimId === undefined || claimId === null) throw new Error("The parameter 'claimId' must be defined.");
+        url_ = url_.replace("{claimId}", encodeURIComponent("" + claimId));
+        if (caseId === undefined || caseId === null) throw new Error("The parameter 'caseId' must be defined.");
+        url_ = url_.replace("{caseId}", encodeURIComponent("" + caseId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDeathAndDisabilityClaimDetailConsider(_response);
+            });
+    }
+
+    protected processGetDeathAndDisabilityClaimDetailConsider(
+        response: AxiosResponse
+    ): Promise<GetDeathAndDisabilityClaimDetailConsiderDtoResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDeathAndDisabilityClaimDetailConsiderDtoResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDeathAndDisabilityClaimDetailConsiderDtoResponseServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูลรายละเอียดผู้รับผลประโยชน์ สำหรับพิจารณา
+     * @return Success
+     */
+    getDeathAndDisabilityBeneficiary(
+        claimId: string,
+        caseId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/claim/death-disability/beneficiary/{claimId}/{caseId}";
+        if (claimId === undefined || claimId === null) throw new Error("The parameter 'claimId' must be defined.");
+        url_ = url_.replace("{claimId}", encodeURIComponent("" + claimId));
+        if (caseId === undefined || caseId === null) throw new Error("The parameter 'caseId' must be defined.");
+        url_ = url_.replace("{caseId}", encodeURIComponent("" + caseId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetDeathAndDisabilityBeneficiary(_response);
+            });
+    }
+
+    protected processGetDeathAndDisabilityBeneficiary(
+        response: AxiosResponse
+    ): Promise<GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ บันทึกผลพิจารณาเคลม
      * @param body (optional)
      * @return Success
@@ -5301,6 +5872,108 @@ export class HospitalBillingClient {
             let resultData500 = _responseText;
             result500 = JSON.parse(resultData500);
             return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BillingSubmitResultDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * อนุมัติจากผลพิจารณา Case ล่าสุดและเข้าคิวแจ้ง SmileConnect หลังบันทึกสำเร็จ.
+     * @param body (optional)
+     * @return Success
+     */
+    approveHospitalBilling(
+        billingDetailId: string,
+        body?: ApproveHospitalBillingDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BillingSubmitResultDtoServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/{billingDetailId}/approve";
+        if (billingDetailId === undefined || billingDetailId === null)
+            throw new Error("The parameter 'billingDetailId' must be defined.");
+        url_ = url_.replace("{billingDetailId}", encodeURIComponent("" + billingDetailId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processApproveHospitalBilling(_response);
+            });
+    }
+
+    protected processApproveHospitalBilling(response: AxiosResponse): Promise<BillingSubmitResultDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BillingSubmitResultDtoServiceResponse>(result200);
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400 = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404 = _responseText;
+            result404 = JSON.parse(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+        } else if (status === 409) {
+            const _responseText = response.data;
+            let result409: any = null;
+            let resultData409 = _responseText;
+            result409 = JSON.parse(resultData409);
+            return throwException("Conflict", status, _responseText, _headers, result409);
         } else if (status !== 200 && status !== 204) {
             const _responseText = response.data;
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
@@ -8008,6 +8681,13 @@ export interface ApproveClaimDecisionDtoRequest {
     jsonDetail: string;
 }
 
+export interface ApproveHospitalBillingDto {
+    requestId?: string;
+    expectedVersion?: number;
+    rowVersion: string;
+    reviewRemark?: string | undefined;
+}
+
 export interface BankAccountRelationTypeResponseDto {
     id?: number;
     name?: string | undefined;
@@ -8096,6 +8776,23 @@ export interface BeneficiaryV2Request {
     payables?: CasePayableV2Request[] | undefined;
 }
 
+export interface BillingApprovalItemDto {
+    caseItemId?: string;
+    netCaseAmount?: number;
+    eligibleAmount?: number;
+    approvedAmount?: number;
+    nonCoveredAmount?: number;
+}
+
+export interface BillingApprovalSnapshotDto {
+    caseAdjudicationId?: string;
+    versionNo?: number | undefined;
+    coveredAmount?: number;
+    approvedMedicalAmount?: number;
+    approvedCompensateAmount?: number;
+    items?: BillingApprovalItemDto[] | undefined;
+}
+
 export interface BillingClaimDto {
     incidentTypeId?: number | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
@@ -8121,6 +8818,7 @@ export interface BillingClaimDto {
 }
 
 export interface BillingDetailDto {
+    approval?: BillingApprovalSnapshotDto;
     billingRequestItemId?: string | undefined;
     billingDetailId?: string;
     billingHeaderId?: string;
@@ -8317,6 +9015,9 @@ export interface BillingTotalsDto {
 
 export interface CalculateCaseClaim {
     productId?: number | undefined;
+    customerDetailId?: string | undefined;
+    customerTypeCode?: string | undefined;
+    productName?: string | undefined;
     coverageTypeId?: number;
     medicalTypeId?: number;
     incidentTypeId?: number;
@@ -8350,6 +9051,8 @@ export interface CalculateCaseClaimDtoResponse {
     medicalPay?: number;
     medicalCompensateInclude?: number;
     medicalUnpay?: number;
+    totalReceipt?: number;
+    totalNetAmount?: number;
 }
 
 export interface CalculateCaseClaimDtoResponseServiceResponse {
@@ -8375,6 +9078,7 @@ export interface CalculateCaseDisability {
     disabilityPercent?: number;
     reasonId?: number | undefined;
     remark?: string | undefined;
+    receiptAmount?: number | undefined;
 }
 
 export interface CalculateCaseDisabilityDtoResponse {
@@ -8413,6 +9117,7 @@ export interface CalculateCaseExpense {
     nonCoverAmount?: number;
     reasonId?: number | undefined;
     remark?: string | undefined;
+    receiptAmount?: number | undefined;
 }
 
 export interface CaseAdjudicationSaveClaimEditDraftRequest {
@@ -8573,6 +9278,8 @@ export interface CaseItemSaveClaimEditDraftRequest {
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
     nonCoveredReasonId?: number | undefined;
+    receiptAmount?: number | undefined;
+    bodyPartId?: number | undefined;
 }
 
 export interface CaseItemV2Request {
@@ -8586,6 +9293,8 @@ export interface CaseItemV2Request {
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
     nonCoveredReasonId?: number;
+    receiptAmount?: number | undefined;
+    bodyPartId?: number | undefined;
 }
 
 export interface CasePayableV2Request {
@@ -8654,6 +9363,25 @@ export interface CaseServicePersonV2Request {
     employeeName?: string | undefined;
 }
 
+export interface CaseTransferApprovalRejectResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface CaseTransferApprovalRejectResponseDtoListServiceResponse {
+    data?: CaseTransferApprovalRejectResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface CaseV2Request {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
@@ -8684,6 +9412,7 @@ export interface CaseV2Request {
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
+    reservationRemark?: string | undefined;
     items?: CaseItemV2Request[] | undefined;
     registrations?: CaseRegistrationV2Request[] | undefined;
     assessments?: CaseAssessmentV2Request[] | undefined;
@@ -8859,6 +9588,8 @@ export interface ClaimEditDraftCaseItemPayloadDto {
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
     nonCoveredReasonId?: number | undefined;
+    receiptAmount?: number | undefined;
+    bodyPartId?: number | undefined;
 }
 
 export interface ClaimEditDraftCasePayloadDto {
@@ -8951,6 +9682,8 @@ export interface CompensateExpenseList {
     unPay?: number;
     countDay?: number;
     dayOfUnit?: number;
+    receipt?: number;
+    discount?: number;
 }
 
 export interface CreateCaseAdjudicationDtoRequest {
@@ -9096,6 +9829,7 @@ export interface DisabilityExpenseList {
     benefitPerUnit?: number;
     benefitUnitName?: string | undefined;
     benefitMaxPrice?: number;
+    discount?: number;
 }
 
 /** สรุปรายการเอกสารที่ใช้แสดงในส่วนตรวจสอบเอกสาร */
@@ -10060,6 +10794,143 @@ export interface GetDashboardCustomerConsiderDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GetDashboardDeathAndDisabilityClaimConsiderDtoResponse {
+    totalCount?: number | undefined;
+    pendingCount?: number | undefined;
+    inProgressCount?: number | undefined;
+    pendingCorrectionCount?: number | undefined;
+    rejectCount?: number | undefined;
+    cancelCount?: number | undefined;
+    approveCount?: number | undefined;
+}
+
+export interface GetDashboardDeathAndDisabilityClaimConsiderDtoResponseListServiceResponse {
+    data?: GetDashboardDeathAndDisabilityClaimConsiderDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetDeathAndDisabilityBeneficiaryDtoResponse {
+    beneficiaryId?: string;
+    claimId?: string;
+    caseId?: string;
+    relationId?: number | undefined;
+    relationTypeName?: string | undefined;
+    idCard?: string | undefined;
+    titleId?: string | undefined;
+    titleName?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    phoneNo?: string | undefined;
+    bankId?: number | undefined;
+    bankName?: string | undefined;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
+    payoutAmount?: number | undefined;
+}
+
+export interface GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse {
+    data?: GetDeathAndDisabilityBeneficiaryDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponse {
+    claimId?: string;
+    caseId?: string;
+    createdDate?: dayjs.Dayjs | undefined;
+    claimNo?: string | undefined;
+    branchName?: string | undefined;
+    customerName?: string | undefined;
+    productName?: string | undefined;
+    caseAmount?: number | undefined;
+    claimTransactionTypeId?: number | undefined;
+    claimTransactionTypeName?: string | undefined;
+    customerDetailId?: string | undefined;
+    totalCount?: number | undefined;
+    caseCount?: number | undefined;
+}
+
+export interface GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponseListServiceResponse {
+    data?: GetDeathAndDisabilityClaimAdjudicationMonitorDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetDeathAndDisabilityClaimDetailConsiderDtoResponse {
+    claimId?: string;
+    claimNo?: string | undefined;
+    claimSourceId?: number | undefined;
+    claimType?: string | undefined;
+    incidentTypeId?: number | undefined;
+    incidentTypeNameTH?: string | undefined;
+    coverageTypeId?: number | undefined;
+    coverageTypeNameTH?: string | undefined;
+    causeOfIncidentId?: number | undefined;
+    causeOfIncidentName?: string | undefined;
+    incidentDate?: dayjs.Dayjs | undefined;
+    deathDate?: dayjs.Dayjs | undefined;
+    documentReceivedDate?: dayjs.Dayjs | undefined;
+    documentCompleteDate?: dayjs.Dayjs | undefined;
+    hospitalId?: number | undefined;
+    organizeName?: string | undefined;
+    chiefComplaintId?: number | undefined;
+    chiefComplaint?: string | undefined;
+    icD10_1stId?: number | undefined;
+    icD10_1?: string | undefined;
+    icD10_2ndId?: number | undefined;
+    icD10_2?: string | undefined;
+    icD10_3rdId?: number | undefined;
+    icD10_3?: string | undefined;
+    remark?: string | undefined;
+    customerDetailId?: string | undefined;
+    caseId?: string | undefined;
+    caseNo?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    createByUserName?: string | undefined;
+    claimStatusId?: number | undefined;
+    claimStatusName?: string | undefined;
+    paymentDate?: dayjs.Dayjs | undefined;
+}
+
+export interface GetDeathAndDisabilityClaimDetailConsiderDtoResponseServiceResponse {
+    data?: GetDeathAndDisabilityClaimDetailConsiderDtoResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface GetDecisionDtoResponse {
     decisionId?: number;
     decisionNameTH?: string | undefined;
@@ -10365,6 +11236,38 @@ export interface GetIncidentTypeMappingDtoResponse {
 
 export interface GetIncidentTypeMappingDtoResponseListServiceResponse {
     data?: GetIncidentTypeMappingDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetIncreaseTransferLimitDetailResponseDto {
+    caseTransferApprovalId?: string;
+    caseNo?: string | undefined;
+    /** จำนวนเงินจากการบันทึกเคลม */
+    caseAmount?: number | undefined;
+    /** วงเงินที่ใช้ไป */
+    usedAmount?: number | undefined;
+    /** วงเงินคงเหลือ */
+    remainingAmount?: number | undefined;
+    /** วงเงินคงเหลือครั้งใหม่ */
+    newRemainingLimit?: number | undefined;
+    /** ยอดเงินที่ขออนุมัติโอน */
+    requestedTransferAmount?: number | undefined;
+    /** วงเงินปัจจุบัน */
+    currentLimit?: number | undefined;
+    customerName?: string | undefined;
+}
+
+export interface GetIncreaseTransferLimitDetailResponseDtoServiceResponse {
+    data?: GetIncreaseTransferLimitDetailResponseDto;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -10712,7 +11615,43 @@ export interface IncidentTypeDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface IncreaseTransferLimitChangeStatusRequestDto {
+    caseTransferApprovalId?: string;
+    /** สาะนะรายการ */
+    transferApprovalStatusId: number;
+    /** หมายเหตุการอนุมัติ ส่วนเหตุผลปฏิเสธเก็บใน TransactionLog */
+    approvalRemark?: string | undefined;
+    rejectReasonId?: number;
+}
+
+export interface IncreaseTransferLimitChangeStatusResponseDto {
+    isSuccess?: boolean;
+    message?: string | undefined;
+}
+
+export interface IncreaseTransferLimitChangeStatusResponseDtoServiceResponse {
+    data?: IncreaseTransferLimitChangeStatusResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface IncreaseTransferLimitMonitorRequestDto {
+    branceId?: number;
+    transferApprovalStatusId?: number;
+    claimCreatedDateFrom?: dayjs.Dayjs | undefined;
+    claimCreatedDateTo?: dayjs.Dayjs | undefined;
+}
+
 export interface IncreaseTransferLimitMonitorResponseDto {
+    caseTransferApprovalId?: string;
     caseId?: string;
     /** เลขที่ CC */
     caseNo?: string | undefined;
@@ -10723,11 +11662,15 @@ export interface IncreaseTransferLimitMonitorResponseDto {
     /** สาขา */
     branchName?: string | undefined;
     /** จำนวนเงิน */
-    amount?: number | undefined;
+    caseAmount?: number | undefined;
     /** เลขที่บัญชี */
     toAccountNo?: string | undefined;
     /** ประเภทโอนเงิน */
     transferType?: string | undefined;
+    /** สาเหตุ */
+    remark?: string | undefined;
+    transferApprovalStatusName?: string | undefined;
+    transferApprovalStatusId?: number;
 }
 
 export interface IncreaseTransferLimitMonitorResponseDtoListServiceResponse {
@@ -10786,6 +11729,8 @@ export interface MedicalExpenseList {
     unCover?: number;
     pay?: number;
     unPay?: number;
+    receipt?: number;
+    discount?: number;
 }
 
 export interface PayTransferSettingHistoryResponseDto {
@@ -11205,6 +12150,25 @@ export interface TimeSpan {
     readonly totalSeconds?: number;
 }
 
+export interface TransferApprovalStatusResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface TransferApprovalStatusResponseDtoListServiceResponse {
+    data?: TransferApprovalStatusResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface TransferTransactionDetailResponseDto {
     paymentCode?: string | undefined;
     createdDate?: dayjs.Dayjs | undefined;
@@ -11395,6 +12359,8 @@ export interface UpsertClaimDecisionCaseItemRequest {
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
     nonCoveredReasonId?: number;
+    receiptAmount?: number | undefined;
+    bodyPartId?: number | undefined;
 }
 
 export interface UpsertClaimDecisionCaseRequest {

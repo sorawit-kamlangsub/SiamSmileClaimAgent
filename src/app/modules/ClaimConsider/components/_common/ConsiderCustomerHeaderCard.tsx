@@ -41,7 +41,7 @@ const ConsiderCustomerHeaderCard = ({
                 },
                 {
                     icon: <CancelIcon sx={{ color: GREEN, fontSize: 26 }} />,
-                    label: "ยกเลิก",
+                    label: "ยกเลิก/ปฏิเสธ",
                     value: cancelledCount,
                 },
             ]}

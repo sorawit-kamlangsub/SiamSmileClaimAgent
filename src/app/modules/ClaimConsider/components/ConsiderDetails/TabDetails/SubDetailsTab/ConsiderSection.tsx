@@ -14,6 +14,7 @@ import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
 import { DECISION_ID } from "../../../../store/claimConsider.constants";
 import { useFormikContext } from "formik";
 import {
+    CaseDocumentV2Request,
     GetCancelReasonDtoResponse,
     GetDecisionReasonDtoResponse,
     GetRejectReasonDtoResponse,
@@ -107,6 +108,8 @@ type ConsiderSectionProps = {
     headingText?: string;
     /** override label ปุ่ม/หัวข้อรายละเอียดของแต่ละ decisionId (เช่น เคลมโรงพยาบาล "รอแก้ไข" → "แจ้งแก้ไข") */
     labelOverrides?: Partial<Record<number, string>>;
+    /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — parent เก็บไว้ส่งไปกับผลพิจารณา */
+    onRejectDocumentsChange?: (docs: CaseDocumentV2Request[]) => void;
 };
 
 const ConsiderSection = ({
@@ -121,6 +124,7 @@ const ConsiderSection = ({
     hiddenDecisionIds,
     headingText,
     labelOverrides,
+    onRejectDocumentsChange,
 }: ConsiderSectionProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
@@ -319,10 +323,12 @@ const ConsiderSection = ({
 
                         {selectedStatus.requiresAttachment && (
                             <DocumentScanTable
+                                disablePaper
                                 productTypeId={productId ?? 0}
                                 documentType="ใบแจ้งปฏิเสธสินไหม"
                                 aplicationCode={aplicationCode ?? ""}
                                 Header="เอกสารประกอบการปฏิเสธ"
+                                onAttachedDocumentsChange={onRejectDocumentsChange}
                                 // documentCode ที่ endpoint คืนผูกกับเคสนี้โดยเฉพาะ (ไม่ได้ส่ง caseId มา merge
                                 // ทับ) ต้อง cache ตลอดไปไม่ได้ ไม่งั้นเคสอื่นที่ productTypeId เดียวกันจะเห็น
                                 // เอกสารของเคสก่อนหน้าค้างอยู่

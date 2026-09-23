@@ -66,6 +66,11 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     icuDays: 0,
     simBCategory: "SimB2",
     mergeCompensation: true,
+    trafficVehicleType: undefined,
+    trafficVehicleOther: "",
+    trafficCasualtyStatus: undefined,
+    trafficIsPoroboExcess: undefined,
+    trafficNoPoroboReason: "",
 };
 
 /**
@@ -116,7 +121,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         hasSyncedRef.current = false;
     };
 
-    /** แก้ไขได้เฉพาะ statusId = 1 (รอตรวจสอบ) — สถานะอื่นเป็นการดูย้อนหลังอย่างเดียว (handoff ข้อ 1) */
+    /** แก้ไขได้เฉพาะ statusId = BILLING_STATUS.pendingReview (รอตรวจสอบ) — สถานะอื่นเป็นการดูย้อนหลังอย่างเดียว (handoff ข้อ 1) */
     const isReadOnly = readOnlyProp || detail?.statusId !== BILLING_STATUS.pendingReview;
 
     /**
@@ -145,25 +150,16 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
 
     const documentHook = useBillingDocumentHook(formik.values.documents);
 
-    /** required document subtype ทุกตัวต้องมีแถวและมีผลตรวจครบ — สัญญา BE จริง (handoff ข้อ 6) บังคับทุกครั้งที่ submit */
+    /**
+     * required document subtype ทุกตัวต้องมีแถวครบ — สัญญา BE จริง (handoff ข้อ 6) บังคับทุกครั้งที่ submit
+     *
+     * CR "Traffic Accident and Hospital Document Review" ข้อ CR-05 : ตัดคอลัมน์ "ผลการตรวจ" ออกจากตาราง
+     * ตรวจสอบเอกสารแล้ว จึงตัดเงื่อนไข "ต้องมีผลตรวจครบ" ออกจากเกทนี้ด้วย (คอลัมน์ที่ผูก validation ถูกตัด
+     * ไปแล้ว) เหลือแค่เช็คว่ามีแถวเอกสารของ subtype ที่จำเป็นครบหรือไม่
+     */
     const isDocumentSubTypeCoverageComplete = () => {
         const required = detail?.requiredDocumentSubTypeIds ?? [];
-        return required.every((subTypeId) => {
-            const rowsOfSubType = formik.values.documents.filter((d) => d.documentSubTypeId === subTypeId);
-            return (
-                rowsOfSubType.length > 0 &&
-                rowsOfSubType.every((d) => d.reviewStatusId !== undefined && d.reviewStatusId !== null)
-            );
-        });
-    };
-
-    /** gate ปุ่ม "ถัดไป" ของ Step 1 — สเปค : "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป" */
-    const validateStep1Documents = (): boolean => {
-        if (documentHook.hasAnyMissingResult()) {
-            swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
-            return false;
-        }
-        return true;
+        return required.every((subTypeId) => formik.values.documents.some((d) => d.documentSubTypeId === subTypeId));
     };
 
     /**
@@ -185,15 +181,6 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         return !!result.isConfirmed;
     };
 
-    /** gate ปุ่ม "อนุมัติ" ของ Step 3 — ทุกแถวที่มีเอกสาร (Document Count > 0) ต้องมีผลเป็น "ผ่าน" */
-    const validateApprove = (): boolean => {
-        if (documentHook.hasAnyNotPassed()) {
-            swalToast("warning", "กรุณาเลือกผลการตรวจเป็น “ผ่าน” ให้ครบทุกรายการที่มีเอกสารก่อนอนุมัติ");
-            return false;
-        }
-        return true;
-    };
-
     /**
      * ยิง POST /billing/hospital/{id}/submit ด้วย `statusId` ที่ระบุ — ใช้ร่วมกันทั้ง "ยืนยันบันทึกผลพิจารณา"
      * (รอแก้ไข/ปฏิเสธ, อ่านสาเหตุ/หมายเหตุจาก `formik.values.reviewReasonId`/`reviewRemark`) และ "อนุมัติ"
@@ -211,11 +198,11 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             return false;
         }
         if (statusId === BILLING_STATUS.needsCorrection && !formik.values.reviewRemark) {
-            swalError("บันทึกไม่สำเร็จ", "กรุณาระบุรายละเอียดการรอแก้ไข");
+            swalError("บันทึกไม่สำเร็จ", "กรุณาระบุรายละเอียดการแจ้งแก้ไข");
             return false;
         }
         if (!isDocumentSubTypeCoverageComplete()) {
-            swalError("บันทึกไม่สำเร็จ", "เอกสารที่จำเป็นต้องมีครบและมีผลการตรวจทุกแถว");
+            swalError("บันทึกไม่สำเร็จ", "เอกสารที่จำเป็นต้องมีครบทุกรายการ");
             return false;
         }
 
@@ -264,7 +251,13 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             lastBodyKeyRef.current = undefined;
 
             if (statusId === BILLING_STATUS.passed) {
-                await swalToast("success", "บันทึกผลตรวจ “ผ่าน” สำเร็จ");
+                // rule 7 (handoff "Business Rule: อนุมัติรายการวางบิลโรงพยาบาล") : แจ้งผู้ใช้ว่ารายการ
+                // ถูกส่งไปที่ "ตั้งเบิกกองทุน > เคลมโรงพยาบาล" แล้ว — caller (BillingClaimDetailsTab) เป็นคน
+                // navigate ไปหน้านั้นต่อ
+                await swalToast(
+                    "success",
+                    "อนุมัติรายการวางบิลเรียบร้อย ระบบส่งรายการไปที่ตั้งเบิกกองทุน > เคลมโรงพยาบาล แล้ว"
+                );
             } else {
                 // `returnStatus = "Published"` หมายถึง RabbitMQ รับ event แล้วเท่านั้น ไม่ใช่ SmileConnect
                 // ประมวลผลสำเร็จ (handoff ข้อ 7) ห้ามอ้างว่า "ส่งกลับสำเร็จ" หรือ "SmileConnect รับแล้ว"
@@ -318,10 +311,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     };
 
     /** ปุ่ม "อนุมัติ" (Step 3) */
-    const handleApprove = async (): Promise<boolean> => {
-        if (!validateApprove()) return false;
-        return submitReview(BILLING_STATUS.passed);
-    };
+    const handleApprove = async (): Promise<boolean> => submitReview(BILLING_STATUS.passed);
 
     return {
         formik,
@@ -333,7 +323,6 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         reviewReasonLoading,
         canSubmitReview,
         documentHook,
-        validateStep1Documents,
         confirmStep2Amount,
         handleSubmitReviewResult,
         handleApprove,

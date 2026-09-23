@@ -3,6 +3,7 @@ import { API_URL } from "../../Const";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AllUserDtoResponse, GetICD10DtoResponse, GetOrganizeDtoResponse, MastersClient } from "./coreClaimApi.client";
 import { useMemo } from "react";
+import { useBranchByUserPermission } from "../modules/_common/branchPermission";
 
 const coreClaimMastersClient = new MastersClient(API_URL, axios);
 
@@ -411,9 +412,14 @@ export const useGetBodyPartByDisabilityLossPart = (disabilityLossPartId?: number
 };
 
 export const useGetBranch = (branchId?: number | undefined) => {
-    return useQuery([getBranchQueryKey, branchId], () => coreClaimMastersClient.getBranch(branchId), {
+    const branchQuery = useQuery([getBranchQueryKey, branchId], () => coreClaimMastersClient.getBranch(branchId), {
         refetchOnWindowFocus: false,
     });
+    const filteredBranches = useBranchByUserPermission(branchQuery.data?.data);
+    return {
+        ...branchQuery,
+        data: branchQuery.data ? { ...branchQuery.data, data: filteredBranches } : branchQuery.data,
+    };
 };
 
 export const useGetPaymentStatus = (paymentStatusId?: number | undefined) => {

@@ -51,6 +51,10 @@ export const AuthProvider = ({ children, oidcUserManager }: AuthProviderProps) =
             lastName: profile.LastName,
             branchId: profile.Branch_ID,
             branchDetail: profile.BranchDetail,
+            employeeBranchId:
+                profile.employee_branchid === undefined || profile.employee_branchid === null
+                    ? undefined
+                    : Number(profile.employee_branchid),
             areaId: profile.Area_ID,
             areaDetail: profile.AreaDetail,
             departmentId: profile.Department_ID,

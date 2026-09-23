@@ -154,6 +154,11 @@ export interface ImportMetaEnv {
     readonly VITE_CLAIM_FUND_API_URL: string;
 
     /**
+     * URL ของ Claim Fund API ผ่าน API Gateway
+     */
+    readonly VITE_APIGW_CLAIM_FUND_API_URL: string;
+
+    /**
      * URL ของ OCR API
      */
     readonly VITE_OCR_API_URL: string;

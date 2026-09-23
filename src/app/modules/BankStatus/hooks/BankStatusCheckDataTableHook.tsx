@@ -12,7 +12,7 @@ const useBankStatusCheckDataTableHook = () => {
     const { searchBankStatusCheck } = useAppSelector((state) => state.bankStatusCheck);
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
-        recordsPerPage: 5,
+        recordsPerPage: 10,
     });
     const { data: getInquiryMonitorsData, isLoading: getInquiryMonitorsIsLoading } = useGetInquiryMonitors({
         searchDetail: searchBankStatusCheck.searchDetail,

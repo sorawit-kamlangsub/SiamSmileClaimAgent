@@ -76,7 +76,10 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
 
     const buildCalculatePayload = (): CalculateCaseClaimDtoRequest => {
         const calculateDetail: CalculateCaseClaim = {
-            productId: customerDetail?.productId,
+            productId: customerDetail?.productId ?? undefined,
+            customerDetailId: customerDetail?.customerDetailId ?? undefined,
+            customerTypeCode: customerDetail?.customerTypeCode ?? undefined,
+            productName: customerDetail?.productName ?? undefined,
             coverageTypeId: formik.values.coverageTypeId,
             medicalTypeId: formik.values.medicalTypeId,
             incidentTypeId: formik.values.incidentTypeId,
@@ -92,6 +95,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
                 nonCoverAmount: item.notCovered,
                 reasonId: item.reason,
                 remark: item.remark,
+                receiptAmount: item.receiptAmount,
             })),
             disabilityList: [],
         };
@@ -104,6 +108,8 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
             jsonDetail: calculateDetail,
         };
     };
+
+    console.log("caseAdjudicationId", caseAdjudicationId);
 
     /** @returns สำเร็จหรือไม่ — handleNext ต้องเช็คก่อนเลื่อน step ต่อ ไม่งั้นเลื่อนไปหน้าสรุปทั้งที่ยอดคำนวณผิด/ไม่มี */
     const handleCalculate = async (): Promise<boolean> => {

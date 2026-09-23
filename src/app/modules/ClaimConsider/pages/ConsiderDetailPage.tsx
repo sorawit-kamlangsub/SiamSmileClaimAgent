@@ -4,9 +4,11 @@ import HeaderDetails from "../components/ConsiderDetails/HeaderDetails";
 import useConsiderDetailHook from "../hooks/ClaimConsiderDetail/ConsiderDetailHook";
 import { useAppDispatch } from "../../../../redux";
 import { resetState } from "../store/claimConsiderSlice";
+import useClearDocumentScanOnUnmount from "../../CreatedClaim/hooks/ClearDocumentScanHook";
 
 const ConsiderDetailPage = () => {
     const dispatch = useAppDispatch();
+    useClearDocumentScanOnUnmount();
     const { detailData, detailDataLoading, customerDetailData, customerDetailLoading } = useConsiderDetailHook();
 
     // safety net: หน้านี้ unmount ทุกครั้งที่ออกไป monitor (คนละ route) — ต้องเคลียร์สไลซ์ทั้งก้อนที่นี่

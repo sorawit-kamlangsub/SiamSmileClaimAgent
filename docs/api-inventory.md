@@ -78,7 +78,7 @@ full module writeup.
 
 | Hook | Purpose |
 |---|---|
-| `useGetHospitalBillingFilter(statusId, searchBy, searchDetail, orderingField, ascendingOrder, page, recordsPerPage)` | GET `/billing/hospital/filter` — list + dashboard counts. `statusId=3` (ผ่าน) is rejected with 400; only 1/2/4/5 are valid |
+| `useGetHospitalBillingFilter(statusId, searchBy, searchDetail, orderingField, ascendingOrder, page, recordsPerPage)` | GET `/billing/hospital/filter` — list + dashboard counts. Uses the shared `ClaimTransactionTypeId` numbering (confirmed with BE 2026-09-23); `statusId=9` (อนุมัติ) is rejected with 400, only 2/3/5/6 are valid (`BILLING_STATUS.pendingReview=2, needsCorrection=3, rejected=5, cancelled=6`) |
 | `useGetHospitalBillingDetail(billingDetailId)` | GET `/billing/hospital/{billingDetailId}` — working-copy source before edit/submit |
 | `useGetHospitalBillingHistory(billingDetailId)` | GET `/billing/hospital/{billingDetailId}/history` — `rounds` (all rounds of the case) + `revisions` (this round's review history) |
 | `useSubmitHospitalBilling` **(mutation)** | POST `/billing/hospital/{billingDetailId}/submit` — idempotent via caller-supplied `requestId`; invalidates filter/detail/history on success |
@@ -103,7 +103,13 @@ Plain async functions (no React Query hooks): `uploadIDCard`, `uploadReceipt`,
 
 ## Still no API for
 
-- **Customer billing** (`วางบิลเคลม > เคลมลูกค้า`) — out of scope per the original hospital-billing
-  handoff; `BillingCustomerPage.tsx` is a placeholder ("อยู่ระหว่างพัฒนา"), no endpoint exists.
-  `เคลมโรงพยาบาล` (the other half of `วางบิลเคลม`) is wired to a real backend — see
+- **ตั้งเบิกกองทุน** (`วางบิลเคลม > ตั้งเบิกกองทุน`, `/billing/customers`, renamed from
+  "เคลมลูกค้า" by `CR-billing-claim-menu-renaming-and-approval-flow.md`) — no endpoint exists.
+  `BillingFundDisbursementPage.tsx` is a full UI shell (filter, summary cards, multi-select table)
+  built against `useFundDisbursementList.ts`, a hardcoded-empty adapter hook — swap that one hook
+  for a real `useQuery` once the backend ships a filter/list endpoint (expected shape:
+  claimType/productId/branchId/userId/searchBy/searchDetail + pagination/sort, matching
+  `FundDisbursementFilterValues` in `fundDisbursement.types.ts`) plus a submit endpoint for
+  "ยืนยันตั้งเบิก" (currently permanently disabled). `ตรวจสอบรพ.วางบิล` (the other half of
+  `วางบิลเคลม`, renamed from "เคลมโรงพยาบาล") is wired to a real backend — see
   `hospitalBillingApi.ts` above and [modules/BillingClaim.md](modules/BillingClaim.md).

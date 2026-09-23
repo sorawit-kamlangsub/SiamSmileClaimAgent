@@ -3,15 +3,15 @@ import { BillingDocumentDto, BillingExpenseDto } from "../../../api/coreClaimApi
 import { ContinuousClaimSelection } from "../../CheckEligible/components/ContinuousClaimDialog";
 
 /**
- * สถานะรายการวางบิลเคลมโรงพยาบาล — ตรงกับ contract จริงใน hospital-billing-fe.md ข้อ 4
- * (คนละความหมายกับตัวเลขที่เคยใช้ตอน mock — ห้ามสลับกลับ)
+ * สถานะรายการวางบิลเคลมโรงพยาบาล — ใช้เลขชุดเดียวกับ master ClaimTransactionTypeId ของ BE
+ * (คนละความหมายกับตัวเลข 1-5 ที่เคยใช้ตอน mock/contract เก่า — ห้ามสลับกลับ; ยืนยันกับ BE 2026-09-23)
  */
 export const BILLING_STATUS = {
-    pendingReview: 1, // PendingReview / รอตรวจสอบ
-    needsCorrection: 2, // NeedsCorrection / รอแก้ไข
-    passed: 3, // Passed / อนุมัติ — ไม่รองรับใน Filter, ส่ง statusId=3 จะได้ 400
-    rejected: 4, // Rejected / ปฏิเสธ
-    cancelled: 5, // Cancelled / ยกเลิก
+    pendingReview: 2, // รอพิจารณา / รอตรวจสอบ
+    needsCorrection: 3, // รอเอกสาร / รอแก้ไข
+    passed: 9, // อนุมัติ — ไม่รองรับใน Filter, ส่ง statusId=9 จะได้ 400
+    rejected: 5, // ปฏิเสธ
+    cancelled: 6, // ยกเลิก
 } as const;
 
 export type BillingStatusId = (typeof BILLING_STATUS)[keyof typeof BILLING_STATUS];
@@ -30,12 +30,13 @@ export const BILLING_CLAIM_TYPE_LABEL = "เคลมโรงพยาบาล
 /**
  * decisionId ของ Decision master ที่ผูกกับผลตรวจสอบวางบิลแต่ละสถานะ
  * เลขชุดเดียวกับ ConsiderSection ของ ClaimConsider (3 รอเอกสาร / 4 รอแก้ไข / 5 ปฏิเสธ / 6 ยกเลิก)
- * TODO: ยืนยันเลข decisionId กับ BE — handoff ไม่ได้ระบุไว้
+ * — ยืนยันกับ BE แล้วว่าตรงกับ master ClaimTransactionTypeId (2026-09-23)
  *
- * TODO(billing-reject-reason): สถานะ "ปฏิเสธ" (4) ใช้ entry นี้ (decisionId=5) เพื่อดึงรายการเหตุผลมาโชว์
- * บนจอชั่วคราวเท่านั้น — hospital-billing-fe.md ข้อ 9 ระบุว่า `rejectReasonId` เป็นคนละ master กับ
- * DecisionReason และ repository ยังไม่มี HTTP endpoint อ่าน RejectReason ห้าม reuse master นี้ถาวร
- * เมื่อ BE เพิ่ม endpoint ให้ย้าย status 4 ไปเรียก master ใหม่แยกจาก BILLING_DECISION_ID
+ * TODO(billing-reject-reason): สถานะ "ปฏิเสธ" (BILLING_STATUS.rejected) ใช้ entry นี้ (decisionId=5)
+ * เพื่อดึงรายการเหตุผลมาโชว์บนจอชั่วคราวเท่านั้น — hospital-billing-fe.md ข้อ 9 ระบุว่า `rejectReasonId`
+ * เป็นคนละ master กับ DecisionReason และ repository ยังไม่มี HTTP endpoint อ่าน RejectReason ห้าม
+ * reuse master นี้ถาวร เมื่อ BE เพิ่ม endpoint ให้ย้าย status rejected ไปเรียก master ใหม่แยกจาก
+ * BILLING_DECISION_ID
  */
 export const BILLING_DECISION_ID: Partial<Record<BillingStatusId, number>> = {
     [BILLING_STATUS.needsCorrection]: 4,
@@ -171,6 +172,41 @@ export const parseBillingClaimListType = (value: string | null): BillingClaimLis
 };
 
 /**
+ * Section "ข้อมูลอุบัติเหตุจากการจราจร" — CR: Traffic Accident and Hospital Document Review
+ * ยังไม่มีฟิลด์รองรับใน `BillingClaimDto` (ดู PENDING_BE_FIELDS.trafficAccident) จึงเป็น FE-only
+ * ทั้งชุด อยู่ท้าย `BillingReviewFormValues` เหมือนฟิลด์ FE-only อื่น ๆ
+ */
+export const TRAFFIC_VEHICLE_TYPE = {
+    motorcycle: "motorcycle",
+    car: "car",
+    other: "other",
+} as const;
+export type TrafficVehicleType = (typeof TRAFFIC_VEHICLE_TYPE)[keyof typeof TRAFFIC_VEHICLE_TYPE];
+
+export const TRAFFIC_VEHICLE_TYPE_OPTIONS: { value: TrafficVehicleType; label: string }[] = [
+    { value: TRAFFIC_VEHICLE_TYPE.motorcycle, label: "มอเตอร์ไซค์" },
+    { value: TRAFFIC_VEHICLE_TYPE.car, label: "รถยนต์" },
+    { value: TRAFFIC_VEHICLE_TYPE.other, label: "อื่นๆ" },
+];
+
+export const TRAFFIC_CASUALTY_STATUS = {
+    driver: "driver",
+    passenger: "passenger",
+} as const;
+export type TrafficCasualtyStatus = (typeof TRAFFIC_CASUALTY_STATUS)[keyof typeof TRAFFIC_CASUALTY_STATUS];
+
+export const TRAFFIC_CASUALTY_STATUS_OPTIONS: { value: TrafficCasualtyStatus; label: string }[] = [
+    { value: TRAFFIC_CASUALTY_STATUS.driver, label: "ผู้ขับขี่" },
+    { value: TRAFFIC_CASUALTY_STATUS.passenger, label: "ผู้โดยสาร" },
+];
+
+/** เป็นส่วนเกิน พ.ร.บ. — เก็บเป็น boolean ตรง ๆ (ใช่ = true / ไม่ใช่ = false) */
+export const TRAFFIC_POROBO_EXCESS_OPTIONS: { value: boolean; label: string }[] = [
+    { value: true, label: "ใช่" },
+    { value: false, label: "ไม่ใช่" },
+];
+
+/**
  * ค่าฟอร์มหน้า "ตรวจสอบรายการวางบิล" — เก็บแบบ flat (ไม่ซ้อนตาม claim/medical ของ DTO)
  *
  * เหตุผล: `ClaimTypeSelector`/`ChipSelector` (ที่ reuse มาเลือก incidentType/coverageType/medicalType)
@@ -251,4 +287,11 @@ export interface BillingReviewFormValues {
 
     // สรุปรายการเคลม (Step 3)
     mergeCompensation: boolean;
+
+    // ข้อมูลอุบัติเหตุจากการจราจร (Step 1) — วางบิลเคลมโรงพยาบาล : read-only เสมอ (CR-02)
+    trafficVehicleType: TrafficVehicleType | undefined;
+    trafficVehicleOther: string;
+    trafficCasualtyStatus: TrafficCasualtyStatus | undefined;
+    trafficIsPoroboExcess: boolean | undefined;
+    trafficNoPoroboReason: string;
 }

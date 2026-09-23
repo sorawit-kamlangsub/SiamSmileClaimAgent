@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { API_CLAIM_FUND_URL } from "../../Const";
+import { APIGW_CLAIM_FUND_API_URL } from "../../Const";
 
-const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
+const claimFundAPI_URL = APIGW_CLAIM_FUND_API_URL;
 
 const createTransferKey = "createTransfer";
 

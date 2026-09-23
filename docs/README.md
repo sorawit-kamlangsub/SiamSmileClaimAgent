@@ -34,3 +34,15 @@ these docs don't repeat that, only add the concrete inventory CLAUDE.md doesn't 
 | Survey / TransferSlips | Public routes (no auth), under `LayoutPublic` | see module docs |
 
 Full detail in each `modules/*.md`.
+
+> ✅ **Real API** — `/api/ClaimFund/IncreaseTransfer/IncreaseTransferLimitMonitors`
+> (`useGetIncreaseTransferLimitMonitors` → `{base}/IncreaseTransfer/IncreaseTransferLimitMonitors`,
+> monitor table หน้า ขยายวงเงิน) — เชื่อม backend จริงแล้ว; ยังไม่ map ข้อมูล field
+>
+> ⚠ **Mock API note** — เส้นที่เหลือด้านล่างยังเป็น **mock** (Postman) ยังไม่มี backend จริง
+> เก็บไว้เป็น placeholder จนกว่าเส้นจริงจะมา:
+> 1. **`/api/ClaimFund/Masters/GetPaymentIncreaseStatuses`** (`useGetPaymentIncreaseStatus`
+>    → `{base}/Masters/GetPaymentIncreaseStatuses`, status dropdown หน้า ขยายวงเงิน)
+> 2. **`/api/ClaimFund/IncreaseTransfer/IncreaseTransferLimitDetail`**
+>    (`useGetIncreaseTransferLimitDetail` → `{base}/IncreaseTransfer/IncreaseTransferLimitDetail`,
+>    dialog ขยายวงเงิน หน้า ขยายวงเงิน)

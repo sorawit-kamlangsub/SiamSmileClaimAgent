@@ -3,6 +3,7 @@ import {
     ApproveClaimDecisionDtoRequest,
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
+    ClaimFundClient,
     CoreClaimClient,
     CreateContinuedClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
@@ -10,6 +11,9 @@ import {
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
     GetEmployeeClaimPaymentLimitResponseServiceResponse,
+    IncreaseTransferLimitChangeStatusRequestDto,
+    IncreaseTransferLimitChangeStatusResponseDtoServiceResponse,
+    IncreaseTransferLimitMonitorRequestDto,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
     UpsertClaimDecisionDtoRequest,
@@ -20,6 +24,7 @@ import dayjs, { Dayjs } from "dayjs";
 import { API_URL } from "../../Const";
 
 const coreClaimClient = new CoreClaimClient(API_URL, axios);
+const claimFundClient = new ClaimFundClient(API_URL, axios);
 
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
 const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
@@ -37,6 +42,11 @@ const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
+const getDashboardDeathAndDisabilityClaimConsiderQueryKey = ["getDashboardDeathAndDisabilityClaimConsider"];
+const getDeathAndDisabilityClaimAdjudicationMonitorQueryKey = ["getDeathAndDisabilityClaimAdjudicationMonitor"];
+const getDeathAndDisabilityClaimDetailConsiderQueryKey = ["getDeathAndDisabilityClaimDetailConsider"];
+const getDeathAndDisabilityBeneficiaryQueryKey = ["getDeathAndDisabilityBeneficiary"];
+const getCaseDisabilityBenefitByCaseIdQueryKey = ["getCaseDisabilityBenefitByCaseId"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
@@ -47,6 +57,104 @@ const getHospitalClaimAdjudicationMonitorQueryKey = ["getHospitalClaimAdjudicati
 const getDocumentByCaseIdQueryKey = ["getDocumentByCaseId"];
 const getDCRQueryKey = ["getDCR"];
 const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
+
+// ---- ขยายวงเงิน (ClaimFund / IncreaseTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getIncreaseTransferLimitMonitorsQueryKey = ["getIncreaseTransferLimitMonitors"];
+const getIncreaseTransferLimitDetailQueryKey = ["getIncreaseTransferLimitDetail"];
+const getTransferApprovalStatusQueryKey = ["getTransferApprovalStatus"];
+const getCaseTransferApprovalRejectReasonStatusQueryKey = ["getCaseTransferApprovalRejectReasonStatus"];
+
+export const useGetTransferApprovalStatus = () => {
+    return useQuery([getTransferApprovalStatusQueryKey], () => claimFundClient.getTransferApprovalStatus(), {
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useGetIncreaseTransferLimitMonitors = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    filter?: IncreaseTransferLimitMonitorRequestDto,
+    searchTrigger?: number,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [
+            getIncreaseTransferLimitMonitorsQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+            searchTrigger,
+        ],
+        () =>
+            claimFundClient.increaseTransferLimitMonitors(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage,
+                filter
+            ),
+        {
+            enabled: enabled ?? true,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetIncreaseTransferLimitDetail = (caseTransferApprovalId?: string) => {
+    return useQuery(
+        [getIncreaseTransferLimitDetailQueryKey, caseTransferApprovalId],
+        () => claimFundClient.getIncreaseTransferLimitDetail(caseTransferApprovalId),
+        {
+            enabled: caseTransferApprovalId !== undefined && caseTransferApprovalId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseTransferApprovalRejectReasonStatus = () => {
+    return useQuery(
+        [getCaseTransferApprovalRejectReasonStatusQueryKey],
+        () => claimFundClient.getCaseTransferApprovalRejectReasonStatus(),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useIncreaseTransferLimitChangeStatus = (
+    onSuccessCallback?: (response: IncreaseTransferLimitChangeStatusResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: IncreaseTransferLimitChangeStatusRequestDto) => claimFundClient.increaseTransferLimitChangeStatus(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else {
+                    queryClient.invalidateQueries([getIncreaseTransferLimitMonitorsQueryKey], { refetchType: "all" });
+                    queryClient.invalidateQueries([getIncreaseTransferLimitDetailQueryKey], { refetchType: "all" });
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
 
 /**
  * ล้าง cache ของ query ที่ได้รับผลกระทบจากการบันทึก/พิจารณาเคลม (ใช้ร่วมกันทั้งเคลมลูกค้าและเคลม รพ.
@@ -215,6 +323,20 @@ export const useCreateCoreClaim = (
  * endpoint คืน documentCode เฉพาะเคส (เช่น "ใบแจ้งปฏิเสธสินไหม") ไม่งั้นสอง case ที่ productTypeId ตรงกันจะ
  * ได้ documentCode เดิมค้างจาก cache ตลอดไป (เอกสารไม่ตรงเคสที่กำลังพิจารณาอยู่)
  */
+/**
+ * คืนฟังก์ชันล้าง cache ของ useGetDocumentType ตาม documentTypeId — ใช้กับตารางสแกนเอกสารที่ต้องแชร์ documentCode
+ * ระหว่าง 2 component ในหน้าเดียว (cache ปกติ) แล้วล้างทิ้งตอนออกจากหน้า กัน documentCode ค้างไปเคสถัดไป
+ */
+export const useRemoveDocumentTypeCache = () => {
+    const queryClient = useQueryClient();
+    return (documentTypeId: number) =>
+        queryClient.removeQueries({
+            queryKey: [getDocumentSubTypeQueryKey],
+            predicate: (query) =>
+                (query.queryKey[1] as GetDocumentSubTypeDtoRequest | undefined)?.documentTypeId === documentTypeId,
+        });
+};
+
 export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean, alwaysFresh = false) => {
     return useQuery(
         [getDocumentSubTypeQueryKey, request],
@@ -552,6 +674,130 @@ export const useGetCustomerClaimAdjudicationMonitor = (
             ),
         {
             enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDashboardDeathAndDisabilityClaimConsider = (
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined
+) => {
+    return useQuery(
+        [getDashboardDeathAndDisabilityClaimConsiderQueryKey, dateFrom, dateTo],
+        () => coreClaimClient.getDashboardDeathAndDisabilityClaimConsider(dateFrom, dateTo),
+        {
+            enabled: !!dateFrom && !!dateTo,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimAdjudicationMonitor = (
+    isSearch?: boolean,
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined,
+    isProductTypeId_PH?: boolean | undefined,
+    isProductTypeId_PA?: boolean | undefined,
+    claimTransactionTypeId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getDeathAndDisabilityClaimAdjudicationMonitorQueryKey,
+            dateFrom,
+            dateTo,
+            isProductTypeId_PH,
+            isProductTypeId_PA,
+            claimTransactionTypeId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getDeathAndDisabilityClaimAdjudicationMonitor(
+                dateFrom,
+                dateTo,
+                isProductTypeId_PH,
+                isProductTypeId_PA,
+                claimTransactionTypeId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimDetailConsider = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityClaimDetailConsiderQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityClaimDetailConsider(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityBeneficiary = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityBeneficiaryQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityBeneficiary(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCaseDisabilityBenefitByCaseId = (
+    caseId: string,
+    productTypeId?: number | undefined,
+    productId?: number | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined,
+    policyCode?: string | undefined,
+    customerTypeCode?: string | undefined,
+    isEnabled = true
+) => {
+    return useQuery(
+        [
+            getCaseDisabilityBenefitByCaseIdQueryKey,
+            caseId,
+            productTypeId,
+            productId,
+            incidentTypeId,
+            coverageTypeId,
+            causeOfIncidentId,
+            policyCode,
+            customerTypeCode,
+        ],
+        () =>
+            coreClaimClient.getCaseDisabilityBenefitByCaseId(
+                caseId,
+                productTypeId,
+                productId,
+                incidentTypeId,
+                coverageTypeId,
+                causeOfIncidentId,
+                policyCode,
+                customerTypeCode
+            ),
+        {
+            enabled: isEnabled && !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );

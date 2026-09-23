@@ -315,6 +315,11 @@ const claimPHSlice = createSlice({
                 ...incoming,
             ];
         },
+        /** ล้างเฉพาะเอกสารที่สแกน — หน้าที่ไม่ใช่การสร้างเคลมเรียกตอนออกจากหน้า ไม่ให้เอกสารของเคสนั้นค้างไปหน้าอื่น */
+        clearDocumentScan: (state) => {
+            state.documentScanList = [];
+            state.documentDetailById = {};
+        },
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;
         },
@@ -380,6 +385,7 @@ export const {
     setEnabled,
     setDocumentDetailById,
     setDocument,
+    clearDocumentScan,
     setOrganLossItems,
     setBeneficiaries,
     updateBeneficiary,
