@@ -152,13 +152,15 @@ const DeathDisabilityConsiderSection = ({
     const remarkHasError = !!remarkMeta.touched && !!remarkMeta.error;
 
     const selectStatus = (status: StatusOption) => {
+        // กดปุ่มที่เลือกอยู่ซ้ำ = ยกเลิกเลือก (ปิดการ์ดรายละเอียด) โดยไม่ต้องไปกดปุ่มสถานะอื่น
+        const isDeselect = status.decisionId === formik.values.considerResult;
         // อัปเดตทีเดียวแล้ว validate ใหม่ — ไม่งั้น error "กรุณาเลือกผลการพิจารณา" จากการกดยืนยันรอบก่อนจะค้าง
         // (ช่องสาเหตุ/หมายเหตุ ล้าง touched ไว้ จึงยังไม่โชว์ error จนกว่าผู้ใช้จะแตะช่องหรือกดยืนยัน)
         formik.setTouched({}, false);
         formik.setValues(
             {
                 ...formik.values,
-                considerResult: status.decisionId,
+                considerResult: isDeselect ? undefined : status.decisionId,
                 decisionReasonId: undefined,
                 decisionReasonDetail: "",
                 remark: "",

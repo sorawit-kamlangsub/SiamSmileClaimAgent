@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
 import { useAppDispatch } from "../../../../../redux";
@@ -26,7 +26,7 @@ import {
     CLAIM_LIST_TYPE_CONFIG,
     DOCUMENT_CHECK_RESULTS,
     DocumentCheckRow,
-    parseClaimListType,
+    resolveClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useHospitalDocumentVerifyHook from "./HospitalDocumentVerifyHook";
 import useHospitalContinuousClaimHook from "./HospitalContinuousClaimHook";
@@ -206,10 +206,13 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     // ── ข้อมูลการเข้ารับการรักษา ──
     if (!values.hn.trim()) errors.hn = req;
     if (!values.vn.trim()) errors.vn = req;
-    // AN + ข้อบ่งชี้การ Admit + จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
-    if (values.medicalTypeId === MedicalType.IPD) {
+    // AN + ข้อบ่งชี้การ Admit : บังคับเฉพาะประเภทการรักษา IPD และ Day Case Surgery
+    if (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery) {
         if (!values.an.trim()) errors.an = req;
         if (!values.admitIndication.trim()) errors.admitIndication = req;
+    }
+    // จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
+    if (values.medicalTypeId === MedicalType.IPD) {
         if (!values.ipdDays || values.ipdDays < 1) errors.ipdDays = req;
     }
     if (!values.underlyingDisease.trim()) errors.underlyingDisease = req;
@@ -249,17 +252,16 @@ const useHospitalConsiderDetailHook = () => {
     const caseId = safeAtob(caseIdEncoded);
     /** เอกลักษณ์ของเคสที่กำลังเปิดอยู่ — ใช้ตรวจว่าเปลี่ยนเคสหรือไม่ (route ใช้ element เดิมเสมอ ไม่ remount) */
     const caseKey = claimId && caseId ? `${claimId}:${caseId}` : undefined;
-    const [searchParams] = useSearchParams();
-
-    /**
-     * ประเภทรายการเคลมของเคสนี้ (ตอนนี้อ่านจาก Query String เพราะ BE ยังไม่ส่งมา)
-     * ตัวอย่าง : ?type=opd-full
-     */
-    const claimListType = parseClaimListType(searchParams.get("type"));
-    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
 
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
     const detail = detailData?.data;
+
+    /**
+     * ประเภทรายการเคลมของเคสนี้ — มาจากข้อมูลจริง (DFUAT-033 เดิมอ่านจาก URL `?type=` ที่ไม่เคยมีใคร set
+     * เลยทุกเคสตกไปที่ default "opd-half" หมด ดู resolveClaimListType ที่ hospitalConsiderMock.tsx)
+     */
+    const claimListType = resolveClaimListType(detail?.medicalTypeId, detail?.medicalSubTypeCode);
+    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detail?.customerDetailId
@@ -340,9 +342,17 @@ const useHospitalConsiderDetailHook = () => {
     /**
      * ตรวจฟอร์ม Step 1 ทั้งหมดก่อนกด "ถัดไป" หรือ "ยืนยันบันทึกผลพิจารณา"
      * คืน true เมื่อผ่าน, false เมื่อมี error (mark touched + เลื่อนไปช่องแรกที่ผิด)
+     *
+     * `includeConsiderResult = false` (ปุ่ม "ถัดไป") ละ error ของ "แจ้งผลการพิจารณาโรงพยาบาล"
+     * (decisionReasonId/decisionReasonDetail) — validate ส่วนนี้มีผลเฉพาะตอนกด "ยืนยันบันทึกผลพิจารณา"
+     * (DFUAT-048)
      */
-    const validateStep1 = async (): Promise<boolean> => {
+    const validateStep1 = async (includeConsiderResult = true): Promise<boolean> => {
         const errs = await formik.validateForm();
+        if (!includeConsiderResult) {
+            delete errs.decisionReasonId;
+            delete errs.decisionReasonDetail;
+        }
         const errorKeys = Object.keys(errs);
         if (errorKeys.length === 0) return true;
 
