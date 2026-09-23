@@ -55,7 +55,7 @@ selectors in `RecordClaimData`), `useGetSimBCategory`, `useGetSimB`, `useGetChie
 `useGetDisabilityLossPart`, `useGetBodyPartByDisabilityLossPart`, `useGetBranch`,
 `useGetPaymentStatus`, `useGetDeductionSource`, `useGetEmployeeClaimPaymentLimit`,
 `useGetDecision`, `useGetDocumentReviewStatus` (feeds the ผ่าน/ไม่ผ่าน/รอเอกสารเพิ่มเติม toggle
-in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetInsuranceCompany`.
+in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetCancelReason`, `useGetRejectReason`, `useGetInsuranceCompany`.
 
 ## `docstorageApi.ts` — DocStorage API (`DOCSTORAGE_API_URL`)
 
@@ -70,8 +70,11 @@ in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetInsuranceCompany`.
 
 `วางบิลเคลม > เคลมโรงพยาบาล` — real backend, GET/POST only, route + envelope unchanged since the
 2026-09-08 backend restructure (immutable review snapshot per billing round; `expectedVersion` /
-`rowVersion` are the only fields that decide `409 Conflict`). See
-[modules/BillingClaim.md](modules/BillingClaim.md) for the full module writeup.
+`rowVersion` are the only fields that decide `409 Conflict`). Contract revision 2026-09-14 renamed
+`externalBillingId`→`billingRequestId` and `billingNo`→`billingRequestCode`, and dropped
+`previousBillingDetailId` / `originalBilledAmount` / `ssEndDiscountAmount` from the HTTP response —
+no fallback on the old field names. See [modules/BillingClaim.md](modules/BillingClaim.md) for the
+full module writeup.
 
 | Hook | Purpose |
 |---|---|

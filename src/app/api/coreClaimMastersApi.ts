@@ -32,11 +32,12 @@ const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPar
 const getPaymentStatusQueryKey = ["getPaymentStatus"];
 const getBranchQueryKey = ["getBranch"];
 const getDeductionSourceQueryKey = ["getDeductionSource"];
-const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
 const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
 const getDocumentReviewStatusQueryKey = ["getDocumentReviewStatus"];
+const getCancelReasonQueryKey = ["getCancelReason"];
+const getRejectReasonQueryKey = ["getRejectReason"];
 const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
 const getBenefitQueryKey = ["getBenefit"];
 
@@ -441,16 +442,6 @@ export const useGetDeductionSource = (deductionSourceId?: number | undefined) =>
     );
 };
 
-export const useGetEmployeeClaimPaymentLimit = (userId: number) => {
-    return useQuery(
-        [getEmployeeClaimPaymentLimitQueryKey, userId],
-        () => coreClaimMastersClient.employeePaymentLimit(userId),
-        {
-            refetchOnWindowFocus: false,
-        }
-    );
-};
-
 export const useGetDecision = (decisionId?: number | undefined) => {
     return useQuery([getDecisionQueryKey, decisionId], () => coreClaimMastersClient.getDecision(decisionId), {
         refetchOnWindowFocus: false,
@@ -463,6 +454,28 @@ export const useGetDocumentReviewStatus = (documentReviewStatusId?: number | und
         () => coreClaimMastersClient.getDocumentReviewStatus(documentReviewStatusId),
         {
             cacheTime: 1000 * 60 * 60 * 24,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCancelReason = (cancelReasonId?: number | undefined, enabled = true) => {
+    return useQuery(
+        [getCancelReasonQueryKey, cancelReasonId],
+        () => coreClaimMastersClient.getCancelReason(cancelReasonId),
+        {
+            enabled,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetRejectReason = (rejectReasonId?: number | undefined, enabled = true) => {
+    return useQuery(
+        [getRejectReasonQueryKey, rejectReasonId],
+        () => coreClaimMastersClient.getRejectReason(rejectReasonId),
+        {
+            enabled,
             refetchOnWindowFocus: false,
         }
     );

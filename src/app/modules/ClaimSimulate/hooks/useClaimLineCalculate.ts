@@ -95,7 +95,7 @@ export const useClaimLineCalculate = () => {
         true,
         productTypeId,
         causeOfIncident,
-        planId
+        planId === null ? undefined : planId
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
@@ -105,7 +105,7 @@ export const useClaimLineCalculate = () => {
         medicalType,
         productTypeId,
         causeOfIncident,
-        planId
+        planId === null ? undefined : planId
     );
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
     const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();

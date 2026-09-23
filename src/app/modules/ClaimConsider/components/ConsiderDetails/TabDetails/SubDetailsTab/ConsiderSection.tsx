@@ -11,8 +11,13 @@ import { HeadingWithColor } from "../../../../../_common/components/CustomCompon
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
 import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../../../store/claimConsider.constants";
 import { useFormikContext } from "formik";
-import { GetDecisionReasonDtoResponse } from "../../../../../../api/coreClaimApi.client";
+import {
+    GetCancelReasonDtoResponse,
+    GetDecisionReasonDtoResponse,
+    GetRejectReasonDtoResponse,
+} from "../../../../../../api/coreClaimApi.client";
 
 type ConsiderType = "pendingDocument" | "revision" | "rejected" | "cancelled";
 
@@ -33,7 +38,7 @@ type StatusOption = {
 const statusOptions: StatusOption[] = [
     {
         value: "pendingDocument",
-        decisionId: 3,
+        decisionId: DECISION_ID.PENDING_DOCUMENT,
         label: "รอเอกสาร",
         icon: <HourglassTopIcon fontSize="small" />,
         color: "#A87808",
@@ -45,7 +50,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "revision",
-        decisionId: 4,
+        decisionId: DECISION_ID.REVISION,
         label: "รอแก้ไข",
         icon: <FormatListBulletedIcon fontSize="small" />,
         color: "#806033",
@@ -57,7 +62,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "rejected",
-        decisionId: 5,
+        decisionId: DECISION_ID.REJECTED,
         label: "ปฏิเสธ",
         icon: <BlockIcon fontSize="small" />,
         color: "#D76451",
@@ -70,7 +75,7 @@ const statusOptions: StatusOption[] = [
     },
     {
         value: "cancelled",
-        decisionId: 6,
+        decisionId: DECISION_ID.CANCELLED,
         label: "ยกเลิก",
         icon: <CancelIcon fontSize="small" />,
         color: "#D92D2D",
@@ -87,9 +92,15 @@ type ConsiderSectionProps = {
     aplicationCode?: string | undefined;
     decisionReason: { data?: GetDecisionReasonDtoResponse[] } | undefined;
     decisionReasonLoading: boolean;
+    /** Master สาเหตุการปฏิเสธ — ใช้กับปุ่ม "ปฏิเสธ" (decisionId 5) */
+    rejectReason: { data?: GetRejectReasonDtoResponse[] } | undefined;
+    rejectReasonLoading: boolean;
+    /** Master สาเหตุการยกเลิก — ใช้กับปุ่ม "ยกเลิก" (decisionId 6) */
+    cancelReason: { data?: GetCancelReasonDtoResponse[] } | undefined;
+    cancelReasonLoading: boolean;
     /**
      * decisionId ของผลการพิจารณาที่ไม่ต้องแสดงปุ่มในหน้านี้
-     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3, "ยกเลิก" = 5)
+     * (เช่น หน้าเคลมโรงพยาบาล OPD ไม่มีปุ่ม "รอเอกสาร" = 3, "ยกเลิก" = 6)
      */
     hiddenDecisionIds?: number[];
     /** override หัวข้อ section — default "ผลการพิจารณา" (เคลมโรงพยาบาลใช้ "แจ้งผลการพิจารณาโรงพยาบาล") */
@@ -103,6 +114,10 @@ const ConsiderSection = ({
     aplicationCode,
     decisionReason,
     decisionReasonLoading,
+    rejectReason,
+    rejectReasonLoading,
+    cancelReason,
+    cancelReasonLoading,
     hiddenDecisionIds,
     headingText,
     labelOverrides,
@@ -130,6 +145,23 @@ const ConsiderSection = ({
     const detailHasError = !!detailMeta.touched && !!detailMeta.error;
 
     const selectedStatus = visibleStatusOptions.find((status) => status.decisionId === formik.values.considerResult);
+
+    // ปฏิเสธ/ยกเลิก ใช้ Master RejectReason/CancelReason ของตัวเอง — สถานะอื่นยังใช้ DecisionReason ตาม decisionId
+    const reasonOptions: { id?: number; name?: string }[] =
+        selectedStatus?.value === "rejected"
+            ? (rejectReason?.data ?? []).map((item) => ({ id: item.rejectReasonId, name: item.rejectReasonName }))
+            : selectedStatus?.value === "cancelled"
+            ? (cancelReason?.data ?? []).map((item) => ({ id: item.cancelReasonId, name: item.cancelReasonName }))
+            : (decisionReason?.data ?? []).map((item) => ({
+                  id: item.decisionReasonId,
+                  name: item.decisionReasonName,
+              }));
+    const reasonLoading =
+        selectedStatus?.value === "rejected"
+            ? rejectReasonLoading
+            : selectedStatus?.value === "cancelled"
+            ? cancelReasonLoading
+            : decisionReasonLoading;
     const selectStatus = (status: StatusOption) => {
         formik.setFieldValue("considerResult", status.decisionId, false);
         formik.setFieldValue("decisionReasonId", undefined, false);
@@ -252,7 +284,7 @@ const ConsiderSection = ({
                                 select
                                 required
                                 fullWidth
-                                label={decisionReasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
+                                label={reasonLoading ? "กำลังโหลด..." : selectedStatus.reasonLabel}
                                 value={formik.values.decisionReasonId || ""}
                                 onChange={(event) =>
                                     formik.setFieldValue("decisionReasonId", Number(event.target.value))
@@ -261,9 +293,9 @@ const ConsiderSection = ({
                                 error={reasonHasError}
                                 helperText={reasonHasError ? reasonMeta.error : undefined}
                             >
-                                {(decisionReason?.data ?? []).map((item) => (
-                                    <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
-                                        {item.decisionReasonName}
+                                {reasonOptions.map((item) => (
+                                    <MenuItem key={item.id} value={item.id}>
+                                        {item.name}
                                     </MenuItem>
                                 ))}
                             </TextField>
@@ -291,6 +323,10 @@ const ConsiderSection = ({
                                 documentType="ใบแจ้งปฏิเสธสินไหม"
                                 aplicationCode={aplicationCode ?? ""}
                                 Header="เอกสารประกอบการปฏิเสธ"
+                                // documentCode ที่ endpoint คืนผูกกับเคสนี้โดยเฉพาะ (ไม่ได้ส่ง caseId มา merge
+                                // ทับ) ต้อง cache ตลอดไปไม่ได้ ไม่งั้นเคสอื่นที่ productTypeId เดียวกันจะเห็น
+                                // เอกสารของเคสก่อนหน้าค้างอยู่
+                                alwaysFreshMasterList
                             />
                         )}
                     </Box>

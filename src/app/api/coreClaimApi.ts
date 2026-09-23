@@ -10,6 +10,7 @@ import {
     CreateCoreClaimV2DtoRequest,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    GetEmployeeClaimPaymentLimitResponseServiceResponse,
     IncreaseTransferLimitChangeStatusRequestDto,
     IncreaseTransferLimitChangeStatusResponseDtoServiceResponse,
     IncreaseTransferLimitMonitorRequestDto,
@@ -31,6 +32,7 @@ const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"
 const getClaimContinueQueryKey = ["getClaimContinue"];
 const getDocumentSubTypeQueryKey = ["getDocumentSubType"];
 const getClaimHistoryQueryKey = ["getClaimHistory"];
+const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
@@ -156,9 +158,11 @@ export const useIncreaseTransferLimitChangeStatus = (
  * ทำไมต้องมี : global staleTime = 5 นาที ถ้าไม่ invalidate ผู้ใช้ที่บันทึกแล้วกลับเข้ารายการเดิม
  * ภายใน 5 นาทีจะเห็นข้อมูล "ก่อนบันทึก" จาก cache จนกว่าจะ refresh ทั้งหน้า
  *
- * ทำไมใช้ refetchType "none" : query รายละเอียด/ค่ารักษา/เอกสาร ยัง active อยู่ตอนกดบันทึก และผู้ใช้
- * กำลังจะออกจากหน้าอยู่แล้ว การ refetch ตรงนั้นเป็น request ที่เสียเปล่าบนหน้าที่หนักที่สุด — แค่มาร์ค
- * ว่า stale ก็พอ รอบ mount ถัดไปจะยิงใหม่เอง (refetchOnMount ไม่ได้ถูก override จึงเป็น true ตาม default)
+ * ใช้ refetchType default ("active") ไม่ใช่ "none" — เดิมใช้ "none" โดยหวังว่า refetchOnMount default
+ * จะยิงใหม่เองตอน mount รอบถัดไป แต่ query พวกนี้มัก active อยู่ต่อเนื่อง (ผู้ใช้ไม่ได้ unmount component
+ * หลังกดบันทึก เช่น สลับ tab ในหน้าเดียวกัน) ทำให้ "รอบ mount ถัดไป" ไม่เกิดขึ้นจริง และข้อมูลเก่าค้างอยู่
+ * "active" จะ refetch ทันทีเฉพาะ query ที่มีคน mount อยู่ตอนนี้ ส่วน query ที่ inactive จะแค่ mark stale
+ * ตามปกติ (ไม่มี request เสียเปล่า)
  *
  * หมายเหตุรูปแบบ key : key ในไฟล์นี้เป็น array ซ้อน array เช่น [["getClaimDetailConsider"], claimId]
  * จึงต้องส่ง filter เป็น [key] ไม่ใช่ key เปล่าๆ ไม่งั้นจะเทียบ string กับ array แล้วไม่ match อะไรเลย
@@ -172,7 +176,7 @@ const invalidateClaimConsiderQueries = (queryClient: QueryClient) => {
         getCustomerClaimAdjudicationMonitorQueryKey,
         getHospitalClaimAdjudicationMonitorQueryKey,
         getDashboardCustomerConsiderQueryKey,
-    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey], { refetchType: "none" }));
+    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey]));
 };
 
 export const useCalculateCaseClaim = (
@@ -241,11 +245,15 @@ export const useGetCustomerSearch = (
     );
 };
 
-export const useGetCustomerDetailById = (id: number | undefined) => {
-    return useQuery([getCustomerDetailByIdQueryKey, id], () => coreClaimClient.getCustomerDetailById(id as number), {
-        enabled: !!id,
-        refetchOnWindowFocus: false,
-    });
+export const useGetCustomerDetailById = (customerDetailId: string | undefined) => {
+    return useQuery(
+        [getCustomerDetailByIdQueryKey, customerDetailId],
+        () => coreClaimClient.getCustomerDetailById(customerDetailId as string),
+        {
+            enabled: !!customerDetailId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };
 
 export const useGetCustomerBenefitDetailSearch = (
@@ -304,7 +312,13 @@ export const useCreateCoreClaim = (
     });
 };
 
-export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean) => {
+/**
+ * `alwaysFresh` (default false = พฤติกรรมเดิม cache ตลอดไปด้วย cacheTime/staleTime: Infinity — เหมาะกับ
+ * master list ของ document type ทั่วไปที่ไม่เปลี่ยนตามเคส) — ต้องเปิดเป็น true สำหรับ documentTypeId ที่
+ * endpoint คืน documentCode เฉพาะเคส (เช่น "ใบแจ้งปฏิเสธสินไหม") ไม่งั้นสอง case ที่ productTypeId ตรงกันจะ
+ * ได้ documentCode เดิมค้างจาก cache ตลอดไป (เอกสารไม่ตรงเคสที่กำลังพิจารณาอยู่)
+ */
+export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean, alwaysFresh = false) => {
     return useQuery(
         [getDocumentSubTypeQueryKey, request],
         async () => {
@@ -312,18 +326,18 @@ export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnab
             return response;
         },
         {
-            cacheTime: Infinity,
-            staleTime: Infinity,
+            cacheTime: alwaysFresh ? 0 : Infinity,
+            staleTime: alwaysFresh ? 0 : Infinity,
             enabled: !!(isEnabled && request.documentTypeId),
             refetchOnWindowFocus: false,
-            refetchOnMount: false,
+            refetchOnMount: alwaysFresh ? "always" : false,
         }
     );
 };
 
 export const useGetClaimContinue = (
     applicationId?: string | undefined,
-    initialClaimId?: string | undefined,
+    initialCaseId?: string | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,
@@ -334,7 +348,7 @@ export const useGetClaimContinue = (
         [
             getClaimContinueQueryKey,
             applicationId,
-            initialClaimId,
+            initialCaseId,
             searchDetail,
             orderingField,
             ascendingOrder,
@@ -344,7 +358,7 @@ export const useGetClaimContinue = (
         () =>
             coreClaimClient.getClaimContinue(
                 applicationId,
-                initialClaimId,
+                initialCaseId,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
@@ -371,6 +385,7 @@ export const useGetClaimHistory = (
         () =>
             coreClaimClient.getClaimHistory(
                 applicationId,
+                undefined,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
@@ -380,6 +395,16 @@ export const useGetClaimHistory = (
         {
             enabled: !!applicationId,
             refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetEmployeeClaimPaymentLimit = (userId: number, requestedTransferAmount: number) => {
+    return useQuery<GetEmployeeClaimPaymentLimitResponseServiceResponse, Error>(
+        [getEmployeeClaimPaymentLimitQueryKey, userId, requestedTransferAmount],
+        () => coreClaimClient.getEmployeeClaimPaymentLimit(userId, requestedTransferAmount),
+        {
+            refetchOnWindowFocus: false,
         }
     );
 };
@@ -433,15 +458,15 @@ export const useGetCaseByClaimId = (
 };
 
 export const useCalculateCaseDisability = (
-    customerId?: number | undefined,
+    customerDetailId?: string | undefined,
     bodyPartId?: number | undefined,
     standardMedicalExpenseId?: number | undefined
 ) => {
     return useQuery(
-        [calculateCaseDisabilityQueryKey, customerId, bodyPartId, standardMedicalExpenseId],
-        () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
+        [calculateCaseDisabilityQueryKey, customerDetailId, bodyPartId, standardMedicalExpenseId],
+        () => coreClaimClient.calculateCaseDisability(customerDetailId, bodyPartId, standardMedicalExpenseId),
         {
-            enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
+            enabled: !!customerDetailId && !!bodyPartId && !!standardMedicalExpenseId,
             refetchOnWindowFocus: false,
         }
     );
@@ -449,7 +474,7 @@ export const useCalculateCaseDisability = (
 
 export const useGetCustomerBenefitDetailHalf = (
     policyCode?: string | undefined,
-    incidentDate?: Dayjs | undefined,
+    incidentDate?: dayjs.Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
@@ -457,7 +482,7 @@ export const useGetCustomerBenefitDetailHalf = (
     causeOfIncidentId?: number | undefined,
     formatTypeId?: number | undefined,
     cusTomerTypeCode?: string | undefined,
-    customerCode?: string | undefined,
+    customerDetailId?: string | undefined,
     claimNo?: string | undefined
 ) => {
     return useQuery(
@@ -472,7 +497,7 @@ export const useGetCustomerBenefitDetailHalf = (
             causeOfIncidentId,
             formatTypeId,
             cusTomerTypeCode,
-            customerCode,
+            customerDetailId,
             claimNo,
         ],
         () =>
@@ -486,7 +511,7 @@ export const useGetCustomerBenefitDetailHalf = (
                 causeOfIncidentId,
                 formatTypeId,
                 cusTomerTypeCode,
-                customerCode,
+                customerDetailId,
                 claimNo
             ),
         {
@@ -539,6 +564,20 @@ export const useGetCustomerSearchByPolicyCode = (
     );
 };
 
+// TODO(backend): GetPolicyBenefitSheredDtoResponse ที่ codegen ได้ตอนนี้ว่างเปล่า (schema ฝั่ง backend มีปัญหา)
+// mock shape เดิมไว้ก่อนตรงนี้ — ลบ interface นี้แล้วใช้ GetPolicyBenefitSheredDtoResponse จาก client ตรงๆ ได้เลยเมื่อ backend แก้แล้ว + codegen ใหม่
+export interface PolicyBenefitSheredItem {
+    policyCode?: string;
+    benefitId?: number;
+    benefitCode?: string;
+    productId?: number;
+    benefitName?: string;
+    maxPrice?: number;
+    customerTypeCode?: string;
+    shortBenefit?: string;
+    fullBenefitDisplay?: string;
+}
+
 export const useGetPolicyBenefitShered = (
     applicaitonCode?: string | undefined,
     customerTypeCode?: string | undefined
@@ -548,6 +587,7 @@ export const useGetPolicyBenefitShered = (
         () => coreClaimClient.getPolicyBenefitShered(applicaitonCode, customerTypeCode),
         {
             enabled: !!applicaitonCode && !!customerTypeCode,
+            select: (res) => ({ ...res, data: res.data as unknown as PolicyBenefitSheredItem[] | undefined }),
         }
     );
 };
@@ -778,39 +818,42 @@ export const useGetPreviousClaim = (claimId: string) => {
 
 export const useGetStandardMedicalExpenseByCase = (
     caseId: string,
+    productTypeId: number,
     formatTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    isUseOften?: boolean | undefined,
-    productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    productId?: number | undefined
+    productId?: number | undefined,
+    applicationCode?: string | undefined,
+    customerTypeCode?: string | undefined
 ) => {
     return useQuery(
         [
             getStandardMedicalExpenseByCaseQueryKey,
             caseId,
+            productTypeId,
             formatTypeId,
             coverageTypeId,
             medicalTypeId,
-            isUseOften,
-            productTypeId,
             causeOfIncidentId,
             productId,
+            applicationCode,
+            customerTypeCode,
         ],
         () =>
             coreClaimClient.getStandardMedicalExpenseByCase(
                 caseId,
+                productTypeId,
                 formatTypeId,
                 coverageTypeId,
                 medicalTypeId,
-                isUseOften,
-                productTypeId,
                 causeOfIncidentId,
-                productId
+                productId,
+                applicationCode,
+                customerTypeCode
             ),
         {
-            enabled: !!caseId,
+            enabled: !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );

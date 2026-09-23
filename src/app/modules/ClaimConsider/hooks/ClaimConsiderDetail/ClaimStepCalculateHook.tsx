@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { FormikErrors, FormikProps, FormikTouched } from "formik";
 import {
     CalculateCaseClaim,
@@ -56,6 +56,10 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
     const [isCalculating, setIsCalculating] = useState(false);
+    // กันกดปุ่ม "ถัดไป" ซ้ำระหว่างรอ validate/calculate อยู่ (ครอบทั้ง handleNext ไม่ใช่แค่ตอน calculate)
+    const [isAdvancing, setIsAdvancing] = useState(false);
+    // state อัปเดตหลัง render ถัดไป คลิกซ้ำเร็วๆ ในเฟรมเดียวกันจะยังอ่านได้ false — ใช้ ref เป็นตัวกันจริง ส่วน state ไว้ disable ปุ่ม
+    const isAdvancingRef = useRef(false);
 
     const onErrorCallback = (error: string) => swalError("Error", error);
     const calculateCaseClaim = useCalculateCaseClaim(() => {}, onErrorCallback);
@@ -101,16 +105,20 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
         };
     };
 
-    const handleCalculate = async () => {
+    /** @returns สำเร็จหรือไม่ — handleNext ต้องเช็คก่อนเลื่อน step ต่อ ไม่งั้นเลื่อนไปหน้าสรุปทั้งที่ยอดคำนวณผิด/ไม่มี */
+    const handleCalculate = async (): Promise<boolean> => {
         try {
             setIsCalculating(true);
             const payload = buildCalculatePayload();
             const res = await calculateCaseClaim.mutateAsync(payload);
             if (res?.isSuccess && res.data) {
                 dispatch(setCalculateExpenseResult(res.data));
+                return true;
             }
+            return false;
         } catch {
             // error handled ใน onErrorCallback
+            return false;
         } finally {
             setIsCalculating(false);
         }
@@ -159,24 +167,36 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     };
 
     const handleNext = async () => {
-        if (activeStep === 0) {
-            const isValid = await validateStep1();
-            if (!isValid) return;
-        }
-
-        if (activeStep === 1) {
-            const totals = sumClaimExpenseItems(filledItems);
-            const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
-            if (reconciliation.status === "error") {
-                swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
-                return;
+        if (isAdvancingRef.current) return;
+        isAdvancingRef.current = true;
+        setIsAdvancing(true);
+        try {
+            if (activeStep === 0) {
+                const isValid = await validateStep1();
+                if (!isValid) return;
             }
-            await handleCalculate();
+
+            if (activeStep === 1) {
+                const totals = sumClaimExpenseItems(filledItems);
+                // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
+                // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ
+                // ทั้งที่ควรเป็น "pending" (ดู ClaimAmountReconciliationInput.paymentAmount)
+                const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
+                if (reconciliation.status === "error") {
+                    swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
+                    return;
+                }
+                const calculated = await handleCalculate();
+                if (!calculated) return;
+            }
+            const next = Math.min(activeStep + 1, stepsLength - 1);
+            setActiveStep(next);
+            setFurthestStep((prev) => Math.max(prev, next));
+            scrollToStepToggleBar();
+        } finally {
+            isAdvancingRef.current = false;
+            setIsAdvancing(false);
         }
-        const next = Math.min(activeStep + 1, stepsLength - 1);
-        setActiveStep(next);
-        setFurthestStep((prev) => Math.max(prev, next));
-        scrollToStepToggleBar();
     };
 
     const handleBack = () => {
@@ -190,6 +210,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
         furthestStep,
         isLastStep,
         isCalculating,
+        isAdvancing,
         handleNext,
         handleBack,
         handleCalculate,

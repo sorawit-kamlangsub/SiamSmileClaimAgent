@@ -34,7 +34,7 @@ import { swalError } from "../../../../_common";
 import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPAInfo";
 import { useBeneficiaryPA } from "../../../hooks/CreateClaim/ClaimPA/useBeneficiaryPA";
 import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/BeneficiarySectionPA";
-import { CoverageType } from "../../../../../functionHelpers";
+import { CoverageType, safeAtob } from "../../../../../functionHelpers";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
 import { ContactCard } from "../../../components/CreateClaim/ContactCard";
@@ -44,7 +44,7 @@ const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { appId, refId, isContinuous: isContinuousParam, oldClaimId } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim, editingItemId, oldClaim } = useAppSelector(
         (s) => s.claimpa
     );
@@ -328,10 +328,10 @@ const ClaimPASummaryPage: React.FC = () => {
 
         Swal.fire({
             icon: "success",
-            title: "ทำรายการสำเร็จ",
+            title: outcome.result?.data?.result ?? "ทำรายการสำเร็จ",
             html: `
-                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:1.8;">
-                        ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
+                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:2.4;">
+                        ${outcome.result?.data?.msg ?? "ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS"}
                     </div>
                     <div style="max-height:200px;overflow-y:auto;padding-right:8px;">
                         ${itemsHtml}

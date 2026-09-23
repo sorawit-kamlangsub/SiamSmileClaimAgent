@@ -1,14 +1,29 @@
-import { Grid, Paper, Skeleton } from "@mui/material";
+import { Alert, Grid, Paper, Skeleton } from "@mui/material";
 import ConsiderCustomerHeaderCard from "../_common/ConsiderCustomerHeaderCard";
 import ConsiderHospitalHeaderCard from "../_common/ConsiderHospitalHeaderCard";
 import { useGetDashboardCustomerConsider } from "../../../../api/coreClaimApi";
 type ConsiderCustomerHeaderProps = {
     dashboardData: ReturnType<typeof useGetDashboardCustomerConsider>["data"];
     dashboardDataLoading: boolean;
+    dashboardDataError?: boolean;
 };
 
-const ConsiderCustomerHeader = ({ dashboardData, dashboardDataLoading }: ConsiderCustomerHeaderProps) => {
+const ConsiderCustomerHeader = ({
+    dashboardData,
+    dashboardDataLoading,
+    dashboardDataError,
+}: ConsiderCustomerHeaderProps) => {
     const summary = dashboardData?.data?.[0];
+
+    // ก่อนหน้านี้ error กับ "ไม่มีข้อมูล" แสดงเหมือนกัน (การ์ดโชว์ 0 เฉยๆ) ผู้ใช้แยกไม่ออกว่า API ล่มหรือแค่ไม่มีเคส
+    if (dashboardDataError) {
+        return (
+            <Alert severity="error" variant="outlined">
+                ไม่สามารถโหลดข้อมูลสรุปได้ กรุณาลองใหม่อีกครั้ง
+            </Alert>
+        );
+    }
+
     return (
         <>
             <Grid container spacing={2}>

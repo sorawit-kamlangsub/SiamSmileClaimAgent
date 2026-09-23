@@ -7,16 +7,17 @@ import {
     useGetCustomerDetailById,
 } from "../../../../../api/coreClaimApi";
 import { setBankAccounts, setContacts, setInsured } from "../../../store/claimPHSlice";
+import { safeAtob } from "../../../../../functionHelpers";
 
 export const useClaimPH = () => {
     const dispatch = useAppDispatch();
 
     const { appId, refId } = useParams();
 
-    const customerId = refId ? parseInt(atob(refId)) : undefined;
-    const applicationId = appId ? atob(appId) : undefined;
+    const customerId = safeAtob(refId);
+    const applicationId = safeAtob(appId);
 
-    const claimInfoQuery = useGetCustomerDetailById(customerId as number);
+    const claimInfoQuery = useGetCustomerDetailById(customerId);
     const bankAccountQuery = useGetCustomerBankAccount(applicationId);
     const contactQuery = useGetContactPerson(applicationId ?? "", 6);
 

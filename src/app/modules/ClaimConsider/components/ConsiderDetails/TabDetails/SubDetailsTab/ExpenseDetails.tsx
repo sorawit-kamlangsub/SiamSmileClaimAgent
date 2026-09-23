@@ -31,7 +31,7 @@ type ExpenseDetailsProps = {
 // ด้านล่างต้องใช้ benefitName จาก hook นี้ ก่อนถึง ExpenseRecords — ส่งผลลัพธ์ทั้งก้อนต่อลงไปแทนเรียกซ้ำ
 const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetailsProps) => {
     const nplAmount = detailData?.data?.nplAmount || 0;
-    const expenseDetail = useClaimExpenseDetailHook({ detailData, customerDetailData });
+    const expenseDetail = useClaimExpenseDetailHook({ detailData, customerDetailData, isCustomerClaim: true });
     return (
         <>
             <CustomPaper>

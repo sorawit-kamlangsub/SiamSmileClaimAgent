@@ -31,6 +31,11 @@ export const BILLING_CLAIM_TYPE_LABEL = "เคลมโรงพยาบาล
  * decisionId ของ Decision master ที่ผูกกับผลตรวจสอบวางบิลแต่ละสถานะ
  * เลขชุดเดียวกับ ConsiderSection ของ ClaimConsider (3 รอเอกสาร / 4 รอแก้ไข / 5 ปฏิเสธ / 6 ยกเลิก)
  * TODO: ยืนยันเลข decisionId กับ BE — handoff ไม่ได้ระบุไว้
+ *
+ * TODO(billing-reject-reason): สถานะ "ปฏิเสธ" (4) ใช้ entry นี้ (decisionId=5) เพื่อดึงรายการเหตุผลมาโชว์
+ * บนจอชั่วคราวเท่านั้น — hospital-billing-fe.md ข้อ 9 ระบุว่า `rejectReasonId` เป็นคนละ master กับ
+ * DecisionReason และ repository ยังไม่มี HTTP endpoint อ่าน RejectReason ห้าม reuse master นี้ถาวร
+ * เมื่อ BE เพิ่ม endpoint ให้ย้าย status 4 ไปเรียก master ใหม่แยกจาก BILLING_DECISION_ID
  */
 export const BILLING_DECISION_ID: Partial<Record<BillingStatusId, number>> = {
     [BILLING_STATUS.needsCorrection]: 4,
@@ -93,6 +98,16 @@ export const BILLING_DOCUMENT_REVIEW_STATUS = {
     waiting: 4,
 } as const;
 
+/** สีประจำผลการตรวจเอกสารแต่ละสถานะ (key = documentReviewStatusId) — ชุดสีเดียวกับ DOCUMENT_CHECK_RESULT_COLORS ของหน้าพิจารณาเคลม */
+export const BILLING_DOCUMENT_REVIEW_STATUS_COLOR: Record<number, string> = {
+    [BILLING_DOCUMENT_REVIEW_STATUS.passed]: "#178236",
+    [BILLING_DOCUMENT_REVIEW_STATUS.failed]: "#B32615",
+    [BILLING_DOCUMENT_REVIEW_STATUS.waiting]: "#A87808",
+};
+
+/** สีสำรองเมื่อเจอ documentReviewStatusId ที่ยังไม่ได้กำหนดสี */
+export const BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR = "#5A6B7B";
+
 /** เพิ่มแถวค่ารักษาใหม่ให้ `caseItemId` ว่างไว้ — BE รู้ว่าเป็นแถวใหม่จากตรงนี้ (handoff ข้อ 5) */
 export type BillingExpenseFormItem = BillingExpenseDto & {
     _rowKey: string;
@@ -107,15 +122,6 @@ export type BillingExpenseFormItem = BillingExpenseDto & {
 
 /** เอกสารแก้ได้เฉพาะ `reviewStatusId` / `note` — field อื่นเป็นข้อมูลอ่านอย่างเดียวจาก BE (handoff ข้อ 5) */
 export type BillingDocumentFormItem = BillingDocumentDto & { _rowKey: string };
-
-/** แถวตาราง "เอกสารประกอบการปฏิเสธ" — ยังไม่มี endpoint/DTO จริง (PENDING_BE_FIELDS.rejectionDocumentType) */
-export type BillingRejectionDocumentFormItem = {
-    _rowKey: string;
-    documentSubTypeId?: number;
-    documentSubTypeName?: string;
-    documentId?: string;
-    fileCount?: number;
-};
 
 /**
  * ประเภทรายการเคลมของหน้าวางบิลโรงพยาบาล (Sheet 2-4 ของสเปค) — วันนี้ derive จาก query param `?type=`
@@ -214,18 +220,15 @@ export interface BillingReviewFormValues {
     medicalLicenseNo: string;
     physicianName: string;
 
-    // expenses / documents / ส่วนลดท้ายบิล
+    // expenses / documents
     expenses: BillingExpenseFormItem[];
     documents: BillingDocumentFormItem[];
-    ssEndDiscountAmount: number;
 
     // Step 3 — ผลการตรวจสอบ
     reviewStatusId: BillingStatusId | undefined;
     /** สาเหตุของผลตรวจสอบ — mapper เป็นตัวตัดสินว่าส่งเป็น rejectReasonId (สถานะ 4) หรือ decisionReasonId (2/5) */
     reviewReasonId: number | undefined;
     reviewRemark: string;
-    /** เอกสารประกอบการปฏิเสธ (แสดงเมื่อ reviewStatusId = rejected) — ยังไม่มี endpoint จริง */
-    rejectionDocuments: BillingRejectionDocumentFormItem[];
 
     /*
      * ฟิลด์ต่อจากนี้เป็น FE-only ทั้งหมด — เพิ่มเพื่อรองรับ UI ตามสเปคใหม่ที่ contract ปัจจุบันยังไม่มีข้อมูล

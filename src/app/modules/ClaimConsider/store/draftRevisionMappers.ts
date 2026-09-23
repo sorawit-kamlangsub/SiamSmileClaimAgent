@@ -7,6 +7,7 @@ import {
     TimeSpan,
 } from "../../../api/coreClaimApi.client";
 import { ClaimConsiderValues, ClaimExpenseItem } from "./claimConsiderSlice";
+import { DECISION_ID } from "./claimConsider.constants";
 
 /**
  * TimeSpan จาก NSwag พิมพ์เป็น object แต่ backend ส่งจริงเป็น string "HH:mm:ss" เสมอ (ดู asTimeSpan
@@ -98,7 +99,7 @@ export const mapDraftPayloadToFormValues = ({
     if (c?.hospitalId !== undefined) values.hospitalId = c.hospitalId;
     if (c?.chiefComplaintId !== undefined) values.chiefComplaintId = c.chiefComplaintId;
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
-    if (payload.accidentDescription !== undefined) values.detail = payload.accidentDescription;
+    if (c?.chiefComplaintCustom !== undefined) values.detail = c.chiefComplaintCustom;
 
     if (c?.icD10_1stId !== undefined || c?.icD10_2ndId !== undefined || c?.icD10_3rdId !== undefined) {
         values.diagnoses = [
@@ -110,7 +111,14 @@ export const mapDraftPayloadToFormValues = ({
 
     const adjudication = c?.caseAdjudication;
     if (adjudication?.decisionId !== undefined) values.considerResult = adjudication.decisionId;
-    if (adjudication?.decisionReasonId !== undefined) values.decisionReasonId = adjudication.decisionReasonId;
+    // ปฏิเสธ (5) / ยกเลิก (6) : สาเหตุที่เลือกใน ConsiderSection คือ rejectReasonId / cancelReasonId
+    const reasonId =
+        adjudication?.decisionId === DECISION_ID.REJECTED
+            ? adjudication.rejectReasonId
+            : adjudication?.decisionId === DECISION_ID.CANCELLED
+            ? c?.cancelReasonId
+            : adjudication?.decisionReasonId;
+    if (reasonId !== undefined) values.decisionReasonId = reasonId;
     if (adjudication?.decisionRemark !== undefined) values.decisionReasonDetail = adjudication.decisionRemark;
     if (adjudication?.approvedIPDDayCount !== undefined) values.ipdDays = adjudication.approvedIPDDayCount;
     if (adjudication?.approvedICUDayCount !== undefined) values.icuDays = adjudication.approvedICUDayCount;
@@ -135,8 +143,9 @@ const draftItemKey = (i: { inputToStandardMappingId?: number; standardMedicalExp
  * เพราะ caseItem ของแบบร่างไม่มี code/description/color/maximumLimit/bodyPartId — ถ้าสร้างใหม่ล้วนๆ
  * แถวจะไม่มีชื่อ/สี/เพดานให้แสดง
  *
- * ห้าม match ด้วย caseItemId: ฝั่ง save (ClaimDetailActionHook.tsx) generate uuid ตัวเดียวแล้วใส่ซ้ำทุก
- * แถว ทำให้ caseItemId ในแบบร่างไม่ unique — ต้อง match ด้วย inputToStandardMappingId+standardMedicalExpenseId
+ * ห้าม match ด้วย caseItemId: แบบร่างเก่าที่บันทึกไว้ก่อนแก้ ClaimDetailActionHook.tsx (เคย generate uuid
+ * ตัวเดียวใส่ซ้ำทุกแถว) ยังมี caseItemId ไม่ unique อยู่ — ต้อง match ด้วย inputToStandardMappingId+standardMedicalExpenseId
+ * ต่อไปเพื่อรองรับข้อมูลเก่า แม้แบบร่างใหม่จะมี caseItemId unique ต่อแถวแล้วก็ตาม
  */
 export const mergeDraftCaseItems = (
     frequentItems: ClaimExpenseItem[],

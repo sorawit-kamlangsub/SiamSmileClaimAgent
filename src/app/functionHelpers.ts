@@ -80,6 +80,19 @@ export const decodeFromBase64 = (str: string): string => {
     return decodeURIComponent(escape(atob(str)));
 };
 
+/**
+ * ถอด base64 อย่างปลอดภัย — คืน undefined แทนการ throw เมื่อ input ไม่ใช่ base64 ที่ถูกต้อง
+ * (เช่น bookmark เก่า/แก้ URL เอง) ไม่มี ErrorBoundary ดักในระบบ ถ้าปล่อยให้ throw ตรงๆ จะทำให้ทั้ง SPA ขาว
+ */
+export const safeAtob = (value: string | undefined): string | undefined => {
+    if (!value) return undefined;
+    try {
+        return atob(value);
+    } catch {
+        return undefined;
+    }
+};
+
 export const [startOfMonth, endOfMonth] = [
     dayjs().local().utcOffset(0).startOf("month"),
     dayjs().local().utcOffset(0).endOf("month"),

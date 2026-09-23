@@ -6,6 +6,7 @@ import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { mapCaseEntryToV2, mapBeneficiariesToRequest, mapBankAccountToBeneficiary } from "./useCreateClaimPA";
 import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
 import { useParams } from "react-router-dom";
+import { safeAtob } from "../../../../../functionHelpers";
 
 const generateRequestId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -30,7 +31,7 @@ export const mapLocalCoreClaimToContinuedRequest = (
 
 export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { oldClaimId: oldClaimIdParam } = useParams();
-    const oldClaimId = oldClaimIdParam ? atob(oldClaimIdParam) : "";
+    const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);
     const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];

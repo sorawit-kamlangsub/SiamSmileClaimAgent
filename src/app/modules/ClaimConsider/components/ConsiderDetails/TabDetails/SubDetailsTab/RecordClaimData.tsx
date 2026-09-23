@@ -18,8 +18,9 @@ import StayDaysSummary from "./StayDaysSummary";
 import { EMPTY_STATE_SX } from "../../../../../CreatedClaim/components/CreateClaim/ClaimPH/ClaimFormSection";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
 import { useFormikContext } from "formik";
-import ContinuousClaimSection from "../../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimSection";
-import { ContinuousClaimRow } from "../../../ConsiderHospitalDetails/mock/hospitalConsiderMock";
+// เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+// import ContinuousClaimSection from "../../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimSection";
+// import { ContinuousClaimRow } from "../../../ConsiderHospitalDetails/mock/hospitalConsiderMock";
 type RecordClaimDataProps = {
     incidentType: ClaimTypeOption[];
     incidentTypeLoading: boolean;
@@ -27,14 +28,18 @@ type RecordClaimDataProps = {
     causeOfIncident: ChipOption[];
     medicalType: ChipOption[];
     incidentTypeMappingLoading: boolean;
-    /** เคลมต่อเนื่อง */
+    /* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
     continuousClaimRows: ContinuousClaimRow[];
     continuousClaimOpen: boolean;
     onContinuousClaimOpenChange: (open: boolean) => void;
     onContinuousClaimToggle: (checked: boolean) => void;
     onContinuousClaimSelect: (row: ContinuousClaimRow) => void;
     onContinuousClaimClear: () => void;
+    */
 };
+// เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1) : ไม่ destructure
+// continuousClaimRows / continuousClaimOpen / onContinuousClaimOpenChange / onContinuousClaimToggle /
+// onContinuousClaimSelect / onContinuousClaimClear
 const RecordClaimData = ({
     incidentType,
     incidentTypeLoading,
@@ -42,12 +47,6 @@ const RecordClaimData = ({
     causeOfIncident,
     medicalType,
     incidentTypeMappingLoading,
-    continuousClaimRows,
-    continuousClaimOpen,
-    onContinuousClaimOpenChange,
-    onContinuousClaimToggle,
-    onContinuousClaimSelect,
-    onContinuousClaimClear,
 }: RecordClaimDataProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
@@ -57,9 +56,8 @@ const RecordClaimData = ({
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
-    // เลือกเคลมต่อเนื่องแล้ว = วันที่เกิดเหตุ/อาการสำคัญถูกล็อคตามเคลมเดิม (ดู handleSelectContinuousClaim)
-    // ห้ามแก้จนกว่าจะเอาติ๊ก "เป็นเคลมต่อเนื่อง" ออก
-    const isContinuousClaimLocked = !!values.continuousClaim;
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const isContinuousClaimLocked = !!values.continuousClaim;
     // const isManualIPD =
     //     values.coverageTypeId === CoverageType.Medical &&
     //     (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
@@ -73,7 +71,7 @@ const RecordClaimData = ({
                 <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="บันทึกข้อมูลเคลม" color="blue" />
                 <Box component="form" p={2}>
                     <Grid container spacing={2}>
-                        {/* เคลมต่อเนื่อง */}
+                        {/* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
                         <Grid item xs={12}>
                             <ContinuousClaimSection
                                 rows={continuousClaimRows}
@@ -84,6 +82,7 @@ const RecordClaimData = ({
                                 onClear={onContinuousClaimClear}
                             />
                         </Grid>
+                        */}
                         {/* เหตุของการเคลม */}
                         <Grid item xs={12}>
                             <Typography fontWeight={600} fontSize={16} mb={2}>
@@ -180,7 +179,8 @@ const RecordClaimData = ({
                                     slotProps={{ textField: { size: "small" } }}
                                     maxDate={dayjs()}
                                     required
-                                    disabled={isContinuousClaimLocked}
+                                    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+                                    // disabled={isContinuousClaimLocked}
                                 />
                             </Box>
                         </Grid>
@@ -275,7 +275,8 @@ const RecordClaimData = ({
                                     formik={formik}
                                     size="small"
                                     required
-                                    disabled={isContinuousClaimLocked}
+                                    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+                                    // disabled={isContinuousClaimLocked}
                                 />
                             </Box>
                         </Grid>

@@ -50,7 +50,7 @@ interface InsuredDetailItem {
 }
 
 interface SearchResult {
-    id: number;
+    id: string;
     appId: string;
     customerName: string;
     idCardNo: string;
@@ -83,7 +83,7 @@ const mapToSearchResult = (dto: GetCustomerSearchByPolicyCodeDtoResponse): Searc
     ];
 
     return {
-        id: dto.id ?? 0,
+        id: dto.customerDetailId ?? "",
         appId: dto.policyCode ?? "",
         customerName: dto.customerName ?? "",
         idCardNo: dto.cardDetail ?? "",
@@ -202,10 +202,10 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
 
         const stubClaim: LocalClaimEntry = {
             tempClaimId,
-            applicationId: selectedInsured.appId,
+            policyCode: selectedInsured.appId,
             policyNo: undefined,
             certificateNo: undefined,
-            customerId: selectedInsured.id,
+            customerDetailId: selectedInsured.id,
             customerName: selectedInsured.customerName,
             incidentTypeId: undefined,
             incidentDate: undefined,

@@ -124,7 +124,7 @@ type ClaimTransactionTabProps = {
 
 const ClaimTransactionTab = ({ onViewDraft }: ClaimTransactionTabProps) => {
     const dispatch = useAppDispatch();
-    const { transaction, transactionLoading, pagination, setPaginated } = useClaimTransactionHook();
+    const { transaction, transactionLoading, transactionError, pagination, setPaginated } = useClaimTransactionHook();
 
     const transactionList = transaction?.data ?? [];
 
@@ -148,21 +148,27 @@ const ClaimTransactionTab = ({ onViewDraft }: ClaimTransactionTabProps) => {
                                 width: 64,
                                 height: 64,
                                 borderRadius: "50%",
-                                bgcolor: "#F0F0F0",
+                                bgcolor: transactionError ? "#FFEBEE" : "#F0F0F0",
                                 display: "flex",
                                 alignItems: "center",
                                 justifyContent: "center",
                             }}
                         >
-                            <HistoryOutlinedIcon sx={{ fontSize: 32, color: "#9E9E9E" }} />
+                            {transactionError ? (
+                                <ErrorOutlineIcon sx={{ fontSize: 32, color: "#D32F2F" }} />
+                            ) : (
+                                <HistoryOutlinedIcon sx={{ fontSize: 32, color: "#9E9E9E" }} />
+                            )}
                         </Box>
 
                         <Typography variant="subtitle1" fontWeight={600} color="text.primary">
-                            ไม่พบประวัติการทำรายการ
+                            {transactionError ? "ไม่สามารถโหลดประวัติการทำรายการได้" : "ไม่พบประวัติการทำรายการ"}
                         </Typography>
 
                         <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 320 }}>
-                            เมื่อมีการทำรายการเกี่ยวกับเคลมนี้ ประวัติจะแสดงที่นี่
+                            {transactionError
+                                ? "กรุณาลองใหม่อีกครั้ง"
+                                : "เมื่อมีการทำรายการเกี่ยวกับเคลมนี้ ประวัติจะแสดงที่นี่"}
                         </Typography>
                     </Box>
                 )}

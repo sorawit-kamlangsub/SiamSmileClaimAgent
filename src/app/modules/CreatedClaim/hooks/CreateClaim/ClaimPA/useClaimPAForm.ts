@@ -12,7 +12,7 @@ import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailHalf } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
-import { CoverageType, MedicalType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import {
     addClaimItem,
     ClaimInsuredItem,
@@ -60,7 +60,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const {
         form,
         oldClaim,
@@ -309,10 +309,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
             const claimEntry: LocalClaimEntry = {
                 tempClaimId,
-                applicationId: applicationId ?? "",
+                policyCode: applicationId ?? "",
                 policyNo: undefined,
                 certificateNo: undefined,
-                customerId,
+                customerDetailId: customerId,
                 customerName: customerName ?? "",
                 incidentTypeId: values.incidentTypeId,
                 incidentDate: values.incidentDate,
@@ -553,7 +553,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId,
         formattype,
         effectiveInsured?.customerTypeCode,
-        effectiveInsured?.customerCode,
+        effectiveInsured?.customerDetailId,
         isContinuous ? oldClaim?.claimNo : undefined
     );
 

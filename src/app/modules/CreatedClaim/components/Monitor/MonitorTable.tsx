@@ -43,7 +43,11 @@ const MonitorTable: React.FC = () => {
                     return (
                         <>
                             <Link
-                                href={item?.id ? `/checkeligible/detail/${btoa(item.id.toString())}` : ""}
+                                href={
+                                    item?.customerDetailId
+                                        ? `/checkeligible/detail/${btoa(item.customerDetailId.toString())}`
+                                        : ""
+                                }
                                 target="_blank"
                                 underline="hover"
                             >

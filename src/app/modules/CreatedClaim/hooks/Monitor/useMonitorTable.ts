@@ -28,12 +28,12 @@ export const useMonitorTable = () => {
     );
 
     const selectedId =
-        selectedRowIndex !== undefined && data?.data?.[selectedRowIndex]?.id != undefined
-            ? data.data[selectedRowIndex].id
-            : 0;
+        selectedRowIndex !== undefined && data?.data?.[selectedRowIndex]?.customerDetailId != undefined
+            ? data.data[selectedRowIndex].customerDetailId
+            : undefined;
 
     const { data: claimInfo, isLoading: claimInfoLoading } = useGetCustomerDetailById(selectedId);
-    const customerDetailLoading = selectedId! > 0 && claimInfoLoading;
+    const customerDetailLoading = !!selectedId && claimInfoLoading;
     useEffect(() => {
         if (!search.searchDetail) return;
 
@@ -53,7 +53,7 @@ export const useMonitorTable = () => {
             cardNo: claimInfo.data?.cardDetail || "-",
             productName: claimInfo.data?.productTypeName || "-",
             productTypeId: data.data?.[selectedRowIndex!]?.productTypeId,
-            customerId: data.data?.[selectedRowIndex!]?.id,
+            customerId: data.data?.[selectedRowIndex!]?.customerDetailId,
             startCoverDate: claimInfo.data?.coverageFrom?.toString() || "-",
             endCoverDate: claimInfo.data?.coverageTo?.toString() ?? "-",
             schoolName: claimInfo.data?.schoolName || "-",

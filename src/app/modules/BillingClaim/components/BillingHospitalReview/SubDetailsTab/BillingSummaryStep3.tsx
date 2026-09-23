@@ -32,9 +32,10 @@ const fmtTime = (v: string | undefined) => formatDateString(v, "HH:mm");
  *
  * ส่วนตัวเลข (รายการค่ารักษา/สรุปค่าชดเชย/สรุปค่าใช้จ่ายโรงพยาบาล/บัญชีรับเงินค่าชดเชย) reuse
  * `ClaimSummaryStep3` ของ ClaimConsider ตรง ๆ (เป็น prop-driven ล้วน) ผ่าน additive props ที่เพิ่มไว้
- * (`hideCompensationTable`/`lastSummaryLine`/`disableAccountEdit`) — ไม่มี benefit breakdown จริง
+ * (`hideCompensationTable`/`disableAccountEdit`) — ไม่มี benefit breakdown จริง
  * (PENDING_BE_FIELDS.benefitBreakdown) จึงส่ง `treatmentRows=[]` และ derive summary จากยอดที่คำนวณได้จริง
- * (`useBillingExpenseHook`) เท่านั้น
+ * (`useBillingExpenseHook`) เท่านั้น บรรทัดสุดท้ายของการ์ด "สรุปค่าใช้จ่ายโรงพยาบาล" ใช้สูตรเดียวกับ
+ * หน้าพิจารณาเคลมโรงพยาบาล คือ "ส่วนเกิน (ลูกค้าจ่าย)" (`lastSummaryLine` default = "excess")
  */
 const BillingSummaryStep3 = ({
     hospitalName,
@@ -73,7 +74,10 @@ const BillingSummaryStep3 = ({
                         value={fmtTime(values.dischargeTime?.toString()) ?? "-"}
                     />
                     <CustomDisplayText label="สถานพยาบาล" value={hospitalName} />
-                    <CustomDisplayText label="อาการสำคัญ" value={values.chiefComplaintId_selectedText} />
+                    <CustomDisplayText
+                        label="อาการสำคัญ"
+                        value={values.chiefComplaintId_selectedText || labels.chiefComplaintName}
+                    />
                     <CustomDisplayText label="คำวินิจฉัย 1" value={labels.diagnosis1Name} />
                     <CustomDisplayText label="คำวินิจฉัย 2" value={labels.diagnosis2Name ?? "-"} />
                     <CustomDisplayText label="คำวินิจฉัย 3" value={labels.diagnosis3Name ?? "-"} />
@@ -99,7 +103,6 @@ const BillingSummaryStep3 = ({
                             : undefined
                     }
                     allowSeparateCompensation={allowSeparateCompensation}
-                    lastSummaryLine="compensateRemain"
                     disableAccountEdit
                 />
             </CustomPaper>
