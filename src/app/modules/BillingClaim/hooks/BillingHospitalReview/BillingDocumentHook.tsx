@@ -64,16 +64,6 @@ const useBillingDocumentHook = (documents: BillingDocumentFormItem[]) => {
     /** ค่าจำนวนไฟล์ normalize เป็น 0 — ใช้เฉพาะ gate ตรวจสอบ `> 0` ห้ามใช้แสดงผลตรง ๆ (ดู getRawFileCount) */
     const getFileCount = (row: BillingDocumentFormItem): number => getRawFileCount(row) ?? 0;
 
-    /** ทุกแถวที่มีไฟล์ (fileCount > 0) ต้องมีผลการตรวจแล้ว — gate ปุ่ม "ถัดไป" ของ Step 1 */
-    const hasAnyMissingResult = () =>
-        documents.some(
-            (doc) => getFileCount(doc) > 0 && (doc.reviewStatusId === undefined || doc.reviewStatusId === null)
-        );
-
-    /** ทุกแถวที่มีไฟล์ต้องมีผลเป็น "ผ่าน" — gate ปุ่ม "อนุมัติ" ของ Step 3 */
-    const hasAnyNotPassed = () =>
-        documents.some((doc) => getFileCount(doc) > 0 && doc.reviewStatusId !== BILLING_DOCUMENT_REVIEW_STATUS.passed);
-
     const hasMissingRequiredNote = () =>
         documents.some(
             (doc) =>
@@ -88,8 +78,6 @@ const useBillingDocumentHook = (documents: BillingDocumentFormItem[]) => {
         getDocInfo,
         getFileCount,
         getRawFileCount,
-        hasAnyMissingResult,
-        hasAnyNotPassed,
         hasMissingRequiredNote,
     };
 };

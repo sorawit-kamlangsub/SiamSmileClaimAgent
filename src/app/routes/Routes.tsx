@@ -34,7 +34,7 @@ import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/Consider
 import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
-import BillingCustomerPage from "../modules/BillingClaim/pages/BillingCustomerPage.tsx";
+import BillingFundDisbursementPage from "../modules/BillingClaim/pages/BillingFundDisbursementPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -274,27 +274,27 @@ const Routes: RouteMapType[] = [
         children: [
             {
                 index: true,
-                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                title: "วางบิลเคลม - ตรวจสอบรพ.วางบิล",
                 element: <Navigate to="hospital" replace />,
             },
             {
                 path: "customers",
-                title: "วางบิลเคลม - เคลมลูกค้า",
-                element: <BillingCustomerPage />,
+                title: "วางบิลเคลม - ตั้งเบิกกองทุน",
+                element: <BillingFundDisbursementPage />,
             },
             {
                 path: "hospital",
-                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                title: "วางบิลเคลม - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalMonitorPage />,
             },
             {
                 path: "hospital/:id/review",
-                title: "ตรวจสอบรายการวางบิล - เคลมโรงพยาบาล",
+                title: "ตรวจสอบรายการวางบิล - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalReviewPage />,
             },
             {
                 path: "hospital/:id/document",
-                title: "ดูรายละเอียดการวางบิล - เคลมโรงพยาบาล",
+                title: "ดูรายละเอียดการวางบิล - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalDocumentPage />,
             },
         ],

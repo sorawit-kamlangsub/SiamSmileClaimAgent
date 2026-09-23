@@ -24,8 +24,8 @@ import ClaimNoWithContinuousBadge from "../../components/_common/ClaimNoWithCont
  */
 type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string; caseCount?: number };
 
-// ตาม spec: สถานะ "อยู่ระหว่างดำเนินการ" (7), "ปฏิเสธ" (5) แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
-const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [5, 7];
+// ตาม spec: สถานะ "อยู่ระหว่างดำเนินการ" (7), "ปฏิเสธ" (5), "ยกเลิก" (6) แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
+const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [5, 6, 7];
 
 const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -203,28 +203,28 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                     );
                     return (
                         <>
-                            <Grid container sx={{ gap: 1.5 }}>
-                                {showAdjudicateButton && (
-                                    <Tooltip title="พิจารณาเคลม">
-                                        <IconButton
-                                            onClick={() => {
-                                                navigate(
-                                                    `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
-                                                        row?.caseId ?? ""
-                                                    )}`
-                                                );
-                                            }}
-                                            sx={{
-                                                backgroundColor: "#FFF1CD",
-                                                ":hover": {
-                                                    backgroundColor: "#e7cf95",
-                                                },
-                                            }}
-                                        >
-                                            <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
+                            <Grid container sx={{ gap: 1.5 }} wrap="nowrap">
+                                <Tooltip title={showAdjudicateButton ? "พิจารณาเคลม" : ""}>
+                                    <IconButton
+                                        disabled={!showAdjudicateButton}
+                                        onClick={() => {
+                                            navigate(
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
+                                                )}`
+                                            );
+                                        }}
+                                        sx={{
+                                            visibility: showAdjudicateButton ? "visible" : "hidden",
+                                            backgroundColor: "#FFF1CD",
+                                            ":hover": {
+                                                backgroundColor: "#e7cf95",
+                                            },
+                                        }}
+                                    >
+                                        <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
+                                    </IconButton>
+                                </Tooltip>
                                 <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
                                         onClick={() => {

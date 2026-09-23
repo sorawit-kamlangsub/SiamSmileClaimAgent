@@ -25,8 +25,9 @@ type UseSearchFilterHookParams = {
     isHospital?: boolean;
 };
 
-// DFUAT-038: เคลมโรงพยาบาลไม่มีสถานะ "รอเอกสาร" (3) และ "ยกเลิก" (6) — ซ่อนออกจากตัวกรองสถานะของ Monitor โรงพยาบาล
-const HOSPITAL_EXCLUDED_STATUS_IDS = [3, 6];
+// DFUAT-038: เคลมโรงพยาบาลไม่มีสถานะ "รอเอกสาร" (3) — ซ่อนออกจากตัวกรองสถานะของ Monitor โรงพยาบาล
+// "ยกเลิก" (6) เพิ่มกลับเข้าตัวกรองแล้ว — ปุ่ม "พิจารณาเคลม" ของแถวสถานะนี้ถูกซ่อนแทน (ดู HIDE_ADJUDICATE_BUTTON_STATUS_IDS ใน DataTableConsiderHospital.tsx)
+const HOSPITAL_EXCLUDED_STATUS_IDS = [3];
 
 const useSearchFilterHook = ({ onSearch, isHospital }: UseSearchFilterHookParams = {}) => {
     const currentDate = dayjs();

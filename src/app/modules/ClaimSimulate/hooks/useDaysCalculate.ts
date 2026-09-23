@@ -261,7 +261,9 @@ export const useDaysCalculate = () => {
             : [];
 
         const calculateDetail: CalculateCaseClaim = {
-            productId: selectedInsured?.productId,
+            productId: selectedInsured?.productId ?? undefined,
+            customerDetailId: selectedInsured?.customerDetailId ?? undefined,
+            productName: selectedInsured?.productName ?? undefined,
             coverageTypeId: header.coverageType,
             medicalTypeId: medicalTypeId,
             incidentTypeId: header.claimCause,

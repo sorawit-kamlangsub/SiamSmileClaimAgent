@@ -186,6 +186,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
                 nonCoveredAmount: nonCovered,
                 nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+                receiptAmount: item.receiptAmount,
+                bodyPartId: item.bodyPartId,
             };
         });
     };
@@ -402,6 +404,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 nonCoveredAmount: nonCovered,
                 // BE บังคับต้องมี + > 0 ทุกแถว : ใช้สาเหตุจริงถ้ามี ไม่งั้น fallback 1 (BE ignore เมื่อ nonCoveredAmount = 0)
                 nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+                receiptAmount: item.receiptAmount,
+                bodyPartId: item.bodyPartId,
             };
         });
     };
