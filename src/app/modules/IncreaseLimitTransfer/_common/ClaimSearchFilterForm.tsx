@@ -1,6 +1,7 @@
-import { Box, Button, Grid, InputAdornment } from "@mui/material";
+import { Box, Button, Grid, IconButton, InputAdornment } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import PersonSearchIcon from "@mui/icons-material/PersonSearch";
+import CloseIcon from "@mui/icons-material/Close";
 import { useFormik } from "formik";
 import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
@@ -124,6 +125,17 @@ const ClaimSearchFilterForm = ({ initialValues, onSubmit }: ClaimSearchFilterFor
                                     <PersonSearchIcon sx={{ color: "#9E9E9E", fontSize: 20 }} />
                                 </InputAdornment>
                             ),
+                            endAdornment: formik.values.searchText ? (
+                                <InputAdornment position="end">
+                                    <IconButton
+                                        size="small"
+                                        onClick={() => formik.setFieldValue("searchText", "")}
+                                        onMouseDown={(event) => event.preventDefault()}
+                                    >
+                                        <CloseIcon sx={{ fontSize: 18 }} />
+                                    </IconButton>
+                                </InputAdornment>
+                            ) : undefined,
                         }}
                     />
                 </Grid>
