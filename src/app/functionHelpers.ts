@@ -469,7 +469,7 @@ export const colorMapPaymentAppStatus: Record<number, "#11734B" | "#a56e07" | "#
 };
 
 //AppStatus
-export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9"> = {
+export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9" | "#D4EDBC"> = {
     2: "#FFF1CD", // รอพิจารณา
     3: "#FFF1CD", // รอเอกสาร
     4: "#FFF1CD", // รอแก้ไข
@@ -477,9 +477,10 @@ export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | 
     6: "#FFCFC9", // ยกเลิก
     7: "#FFF1CD", // อยู่ระหว่างดำเนินการ
     8: "#FFF1CD", // รอตรวจสอบการแก้ไข
+    9: "#D4EDBC", // อนุมัติ
 };
 
-export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615"> = {
+export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615" | "#11734B"> = {
     2: "#a56e07", // รอพิจารณา
     3: "#a56e07", // รอเอกสาร
     4: "#a56e07", // รอแก้ไข
@@ -487,6 +488,7 @@ export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615">
     6: "#B32615", // ยกเลิก
     7: "#a56e07", // อยู่ระหว่างดำเนินการ
     8: "#a56e07", // รอตรวจสอบการแก้ไข
+    9: "#11734B", // อนุมัติ
 };
 export enum IncidentType {
     Illness = 2,

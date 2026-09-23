@@ -32,10 +32,12 @@ import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPa
 import ManageRefundDetailPage from "../modules/ManageClaimTransferDetails/pages/ManageRefundDetailPage.tsx";
 import ManageAdjustDetailPage from "../modules/ManageClaimTransferDetails/pages/ManageAdjustDetailPage.tsx";
 import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/ConsiderHospitalMonitorPage.tsx";
+import ConsiderDeathDisabilityMonitorPage from "../modules/ClaimConsider/pages/ConsiderDeathDisabilityMonitorPage.tsx";
+import ConsiderDeathDisabilityDetailPage from "../modules/ClaimConsider/pages/ConsiderDeathDisabilityDetailPage.tsx";
 import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
-import BillingCustomerPage from "../modules/BillingClaim/pages/BillingCustomerPage.tsx";
+import BillingFundDisbursementPage from "../modules/BillingClaim/pages/BillingFundDisbursementPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -296,6 +298,23 @@ const Routes: RouteMapType[] = [
             },
         ],
     },
+    {
+        path: "/consider/death-disability-monitor",
+        title: "Death & Disability",
+        element: <Outlet />,
+        children: [
+            {
+                index: true,
+                title: "Death & Disability",
+                element: <ConsiderDeathDisabilityMonitorPage />,
+            },
+            {
+                path: ":id/:caseId",
+                title: "พิจารณาเคลม - Death & Disability",
+                element: <ConsiderDeathDisabilityDetailPage />,
+            },
+        ],
+    },
     // ===== วางบิลเคลม =====
     {
         path: "/billing",
@@ -305,27 +324,27 @@ const Routes: RouteMapType[] = [
         children: [
             {
                 index: true,
-                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                title: "วางบิลเคลม - ตรวจสอบรพ.วางบิล",
                 element: <Navigate to="hospital" replace />,
             },
             {
                 path: "customers",
-                title: "วางบิลเคลม - เคลมลูกค้า",
-                element: <BillingCustomerPage />,
+                title: "วางบิลเคลม - ตั้งเบิกกองทุน",
+                element: <BillingFundDisbursementPage />,
             },
             {
                 path: "hospital",
-                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                title: "วางบิลเคลม - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalMonitorPage />,
             },
             {
                 path: "hospital/:id/review",
-                title: "ตรวจสอบรายการวางบิล - เคลมโรงพยาบาล",
+                title: "ตรวจสอบรายการวางบิล - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalReviewPage />,
             },
             {
                 path: "hospital/:id/document",
-                title: "ดูรายละเอียดการวางบิล - เคลมโรงพยาบาล",
+                title: "ดูรายละเอียดการวางบิล - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalDocumentPage />,
             },
         ],

@@ -25,7 +25,7 @@ don't derive from each other. Both must be updated by hand when adding a page.
 | `/manage/setting/transfer` | ตั้งค่าการโอนเงิน | `ManageTransferPage` | ManageClaimFund |
 | `/consider/monitor` | พิจารณาเคลม - เคลมลูกค้า | `Outlet` → `ConsiderMonitorPage` (child `path:"customers"`, also `index:true` — see quirk below), `customers/:id/:caseId` → `ConsiderDetailPage` (both params `btoa`-encoded; `:caseId` feeds `useGetClaimDetailConsider`) | ClaimConsider |
 | `/consider/hospital-monitor` | พิจารณาเคลม - เคลมโรงพยาบาล | `Outlet` → `ConsiderHospitalMonitorPage` (index), `hospital/:id/:caseId` → `ConsiderHospitalDetailPage`, `hospital/:id/:caseId/document` → `ConsiderHospitalDocumentPage` (both params `btoa`-encoded; `:caseId` feeds `useGetClaimDetailConsider`) | ClaimConsider |
-| `/billing` | วางบิลเคลม | `Outlet` → `Navigate to="hospital"` (index), `customers` → `BillingCustomerPage`, `hospital` → `BillingHospitalMonitorPage`, `hospital/:id/review` → `BillingHospitalReviewPage`, `hospital/:id/document` → `BillingHospitalDocumentPage` | **BillingClaim** |
+| `/billing` | วางบิลเคลม | `Outlet` → `Navigate to="hospital"` (index), `customers` → `BillingFundDisbursementPage` (ตั้งเบิกกองทุน), `hospital` → `BillingHospitalMonitorPage` (ตรวจสอบรพ.วางบิล), `hospital/:id/review` → `BillingHospitalReviewPage`, `hospital/:id/document` → `BillingHospitalDocumentPage` | **BillingClaim** |
 
 Plus `src/App.tsx` itself: `AuthRoutes` (callbacks, `/unauthorized`), `/` → `Home`, public
 `/slip/:id` + `/survey/*` under `<LayoutPublic />`, `*` → `/not-found`.
@@ -69,9 +69,9 @@ Home                                          → /
 พิจารณาเคลม (ParentMenu)
   ├ เคลมลูกค้า                                 → /consider/monitor
   └ เคลมโรงพยาบาล                              → /consider/hospital-monitor
-วางบิลเคลม (ParentMenu)                        ← added this session
-  ├ เคลมลูกค้า (placeholder page)              → /billing/customers
-  └ เคลมโรงพยาบาล                              → /billing/hospital
+วางบิลเคลม (ParentMenu)
+  ├ ตั้งเบิกกองทุน (UI shell, ไม่มี backend)   → /billing/customers
+  └ ตรวจสอบรพ.วางบิล                           → /billing/hospital
 ```
 
 All entries pass `permissions: []` (guarding is not enforced yet — see project-structure.md).

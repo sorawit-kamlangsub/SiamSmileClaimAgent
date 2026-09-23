@@ -1,17 +1,5 @@
 import { useState } from "react";
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    FormHelperText,
-    IconButton,
-    TextField,
-    ToggleButton,
-    ToggleButtonGroup,
-    Tooltip,
-} from "@mui/material";
+import { Box, Button, Dialog, DialogContent, DialogTitle, FormHelperText, IconButton, Tooltip } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
@@ -23,16 +11,9 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 import { StandardDataTable } from "../../../../_common";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../../functionHelpers";
 import { DOC_STORAGE_URL } from "../../../../../../Const";
-import { useGetDocumentReviewStatus } from "../../../../../api/coreClaimMastersApi";
 import DocumentFileViewer from "../../../../ClaimConsider/components/ConsiderHospitalDetails/SubDetailsTab/DocumentFileViewer";
 import useBillingDocumentHook from "../../../hooks/BillingHospitalReview/BillingDocumentHook";
-import {
-    BILLING_DOCUMENT_REVIEW_STATUS,
-    BILLING_DOCUMENT_REVIEW_STATUS_COLOR,
-    BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR,
-    BillingDocumentFormItem,
-    BillingReviewFormValues,
-} from "../../../store/billingClaim.types";
+import { BillingDocumentFormItem, BillingReviewFormValues } from "../../../store/billingClaim.types";
 
 type BillingDocumentTableProps = {
     /** subtype ที่ BE บังคับต้องมีเอกสารครบ (`detail.requiredDocumentSubTypeIds`) — ใช้แสดง badge เตือนเท่านั้น */
@@ -40,23 +21,19 @@ type BillingDocumentTableProps = {
     readOnly?: boolean;
 };
 
-/** หมายเหตุบังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม */
-const isNoteRequired = (resultId: number | undefined) =>
-    resultId === BILLING_DOCUMENT_REVIEW_STATUS.failed || resultId === BILLING_DOCUMENT_REVIEW_STATUS.waiting;
-
 /**
  * Step 1 : "ตรวจสอบเอกสาร" — bind `documents[]`
  *
- * แก้ได้เฉพาะ `reviewStatusId` / `note` ต่อแถว (handoff ข้อ 5) แต่มีปุ่ม "สแกนเอกสาร" (เปิดหน้า DocStorage
- * ให้แนบเอกสารของแถวนั้นเพิ่ม — enable เฉพาะแถวที่มีเอกสารแนบมาจาก SmileConnect อยู่แล้ว ยืนยันกับ BA ตามข้อ 7.3)
+ * CR "Traffic Accident and Hospital Document Review" ข้อ CR-05 : ตัดคอลัมน์ "ผลการตรวจ"/"หมายเหตุ"
+ * ออกจากตารางนี้ (ทั้ง toggle เลือกผลตรวจและ textfield หมายเหตุ) — `reviewStatusId`/`note` ยังอยู่บน
+ * `BillingDocumentFormItem`/mapper เหมือนเดิม (ห้ามลบ ดู "Read-only by design" ใน docs/modules/BillingClaim.md)
+ * เพียงแต่ไม่มี control ให้แก้จากตารางนี้แล้ว ตารางเหลือแค่ปุ่ม "สแกนเอกสาร" (เปิดหน้า DocStorage ให้แนบ
+ * เอกสารของแถวนั้นเพิ่ม — enable เฉพาะแถวที่มีเอกสารแนบมาจาก SmileConnect อยู่แล้ว ยืนยันกับ BA ตามข้อ 7.3)
  * และปุ่ม "รายละเอียด" เปิด modal ดูไฟล์จริงจาก DocStorage (`documentId` + `fileCount` มีอยู่แล้วใน DTO)
  */
 const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: BillingDocumentTableProps) => {
     const formik = useFormikContext<BillingReviewFormValues>();
     const rows = formik.values.documents;
-
-    const { data: reviewStatusRaw, isLoading: reviewStatusLoading } = useGetDocumentReviewStatus();
-    const reviewStatusOptions = [...(reviewStatusRaw?.data ?? [])].sort((a, b) => (a.indexId ?? 0) - (b.indexId ?? 0));
 
     const { getDocInfo, getFileCount, getRawFileCount } = useBillingDocumentHook(rows);
 
@@ -179,96 +156,6 @@ const BillingDocumentTable = ({ requiredDocumentSubTypeIds, readOnly = false }: 
                                 </IconButton>
                             </span>
                         </Tooltip>
-                    );
-                },
-            },
-        },
-        {
-            name: "reviewStatusId",
-            label: "ผลการตรวจ",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = rows[tableMeta.rowIndex];
-                    return (
-                        <ToggleButtonGroup
-                            exclusive
-                            size="small"
-                            disabled={readOnly || reviewStatusLoading}
-                            value={row.reviewStatusId ?? null}
-                            onChange={(_event, value: number | null) =>
-                                handleChange(tableMeta.rowIndex, "reviewStatusId", value ?? undefined)
-                            }
-                            sx={{
-                                gap: 1,
-                                "& .MuiToggleButtonGroup-grouped": {
-                                    border: "1px solid #DDE3EA",
-                                    borderRadius: "8px !important",
-                                    marginLeft: 0,
-                                },
-                            }}
-                        >
-                            {reviewStatusOptions.map((option) => {
-                                const color =
-                                    (option.documentReviewStatusId !== undefined &&
-                                        BILLING_DOCUMENT_REVIEW_STATUS_COLOR[option.documentReviewStatusId]) ||
-                                    BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR;
-                                return (
-                                    <ToggleButton
-                                        key={option.documentReviewStatusId}
-                                        value={option.documentReviewStatusId ?? 0}
-                                        disableRipple
-                                        sx={{
-                                            px: 2,
-                                            py: 0.75,
-                                            whiteSpace: "nowrap",
-                                            textTransform: "none",
-                                            fontSize: 14,
-                                            color: "#5A6B7B",
-                                            bgcolor: "#fff",
-                                            "&:hover": { bgcolor: `${color}12` },
-                                            "&.Mui-selected": {
-                                                color: "#fff",
-                                                bgcolor: color,
-                                                borderColor: color,
-                                                fontWeight: 700,
-                                                "&:hover": { bgcolor: color },
-                                            },
-                                        }}
-                                    >
-                                        {option.documentReviewStatusName}
-                                    </ToggleButton>
-                                );
-                            })}
-                        </ToggleButtonGroup>
-                    );
-                },
-            },
-        },
-        {
-            name: "note",
-            label: "หมายเหตุ",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = rows[tableMeta.rowIndex];
-                    const required = isNoteRequired(row.reviewStatusId);
-                    return (
-                        <TextField
-                            size="small"
-                            fullWidth
-                            disabled={readOnly}
-                            value={row.note ?? ""}
-                            placeholder="ระบุหมายเหตุ"
-                            error={required && !row.note}
-                            inputProps={{ maxLength: 1000 }}
-                            onChange={(event) => handleChange(tableMeta.rowIndex, "note", event.target.value)}
-                            sx={{ minWidth: 220 }}
-                        />
                     );
                 },
             },

@@ -212,6 +212,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                         medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
                         nonCoveredAmount: amountNumber(organ.uncoveredAmount),
                         nonCoveredReasonId: organ.uncoveredReason ?? 0,
+                        bodyPartId: organ.bodyPartId,
                     });
                 }
             } else if (isManualIPD) {

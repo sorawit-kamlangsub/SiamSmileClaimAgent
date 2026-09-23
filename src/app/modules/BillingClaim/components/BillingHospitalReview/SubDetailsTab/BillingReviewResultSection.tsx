@@ -27,12 +27,12 @@ const RESULT_OPTIONS: {
 }[] = [
     {
         value: BILLING_STATUS.needsCorrection,
-        label: "รอแก้ไข",
+        label: "แจ้งแก้ไข",
         icon: <FormatListBulletedIcon fontSize="small" />,
         color: "#806033",
         softColor: "#FAF7F2",
-        reasonLabel: "สาเหตุรอแก้ไข",
-        remarkLabel: "รายละเอียดการรอแก้ไข",
+        reasonLabel: "สาเหตุแจ้งแก้ไข",
+        remarkLabel: "รายละเอียดการแจ้งแก้ไข",
         remarkRequired: true,
     },
     {
@@ -115,7 +115,7 @@ const BillingReviewResultSection = ({
                                         },
                                     }}
                                 >
-                                    {`ปุ่ม${option.label}`}
+                                    {option.label}
                                 </Button>
                             </Grid>
                         );
@@ -143,7 +143,7 @@ const BillingReviewResultSection = ({
                             required
                             fullWidth
                             disabled={readOnly}
-                            label={reviewReasonLoading ? "กำลังโหลด..." : `${selected.reasonLabel}`}
+                            label={reviewReasonLoading ? "กำลังโหลด..." : selected.reasonLabel}
                             value={formik.values.reviewReasonId || ""}
                             onChange={(e) => formik.setFieldValue("reviewReasonId", Number(e.target.value))}
                             sx={{ bgcolor: "#fff", mb: 2 }}
@@ -163,7 +163,7 @@ const BillingReviewResultSection = ({
                         disabled={readOnly}
                         required={selected.remarkRequired}
                         error={selected.remarkRequired && !formik.values.reviewRemark}
-                        label={selected.remarkRequired ? `${selected.remarkLabel}` : selected.remarkLabel}
+                        label={selected.remarkLabel}
                         placeholder="ระบุรายละเอียดผลการพิจารณา"
                         value={formik.values.reviewRemark}
                         onChange={(e) => formik.setFieldValue("reviewRemark", e.target.value)}

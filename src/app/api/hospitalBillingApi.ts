@@ -31,13 +31,13 @@ const getHospitalBillingHistoryQueryKey = ["getHospitalBillingHistory"];
  * `netBillableAmount` (hospital-billing-fe.md ข้อ 4)
  */
 export const useGetHospitalBillingFilter = (
-    statusId: number | undefined,
-    searchBy: string | undefined,
-    searchDetail: string | undefined,
-    orderingField: string | undefined,
-    ascendingOrder: boolean | undefined,
-    page: number | undefined,
-    recordsPerPage: number | undefined
+    statusId?: number | undefined,
+    searchBy?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
 ) => {
     return useQuery<BillingListDtoServiceResponse>(
         [

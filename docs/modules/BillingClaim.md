@@ -11,21 +11,37 @@ The 2026-09-14 revision is a **breaking contract change**: `externalBillingId`�
 `ssEndDiscountAmount` were dropped from the HTTP response — no fallback reads the old names.
 
 Routes: `/billing/*` — see [routes.md](../routes.md). Menu: ParentMenu "วางบิลเคลม" in
-`ASideMenuList.tsx`, submenu "เคลมลูกค้า" (placeholder) + "เคลมโรงพยาบาล" (built).
+`ASideMenuList.tsx`, submenu "ตั้งเบิกกองทุน" (`/billing/customers`, UI shell only — no endpoint
+yet) + "ตรวจสอบรพ.วางบิล" (`/billing/hospital`, built against the real API). Both submenu labels
+were renamed from "เคลมลูกค้า" / "เคลมโรงพยาบาล" by
+`CR-billing-claim-menu-renaming-and-approval-flow.md` — routes/paths/permissions are unchanged
+(compatibility alias), only the display strings moved.
 
 **2026-09 UI rewrite** — the review page (`BillingClaimDetailsTab` and everything under it) was
 rebuilt against a new 4-tab spec sheet (Monitor + 3 product variants: OPD Half/A, OPD Full/B,
 IPD/C). The headline change: **Step 1 and Step 2 are now fully read-only** (mirrors data from
-SmileConnect, no input controls) — the only things a reviewer can still edit are the document
-review result/note per row, the scan-document action, and the "แจ้งผลการพิจารณาโรงพยาบาล" block
-(Step 1 + Step 2). Step 3 no longer has that block — it has a dedicated "อนุมัติ" button instead.
-See "Read-only by design" and "Known gaps" below before touching any Step 1/2 section.
+SmileConnect, no input controls) — the only things a reviewer can still edit are the scan-document
+action and the "แจ้งผลการพิจารณาโรงพยาบาล" block (Step 1 + Step 2). Step 3 no longer has that block
+— it has a dedicated "อนุมัติ" button instead. See "Read-only by design" and "Known gaps" below
+before touching any Step 1/2 section.
+
+**CR "Traffic Accident and Hospital Document Review"** (billing scope only — the ClaimConsider side
+of that CR was not picked up in this pass) added `BillingTrafficAccidentSection.tsx` (Step 1, all
+FE-only fields, always disabled on this flow) and removed the "ผลการตรวจ"/"หมายเหตุ" columns from
+`BillingDocumentTable.tsx` — the approval guards that depended on those columns
+(`hasAnyMissingResult`/`hasAnyNotPassed` gating "ถัดไป"/"อนุมัติ") were removed too; only the
+"required document subtype must have a row" check remains. See "Known gaps" for the traffic-
+accident fields and `PENDING_BE_FIELDS.trafficAccident`.
 
 ## Scope
 
-Only `วางบิลเคลม > เคลมโรงพยาบาล` is implemented. `เคลมลูกค้า` is a placeholder page
-(`BillingCustomerPage.tsx`, "อยู่ระหว่างพัฒนา") — out of scope, no endpoint exists; would need a
-checkbox-multi-select-then-confirm-billing flow if picked up later.
+`วางบิลเคลม > ตรวจสอบรพ.วางบิล` (the review flow) is implemented against the real backend.
+`วางบิลเคลม > ตั้งเบิกกองทุน` (`BillingFundDisbursementPage.tsx`) is a **full UI shell with no
+backend** — filter, summary cards, multi-select table are all built to spec, but
+`useFundDisbursementList.ts` is a hardcoded-empty adapter (no endpoint exists yet, see
+[api-inventory.md](../api-inventory.md) "Still no API for"). Swap that one hook for a real
+`useQuery` once the backend ships the endpoint; nothing else in `BillingFundDisbursement/*` should
+need to change.
 
 ## pages/
 
@@ -34,7 +50,7 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
 | `BillingHospitalMonitorPage.tsx` | List page: dashboard + filter + table |
 | `BillingHospitalReviewPage.tsx` | Review page shell: header cards (+ ข้อมูลสถานศึกษา card when `variant.isPA`) + 2 active tabs (`ข้อมูลเคลม`, `ประวัติทำรายการ`) + 4 disabled tabs, `BillingClaimDetailsTab` |
 | `BillingHospitalDocumentPage.tsx` | 4-line wrapper = `<BillingHospitalReviewPage readOnly />` (the "ดูรายละเอียด" eye-icon route) |
-| `BillingCustomerPage.tsx` | Placeholder |
+| `BillingFundDisbursementPage.tsx` | "ตั้งเบิกกองทุน" (`/billing/customers`) list page: header cards + filter + multi-select table. UI shell only — see "Scope" above |
 
 ## components/
 
@@ -61,16 +77,33 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
   history of the selected round, each with an embedded `snapshot`)
 - `SubDetailsTab/BillingContinuousClaimSection.tsx` — Step 1 "เคลมต่อเนื่อง" checkbox → reuses
   `CheckEligible/components/ContinuousClaimDialog.tsx` as-is (props-only, no foreign Formik
-  context) to pick a continuous claim
+  context) to pick a continuous claim. **Currently hidden** — the render call and its import in
+  `BillingClaimDetailsTab.tsx` are commented out (2026-09-22, requested), not deleted; the
+  component file, its formik fields (`isContinuousClaim`/`continuousClaim`), and their defaults in
+  `billingMappers.ts` are untouched, so uncommenting the two spots in `BillingClaimDetailsTab.tsx`
+  brings it back with no other changes needed
 - `SubDetailsTab/BillingClaimInfoSection.tsx`, `BillingTreatmentSection.tsx`,
   `BillingAttendingDoctorSection.tsx` — Step 1, **read-only** (`CustomDisplayText` grids). Names
   for `incidentTypeId`/`coverageTypeId`/`medicalTypeId`/`diagnosis1..3Id` are resolved via
   `useBillingClaimLabels` since the DTO only carries IDs. `BillingTreatmentSection`/
   `BillingAttendingDoctorSection` are wrapped in `ClaimConsider`'s `CollapsibleSection`
   (Default Expand per spec)
-- `SubDetailsTab/BillingDocumentTable.tsx` — Step 1 "ตรวจสอบเอกสาร", the one editable table: 6
-  columns (รายการเอกสาร / **สแกนเอกสาร** / จำนวนเอกสาร / รายละเอียด (eye → `DocumentFileViewer`) /
-  ผลการตรวจ / หมายเหตุ). Backed by `useBillingDocumentHook` which joins `documents[]` with
+- `SubDetailsTab/BillingTrafficAccidentSection.tsx` — Step 1 "ข้อมูลอุบัติเหตุจากการจราจร", right
+  after `BillingClaimInfoSection`. Added by CR "Traffic Accident and Hospital Document Review"
+  (billing scope only). 3 columns (ประเภทยานพาหนะ / ผู้ขับขี่-ผู้โดยสาร / เป็นส่วนเกิน พ.ร.บ.),
+  1 column responsive below 820px. **Always disabled** on this flow (CR-02: only "พิจารณาเคลม >
+  เคลมลูกค้า" — out of this CR's scope — lets the user edit it). All 5 fields are FE-only, no DTO
+  support yet (`PENDING_BE_FIELDS.trafficAccident`) — defaults to มอเตอร์ไซค์/ผู้ขับขี่/ใช่ when
+  there's no source data, per CR-02. **Currently hidden** — same as `BillingContinuousClaimSection`
+  above, its render call and import in `BillingClaimDetailsTab.tsx` are commented out (2026-09-22,
+  requested), the component file and form fields are untouched
+- `SubDetailsTab/BillingDocumentTable.tsx` — Step 1 "ตรวจสอบเอกสาร", the one editable table: 4
+  columns (รายการเอกสาร / **สแกนเอกสาร** / จำนวนเอกสาร / รายละเอียด (eye → `DocumentFileViewer`)).
+  `ผลการตรวจ`/`หมายเหตุ` columns were removed by the traffic-accident CR (CR-05) — `reviewStatusId`/
+  `note` still round-trip on `BillingDocumentFormItem` (see "Read-only by design"), there's just no
+  UI control for them anymore; the "แถวที่มีเอกสารต้องมีผลตรวจ" gates on "ถัดไป"/"อนุมัติ" were
+  removed with the columns (only "required document subtype must have a row" remains, see
+  `BillingReviewDetailHook.tsx`). Backed by `useBillingDocumentHook` which joins `documents[]` with
   DocStorage (`useGetDocumentListByIds`) for real `fileCount` + scan-link metadata
 - `SubDetailsTab/BillingOcrReceiptViewer.tsx` — Step 2 "OCR ใบแจ้งค่ารักษา" (variant A only),
   disabled shell (spec: no new upload/delete/re-OCR allowed on this page)
@@ -87,9 +120,12 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
   ตรวจสอบเอกสาร; spec says explicitly this one does **not** sync back to SmileConnect)
 - `SubDetailsTab/BillingReviewResultSection.tsx` — "แจ้งผลการพิจารณาโรงพยาบาล", rendered on
   **Step 1 and Step 2 only** (not Step 3 — spec moved that block off the last step and gave Step 3
-  its own "อนุมัติ" button instead). Only 2 outcomes here: รอแก้ไข / ปฏิเสธ (อนุมัติ isn't a button
-  in this block anymore) + conditional สาเหตุ dropdown + รายละเอียด (required for รอแก้ไข only) +
-  "เอกสารประกอบการปฏิเสธ" (shown when ปฏิเสธ is selected) — reuses `DocumentScanTable`
+  its own "อนุมัติ" button instead). Only 2 outcomes here: **แจ้งแก้ไข** (label renamed from
+  "รอแก้ไข" by the billing-menu CR — `reviewStatusId` value/status wording elsewhere, e.g. the
+  Monitor status chip and filter tab, is unchanged; only this button's own label/reason/remark text
+  moved) / ปฏิเสธ (อนุมัติ isn't a button in this block anymore) + conditional สาเหตุ dropdown +
+  รายละเอียด (required for แจ้งแก้ไข only) + "เอกสารประกอบการปฏิเสธ" (shown when ปฏิเสธ is
+  selected) — reuses `DocumentScanTable`
   (`CreatedClaim/.../DocumentScanTable`) the same way `ConsiderSection` does, `productTypeId={0}`
   since `BillingDetailDto` still has no real product type (see Known gaps), with
   `alwaysFreshMasterList` so it always GETs fresh instead of caching the master row forever across
@@ -155,6 +191,21 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
   `mock` and mixes real config with mock data; the 3-flag shape was copied into
   `BILLING_CLAIM_LIST_TYPE_CONFIG` (`billingClaim.types.ts`) instead of importing across modules.
 
+**`BillingFundDisbursement/`** (ตั้งเบิกกองทุน list page — UI shell, no backend, see "Scope")
+- `FundDisbursementHeader.tsx` — 2 independent summary cards (จำนวนรายการรอวางบิล / จำนวนเงินรอวางบิล);
+  not `SummaryHeaderCard` (that component is 1-total + N-breakdown-of-that-total, a different shape
+  than 2 unrelated numbers)
+- `FundDisbursementFilter.tsx` — ประเภทการเคลม\* / ผลิตภัณฑ์\* (required, large 2-button toggle,
+  local `RequiredToggleField`) + สาขา (reuses `BranchAutocomplete` as-is) + ผู้ทำรายการ (reuses the
+  `getUserFilter` master hook through `FormikAutocompleteApi` directly, **not** through
+  `UserAutocompleteApi` — that wrapper hardcodes its label to "ผู้ให้บริการ") + ค้นหาจาก (reuses
+  `ClaimConsider`'s `StatusFilterToggle`, same as the hospital Monitor page) + คำค้นหา
+- `FundDisbursementDataTable.tsx` — `StandardDataTable` with `selectableRows: "multiple"` (built-in
+  left checkbox column, not a hand-rolled one) + a "เลือกแล้ว N รายการ — รวม ฿X / ยืนยันตั้งเบิก" bar
+  underneath; renders "กรุณาเลือกประเภทการเคลมก่อน…" instead of the table until `claimType` is
+  picked (spec's empty state); the submit button is permanently `disabled` with a `PENDING_BE_TOOLTIP`
+  (no disbursement endpoint yet)
+
 ## hooks/
 
 - `BillingHospitalMonitor/BillingSearchFilterHook.tsx` — `useFormik<BillingSearchFilterValues>`,
@@ -166,15 +217,19 @@ checkbox-multi-select-then-confirm-billing flow if picked up later.
   `enableReinitialize` clobbering user edits on refetch). One submit endpoint
   (`useSubmitHospitalBilling`) backs every outcome — `submitReview(statusId)` is the single call
   site; `handleSubmitReviewResult()` (Step 1/2 "ยืนยันบันทึกผลพิจารณา") and `handleApprove()`
-  (Step 3 "อนุมัติ", runs `validateApprove()` first) both call it. `requestId`
+  (Step 3 "อนุมัติ") both call it directly — there's no separate per-document-result validation
+  gating either button any more (removed by CR-05, see "2026-09 UI rewrite" above); `submitReview`
+  itself still checks that every *required* document subtype has at least one row. `requestId`
   (`crypto.randomUUID()`, one per submit *intent*) resets whenever `reviewStatusId`/
   `reviewReasonId`/`reviewRemark` change, not just on success/409 — otherwise a failed submit
   followed by the reviewer changing their mind would retry with the *old* requestId against a
   *new* payload. Handles `409` by `swalWarning` + resetting `hasSyncedRef` + `refetchDetail()`
-  (never auto-resubmits the stale payload).
+  (never auto-resubmits the stale payload). On a successful "อนุมัติ" the caller
+  (`BillingClaimDetailsTab.tsx`) navigates to `/billing/customers?claimType=hospital` (ตั้งเบิกกองทุน
+  แท็บเคลมโรงพยาบาล) instead of back to the Monitor page — handoff "Business Rule: อนุมัติรายการ
+  วางบิลโรงพยาบาล"
 - `BillingHospitalReview/BillingDocumentHook.tsx` — joins `documents[]` with DocStorage
-  (`useGetDocumentListByIds`) for real `fileCount` + scan-link metadata; exposes
-  `hasAnyMissingResult()` (Step 1 "ถัดไป" gate), `hasAnyNotPassed()` (Step 3 "อนุมัติ" gate)
+  (`useGetDocumentListByIds`) for real `fileCount` + scan-link metadata
 - `BillingHospitalReview/BillingClaimLabelsHook.tsx` — resolves the ID-only fields on
   `BillingClaimDto` (`incidentTypeId`/`coverageTypeId`/`medicalTypeId`/`diagnosis1..3Id`) to
   display names via the same master endpoints `ClaimTypeSelector`/`CD10Autocomplete` used when
@@ -221,6 +276,11 @@ success, which is what makes the list page reflect a status change made on the r
   contract field), `PENDING_BE_FIELDS` (screen field → expected DTO/endpoint map — the index for
   the table below). `grep -rn "PENDING_BE" src/app/modules/BillingClaim` lists every stub in the
   module in one shot.
+- `fundDisbursement.types.ts` — ตั้งเบิกกองทุน page's own types (`FUND_CLAIM_TYPE`,
+  `FUND_SEARCH_BY`, `FundDisbursementFilterValues`, `FundDisbursementItem`) — kept separate from
+  `billingClaim.types.ts` since it's a different page with no shared DTO; reuses
+  `productMultipleSelectData` (`ClaimConsider/.../Constant/ConstantValues.ts`) rather than defining
+  its own PH/PA constant
 
 ## Reason fields (สาเหตุ) on submit
 
@@ -229,18 +289,22 @@ handoff's status matrix requires per `reviewStatusId`:
 
 | `reviewStatusId` | Fields sent |
 |---:|---|
-| 2 (รอแก้ไข) | `decisionId` + `decisionReasonId` |
-| 3 (อนุมัติ) | none (all three `undefined`) |
-| 4 (ปฏิเสธ) | `rejectReasonId` only |
-| 5 (ยกเลิก) | `decisionId` + `decisionReasonId` (hidden from this UI, CR Ver2) |
+| 3 (รอแก้ไข) | `decisionId` + `decisionReasonId` |
+| 9 (อนุมัติ) | none (all three `undefined`) |
+| 5 (ปฏิเสธ) | `rejectReasonId` only |
+| 6 (ยกเลิก) | `decisionId` + `decisionReasonId` (hidden from this UI, CR Ver2) |
+
+`reviewStatusId` uses the shared `ClaimTransactionTypeId` numbering — see `BILLING_STATUS` in
+`billingClaim.types.ts` (confirmed with BE 2026-09-23, superseding the old 1-5 numbering below).
 
 There is no dedicated `RejectReason` master in the generated client, and the handoff doesn't name
 the `decisionId` values to use — `BILLING_DECISION_ID` reuses the same numbering
 `ClaimConsider/ClaimDetailActionHook.tsx` already sends BE (`4` รอแก้ไข / `5` ปฏิเสธ / `6`
 ยกเลิก) and the same `useGetDecisionReason(undefined, decisionId)` master hook, on the assumption
-the reason master is shared across claim-consider and billing decisions. **Unconfirmed with
-backend** — flagged with a `TODO` at `BILLING_DECISION_ID`'s definition, now higher-stakes since
-the save action lives on every step instead of just the last one.
+the reason master is shared across claim-consider and billing decisions. This numbering matches
+the `ClaimTransactionTypeId` master BE confirmed for `BILLING_STATUS` (2026-09-23), so the
+`decisionId` reuse is no longer unconfirmed — the `TODO` at `BILLING_DECISION_ID`'s definition
+was removed accordingly.
 
 The form keeps a single `reviewReasonId` field (not three) so switching status can't leave a
 stale reason from a different `decisionId` behind — `BillingReviewResultSection` clears it on
@@ -290,7 +354,7 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 | Product type (PA/PH) | Header, Step 3 บัญชีรับเงินค่าชดเชย gate | `BillingDetailDto.productTypeId` | `useBillingProductVariant` hardcodes `false` for both `isPA`/`isPH` |
 | Claim list variant (OPD Half/Full/IPD) | Whole review page | `BillingDetailDto.claimListTypeId` | `?type=` query param (`BILLING_CLAIM_LIST_TYPE_CONFIG`) |
 | ข้อมูลสถานศึกษา | Header (PA only) | `BillingDetailDto` school block | `HeaderCardSchoolDetails` never renders (`isPA` false) |
-| เลขบัตรประชาชน / เบอร์โทรศัพท์ / สถานะ App | Header ข้อมูลผู้เอาประกัน | `BillingInsuredDto.idCard`/`phone`/`appStatus` — handoff ข้อ 5 (2026-09-14) lists `idCard`/`phone` as already added, but the live swagger this module was regenerated against still doesn't return them; `appStatus` was never in any handoff revision | `PENDING_BE` |
+| เลขบัตรประชาชน / เบอร์โทรศัพท์ / สถานะ App | Header ข้อมูลผู้เอาประกัน | `BillingInsuredDto.idCard`/`phone`/`appStatus` — **confirmed 2026-09-22**: the live `GET /billing/hospital/{id}` response *does* include `insured.idCard`/`insured.phone` now (checked against a real payload), but the backend's own swagger schema for `BillingInsuredDto` still only declares `name`/`policyCode`/`studentCard`/`plan`/`coverageStart`/`coverageEnd` (`additionalProperties: false`) — the DTO/swagger annotation on the backend hasn't caught up to what it actually returns, so `npm run codegen` won't pick these up yet. This is purely a backend-side swagger gap, not a stale local generation — get the backend to add `IdCard`/`Phone` to the `BillingInsuredDto` swagger contract, then `npm run codegen`, then wire `idCardNo`/`phoneNumber` in `BillingHospitalReviewPage.tsx` (2 lines) and drop this row. `appStatus` was never in any handoff revision and wasn't in the checked payload either — still an open question for BE | `PENDING_BE` |
 | สถานะเคลม (CL) | Header | separate claim-status field (today shows the *billing* status — see risk 7.8 in the design conversation) | `billingStatusLabel(detail.statusId)` |
 | วันที่เอกสารครบ | Step 1 รายละเอียดเคลม | `BillingClaimDto.documentCompleteDate` | form field defaults to today, no DTO round-trip |
 | ข้อบ่งชี้การ Admit | Step 1 ข้อมูลการเข้ารับการรักษา (IPD) | `BillingClaimDto.admitIndication` | `PENDING_BE` |
@@ -305,6 +369,8 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 | เคลมต่อเนื่อง default จาก SmileConnect | Step 1 | `BillingReviewDataDto.continuousClaim` | checkbox starts unchecked; picking one manually via the dialog still works |
 | Step 3 ตารางสแกนเอกสาร | Step 3 | `BillingDetailDto` doesn't expose this document set | `BillingScanDocumentTable` gets `rows=[]` |
 | เอกสารประกอบการปฏิเสธ (ประเภทเอกสาร master) | Step 1/2 บล็อกปฏิเสธ | `useGetDocumentType` needs a real `productTypeId`, billing sends `0` | real `DocumentScanTable`, but master list for `productTypeId=0` likely returns no rows until BE adds the field — swap the hardcoded `0` for the real value once available |
+| ข้อมูลอุบัติเหตุจากการจราจร (ประเภทยานพาหนะ/ผู้ขับขี่-ผู้โดยสาร/เป็นส่วนเกิน พ.ร.บ.) | Step 1, `BillingTrafficAccidentSection` | `BillingClaimDto.trafficAccident` (`PENDING_BE_FIELDS.trafficAccident`) | form fields default มอเตอร์ไซค์/ผู้ขับขี่/ใช่ (CR-02), no DTO round-trip, control always disabled |
+| ตั้งเบิกกองทุน list (ทั้งหน้า) | `/billing/customers` | billing-fund disbursement filter/submit endpoint — doesn't exist at all | `useFundDisbursementList.ts` returns hardcoded empty data; "ยืนยันตั้งเบิก" permanently disabled |
 
 Also unchanged from before this rewrite:
 

@@ -8,6 +8,7 @@ import { cellAlignOptions, formatDateString, numberWithCommas } from "../../../.
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 import { useGetHospitalBillingFilter } from "../../../../api/hospitalBillingApi";
 import { BillingListItemDto } from "../../../../api/coreClaimApi.client";
+import { BillingStatusId } from "../../store/billingClaim.types";
 import {
     backgroundColorMapBillingStatus,
     billingStatusLabel,
@@ -101,8 +102,8 @@ const useBillingHospitalDataTableHook = (appliedFilter: BillingAppliedFilter) =>
                         label={billingStatusLabel(value)}
                         size="small"
                         sx={{
-                            backgroundColor: backgroundColorMapBillingStatus[value as 1 | 2 | 3 | 4 | 5],
-                            color: colorMapBillingStatus[value as 1 | 2 | 3 | 4 | 5],
+                            backgroundColor: backgroundColorMapBillingStatus[value as BillingStatusId],
+                            color: colorMapBillingStatus[value as BillingStatusId],
                             fontWeight: 600,
                             borderRadius: "16px",
                         }}
