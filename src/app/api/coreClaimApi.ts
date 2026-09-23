@@ -37,6 +37,11 @@ const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
+const getDashboardDeathAndDisabilityClaimConsiderQueryKey = ["getDashboardDeathAndDisabilityClaimConsider"];
+const getDeathAndDisabilityClaimAdjudicationMonitorQueryKey = ["getDeathAndDisabilityClaimAdjudicationMonitor"];
+const getDeathAndDisabilityClaimDetailConsiderQueryKey = ["getDeathAndDisabilityClaimDetailConsider"];
+const getDeathAndDisabilityBeneficiaryQueryKey = ["getDeathAndDisabilityBeneficiary"];
+const getCaseDisabilityBenefitByCaseIdQueryKey = ["getCaseDisabilityBenefitByCaseId"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
@@ -215,6 +220,20 @@ export const useCreateCoreClaim = (
  * endpoint คืน documentCode เฉพาะเคส (เช่น "ใบแจ้งปฏิเสธสินไหม") ไม่งั้นสอง case ที่ productTypeId ตรงกันจะ
  * ได้ documentCode เดิมค้างจาก cache ตลอดไป (เอกสารไม่ตรงเคสที่กำลังพิจารณาอยู่)
  */
+/**
+ * คืนฟังก์ชันล้าง cache ของ useGetDocumentType ตาม documentTypeId — ใช้กับตารางสแกนเอกสารที่ต้องแชร์ documentCode
+ * ระหว่าง 2 component ในหน้าเดียว (cache ปกติ) แล้วล้างทิ้งตอนออกจากหน้า กัน documentCode ค้างไปเคสถัดไป
+ */
+export const useRemoveDocumentTypeCache = () => {
+    const queryClient = useQueryClient();
+    return (documentTypeId: number) =>
+        queryClient.removeQueries({
+            queryKey: [getDocumentSubTypeQueryKey],
+            predicate: (query) =>
+                (query.queryKey[1] as GetDocumentSubTypeDtoRequest | undefined)?.documentTypeId === documentTypeId,
+        });
+};
+
 export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean, alwaysFresh = false) => {
     return useQuery(
         [getDocumentSubTypeQueryKey, request],
@@ -552,6 +571,130 @@ export const useGetCustomerClaimAdjudicationMonitor = (
             ),
         {
             enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDashboardDeathAndDisabilityClaimConsider = (
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined
+) => {
+    return useQuery(
+        [getDashboardDeathAndDisabilityClaimConsiderQueryKey, dateFrom, dateTo],
+        () => coreClaimClient.getDashboardDeathAndDisabilityClaimConsider(dateFrom, dateTo),
+        {
+            enabled: !!dateFrom && !!dateTo,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimAdjudicationMonitor = (
+    isSearch?: boolean,
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined,
+    isProductTypeId_PH?: boolean | undefined,
+    isProductTypeId_PA?: boolean | undefined,
+    claimTransactionTypeId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getDeathAndDisabilityClaimAdjudicationMonitorQueryKey,
+            dateFrom,
+            dateTo,
+            isProductTypeId_PH,
+            isProductTypeId_PA,
+            claimTransactionTypeId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getDeathAndDisabilityClaimAdjudicationMonitor(
+                dateFrom,
+                dateTo,
+                isProductTypeId_PH,
+                isProductTypeId_PA,
+                claimTransactionTypeId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimDetailConsider = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityClaimDetailConsiderQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityClaimDetailConsider(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityBeneficiary = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityBeneficiaryQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityBeneficiary(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCaseDisabilityBenefitByCaseId = (
+    caseId: string,
+    productTypeId?: number | undefined,
+    productId?: number | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined,
+    policyCode?: string | undefined,
+    customerTypeCode?: string | undefined,
+    isEnabled = true
+) => {
+    return useQuery(
+        [
+            getCaseDisabilityBenefitByCaseIdQueryKey,
+            caseId,
+            productTypeId,
+            productId,
+            incidentTypeId,
+            coverageTypeId,
+            causeOfIncidentId,
+            policyCode,
+            customerTypeCode,
+        ],
+        () =>
+            coreClaimClient.getCaseDisabilityBenefitByCaseId(
+                caseId,
+                productTypeId,
+                productId,
+                incidentTypeId,
+                coverageTypeId,
+                causeOfIncidentId,
+                policyCode,
+                customerTypeCode
+            ),
+        {
+            enabled: isEnabled && !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );

@@ -3,6 +3,7 @@ import { useApproveClaimDecision, useSaveClaimEditDraft, useUpsertClaimDecision 
 import {
     ApproveCasePayableRequest,
     ApproveClaimDecisionDtoRequest,
+    CaseDocumentV2Request,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
     CaseSaveClaimEditDraftRequest,
@@ -29,7 +30,6 @@ import { FormikProps } from "formik";
 import { customFormatter, swalError, swalSuccess } from "../../../_common";
 import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
-import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
 import { useAppSelector } from "../../../../../redux";
 import {
     claimConsiderSelector,
@@ -84,6 +84,10 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
      * ไม่ส่งมา = ใช้ค่าจาก Redux ตามเดิม (เคลมลูกค้า)
      */
     calculateOverride?: CalculateCaseClaimDtoResponse | null;
+    /** เอกสารที่แนบไฟล์แล้วในตาราง "สแกนเอกสาร" (onAttachedDocumentsChange) — ไม่ส่ง = หน้านี้ไม่มีตารางนี้ */
+    scanDocuments?: CaseDocumentV2Request[];
+    /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — ส่งไปเฉพาะเมื่อผลพิจารณาเป็นปฏิเสธ */
+    rejectDocuments?: CaseDocumentV2Request[];
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -123,8 +127,21 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     onSaveDraftSuccess,
     calculateOverride,
     draftStep,
+    scanDocuments,
+    rejectDocuments,
 }: UseClaimDetailActionHookParams<T>) => {
-    const { documentScanList } = useAppSelector(claimPHSelector);
+    /**
+     * เอกสารที่สแกนในหน้านี้ — มาจาก onAttachedDocumentsChange ของแต่ละตาราง (เฉพาะแถวที่มีไฟล์จริง)
+     * ไม่อ่าน documentScanList ของ redux claimPH เพราะเป็น list กลางที่ DocumentScanTable ทุกหน้าเขียนลง
+     * (มีเอกสารของเคสอื่น / แถวที่ยังไม่แนบไฟล์ / ใบปฏิเสธที่เปลี่ยนสถานะไปแล้ว ปนอยู่)
+     */
+    const getScannedDocuments = (): CaseDocumentV2Request[] => {
+        const docs = [
+            ...(scanDocuments ?? []),
+            ...(formik.values.considerResult === DECISION_ID.REJECTED ? rejectDocuments ?? [] : []),
+        ];
+        return docs.filter((doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index);
+    };
     const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
     // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload
     const calculateResult = calculateOverride ?? calculateResultStore;
@@ -283,12 +300,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         );
     };
 
-    /** จาก documentScanList (redux claimPH) — เอกสาร scan เฉย ๆ ไม่มี OCR detail */
+    /** เอกสาร scan เฉย ๆ (getScannedDocuments) — ไม่มี OCR detail */
     const mapDocumentScanListForDraft = (): CaseDocumentSaveClaimEditDraftRequest[] => {
-        return documentScanList.map(
+        return getScannedDocuments().map(
             (d): CaseDocumentSaveClaimEditDraftRequest => ({
                 documentId: d.documentId,
-                documentNo: d.documentCode,
+                documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId,
                 caseDocumentDetail: [],
             })
@@ -497,12 +514,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         );
     };
 
-    /** จาก documentScanList (redux claimPH) — เอกสาร scan เฉย ๆ ไม่มี OCR detail */
+    /** เอกสาร scan เฉย ๆ (getScannedDocuments) — ไม่มี OCR detail */
     const mapDocumentScanListForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] => {
-        return documentScanList.map(
+        return getScannedDocuments().map(
             (d): UpsertClaimDecisionCaseDocumentRequest => ({
                 documentId: d.documentId,
-                documentNo: d.documentCode,
+                documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId ?? 0,
                 caseDocumentDetail: [],
             })

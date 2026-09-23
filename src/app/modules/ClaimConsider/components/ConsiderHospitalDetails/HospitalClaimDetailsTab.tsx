@@ -15,6 +15,7 @@ import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggl
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
 import { DECISION_ID } from "../../store/claimConsider.constants";
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
 import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { calculateCompensationSummary } from "./SubDetailsTab/ExpensesTabs/_common/calculateCompensationSummary";
@@ -126,6 +127,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const [isPayoutAccountBlocking, setIsPayoutAccountBlocking] = useState(false);
     /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+    /** เอกสารประกอบการปฏิเสธที่แนบไฟล์แล้ว — หน้านี้ไม่มีตารางสแกนเอกสารทั่วไป จึงส่งแค่ชุดนี้ */
+    const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
 
     /**
      * mount ใหม่ที่ Redux เป็นของเคสอื่น (ผ่านหน้า Monitor) หรือเปลี่ยนเคสในอินสแตนซ์เดิม
@@ -273,6 +276,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
         // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
         documentChecks: formik.values.documentChecks,
+        rejectDocuments,
         // ยอดที่ปรับตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" แล้ว — ให้ payload อนุมัติใช้ยอดนี้แทน calculateResult ดิบ
         calculateOverride,
         // ไม่มีค่าชดเชยคงเหลือต้องโอนแยก → ส่งบัญชีปลายทางใน casePayable เหมือนเดิม
@@ -584,6 +588,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         hiddenDecisionIds={[DECISION_ID.PENDING_DOCUMENT, DECISION_ID.CANCELLED]}
                                         headingText="แจ้งผลการพิจารณาโรงพยาบาล"
                                         labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
+                                        onRejectDocumentsChange={setRejectDocuments}
                                     />
                                 </Grid>
                             </Grid>

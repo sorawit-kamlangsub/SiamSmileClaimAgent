@@ -30,6 +30,8 @@ import ConsiderHospitalDocumentPage from "../modules/ClaimConsider/pages/Conside
 import RefundPage from "../modules/Refund/pages/RefundPage.tsx";
 import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPage.tsx";
 import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/ConsiderHospitalMonitorPage.tsx";
+import ConsiderDeathDisabilityMonitorPage from "../modules/ClaimConsider/pages/ConsiderDeathDisabilityMonitorPage.tsx";
+import ConsiderDeathDisabilityDetailPage from "../modules/ClaimConsider/pages/ConsiderDeathDisabilityDetailPage.tsx";
 
 import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
@@ -262,6 +264,23 @@ const Routes: RouteMapType[] = [
                 path: "hospital/:id/:caseId/document",
                 title: "ดูรายละเอียดเคลม - เคลมโรงพยาบาล",
                 element: <ConsiderHospitalDocumentPage />,
+            },
+        ],
+    },
+    {
+        path: "/consider/death-disability-monitor",
+        title: "Death & Disability",
+        element: <Outlet />,
+        children: [
+            {
+                index: true,
+                title: "Death & Disability",
+                element: <ConsiderDeathDisabilityMonitorPage />,
+            },
+            {
+                path: ":id/:caseId",
+                title: "พิจารณาเคลม - Death & Disability",
+                element: <ConsiderDeathDisabilityDetailPage />,
             },
         ],
     },

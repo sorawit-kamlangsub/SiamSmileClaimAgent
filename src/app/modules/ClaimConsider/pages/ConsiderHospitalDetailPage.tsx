@@ -22,6 +22,7 @@ import {
 } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../api/coreClaimApi";
 import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
+import useClearDocumentScanOnUnmount from "../../CreatedClaim/hooks/ClearDocumentScanHook";
 
 /**
  * หน้า "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล (OPD Half / OPD Full)"
@@ -39,6 +40,7 @@ type ConsiderHospitalDetailPageProps = {
 
 const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetailPageProps) => {
     const [tabValue, setTabValue] = useState("1");
+    useClearDocumentScanOnUnmount();
     const [searchParams] = useSearchParams();
     const { id, caseId: caseIdEncoded } = useParams();
     const claimId = safeAtob(id) ?? "";

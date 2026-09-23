@@ -1,5 +1,5 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
+import { Box, Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useGetDocumentByCaseId, useGetDocumentType } from "../../../../api/coreClaimApi";
@@ -70,6 +70,8 @@ type DocumentScanTableProps = {
      * caseId มา merge ทับ) ไม่งั้นสองเคสที่ productTypeId ตรงกันจะเห็น documentCode ของเคสก่อนหน้าค้างอยู่
      */
     alwaysFreshMasterList?: boolean;
+    /** ไม่ครอบด้วย CustomPaper (เหลือแค่ระยะ mt: 1) — ใช้เมื่อตารางอยู่ภายใน section/dialog ที่มีกรอบอยู่แล้ว (default false) */
+    disablePaper?: boolean;
 };
 
 const DocumentScanTable = ({
@@ -82,6 +84,7 @@ const DocumentScanTable = ({
     claimSourceId,
     onAttachedDocumentsChange,
     alwaysFreshMasterList = false,
+    disablePaper = false,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
     const dispatch = useAppDispatch();
@@ -282,31 +285,31 @@ const DocumentScanTable = ({
             },
         },
     ];
-    return (
+    const content = (
         <>
-            <CustomPaper sx={{ mt: 1 }}>
-                {!!Header && (
-                    <HeadingWithColor text={Header} color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
-                )}
-                {isLoading ? (
-                    <LinearProgress sx={{ height: "5px" }} />
-                ) : (
-                    <StandardDataTable
-                        name="scanDocumentTable"
-                        title=""
-                        data={enrichedData}
-                        isLoading={isLoading}
-                        columns={columns}
-                        color="primary"
-                        columnHeaderAlign="center"
-                        displayToolbar={false}
-                        displayFooter={false}
-                        options={defaultOptionStandardDataTable}
-                    />
-                )}
-            </CustomPaper>
+            {!!Header && (
+                <HeadingWithColor text={Header} color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
+            )}
+            {isLoading ? (
+                <LinearProgress sx={{ height: "5px" }} />
+            ) : (
+                <StandardDataTable
+                    name="scanDocumentTable"
+                    title=""
+                    data={enrichedData}
+                    isLoading={isLoading}
+                    columns={columns}
+                    color="primary"
+                    columnHeaderAlign="center"
+                    displayToolbar={false}
+                    displayFooter={false}
+                    options={defaultOptionStandardDataTable}
+                />
+            )}
         </>
     );
+
+    return disablePaper ? <Box sx={{ mt: 2 }}>{content}</Box> : <CustomPaper sx={{ mt: 1 }}>{content}</CustomPaper>;
 };
 
 export default DocumentScanTable;

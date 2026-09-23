@@ -23,20 +23,27 @@ export type AppliedFilter = Omit<SearchFilterType, "dateFrom" | "dateTo"> & {
 type UseSearchFilterHookParams = {
     onSearch?: (values: SearchFilterType) => void;
     isHospital?: boolean;
+    /** กำหนดสถานะที่แสดงเอง (เช่น Death & Disability) — ระบุแล้วจะแสดงเฉพาะ id เหล่านี้ รวม "อนุมัติ" (9) ด้วย */
+    includedStatusIds?: number[];
 };
 
 // DFUAT-038: เคลมโรงพยาบาลไม่มีสถานะ "รอเอกสาร" (3) — ซ่อนออกจากตัวกรองสถานะของ Monitor โรงพยาบาล
 // "ยกเลิก" (6) เพิ่มกลับเข้าตัวกรองแล้ว — ปุ่ม "พิจารณาเคลม" ของแถวสถานะนี้ถูกซ่อนแทน (ดู HIDE_ADJUDICATE_BUTTON_STATUS_IDS ใน DataTableConsiderHospital.tsx)
 const HOSPITAL_EXCLUDED_STATUS_IDS = [3];
 
-const useSearchFilterHook = ({ onSearch, isHospital }: UseSearchFilterHookParams = {}) => {
+const useSearchFilterHook = ({ onSearch, isHospital, includedStatusIds }: UseSearchFilterHookParams = {}) => {
     const currentDate = dayjs();
     const { data: claimTransactionTypeData, isLoading: claimTransactionTypeDataLoading } = useGetClaimTransactionType();
     const statusOptions = useMemo(
         () => [
             { value: 0, label: "ทั้งหมด" },
             ...(claimTransactionTypeData?.data ?? [])
-                .filter((item) => item.claimTransactionTypeId !== 9) // ซ่อนสถานะ "อนุมัติ" (id 9)
+                .filter(
+                    (item) =>
+                        includedStatusIds
+                            ? includedStatusIds.includes(item.claimTransactionTypeId ?? -1)
+                            : item.claimTransactionTypeId !== 9 // ซ่อนสถานะ "อนุมัติ" (id 9)
+                )
                 .filter(
                     (item) => !isHospital || !HOSPITAL_EXCLUDED_STATUS_IDS.includes(item.claimTransactionTypeId ?? -1)
                 )
@@ -45,7 +52,7 @@ const useSearchFilterHook = ({ onSearch, isHospital }: UseSearchFilterHookParams
                     label: item.claimTransactionTypeName ?? "",
                 })),
         ],
-        [claimTransactionTypeData, isHospital]
+        [claimTransactionTypeData, isHospital, includedStatusIds]
     );
 
     const defaultValues: SearchFilterType = {
@@ -59,8 +66,11 @@ const useSearchFilterHook = ({ onSearch, isHospital }: UseSearchFilterHookParams
     };
     const formik = useFormik<SearchFilterType>({
         initialValues: defaultValues,
-        validate: () => {
+        validate: (values) => {
             const errors: FormikErrors<SearchFilterType> = {};
+            if (values.dateFrom && values.dateTo && values.dateTo.isBefore(values.dateFrom, "day")) {
+                errors.dateTo = "ถึงวันที่แจ้งเคลมต้องไม่น้อยกว่าจากวันที่แจ้งเคลม";
+            }
             return errors;
         },
         onSubmit: (values) => {
