@@ -544,6 +544,198 @@ export class ClaimFundClient {
     }
 
     /**
+     * สาเหตุที่ปฏิเสธ
+     * @return Success
+     */
+    getCaseRefundRejectReasons(
+        cancelToken?: CancelToken | undefined
+    ): Promise<CaseRefundRejectReasonResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetCaseRefundRejectReasons";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseRefundRejectReasons(_response);
+            });
+    }
+
+    protected processGetCaseRefundRejectReasons(
+        response: AxiosResponse
+    ): Promise<CaseRefundRejectReasonResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CaseRefundRejectReasonResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CaseRefundRejectReasonResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * สาเหตุการปฏิเสธ (ขยายวงเงิน)
+     * @return Success
+     */
+    getCaseTransferApprovalRejectReasonStatus(
+        cancelToken?: CancelToken | undefined
+    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetCaseTransferApprovalRejectReasonStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseTransferApprovalRejectReasonStatus(_response);
+            });
+    }
+
+    protected processGetCaseTransferApprovalRejectReasonStatus(
+        response: AxiosResponse
+    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * สถานะการขยายวงเงิน
+     * @return Success
+     */
+    getTransferApprovalStatus(
+        cancelToken?: CancelToken | undefined
+    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Masters/GetTransferApprovalStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetTransferApprovalStatus(_response);
+            });
+    }
+
+    protected processGetTransferApprovalStatus(
+        response: AxiosResponse
+    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<TransferApprovalStatusResponseDtoListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<TransferApprovalStatusResponseDtoListServiceResponse>(null as any);
+    }
+
+    /**
      * ตั้งค่าการโอนเงิน
      * @return Success
      */
@@ -741,130 +933,6 @@ export class ClaimFundClient {
         return Promise.resolve<SearchClaimOrCaseResponseDtoListServiceResponse>(null as any);
     }
 
-    getCaseTransferApprovalRejectReasonStatus(
-        cancelToken?: CancelToken | undefined
-    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
-        let url_ = this.baseUrl + "/ClaimFund/Masters/GetCaseTransferApprovalRejectReasonStatus";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processGetCaseTransferApprovalRejectReasonStatus(_response);
-            });
-    }
-
-    protected processGetCaseTransferApprovalRejectReasonStatus(
-        response: AxiosResponse
-    ): Promise<CaseTransferApprovalRejectResponseDtoListServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<CaseTransferApprovalRejectResponseDtoListServiceResponse>(null as any);
-    }
-
-    /**
-     * สถานะการขยายวงเงิน
-     * @return Success
-     */
-    getTransferApprovalStatus(
-        cancelToken?: CancelToken | undefined
-    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
-        let url_ = this.baseUrl + "/ClaimFund/Masters/GetTransferApprovalStatus";
-        url_ = url_.replace(/[?&]$/, "");
-
-        let options_: AxiosRequestConfig = {
-            method: "GET",
-            url: url_,
-            headers: {
-                Accept: "text/plain",
-            },
-            cancelToken,
-        };
-
-        return this.instance
-            .request(options_)
-            .catch((_error: any) => {
-                if (isAxiosError(_error) && _error.response) {
-                    return _error.response;
-                } else {
-                    throw _error;
-                }
-            })
-            .then((_response: AxiosResponse) => {
-                return this.processGetTransferApprovalStatus(_response);
-            });
-    }
-
-    protected processGetTransferApprovalStatus(
-        response: AxiosResponse
-    ): Promise<TransferApprovalStatusResponseDtoListServiceResponse> {
-        const status = response.status;
-        let _headers: any = {};
-        if (response.headers && typeof response.headers === "object") {
-            for (let k in response.headers) {
-                if (response.headers.hasOwnProperty(k)) {
-                    _headers[k] = response.headers[k];
-                }
-            }
-        }
-        if (status === 200) {
-            const _responseText = response.data;
-            let result200: any = null;
-            let resultData200 = _responseText;
-            result200 = resultData200;
-            return Promise.resolve<TransferApprovalStatusResponseDtoListServiceResponse>(result200);
-        } else if (status === 401) {
-            const _responseText = response.data;
-            return throwException("Unauthorized", status, _responseText, _headers);
-        } else if (status === 403) {
-            const _responseText = response.data;
-            return throwException("Forbidden", status, _responseText, _headers);
-        } else if (status !== 200 && status !== 204) {
-            const _responseText = response.data;
-            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
-        }
-        return Promise.resolve<TransferApprovalStatusResponseDtoListServiceResponse>(null as any);
-    }
-
     /**
      * Monitor ขยายวงเงิน
      * @param searchDetail (optional)
@@ -1026,6 +1094,11 @@ export class ClaimFundClient {
         return Promise.resolve<GetIncreaseTransferLimitDetailResponseDtoServiceResponse>(null as any);
     }
 
+    /**
+     * บันทึกรายการ ขยายวงเงิน
+     * @param body (optional)
+     * @return Success
+     */
     increaseTransferLimitChangeStatus(
         body?: IncreaseTransferLimitChangeStatusRequestDto | undefined,
         cancelToken?: CancelToken | undefined
@@ -2615,6 +2688,304 @@ export class ClaimFundClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<RefundMonitorResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * Monitor approve
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @param body (optional)
+     * @return Success
+     */
+    refundApproveMonitor(
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        body?: RefundApproveMonitorRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<RefundApproveMonitorResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Refund/RefundApproveMonitor?";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processRefundApproveMonitor(_response);
+            });
+    }
+
+    protected processRefundApproveMonitor(
+        response: AxiosResponse
+    ): Promise<RefundApproveMonitorResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<RefundApproveMonitorResponseListServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<RefundApproveMonitorResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * สร้างรายการเงินคืนเงิน
+     * @param body (optional)
+     * @return Success
+     */
+    createCaseRefund(
+        body?: CreateRefundRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CreateRefundResponsetDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Refund/CreateCaseRefund";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCreateCaseRefund(_response);
+            });
+    }
+
+    protected processCreateCaseRefund(response: AxiosResponse): Promise<CreateRefundResponsetDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CreateRefundResponsetDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CreateRefundResponsetDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * รายละเอียดการ อนุมัติคืนเงิน
+     * @param caseRefundId (optional)
+     * @return Success
+     */
+    caseRefundApproveDetail(
+        caseRefundId?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CaseRefundApproveDetailResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Refund/CaseRefundApproveDetail?";
+        if (caseRefundId === null) throw new Error("The parameter 'caseRefundId' cannot be null.");
+        else if (caseRefundId !== undefined) url_ += "caseRefundId=" + encodeURIComponent("" + caseRefundId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCaseRefundApproveDetail(_response);
+            });
+    }
+
+    protected processCaseRefundApproveDetail(
+        response: AxiosResponse
+    ): Promise<CaseRefundApproveDetailResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CaseRefundApproveDetailResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CaseRefundApproveDetailResponseDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * อนุมัติคืนเงิน /ปฎิเสษ
+     * @param body (optional)
+     * @return Success
+     */
+    caseRefundApproveUpdateStatus(
+        body?: CaseRefundApproveUpdateStatusRequestDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<CaseRefundApproveUpdateStatusResponseDtoServiceResponse> {
+        let url_ = this.baseUrl + "/ClaimFund/Refund/CaseRefundApproveUpdateStatus";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCaseRefundApproveUpdateStatus(_response);
+            });
+    }
+
+    protected processCaseRefundApproveUpdateStatus(
+        response: AxiosResponse
+    ): Promise<CaseRefundApproveUpdateStatusResponseDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<CaseRefundApproveUpdateStatusResponseDtoServiceResponse>(result200);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            return throwException("Unauthorized", status, _responseText, _headers);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            return throwException("Forbidden", status, _responseText, _headers);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<CaseRefundApproveUpdateStatusResponseDtoServiceResponse>(null as any);
     }
 }
 
@@ -5301,6 +5672,100 @@ export class CoreClaimClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Get ข้อมูลผลประโยชน์ทุพพลภาพ By CaseId
+     * @param productTypeId (optional)
+     * @param productId (optional)
+     * @param incidentTypeId (optional)
+     * @param coverageTypeId (optional)
+     * @param causeOfIncidentId (optional)
+     * @param policyCode (optional)
+     * @param customerTypeCode (optional)
+     * @return Success
+     */
+    getCaseDisabilityBenefitByCaseId(
+        caseId: string,
+        productTypeId?: number | undefined,
+        productId?: number | undefined,
+        incidentTypeId?: number | undefined,
+        coverageTypeId?: number | undefined,
+        causeOfIncidentId?: number | undefined,
+        policyCode?: string | undefined,
+        customerTypeCode?: string | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetCaseDisabilityBenefitByCaseIdDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/claim/death-disability/disability-benefit?";
+        if (caseId === undefined || caseId === null)
+            throw new Error("The parameter 'caseId' must be defined and cannot be null.");
+        else url_ += "caseId=" + encodeURIComponent("" + caseId) + "&";
+        if (productTypeId === null) throw new Error("The parameter 'productTypeId' cannot be null.");
+        else if (productTypeId !== undefined) url_ += "productTypeId=" + encodeURIComponent("" + productTypeId) + "&";
+        if (productId === null) throw new Error("The parameter 'productId' cannot be null.");
+        else if (productId !== undefined) url_ += "productId=" + encodeURIComponent("" + productId) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
+        if (coverageTypeId === null) throw new Error("The parameter 'coverageTypeId' cannot be null.");
+        else if (coverageTypeId !== undefined)
+            url_ += "coverageTypeId=" + encodeURIComponent("" + coverageTypeId) + "&";
+        if (causeOfIncidentId === null) throw new Error("The parameter 'causeOfIncidentId' cannot be null.");
+        else if (causeOfIncidentId !== undefined)
+            url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
+        if (policyCode === null) throw new Error("The parameter 'policyCode' cannot be null.");
+        else if (policyCode !== undefined) url_ += "policyCode=" + encodeURIComponent("" + policyCode) + "&";
+        if (customerTypeCode === null) throw new Error("The parameter 'customerTypeCode' cannot be null.");
+        else if (customerTypeCode !== undefined)
+            url_ += "customerTypeCode=" + encodeURIComponent("" + customerTypeCode) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetCaseDisabilityBenefitByCaseId(_response);
+            });
+    }
+
+    protected processGetCaseDisabilityBenefitByCaseId(
+        response: AxiosResponse
+    ): Promise<GetCaseDisabilityBenefitByCaseIdDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetCaseDisabilityBenefitByCaseIdDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetCaseDisabilityBenefitByCaseIdDtoResponseListServiceResponse>(null as any);
     }
 
     /**
@@ -9301,6 +9766,89 @@ export interface CasePayableV2Request {
     payableCategoryId?: number;
 }
 
+export interface CaseRefundApproveDetailResponseDto {
+    /** เลข CL */
+    claimNo?: string | undefined;
+    /** เลขที่ case */
+    caseNo?: string | undefined;
+    /** สาขา */
+    branchName?: string | undefined;
+    /** ชื่อ - สกุล ผู้เอาประกัน */
+    insuredName?: string | undefined;
+    /** ผู้ทำรายการ */
+    createdBy?: string | undefined;
+    /** จำนวนเคสคืนเงิน */
+    refundCount?: number;
+    /** จำนวนเงินที่แจ้งโอน */
+    transferAmount?: number | undefined;
+    /** โอนคืนรวม */
+    totalRefundAmount?: number | undefined;
+    /** คงเหลือ */
+    remainingAmount?: number | undefined;
+    /** วันที่/เวลาที่โอนเงินคืน */
+    refundDate?: dayjs.Dayjs | undefined;
+    caseRefundId?: string;
+}
+
+export interface CaseRefundApproveDetailResponseDtoServiceResponse {
+    data?: CaseRefundApproveDetailResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface CaseRefundApproveUpdateStatusRequestDto {
+    caseRefundId?: string;
+    caseRefundStatusId?: number;
+    caseRefundRejectReasonId?: number | undefined;
+    caseRefundRejectReasonRemark?: string | undefined;
+}
+
+export interface CaseRefundApproveUpdateStatusResponseDto {
+    isSuccess?: boolean;
+    message?: string | undefined;
+}
+
+export interface CaseRefundApproveUpdateStatusResponseDtoServiceResponse {
+    data?: CaseRefundApproveUpdateStatusResponseDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface CaseRefundRejectReasonResponseDto {
+    id?: number;
+    name?: string | undefined;
+}
+
+export interface CaseRefundRejectReasonResponseDtoListServiceResponse {
+    data?: CaseRefundRejectReasonResponseDto[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface CaseRegistrationV2Request {
     notificationDate?: dayjs.Dayjs | undefined;
     notifyBy?: string | undefined;
@@ -9409,6 +9957,7 @@ export interface CaseV2Request {
     icD10_5thId?: number | undefined;
     icD10_6thId?: number | undefined;
     medicalTypeId?: number | undefined;
+    medicalSubTypeId?: number | undefined;
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
@@ -9763,6 +10312,36 @@ export interface CreateCoreClaimV2DtoRequest {
     createdByUserCode?: string | undefined;
     createdByUserName?: string | undefined;
     claims: ClaimV2Request[];
+}
+
+export interface CreateRefundRequestDto {
+    adjustmentTypeId?: number | undefined;
+    refundReasonId?: number | undefined;
+    cacseId?: string | undefined;
+    claimId?: string | undefined;
+    refundDate?: dayjs.Dayjs | undefined;
+    remark?: string | undefined;
+    decreaseAmount?: number;
+}
+
+export interface CreateRefundResponsetDto {
+    caseAdjustmentId?: string | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+}
+
+export interface CreateRefundResponsetDtoServiceResponse {
+    data?: CreateRefundResponsetDto;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
 }
 
 export interface CustomerCheckEligibleCustomerDto {
@@ -10159,6 +10738,31 @@ export interface GetCaseByClaimIdDtoResponse {
 
 export interface GetCaseByClaimIdDtoResponseListServiceResponse {
     data?: GetCaseByClaimIdDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetCaseDisabilityBenefitByCaseIdDtoResponse {
+    caseDisabilityId?: string | undefined;
+    caseId?: string | undefined;
+    bodyPartId?: number | undefined;
+    inputToStandardMappingId?: number | undefined;
+    descriptionTH?: string | undefined;
+    netCaseAmount?: number | undefined;
+    standardMedicalExpenseId?: number | undefined;
+    maxPrice?: number | undefined;
+}
+
+export interface GetCaseDisabilityBenefitByCaseIdDtoResponseListServiceResponse {
+    data?: GetCaseDisabilityBenefitByCaseIdDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -11619,8 +12223,6 @@ export interface IncreaseTransferLimitChangeStatusRequestDto {
     caseTransferApprovalId?: string;
     /** สาะนะรายการ */
     transferApprovalStatusId: number;
-    /** หมายเหตุการอนุมัติ ส่วนเหตุผลปฏิเสธเก็บใน TransactionLog */
-    approvalRemark?: string | undefined;
     rejectReasonId?: number;
 }
 
@@ -11789,6 +12391,44 @@ export interface ProblemDetails {
     [key: string]: any;
 }
 
+export interface RefundApproveMonitorRequestDto {
+    branceId?: number | undefined;
+    refundStatusId?: number | undefined;
+    fromDate?: dayjs.Dayjs | undefined;
+    toDate?: dayjs.Dayjs | undefined;
+}
+
+export interface RefundApproveMonitorResponse {
+    caseId?: string | undefined;
+    claimId?: string | undefined;
+    refundNo?: string | undefined;
+    claimNo?: string | undefined;
+    caseNo?: string | undefined;
+    createdDate?: dayjs.Dayjs | undefined;
+    customerName?: string | undefined;
+    remark?: string | undefined;
+    totalNetPaidAmount?: number | undefined;
+    refundAmount?: number | undefined;
+    refundStatusId?: number | undefined;
+    refundStatusNameTH?: string | undefined;
+    branceName?: string | undefined;
+    caseRefundId?: string;
+}
+
+export interface RefundApproveMonitorResponseListServiceResponse {
+    data?: RefundApproveMonitorResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface RefundDetailsAccountDetailsResponseDto {
     /** ชื่อบัญชีปลายทางผู้รับเงิน */
     toAccountName?: string | undefined;
@@ -11838,8 +12478,6 @@ export interface RefundMonitorResponse {
     refundAmount?: number | undefined;
     refundStatusId?: number | undefined;
     refundStatusNameTH?: string | undefined;
-    casePayableId?: string | undefined;
-    paymentId?: string | undefined;
 }
 
 export interface RefundMonitorResponseListServiceResponse {
