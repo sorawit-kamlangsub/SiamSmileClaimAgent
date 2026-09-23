@@ -4,7 +4,7 @@ type FormikValueType = {
     statusId: number | undefined;
     searchDetail: string;
 };
-const SearchTransferByStatusHook = () => {
+const useSearchTransferByStatusHook = () => {
     const defaultValue: FormikValueType = {
         statusId: undefined,
         searchDetail: "",
@@ -18,4 +18,4 @@ const SearchTransferByStatusHook = () => {
     return { formik };
 };
 
-export default SearchTransferByStatusHook;
+export default useSearchTransferByStatusHook;
