@@ -85,6 +85,10 @@ const ocrDocumentPayload = (
     return list;
 };
 
+// เอกสารที่มีผล OCR แล้วแต่ยังไม่ได้ documentId จาก DocStorage (ยังอัปโหลดไม่เสร็จหรืออัปโหลดไม่สำเร็จ)
+const hasMissingOcrDocumentId = (ocrResult: OcrDocumentScanResult, documentIds: DocStorageDocumentIds): boolean =>
+    ocrDocumentPayload(ocrResult, documentIds).some((doc) => !doc.documentId);
+
 export const useOcrDocumentScan = () => {
     const [isOcrDocsValid, setIsOcrDocsValid] = useState(true);
     const [ocrResult, setOcrResult] = useState<OcrDocumentScanResult>({});
@@ -119,6 +123,7 @@ export const useOcrDocumentScan = () => {
         getRequiredDocsByCoverageType,
         shouldShowOcrDocumentScan,
         ocrDocumentPayload,
+        hasMissingOcrDocumentId,
         resetOcr,
     };
 };
