@@ -19,6 +19,7 @@ import { useGetHospitalBillingDetail } from "../../../api/hospitalBillingApi";
 import { billingStatusLabel } from "../store/billingStatusHelpers";
 import { PENDING_BE } from "../store/billingPendingFields";
 import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
+import useClearDocumentScanOnUnmount from "../../CreatedClaim/hooks/ClearDocumentScanHook";
 
 type BillingHospitalReviewPageProps = {
     /** โหมดดูอย่างเดียว : ใช้ตอนเปิดจากปุ่ม "ดูรายละเอียด" ในหน้า Monitor */
@@ -34,6 +35,7 @@ type BillingHospitalReviewPageProps = {
  */
 const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPageProps) => {
     const [tabValue, setTabValue] = useState("1");
+    useClearDocumentScanOnUnmount();
     const { id } = useParams();
     const billingDetailId = safeAtob(id) ?? "";
 

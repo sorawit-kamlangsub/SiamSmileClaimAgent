@@ -10,6 +10,7 @@ import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
 // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
 // import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
 import {
+    CaseDocumentV2Request,
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
@@ -43,6 +44,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
     /** มีค่า = แสดง toast อนุมัติสำเร็จ (เก็บเลขที่ Claim/Case ที่ได้จาก response) */
     const [approveResult, setApproveResult] = useState<{ claimNo?: string; caseNo?: string }>();
+    const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -87,6 +89,8 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         useClaimDetailActionHook({
             ...considerDetail,
             isCombinedWithMedicalAll,
+            scanDocuments: attachedDocuments,
+            rejectDocuments,
             // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
             onApproveSuccess: (response) => {
                 setConfirmApproveOpen(false);
@@ -206,6 +210,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                     rejectReasonLoading={rejectReasonLoading}
                                     cancelReason={cancelReason}
                                     cancelReasonLoading={cancelReasonLoading}
+                                    onRejectDocumentsChange={setRejectDocuments}
                                 />
                             </Grid>
                         )}

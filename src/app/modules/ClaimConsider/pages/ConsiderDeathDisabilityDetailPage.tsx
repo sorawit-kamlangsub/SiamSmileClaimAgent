@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { Grid } from "@mui/material";
 import { useAppDispatch } from "../../../../redux";
 import { resetState } from "../store/claimConsiderSlice";
+import useClearDocumentScanOnUnmount from "../../CreatedClaim/hooks/ClearDocumentScanHook";
 import { useRemoveDocumentTypeCache } from "../../../api/coreClaimApi";
 import { documentTypeId } from "../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { TRANSFER_ACCOUNT_DOCUMENT_TYPE } from "../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
@@ -11,6 +12,7 @@ import DeathDisabilityHeaderDetails from "../components/ConsiderDeathDisabilityD
 /** หน้าบันทึกข้อมูลเคลม - Death & Disability — route :id/:caseId (btoa) ดึงข้อมูลหัวหน้า (claim + customer detail) */
 const ConsiderDeathDisabilityDetailPage = () => {
     const dispatch = useAppDispatch();
+    useClearDocumentScanOnUnmount();
     const { detailData, detailDataLoading, customerDetailData, customerDetailLoading } = useDeathDisabilityDetailHook();
 
     // tab ประวัติการทำรายการ (ClaimTransationTab) dispatch แบบร่างลง claimConsider slice — ล้างตอนออกจากหน้า
