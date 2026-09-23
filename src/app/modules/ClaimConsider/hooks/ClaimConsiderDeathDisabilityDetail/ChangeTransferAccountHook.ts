@@ -40,6 +40,7 @@ const validate = (values: ChangeTransferAccountValues) => {
 export type TransferAccountChange = {
     reason: string;
     payeeName: string;
+    bankId: number | undefined;
     bankName: string;
     accountTypeName: string;
     accountNo: string;
@@ -77,6 +78,7 @@ const useChangeTransferAccountHook = ({ onSaved, attachedDocuments }: UseChangeT
             onSaved({
                 reason: values.reason.trim(),
                 payeeName: values.payeeName.trim(),
+                bankId: values.bankId,
                 bankName: bankOptions.find((bank) => bank.organizeId === values.bankId)?.organizeName ?? "-",
                 accountTypeName:
                     ACCOUNT_TYPE_OPTIONS.find((option) => option.value === values.accountTypeId)?.label ?? "-",

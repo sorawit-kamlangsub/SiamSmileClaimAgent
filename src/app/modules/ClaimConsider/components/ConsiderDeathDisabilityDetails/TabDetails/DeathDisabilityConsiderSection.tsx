@@ -12,6 +12,7 @@ import CustomPaper from "../../../../_common/components/CustomComponent/CustomPa
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import FormikDatePicker from "../../../../_common/components/CustomFormik/FormikDatePicker";
 import { DECISION_ID } from "../../../store/claimConsider.constants";
+import { CaseDocumentV2Request } from "../../../../../api/coreClaimApi.client";
 import {
     DEATH_DISABILITY_IN_PROGRESS_DECISION_ID,
     DeathDisabilityConsiderValues,
@@ -104,6 +105,11 @@ type DeathDisabilityConsiderSectionProps = {
     rejectReasonLoading: boolean;
     cancelReasonOptions: ReasonOption[];
     cancelReasonLoading: boolean;
+    /** กด "ยืนยันบันทึก" — validate + ยิง API อยู่ที่ parent */
+    onConfirm: () => void;
+    isSubmitting: boolean;
+    /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — parent เก็บไว้ส่งไปกับผลพิจารณา */
+    onRejectDocumentsChange: (docs: CaseDocumentV2Request[]) => void;
 };
 
 /**
@@ -122,6 +128,9 @@ const DeathDisabilityConsiderSection = ({
     rejectReasonLoading,
     cancelReasonOptions,
     cancelReasonLoading,
+    onConfirm,
+    isSubmitting,
+    onRejectDocumentsChange,
 }: DeathDisabilityConsiderSectionProps) => {
     const formik = useFormikContext<DeathDisabilityConsiderValues>();
     const selected = STATUS_OPTIONS.find((status) => status.decisionId === formik.values.considerResult);
@@ -412,6 +421,7 @@ const DeathDisabilityConsiderSection = ({
                                     documentType="ใบแจ้งปฏิเสธสินไหม"
                                     aplicationCode={aplicationCode ?? ""}
                                     Header="เอกสารประกอบการปฏิเสธ"
+                                    onAttachedDocumentsChange={onRejectDocumentsChange}
                                     // documentCode ที่ endpoint คืนผูกกับเคสนี้โดยเฉพาะ ต้องไม่ cache ข้ามเคส
                                     // เหมือน ConsiderSection ของเคลมลูกค้า
                                     alwaysFreshMasterList
@@ -421,12 +431,21 @@ const DeathDisabilityConsiderSection = ({
                     </Box>
                 )}
 
-                <Box sx={{ mt: 3, pt: 3, borderTop: "1px dashed #DCE8F4", display: "flex", justifyContent: "center" }}>
+                <Box
+                    sx={{
+                        mt: 3,
+                        pt: 3,
+                        borderTop: "1px dashed #DCE8F4",
+                        display: "flex",
+                        justifyContent: "center",
+                    }}
+                >
                     <Button
                         variant="contained"
                         color="success"
                         startIcon={<SaveIcon />}
-                        onClick={() => formik.handleSubmit()}
+                        onClick={onConfirm}
+                        disabled={isSubmitting}
                         sx={{ minWidth: 190, minHeight: 40, fontWeight: 600, width: { xs: "100%", sm: "auto" } }}
                     >
                         ยืนยันบันทึก

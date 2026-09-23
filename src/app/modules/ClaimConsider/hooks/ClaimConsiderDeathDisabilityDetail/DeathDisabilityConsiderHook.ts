@@ -47,7 +47,7 @@ type UseDeathDisabilityConsiderHookParams = {
 
 /**
  * Form ผลการพิจารณาของเคลม Death & Disability
- * TODO(death-disability-api): onSubmit ยังไม่ยิง API — รอ BE มี endpoint บันทึกผลพิจารณาของเคลมประเภทนี้
+ * การยิง API อยู่ที่ useDeathDisabilityActionHook (เรียกจาก DeathDisabilityClaimDetailsTab หลัง validate ผ่าน)
  */
 const useDeathDisabilityConsiderHook = ({ documentCompleteDate }: UseDeathDisabilityConsiderHookParams = {}) => {
     const formik = useFormik<DeathDisabilityConsiderValues>({

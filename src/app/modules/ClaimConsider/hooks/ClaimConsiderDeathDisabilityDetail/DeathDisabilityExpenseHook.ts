@@ -75,7 +75,14 @@ const useDeathDisabilityExpenseHook = (
         [isDisability, disabilityData, standardData]
     );
 
-    return { expenseItems, expenseLoading: isDisability ? disabilityLoading : standardLoading };
+    return {
+        expenseItems,
+        expenseLoading: isDisability ? disabilityLoading : standardLoading,
+        /** รายการทุพพลภาพดิบ (มี bodyPartId) — ใช้ส่ง case.caseDisability ตอนบันทึกผลพิจารณา */
+        disabilityBenefits: isDisability ? disabilityData?.data ?? [] : [],
+        /** รายการค่าใช้จ่ายดิบของเคลมเสียชีวิต — ใช้ส่ง case.caseItem ตอนบันทึกผลพิจารณา */
+        standardExpenses: isDisability ? [] : standardData?.data ?? [],
+    };
 };
 
 export default useDeathDisabilityExpenseHook;

@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { Grid } from "@mui/material";
 import { FormikProvider } from "formik";
+import { useNavigate } from "react-router-dom";
+import { swalSuccess } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
 import useDeathDisabilityExpenseHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
 import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
+import useDeathDisabilityActionHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityActionHook";
 import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
 import {
+    CaseDocumentV2Request,
     GetCustomerDetailByIdDtoResponse,
     GetDeathAndDisabilityClaimDetailConsiderDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
@@ -15,6 +19,8 @@ import DeathDisabilityExpenseSection from "./DeathDisabilityExpenseSection";
 import DeathDisabilityBeneficiarySection from "./DeathDisabilityBeneficiarySection";
 import DeathDisabilityConsiderSection from "./DeathDisabilityConsiderSection";
 import TransferAccountChangeSection from "./TransferAccountChangeSection";
+
+const CONSIDER_DEATH_DISABILITY_MONITOR_PATH = "/consider/death-disability-monitor";
 
 type DeathDisabilityClaimDetailsTabProps = {
     /** รายละเอียดเคลม Death & Disability (GetDeathAndDisabilityClaimDetailConsider) */
@@ -35,7 +41,10 @@ const DeathDisabilityClaimDetailsTab = ({
     detailLoading,
     customerDetail,
 }: DeathDisabilityClaimDetailsTabProps) => {
-    const { expenseItems, expenseLoading } = useDeathDisabilityExpenseHook(detail, customerDetail);
+    const { expenseItems, expenseLoading, disabilityBenefits, standardExpenses } = useDeathDisabilityExpenseHook(
+        detail,
+        customerDetail
+    );
     const {
         beneficiaries,
         beneficiaryLoading,
@@ -54,7 +63,6 @@ const DeathDisabilityClaimDetailsTab = ({
         cancelReasonLoading,
     } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
     // ข้อมูลผู้รับผลประโยชน์ที่แก้ไว้ยังไม่ถูกบันทึกจนกว่าจะกดยืนยันบันทึก — เตือนก่อนปิด/รีเฟรชหน้า
-    // TODO(death-disability-api): ส่ง editedBeneficiaries ไปกับ request บันทึกผลพิจารณา (DeathDisabilityConsiderHook onSubmit)
     const hasPendingBeneficiaryEdits = editedBeneficiaries.length > 0;
     useEffect(() => {
         if (!hasPendingBeneficiaryEdits) return undefined;
@@ -67,6 +75,34 @@ const DeathDisabilityClaimDetailsTab = ({
     }, [hasPendingBeneficiaryEdits]);
     // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
     const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
+    // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
+    const [scanDocuments, setScanDocuments] = useState<CaseDocumentV2Request[]>([]);
+    const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
+    const navigate = useNavigate();
+    const { handleSubmitDecision, isSubmitting } = useDeathDisabilityActionHook({
+        formik,
+        detail,
+        editedBeneficiaries,
+        totalPayoutAmount,
+        transferAccountChange,
+        scanDocuments,
+        rejectDocuments,
+        disabilityBenefits,
+        standardExpenses,
+        // บันทึกแล้วกลับหน้า monitor Death & Disability
+        onSuccess: () => {
+            swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                navigate(CONSIDER_DEATH_DISABILITY_MONITOR_PATH)
+            );
+        },
+    });
+    /** submitForm = mark touched + นับ submitCount ให้ section โชว์ error แล้วจึงเช็คผล validate ก่อนยิง API */
+    const handleConfirm = async () => {
+        await formik.submitForm();
+        const errors = await formik.validateForm();
+        if (Object.keys(errors).length > 0) return;
+        await handleSubmitDecision();
+    };
     const claimNo = detail?.claimNo ?? "-";
     const customerName = customerDetail?.customerName ?? "-";
 
@@ -115,6 +151,7 @@ const DeathDisabilityClaimDetailsTab = ({
                         documentType="เอกสารประกอบการพิจารณาเคลม"
                         caseId={detail?.caseId}
                         claimSourceId={detail?.claimSourceId}
+                        onAttachedDocumentsChange={setScanDocuments}
                     />
                 </Grid>
                 <Grid item xs={12}>
@@ -129,6 +166,9 @@ const DeathDisabilityClaimDetailsTab = ({
                         rejectReasonLoading={rejectReasonLoading}
                         cancelReasonOptions={cancelReasonOptions}
                         cancelReasonLoading={cancelReasonLoading}
+                        onConfirm={handleConfirm}
+                        isSubmitting={isSubmitting}
+                        onRejectDocumentsChange={setRejectDocuments}
                     />
                 </Grid>
             </Grid>
