@@ -418,8 +418,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
     const handleNext = async () => {
         // Step 1 : ต้องผ่าน Validate + เลือกผลการตรวจเอกสารครบ ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท)
+        // ไม่รวม validate ของ "แจ้งผลการพิจารณาโรงพยาบาล" — มีผลเฉพาะตอนกด "ยืนยันบันทึกผลพิจารณา" (DFUAT-048)
         if (activeStep === 0) {
-            const isValid = await validateStep1();
+            const isValid = await validateStep1(false);
             if (!isValid) return;
             if (!isDocumentResultAllSelected()) {
                 swalError("ยังดำเนินการต่อไม่ได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
@@ -468,9 +469,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             (doc) => getFileCount(doc.documentId) > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
         );
 
-    /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง */
+    /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง (ไม่รวม "แจ้งผลการพิจารณาโรงพยาบาล" — DFUAT-048) */
     const handleApprove = async () => {
-        const isValid = await validateStep1();
+        const isValid = await validateStep1(false);
         if (!isValid) {
             setActiveStep(0);
             return;

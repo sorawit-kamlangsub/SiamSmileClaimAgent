@@ -20,8 +20,9 @@ const procedureOptions = [
 const TreatmentInfoSection = () => {
     const formik = useFormikContext<HospitalConsiderValues>();
 
-    /** AN + ข้อบ่งชี้การ Admit แสดงเฉพาะประเภทการรักษา IPD */
-    const isIPD = formik.values.medicalTypeId === MedicalType.IPD;
+    /** AN + ข้อบ่งชี้การ Admit แสดงเฉพาะประเภทการรักษา IPD และ Day Case Surgery */
+    const showAdmitFields =
+        formik.values.medicalTypeId === MedicalType.IPD || formik.values.medicalTypeId === MedicalType.DayCaseSurgery;
 
     return (
         <CollapsibleSection title="ข้อมูลการเข้ารับการรักษา" icon={<LocalHospitalIcon sx={{ fontSize: 27 }} />}>
@@ -32,12 +33,12 @@ const TreatmentInfoSection = () => {
                 <Grid item xs={12} sm={6} md={3}>
                     <FormikTextField name="vn" label="VN" formik={formik} size="small" fullWidth required />
                 </Grid>
-                {isIPD && (
+                {showAdmitFields && (
                     <Grid item xs={12} sm={6} md={3}>
                         <FormikTextField name="an" label="AN" formik={formik} size="small" fullWidth required />
                     </Grid>
                 )}
-                <Grid item xs={12} sm={12} md={isIPD ? 3 : 6}>
+                <Grid item xs={12} sm={12} md={showAdmitFields ? 3 : 6}>
                     <FormikTextField
                         name="underlyingDisease"
                         label="โรคประจำตัว (U/D)"
@@ -47,7 +48,7 @@ const TreatmentInfoSection = () => {
                         required
                     />
                 </Grid>
-                {isIPD && (
+                {showAdmitFields && (
                     <Grid item xs={12}>
                         <FormikTextField
                             name="admitIndication"

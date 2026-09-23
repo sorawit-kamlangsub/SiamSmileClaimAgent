@@ -9375,6 +9375,8 @@ export interface BillingInsuredDto {
     plan?: string | undefined;
     coverageStart?: dayjs.Dayjs | undefined;
     coverageEnd?: dayjs.Dayjs | undefined;
+    idCard?: string | undefined;
+    phone?: string | undefined;
 }
 
 export interface BillingListDto {
@@ -10751,7 +10753,7 @@ export interface GetCaseByClaimIdDtoResponseListServiceResponse {
 }
 
 export interface GetCaseDisabilityBenefitByCaseIdDtoResponse {
-    caseDisabilityId?: string | undefined;
+    caseDisabilityId?: string;
     caseId?: string | undefined;
     bodyPartId?: number | undefined;
     inputToStandardMappingId?: number | undefined;
@@ -10907,6 +10909,7 @@ export interface GetClaimDetailConsiderDtoResponse {
     admissionIndication?: string | undefined;
     reservationRemark?: string | undefined;
     insuranceCompanyId?: number | undefined;
+    medicalSubTypeCode?: string | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
