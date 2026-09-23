@@ -16,7 +16,7 @@ import CloseIcon from "@mui/icons-material/Close";
 import DescriptionIcon from "@mui/icons-material/Description";
 import LockOutlined from "@mui/icons-material/LockOutlined";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
     useGetCaseTransferApprovalRejectReasonStatus,
     useGetIncreaseTransferLimitDetail,
@@ -50,6 +50,10 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
 
     const detail = detailRes?.data as GetIncreaseTransferLimitDetailResponseDto | undefined;
     const [rejectReasonId, setRejectReasonId] = useState<number | undefined>(undefined);
+
+    useEffect(() => {
+        if (!open) setRejectReasonId(undefined);
+    }, [open]);
     const changeStatus = useIncreaseTransferLimitChangeStatus(
         () => {
             swalSuccess("ดำเนินการสำเร็จ", "บันทึกการอนุมัติ/ปฏิเสธเรียบร้อยแล้ว");
