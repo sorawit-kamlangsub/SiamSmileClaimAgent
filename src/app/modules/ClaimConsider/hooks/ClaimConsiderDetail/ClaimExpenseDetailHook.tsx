@@ -451,7 +451,7 @@ const useClaimExpenseDetailHook = ({
             discount: discount,
             notCovered: notCovered,
             reason: reason,
-            remark: pendingRemark,
+            remark: pendingRemark.trim() || undefined,
             disabled: false,
             maximumLimit: selectedItem.maximumLimit,
         };
