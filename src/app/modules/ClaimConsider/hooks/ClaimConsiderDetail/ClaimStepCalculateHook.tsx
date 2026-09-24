@@ -14,7 +14,22 @@ import {
     claimConsiderSelector,
     setCalculateExpenseResult,
 } from "../../store/claimConsiderSlice";
-import { getClaimAmountReconciliation, sumClaimExpenseItems } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    getClaimAmountReconciliation,
+    hasMissingReasonError,
+    sumClaimExpenseItems,
+} from "../../../ClaimSimulate/store/Claimsimulateutils";
+
+/**
+ * แจ้งเตือนว่ายังไม่เลือกสาเหตุไม่คุ้มครอง แล้ว (หลังปิด alert) เลื่อนไป focus ช่องสาเหตุของแถวแรกที่ยังไม่เลือก
+ * ในตาราง "รายการค่ารักษา(เบื้องต้น)" (ExpenseRecords ติด data-missing-reason) — ใช้ทั้งเคลมลูกค้าและเคลมโรงพยาบาล
+ */
+export const alertMissingNonCoveredReason = () =>
+    swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครอง").then(() => {
+        const cell = document.querySelector<HTMLElement>('[data-missing-reason="true"]');
+        cell?.scrollIntoView({ behavior: "smooth", block: "center" });
+        cell?.querySelector<HTMLElement>('[role="combobox"], [tabindex="0"]')?.focus({ preventScroll: true });
+    });
 
 const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
     "incidentTypeId",
@@ -183,6 +198,11 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
             }
 
             if (activeStep === 1) {
+                // ตาราง "รายการค่ารักษา(เบื้องต้น)" โชว์ error ที่ช่องสาเหตุแล้ว แต่ไม่ได้กันปุ่มถัดไป — ต้องบล็อกที่นี่
+                if (filledItems.some((item) => hasMissingReasonError(item))) {
+                    alertMissingNonCoveredReason();
+                    return;
+                }
                 const totals = sumClaimExpenseItems(filledItems);
                 // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
                 // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ

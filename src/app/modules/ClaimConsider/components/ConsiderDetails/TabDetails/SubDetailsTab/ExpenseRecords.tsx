@@ -554,8 +554,11 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                                 </Tooltip>
                                             </TableCell>
 
-                                            {/* สาเหตุไม่คุ้มครอง */}
-                                            <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                            {/* สาเหตุไม่คุ้มครอง — data-missing-reason ให้ปุ่ม "ถัดไป" เลื่อนมา focus แถวแรกที่ยังไม่เลือก */}
+                                            <TableCell
+                                                sx={{ ...bodyCell, p: 0.5 }}
+                                                data-missing-reason={rowReasonError || undefined}
+                                            >
                                                 <Tooltip
                                                     title="กรุณาเลือกสาเหตุไม่คุ้มครอง"
                                                     disableHoverListener={!rowReasonError}
