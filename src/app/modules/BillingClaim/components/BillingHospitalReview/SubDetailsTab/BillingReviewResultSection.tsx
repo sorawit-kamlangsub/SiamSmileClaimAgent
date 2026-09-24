@@ -6,7 +6,6 @@ import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
-import { GetDecisionReasonDtoResponse } from "../../../../../api/coreClaimApi.client";
 import {
     BILLING_DECISION_ID,
     BILLING_STATUS,
@@ -49,10 +48,12 @@ const RESULT_OPTIONS: {
     // CR Ver2 : ตัดตัวเลือก "ยกเลิก" ออกจากหน้าวางบิลเคลมโรงพยาบาล — ยังคงมีใน BILLING_STATUS/filter หน้า Monitor
 ];
 
+export type ReviewReasonOption = { id?: number; name?: string };
+
 type BillingReviewResultSectionProps = {
     readOnly?: boolean;
-    /** ตัวเลือกสาเหตุตามสถานะที่เลือก — จาก useGetDecisionReason(undefined, decisionId) */
-    reviewReason?: { data?: GetDecisionReasonDtoResponse[] };
+    /** ตัวเลือกสาเหตุตามสถานะที่เลือก — แจ้งแก้ไขจาก useGetDecisionReason, ปฏิเสธจาก useGetRejectReason */
+    reviewReason?: ReviewReasonOption[];
     reviewReasonLoading?: boolean;
     /** ผูกกับ "เอกสารประกอบการปฏิเสธ" (DocumentScanTable) — ตามสเปคเดียวกับ ConsiderSection ฝั่งพิจารณาเคลม */
     productId?: number | undefined;
@@ -148,9 +149,9 @@ const BillingReviewResultSection = ({
                             onChange={(e) => formik.setFieldValue("reviewReasonId", Number(e.target.value))}
                             sx={{ bgcolor: "#fff", mb: 2 }}
                         >
-                            {(reviewReason?.data ?? []).map((item) => (
-                                <MenuItem key={item.decisionReasonId} value={item.decisionReasonId}>
-                                    {item.decisionReasonName}
+                            {(reviewReason ?? []).map((item) => (
+                                <MenuItem key={item.id} value={item.id}>
+                                    {item.name}
                                 </MenuItem>
                             ))}
                         </TextField>

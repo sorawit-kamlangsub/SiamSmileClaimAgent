@@ -17,6 +17,8 @@ interface Props {
     debounceMs?: number;
     /** เคลมต่อเนื่อง: แสดง/ตรวจสอบด้วย benefit คงเหลือ (remainBenefit / remainAmount) แทนวงเงินสูงสุด */
     isContinuous?: boolean;
+    /** error ของ formik field transferAmount — แสดงใต้กล่องจำนวนเงินโอนรวม */
+    transferAmountError?: string;
 }
 
 const BenefitIcon: React.FC<{ benefitId?: number }> = ({ benefitId }) => {
@@ -73,6 +75,7 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     onTransferAmountChange,
     debounceMs = 300,
     isContinuous = false,
+    transferAmountError,
 }) => {
     const [localAmounts, setLocalAmounts] = useState(benefitAmounts);
     const [amountErrors, setAmountErrors] = useState<Record<number, string>>({});
@@ -362,8 +365,17 @@ const CoverageAndTransferBox: React.FC<Props> = ({
                         sx: { bgcolor: "#fff", borderRadius: 1.5, fontSize: 16, width: 160 },
                     }}
                     inputProps={{ style: { textAlign: "right" } }}
+                    error={!!transferAmountError}
                 />
             </Box>
+            {transferAmountError && (
+                <>
+                    <Box sx={{ display: { xs: "none", md: "block" } }} />
+                    <Typography fontSize={12} color="error.main" textAlign="right" sx={{ mt: -1.5, px: 1.5 }}>
+                        {transferAmountError}
+                    </Typography>
+                </>
+            )}
         </Box>
     );
 };

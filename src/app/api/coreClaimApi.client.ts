@@ -5957,6 +5957,68 @@ export class CoreClaimClient {
         }
         return Promise.resolve<SaveClaimEditDraftDtoResponeServiceResponse>(null as any);
     }
+
+    /**
+     * API สำหรับ Update Beneficiary (ผู้รับผลประโยชน์)
+     * @param body (optional)
+     * @return Success
+     */
+    updateBeneficiary(
+        body?: UpdateBeneficiaryDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BaseResponseServiceResponse> {
+        let url_ = this.baseUrl + "/beneficiary/update";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUpdateBeneficiary(_response);
+            });
+    }
+
+    protected processUpdateBeneficiary(response: AxiosResponse): Promise<BaseResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BaseResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BaseResponseServiceResponse>(null as any);
+    }
 }
 
 export class HospitalBillingClient {
@@ -9209,6 +9271,26 @@ export interface BankInquiryDetailResponseDtoServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface BaseResponse {
+    isResult?: boolean;
+    result?: string | undefined;
+    msg?: string | undefined;
+}
+
+export interface BaseResponseServiceResponse {
+    data?: BaseResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface BeneficiarySaveClaimEditDraftRequest {
     beneficiaryId?: string;
     policyBeneficiaryId?: number;
@@ -11866,7 +11948,7 @@ export interface GetIncreaseTransferLimitDetailResponseDto {
     remainingAmount?: number | undefined;
     /** วงเงินคงเหลือครั้งใหม่ */
     newRemainingLimit?: number | undefined;
-    /** ยอดเงินที่ขออนุมัติโอน */
+    /** ยอดวงเงินที่ขอเพิ่ม (CaseAmount - RemainingAmount) */
     requestedTransferAmount?: number | undefined;
     /** วงเงินปัจจุบัน */
     currentLimit?: number | undefined;
@@ -12871,6 +12953,25 @@ export interface UpdateAdditionalTransferResponseDtoServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface UpdateBeneficiaryDtoRequest {
+    beneficiaryId?: string;
+    claimId?: string;
+    caseId?: string;
+    relationId?: number | undefined;
+    relationTypeName?: string | undefined;
+    idCard?: string | undefined;
+    titleId?: string | undefined;
+    titleName?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    phoneNo?: string | undefined;
+    bankId?: number | undefined;
+    bankName?: string | undefined;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
+    payoutAmount?: number | undefined;
+}
+
 export interface UpdatePayTransferSettingRequestDto {
     paytransferSettingId: string;
 }
@@ -12999,7 +13100,7 @@ export interface UpsertClaimDecisionCaseItemRequest {
     netCaseAmount?: number;
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
-    nonCoveredReasonId?: number;
+    nonCoveredReasonId?: number | undefined;
     receiptAmount?: number | undefined;
     bodyPartId?: number | undefined;
 }

@@ -27,7 +27,8 @@ import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import useHospitalConsiderPayment from "../../hooks/ClaimConsiderHospital/useHospitalConsiderPayment";
-import { hasAmountSumError } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import { hasAmountSumError, hasMissingReasonError } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import { alertMissingNonCoveredReason } from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
 // import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
@@ -439,6 +440,11 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
         // Step 2 → Step 3 : sync coverage/medical ลง Redux (เผื่อผู้ใช้แก้ค่า) แล้วเรียก /api/calculate/caseclaim
         if (activeStep === 1) {
+            // มียอดไม่คุ้มครองแต่ยังไม่เลือกสาเหตุ — บล็อกก่อนคำนวณ แล้วพาไป focus แถวนั้น
+            if (filledItems.some((item) => hasMissingReasonError(item))) {
+                alertMissingNonCoveredReason();
+                return;
+            }
             dispatch(
                 setClaimForm({
                     coverageTypeId: formik.values.coverageTypeId,
@@ -636,7 +642,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     compensationRows={step3CompensationRows}
                                     summary={step3Summary}
                                     totalReceipt={calculateResult?.totalReceipt}
-                                    totalNetAmount={calculateResult?.totalNetAmount}
+                                    totalNetAmount={calculateResult?.totalNetAmount ?? 0}
                                     allowSeparateCompensation={allowSeparateCompensation}
                                     stayDays={stayDays}
                                     mergeChecked={mergeCompensation}

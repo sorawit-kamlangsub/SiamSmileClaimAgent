@@ -3,13 +3,14 @@ import { BillingDocumentDto, BillingExpenseDto } from "../../../api/coreClaimApi
 import { ContinuousClaimSelection } from "../../CheckEligible/components/ContinuousClaimDialog";
 
 /**
- * สถานะรายการวางบิลเคลมโรงพยาบาล — ใช้เลขชุดเดียวกับ master ClaimTransactionTypeId ของ BE
- * (คนละความหมายกับตัวเลข 1-5 ที่เคยใช้ตอน mock/contract เก่า — ห้ามสลับกลับ; ยืนยันกับ BE 2026-09-23)
+ * สถานะรายการวางบิลเคลมโรงพยาบาล — ตรงกับ master BillingReviewStatusId ใน DB (ตรวจ 2026-09-24):
+ * 2 รอตรวจสอบ / 3 รอแก้ไข / 4 ผ่าน / 5 ปฏิเสธ / 6 ยกเลิก / 7 รอสร้างรายการ (7 ยังไม่ใช้ในหน้านี้)
+ * — ไม่ใช่ ClaimTransactionTypeId (อนุมัติ = 9 เป็นของ master นั้น ห้ามใช้ที่นี่)
  */
 export const BILLING_STATUS = {
     pendingReview: 2, // รอพิจารณา / รอตรวจสอบ
     needsCorrection: 3, // รอเอกสาร / รอแก้ไข
-    passed: 9, // อนุมัติ — ไม่รองรับใน Filter, ส่ง statusId=9 จะได้ 400
+    passed: 4, // ผ่าน / อนุมัติ — ไม่รองรับใน Filter
     rejected: 5, // ปฏิเสธ
     cancelled: 6, // ยกเลิก
 } as const;
