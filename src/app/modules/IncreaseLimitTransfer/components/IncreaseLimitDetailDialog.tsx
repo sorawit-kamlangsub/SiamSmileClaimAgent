@@ -372,7 +372,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", gap: 2, pb: 0 }}>
+                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2, pb: 0 }}>
                                 <Button
                                     variant="contained"
                                     size="small"
