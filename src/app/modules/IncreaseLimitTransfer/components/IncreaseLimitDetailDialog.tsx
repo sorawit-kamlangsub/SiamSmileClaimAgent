@@ -46,13 +46,17 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
 
     const detail = detailRes?.data as GetIncreaseTransferLimitDetailResponseDto | undefined;
     const [limitReviewNote, setLimitReviewNote] = useState<string>("");
+    const [limitReviewNoteError, setLimitReviewNoteError] = useState<string>("");
 
     useEffect(() => {
-        if (!open) setLimitReviewNote("");
+        if (!open) {
+            setLimitReviewNote("");
+            setLimitReviewNoteError("");
+        }
     }, [open]);
     const changeStatus = useIncreaseTransferLimitChangeStatus(
         () => {
-            swalSuccess("ดำเนินการสำเร็จ", "บันทึกการอนุมัติเรียบร้อยแล้ว");
+            swalSuccess("ดำเนินการสำเร็จ", "บันทึกสถานะเรียบร้อยแล้ว");
             onClose();
         },
         (error) => {
@@ -73,6 +77,19 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
             return;
         }
         changeStatus.mutate(buildChangeStatusBody(4));
+    };
+
+    const handleHoldReview = async () => {
+        if (!limitReviewNote.trim()) {
+            setLimitReviewNoteError('ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ"');
+            return;
+        }
+        setLimitReviewNoteError("");
+        const result = await swalConfirm("ยืนยันการรอตรวจสอบ", "ยืนยันการ Hold รายการไว้รอตรวจสอบหรือไม่?");
+        if (!result.isConfirmed) {
+            return;
+        }
+        changeStatus.mutate(buildChangeStatusBody(2));
     };
 
     return (
@@ -326,8 +343,12 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                             placeholder="ระบุหมายเหตุเพื่อ Hold รายการไว้รอตรวจสอบ"
                                             inputProps={{ maxLength: 500 }}
                                             fullWidth
+                                            error={Boolean(limitReviewNoteError)}
                                             value={limitReviewNote}
-                                            onChange={(event) => setLimitReviewNote(event.target.value)}
+                                            onChange={(event) => {
+                                                setLimitReviewNote(event.target.value);
+                                                if (limitReviewNoteError) setLimitReviewNoteError("");
+                                            }}
                                         />
                                         <Box
                                             sx={{
@@ -339,9 +360,15 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                                 px: 0.5,
                                             }}
                                         >
-                                            <Typography component="span" sx={{ fontSize: "0.75rem", color: "#757575" }}>
-                                                ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ ไม่ใช่การปฏิเสธหรือโอนเงิน)
-                                            </Typography>
+                                            {limitReviewNoteError ? (
+                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#D32F2F" }}>
+                                                    {limitReviewNoteError}
+                                                </Typography>
+                                            ) : (
+                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#757575" }}>
+                                                    ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ ไม่ใช่การปฏิเสธหรือโอนเงิน)
+                                                </Typography>
+                                            )}
                                             <Typography
                                                 component="span"
                                                 sx={{ fontSize: "0.75rem", color: "#757575", whiteSpace: "nowrap" }}
@@ -364,7 +391,16 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", pb: 0 }}>
+                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2, pb: 0 }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    size="small"
+                                    disabled={changeStatus.isLoading}
+                                    onClick={handleHoldReview}
+                                >
+                                    รอตรวจสอบ
+                                </Button>
                                 <Button
                                     variant="contained"
                                     size="small"
