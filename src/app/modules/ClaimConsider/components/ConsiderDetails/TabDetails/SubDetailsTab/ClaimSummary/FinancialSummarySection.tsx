@@ -237,7 +237,6 @@ const FinancialSummarySection = ({
                     sx={{ mb: 1 }}
                 />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                    <SummaryLine label="ยอดเบิกรวม" value={fmt(totalCoveredAmount)} />
                     <SummaryLine label="ยอดเงินรวมตามใบเสร็จ" value={fmt(calculateResult?.totalReceipt ?? 0)} />
                     <SummaryLine label="ค่าใช้จ่ายทั้งหมดสุทธิ" value={fmt(calculateResult?.totalNetAmount ?? 0)} />
                     <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
