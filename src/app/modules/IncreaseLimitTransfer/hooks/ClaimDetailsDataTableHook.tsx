@@ -15,7 +15,7 @@ type StatusColor = { bg: string; text: string };
 
 const statusColorMapById: Record<number, StatusColor> = {
     2: { bg: "#FFF3E0", text: "#EF6C00" },
-    3: { bg: "#FDECEA", text: "#C62828" },
+    3: { bg: "#E1F5FE", text: "#0288D1" },
     4: { bg: "#E8F5E9", text: "#2E7D32" },
 };
 
