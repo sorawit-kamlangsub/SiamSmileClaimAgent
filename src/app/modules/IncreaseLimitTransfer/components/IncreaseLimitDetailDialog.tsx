@@ -213,7 +213,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                                 textAlign: "right",
                                             }}
                                         >
-                                            {formatBaht(detail?.requestedTransferAmount)}
+                                            {formatBaht(detail?.caseAmount)}
                                         </Typography>
                                     </Box>
                                 </Grid>
