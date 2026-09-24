@@ -68,14 +68,18 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
         } as IncreaseTransferLimitChangeStatusRequestDto & { approvalRemark?: string });
 
     const handleApprove = async () => {
-        const confirmed = await swalConfirm("ยืนยันการอนุมัติ", "ยืนยันการอนุมัติการขยายวงเงินรายการนี้หรือไม่?");
-        if (!confirmed) return;
+        const result = await swalConfirm("ยืนยันการอนุมัติ", "ยืนยันการอนุมัติการขยายวงเงินรายการนี้หรือไม่?");
+        if (!result.isConfirmed) {
+            return;
+        }
         changeStatus.mutate(buildChangeStatusBody(4));
     };
 
     const handleReject = async () => {
-        const confirmed = await swalConfirm("ยืนยันการปฏิเสธ", "ยืนยันการปฏิเสธการขยายวงเงินรายการนี้หรือไม่?");
-        if (!confirmed) return;
+        const result = await swalConfirm("ยืนยันการปฏิเสธ", "ยืนยันการปฏิเสธการขยายวงเงินรายการนี้หรือไม่?");
+        if (!result.isConfirmed) {
+            return;
+        }
         changeStatus.mutate(buildChangeStatusBody(3));
     };
 
