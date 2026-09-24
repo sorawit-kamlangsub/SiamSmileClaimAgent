@@ -240,6 +240,12 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 return;
             }
 
+            if (isMedical && ocr.hasMissingOcrDocumentId(ocr.ocrResult, ocr.ocrDocumentIds)) {
+                swalWarning("แจ้งเตือน", "บันทึกเอกสารที่สแกนไม่สำเร็จ กรุณาลบแล้วสแกนเอกสารใหม่อีกครั้ง");
+                setSubmitting(false);
+                return;
+            }
+
             const ocrDocument = isMedical
                 ? ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds)
                 : values.ocrDocument;

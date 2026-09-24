@@ -599,6 +599,8 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
     const [medCertResult, setMedCertResult] = useState<MedCertOcrResult | undefined>(undefined);
 
     const [_documentIds, setDocumentIds] = useState<DocStorageDocumentIds>({});
+    const [pendingDocStorageCount, setPendingDocStorageCount] = useState(0);
+    const latestDocStorageFileRef = useRef<Partial<Record<number, File>>>({});
 
     const emitOcrChange = useCallback(
         (next: Partial<OcrDocumentScanResult>) => {
@@ -619,7 +621,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
     });
 
     const saveToDocStorage = useCallback(
-        (file: File, ocrDocumentTypeId: number) => {
+        async (file: File, ocrDocumentTypeId: number) => {
             const fileUploads = [
                 {
                     data: file,
@@ -638,16 +640,27 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
                 fileUploads,
             };
 
-            createDocumentToDocStorageMutation.mutate(body, {
-                onSuccess: (response) => {
-                    const newDocumentId = response.data?.documentId;
-                    setDocumentIds((prev) => {
-                        const next = { ...prev, [ocrDocumentTypeId]: newDocumentId };
-                        onDocumentIdsChange?.(next);
-                        return next;
-                    });
-                },
-            });
+            latestDocStorageFileRef.current[ocrDocumentTypeId] = file;
+            setPendingDocStorageCount((count) => count + 1);
+
+            // ใช้ mutateAsync เพราะ onSuccess ที่ส่งเข้า mutate() จะทำงานเฉพาะครั้งล่าสุด
+            // ถ้าสแกนหลายเอกสารติดกัน documentId ของเอกสารก่อนหน้าจะหาย (ส่งไปเป็น Guid ว่าง)
+            try {
+                const response = await createDocumentToDocStorageMutation.mutateAsync(body);
+                // ข้ามถ้าเอกสารถูกลบหรือถูกแทนที่ด้วยไฟล์ใหม่ระหว่างรอ
+                if (!response.isSuccess || latestDocStorageFileRef.current[ocrDocumentTypeId] !== file) return;
+
+                const newDocumentId = response.data?.documentId;
+                setDocumentIds((prev) => {
+                    const next = { ...prev, [ocrDocumentTypeId]: newDocumentId };
+                    onDocumentIdsChange?.(next);
+                    return next;
+                });
+            } catch {
+                // แจ้ง error ผ่าน onErrorCallback ของ useCreateDocumentToDocStorage แล้ว
+            } finally {
+                setPendingDocStorageCount((count) => count - 1);
+            }
         },
         [applicationCode, createDocumentToDocStorageMutation, onDocumentIdsChange]
     );
@@ -869,6 +882,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         setIdCardFile(null);
         setIdCardResult(undefined);
         emitOcrChange({ idCard: undefined });
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.idCard];
         setDocumentIds((prev) => {
             const next = { ...prev, [OCR_DOCUMENT_TYPE_ID.idCard]: undefined };
             onDocumentIdsChange?.(next);
@@ -889,6 +903,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         setPassportFile(null);
         setPassportResult(undefined);
         emitOcrChange({ passport: undefined });
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.passport];
         setDocumentIds((prev) => {
             const next = { ...prev, [OCR_DOCUMENT_TYPE_ID.passport]: undefined };
             onDocumentIdsChange?.(next);
@@ -910,6 +925,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         setAlienCardFile(null);
         setAlienCardResult(undefined);
         emitOcrChange({ alienCard: undefined });
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.alienCard];
         setDocumentIds((prev) => {
             const next = { ...prev, [OCR_DOCUMENT_TYPE_ID.alienCard]: undefined };
             onDocumentIdsChange?.(next);
@@ -940,6 +956,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         setReceiptFile(null);
         setReceiptResult(undefined);
         emitOcrChange({ receipt: undefined });
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.receipt];
         setDocumentIds((prev) => {
             const next = { ...prev, [OCR_DOCUMENT_TYPE_ID.receipt]: undefined };
             onDocumentIdsChange?.(next);
@@ -968,6 +985,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         setMedCertFile(null);
         setMedCertResult(undefined);
         emitOcrChange({ medCert: undefined });
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.medCert];
         setDocumentIds((prev) => {
             const next = { ...prev, [OCR_DOCUMENT_TYPE_ID.medCert]: undefined };
             onDocumentIdsChange?.(next);
@@ -990,6 +1008,9 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
             alienCard: undefined,
         });
 
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.idCard];
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.passport];
+        delete latestDocStorageFileRef.current[OCR_DOCUMENT_TYPE_ID.alienCard];
         setDocumentIds((prev) => {
             const next = {
                 ...prev,
@@ -1009,7 +1030,7 @@ const OcrDocumentScanSection = <T extends OcrRequiredFields>({
         uploadAlienCardMutation.isLoading ||
         uploadReceiptMutation.isLoading ||
         uploadMedCertMutation.isLoading ||
-        createDocumentToDocStorageMutation.isLoading;
+        pendingDocStorageCount > 0;
 
     useEffect(() => {
         onOcrLoadingChange?.(isOcrBusy);

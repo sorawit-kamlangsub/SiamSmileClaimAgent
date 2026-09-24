@@ -7,7 +7,8 @@ import {
     useSubmitHospitalBilling,
     normalizeSubmitError,
 } from "../../../../api/hospitalBillingApi";
-import { useGetDecisionReason } from "../../../../api/coreClaimMastersApi";
+import { useGetDecisionReason, useGetRejectReason } from "../../../../api/coreClaimMastersApi";
+import { ReviewReasonOption } from "../../components/BillingHospitalReview/SubDetailsTab/BillingReviewResultSection";
 import { SubmitHospitalBillingDto } from "../../../../api/coreClaimApi.client";
 import { swalConfirm, swalError, swalSuccess, swalToast, swalWarning } from "../../../_common";
 import { round2, toFormValues, toReviewDataDto } from "../../store/billingMappers";
@@ -138,12 +139,23 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
 
     /**
      * สถานะ 2/4/5 ต้องระบุสาเหตุ — 2/5 ใช้ decisionId+decisionReasonId (Decision master), 4 ใช้
-     * rejectReasonId (ไม่มี master แยก ใช้ตัวเลือกชุดเดียวกับ decisionId ของสถานะ "ปฏิเสธ")
+     * rejectReasonId (ตัวเลือกจาก Master สาเหตุการปฏิเสธ — useGetRejectReason)
      */
     const reasonDecisionId = formik.values.reviewStatusId
         ? BILLING_DECISION_ID[formik.values.reviewStatusId]
         : undefined;
-    const { data: reviewReason, isLoading: reviewReasonLoading } = useGetDecisionReason(undefined, reasonDecisionId);
+    const isRejectedSelected = formik.values.reviewStatusId === BILLING_STATUS.rejected;
+    // ปฏิเสธ (4) ใช้ Master สาเหตุการปฏิเสธของตัวเอง (useGetRejectReason) — สถานะอื่นยังใช้ Decision master
+    const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
+        undefined,
+        isRejectedSelected ? undefined : reasonDecisionId
+    );
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(undefined, isRejectedSelected);
+    /** ตัวเลือก dropdown สาเหตุ (normalize เป็น id/name ให้ BillingReviewResultSection) */
+    const reviewReason: ReviewReasonOption[] = isRejectedSelected
+        ? (rejectReason?.data ?? []).map((item) => ({ id: item.rejectReasonId, name: item.rejectReasonName }))
+        : (decisionReason?.data ?? []).map((item) => ({ id: item.decisionReasonId, name: item.decisionReasonName }));
+    const reviewReasonLoading = isRejectedSelected ? rejectReasonLoading : decisionReasonLoading;
     const needsReason = reasonDecisionId !== undefined;
     /** *Enable ปุ่ม "ยืนยันบันทึกผลพิจารณา" เมื่อมีการเลือกผลการพิจารณา (+ สาเหตุถ้าจำเป็น) */
     const canSubmitReview = !!formik.values.reviewStatusId && (!needsReason || !!formik.values.reviewReasonId);

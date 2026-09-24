@@ -91,12 +91,6 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
- * ค่า fallback ของ nonCoveredReasonId : BE บังคับต้องมี + > 0 ทุก caseItem แม้ไม่มียอดไม่คุ้มครอง
- * ใช้ id แรกของ Master สาเหตุไม่คุ้มครอง (BE จะ ignore เมื่อ nonCoveredAmount = 0)
- */
-const DEFAULT_NON_COVERED_REASON_ID = 1;
-
-/**
  * ผลพิจารณา "ปฏิเสธ" (5) / "ยกเลิก" (6) : ConsiderSection เลือกสาเหตุจาก Master RejectReason / CancelReason
  * โดยตรง ค่าใน decisionReasonId ของฟอร์มจึงเป็น rejectReasonId / cancelReasonId ไม่ใช่ id ของ DecisionReason
  */
@@ -202,7 +196,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 netCaseAmount: getNetAmount(item),
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
                 nonCoveredAmount: nonCovered,
-                nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+                nonCoveredReasonId: reasonId > 0 ? reasonId : undefined,
                 receiptAmount: item.receiptAmount,
                 bodyPartId: item.bodyPartId,
             };
@@ -419,8 +413,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 netCaseAmount: getNetAmount(item),
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
                 nonCoveredAmount: nonCovered,
-                // BE บังคับต้องมี + > 0 ทุกแถว : ใช้สาเหตุจริงถ้ามี ไม่งั้น fallback 1 (BE ignore เมื่อ nonCoveredAmount = 0)
-                nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+                nonCoveredReasonId: reasonId > 0 ? reasonId : undefined,
                 receiptAmount: item.receiptAmount,
                 bodyPartId: item.bodyPartId,
             };

@@ -7,7 +7,7 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { TabContext, TabPanel } from "@mui/lab";
 import { useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import HeaderCardCustomerDetails from "../components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
 import ClaimDetail from "../components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
@@ -18,7 +18,7 @@ import ClaimHistoryTab from "../components/ConsiderDetails/TabDetails/ClaimHisto
 import PaymentHistoryTab from "../components/ConsiderDetails/TabDetails/PaymentHistoryTab";
 import {
     CLAIM_LIST_TYPE_CONFIG,
-    parseClaimListType,
+    resolveClaimListType,
 } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../api/coreClaimApi";
 import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
@@ -41,7 +41,6 @@ type ConsiderHospitalDetailPageProps = {
 const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetailPageProps) => {
     const [tabValue, setTabValue] = useState("1");
     useClearDocumentScanOnUnmount();
-    const [searchParams] = useSearchParams();
     const { id, caseId: caseIdEncoded } = useParams();
     const claimId = safeAtob(id) ?? "";
     // route hospital/:id/:caseId(/document) — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
@@ -57,8 +56,11 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
 
     const isHeaderLoading = detailDataLoading || customerDetailLoading;
 
-    /** ประเภทรายการเคลม อ่านจาก Query String เช่น ?type=opd-full (Default : OPD Half) */
-    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[parseClaimListType(searchParams.get("type"))];
+    /** ประเภทรายการเคลม — DFUAT-033 มาจากข้อมูลจริง (medicalTypeId/medicalSubTypeCode) ไม่ใช่ URL query string แล้ว */
+    const claimListTypeConfig =
+        CLAIM_LIST_TYPE_CONFIG[resolveClaimListType(detail?.medicalTypeId, detail?.medicalSubTypeCode)];
+    /** Chip แสดงค่าดิบจาก BE ตรงๆ (medicalSubTypeCode) ตามที่ยืนยันแล้วว่าใช้แสดงได้เลย ("IPD") — fallback เป็น label ที่คำนวณไว้เผื่อเคสเก่าที่ BE ยังไม่ส่ง field นี้มา */
+    const claimTypeDisplayLabel = detail?.medicalSubTypeCode ?? claimListTypeConfig.label;
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => {
         setTabValue(newValue);
@@ -147,7 +149,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                         </Tabs>
 
                         <Chip
-                            label={`ประเภทรายการเคลม : ${claimListTypeConfig.label}`}
+                            label={`ประเภทรายการเคลม : ${claimTypeDisplayLabel}`}
                             color="primary"
                             variant="outlined"
                             sx={{ ml: "auto", mr: 1, fontWeight: 700 }}

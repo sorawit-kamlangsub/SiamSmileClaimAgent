@@ -40,7 +40,7 @@ const FormikDateTimePicker = ({
                 onClose={handleBlur}
                 slotProps={{
                     textField: {
-                        helperText: error,
+                        helperText: touched ? error : undefined,
                         error: touched && !!error,
                         ...textFieldProps,
                         sx: [

@@ -1,12 +1,12 @@
 import { FormikErrors, useFormik } from "formik";
-import { useGetBank } from "../../../../api/coreClaimMastersApi";
+import { useGetBank, useGetTitle } from "../../../../api/coreClaimMastersApi";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 
 /**
  * ประเภทเอกสารของตารางสแกน "เอกสารประกอบการเปลี่ยนบัญชี" (ใน dialog และ section หลังบันทึก ใช้ค่าเดียวกัน)
  * TODO(death-disability-api): master documentTypeId ยังไม่มีประเภทนี้ — ใช้ "อื่นๆ" ไปก่อน
  */
-export const TRANSFER_ACCOUNT_DOCUMENT_TYPE = "อื่นๆ";
+export const TRANSFER_ACCOUNT_DOCUMENT_TYPE = "เอกสารประกอบการเปลี่ยนบัญชี";
 
 /** TODO(death-disability-api): ยังไม่มี master ประเภทบัญชี — ใช้ค่าคงที่ไปก่อน */
 export const ACCOUNT_TYPE_OPTIONS = [
@@ -21,7 +21,10 @@ export type ChangeTransferAccountValues = {
     accountTypeId: number | undefined;
     accountNo: string;
     accountName: string;
-    payeeName: string;
+    /** ผู้รับเงินแทน — ไม่บังคับกรอก */
+    payeeTitleId: number | undefined;
+    payeeFirstName: string;
+    payeeLastName: string;
 };
 
 const validate = (values: ChangeTransferAccountValues) => {
@@ -32,14 +35,17 @@ const validate = (values: ChangeTransferAccountValues) => {
     if (!values.accountNo.trim()) errors.accountNo = "กรุณาระบุเลขที่บัญชี";
     else if (!/^\d{10,15}$/.test(values.accountNo)) errors.accountNo = "เลขที่บัญชีต้องเป็นตัวเลข 10-15 หลัก";
     if (!values.accountName.trim()) errors.accountName = "กรุณาระบุชื่อบัญชี";
-    if (!values.payeeName.trim()) errors.payeeName = "กรุณาระบุชื่อผู้รับเงินแทน";
     return errors;
 };
 
 /** ผลการเปลี่ยนบัญชีที่บันทึกแล้ว — ใช้แสดง section "รายละเอียดการเปลี่ยนบัญชีปลายทางการโอนเงิน" */
 export type TransferAccountChange = {
     reason: string;
+    /** ชื่อเต็มผู้รับเงินแทน (คำนำหน้า+ชื่อ นามสกุล) สำหรับแสดงผล — ไม่ได้กรอก = "-" */
     payeeName: string;
+    payeeTitleId: number | undefined;
+    payeeFirstName: string;
+    payeeLastName: string;
     bankId: number | undefined;
     bankName: string;
     accountTypeName: string;
@@ -60,9 +66,13 @@ type UseChangeTransferAccountHookParams = {
  * ทุกช่องเริ่มว่าง ให้ผู้ใช้กรอกเอง (ไม่ดึงบัญชีของผู้รับผลประโยชน์มาเติม)
  * TODO(death-disability-api): onSubmit ยังไม่ยิง API — ตอนนี้ validate ผ่านแล้วส่งผลกลับให้ parent แสดงผล
  */
+/** TitlePersonDropdown ใช้ personTypeId = 2 — ต้องส่งค่าเดียวกันให้ได้ cache ชุดเดียวกัน */
+const TITLE_PERSON_TYPE_ID = 2;
+
 const useChangeTransferAccountHook = ({ onSaved, attachedDocuments }: UseChangeTransferAccountHookParams) => {
     const { data: bankData, isLoading: bankLoading } = useGetBank();
     const bankOptions = bankData?.data ?? [];
+    const { data: titleData } = useGetTitle(undefined, TITLE_PERSON_TYPE_ID);
 
     const formik = useFormik<ChangeTransferAccountValues>({
         initialValues: {
@@ -71,13 +81,21 @@ const useChangeTransferAccountHook = ({ onSaved, attachedDocuments }: UseChangeT
             accountTypeId: undefined,
             accountNo: "",
             accountName: "",
-            payeeName: "",
+            payeeTitleId: undefined,
+            payeeFirstName: "",
+            payeeLastName: "",
         },
         validate,
-        onSubmit: (values) =>
+        onSubmit: (values) => {
+            const titleName = titleData?.data?.find((item) => item.titleId === values.payeeTitleId)?.titleName ?? "";
+            const firstName = values.payeeFirstName.trim();
+            const lastName = values.payeeLastName.trim();
             onSaved({
                 reason: values.reason.trim(),
-                payeeName: values.payeeName.trim(),
+                payeeName: [`${titleName}${firstName}`, lastName].filter((part) => part).join(" ") || "-",
+                payeeTitleId: values.payeeTitleId,
+                payeeFirstName: firstName,
+                payeeLastName: lastName,
                 bankId: values.bankId,
                 bankName: bankOptions.find((bank) => bank.organizeId === values.bankId)?.organizeName ?? "-",
                 accountTypeName:
@@ -85,7 +103,8 @@ const useChangeTransferAccountHook = ({ onSaved, attachedDocuments }: UseChangeT
                 accountNo: values.accountNo,
                 accountName: values.accountName.trim(),
                 attachedDocuments,
-            }),
+            });
+        },
     });
 
     return { formik, bankOptions, bankLoading };

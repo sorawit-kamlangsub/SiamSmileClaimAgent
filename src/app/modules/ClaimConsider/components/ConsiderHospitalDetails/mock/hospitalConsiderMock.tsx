@@ -46,6 +46,7 @@ export const CLAIM_LIST_TYPES = {
     opdHalf: "opd-half",
     opdFull: "opd-full",
     ipd: "ipd",
+    daycase: "daycase",
 } as const;
 
 export type ClaimListType = (typeof CLAIM_LIST_TYPES)[keyof typeof CLAIM_LIST_TYPES];
@@ -88,12 +89,42 @@ export const CLAIM_LIST_TYPE_CONFIG: Record<ClaimListType, ClaimListTypeConfig> 
         hasHospitalExpenseSummary: false,
         hasSimBSelector: true,
     },
+    [CLAIM_LIST_TYPES.daycase]: {
+        label: "Day Case",
+        hasOcrReceipt: false,
+        hasHospitalExpenseSummary: false,
+        hasSimBSelector: true,
+    },
 };
 
-/** แปลงค่าจาก URL (?type=opd-full) เป็นประเภทรายการเคลม */
-export const parseClaimListType = (value: string | null): ClaimListType => {
-    if (value === CLAIM_LIST_TYPES.opdFull) return CLAIM_LIST_TYPES.opdFull;
-    if (value === CLAIM_LIST_TYPES.ipd) return CLAIM_LIST_TYPES.ipd;
+const normalizeSubTypeCode = (value?: string) =>
+    value
+        ?.trim()
+        .toUpperCase()
+        .replace(/[\s_-]/g, "");
+
+/**
+ * แปลงเป็นประเภทรายการเคลมจากข้อมูลจริงของเคส (DFUAT-033 — เดิมอ่านจาก URL `?type=` ที่ไม่เคยมีใคร set
+ * เลยทุกเคสตกไปที่ default "opd-half" หมด)
+ *
+ * `medicalSubTypeCode` (BE ส่งมาใน GetClaimDetailConsider, codegen 2026-09-23) เป็นตัวตัดสินหลัก —
+ * ยืนยันค่าจริงแล้วว่า "IPD" คือ IPD ส่วน OPD Half/OPD Full ยังไม่มีตัวอย่างค่าจริงยืนยัน จึงเทียบแบบมี
+ * keyword "HALF"/"FULL" ปนอยู่ไปก่อน `medicalTypeId` (เชื่อถือได้แน่นอน) ใช้เป็น fallback เมื่อ
+ * `medicalSubTypeCode` ไม่มีค่าหรือไม่ตรงชุดที่รู้จัก
+ */
+export const resolveClaimListType = (
+    medicalTypeId: number | undefined,
+    medicalSubTypeCode: string | undefined
+): ClaimListType => {
+    const code = normalizeSubTypeCode(medicalSubTypeCode);
+    if (code === "IPD") return CLAIM_LIST_TYPES.ipd;
+    if (code === "DAYCASE" || code === "DAYCASESURGERY") return CLAIM_LIST_TYPES.daycase;
+    if (code?.includes("FULL")) return CLAIM_LIST_TYPES.opdFull;
+    if (code?.includes("HALF")) return CLAIM_LIST_TYPES.opdHalf;
+
+    if (medicalTypeId === MedicalType.IPD) return CLAIM_LIST_TYPES.ipd;
+    if (medicalTypeId === MedicalType.DayCaseSurgery) return CLAIM_LIST_TYPES.daycase;
+
     return CLAIM_LIST_TYPES.opdHalf;
 };
 

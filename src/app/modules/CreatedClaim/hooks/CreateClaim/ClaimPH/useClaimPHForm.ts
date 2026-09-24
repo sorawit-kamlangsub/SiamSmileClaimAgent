@@ -151,6 +151,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     isContinuous ? "คงเหลือ" : "สูงสุด"
                 } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
+            console.log("🚀 ~ useClaimPHForm ~ errors:", errors)
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
@@ -175,6 +176,12 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             });
 
             if (hasError) {
+                setSubmitting(false);
+                return;
+            }
+
+            if (isMedical && ocr.hasMissingOcrDocumentId(ocr.ocrResult, ocr.ocrDocumentIds)) {
+                swalWarning("แจ้งเตือน", "บันทึกเอกสารที่สแกนไม่สำเร็จ กรุณาลบแล้วสแกนเอกสารใหม่อีกครั้ง");
                 setSubmitting(false);
                 return;
             }

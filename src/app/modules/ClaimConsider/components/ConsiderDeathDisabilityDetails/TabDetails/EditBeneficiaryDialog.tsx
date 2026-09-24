@@ -23,8 +23,12 @@ type EditBeneficiaryDialogProps = {
     claimNo: string;
     customerName: string;
     beneficiary: GetDeathAndDisabilityBeneficiaryDtoResponse | undefined;
-    /** กดบันทึกข้อมูล — ยังไม่บันทึกจริง parent เก็บไว้ส่งพร้อมผลการพิจารณา */
-    onSaved: (updated: GetDeathAndDisabilityBeneficiaryDtoResponse) => void;
+    /** ผลรวมจำนวนเงินของผู้รับผลประโยชน์รายอื่น (ไม่รวมคนที่แก้) */
+    otherPayoutAmount: number;
+    /** ยอดเงินรวมทั้งหมดของรายละเอียดค่าใช้จ่าย — ยอดคนนี้ + รายอื่นห้ามเกิน */
+    totalTransferAmount: number;
+    /** บันทึกผ่าน API (UpdateBeneficiary) สำเร็จ — parent ปิด dialog */
+    onSaved: () => void;
 };
 
 type EditBeneficiaryFormProps = Omit<EditBeneficiaryDialogProps, "open">;
@@ -37,8 +41,15 @@ const EditBeneficiaryForm = ({
     claimNo,
     customerName,
     beneficiary,
+    otherPayoutAmount,
+    totalTransferAmount,
 }: EditBeneficiaryFormProps) => {
-    const { formik, bankOptions, bankLoading } = useEditBeneficiaryHook({ beneficiary, onSaved });
+    const { formik, bankOptions, bankLoading, isSaving } = useEditBeneficiaryHook({
+        beneficiary,
+        onSaved,
+        otherPayoutAmount,
+        totalTransferAmount,
+    });
     const amountPreview = (formik.values.amount ?? 0).toLocaleString(undefined, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
@@ -186,9 +197,10 @@ const EditBeneficiaryForm = ({
                     color="success"
                     startIcon={<SaveIcon />}
                     onClick={() => formik.handleSubmit()}
+                    disabled={isSaving}
                     sx={{ ...dialogActionButtonSx, fontWeight: 600 }}
                 >
-                    บันทึกข้อมูล
+                    {isSaving ? "กำลังบันทึก..." : "บันทึกข้อมูล"}
                 </Button>
             </DialogActions>
         </>

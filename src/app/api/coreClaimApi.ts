@@ -1,6 +1,7 @@
 import axios from "axios";
 import {
     ApproveClaimDecisionDtoRequest,
+    BaseResponseServiceResponse,
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
     ClaimFundClient,
@@ -16,6 +17,7 @@ import {
     IncreaseTransferLimitMonitorRequestDto,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
+    UpdateBeneficiaryDtoRequest,
     UpsertClaimDecisionDtoRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
@@ -760,6 +762,27 @@ export const useGetDeathAndDisabilityBeneficiary = (claimId: string, caseId: str
             refetchOnWindowFocus: false,
         }
     );
+};
+
+/** แก้ไขข้อมูลผู้รับผลประโยชน์ (POST /beneficiary/update) — สำเร็จแล้วโหลดรายการผู้รับผลประโยชน์ใหม่ */
+export const useUpdateBeneficiary = (
+    onSuccessCallback?: (response: BaseResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((body: UpdateBeneficiaryDtoRequest) => coreClaimClient.updateBeneficiary(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess)
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            else {
+                queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey], { refetchType: "all" });
+                onSuccessCallback?.(response);
+            }
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
 };
 
 export const useGetCaseDisabilityBenefitByCaseId = (

@@ -441,7 +441,10 @@ const ClaimSummaryStep3 = ({
                     icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />}
                 />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
-                    <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
+                    {/* มี "ค่าใช้จ่ายทั้งหมดสุทธิ" แล้วไม่ต้องแสดง "ค่าใช้จ่ายทั้งหมด" ซ้ำ (หน้าวางบิลไม่ส่ง totalNetAmount จึงยังแสดงเหมือนเดิม) */}
+                    {totalNetAmount === undefined && (
+                        <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
+                    )}
                     {totalReceipt !== undefined && (
                         <SummaryLine label="ยอดเงินรวมตามใบเสร็จ" value={fmt(totalReceipt)} />
                     )}

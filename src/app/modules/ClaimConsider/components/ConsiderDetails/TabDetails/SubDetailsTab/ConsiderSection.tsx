@@ -167,9 +167,14 @@ const ConsiderSection = ({
             ? cancelReasonLoading
             : decisionReasonLoading;
     const selectStatus = (status: StatusOption) => {
-        formik.setFieldValue("considerResult", status.decisionId, false);
+        const isAlreadySelected = status.decisionId === formik.values.considerResult;
+
+        formik.setFieldValue("considerResult", isAlreadySelected ? undefined : status.decisionId, false);
         formik.setFieldValue("decisionReasonId", undefined, false);
         formik.setFieldValue("decisionReasonDetail", "", false);
+
+        // กดปุ่มที่เลือกอยู่แล้วซ้ำ = ยกเลิกเลือก (หุบฟอร์ม) — ไม่ต้อง scroll ตาม
+        if (isAlreadySelected) return;
 
         window.setTimeout(() => {
             formRef.current?.scrollIntoView({
