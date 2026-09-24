@@ -117,6 +117,14 @@ const ExpenseItemCard = ({ item, title }: { item: DeathDisabilityExpenseItem; ti
     </Box>
 );
 
+/** ยอดเงินรวมทั้งหมดของ section (ผลรวม netCaseAmount ของรายการที่แสดงจริง) — ใช้เป็นเพดานยอดโอนผู้รับผลประโยชน์ */
+export const getExpenseTotalAmount = (
+    items: DeathDisabilityExpenseItem[],
+    productTypeId: number | undefined,
+    coverageTypeId: number | undefined
+) =>
+    getDisplayItems(items, productTypeId, coverageTypeId).reduce((sum, { item }) => sum + (item.netCaseAmount ?? 0), 0);
+
 /** Section "รายละเอียดค่าใช้จ่าย" (read-only) — การ์ดต่อความคุ้มครอง + ยอดเงินรวมทั้งหมด (ผลรวม netCaseAmount) */
 const DeathDisabilityExpenseSection = ({
     items,
@@ -125,8 +133,7 @@ const DeathDisabilityExpenseSection = ({
     coverageTypeId,
 }: DeathDisabilityExpenseSectionProps) => {
     const displayItems = getDisplayItems(items, productTypeId, coverageTypeId);
-    // ยอดรวมคิดจากรายการที่แสดงจริง
-    const totalAmount = displayItems.reduce((sum, { item }) => sum + (item.netCaseAmount ?? 0), 0);
+    const totalAmount = getExpenseTotalAmount(items, productTypeId, coverageTypeId);
     return (
         <CustomPaper>
             <HeadingWithColor

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Box, Button, Chip, Grid, Typography } from "@mui/material";
+import { Alert, Box, Button, Grid, Typography } from "@mui/material";
 import PeopleIcon from "@mui/icons-material/People";
 import EditIcon from "@mui/icons-material/Edit";
 import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
@@ -29,9 +29,8 @@ type DeathDisabilityBeneficiarySectionProps = {
     isLoading: boolean;
     /** ผลรวม payoutAmount ของผู้รับผลประโยชน์ทุกคน */
     totalAmount: number;
-    /** ลำดับ (index) ที่แก้ไขแล้วแต่ยังไม่ได้ยืนยันบันทึก */
-    editedIndexes: number[];
-    onBeneficiaryEdited: (index: number, updated: GetDeathAndDisabilityBeneficiaryDtoResponse) => void;
+    /** ยอดเงินรวมทั้งหมดของรายละเอียดค่าใช้จ่าย — เพดานยอดโอน และต้องจ่ายครบก่อนอนุมัติ */
+    expenseTotalAmount: number;
     claimNo: string;
     customerName: string;
     /** ใช้กับตารางสแกนเอกสารใน dialog เปลี่ยนบัญชี */
@@ -50,8 +49,7 @@ const DeathDisabilityBeneficiarySection = ({
     beneficiaries,
     isLoading,
     totalAmount,
-    editedIndexes,
-    onBeneficiaryEdited,
+    expenseTotalAmount,
     claimNo,
     customerName,
     productTypeId,
@@ -102,10 +100,12 @@ const DeathDisabilityBeneficiarySection = ({
                 claimNo={claimNo}
                 customerName={customerName}
                 beneficiary={editingBeneficiary}
-                onSaved={(updated) => {
-                    if (editingIndex !== undefined) onBeneficiaryEdited(editingIndex, updated);
-                    setEditOpen(false);
-                }}
+                otherPayoutAmount={beneficiaries.reduce(
+                    (sum, item, index) => (index === editingIndex ? sum : sum + (item.payoutAmount ?? 0)),
+                    0
+                )}
+                totalTransferAmount={expenseTotalAmount}
+                onSaved={() => setEditOpen(false)}
             />
             {!isLoading && beneficiaries.length === 0 && (
                 <Typography color="text.secondary" textAlign="center" sx={{ mt: 2, py: 3 }}>
@@ -119,13 +119,6 @@ const DeathDisabilityBeneficiarySection = ({
                 >
                     <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
                         <Typography fontWeight={700}>ผู้รับผลประโยชน์ ลำดับที่ {index + 1}</Typography>
-                        {editedIndexes.includes(index) && (
-                            <Chip
-                                label="แก้ไขแล้ว รอยืนยันบันทึก"
-                                size="small"
-                                sx={{ bgcolor: "#FFF1CD", color: "#A56E07", fontWeight: 600 }}
-                            />
-                        )}
                         <Button
                             variant="outlined"
                             size="small"
@@ -166,6 +159,17 @@ const DeathDisabilityBeneficiarySection = ({
                     จำนวนเงินโอนรวม : {formatAmount(totalAmount)} บาท
                 </Typography>
             </Box>
+            {!isLoading &&
+                beneficiaries.length > 0 &&
+                Math.round(totalAmount * 100) !== Math.round(expenseTotalAmount * 100) && (
+                    <Alert severity="warning" sx={{ mt: 1.5, borderRadius: 2 }}>
+                        จำนวนเงินโอนรวม {formatAmount(totalAmount)} บาท ไม่เท่ากับยอดเงินรวมทั้งหมด{" "}
+                        {formatAmount(expenseTotalAmount)} บาท
+                        {totalAmount < expenseTotalAmount &&
+                            ` (ยังขาด ${formatAmount(expenseTotalAmount - totalAmount)} บาท)`}{" "}
+                        — ต้องเท่ากันจึงจะอนุมัติได้
+                    </Alert>
+                )}
         </CustomPaper>
     );
 };

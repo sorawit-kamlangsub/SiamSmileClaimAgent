@@ -30,8 +30,8 @@ const DEATH_COVERAGE_TYPE_ID = 5;
 type UseDeathDisabilityActionHookParams = {
     formik: FormikProps<DeathDisabilityConsiderValues>;
     detail: GetDeathAndDisabilityClaimDetailConsiderDtoResponse | undefined;
-    /** ผู้รับผลประโยชน์ที่ผู้ใช้แก้ใน dialog (ยังไม่บันทึก) — ส่งเฉพาะรายการที่แก้ */
-    editedBeneficiaries: GetDeathAndDisabilityBeneficiaryDtoResponse[];
+    /** ผู้รับผลประโยชน์ของเคส (ค่าล่าสุดจาก API — การแก้ไขบันทึกผ่าน UpdateBeneficiary แล้ว) */
+    beneficiaries: GetDeathAndDisabilityBeneficiaryDtoResponse[];
     /** ยอดโอนรวมของผู้รับผลประโยชน์ (รวมยอดที่แก้แล้ว) — ใช้เป็น payableAmount ตอนอนุมัติ */
     totalPayoutAmount: number;
     /** บัญชีปลายทางที่เปลี่ยนจาก dialog เงินสดมอบหน้างาน — ไม่มี = ไม่ส่งบัญชีปลายทาง */
@@ -60,7 +60,7 @@ type UseDeathDisabilityActionHookParams = {
 const useDeathDisabilityActionHook = ({
     formik,
     detail,
-    editedBeneficiaries,
+    beneficiaries,
     totalPayoutAmount,
     transferAccountChange,
     scanDocuments,
@@ -173,7 +173,7 @@ const useDeathDisabilityActionHook = ({
     ];
 
     const mapBeneficiaries = (): UpsertClaimDecisionBeneficiaryRequest[] =>
-        editedBeneficiaries.map(
+        beneficiaries.map(
             (item): UpsertClaimDecisionBeneficiaryRequest => ({
                 beneficiaryId: item.beneficiaryId,
                 titleId: item.titleId,

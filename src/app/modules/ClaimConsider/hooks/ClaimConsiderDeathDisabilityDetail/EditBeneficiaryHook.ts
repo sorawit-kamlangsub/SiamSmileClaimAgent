@@ -1,6 +1,8 @@
 import { FormikErrors, useFormik } from "formik";
 import { useGetBank, useGetRelationType, useGetTitle } from "../../../../api/coreClaimMastersApi";
+import { useUpdateBeneficiary } from "../../../../api/coreClaimApi";
 import { GetDeathAndDisabilityBeneficiaryDtoResponse } from "../../../../api/coreClaimApi.client";
+import { swalError } from "../../../_common";
 import { validatePhoneNumber, validateThaiCitizenID } from "../../../_common/commonValidators";
 
 export type EditBeneficiaryValues = {
@@ -17,7 +19,13 @@ export type EditBeneficiaryValues = {
     amount: number | undefined;
 };
 
-const validate = (values: EditBeneficiaryValues) => {
+const formatAmount = (value: number) =>
+    value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** ขอบเขตจำนวนเงิน — ยอดของคนนี้ + ผู้รับผลประโยชน์รายอื่น ต้องไม่เกินยอดเงินรวมทั้งหมดของรายละเอียดค่าใช้จ่าย */
+type AmountLimit = { otherPayoutAmount: number; totalTransferAmount: number };
+
+const validate = (values: EditBeneficiaryValues, { otherPayoutAmount, totalTransferAmount }: AmountLimit) => {
     const errors: FormikErrors<EditBeneficiaryValues> = {};
     if (!values.relationTypeId) errors.relationTypeId = "กรุณาเลือกความสัมพันธ์";
     if (!values.documentNo) errors.documentNo = "กรุณาระบุเลขบัตรประชาชน";
@@ -32,14 +40,22 @@ const validate = (values: EditBeneficiaryValues) => {
     else if (!/^\d{10,15}$/.test(values.accountNo)) errors.accountNo = "เลขที่บัญชีต้องเป็นตัวเลข 10-15 หลัก";
     if (!values.accountName.trim()) errors.accountName = "กรุณาระบุชื่อบัญชี";
     if (!values.amount || values.amount <= 0) errors.amount = "กรุณาระบุจำนวนเงิน";
+    else if (values.amount > totalTransferAmount)
+        errors.amount = `จำนวนเงินต้องไม่เกินยอดเงินรวมทั้งหมด ${formatAmount(totalTransferAmount)} บาท`;
+    // เทียบเป็นสตางค์ กันทศนิยม float คลาดเคลื่อน
+    else if (Math.round((values.amount + otherPayoutAmount) * 100) > Math.round(totalTransferAmount * 100))
+        errors.amount = `รวมกับผู้รับผลประโยชน์รายอื่นแล้วเกินยอดเงินรวมทั้งหมด (ระบุได้ไม่เกิน ${formatAmount(
+            Math.max(totalTransferAmount - otherPayoutAmount, 0)
+        )} บาท)`;
     return errors;
 };
 
 type UseEditBeneficiaryHookParams = {
     /** ข้อมูลผู้รับผลประโยชน์ปัจจุบัน (จาก API หรือที่แก้ไว้ก่อนหน้า) */
     beneficiary: GetDeathAndDisabilityBeneficiaryDtoResponse | undefined;
-    onSaved: (updated: GetDeathAndDisabilityBeneficiaryDtoResponse) => void;
-};
+    /** บันทึกผ่าน API สำเร็จ */
+    onSaved: () => void;
+} & AmountLimit;
 
 /** TitlePersonDropdown ใช้ personTypeId = 2 — ต้องส่งค่าเดียวกันให้ได้ cache ชุดเดียวกัน */
 const TITLE_PERSON_TYPE_ID = 2;
@@ -60,14 +76,23 @@ const toFormValues = (item: GetDeathAndDisabilityBeneficiaryDtoResponse | undefi
 
 /**
  * Form ของ dialog "แก้ไขข้อมูลผู้รับผลประโยชน์" (ปุ่มแก้ไขข้อมูล)
- * กดบันทึกแล้วยังไม่ยิง API — คืนข้อมูลที่แก้ (รูปแบบ DTO เดิม พร้อมชื่อจาก master เพื่อแสดงบนการ์ด) ให้ parent
- * เก็บไว้ ข้อมูลจริงบันทึกตอนกด "ยืนยันบันทึก" ที่ผลการพิจารณา
+ * กดบันทึกข้อมูล → POST /beneficiary/update ทันที สำเร็จแล้วรายการผู้รับผลประโยชน์โหลดใหม่ (invalidate query)
+ * แล้วเรียก onSaved ให้ parent ปิด dialog
  */
-const useEditBeneficiaryHook = ({ beneficiary, onSaved }: UseEditBeneficiaryHookParams) => {
+const useEditBeneficiaryHook = ({
+    beneficiary,
+    onSaved,
+    otherPayoutAmount,
+    totalTransferAmount,
+}: UseEditBeneficiaryHookParams) => {
     const { data: bankData, isLoading: bankLoading } = useGetBank();
     // query เดียวกับ RelationTypeDropdown / TitlePersonDropdown — ได้จาก cache ไม่ยิงซ้ำ
     const { data: relationTypeData } = useGetRelationType();
     const { data: titleData } = useGetTitle(undefined, TITLE_PERSON_TYPE_ID);
+    const updateBeneficiary = useUpdateBeneficiary(
+        () => onSaved(),
+        (error) => swalError("บันทึกข้อมูลผู้รับผลประโยชน์ไม่สำเร็จ", error)
+    );
 
     const toBeneficiaryDto = (values: EditBeneficiaryValues): GetDeathAndDisabilityBeneficiaryDtoResponse => ({
         ...beneficiary,
@@ -89,11 +114,23 @@ const useEditBeneficiaryHook = ({ beneficiary, onSaved }: UseEditBeneficiaryHook
 
     const formik = useFormik<EditBeneficiaryValues>({
         initialValues: toFormValues(beneficiary),
-        validate,
-        onSubmit: (values) => onSaved(toBeneficiaryDto(values)),
+        validate: (values) => validate(values, { otherPayoutAmount, totalTransferAmount }),
+        onSubmit: async (values) => {
+            const updated = toBeneficiaryDto(values);
+            try {
+                await updateBeneficiary.mutateAsync(updated);
+            } catch {
+                // error แจ้งผ่าน onErrorCallback แล้ว — ไม่ปิด dialog ให้แก้แล้วกดบันทึกใหม่ได้
+            }
+        },
     });
 
-    return { formik, bankOptions: bankData?.data ?? [], bankLoading };
+    return {
+        formik,
+        bankOptions: bankData?.data ?? [],
+        bankLoading,
+        isSaving: updateBeneficiary.isLoading,
+    };
 };
 
 export default useEditBeneficiaryHook;

@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Grid } from "@mui/material";
 import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
-import { swalSuccess } from "../../../../_common";
+import { DECISION_ID } from "../../../store/claimConsider.constants";
+import { swalError, swalSuccess } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
@@ -16,7 +17,7 @@ import {
     GetDeathAndDisabilityClaimDetailConsiderDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
 import DeathDisabilityClaimInfoSection from "./DeathDisabilityClaimInfoSection";
-import DeathDisabilityExpenseSection from "./DeathDisabilityExpenseSection";
+import DeathDisabilityExpenseSection, { getExpenseTotalAmount } from "./DeathDisabilityExpenseSection";
 import DeathDisabilityBeneficiarySection from "./DeathDisabilityBeneficiarySection";
 import DeathDisabilityConsiderSection from "./DeathDisabilityConsiderSection";
 import TransferAccountChangeSection from "./TransferAccountChangeSection";
@@ -37,6 +38,9 @@ type DeathDisabilityClaimDetailsTabProps = {
  * - สแกนเอกสาร: DocumentScanTable ตัวเดียวกับ ClaimDetailsTab (ดึงเอกสารที่แนบไว้ของ caseId จริง)
  * - ผู้รับผลประโยชน์: GetDeathAndDisabilityBeneficiary
  */
+const formatAmount = (value: number) =>
+    value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
 const DeathDisabilityClaimDetailsTab = ({
     detail,
     detailLoading,
@@ -46,14 +50,7 @@ const DeathDisabilityClaimDetailsTab = ({
         detail,
         customerDetail
     );
-    const {
-        beneficiaries,
-        beneficiaryLoading,
-        totalPayoutAmount,
-        editedIndexes,
-        editedBeneficiaries,
-        updateBeneficiary,
-    } = useDeathDisabilityBeneficiaryHook(detail);
+    const { beneficiaries, beneficiaryLoading, totalPayoutAmount } = useDeathDisabilityBeneficiaryHook(detail);
     const {
         formik,
         revisionReasonOptions,
@@ -63,17 +60,6 @@ const DeathDisabilityClaimDetailsTab = ({
         cancelReasonOptions,
         cancelReasonLoading,
     } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
-    // ข้อมูลผู้รับผลประโยชน์ที่แก้ไว้ยังไม่ถูกบันทึกจนกว่าจะกดยืนยันบันทึก — เตือนก่อนปิด/รีเฟรชหน้า
-    const hasPendingBeneficiaryEdits = editedBeneficiaries.length > 0;
-    useEffect(() => {
-        if (!hasPendingBeneficiaryEdits) return undefined;
-        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-            event.preventDefault();
-            event.returnValue = "";
-        };
-        window.addEventListener("beforeunload", handleBeforeUnload);
-        return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-    }, [hasPendingBeneficiaryEdits]);
     // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
     const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
     // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
@@ -83,7 +69,7 @@ const DeathDisabilityClaimDetailsTab = ({
     const { handleSubmitDecision, isSubmitting } = useDeathDisabilityActionHook({
         formik,
         detail,
-        editedBeneficiaries,
+        beneficiaries,
         totalPayoutAmount,
         transferAccountChange,
         scanDocuments,
@@ -102,8 +88,25 @@ const DeathDisabilityClaimDetailsTab = ({
         await formik.submitForm();
         const errors = await formik.validateForm();
         if (Object.keys(errors).length > 0) return;
+        // อนุมัติ = จ่ายเงินจริง — ยอดโอนผู้รับผลประโยชน์ต้องเท่ายอดเงินรวมทั้งหมดของค่าใช้จ่าย (จ่ายต่ำกว่ายอดเคลมไม่ได้)
+        if (formik.values.considerResult === DECISION_ID.APPROVED && !isPayoutComplete) {
+            swalError(
+                "ยอดโอนผู้รับผลประโยชน์ไม่ครบ",
+                `จำนวนเงินโอนรวม ${formatAmount(totalPayoutAmount)} บาท ต้องเท่ากับยอดเงินรวมทั้งหมด ${formatAmount(
+                    expenseTotalAmount
+                )} บาท กรุณาแก้ไขข้อมูลผู้รับผลประโยชน์`
+            );
+            return;
+        }
         await handleSubmitDecision();
     };
+    // เพดานยอดโอนผู้รับผลประโยชน์ = ยอดเงินรวมทั้งหมดในรายละเอียดค่าใช้จ่าย (ปัดทศนิยม 2 ตำแหน่งก่อนเทียบ)
+    const expenseTotalAmount = getExpenseTotalAmount(
+        expenseItems,
+        customerDetail?.productTypeId,
+        detail?.coverageTypeId
+    );
+    const isPayoutComplete = Math.round(totalPayoutAmount * 100) === Math.round(expenseTotalAmount * 100);
     // รอข้อมูลของทุก section ที่ดึงจาก API ในแท็บนี้
     const isTabLoading = detailLoading || expenseLoading || beneficiaryLoading;
     const claimNo = detail?.claimNo ?? "-";
@@ -130,8 +133,7 @@ const DeathDisabilityClaimDetailsTab = ({
                             beneficiaries={beneficiaries}
                             isLoading={beneficiaryLoading}
                             totalAmount={totalPayoutAmount}
-                            editedIndexes={editedIndexes}
-                            onBeneficiaryEdited={updateBeneficiary}
+                            expenseTotalAmount={expenseTotalAmount}
                             claimNo={claimNo}
                             customerName={customerName}
                             productTypeId={customerDetail?.productTypeId}
