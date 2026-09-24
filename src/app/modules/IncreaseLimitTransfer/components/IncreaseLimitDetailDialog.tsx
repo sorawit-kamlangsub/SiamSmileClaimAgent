@@ -52,7 +52,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
     }, [open]);
     const changeStatus = useIncreaseTransferLimitChangeStatus(
         () => {
-            swalSuccess("ดำเนินการสำเร็จ", "บันทึกการอนุมัติ/ปฏิเสธเรียบร้อยแล้ว");
+            swalSuccess("ดำเนินการสำเร็จ", "บันทึกการอนุมัติเรียบร้อยแล้ว");
             onClose();
         },
         (error) => {
@@ -73,14 +73,6 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
             return;
         }
         changeStatus.mutate(buildChangeStatusBody(4));
-    };
-
-    const handleReject = async () => {
-        const result = await swalConfirm("ยืนยันการปฏิเสธ", "ยืนยันการปฏิเสธการขยายวงเงินรายการนี้หรือไม่?");
-        if (!result.isConfirmed) {
-            return;
-        }
-        changeStatus.mutate(buildChangeStatusBody(3));
     };
 
     return (
@@ -372,7 +364,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2, pb: 0 }}>
+                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", pb: 0 }}>
                                 <Button
                                     variant="contained"
                                     size="small"
@@ -381,15 +373,6 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     sx={{ backgroundColor: "#1B6CB2" }}
                                 >
                                     อนุมัติ
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    size="small"
-                                    disabled={changeStatus.isLoading}
-                                    onClick={handleReject}
-                                >
-                                    ปฏิเสธ
                                 </Button>
                             </Box>
                         </Box>
