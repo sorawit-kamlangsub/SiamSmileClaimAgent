@@ -176,7 +176,7 @@ export const mergeDraftCaseItems = (
             claimAmount: draftItem.originalAmount || undefined,
             discount: draftItem.discountAmount || undefined,
             notCovered,
-            // forward mapper เขียน DEFAULT_NON_COVERED_REASON_ID (1) ลงทุกแถวแม้ nonCoveredAmount = 0
+            // draft เก่าอาจมี nonCoveredReasonId = 1 ติดมาทุกแถวแม้ nonCoveredAmount = 0 (เคยส่ง fallback)
             // ต้อง guard ไม่งั้นทุกแถวจะโชว์ "สาเหตุไม่คุ้มครอง" มั่วและกระทบ validation ตอนกดถัดไป
             reason: notCovered ? draftItem.nonCoveredReasonId || undefined : undefined,
         };

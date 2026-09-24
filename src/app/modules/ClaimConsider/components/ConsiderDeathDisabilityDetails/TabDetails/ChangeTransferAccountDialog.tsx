@@ -20,6 +20,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SaveIcon from "@mui/icons-material/Save";
 import { FormikDropdown, FormikTextField } from "../../../../_common";
+import TitlePersonDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/TitlePersonDropdown";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { CaseDocumentV2Request } from "../../../../../api/coreClaimApi.client";
 import useChangeTransferAccountHook, {
@@ -122,7 +123,7 @@ const ChangeTransferAccountForm = ({
 
                 <SectionRow icon={<AccountBalanceIcon />}>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} md={4}>
+                        <Grid item xs={12} sm={6}>
                             <FormikDropdown
                                 formik={formik}
                                 name="bankId"
@@ -136,7 +137,7 @@ const ChangeTransferAccountForm = ({
                                 required
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
+                        <Grid item xs={12} sm={6}>
                             <FormikDropdown
                                 formik={formik}
                                 name="accountTypeId"
@@ -149,7 +150,7 @@ const ChangeTransferAccountForm = ({
                                 required
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6} md={4}>
+                        <Grid item xs={12} sm={6}>
                             <FormikTextField
                                 formik={formik}
                                 name="accountNo"
@@ -162,14 +163,19 @@ const ChangeTransferAccountForm = ({
                         <Grid item xs={12} sm={6}>
                             <FormikTextField formik={formik} name="accountName" label="ชื่อบัญชี" fullWidth required />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <FormikTextField
-                                formik={formik}
-                                name="payeeName"
-                                label="ชื่อผู้รับเงินแทน"
-                                fullWidth
-                                required
-                            />
+                        <Grid item xs={12}>
+                            <Typography variant="body2" color="text.secondary" mt={1}>
+                                ผู้รับเงินแทน (ถ้ามี)
+                            </Typography>
+                        </Grid>
+                        <Grid item xs={12} sm={4} md={3}>
+                            <TitlePersonDropdown formik={formik} name="payeeTitleId" firstItemText="---เลือก---" />
+                        </Grid>
+                        <Grid item xs={12} sm={8} md={4.5}>
+                            <FormikTextField formik={formik} name="payeeFirstName" label="ชื่อ" fullWidth />
+                        </Grid>
+                        <Grid item xs={12} md={4.5}>
+                            <FormikTextField formik={formik} name="payeeLastName" label="นามสกุล" fullWidth />
                         </Grid>
                     </Grid>
                 </SectionRow>
@@ -213,7 +219,15 @@ const ChangeTransferAccountDialog = ({ open, ...formProps }: ChangeTransferAccou
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
 
     return (
-        <Dialog open={open} onClose={formProps.onClose} fullScreen={fullScreen} fullWidth maxWidth="lg">
+        <Dialog
+            open={open}
+            onClose={formProps.onClose}
+            fullScreen={fullScreen}
+            fullWidth
+            maxWidth="lg"
+            // ให้เลื่อนเฉพาะ DialogContent — กัน scrollbar ซ้อนที่ขอบ dialog
+            PaperProps={{ sx: { overflowY: "hidden" } }}
+        >
             <ChangeTransferAccountForm {...formProps} />
         </Dialog>
     );
