@@ -337,8 +337,8 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     <Grid item xs={12}>
                                         <TextField
                                             multiline
-                                            rows={2}
-                                            minRows={2}
+                                            rows={1}
+                                            minRows={1}
                                             label="หมายเหตุรอตรวจสอบ"
                                             placeholder="ระบุหมายเหตุเพื่อ Hold รายการไว้รอตรวจสอบ"
                                             inputProps={{ maxLength: 500 }}
@@ -391,7 +391,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2, pb: 0 }}>
+                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2}}>
                                 <Button
                                     variant="contained"
                                     color="primary"
@@ -412,6 +412,15 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Button>
                             </Box>
                         </Box>
+
+                        <Box
+                            sx={{
+                                mt: 1.5,
+                                p: "8px 14px",
+                                borderRadius: 2,
+                                backgroundColor: "#FFFFFF",
+                            }}
+                        />
                     </>
                 )}
             </DialogContent>
