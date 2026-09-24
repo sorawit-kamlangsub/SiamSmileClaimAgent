@@ -1085,6 +1085,8 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             type="number"
                                             value={formik.values.bedDays}
                                             onChange={(e) => handleIcuDaysChange(toInteger(e.target.value))}
+                                            error={formik.touched.bedDays && !!formik.errors.bedDays}
+                                            helperText={formik.touched.bedDays ? formik.errors.bedDays : ""}
                                             inputProps={{ min: 0 }}
                                             disabled
                                             sx={refInputSx}
