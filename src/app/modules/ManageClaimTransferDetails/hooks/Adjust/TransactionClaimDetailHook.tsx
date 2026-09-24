@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetTransactionHistory } from "../../adjustClaimAPI";
+import { useGetClaimTransactions } from "../../../../api/coreClaimApi";
 import { Box } from "@mui/material";
 import { numberWithCommas } from "../../../../functionHelpers";
 import { useMemo, useState } from "react";
@@ -14,9 +14,13 @@ const TransactionClaimDetailHook = ({ caseId }: TransactionClaimDetailHookProps)
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetTransactionHistory(
+    const { data: historyTransactionData, isLoading: isHistoryTransactionLoading } = useGetClaimTransactions(
         caseId,
-        paginated
+        undefined,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
     );
 
     const pagination: PaginationResultDto = useMemo(

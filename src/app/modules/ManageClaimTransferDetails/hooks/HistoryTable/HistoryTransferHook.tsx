@@ -4,13 +4,13 @@ import { numberWithCommas } from "../../../../functionHelpers";
 import dayjs from "dayjs";
 
 export interface PayTransferDetail {
-    paymentCode: string;
-    createdDate: string;
-    paymentTypeName: string;
-    totalNetPaidAmount: number;
-    toBankName: string;
-    toBankAccountNo: string;
-    toBankAccountName: string;
+    paymentCode?: string;
+    createdDate?: string | dayjs.Dayjs;
+    paymentTypeName?: string;
+    totalNetPaidAmount?: number;
+    toBankName?: string;
+    toBankAccountNo?: string;
+    toBankAccountName?: string;
 }
 
 const rightAlignedHeadCellProps = () => ({ align: "right" as const });

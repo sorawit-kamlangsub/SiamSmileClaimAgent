@@ -44,8 +44,8 @@ const ManageAdjustDetailPage = () => {
                         <Grid item>
                             <TransferRecordForm
                                 formik={formik}
-                                account={account}
-                                reasonOptions={reasonOptions}
+                                account={account ?? {}}
+                                reasonOptions={reasonOptions ?? []}
                                 isLoadingDropdown={reasonOptionIsLoading}
                             />
                         </Grid>

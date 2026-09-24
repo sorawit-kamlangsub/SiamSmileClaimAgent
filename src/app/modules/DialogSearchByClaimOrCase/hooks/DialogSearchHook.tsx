@@ -1,6 +1,6 @@
 import { useFormik } from "formik";
 import { NOT_FOUND_MESSAGE, mapErrorMessage, swalError, swalWarning } from "../../_common";
-import { useSearchClaimOrCase } from "../dialogSearchClaimAPI";
+import { useSearchClaimOrCase } from "../../../api/coreClaimApi";
 import { useState } from "react";
 
 type RefundClaimSearchType = {
@@ -38,7 +38,7 @@ const useDialogSearchHook = ({ onSearchSuccess }: UseRefundDialogSearchHookProps
 
         onSubmit: (value) => {
             if (value.searchDetail) {
-                searchByClaimOrCaseMutate({ searchDetail: value.searchDetail, });
+                searchByClaimOrCaseMutate(value.searchDetail);
             }
         },
     });

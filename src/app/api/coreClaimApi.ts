@@ -1,5 +1,6 @@
 import axios from "axios";
 import {
+    AdditionalTransferMonitorRequestDto,
     ApproveClaimDecisionDtoRequest,
     BaseResponseServiceResponse,
     CalculateCaseClaimDtoRequest,
@@ -15,8 +16,11 @@ import {
     IncreaseTransferLimitChangeStatusRequestDto,
     IncreaseTransferLimitChangeStatusResponseDtoServiceResponse,
     IncreaseTransferLimitMonitorRequestDto,
+    SaveAdditionalTransferRequest,
+    SaveAdditionalTransferResponseDtoServiceResponse,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
+    SearchClaimOrCaseResponseDtoListServiceResponse,
     UpdateBeneficiaryDtoRequest,
     UpsertClaimDecisionDtoRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
@@ -1146,4 +1150,177 @@ export const useGetClaimEditDraftRevision = (draftRevisionId?: string | undefine
             refetchOnWindowFocus: false,
         }
     );
+};
+
+// ---- โอนเพิ่ม (ClaimFund / AdditionalTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getAdditionalTransferMonitorQueryKey = ["getAdditionalTransferMonitor"];
+const getAdditionalTransferAccountDetailQueryKey = ["getAdditionalTransferAccountDetail"];
+const getSearchClaimOrCaseQueryKey = ["getSearchClaimOrCase"];
+const getAdditionalTransferDetailsQueryKey = ["getAdditionalTransferDetails"];
+const getAdjustmentReasonsQueryKey = ["getAdjustmentReasons"];
+const getClaimTransactionsQueryKey = ["getClaimTransactions"];
+const getTransferHistoryQueryKey = ["getTransferHistory"];
+
+export const useGetAdditionalTransferMonitor = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    filter?: AdditionalTransferMonitorRequestDto,
+    searchTrigger?: number,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [
+            getAdditionalTransferMonitorQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+            searchTrigger,
+        ],
+        () =>
+            claimFundClient.additionalTransferMonitor(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage,
+                filter
+            ),
+        {
+            enabled: enabled ?? true,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetAdditionalTransferAccountDetail = (paymentId?: string | undefined) => {
+    return useQuery(
+        [getAdditionalTransferAccountDetailQueryKey, paymentId],
+        () => claimFundClient.getAdditionalTransferAccountDetail(paymentId),
+        {
+            enabled: paymentId !== undefined && paymentId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useSearchClaimOrCase = (
+    onSuccessCallback?: (response: SearchClaimOrCaseResponseDtoListServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((searchDetail: string) => claimFundClient.searchClaimOrCase(searchDetail), {
+        onSuccess: (response) => {
+            if (!response?.isSuccess) {
+                onErrorCallback?.(response?.message || response?.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallback?.(response);
+            }
+            queryClient.invalidateQueries([getSearchClaimOrCaseQueryKey]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+            queryClient.invalidateQueries([getSearchClaimOrCaseQueryKey]);
+        },
+    });
+};
+
+export const useGetAdditionalTransferDetails = (caseId?: string | undefined) => {
+    return useQuery(
+        [getAdditionalTransferDetailsQueryKey, caseId],
+        () => claimFundClient.additionalTransferDetails(caseId),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetAdjustmentReasons = (adjustmentTypeId?: number | undefined) => {
+    return useQuery(
+        [getAdjustmentReasonsQueryKey, adjustmentTypeId],
+        () => claimFundClient.getAdjustmentReasons(adjustmentTypeId),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetClaimTransactions = (
+    caseId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getClaimTransactionsQueryKey, caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            claimFundClient.getClaimTransactions(
+                caseId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetTransferHistory = (
+    caseId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getTransferHistoryQueryKey, caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            claimFundClient.transferHistory(caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useSaveAdditionalTransfer = (
+    onSuccessCallback?: (response: SaveAdditionalTransferResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((body: SaveAdditionalTransferRequest) => claimFundClient.saveAdditionalTransfer(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallback?.(response);
+            }
+            queryClient.invalidateQueries([getAdditionalTransferMonitorQueryKey], { refetchType: "all" });
+            queryClient.invalidateQueries([getAdditionalTransferDetailsQueryKey], { refetchType: "all" });
+            queryClient.invalidateQueries([getClaimTransactionsQueryKey], { refetchType: "all" });
+            queryClient.invalidateQueries([getTransferHistoryQueryKey], { refetchType: "all" });
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
 };

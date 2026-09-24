@@ -10,8 +10,8 @@ export interface TransferRecordFormValues {
 
 export interface TransferRecordFormProps<T extends TransferRecordFormValues> {
     formik: FormikProps<T>;
-    account: ReceivingAccountCardProps;
-    reasonOptions: any[];
+    account?: ReceivingAccountCardProps;
+    reasonOptions?: any[];
     isLoadingDropdown: boolean;
     onChangeAccount?: () => void;
 }
