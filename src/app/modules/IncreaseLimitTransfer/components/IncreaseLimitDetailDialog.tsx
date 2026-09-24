@@ -84,7 +84,12 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
             open={open}
             maxWidth="sm"
             fullWidth
-            PaperProps={{ sx: { borderRadius: 3 } }}
+            PaperProps={{
+                sx: {
+                    borderRadius: 3,
+                    overflow: "hidden",
+                },
+            }}
         >
             <DialogTitle
                 sx={{
@@ -121,9 +126,18 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                 </IconButton>
             </DialogTitle>
 
-            <DialogContent sx={{ pt: "15px", pb: 0 }}>
+            <DialogContent
+                sx={{
+                    pt: "15px",
+                    pb: 0,
+                    overflow: "hidden",
+                    display: "flex",
+                    flexDirection: "column",
+                    height: "100%",
+                }}
+            >
                 {isDetailLoading ? (
-                    <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
+                    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", flex: 1, py: 8 }}>
                         <CircularProgress />
                     </Box>
                 ) : (
@@ -204,157 +218,160 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
 
                         <Box sx={{ borderTop: "1px solid #E0E0E0", my: 2 }} />
 
-                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2 }}>
-                            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
-                                <VerifiedUserIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
-                                <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
-                                    อนุมัติวงเงิน
-                                </Typography>
-                            </Box>
-
-                            <Grid container spacing={2}>
-                                <Grid item xs={6}>
-                                    <Box
-                                        sx={{
-                                            p: 2,
-                                            borderRadius: 2,
-                                            textAlign: "center",
-                                            backgroundColor: "#EAF2FB",
-                                        }}
-                                    >
-                                        <Typography sx={{ fontSize: "0.8rem", color: "#0A55A2" }}>
-                                            วงเงินปัจจุบัน
-                                        </Typography>
-                                        <Typography
-                                            sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#0A55A2" }}
-                                        >
-                                            {formatNumber(detail?.currentLimit)}
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                                <Grid item xs={6}>
-                                    <Box
-                                        sx={{
-                                            p: 2,
-                                            borderRadius: 2,
-                                            textAlign: "center",
-                                            backgroundColor: "#FFF6E5",
-                                        }}
-                                    >
-                                        <Typography sx={{ fontSize: "0.8rem", color: "#B7791F" }}>
-                                            วงเงินที่ใช้ไป
-                                        </Typography>
-                                        <Typography
-                                            sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#B7791F" }}
-                                        >
-                                            {formatNumber(detail?.usedAmount)}
-                                        </Typography>
-                                    </Box>
-                                </Grid>
-                            </Grid>
-
-                            <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#FDECEC" }}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: "0.9rem", color: "#C62828" }}>
-                                        จำนวนคงเหลือ (ภายในวัน) :
-                                    </Typography>
-                                    <Typography sx={{ fontWeight: 700, color: "#C62828" }}>
-                                        {formatBaht(detail?.remainingAmount)}
+                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, pt: 1.5, flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-start", overflow: "hidden", gap: 1 }}>
+                            <Box>
+                                <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
+                                    <VerifiedUserIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
+                                    <Typography sx={{ fontWeight: 600, fontSize: "1rem", color: "#0D4C8C" }}>
+                                        อนุมัติวงเงิน
                                     </Typography>
                                 </Box>
-                            </Box>
 
-                            <Grid container spacing={2} alignItems="flex-end" sx={{ mt: 0.5 }}>
-                                <Grid item xs={12}>
-                                    <Box
-                                        sx={{
-                                            display: "flex",
-                                            alignItems: "center",
-                                            gap: "4px",
-                                            mb: 0.5,
-                                        }}
-                                    >
-                                        <Typography component="span" sx={{ fontSize: "0.85rem", color: "#D32F2F" }}>
-                                            วงเงินที่ขอเพิ่ม
-                                        </Typography>
+                                <Grid container spacing={2}>
+                                    <Grid item xs={6}>
                                         <Box
-                                            component="span"
                                             sx={{
-                                                display: "inline-flex",
-                                                alignItems: "center",
-                                                gap: "4px",
-                                                whiteSpace: "nowrap",
-                                                fontSize: "0.75rem",
+                                                p: 2,
+                                                borderRadius: 2,
+                                                textAlign: "center",
+                                                backgroundColor: "#EAF2FB",
                                             }}
                                         >
-                                            <LockOutlined sx={{ fontSize: 12, color: "#D32F2F" }} />
-                                            <Typography component="span" sx={{ fontSize: "0.75rem", color: "#212121" }}>
-                                                คำนวณโดยระบบ
+                                            <Typography sx={{ fontSize: "0.8rem", color: "#0A55A2" }}>
+                                                วงเงินปัจจุบัน
+                                            </Typography>
+                                            <Typography
+                                                sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#0A55A2" }}
+                                            >
+                                                {formatNumber(detail?.currentLimit)}
                                             </Typography>
                                         </Box>
-                                    </Box>
-                                    <Box
-                                        sx={{
-                                            border: "1px solid #D9DEE5",
-                                            borderRadius: 1,
-                                            backgroundColor: "#F5F6F7",
-                                            p: "8px 12px",
-                                        }}
-                                    >
-                                        <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: "#212121" }}>
-                                            {formatBaht(detail?.requestedTransferAmount)}
+                                    </Grid>
+                                    <Grid item xs={6}>
+                                        <Box
+                                            sx={{
+                                                p: 2,
+                                                borderRadius: 2,
+                                                textAlign: "center",
+                                                backgroundColor: "#FFF6E5",
+                                            }}
+                                        >
+                                            <Typography sx={{ fontSize: "0.8rem", color: "#B7791F" }}>
+                                                วงเงินที่ใช้ไป
+                                            </Typography>
+                                            <Typography
+                                                sx={{ mt: 0.5, fontWeight: 700, fontSize: "1.15rem", color: "#B7791F" }}
+                                            >
+                                                {formatNumber(detail?.usedAmount)}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                </Grid>
+
+                                <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#FDECEC" }}>
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <Typography sx={{ fontSize: "0.9rem", color: "#C62828" }}>
+                                            จำนวนคงเหลือ (ภายในวัน) :
+                                        </Typography>
+                                        <Typography sx={{ fontWeight: 700, color: "#C62828" }}>
+                                            {formatBaht(detail?.remainingAmount)}
                                         </Typography>
                                     </Box>
-                                </Grid>
-                                <Grid item xs={12}>
-                                    <TextField
-                                        multiline
-                                        rows={2}
-                                        label="หมายเหตุรอตรวจสอบ"
-                                        placeholder="ระบุหมายเหตุเพื่อ Hold รายการไว้รอตรวจสอบ"
-                                        inputProps={{ maxLength: 500 }}
-                                        fullWidth
-                                        value={limitReviewNote}
-                                        onChange={(event) => setLimitReviewNote(event.target.value)}
-                                        helperText={
+                                </Box>
+
+                                <Grid container spacing={2} alignItems="flex-end" sx={{ mt: 0.5 }}>
+                                    <Grid item xs={12}>
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "4px",
+                                                mb: 0.5,
+                                            }}
+                                        >
+                                            <Typography component="span" sx={{ fontSize: "0.85rem", color: "#D32F2F" }}>
+                                                วงเงินที่ขอเพิ่ม
+                                            </Typography>
                                             <Box
+                                                component="span"
                                                 sx={{
-                                                    display: "flex",
-                                                    justifyContent: "space-between",
-                                                    alignItems: "flex-start",
-                                                    gap: 2,
-                                                    width: "100%",
+                                                    display: "inline-flex",
+                                                    alignItems: "center",
+                                                    gap: "4px",
+                                                    whiteSpace: "nowrap",
+                                                    fontSize: "0.75rem",
                                                 }}
                                             >
-                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#757575" }}>
-                                                    ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ ไม่ใช่การปฏิเสธหรือโอนเงิน)
-                                                </Typography>
-                                                <Typography
-                                                    component="span"
-                                                    sx={{ fontSize: "0.75rem", color: "#757575", whiteSpace: "nowrap" }}
-                                                >
-                                                    {limitReviewNote.length}/500
+                                                <LockOutlined sx={{ fontSize: 12, color: "#D32F2F" }} />
+                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#212121" }}>
+                                                    คำนวณโดยระบบ
                                                 </Typography>
                                             </Box>
-                                        }
-                                    />
+                                        </Box>
+                                        <Box
+                                            sx={{
+                                                border: "1px solid #D9DEE5",
+                                                borderRadius: 1,
+                                                backgroundColor: "#F5F6F7",
+                                                p: "8px 12px",
+                                            }}
+                                        >
+                                            <Typography sx={{ fontWeight: 700, fontSize: "1rem", color: "#212121" }}>
+                                                {formatBaht(detail?.requestedTransferAmount)}
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
+                                    <Grid item xs={12}>
+                                        <TextField
+                                            multiline
+                                            rows={2}
+                                            minRows={2}
+                                            label="หมายเหตุรอตรวจสอบ"
+                                            placeholder="ระบุหมายเหตุเพื่อ Hold รายการไว้รอตรวจสอบ"
+                                            inputProps={{ maxLength: 500 }}
+                                            fullWidth
+                                            value={limitReviewNote}
+                                            onChange={(event) => setLimitReviewNote(event.target.value)}
+                                        />
+                                        <Box
+                                            sx={{
+                                                display: "flex",
+                                                justifyContent: "space-between",
+                                                alignItems: "flex-start",
+                                                gap: 2,
+                                                mt: 0.5,
+                                                px: 0.5,
+                                            }}
+                                        >
+                                            <Typography component="span" sx={{ fontSize: "0.75rem", color: "#757575" }}>
+                                                ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ ไม่ใช่การปฏิเสธหรือโอนเงิน)
+                                            </Typography>
+                                            <Typography
+                                                component="span"
+                                                sx={{ fontSize: "0.75rem", color: "#757575", whiteSpace: "nowrap" }}
+                                            >
+                                                {limitReviewNote.length}/500
+                                            </Typography>
+                                        </Box>
+                                    </Grid>
                                 </Grid>
-                            </Grid>
 
-                            <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#F1F8E9" }}>
-                                <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <Typography sx={{ fontSize: "0.9rem", color: "#33691E" }}>
-                                        วงเงินคงเหลือ (ครั้งใหม่) :
-                                    </Typography>
-                                    <Typography sx={{ fontWeight: 700, color: "#33691E" }}>
-                                        {formatBaht(detail?.newRemainingLimit)}
-                                    </Typography>
+                                <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#F1F8E9" }}>
+                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <Typography sx={{ fontSize: "0.9rem", color: "#33691E" }}>
+                                            วงเงินคงเหลือ (ครั้งใหม่) :
+                                        </Typography>
+                                        <Typography sx={{ fontWeight: 700, color: "#33691E" }}>
+                                            {formatBaht(detail?.newRemainingLimit)}
+                                        </Typography>
+                                    </Box>
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 3, display: "flex", justifyContent: "flex-end", gap: 2, pb: 2 }}>
+                            <Box sx={{ mt: 1, display: "flex", justifyContent: "flex-end", gap: 2, pb: 0 }}>
                                 <Button
                                     variant="contained"
+                                    size="small"
                                     disabled={changeStatus.isLoading}
                                     onClick={handleApprove}
                                     sx={{ backgroundColor: "#1B6CB2" }}
@@ -364,6 +381,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 <Button
                                     variant="outlined"
                                     color="error"
+                                    size="small"
                                     disabled={changeStatus.isLoading}
                                     onClick={handleReject}
                                 >
