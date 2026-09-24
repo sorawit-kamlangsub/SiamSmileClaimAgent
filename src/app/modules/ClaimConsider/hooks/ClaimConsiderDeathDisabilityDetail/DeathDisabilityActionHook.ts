@@ -24,12 +24,6 @@ import { DEATH_DISABILITY_IN_PROGRESS_DECISION_ID, DeathDisabilityConsiderValues
 import { TransferAccountChange } from "./ChangeTransferAccountHook";
 import { DISABILITY_COVERAGE_TYPE_ID } from "./DeathDisabilityExpenseHook";
 
-/**
- * BE บังคับ nonCoveredReasonId > 0 ทุก caseItem แม้ไม่มียอดไม่คุ้มครอง — ใช้ค่าเดียวกับ
- * DEFAULT_NON_COVERED_REASON_ID ของ ClaimDetailActionHook (BE ignore เมื่อ nonCoveredAmount = 0)
- */
-const DEFAULT_NON_COVERED_REASON_ID = 1;
-
 /** coverageTypeId ของ "เสียชีวิต" */
 const DEATH_COVERAGE_TYPE_ID = 5;
 
@@ -155,7 +149,7 @@ const useDeathDisabilityActionHook = ({
                 discountAmount: 0,
                 netCaseAmount: item.netCaseAmount ?? 0,
                 nonCoveredAmount: 0,
-                nonCoveredReasonId: DEFAULT_NON_COVERED_REASON_ID,
+                nonCoveredReasonId: undefined,
                 bodyPartId: item.bodyPartId,
             })
         ),
@@ -172,7 +166,7 @@ const useDeathDisabilityActionHook = ({
                     netCaseAmount: item.netCaseAmount ?? 0,
                     medicalTypeId: item.medicalTypeId,
                     nonCoveredAmount: item.nonCoveredAmount ?? 0,
-                    nonCoveredReasonId: item.nonCoveredReasonId || DEFAULT_NON_COVERED_REASON_ID,
+                    nonCoveredReasonId: item.nonCoveredReasonId || undefined,
                     bodyPartId: item.bodyPartId,
                 })
             ),
