@@ -89,7 +89,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
         if (!result.isConfirmed) {
             return;
         }
-        changeStatus.mutate(buildChangeStatusBody(2));
+        changeStatus.mutate(buildChangeStatusBody(3));
     };
 
     return (
@@ -394,7 +394,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                             <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2}}>
                                 <Button
                                     variant="contained"
-                                    color="primary"
+                                    color="info"
                                     size="small"
                                     disabled={changeStatus.isLoading}
                                     onClick={handleHoldReview}
