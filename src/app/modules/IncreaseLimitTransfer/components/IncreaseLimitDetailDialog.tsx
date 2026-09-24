@@ -370,7 +370,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                     size="small"
                                     disabled={changeStatus.isLoading}
                                     onClick={handleApprove}
-                                    sx={{ backgroundColor: "#1B6CB2" }}
+                                    sx={{ backgroundColor: "#2E7D32" }}
                                 >
                                     อนุมัติ
                                 </Button>
