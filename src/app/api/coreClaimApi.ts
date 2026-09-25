@@ -1422,3 +1422,10 @@ const getRefundStatusQueryKey = ["getRefundStatus"];
 export const useGetRefundStatus = (enabled = true) => {
     return useQuery([getRefundStatusQueryKey], () => claimFundClient.getRefundStatus(), { enabled });
 };
+
+// ---- สถานะการจ่ายเงิน (ClaimFund / Masters.GetPaymentStatuses) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getPaymentStatusesQueryKey = ["getPaymentStatuses"];
+
+export const useGetPaymentStatuses = (enabled = true) => {
+    return useQuery([getPaymentStatusesQueryKey], () => claimFundClient.getPaymentStatuses(), { enabled });
+};
