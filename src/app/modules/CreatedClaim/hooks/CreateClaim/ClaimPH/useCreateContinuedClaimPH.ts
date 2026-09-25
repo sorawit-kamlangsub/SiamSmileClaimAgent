@@ -87,6 +87,8 @@ export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (mes
 
             cases: [
                 {
+                    // สาขาของผู้ใช้ที่ login — ใช้บันทึกว่าเคสถูกสร้างโดยสาขาไหน
+                    createdCaseByBranchId: userProfile?.employeeBranchId,
                     coverageTypeId: form.coverageTypeId,
                     occurrenceDate: form.incidentDate,
                     admissionDate: isMedicalAll ? form.admissionDate : undefined,

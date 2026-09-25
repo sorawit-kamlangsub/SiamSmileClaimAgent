@@ -7,6 +7,7 @@ import { mapCaseEntryToV2, mapBeneficiariesToRequest, mapBankAccountToBeneficiar
 import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
 import { useParams } from "react-router-dom";
 import { safeAtob } from "../../../../../functionHelpers";
+import { useAuth } from "../../../../_auth";
 
 const generateRequestId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -32,6 +33,7 @@ export const mapLocalCoreClaimToContinuedRequest = (
 export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { oldClaimId: oldClaimIdParam } = useParams();
     const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
+    const { userProfile } = useAuth();
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);
     const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
@@ -49,6 +51,8 @@ export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (mes
             ...claim,
             createCase: (claim.createCase ?? []).map((c) => ({
                 ...c,
+                // สาขาของผู้ใช้ที่ login — ใช้บันทึกว่าเคสถูกสร้างโดยสาขาไหน
+                createdCaseByBranchId: userProfile?.employeeBranchId,
                 createBeneficiary:
                     beneficiaryList.length > 0
                         ? mapBeneficiariesToRequest(beneficiaryList, claim.tempClaimId, c.tempCaseId)
