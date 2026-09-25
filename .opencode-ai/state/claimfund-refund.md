@@ -176,10 +176,10 @@
 ## Session: สลับ Branch / PaymentStatus / RefundStatus ไป Codegen + ลบ masterAPI.ts + แก้ merge refundAPI
 
 ### จุดจบของ session นี้ (สิ่งที่เปลี่ยนจริงในโค้ด)
-- **`ActiveWork` 🆕 wrapper codegen ใน `api/coreClaimApi.ts`:**
+- **`ActiveWork` 🆕 wrapper codegen ใน `api/claimFundApi.ts`:**
   - `useGetPaymentStatuses(enabled = true)` → `claimFundClient.getPaymentStatuses()` → `GET /ClaimFund/Masters/GetPaymentStatuses` (DTO `PaymentStatusResponseDto {id,name}` — field ตรงกับที่ SearchByBranchAndStatus ใช้ทันที)
-  - `useGetRefundStatus(enabled = true)` → `claimFundClient.getRefundStatus()` (มีมาก่อน session นี้)
-- **`Refund/_common/SearchByBranchAndStatus.tsx`**: import `useGetPaymentStatus` (masterAPI) → สลับเป็น `useGetPaymentStatuses` (`api/coreClaimApi`) — `valueFieldName="id"` / `displayFieldName="name"` เดิมไม่ต้องแตะ
+  - `useGetRefundStatus(enabled = true)` ใน `api/coreClaimApi.ts` → `claimFundClient.getRefundStatus()` (มีมาก่อน session นี้)
+- **`Refund/_common/SearchByBranchAndStatus.tsx`**: import แยก — `useGetPaymentStatuses` จาก `api/claimFundApi.ts`, `useGetRefundStatus` จาก `api/coreClaimApi.ts` (`valueFieldName="id"` / `displayFieldName="name"` เดิมไม่ต้องแตะ)
 - **`_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete.tsx`**: import `useGetBranch` (masterAPI) → สลับเป็น `api/coreClaimMastersApi` (codegen `MastersClient.getBranch` → `GET {API_URL}/Masters/branch`) — แก้ปุ่มกดสาขา 404 (ดู section ข้างบน)
 - **ลบ `IncreaseLimitTransfer/_common/masterAPI.ts` ทั้งไฟล์** — ไม่มี consumer เหลือ (grep ยืนยัน); ทั้ง 3 hooks (`useGetBranch` / `useGetPaymentStatus` / `useGetPaymentIncreaseStatus`) เป็น dead code
 - **`RefundApprove/components/ApproveRefundDialog.tsx`**: ปุ่ม "คลิกดูภาพ Slip การโอนเงิน" → ตัด guard `if (row?.refundNo)` ใน `handleOpenSlip` — เดิมถ้า refundNo เป็น empty (จาก monitor API) กดแล้วเงียบ (dialog ไม่เปิด) ปุ่มเองไม่ได้ disabled จึงดูเหมือนกดยังไงก็ไม่เกิดผล หลังแก้กดแล้วเปิด slip dialog mock PDF เสมอ

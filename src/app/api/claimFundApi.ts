@@ -1,10 +1,20 @@
 import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { API_CLAIM_FUND_URL } from "../../Const";
+import { API_CLAIM_FUND_URL, API_URL } from "../../Const";
+import { ClaimFundClient } from "./coreClaimApi.client";
 
 // แจ้งเคลม : EncryptText / CreatePayment ยิงตรงไป ClaimFund API (VITE_CLAIM_FUND_API_URL) ไม่ผ่าน API Gateway
 const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
+
+// สถานะการจ่ายเงิน : ใช้ CodeGen (ClaimFundClient) — สอดคล้องกับ coreClaimApi.ts
+const claimFundClient = new ClaimFundClient(API_URL, axios);
+
+const getPaymentStatusesQueryKey = ["getPaymentStatuses"];
+
+export const useGetPaymentStatuses = (enabled = true) => {
+    return useQuery([getPaymentStatusesQueryKey], () => claimFundClient.getPaymentStatuses(), { enabled });
+};
 
 const createTransferKey = "createTransfer";
 
