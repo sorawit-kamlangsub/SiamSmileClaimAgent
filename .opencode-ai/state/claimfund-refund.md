@@ -78,10 +78,24 @@
   - clean อีก: ตัด branch `!response.isSuccess` ใน `onSuccess` (dead code หลัง refactor — createCaseRefund throw ทั้ง fail ชั้นนอก/ในแล้ว)
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ pre-existing จาก AdjustTransfer/BankStatus/ManageTransfer)
 
-### ค้าง ⏳ (งานต่อไป)
-- ปุ่ม "ดูรายละเอียด" (status 3, `handleView` ใน `RefundApproveDataTableHook`) ยัง TODO (console.log) — รอเชื่อม view dialog / detail page
-- ปุ่ม อนุมัติ/ปฏิเสธ ใน `ApproveRefundDialog` ยังเป็น TODO (console.log) — ยังไม่มี API contract; select สาเหตุปฏิเสธ + หมายเหตุ + validation (required) ครบแล้ว
-- typecheck: ผ่านในไฟล์ที่แก้ ทั้งหมด error เหลือจาก module อื่นที่มีอยู่เดิม (AdjustTransfer, BankStatus, ManageClaimTransferDetails, ManageTransfer)
+### เสร็จแล้วเพิ่มเติม: เมนูอนุมัติคืนเงิน (RefundApprove) switch ไปใช้ API แบบ Codegen 100% ✅
+- เป้า: เปลี่ยน API ของเมนู "อนุมัติคืนเงิน" ให้ใช้ **Codegen style** ทั้งหมด (ผู้ใช้สั่ง) และลบทิ้ง API ที่สร้างเองที่ RefundApprove ใช้แล้ว
+- **`coreClaimApi.ts`** ต่อท้าย section "อนุมัติคืนเงิน (ClaimFund / RefundApprove) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น":
+  - query keys: `getRefundApproveMonitorQueryKey`, `getCaseRefundApproveDetailQueryKey`, `getCaseRefundRejectReasonsQueryKey`
+  - `useGetRefundApproveMonitor(searchDetail?, orderingField?, ascendingOrder?, page?, recordsPerPage?, filter?: RefundApproveMonitorRequestDto, searchTrigger?, enabled?)` → `claimFundClient.refundApproveMonitor(...)` — signature รูปแบบเดียวกับ `useGetIncreaseTransferLimitMonitors` (filter = DTO ตัวที่ 6); `enabled` default false, `refetchOnMount:"always"`, `cacheTime:0`
+  - `useGetCaseRefundApproveDetail(caseRefundId?)` → `claimFundClient.caseRefundApproveDetail` (enabled เมื่อ caseRefundId ไม่ empty)
+  - `useGetCaseRefundRejectReasons()` → `claimFundClient.getCaseRefundRejectReasons`
+  - `useCaseRefundApproveUpdateStatus(onSuccess?, onError?, onWarning?)` → mutation เรียก `caseRefundApproveUpdateStatus`; `isSuccess && data.isSuccess===false` → warning; `!isSuccess` → error; success → invalidate `getRefundApproveMonitorQueryKey`
+- **`RefundApproveDataTableHook.tsx`**: import สลับจาก `../../Refund/refundAPI` → `../../../api/coreClaimApi`; เรียก hook แบบ codegen (searchText, orderingField, ascendingOrder, page, recordsPerPage, `{branceId, refundStatusId, fromDate, toDate}`, searchKey, hasSearched) — **ช่วงวันที่ส่งใน DTO body → fromDate/toDate**; `RefundApproveMonitorRow.createdDate` = `string | dayjs.Dayjs`, เพิ่ม `caseRefundId?`; คอลัมน์สถานะตัด `row?.status` (ไม่มีใน codegen type) ใช้ `refundStatusNameTH ?? mapById[statusId]`
+- **`ApproveRefundDialog.tsx`**: import สลับเป็น 3 hooks จาก `../../../api/coreClaimApi`; **ลบ type ท้องถิ่น `ApproveRefundDetail`/`ApproveRefundCaseDetail` + ตัด cast** — `detail = refundDetailRes?.data` (typed `CaseRefundApproveDetailResponseDto`) โดยตรง; `customerName` → `insuredName` (field จริงใน DTO); `reasonOptions = refundReasonsRes?.data ?? []` (typed `CaseRefundRejectReasonResponseDto[]`) ไม่ cast
+- **`refundAPI.ts`** ลบเฉพาะฟังก์ชันที่ RefundApprove ใช้ไม่แล้ว (ผ่านการ grep ยืนยันไม่มี consumer เหลือ):
+  - `getRefundApproveMonitor` key + `useGetRefundApproveMonitorWithFilter` + `getRefundApproveMonitorData`
+  - `getCaseRefundApproveDetail` key + `useGetCaseRefundApproveDetail` + `getCaseRefundApproveDetailData`
+  - `getCaseRefundRejectReasons` key + `useGetCaseRefundRejectReasons` + `getCaseRefundRejectReasonsData`
+  - `CaseRefundApproveUpdateStatusPayload` + `updateCaseRefundApproveStatus` + `useCaseRefundApproveUpdateStatus`
+  - `GetRefundMonitorFilterType` ตัด `transferDateFrom?/transferDateTo?` ทิ้ง (เหลือเฉพาะหน้า Refund ที่ใช้ไม่ส่งวันที่) + ลบ import `Dayjs` ที่ไม่ใช้แล้ว
+  - **คงไว้**: hooks ที่โมดูลอื่นยังใช้ (`useGetRefundMonitorWithFilter`, `useGetRefundDetail`, `useGetRefundTransferTypes`, `useGetRefundReasons`, `useGetRefundStatus`, `useGetRefundClaimTransaction`, `useGetRefundTransferHistory`, `useGetRefundDecreaseTransaction`, `useCreateCaseRefund`)
+- typecheck (`npx tsc --noEmit`) และ lint (ไฟล์ที่แก้) ผ่าน — ไม่มี warning/error ใหม่เพิ่ม ไฟล์ที่เหลือ (เอา baseline เปรียบก่อนเปลี่ยน) warning ทั้งหมดเป็น pre-existing; hook file ลดลง 1 warning (block สถานะที่เขียนใหม่)
 
 ### เสร็จแล้วเพิ่มเติม: Dialog "อนุมัติคืนเงิน" (RefundApprove monitor) ✅
 - ปุ่ม `FactCheckIcon` (แถว status=2 "รอดำเนินการ") เปิด dialog ผ่าน `onEdit` callback → ใหม่ `RefundApprove/components/ApproveRefundDialog.tsx` (ส่งเป็น `ApproveRefundDialog` จาก `RefundApprovePage` ด้วย `approveRow` state)
@@ -130,7 +144,7 @@
 - **ลบ mock ในหน้า refund detail** (`ManageRefundDetailHook.tsx`): มี `mockDetailData: any` + `const detailData = refundDetailRes?.data ?? mockDetailData` + TODO "ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails" — เมื่อ API คืน `data.caseDetails` จริงแล้วให้ลบ mock, TODO comment, และ `any` (`mapCaseDetailsRows(caseDetails: any[])` → type จริง)
 - **callback type `any` ใน refundAPI** (`onSuccessCallBack: (response: any)`, `reasonOptions: any[]` ฯลฯ) — ถ้าจะ clean ให้ใช้ type จาก contract จริง
 - **`onClNoClick` ใน `ClaimSummaryHeader` ยัง `console.log`** (หน้า refund detail) — ควร navigate ไปหน้า CL detail จริง
-- **ปุ่ม "ดูรายละเอียด" (status 3) ใน `RefundApproveDataTableHook` ยัง TODO (console.log)** — ปุ่มดำเนินการ (status 2) เชื่อม `ApproveRefundDialog` แล้ว (ดู section ข้างบน); เหลือ view dialog + API อนุมัติ/ปฏิเสธจริง
+- **ปุ่ม "ดูรายละเอียด" (status 3) ใน `RefundApproveDataTableHook` ยัง TODO (console.log)** — ปุ่มดำเนินการ (status 2) เชื่อม `ApproveRefundDialog` แล้ว (รวม API อนุมัติ/ปฏิเสธจริงแล้ว — ดู section codegen ข้างบน); เหลือ view dialog (mode="view" ของ dialog มีอยู่แล้ว — map จากปุ่ม view ได้เลย)
 
 ### ขั้นตอนต่อไป (ถ้าทำต่องาน)
 1. เปิด dialog / navigate เมื่อกด action ใน `RefundApproveDataTableHook`

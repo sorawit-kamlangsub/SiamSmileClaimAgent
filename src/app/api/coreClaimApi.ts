@@ -5,6 +5,8 @@ import {
     BaseResponseServiceResponse,
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
+    CaseRefundApproveUpdateStatusRequestDto,
+    CaseRefundApproveUpdateStatusResponseDtoServiceResponse,
     ClaimFundClient,
     CoreClaimClient,
     CreateContinuedClaimDtoRequest,
@@ -16,6 +18,7 @@ import {
     IncreaseTransferLimitChangeStatusRequestDto,
     IncreaseTransferLimitChangeStatusResponseDtoServiceResponse,
     IncreaseTransferLimitMonitorRequestDto,
+    RefundApproveMonitorRequestDto,
     SaveAdditionalTransferRequest,
     SaveAdditionalTransferResponseDtoServiceResponse,
     SaveClaimEditDraftDtoRequest,
@@ -1323,4 +1326,99 @@ export const useSaveAdditionalTransfer = (
             onErrorCallback?.(error.message);
         },
     });
+};
+
+// ---- อนุมัติคืนเงิน (ClaimFund / RefundApprove) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getRefundApproveMonitorQueryKey = ["getRefundApproveMonitor"];
+const getCaseRefundApproveDetailQueryKey = ["getCaseRefundApproveDetail"];
+const getCaseRefundRejectReasonsQueryKey = ["getCaseRefundRejectReasons"];
+
+export const useGetRefundApproveMonitor = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    filter?: RefundApproveMonitorRequestDto,
+    searchTrigger?: number,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [
+            getRefundApproveMonitorQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+            searchTrigger,
+        ],
+        () =>
+            claimFundClient.refundApproveMonitor(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage,
+                filter
+            ),
+        {
+            enabled: enabled ?? false,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseRefundApproveDetail = (caseRefundId?: string) => {
+    return useQuery(
+        [getCaseRefundApproveDetailQueryKey, caseRefundId],
+        () => claimFundClient.caseRefundApproveDetail(caseRefundId),
+        {
+            enabled: caseRefundId !== undefined && caseRefundId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseRefundRejectReasons = () => {
+    return useQuery([getCaseRefundRejectReasonsQueryKey], () => claimFundClient.getCaseRefundRejectReasons(), {
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useCaseRefundApproveUpdateStatus = (
+    onSuccessCallback?: (response: CaseRefundApproveUpdateStatusResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void,
+    onWarningCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: CaseRefundApproveUpdateStatusRequestDto) => claimFundClient.caseRefundApproveUpdateStatus(body),
+        {
+            onSuccess: (response) => {
+                if (response.isSuccess && response.data?.isSuccess === false) {
+                    onWarningCallback?.(response.data.message ?? response.message ?? "Occurred error");
+                } else if (!response.isSuccess) {
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                } else {
+                    queryClient.invalidateQueries([getRefundApproveMonitorQueryKey], { refetchType: "all" });
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+// ---- สถานะการคืนเงิน (ClaimFund / Masters.GetRefundStatus) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getRefundStatusQueryKey = ["getRefundStatus"];
+
+export const useGetRefundStatus = (enabled = true) => {
+    return useQuery([getRefundStatusQueryKey], () => claimFundClient.getRefundStatus(), { enabled });
 };
