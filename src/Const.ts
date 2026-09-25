@@ -19,7 +19,6 @@ export const {
     VITE_QUEUE_REFETCH_INTERVAL,
     VITE_SURVEY_API_URL,
     VITE_CLAIM_FUND_API_URL,
-    VITE_APIGW_CLAIM_FUND_API_URL,
     VITE_OCR_API_URL,
     VITE_DOCSTORAGE_API_URL,
     VITE_NPL_URL,
@@ -54,7 +53,6 @@ export const APIGW_URL = VITE_APIGW_BASEURL;
 export const AUTH_LOGOUT_REDIRECT = VITE_SSO_ISSUER + "/Account/Logout";
 export const API_SURVEY_URL = VITE_SURVEY_API_URL;
 export const API_CLAIM_FUND_URL = VITE_CLAIM_FUND_API_URL;
-export const APIGW_CLAIM_FUND_API_URL = VITE_APIGW_CLAIM_FUND_API_URL;
 export const NPL_URL = VITE_NPL_URL;
 export const PUBLIC_PATHS: string[] = ["/slip/:id", "/survey/:id", "/survey/summary/:id"];
 export const HEAD_OFFICE_BRANCH_ID = 70;

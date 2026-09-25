@@ -1,13 +1,13 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { APIGW_CLAIM_FUND_API_URL, APIGW_URL } from "../../../../Const";
+import { API_CLAIM_FUND_URL, APIGW_URL } from "../../../../Const";
 import { useBranchByUserPermission } from "../../_common/branchPermission";
 
 const getBranch = "getBranchKey";
 const getPaymentStatus = "getPaymentStatusKey";
 const getPaymentIncreaseStatus = "getPaymentIncreaseStatusKey";
 const coreClaimURL = `${APIGW_URL}/claim/core`;
-const claimFundURL = APIGW_CLAIM_FUND_API_URL;
+const claimFundURL = `${API_CLAIM_FUND_URL}/api/ClaimFund`;
 
 export const useGetBranch = () => {
     const branchQuery = useQuery([getBranch], () => getBranchData());
