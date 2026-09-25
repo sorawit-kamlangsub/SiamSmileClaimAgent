@@ -26,6 +26,10 @@ export const toAmount = (raw: string): number => {
     return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
 };
 
+/** เหมือน toAmount แต่ช่องว่างคืน undefined (ไม่ใช่ 0) — ใช้กับช่องที่ผู้ใช้ไม่ได้กรอกจะได้ไม่โชว์ 0 */
+export const toOptionalAmount = (raw: string): number | undefined =>
+    sanitizeDecimalInput(raw) === "" ? undefined : toAmount(raw);
+
 export const toInteger = (raw: string): number => {
     const sanitized = sanitizeIntegerInput(raw);
     const n = parseInt(sanitized, 10);

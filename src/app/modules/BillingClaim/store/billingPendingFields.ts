@@ -41,6 +41,8 @@ export const PENDING_BE_FIELDS = {
     continuousClaimDefault: "BillingReviewDataDto.continuousClaim (ค่า default จาก SmileConnect)",
     scanDocumentStep3: "BillingDetailDto.step3Documents (ตารางสแกนเอกสาร Step 3)",
     rejectionDocumentType: "GetDocumentSubTypeDtoRequest.productTypeId (billing ไม่มี productTypeId ให้ยิง master นี้)",
+    policyBenefitProduct:
+        "BillingInsuredDto.productTypeId / productId / customerTypeCode (ใช้ยิง GetPolicyBenefit ของแท็บความคุ้มครอง)",
     trafficAccident:
         "BillingClaimDto.trafficAccident (vehicleType/vehicleOther/casualtyStatus/isPoroboExcess/noPoroboReason)",
 } as const;

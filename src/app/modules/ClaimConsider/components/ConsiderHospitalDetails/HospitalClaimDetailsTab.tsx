@@ -642,7 +642,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     compensationRows={step3CompensationRows}
                                     summary={step3Summary}
                                     totalReceipt={calculateResult?.totalReceipt}
-                                    totalNetAmount={calculateResult?.totalNetAmount ?? 0}
+                                    totalNetAmount={calculateResult?.medicalNet ?? 0}
                                     allowSeparateCompensation={allowSeparateCompensation}
                                     stayDays={stayDays}
                                     mergeChecked={mergeCompensation}

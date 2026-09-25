@@ -28,7 +28,7 @@ dropdown ยังเป็น mock; no store. Route:
 จำนวนคงเหลือ (ภายในวัน) red flat, วงเงินที่ขอเพิ่ม (readonly), สาเหตุการปฏิเสธ select
 (จาก `rejectReasons`), วงเงินคงเหลือ (ครั้งใหม่) green flat. ปุ่ม ปฏิเสธ (disabled จนกว่า
 เลือกสาเหตุ) + อนุมัติ → `swalConfirmAction` → ส่ง `useUpdateIncreaseTransferLimitStatus`
-(POST `${APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/UpdateIncreaseTransferLimitStatus`):
+(POST `${API_CLAIM_FUND_URL}/api/ClaimFund/IncreaseTransfer/UpdateIncreaseTransferLimitStatus`):
 อนุมัติส่ง `increaseTransferLimitStatusId: 3` (caseId + claimId), ปฏิเสธส่ง
 `increaseTransferLimitStatusId: 4` + `rejectReasonsId` (draft — map จาก `rejectReasonCode`
 ชั่วคราว, backend ยังไม่มี field นี้). สำเร็จ → `swalSuccess` ด้วย `data.message` จาก response
@@ -65,19 +65,19 @@ its own independent inline `useFormik` instead.
 ## API hooks called
 
 - `useGetIncreaseTransferLimitMonitors` (`increaseLimitTransferAPI.ts`) — GET
-  `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/IncreaseTransferLimitMonitors` (base
+  `{API_CLAIM_FUND_URL}/api/ClaimFund/IncreaseTransfer/IncreaseTransferLimitMonitors` (base
   `.../api/ClaimFund`), monitor table. ✅ **Real API** — เชื่อม backend จริงแล้ว
-  (`VITE_APIGW_CLAIM_FUND_API_URL` ชี้ dev tunnel); ยังไม่ map ข้อมูล field.
+  (`VITE_CLAIM_FUND_API_URL` + `/api/ClaimFund`); ยังไม่ map ข้อมูล field.
 - `useGetIncreaseTransferLimitDetail` (`increaseLimitTransferAPI.ts`) — GET
-  `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/IncreaseTransferLimitDetail` (base
+  `{API_CLAIM_FUND_URL}/api/ClaimFund/IncreaseTransfer/IncreaseTransferLimitDetail` (base
   `.../api/ClaimFund`), detail dialog. ⚠ **Mock path** เดียวกับข้างบน; fields ตรงกับ
   `IncreaseTransferLimitDetailDto` (caseId, claimNo, insuredName, amount, วงเงินต่างๆ,
   rejectReasons).
 - `useGetPaymentIncreaseStatus` (`_common/masterAPI.ts`) — GET
-  `{APIGW_CLAIM_FUND_API_URL}/Masters/GetPaymentIncreaseStatuses` (base `.../api/ClaimFund`),
+  `{API_CLAIM_FUND_URL}/api/ClaimFund/Masters/GetPaymentIncreaseStatuses` (base `.../api/ClaimFund`),
   feeds the status dropdown. ⚠ **Mock path** เดียวกับข้างบน.
 - `useUpdateIncreaseTransferLimitStatus` (`increaseLimitTransferAPI.ts`) — POST
-  `{APIGW_CLAIM_FUND_API_URL}/IncreaseTransfer/UpdateIncreaseTransferLimitStatus` (base
+  `{API_CLAIM_FUND_URL}/api/ClaimFund/IncreaseTransfer/UpdateIncreaseTransferLimitStatus` (base
   `.../api/ClaimFund`), เปลี่ยนสถานะอนุมัติ/ปฏิเสธขยายวงเงิน. Response envelope
   `UpdateIncreaseTransferLimitStatusDtoServiceResponse` (`data: { isSuccess, message }`).
 

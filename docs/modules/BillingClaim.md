@@ -48,7 +48,7 @@ need to change.
 | File | Purpose |
 |---|---|
 | `BillingHospitalMonitorPage.tsx` | List page: dashboard + filter + table |
-| `BillingHospitalReviewPage.tsx` | Review page shell: header cards (+ ข้อมูลสถานศึกษา card when `variant.isPA`) + 2 active tabs (`ข้อมูลเคลม`, `ประวัติทำรายการ`) + 4 disabled tabs, `BillingClaimDetailsTab` |
+| `BillingHospitalReviewPage.tsx` | Review page shell: header cards (+ ข้อมูลสถานศึกษา card when `variant.isPA`) + 5 active tabs (`ข้อมูลเคลม`, `ประวัติทำรายการ`, and `ความคุ้มครอง`/`ประวัติเคลม`/`ประวัติการชำระเงิน` reused from ClaimConsider via `insured.policyCode`) + disabled `บันทึกข้อความ`, `BillingClaimDetailsTab`. The ความคุ้มครอง table stays empty until the backend sends productTypeId/productId/customerTypeCode (`PENDING_BE_FIELDS.policyBenefitProduct`) |
 | `BillingHospitalDocumentPage.tsx` | 4-line wrapper = `<BillingHospitalReviewPage readOnly />` (the "ดูรายละเอียด" eye-icon route) |
 | `BillingFundDisbursementPage.tsx` | "ตั้งเบิกกองทุน" (`/billing/customers`) list page: header cards + filter + multi-select table. UI shell only — see "Scope" above |
 
