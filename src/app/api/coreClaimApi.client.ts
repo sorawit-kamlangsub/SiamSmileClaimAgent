@@ -10510,6 +10510,8 @@ export interface DocumentReviewOverviewItemDtoResponse {
     documentId?: string | undefined;
     documentNo?: string | undefined;
     documentRemark?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
+    claimDocumentTypeName?: string | undefined;
     documentSubTypeId?: number | undefined;
     documentSubTypeCode?: string | undefined;
     documentSubTypeName?: string | undefined;
@@ -12309,6 +12311,7 @@ export interface IncreaseTransferLimitChangeStatusRequestDto {
     /** สาะนะรายการ */
     transferApprovalStatusId: number;
     rejectReasonId?: number;
+    approvalRemark?: string | undefined;
 }
 
 export interface IncreaseTransferLimitChangeStatusResponseDto {

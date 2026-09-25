@@ -177,9 +177,10 @@ const useClaimExpenseDetailHook = ({
             description: item.descriptionTH ?? "",
             // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — ยอดไม่คุ้มครองเป็นค่าที่ User ต้องพิจารณา
             // กรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
-            // เคลมลูกค้า (isCustomerClaim) ยังใช้ spec เดิม: default originalAmount ลง "สิทธิ์เบิก" ไม่ใช่
-            // "ยอดเงินตามใบเสร็จ" — ต่างจากเคลมโรงพยาบาลที่แก้ไปแล้วใน commit 9c9c930
-            receiptAmount: isCustomerClaim ? undefined : item.originalAmount ?? undefined,
+            // "ยอดเงินตามใบเสร็จ" default จาก originalAmount ทั้งเคลมลูกค้าและเคลมโรงพยาบาล (ส่งไปคำนวณเป็น
+            // receiptAmount → สรุปค่าใช้จ่ายโรงพยาบาลแสดง ยอดเงินรวมตามใบเสร็จ/ค่าใช้จ่ายทั้งหมดสุทธิ เหมือนกัน)
+            // เคลมลูกค้า (isCustomerClaim) ยัง default originalAmount ลง "สิทธิ์เบิก" ด้วยตาม spec เดิม
+            receiptAmount: item.originalAmount ?? undefined,
             claimAmount: isCustomerClaim ? item.originalAmount ?? undefined : undefined,
             discount: item.discountAmount ?? undefined,
             notCovered: undefined,
