@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Chip, Grid, Paper, Skeleton, Tab, Tabs } from "@mui/material";
 import DescriptionIcon from "@mui/icons-material/Description";
@@ -14,6 +14,10 @@ import HeaderCardSchoolDetails from "../../ClaimConsider/components/ConsiderDeta
 import ClaimDetail from "../../ClaimConsider/components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
 import BillingClaimDetailsTab from "../components/BillingHospitalReview/BillingClaimDetailsTab";
 import BillingHistoryTab from "../components/BillingHospitalReview/BillingHistoryTab";
+import PolicyBenefitTab from "../../ClaimConsider/components/ConsiderDetails/TabDetails/PolicyBenefitTab";
+import ClaimHistoryTab from "../../ClaimConsider/components/ConsiderDetails/TabDetails/ClaimHistoryTab";
+import PaymentHistoryTab from "../../ClaimConsider/components/ConsiderDetails/TabDetails/PaymentHistoryTab";
+import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 import useBillingProductVariant from "../hooks/BillingHospitalReview/BillingProductVariantHook";
 import { useGetHospitalBillingDetail } from "../../../api/hospitalBillingApi";
 import { billingStatusLabel } from "../store/billingStatusHelpers";
@@ -42,6 +46,19 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
     const { data: detailData, isLoading } = useGetHospitalBillingDetail(billingDetailId);
     const detail = detailData?.data;
     const variant = useBillingProductVariant(detail?.data?.claim?.medicalTypeId);
+    const policyCode = detail?.insured?.policyCode;
+
+    /**
+     * แท็บ "ความคุ้มครอง" ใช้ PolicyBenefitTab ร่วมกับหน้าพิจารณาเคลม รพ ซึ่งรับ customerDetail
+     * (GetCustomerDetailByIdDtoResponse) — billing มีแค่ `insured.policyCode` จึง map เท่าที่มีไปก่อน
+     * TODO(PENDING-BE): PENDING_BE_FIELDS.policyBenefitProduct — BillingInsuredDto ยังไม่มี
+     * productTypeId / productId / customerTypeCode ทำให้ useGetPolicyBenefit ยังไม่ยิง (enabled: !!productTypeId)
+     * ตารางความคุ้มครองจึงว่างจนกว่า BE จะส่ง 3 ฟิลด์นี้มา แล้วค่อย map เพิ่มตรงนี้
+     */
+    const policyBenefitCustomer = useMemo<GetCustomerDetailByIdDtoResponse | undefined>(
+        () => (policyCode ? { policyCode } : undefined),
+        [policyCode]
+    );
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => setTabValue(newValue);
 
@@ -111,27 +128,9 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                         <Tabs value={tabValue} onChange={handleChangeTab} aria-label="billing review tabs">
                             <Tab icon={<DescriptionIcon />} iconPosition="start" label="ข้อมูลเคลม" value="1" />
                             <Tab icon={<ManageHistoryIcon />} iconPosition="start" label="ประวัติทำรายการ" value="2" />
-                            <Tab
-                                icon={<VerifiedUserIcon />}
-                                iconPosition="start"
-                                label="ความคุ้มครอง"
-                                value="3"
-                                disabled
-                            />
-                            <Tab
-                                icon={<AssignmentIcon />}
-                                iconPosition="start"
-                                label="ประวัติเคลม"
-                                value="4"
-                                disabled
-                            />
-                            <Tab
-                                icon={<PaymentsIcon />}
-                                iconPosition="start"
-                                label="ประวัติการชำระเงิน"
-                                value="5"
-                                disabled
-                            />
+                            <Tab icon={<VerifiedUserIcon />} iconPosition="start" label="ความคุ้มครอง" value="3" />
+                            <Tab icon={<AssignmentIcon />} iconPosition="start" label="ประวัติเคลม" value="4" />
+                            <Tab icon={<PaymentsIcon />} iconPosition="start" label="ประวัติการชำระเงิน" value="5" />
                             <Tab
                                 icon={<StickyNote2Icon />}
                                 iconPosition="start"
@@ -167,6 +166,16 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                     </TabPanel>
                     <TabPanel value="2" sx={{ px: 0 }}>
                         <BillingHistoryTab currentBillingDetailId={billingDetailId} />
+                    </TabPanel>
+                    {/* แท็บ 3-5 reuse ของหน้าพิจารณาเคลม รพ (ConsiderHospitalDetailPage) — ยิงด้วย policyCode ของผู้เอาประกัน */}
+                    <TabPanel value="3" sx={{ px: 0 }}>
+                        <PolicyBenefitTab customerDetail={policyBenefitCustomer} />
+                    </TabPanel>
+                    <TabPanel value="4" sx={{ px: 0 }}>
+                        <ClaimHistoryTab applicationId={policyCode} />
+                    </TabPanel>
+                    <TabPanel value="5" sx={{ px: 0 }}>
+                        <PaymentHistoryTab applicationCode={policyCode} />
                     </TabPanel>
                 </Grid>
             </TabContext>

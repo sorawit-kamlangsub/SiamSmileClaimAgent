@@ -1,9 +1,10 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { APIGW_CLAIM_FUND_API_URL } from "../../Const";
+import { API_CLAIM_FUND_URL } from "../../Const";
 
-const claimFundAPI_URL = APIGW_CLAIM_FUND_API_URL;
+// แจ้งเคลม : EncryptText / CreatePayment ยิงตรงไป ClaimFund API (VITE_CLAIM_FUND_API_URL) ไม่ผ่าน API Gateway
+const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 
 const createTransferKey = "createTransfer";
 
