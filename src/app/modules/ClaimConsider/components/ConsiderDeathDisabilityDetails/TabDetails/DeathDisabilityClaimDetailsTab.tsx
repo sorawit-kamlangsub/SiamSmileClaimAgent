@@ -69,9 +69,8 @@ const DeathDisabilityClaimDetailsTab = ({
     const { handleSubmitDecision, isSubmitting } = useDeathDisabilityActionHook({
         formik,
         detail,
-        beneficiaries,
-        totalPayoutAmount,
         transferAccountChange,
+        totalPayoutAmount,
         scanDocuments,
         rejectDocuments,
         disabilityBenefits,
