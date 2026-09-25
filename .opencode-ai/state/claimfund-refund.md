@@ -188,3 +188,30 @@
 ### points ที่ควรจำ (จาก session นี้)
 - `.env.local` (mode "", local dev) ใส่ `VITE_API_URL = "localhost:44388/api"` **ไม่มี https://** → codegen สร้าง URL ผิด → API 404/ไม่โหลด — ขอให้ใส่ scheme (แก้เป็น `"https://localhost:44388/api"`) แล้ว restart `npm start` เพื่อ regenerate `public/configuration.js`
 - **ข้อกำหนด contract:** ถ้า API คืน 404 ให้ไล่ 2 จุดก่อน: (1) `.env*` ที่ override ค่าใช้งานจริง (runtime config จาก `public/configuration.js`), (2) source ของ baseURL ของ API นั้น (APIGW vs API_URL) — branch/status ที่ใช้ codegen ต้องใช้ `VITE_API_URL` ไม่ใช่ `VITE_APIGW_BASEURL` 
+
+## Session: ย้ายเมนูคืนเงิน (`/manage/refund`) จาก `refundAPI.ts` → CodeGen (ClaimFundClient) ใน `coreClaimApi.ts`
+
+### จุดจบของ session นี้ (สิ่งที่เปลี่ยนจริงในโค้ด)
+- **ลบ `Refund/refundAPI.ts` ทั้งไฟล์** — hooks ทั้ง 8 ตัวย้ายไป `api/coreClaimApi.ts` เป็น wrapper codegen (ใช้ชื่อ hook + signature เดิมทุกตัว เพื่อให้ consumer เปลี่ยนแค่ import path):
+  - `useGetRefundMonitorWithFilter({branceId, refundStatusId, pagination, searchDetail?, searchKey?, enabled?})` → `claimFundClient.refundMonitor(searchDetail, undefined, undefined, page, recordsPerPage, {branceId, refundStatusId})` — **searchDetail กลายเป็น query param (ตัวแรกของ method) ไม่ใช่ field ใน body** (body = `RefundMonitorRequestDto {branceId?, refundStatusId?}`) — consumer เดิมไม่ส่ง searchDetail จึงไม่กระทบ
+  - `useGetRefundDetail(caseId)` → `claimFundClient.saveRefundDetails(caseId)` (method ชื่อ save แต่เป็น GET → ใช้บอกแนวทาง)
+  - `useGetRefundReasons()` → `claimFundClient.getRefundReasons()`
+  - `useGetRefundClaimTransaction(caseId, pagination)` → `getClaimTransaction2(caseId, undefined, undefined, undefined, page, recordsPerPage)`
+  - `useGetRefundTransferHistory(caseId)` → `transferHistory2(caseId)`
+  - `useGetRefundDecreaseTransaction(caseId, pagination)` → `getDecreaseTransaction2(caseId, undefined, undefined, undefined, page, recordsPerPage)`
+  - `CreateCaseRefundPayload` = **alias** ของ `CreateRefundRequestDto` ✓
+  - `useCreateCaseRefund(onSuccess, onError, onWarning?)` → `createCaseRefund(payload)`; **invalidate query key `["getRefundDetail"]`** หลัง success; onWarning ตรวจ `response.data?.isSuccess === false`
+- **consumer 4 ไฟล์ เปลี่ยนเฉพาะ import path** (field/type ตรงกับ codegen DTO หมด ไม่ต้องแก้ mapping):
+  - `Refund/hooks/RefundDataTableHook.tsx:5` → `import { useGetRefundMonitorWithFilter } from "../../../api/coreClaimApi"`
+  - `ManageClaimTransferDetails/hooks/Refund/RefundTransactionDataTableHook.tsx:3` → `../../../../api/coreClaimApi`
+  - `ManageClaimTransferDetails/hooks/Refund/ManageRefundDetailHook.tsx` → import codegen + **`useGetRefundTransferTypes(3)` → `useGetAdjustmentReasons(3)`** (reuse อันเดิมที่มีอยู่แล้วใน coreClaimApi; DTO `{id,name}` → mapping `adjustmentReasonId ?? id` ยังใช้ได้) + **`refundDate` ส่ง `values.refundSlipDateTime` (Dayjs) ตรงๆ ไม่ใช่ `format("YYYY-MM-DDTHH:mm:ss")`** (DTO เป็น `dayjs.Dayjs`; customFormatter จัด serialization ให้)
+  - `ManageClaimTransferDetails/components/Refund/HistoryTab/RefundTransferHistory.tsx:9` → `../../../../../api/coreClaimApi`
+- **`ManageRefundDetailPage.tsx:55`**: `reasonOptions={reasonOptions ?? []}` (codegen คืน `RefundReasonResponseDto[] | undefined` แต่ prop เป็น `any[]` ไม่รับ undefined)
+- **`RefundDataTableHook.tsx`**: ใช้ field จาก codegen type เท่านั้น — ตัด `row?.status`, `statusColorMapById[row?.refundStatusId]` → `[row?.refundStatusId ?? -1]` (type ไม่มี `status`)
+- **tsc ผ่าน** หลัง prettier `--write` เฉพาะ `coreClaimApi.ts` (ส่วนที่เขียนใหม่) — ไฟล์ consumer อื่นมี prettier warning เดิมค้างอยู่ก่อนแล้ว
+
+### points ที่ควรจำ (จาก session นี้)
+- **query-keys ของ Refund menu อยู่ท้าย `coreClaimApi.ts`** (`["getRefundMonitor"]`, `["getRefundDetail"]`, `["getRefundReasons"]`, `["getRefundClaimTransaction"]`, `["getRefundTransferHistory"]`, `["getRefundDecreaseTransaction"]`) — pattern: `refetchOnMount: "always"`, `cacheTime: 0`, `enabled` gate ด้วย `caseId`
+- ถ้าจะเขียน wrapper codegen ให้ **ใช้ชื่อ hook และ signature เดิม** เพื่อให้ consumer เปลี่ยนแค่ import path — วิธีที่เร็วที่สุดในการ migrates
+- `useGetAdjustmentReasons(adjustmentTypeId)` ใน coreClaimApi เป็นตัวเดียวกันกับที่ Refund เรียก `getAdjustmentReasons(3)` — อย่าสร้าง hook ซ้ำ
+- `.env.local` `VITE_API_URL = "https://localhost:44388/api"` (มี scheme แล้ว) + restart `npm start` ถึงจะ regenerate `public/configuration.js` 
