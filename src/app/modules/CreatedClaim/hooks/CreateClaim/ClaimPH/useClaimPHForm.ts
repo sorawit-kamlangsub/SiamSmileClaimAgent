@@ -217,7 +217,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                         netCaseAmount: organ.totalAmount,
                         medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
                         nonCoveredAmount: amountNumber(organ.uncoveredAmount),
-                        nonCoveredReasonId: organ.uncoveredReason ?? 0,
+                        nonCoveredReasonId: organ.uncoveredReason || undefined,
                         bodyPartId: organ.bodyPartId,
                     });
                 }
