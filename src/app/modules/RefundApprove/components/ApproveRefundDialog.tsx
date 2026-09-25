@@ -119,10 +119,8 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
     };
 
     const handleOpenSlip = () => {
-        if (row?.refundNo) {
-            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
-            setOpenSlipDialog(true);
-        }
+        setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
+        setOpenSlipDialog(true);
     };
 
     const handleRejectClick = async () => {
