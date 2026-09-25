@@ -7,7 +7,9 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
 import ClaimSummaryStep3 from "../../../../ClaimConsider/components/ConsiderHospitalDetails/SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { formatDateString } from "../../../../../functionHelpers";
-import useBillingClaimLabels from "../../../hooks/BillingHospitalReview/BillingClaimLabelsHook";
+import useBillingClaimLabels, {
+    BillingClaimBeLabels,
+} from "../../../hooks/BillingHospitalReview/BillingClaimLabelsHook";
 import useBillingExpenseHook from "../../../hooks/BillingHospitalReview/BillingExpenseHook";
 import { BillingReviewFormValues } from "../../../store/billingClaim.types";
 import BillingScanDocumentTable, { BillingStep3DocumentRow } from "./BillingScanDocumentTable";
@@ -18,10 +20,12 @@ type BillingSummaryStep3Props = {
     submittedDate?: string;
     /** [IPD] แสดง "สรุปจำนวนวันนอน" (ผ่าน `ClaimSummaryStep3.stayDays`) */
     showStayDays?: boolean;
-    /** PH + IPD/DayCase เท่านั้น (วันนี้เป็น false เสมอ — PENDING_BE_FIELDS.productTypeId) */
+    /** PH + IPD/DayCase เท่านั้น (อ่าน product type จาก `BillingDetailDto.productTypeId`) */
     allowSeparateCompensation?: boolean;
     /** Step 3 "สแกนเอกสาร" — ยังไม่มีรายการจาก BE (PENDING_BE_FIELDS.scanDocumentStep3) */
     scanDocumentRows?: BillingStep3DocumentRow[];
+    /** ชื่อความคุ้มครอง/ประเภทการรักษา/การวินิจฉัยที่ BE ส่งมาที่ root ของ `BillingDetailDto` */
+    beLabels?: BillingClaimBeLabels;
 };
 
 const fmtDate = (v: string | undefined) => formatDateString(v, "DD/MM/BBBB");
@@ -43,10 +47,11 @@ const BillingSummaryStep3 = ({
     showStayDays = false,
     allowSeparateCompensation = false,
     scanDocumentRows = [],
+    beLabels,
 }: BillingSummaryStep3Props) => {
     const formik = useFormikContext<BillingReviewFormValues>();
     const { values } = formik;
-    const labels = useBillingClaimLabels(values);
+    const labels = useBillingClaimLabels(values, beLabels);
     const expenseTotals = useBillingExpenseHook(formik);
 
     return (
@@ -81,6 +86,9 @@ const BillingSummaryStep3 = ({
                     <CustomDisplayText label="คำวินิจฉัย 1" value={labels.diagnosis1Name} />
                     <CustomDisplayText label="คำวินิจฉัย 2" value={labels.diagnosis2Name ?? "-"} />
                     <CustomDisplayText label="คำวินิจฉัย 3" value={labels.diagnosis3Name ?? "-"} />
+                    {labels.diagnosis4Name && <CustomDisplayText label="คำวินิจฉัย 4" value={labels.diagnosis4Name} />}
+                    {labels.diagnosis5Name && <CustomDisplayText label="คำวินิจฉัย 5" value={labels.diagnosis5Name} />}
+                    {labels.diagnosis6Name && <CustomDisplayText label="คำวินิจฉัย 6" value={labels.diagnosis6Name} />}
                     <CustomDisplayText label="หมายเหตุ" value={values.note} xs={12} />
                 </Grid>
             </CustomPaper>

@@ -7,6 +7,7 @@ import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
 import AssignmentIcon from "@mui/icons-material/Assignment";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
+import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { TabContext, TabPanel } from "@mui/lab";
 
 import HeaderCardCustomerDetails from "../../ClaimConsider/components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
@@ -20,9 +21,7 @@ import PaymentHistoryTab from "../../ClaimConsider/components/ConsiderDetails/Ta
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 import useBillingProductVariant from "../hooks/BillingHospitalReview/BillingProductVariantHook";
 import { useGetHospitalBillingDetail } from "../../../api/hospitalBillingApi";
-import { billingStatusLabel } from "../store/billingStatusHelpers";
-import { PENDING_BE } from "../store/billingPendingFields";
-import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
+import { appStatusLabelMap, calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
 import useClearDocumentScanOnUnmount from "../../CreatedClaim/hooks/ClearDocumentScanHook";
 
 type BillingHospitalReviewPageProps = {
@@ -45,19 +44,26 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
 
     const { data: detailData, isLoading } = useGetHospitalBillingDetail(billingDetailId);
     const detail = detailData?.data;
-    const variant = useBillingProductVariant(detail?.data?.claim?.medicalTypeId);
+    const variant = useBillingProductVariant(
+        detail?.data?.claim?.medicalTypeId,
+        detail?.productTypeId,
+        detail?.medicalSubTypeCode
+    );
+    /** Chip แสดงค่าดิบจาก BE (medicalSubTypeCode) เหมือนหน้าพิจารณาเคลม รพ — fallback เป็น label ที่คำนวณไว้ */
+    const claimTypeDisplayLabel = detail?.medicalSubTypeCode ?? variant.claimListTypeLabel;
     const policyCode = detail?.insured?.policyCode;
 
     /**
      * แท็บ "ความคุ้มครอง" ใช้ PolicyBenefitTab ร่วมกับหน้าพิจารณาเคลม รพ ซึ่งรับ customerDetail
-     * (GetCustomerDetailByIdDtoResponse) — billing มีแค่ `insured.policyCode` จึง map เท่าที่มีไปก่อน
-     * TODO(PENDING-BE): PENDING_BE_FIELDS.policyBenefitProduct — BillingInsuredDto ยังไม่มี
-     * productTypeId / productId / customerTypeCode ทำให้ useGetPolicyBenefit ยังไม่ยิง (enabled: !!productTypeId)
-     * ตารางความคุ้มครองจึงว่างจนกว่า BE จะส่ง 3 ฟิลด์นี้มา แล้วค่อย map เพิ่มตรงนี้
+     * (GetCustomerDetailByIdDtoResponse) — billing map เท่าที่มี : `insured.policyCode` + `productTypeId`
+     * (productTypeId ทำให้ useGetPolicyBenefit เริ่มยิงได้ — enabled: !!productTypeId)
+     * TODO(PENDING-BE): PENDING_BE_FIELDS.policyBenefitProduct — ยังขาด `productId` (PH ต้องส่ง) และ
+     * `customerTypeCode` (PA ต้องส่ง) BE ส่งมาเมื่อไหร่ค่อย map เพิ่มตรงนี้
      */
+    const productTypeId = detail?.productTypeId;
     const policyBenefitCustomer = useMemo<GetCustomerDetailByIdDtoResponse | undefined>(
-        () => (policyCode ? { policyCode } : undefined),
-        [policyCode]
+        () => (policyCode ? { policyCode, productTypeId } : undefined),
+        [policyCode, productTypeId]
     );
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => setTabValue(newValue);
@@ -76,8 +82,8 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                     </>
                 ) : (
                     <>
-                        {/* "ข้อมูลสถานศึกษา" — เฉพาะ Product PA (วันนี้ isPA เป็น false เสมอ ไม่มี productTypeId
-                            จาก BE — PENDING_BE_FIELDS.productTypeId — จึงยังไม่ขึ้นการ์ดนี้จนกว่า BE จะส่งมา) */}
+                        {/* "ข้อมูลสถานศึกษา" — เฉพาะ Product PA (`detail.productTypeId`) — ยังไม่มีข้อมูลสถานศึกษา
+                            จาก BE (PENDING_BE_FIELDS.schoolDetail) การ์ดจึงขึ้นเป็นค่าว่างไปก่อน */}
                         {variant.isPA && (
                             <Grid item xs={12} sx={{ mb: 2 }}>
                                 <HeaderCardSchoolDetails customerDetail={undefined} />
@@ -87,10 +93,15 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                         <Grid item xs={12} sx={{ mb: 2 }}>
                             <HeaderCardCustomerDetails
                                 name={detail?.insured?.name ?? "-"}
-                                idCardNo={PENDING_BE}
+                                idCardNo={detail?.insured?.idCard ?? "-"}
                                 applicationId={detail?.insured?.policyCode ?? "-"}
-                                phoneNumber={PENDING_BE}
-                                appStatus={PENDING_BE}
+                                phoneNumber={detail?.insured?.phone ?? "-"}
+                                appStatus={
+                                    detail?.appStatusName ||
+                                    (detail?.appStatusId ? appStatusLabelMap[detail.appStatusId] : undefined) ||
+                                    "-"
+                                }
+                                appStatusId={detail?.appStatusId}
                                 policyAgeText={calculatePolicyAgeText(detail?.insured?.coverageStart?.toString())}
                                 coverageStartDate={
                                     formatDateString(detail?.insured?.coverageStart?.toString() ?? "", "DD/MM/BBBB") ??
@@ -111,13 +122,13 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                                     "DD/MM/BBBB HH:mm:ss"
                                 )}
                                 transferDate={undefined}
-                                employee={undefined}
-                                branch={detail?.provinceName}
+                                employee={detail?.createdByUserName}
+                                branch={detail?.createdCaseByBranchName}
                                 claimNo={detail?.claimCode}
                                 caseNo={detail?.caseNo}
                                 claimType={variant.claimListTypeLabel}
-                                statusClaim={detail ? billingStatusLabel(detail.statusId) : undefined}
-                                claimStatusId={undefined}
+                                statusClaim={detail?.claimStatusName}
+                                claimStatusId={detail?.claimStatusId}
                             />
                         </Grid>
                     </>
@@ -142,15 +153,21 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
 
                         <Grid sx={{ ml: "auto", mr: 1, display: "flex", gap: 1 }}>
                             {detail?.billingRequestCode && (
+                                // โทนน้ำเงินเข้มบนพื้นฟ้าอ่อน (สีเดียวกับ header ผู้เอาประกัน) — แยกจาก Chip ประเภทรายการเคลม
+                                // ที่เป็น outlined primary ให้อ่านออกว่าเป็น "เลขเอกสาร" คนละกลุ่มกับ "ประเภท"
                                 <Chip
+                                    icon={<ReceiptLongIcon />}
                                     label={`เลขใบวางบิล รพ (PB) : ${detail.billingRequestCode}`}
-                                    color="default"
-                                    variant="outlined"
-                                    sx={{ fontWeight: 700 }}
+                                    sx={{
+                                        fontWeight: 700,
+                                        bgcolor: "#E3F2FD",
+                                        color: "#0D3D6B",
+                                        "& .MuiChip-icon": { color: "#0D3D6B", fontSize: 18 },
+                                    }}
                                 />
                             )}
                             <Chip
-                                label={`ประเภทรายการเคลม : ${variant.claimListTypeLabel}`}
+                                label={`ประเภทรายการเคลม : ${claimTypeDisplayLabel}`}
                                 color="primary"
                                 variant="outlined"
                                 sx={{ fontWeight: 700 }}

@@ -468,6 +468,14 @@ export const colorMapPaymentAppStatus: Record<number, "#11734B" | "#a56e07" | "#
     5: "#B32615", // ยกเลิกก่อน DCR
 };
 
+/** ชื่อสถานะ App ตาม appStatusId — ใช้เป็น fallback เมื่อ BE ส่ง id มาแต่ไม่ส่งชื่อ (ชุดเดียวกับสีด้านบน) */
+export const appStatusLabelMap: Record<number, string> = {
+    2: "ปกติ",
+    3: "มีกำหนดยกเลิก",
+    4: "ยกเลิก",
+    5: "ยกเลิกก่อน DCR",
+};
+
 //AppStatus
 export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9" | "#D4EDBC"> = {
     2: "#FFF1CD", // รอพิจารณา

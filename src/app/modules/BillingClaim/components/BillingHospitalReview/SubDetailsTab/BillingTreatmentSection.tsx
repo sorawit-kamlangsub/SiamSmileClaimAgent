@@ -10,12 +10,14 @@ import { BillingReviewFormValues } from "../../../store/billingClaim.types";
 type BillingTreatmentSectionProps = {
     /** [IPD] แสดง AN + ข้อบ่งชี้การ Admit */
     showIpdFields?: boolean;
+    /** "รายละเอียดเพิ่มเติม" — `BillingDetailDto.reservationRemark` */
+    reservationRemark?: string;
 };
 
 const procedureLabel = (value: boolean | undefined) => (value === undefined ? undefined : value ? "ใช่" : "ไม่ใช่");
 
 /** Step 1 : "ข้อมูลการเข้ารับการรักษา" — Read-only ทั้งหมดตามสเปค (ข้อมูลจาก SmileConnect) */
-const BillingTreatmentSection = ({ showIpdFields = false }: BillingTreatmentSectionProps) => {
+const BillingTreatmentSection = ({ showIpdFields = false, reservationRemark }: BillingTreatmentSectionProps) => {
     const { values } = useFormikContext<BillingReviewFormValues>();
 
     return (
@@ -37,8 +39,7 @@ const BillingTreatmentSection = ({ showIpdFields = false }: BillingTreatmentSect
                     value={values.investigationResults}
                     xs={12}
                 />
-                {/* PENDING-BE: BillingMedicalDto ยังไม่มีฟิลด์ "รายละเอียดเพิ่มเติม" แยกจาก 3 ช่องข้างบน */}
-                <CustomDisplayText label="รายละเอียดเพิ่มเติม" value={PENDING_BE} xs={12} />
+                <CustomDisplayText label="รายละเอียดเพิ่มเติม" value={reservationRemark} xs={12} />
                 <CustomDisplayText label="มีการทำหัตถการหรือไม่" value={procedureLabel(values.isProcedurePerformed)} />
             </Grid>
         </CollapsibleSection>
