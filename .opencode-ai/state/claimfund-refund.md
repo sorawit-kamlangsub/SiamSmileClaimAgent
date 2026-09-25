@@ -16,7 +16,7 @@
 ### เสร็จแล้ว ✅
 - `ClaimSearchFilterForm.tsx` (shared) = **payment-only กลับมาแล้ว** — ไม่มี `useGetRefundStatus` / `statusSource` / `statusId`-refund อีกต่อไป
 - **โมดูลใหม่ `Refund/_common/RefundSearchFilterForm.tsx`** — self-contained:
-  - import เฉพาะ: `useGetBranch` (IncreaseLimitTransfer/masterAPI) + `useGetRefundStatus` (Refund/refundAPI)
+  - import เฉพาะ: `useGetRefundStatus` (`api/coreClaimApi`, codegen) — dropdown สาขาผ่าน `BranchAutocomplete` (codegen `coreClaimMastersApi`)
   - export: `RefundSearchFilterValues` (`searchBy`, `searchText`, `branchId`, `statusId`, `transferDateFrom/To`) + `RefundSearchFilterFormProps` (`initialValues?`, `onSubmit`)
   - มี dropdown สาขา / สถานะ refund / ช่วงวันที่, ปุ่มค้นหา
 - **`refundAPI.ts`** → ขยาย `GetRefundMonitorFilterType` เพิ่ม `searchDetail?`, `searchKey?`, `enabled?` และรวมเข้า query key — **ทุกกดค้นหา (searchKey เปลี่ยน) call API ใหม่เสมอ** ส่วน `enabled` default เท่าเดิม (`!!refundStatusId`) จึงไม่กระทบ `RefundDataTableHook` เดิม
@@ -56,7 +56,7 @@
 
 ### เสร็จแล้ว: หน้า `/manage/refund/detail` — เชื่อม API `Refund/CreateCaseRefund` ✅
 - ปุ่ม "แจ้งคืนเงิน" (`ManageRefundDetailPage.tsx` → `formik.handleSubmit()`) ยิง API จริงแทน mock แล้ว:
-  - `Refund/refundAPI.ts`: เพิ่ม `useCreateCaseRefund(onSuccess, onError)` + `createCaseRefund()` → `POST {APIGW_CLAIM_FUND_API_URL}/Refund/CreateCaseRefund` (mirror `useSaveAdditionalTransfer` ใน `api/coreClaimApi.ts` — `adjustClaimAPI.ts` ตัวเดิมถูกลบไปแล้ว)
+  - `Refund/refundAPI.ts`: เพิ่ม `useCreateCaseRefund(onSuccess, onError)` + `createCaseRefund()` → `POST {API_CLAIM_FUND_URL}/api/ClaimFund/Refund/CreateCaseRefund` (mirror `useSaveAdditionalTransfer` ใน `api/coreClaimApi.ts` — `adjustClaimAPI.ts` ตัวเดิมถูกลบไปแล้ว)
   - `ManageRefundDetailHook.tsx`: เลิก mock `mutate` → `const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError)` (success=`swalSuccess`, error=`swalError`)
 - Mapping body `CreateCaseRefundPayload` (ยืนยันกับ user แล้ว):
   - `adjustmentTypeId` = `values.refundTransferType` (dropdown ประเภทการโอน)
@@ -94,15 +94,15 @@
   - `getCaseRefundRejectReasons` key + `useGetCaseRefundRejectReasons` + `getCaseRefundRejectReasonsData`
   - `CaseRefundApproveUpdateStatusPayload` + `updateCaseRefundApproveStatus` + `useCaseRefundApproveUpdateStatus`
   - `GetRefundMonitorFilterType` ตัด `transferDateFrom?/transferDateTo?` ทิ้ง (เหลือเฉพาะหน้า Refund ที่ใช้ไม่ส่งวันที่) + ลบ import `Dayjs` ที่ไม่ใช้แล้ว
-  - **คงไว้**: hooks ที่โมดูลอื่นยังใช้ (`useGetRefundMonitorWithFilter`, `useGetRefundDetail`, `useGetRefundTransferTypes`, `useGetRefundReasons`, `useGetRefundStatus`, `useGetRefundClaimTransaction`, `useGetRefundTransferHistory`, `useGetRefundDecreaseTransaction`, `useCreateCaseRefund`)
+  - **คงไว้**: hooks ที่โมดูลอื่นยังใช้ (`useGetRefundMonitorWithFilter`, `useGetRefundDetail`, `useGetRefundTransferTypes`, `useGetRefundReasons`, `useGetRefundClaimTransaction`, `useGetRefundTransferHistory`, `useGetRefundDecreaseTransaction`, `useCreateCaseRefund`)
 - typecheck (`npx tsc --noEmit`) และ lint (ไฟล์ที่แก้) ผ่าน — ไม่มี warning/error ใหม่เพิ่ม ไฟล์ที่เหลือ (เอา baseline เปรียบก่อนเปลี่ยน) warning ทั้งหมดเป็น pre-existing; hook file ลดลง 1 warning (block สถานะที่เขียนใหม่)
 
 ### เสร็จแล้วเพิ่มเติม: Dialog "อนุมัติคืนเงิน" (RefundApprove monitor) ✅
 - ปุ่ม `FactCheckIcon` (แถว status=2 "รอดำเนินการ") เปิด dialog ผ่าน `onEdit` callback → ใหม่ `RefundApprove/components/ApproveRefundDialog.tsx` (ส่งเป็น `ApproveRefundDialog` จาก `RefundApprovePage` ด้วย `approveRow` state)
-- ข้อมูล: `useGetCaseRefundApproveDetail(caseRefundId)` → **ใหม่ `GET {apiURL}/Refund/CaseRefundApproveDetail?caseRefundId=...`** (user สั่งเปลี่ยนจาก SaveRefundDetails; `caseRefundId = row.caseId` ยืนยันกับ user แล้ว, `enabled=!!caseRefundId`) — **response ยังไม่ typed (any)** → dialog ประกาศ type ท้องถิ่น `ApproveRefundDetail`/`ApproveRefundCaseDetail` + cast (สมมติ shape เดียวกับ SaveRefundDetails: header + caseDetails[]; ถ้า backend กลับ shape ต่างให้ปรับ mapping); สาเหตุปฏิเสธจาก `useGetRefundReasons()` → `/Masters/GetRefundReasons` (data = `{id,name}[]` cast เหมือนกัน)
-- Mapping (ยืนยันกับ user แล้ว): เลขที่ CPG=`row.claimNo`, สาขา=`row.branceName`, ชื่อ-สกุล=`detail.customerName ?? row.customerName`, ผู้ทำรายการ=**`detail.createdBy`** (user สั่งเปลี่ยนจาก createdByUserName), **จำนวนเงินคืน=`detail.totalRefundAmount`** (field "จำนวนเคลมคืนเงิน" ที่นับจำนวนถูกแทนที่แล้ว — ไม่มี field นับจำนวนอีก), แจ้งโอน=sum(`totalNetPaidAmount`) (fallback `row.totalNetPaidAmount`), คงเหลือ=แจ้งโอน-โอนคืน
-- ปุ่ม "คลิกดูภาพ Slip การโอนเงิน" → `window.open("/slip/{refundNo}", "_blank")` (basename ของ router = "/"); disabled ถ้าไม่มี refundNo
-- **ตารางย่อยถูกลบออกแล้ว (user สั่ง "เอาตาราง ออก")** — เหลือ info-grid (ตัด "รหัสรายการ" badge ออกด้วย ตาม user) + select สาเหตุปฏิเสธ + หมายเหตุ + ปุ่ม ปฏิเสธ/อนุมัติ; ค่ายอดรวม (แจ้งโอน/โอนคืนรวม/คงเหลือ) ยังคำนวณจาก `caseDetails` ผ่าน `totals` (useMemo) ไว้ใน info-grid; `row.refundNo` ยังใช้กับปุ่ม Slip กับ console.log
+- **ข้อมูล: `useGetCaseRefundApproveDetail(caseRefundId)` (codegen `claimFundClient.caseRefundApproveDetail`) → typed `CaseRefundApproveDetailResponseDto`** — `caseRefundId = row.caseId` ยืนยันกับ user แล้ว; สาเหตุปฏิเสธจาก `useGetCaseRefundRejectReasons()` (codegen `claimFundClient.getCaseRefundRejectReasons` → `CaseRefundRejectReasonResponseDto[]`) ไม่ cast แล้ว
+- Mapping (ยืนยันกับ user แล้ว): เลขที่ CPG=`row.claimNo`, สาขา=`row.branceName`, ชื่อ-สกุล=`detail.insuredName ?? row.customerName` (`insuredName` คือ field จริงใน DTO codegen), ผู้ทำรายการ=`detail.createdBy`, จำนวนเงินคืน=`detail.totalRefundAmount`, แจ้งโอน=`detail.remainingAmount`, คงเหลือ=`remainingAmount - totalRefundAmount`
+- ปุ่ม "คลิกดูภาพ Slip การโอนเงิน" → เปิด slip dialog (ในไฟล์เดียวกัน) แสดง mock PDF `https://docstorage.uatsiamsmile.com/files/...pdf` — **กดได้เสมอ (ตัด guard `if (row?.refundNo)` แล้ว)**; ก่อนหน้า ถ้า `row.refundNo` จาก monitor เป็น empty → กดแล้วเงียบ (dialog ไม่เปิด)
+- **ตารางย่อยถูกลบออกแล้ว (user สั่ง "เอาตาราง ออก")** — เหลือ info-grid (ตัด "รหัสรายการ" badge ออกด้วย ตาม user) + select สาเหตุปฏิเสธ + หมายเหตุ + ปุ่ม ปฏิเสธ/อนุมัติ; ค่าใน info-grid มาจาก DTO codegen โดยตรง (`createdBy`, `insuredName`, `refundCount`, `totalRefundAmount`, `remainingAmount`)
 - รูปแบบ per AUN: tall dialog (Paper height 90vh + overflow hidden), header icon tile + Close สีแดง; ปุ่ม ปฏิเสธ=outlined error (กด trigger formik validation), อนุมัติ=contained เขียว; กดแล้ว console.log + ปิด dialog (ยังไม่ refresh ตาราง)
 - typecheck: ผ่านในไฟล์ที่แก้ (error เหลือ 6 pre-existing)
 
@@ -114,8 +114,8 @@
   - `_auth/auth.d.ts`: `CustomClaims.employee_branchid` + `UserProperties.employeeBranchId`
   - `_auth/components/AuthProvider.tsx`: map `employeeBranchId = Number(profile.employee_branchid)` (normalize เป็น number, null/undefined → undefined)
   - **ใหม่ `_common/branchPermission.ts`**: `useBranchByUserPermission<T extends { branchId?: number }>(branches)` — hook เดียวที่ใช้ `useAuth` กรองตามกฎข้างบน
-  - `IncreaseLimitTransfer/_common/masterAPI.ts` `useGetBranch`: กรองผ่าน hook แล้ว wrap `data.data` กลับ (ครอบ RefundSearchFilterForm, SearchByBranchAndStatus, ClaimSearchFilterForm)
-  - `api/coreClaimMastersApi.ts` `useGetBranch`: กรองเหมือนกัน (ครอบ `BranchAutocomplete` ฝั่ง ExtraPayment ด้วย — USER เลือกเอาด้วย)
+  - `IncreaseLimitTransfer/_common/masterAPI.ts` `useGetBranch`: กรองผ่าน hook แล้ว wrap `data.data` กลับ (ครอบ RefundSearchFilterForm, SearchByBranchAndStatus, ClaimSearchFilterForm) — **อัปเดต (ภายหลัง): masterAPI.ts ถูกเล่นทิ้งแล้ว เพราะสลับทุกจุดไป codegen — ดู section "สลับ Branch/status ไป codegen" ด้านล่าง**
+  - `api/coreClaimMastersApi.ts` `useGetBranch`: กรองเหมือนกัน (ครอบ `BranchAutocomplete` ฝั่ง ExtraPayment ด้วย — USER เลือกเอาด้วย) — **ตอนนี้ `BranchAutocomplete` ทุกจุด (Refund + Payment) ใช้ตัวนี้ทั้งหมดแล้ว**
 - typecheck: ผ่าน
 - **รอบเพิ่มเติม (user สั่ง):** ถ้าไม่ใช่สำนักงานใหญ่ ให้เอาตัวเลือก "ทั้งหมด" ออกด้วย — เพิ่ม `useIsHeadOfficeBranch()` ใน `branchPermission.ts`, `RefundSearchFilterForm`/`SearchByBranchAndStatus` เปลี่ยน `firstItemText` เป็น `isHeadOfficeBranch ? "ทั้งหมด" : undefined`, `BranchAutocomplete` ใช้ `!withAllOption || !isHeadOfficeBranch` เป็นเงื่อนไขไม่เพิ่ม option "ทั้งหมด" (`ClaimSearchFilterForm` ไม่มี firstItemText อยู่แล้ว ไม่ต้องแก้)
 - ข้อควรระวัง: เป็น UI-level filter เท่านั้น backend ยังคือ security boundary — ถ้าจะกันข้อมูลข้ามสาขาจริงต้องบังคับฝั่ง API ด้วย
@@ -131,7 +131,7 @@
 
 ### เสร็จแล้วเพิ่มเติม: ตัวเลือกสาขาแบบ AutoComplete (พิมพ์ค้นหาได้) -> ใช้ทั้งหน้า ClaimFund ✅
 - Component: `_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete.tsx` (มีอยู่แล้วจากงาน ExtraPayment) — ห่อ `FormikAutocomplete` (MUI Autocomplete) + `useGetBranch` + `withAllOption` ("ทั้งหมด" เฉพาะสำนักงานใหญ่เท่านั้น)
-- **branch ใช้ API `VITE_APIGW_BASEURL` (`https://apigw.uatsiamsmile.com`)**: `useGetBranch` ที่ `IncreaseLimitTransfer/_common/masterAPI.ts` → `GET ${APIGW_URL}/claim/core/Masters/branch` (APIGW_URL = VITE_APIGW_BASEURL ใน `Const.ts`) — `BranchAutocomplete` import สลับจาก `api/coreClaimMastersApi.ts` (เดิมใช้ VITE_API_URL) มาเป็น masterAPI hook (กรองสิทธิ์สาขาเหมือนเดิมทั้งคู่)
+- **branch ใช้ API codegen `coreClaimMastersApi.useGetBranch` → `MastersClient.getBranch` → `GET {API_URL}/Masters/branch`** (API_URL = VITE_API_URL ใน `Const.ts`) — สลับจาก `IncreaseLimitTransfer/_common/masterAPI.ts` (ใช้ `APIGW_URL`) แล้ว เพราะ `.env` ตั้ง `VITE_APIGW_BASEURL = https://localhost:44388/api` (ไม่มี proxy `/claim/core`) เลย 404 — เดิมยิง `${APIGW_URL}/claim/core/Masters/branch` เป็น APIGW route; codegen ใช้ `VITE_API_URL` ตรง ๆ เช่น `https://localhost:44388/api/Masters/branch` (ถูกต้อง) — มักเป็นบั๊กแบบนี้เวลา merge/env เปลี่ยน
 - เอาไปใช้แทน `FormikDropdown` สาขาแล้วทุกจุด:
   - `Refund/_common/SearchByBranchAndStatus.tsx` → `<BranchAutocomplete name="branch" formik={formik} withAllOption />` (ครอบ RefundPage + AdjustTransferPage)
   - `Refund/_common/RefundSearchFilterForm.tsx` → `<BranchAutocomplete name="branchId" formik={formik} withAllOption />` (RefundApprovePage)
@@ -172,3 +172,19 @@
 - เมื่อยังไม่ search (`hasSearched=false`): `isLoading=false` → `ClaimFundStandardDataTable` แสดง default `noMatchText` = **"ไม่พบข้อมูล"**
 - เมื่อ search แล้ว: `isLoading` ตามจริง → ขึ้น "กำลังโหลดข้อมูล..." ระหว่าง fetch ตามปกติ
 - กรณี `enabled` ไม่ได้ใช้และ query fire ทันที (ไม่มี gate) จะไม่เกิดปัญหานี้ 
+
+## Session: สลับ Branch / PaymentStatus / RefundStatus ไป Codegen + ลบ masterAPI.ts + แก้ merge refundAPI
+
+### จุดจบของ session นี้ (สิ่งที่เปลี่ยนจริงในโค้ด)
+- **`ActiveWork` 🆕 wrapper codegen ใน `api/coreClaimApi.ts`:**
+  - `useGetPaymentStatuses(enabled = true)` → `claimFundClient.getPaymentStatuses()` → `GET /ClaimFund/Masters/GetPaymentStatuses` (DTO `PaymentStatusResponseDto {id,name}` — field ตรงกับที่ SearchByBranchAndStatus ใช้ทันที)
+  - `useGetRefundStatus(enabled = true)` → `claimFundClient.getRefundStatus()` (มีมาก่อน session นี้)
+- **`Refund/_common/SearchByBranchAndStatus.tsx`**: import `useGetPaymentStatus` (masterAPI) → สลับเป็น `useGetPaymentStatuses` (`api/coreClaimApi`) — `valueFieldName="id"` / `displayFieldName="name"` เดิมไม่ต้องแตะ
+- **`_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete.tsx`**: import `useGetBranch` (masterAPI) → สลับเป็น `api/coreClaimMastersApi` (codegen `MastersClient.getBranch` → `GET {API_URL}/Masters/branch`) — แก้ปุ่มกดสาขา 404 (ดู section ข้างบน)
+- **ลบ `IncreaseLimitTransfer/_common/masterAPI.ts` ทั้งไฟล์** — ไม่มี consumer เหลือ (grep ยืนยัน); ทั้ง 3 hooks (`useGetBranch` / `useGetPaymentStatus` / `useGetPaymentIncreaseStatus`) เป็น dead code
+- **`RefundApprove/components/ApproveRefundDialog.tsx`**: ปุ่ม "คลิกดูภาพ Slip การโอนเงิน" → ตัด guard `if (row?.refundNo)` ใน `handleOpenSlip` — เดิมถ้า refundNo เป็น empty (จาก monitor API) กดแล้วเงียบ (dialog ไม่เปิด) ปุ่มเองไม่ได้ disabled จึงดูเหมือนกดยังไงก็ไม่เกิดผล หลังแก้กดแล้วเปิด slip dialog mock PDF เสมอ
+- **merge conflict ใน `refundAPI.ts` (resolve ให้เข้ากับ feat นี้)**: ตอบข้ามส่วนที่ feat อื่นใส่กลับมา — ตัด `Dayjs` import, `useCaseRefundApproveUpdateStatus` + `CaseRefundApproveUpdateStatusPayload` + `updateCaseRefundApproveStatus` (เพราะ RefundApprove ใช้ codegen แล้ว — อย่าให้เกิด duplicate), ใช้ `API_CLAIM_FUND_URL` (Const.ts ตัวที่ merge มาเหลือตัวนี้) → `apiURL = ${API_CLAIM_FUND_URL}/api/ClaimFund`
+
+### points ที่ควรจำ (จาก session นี้)
+- `.env.local` (mode "", local dev) ใส่ `VITE_API_URL = "localhost:44388/api"` **ไม่มี https://** → codegen สร้าง URL ผิด → API 404/ไม่โหลด — ขอให้ใส่ scheme (แก้เป็น `"https://localhost:44388/api"`) แล้ว restart `npm start` เพื่อ regenerate `public/configuration.js`
+- **ข้อกำหนด contract:** ถ้า API คืน 404 ให้ไล่ 2 จุดก่อน: (1) `.env*` ที่ override ค่าใช้งานจริง (runtime config จาก `public/configuration.js`), (2) source ของ baseURL ของ API นั้น (APIGW vs API_URL) — branch/status ที่ใช้ codegen ต้องใช้ `VITE_API_URL` ไม่ใช่ `VITE_APIGW_BASEURL` 
