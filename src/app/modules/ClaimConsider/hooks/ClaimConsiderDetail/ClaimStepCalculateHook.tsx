@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import Swal from "sweetalert2";
 import { FormikErrors, FormikProps, FormikTouched } from "formik";
 import {
     CalculateCaseClaim,
@@ -24,12 +25,17 @@ import {
  * แจ้งเตือนว่ายังไม่เลือกสาเหตุไม่คุ้มครอง แล้ว (หลังปิด alert) เลื่อนไป focus ช่องสาเหตุของแถวแรกที่ยังไม่เลือก
  * ในตาราง "รายการค่ารักษา(เบื้องต้น)" (ExpenseRecords ติด data-missing-reason) — ใช้ทั้งเคลมลูกค้าและเคลมโรงพยาบาล
  */
-export const alertMissingNonCoveredReason = () =>
-    swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครอง").then(() => {
+export const alertMissingNonCoveredReason = () => {
+    const alert = swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกสาเหตุไม่คุ้มครอง");
+    // popup เปิดแล้วตอนนี้ — line-height ปกติเตี้ยเกินสระล่างภาษาไทย (ุ ู) จนโดนตัด ปรับเฉพาะ alert นี้ ไม่แตะ theme
+    const htmlContainer = Swal.getHtmlContainer();
+    if (htmlContainer) htmlContainer.style.lineHeight = "1.6";
+    return alert.then(() => {
         const cell = document.querySelector<HTMLElement>('[data-missing-reason="true"]');
         cell?.scrollIntoView({ behavior: "smooth", block: "center" });
         cell?.querySelector<HTMLElement>('[role="combobox"], [tabindex="0"]')?.focus({ preventScroll: true });
     });
+};
 
 const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
     "incidentTypeId",

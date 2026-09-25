@@ -602,10 +602,13 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                                     size="small"
                                                     fullWidth
                                                     sx={tableInputSx}
-                                                    value={item.remark ?? "-"}
+                                                    value={item.remark ?? ""}
                                                     placeholder="หมายเหตุ"
                                                     onChange={(e) =>
-                                                        handleUpdateItem({ ...item, remark: e.target.value })
+                                                        handleUpdateItem({
+                                                            ...item,
+                                                            remark: e.target.value || undefined,
+                                                        })
                                                     }
                                                 />
                                             </TableCell>
