@@ -301,6 +301,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: d.documentId,
                 documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId,
+                claimDocumentTypeId: d.claimDocumentTypeId,
                 caseDocumentDetail: [],
             })
         );
@@ -514,6 +515,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: d.documentId,
                 documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId ?? 0,
+                claimDocumentTypeId: d.claimDocumentTypeId,
                 caseDocumentDetail: [],
             })
         );
