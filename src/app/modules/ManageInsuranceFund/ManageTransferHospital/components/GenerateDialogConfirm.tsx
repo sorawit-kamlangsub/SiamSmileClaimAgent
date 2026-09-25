@@ -1,4 +1,4 @@
-import { Box, Dialog, Grid, Typography } from "@mui/material";
+import { Box, Button, Dialog, Grid, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { setDialogOpen } from "../store/generateTransferSlice";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
@@ -171,6 +171,27 @@ const GenerateDialogConfirm = () => {
                         )}{" "}
                         บาท
                     </Typography>
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6} sm={6} md={6} lg={6} sx={{ textAlign: "end" }}>
+                            <Button variant="outlined" color="error" sx={{ width: "45%" }} onClick={handleClose}>
+                                ยกเลิก
+                            </Button>
+                        </Grid>
+                        <Grid item xs={6} sm={6} md={6} lg={6} sx={{ textAlign: "start" }}>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                sx={{ width: "45%" }}
+                                onClick={() => {
+                                    console.log(generateTransferDialog?.generateListData);
+                                }}
+                            >
+                                ยืนยัน
+                            </Button>
+                        </Grid>
+                    </Grid>
                 </Box>
             </Box>
         </Dialog>

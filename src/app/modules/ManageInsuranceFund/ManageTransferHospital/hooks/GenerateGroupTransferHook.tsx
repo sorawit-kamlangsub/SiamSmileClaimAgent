@@ -142,8 +142,6 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
 
     //TODO - mutate handle when generate
     const handleGenerateDialogOpen = () => {
-        console.info(`statusId: ${statusId} searchDetail: ${searchDetail}`);
-        console.log(rowsSelected);
         dispatch(setDialogOpen({ isOpen: true, generateListData: rowsSelected }));
     };
 
