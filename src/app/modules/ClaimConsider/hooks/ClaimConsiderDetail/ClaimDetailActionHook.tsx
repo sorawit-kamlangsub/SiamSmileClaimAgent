@@ -1,5 +1,10 @@
 import dayjs, { Dayjs } from "dayjs";
-import { useApproveClaimDecision, useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
+import {
+    useApproveClaimDecision,
+    useGetDocumentByCaseId,
+    useSaveClaimEditDraft,
+    useUpsertClaimDecision,
+} from "../../../../api/coreClaimApi";
 import {
     ApproveCasePayableRequest,
     ApproveClaimDecisionDtoRequest,
@@ -88,6 +93,11 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     scanDocuments?: CaseDocumentV2Request[];
     /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — ส่งไปเฉพาะเมื่อผลพิจารณาเป็นปฏิเสธ */
     rejectDocuments?: CaseDocumentV2Request[];
+    /**
+     * ไม่ส่งเอกสารที่ผูกกับเคสอยู่แล้ว (documentId + claimDocumentTypeId ตรงกับ GetDocumentByCaseId) ซ้ำใน caseDocument
+     * — เปิดเฉพาะเคลมลูกค้า (default false = ส่งทุกตัวตามเดิม)
+     */
+    excludeSavedCaseDocuments?: boolean;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -122,8 +132,26 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     calculateOverride,
     draftStep,
     scanDocuments,
+    excludeSavedCaseDocuments = false,
     rejectDocuments,
 }: UseClaimDetailActionHookParams<T>) => {
+    // เอกสารที่ผูกกับเคสแล้ว — argument ชุดเดียวกับ DocumentScanTable ของเคลมลูกค้า (query key ตรงกัน ไม่ยิงซ้ำ)
+    const productTypeId = customerDetailData?.data?.productTypeId ?? 0;
+    const { data: caseDocumentData } = useGetDocumentByCaseId(
+        excludeSavedCaseDocuments && productTypeId ? detailData?.data?.caseId ?? "" : "",
+        productTypeId,
+        detailData?.data?.claimSourceId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        100
+    );
+    const isSavedToCase = (doc: CaseDocumentV2Request) =>
+        excludeSavedCaseDocuments &&
+        (caseDocumentData?.data ?? []).some(
+            (saved) => saved.documentId === doc.documentId && saved.claimDocumentTypeId === doc.claimDocumentTypeId
+        );
     /**
      * เอกสารที่สแกนในหน้านี้ — มาจาก onAttachedDocumentsChange ของแต่ละตาราง (เฉพาะแถวที่มีไฟล์จริง)
      * ไม่อ่าน documentScanList ของ redux claimPH เพราะเป็น list กลางที่ DocumentScanTable ทุกหน้าเขียนลง
@@ -134,7 +162,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             ...(scanDocuments ?? []),
             ...(formik.values.considerResult === DECISION_ID.REJECTED ? rejectDocuments ?? [] : []),
         ];
-        return docs.filter((doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index);
+        return docs.filter(
+            (doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index && !isSavedToCase(doc)
+        );
     };
     const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
     // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload

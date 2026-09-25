@@ -91,6 +91,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             isCombinedWithMedicalAll,
             scanDocuments: attachedDocuments,
             rejectDocuments,
+            excludeSavedCaseDocuments: true,
             // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
             onApproveSuccess: (response) => {
                 setConfirmApproveOpen(false);
