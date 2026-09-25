@@ -38,6 +38,8 @@ type DeathDisabilityBeneficiarySectionProps = {
     aplicationCode: string | undefined;
     /** บันทึกใน dialog เปลี่ยนบัญชีสำเร็จ — parent (tab) เก็บไว้แสดง section รายละเอียดการเปลี่ยนบัญชี */
     onTransferAccountChanged: (change: TransferAccountChange) => void;
+    /** มีรายการเปลี่ยนบัญชีแล้ว (beneficiaryTypeId = 3 หรือที่เพิ่งกรอก) — ปิดปุ่มเงินสดมอบหน้างาน ให้แก้/ลบจาก section นั้นแทน */
+    hasTransferAccountChange: boolean;
 };
 
 /**
@@ -55,6 +57,7 @@ const DeathDisabilityBeneficiarySection = ({
     productTypeId,
     aplicationCode,
     onTransferAccountChanged,
+    hasTransferAccountChange,
 }: DeathDisabilityBeneficiarySectionProps) => {
     const [changeAccountOpen, setChangeAccountOpen] = useState(false);
     // แยก open ออกจาก editingOrder — ตอนปิดยังคงผู้รับฯ เดิมไว้ ไม่ให้ข้อมูลใน dialog กลายเป็นว่างระหว่าง animation ปิด
@@ -74,7 +77,8 @@ const DeathDisabilityBeneficiarySection = ({
                         variant="outlined"
                         startIcon={<AccountBalanceWalletIcon />}
                         onClick={() => setChangeAccountOpen(true)}
-                        sx={{ borderRadius: 2 }}
+                        disabled={hasTransferAccountChange}
+                        sx={{ borderRadius: 2, bgcolor: "#fff" }}
                     >
                         เงินสดมอบหน้างาน
                     </Button>
@@ -127,7 +131,7 @@ const DeathDisabilityBeneficiarySection = ({
                                 setEditingIndex(index);
                                 setEditOpen(true);
                             }}
-                            sx={{ ml: "auto", borderRadius: 2 }}
+                            sx={{ ml: "auto", borderRadius: 2, bgcolor: "#fff" }}
                         >
                             แก้ไขข้อมูล
                         </Button>

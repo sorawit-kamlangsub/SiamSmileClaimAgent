@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { FormikProps } from "formik";
-import { useUpsertDeathAndDisabilityClaimDecision } from "../../../../api/coreClaimApi";
+import { useGetDocumentByCaseId, useUpsertDeathAndDisabilityClaimDecision } from "../../../../api/coreClaimApi";
 import {
     CaseDocumentV2Request,
     GetCaseDisabilityBenefitByCaseIdDtoResponse,
@@ -22,8 +22,12 @@ import { TransferAccountChange } from "./ChangeTransferAccountHook";
 type UseDeathDisabilityActionHookParams = {
     formik: FormikProps<DeathDisabilityConsiderValues>;
     detail: GetDeathAndDisabilityClaimDetailConsiderDtoResponse | undefined;
+    /** ใช้ดึงเอกสารที่บันทึกไว้แล้วของเคส (GetDocumentByCaseId) — ส่งค่าเดียวกับ DocumentScanTable ให้ใช้ cache ร่วมกัน */
+    productTypeId: number | undefined;
     /** บัญชีปลายทางที่เปลี่ยนจาก dialog เงินสดมอบหน้างาน — มีค่าจึงส่ง beneficiary + เอกสารประกอบการเปลี่ยนบัญชี */
     transferAccountChange: TransferAccountChange | undefined;
+    /** เอกสารที่แนบตอนแก้ไขรายการเปลี่ยนบัญชีที่บันทึกแล้ว — ส่งผูกกับเคสใน caseDocument */
+    savedTransferAccountDocuments: CaseDocumentV2Request[];
     /** จำนวนเงินโอนรวม — payoutAmount ของผู้รับเงินตามบัญชีที่เปลี่ยน */
     totalPayoutAmount: number;
     /** เอกสารที่แนบไฟล์แล้วในตาราง "สแกนเอกสาร" */
@@ -48,7 +52,9 @@ type UseDeathDisabilityActionHookParams = {
 const useDeathDisabilityActionHook = ({
     formik,
     detail,
+    productTypeId,
     transferAccountChange,
+    savedTransferAccountDocuments,
     totalPayoutAmount,
     scanDocuments,
     rejectDocuments,
@@ -62,6 +68,18 @@ const useDeathDisabilityActionHook = ({
                 ? onSuccess(response)
                 : swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว"),
         (error) => swalError("ไม่สำเร็จ", error)
+    );
+
+    // เอกสารที่ผูกกับเคสแล้ว — argument ชุดเดียวกับใน DocumentScanTable (query key ตรงกัน ไม่ยิงซ้ำ)
+    const { data: caseDocumentData } = useGetDocumentByCaseId(
+        productTypeId ? detail?.caseId ?? "" : "",
+        productTypeId,
+        detail?.claimSourceId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        100
     );
 
     /**
@@ -137,6 +155,7 @@ const useDeathDisabilityActionHook = ({
     /**
      * เอกสารที่แนบไฟล์แล้วในหน้านี้ — สแกนเอกสาร + เอกสารประกอบการปฏิเสธ (เฉพาะผลปฏิเสธ)
      * + เอกสารประกอบการเปลี่ยนบัญชี (มีเฉพาะเมื่อกดบันทึก dialog แล้ว)
+     * เอกสารที่ผูกกับ caseId + claimDocumentTypeId เดียวกันอยู่แล้ว (GetDocumentByCaseId) ไม่ส่งซ้ำ
      * ไม่อ่าน documentScanList ของ redux claimPH เพราะเป็น list กลางที่มีเอกสารของหน้า/เคสอื่นปนอยู่
      */
     const mapCaseDocuments = (): UpsertDeathAndDisabilityCaseDocumentRequest[] => {
@@ -144,14 +163,22 @@ const useDeathDisabilityActionHook = ({
             ...scanDocuments,
             ...(formik.values.considerResult === DECISION_ID.REJECTED ? rejectDocuments : []),
             ...(transferAccountChange?.attachedDocuments ?? []),
+            ...savedTransferAccountDocuments,
         ];
+        const savedCaseDocuments = caseDocumentData?.data ?? [];
+        const isSavedToCase = (doc: CaseDocumentV2Request) =>
+            savedCaseDocuments.some(
+                (saved) => saved.documentId === doc.documentId && saved.claimDocumentTypeId === doc.claimDocumentTypeId
+            );
         return docs
             .filter((doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index)
+            .filter((doc) => !isSavedToCase(doc))
             .map(
                 (doc): UpsertDeathAndDisabilityCaseDocumentRequest => ({
                     documentId: doc.documentId,
                     documentNo: doc.documentNo,
                     documentSubTypeId: doc.documentSubTypeId ?? 0,
+                    claimDocumentTypeId: doc.claimDocumentTypeId,
                     caseDocumentDetail: [],
                 })
             );
@@ -162,8 +189,7 @@ const useDeathDisabilityActionHook = ({
         transferAccountChange
             ? [
                   {
-                      // TODO(death-disability-api): policyBeneficiaryId / beneficiaryTypeId / bankAccountRelationTypeId
-                      // หน้านี้ไม่มีข้อมูล — รอ BE ยืนยันค่าที่ต้องส่ง
+                      // TODO(death-disability-api): bankAccountRelationTypeId หน้านี้ไม่มีข้อมูล — รอ BE ยืนยันค่าที่ต้องส่ง
                       titleId: transferAccountChange.payeeTitleId?.toString(),
                       firstName: transferAccountChange.payeeFirstName || undefined,
                       lastName: transferAccountChange.payeeLastName || undefined,
@@ -171,6 +197,8 @@ const useDeathDisabilityActionHook = ({
                       bankAccountNo: transferAccountChange.accountNo,
                       bankAccountName: transferAccountChange.accountName,
                       payoutAmount: totalPayoutAmount,
+                      // เหตุผลการเปลี่ยนแปลงที่กรอกใน dialog
+                      changeReasonRemark: transferAccountChange.reason,
                       beneficiaryTypeId: 3,
                       policyBeneficiaryId: 0,
                   },

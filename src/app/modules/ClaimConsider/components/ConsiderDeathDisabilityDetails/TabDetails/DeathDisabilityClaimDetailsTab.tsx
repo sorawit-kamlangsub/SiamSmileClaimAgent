@@ -50,7 +50,8 @@ const DeathDisabilityClaimDetailsTab = ({
         detail,
         customerDetail
     );
-    const { beneficiaries, beneficiaryLoading, totalPayoutAmount } = useDeathDisabilityBeneficiaryHook(detail);
+    const { beneficiaries, beneficiaryLoading, totalPayoutAmount, savedTransferAccountChange } =
+        useDeathDisabilityBeneficiaryHook(detail);
     const {
         formik,
         revisionReasonOptions,
@@ -63,13 +64,17 @@ const DeathDisabilityClaimDetailsTab = ({
     // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
     const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
     // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
+    // เอกสารที่แนบตอนแก้ไขรายการเปลี่ยนบัญชีที่บันทึกแล้ว (beneficiaryTypeId = 3) — ส่งผูกกับเคสตอนบันทึกผลพิจารณา
+    const [savedTransferAccountDocuments, setSavedTransferAccountDocuments] = useState<CaseDocumentV2Request[]>([]);
     const [scanDocuments, setScanDocuments] = useState<CaseDocumentV2Request[]>([]);
     const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
     const navigate = useNavigate();
     const { handleSubmitDecision, isSubmitting } = useDeathDisabilityActionHook({
         formik,
         detail,
+        productTypeId: customerDetail?.productTypeId,
         transferAccountChange,
+        savedTransferAccountDocuments,
         totalPayoutAmount,
         scanDocuments,
         rejectDocuments,
@@ -107,6 +112,8 @@ const DeathDisabilityClaimDetailsTab = ({
     );
     const isPayoutComplete = Math.round(totalPayoutAmount * 100) === Math.round(expenseTotalAmount * 100);
     // รอข้อมูลของทุก section ที่ดึงจาก API ในแท็บนี้
+    // ที่เพิ่งบันทึกใน dialog มาก่อน ไม่งั้นแสดงที่บันทึกไว้แล้วของเคส (beneficiaryTypeId = 3)
+    const displayedTransferAccountChange = transferAccountChange ?? savedTransferAccountChange;
     const isTabLoading = detailLoading || expenseLoading || beneficiaryLoading;
     const claimNo = detail?.claimNo ?? "-";
     const customerName = customerDetail?.customerName ?? "-";
@@ -138,14 +145,25 @@ const DeathDisabilityClaimDetailsTab = ({
                             productTypeId={customerDetail?.productTypeId}
                             aplicationCode={customerDetail?.policyCode}
                             onTransferAccountChanged={setTransferAccountChange}
+                            hasTransferAccountChange={!!displayedTransferAccountChange}
                         />
                     </Grid>
-                    {transferAccountChange && (
+                    {displayedTransferAccountChange && (
                         <Grid item xs={12}>
                             <TransferAccountChangeSection
-                                change={transferAccountChange}
+                                change={displayedTransferAccountChange}
                                 productTypeId={customerDetail?.productTypeId}
                                 aplicationCode={customerDetail?.policyCode}
+                                claimId={detail?.claimId}
+                                caseId={detail?.caseId}
+                                claimSourceId={detail?.claimSourceId}
+                                claimNo={claimNo}
+                                customerName={customerName}
+                                amount={totalPayoutAmount}
+                                onUnsavedChange={setTransferAccountChange}
+                                onSavedChangeDocuments={(docs) =>
+                                    setSavedTransferAccountDocuments((prev) => [...prev, ...docs])
+                                }
                             />
                         </Grid>
                     )}
@@ -158,6 +176,7 @@ const DeathDisabilityClaimDetailsTab = ({
                             caseId={detail?.caseId}
                             claimSourceId={detail?.claimSourceId}
                             onAttachedDocumentsChange={setScanDocuments}
+                            filterCaseDocumentsByType
                         />
                     </Grid>
                     <Grid item xs={12}>
