@@ -15,7 +15,7 @@ import {
     CaseAssessmentSaveClaimEditDraftRequest,
     CaseAdjudicationSaveClaimEditDraftRequest,
     CaseDocumentSaveClaimEditDraftRequest,
-    CaseDocumentDetailSaveClaimEditDraftRequest,
+    OCRSaveClaimEditDraftRequest,
     TimeSpan,
     CaseItemAdjudicationSaveClaimEditDraftRequest,
     CaseItemSaveClaimEditDraftRequest,
@@ -25,7 +25,7 @@ import {
     UpsertClaimDecisionCaseAssessmentRequest,
     UpsertClaimDecisionCaseAdjudicationRequest,
     UpsertClaimDecisionCaseDocumentRequest,
-    UpsertClaimDecisionCaseDocumentDetailRequest,
+    UpsertClaimDecisionOCRRequest,
     UpsertClaimDecisionCaseRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
     CalculateCaseClaimDtoResponse,
@@ -319,7 +319,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: doc.documentId,
                 documentNo: doc.documentNo,
                 documentSubTypeId: doc.documentSubTypeId,
-                caseDocumentDetail: mapOcrReceiptDetailForDraft(doc.caseDocumentDetail),
+                ocr: mapOcrReceiptDetailForDraft(doc.caseDocumentDetail),
             })
         );
     };
@@ -332,19 +332,17 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId,
                 claimDocumentTypeId: d.claimDocumentTypeId,
-                caseDocumentDetail: [],
+                ocr: [],
             })
         );
     };
 
-    const mapOcrReceiptDetailForDraft = (
-        details: OcrReceiptRequest[] | undefined
-    ): CaseDocumentDetailSaveClaimEditDraftRequest[] => {
+    const mapOcrReceiptDetailForDraft = (details: OcrReceiptRequest[] | undefined): OCRSaveClaimEditDraftRequest[] => {
         if (!details?.length) return [];
 
         return details.map(
-            (doc): CaseDocumentDetailSaveClaimEditDraftRequest => ({
-                caseDocumentDetailId: doc.caseDocumentDetailId,
+            (doc): OCRSaveClaimEditDraftRequest => ({
+                ocrId: doc.caseDocumentDetailId,
                 firstName: doc.firstName,
                 lastName: doc.lastName,
                 fullName: doc.fullName,
@@ -377,7 +375,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
-            chiefComplaintCustom: values.detail,
+            illnessOrInjuryDetail: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -533,7 +531,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: doc.documentId,
                 documentNo: doc.documentNo,
                 documentSubTypeId: doc.documentSubTypeId ?? 0,
-                caseDocumentDetail: mapOcrReceiptDetailForDecision(doc.caseDocumentDetail),
+                ocr: mapOcrReceiptDetailForDecision(doc.caseDocumentDetail),
             })
         );
     };
@@ -546,18 +544,18 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId ?? 0,
                 claimDocumentTypeId: d.claimDocumentTypeId,
-                caseDocumentDetail: [],
+                ocr: [],
             })
         );
     };
 
     const mapOcrReceiptDetailForDecision = (
         details: OcrReceiptRequest[] | undefined
-    ): UpsertClaimDecisionCaseDocumentDetailRequest[] => {
+    ): UpsertClaimDecisionOCRRequest[] => {
         if (!details?.length) return [];
 
         return details.map(
-            (doc): UpsertClaimDecisionCaseDocumentDetailRequest => ({
+            (doc): UpsertClaimDecisionOCRRequest => ({
                 firstName: doc.firstName,
                 lastName: doc.lastName,
                 fullName: doc.fullName,
@@ -584,7 +582,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                     documentSubTypeId: doc.documentSubTypeId,
                     documentReviewStatusId: doc.checkResult || undefined,
                     documentReviewRemark: doc.remark || undefined,
-                    caseDocumentDetail: [],
+                    ocr: [],
                 })
             );
 
@@ -608,7 +606,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
-            chiefComplaintCustom: values.detail,
+            illnessOrInjuryDetail: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,

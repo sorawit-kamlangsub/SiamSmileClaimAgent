@@ -140,7 +140,7 @@ const useDeathDisabilityActionHook = ({
                     documentNo: doc.documentNo,
                     documentSubTypeId: doc.documentSubTypeId ?? 0,
                     claimDocumentTypeId: doc.claimDocumentTypeId,
-                    caseDocumentDetail: [],
+                    ocr: [],
                 })
             );
     };

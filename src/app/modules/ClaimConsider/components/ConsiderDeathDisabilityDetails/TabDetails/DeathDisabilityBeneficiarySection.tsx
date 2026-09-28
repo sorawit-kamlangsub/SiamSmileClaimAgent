@@ -90,7 +90,7 @@ const DeathDisabilityBeneficiarySection = ({
                     documentNo: doc.documentNo,
                     claimDocumentTypeId: doc.claimDocumentTypeId,
                     documentSubTypeId: doc.documentSubTypeId ?? 0,
-                    caseDocumentDetail: [],
+                    ocr: [],
                 })),
             })
             .catch(() => undefined);

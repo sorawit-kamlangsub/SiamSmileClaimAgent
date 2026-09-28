@@ -460,7 +460,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     values.symptomType === SymptomType.ChiefComplaint || isDeath || isDisability
                         ? values.chiefComplaintId
                         : undefined,
-                chiefComplaintCustom:
+                illnessOrInjuryDetail:
                     values.symptomType === SymptomType.Other || isDeath || isDisability ? values.remark : undefined,
                 productId,
                 icD10_1stId: isDeath || isDisability ? values.diagnoses[0]?.icd10Id : undefined,
@@ -737,7 +737,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 ],
                 hospitalId: oldClaim.hospitalId ?? formik.values.hospitalId,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                remark: oldClaim.illnessOrInjuryDetail ?? formik.values.remark,
             },
             false
         );
@@ -757,7 +757,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                remark: oldClaim.illnessOrInjuryDetail ?? formik.values.remark,
             },
             false
         );
