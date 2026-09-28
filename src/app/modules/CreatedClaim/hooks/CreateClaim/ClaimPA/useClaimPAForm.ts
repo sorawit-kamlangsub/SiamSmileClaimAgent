@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailHalf } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
+import { mapOrganLossToCaseItems } from "../organLossCaseItems";
 import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import {
     addClaimItem,
@@ -23,6 +24,7 @@ import {
     LocalCaseDisability,
     LocalCaseDocument,
     LocalCaseEntry,
+    LocalCaseItem,
     LocalCaseRegistration,
     LocalCaseServicePerson,
     LocalClaimEntry,
@@ -429,7 +431,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                   )
                 : buildUniformBenefitAmountMap(filteredBenefits, values.transferAmount ?? 0);
 
-            const createCaseItem = mapBenefitToCaseItems(filteredBenefits, amountByStandardMedicalExpenseId);
+            // ทุพพลภาพ: 1 caseItem ต่ออวัยวะ / ต่อนิ้ว พร้อม bodyPartId (เหมือน PH) — ความคุ้มครองอื่นสร้างตามสิทธิประโยชน์
+            const createCaseItem: LocalCaseItem[] = isDisability
+                ? mapOrganLossToCaseItems(organLossItems, filteredBenefits[0])
+                : mapBenefitToCaseItems(filteredBenefits, amountByStandardMedicalExpenseId);
 
             const caseEntry: LocalCaseEntry = {
                 tempCaseId,
