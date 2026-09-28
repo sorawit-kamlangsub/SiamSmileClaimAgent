@@ -32,7 +32,7 @@ import {
     CalculateCaseClaim,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
-import { customFormatter, swalError, swalSuccess } from "../../../_common";
+import { customFormatter, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { useAppSelector } from "../../../../../redux";
@@ -651,6 +651,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
     /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง DECISION_ID.APPROVED (9) (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
+        // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ (เคลมลูกค้า / เคลมโรงพยาบาล)
+        const decisionId = overrideDecisionId ?? formik.values.considerResult;
+        if (decisionId === DECISION_ID.REJECTED && !rejectDocuments?.length) {
+            swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
+            return;
+        }
         const payload = mapClaimDecisionPayload(overrideDecisionId);
         await saveClaimDecision.mutateAsync(payload);
     };

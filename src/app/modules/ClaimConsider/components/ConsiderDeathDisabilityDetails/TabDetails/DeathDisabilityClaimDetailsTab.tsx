@@ -3,7 +3,7 @@ import { Grid } from "@mui/material";
 import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
 import { DECISION_ID } from "../../../store/claimConsider.constants";
-import { swalError, swalSuccess } from "../../../../_common";
+import { swalError, swalSuccess, swalWarning } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
@@ -92,6 +92,11 @@ const DeathDisabilityClaimDetailsTab = ({
         await formik.submitForm();
         const errors = await formik.validateForm();
         if (Object.keys(errors).length > 0) return;
+        // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ
+        if (formik.values.considerResult === DECISION_ID.REJECTED && rejectDocuments.length === 0) {
+            swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
+            return;
+        }
         // อนุมัติ = จ่ายเงินจริง — ยอดโอนผู้รับผลประโยชน์ต้องเท่ายอดเงินรวมทั้งหมดของค่าใช้จ่าย (จ่ายต่ำกว่ายอดเคลมไม่ได้)
         if (formik.values.considerResult === DECISION_ID.APPROVED && !isPayoutComplete) {
             swalError(
