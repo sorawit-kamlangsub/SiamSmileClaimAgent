@@ -778,7 +778,7 @@ export const useUpdateBeneficiary = (
             if (!response.isSuccess)
                 onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
             else {
-                queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey], { refetchType: "all" });
+                queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey]);
                 onSuccessCallback?.(response);
             }
         },
@@ -805,8 +805,8 @@ export const useInsertBeneficiaryForRecordOnSiteCashPayment = (
                 if (!response.isSuccess)
                     onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
                 else {
-                    queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey], { refetchType: "all" });
-                    queryClient.invalidateQueries([getDocumentByCaseIdQueryKey], { refetchType: "all" });
+                    queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey]);
+                    queryClient.invalidateQueries([getDocumentByCaseIdQueryKey]);
                     onSuccessCallback?.(response);
                 }
             },
