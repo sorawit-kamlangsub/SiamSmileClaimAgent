@@ -10,7 +10,6 @@ import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeath
 import useDeathDisabilityExpenseHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
 import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
 import useDeathDisabilityActionHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityActionHook";
-import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
 import {
     CaseDocumentV2Request,
     GetCustomerDetailByIdDtoResponse,
@@ -61,11 +60,9 @@ const DeathDisabilityClaimDetailsTab = ({
         cancelReasonOptions,
         cancelReasonLoading,
     } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
-    // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
-    const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
-    // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
     // เอกสารที่แนบตอนแก้ไขรายการเปลี่ยนบัญชีที่บันทึกแล้ว (beneficiaryTypeId = 3) — ส่งผูกกับเคสตอนบันทึกผลพิจารณา
     const [savedTransferAccountDocuments, setSavedTransferAccountDocuments] = useState<CaseDocumentV2Request[]>([]);
+    // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
     const [scanDocuments, setScanDocuments] = useState<CaseDocumentV2Request[]>([]);
     const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
     const navigate = useNavigate();
@@ -73,9 +70,7 @@ const DeathDisabilityClaimDetailsTab = ({
         formik,
         detail,
         productTypeId: customerDetail?.productTypeId,
-        transferAccountChange,
         savedTransferAccountDocuments,
-        totalPayoutAmount,
         scanDocuments,
         rejectDocuments,
         disabilityBenefits,
@@ -117,8 +112,6 @@ const DeathDisabilityClaimDetailsTab = ({
     );
     const isPayoutComplete = Math.round(totalPayoutAmount * 100) === Math.round(expenseTotalAmount * 100);
     // รอข้อมูลของทุก section ที่ดึงจาก API ในแท็บนี้
-    // ที่เพิ่งบันทึกใน dialog มาก่อน ไม่งั้นแสดงที่บันทึกไว้แล้วของเคส (beneficiaryTypeId = 3)
-    const displayedTransferAccountChange = transferAccountChange ?? savedTransferAccountChange;
     const isTabLoading = detailLoading || expenseLoading || beneficiaryLoading;
     const claimNo = detail?.claimNo ?? "-";
     const customerName = customerDetail?.customerName ?? "-";
@@ -149,14 +142,16 @@ const DeathDisabilityClaimDetailsTab = ({
                             customerName={customerName}
                             productTypeId={customerDetail?.productTypeId}
                             aplicationCode={customerDetail?.policyCode}
-                            onTransferAccountChanged={setTransferAccountChange}
-                            hasTransferAccountChange={!!displayedTransferAccountChange}
+                            claimId={detail?.claimId}
+                            caseId={detail?.caseId}
+                            hasTransferAccountChange={!!savedTransferAccountChange}
                         />
                     </Grid>
-                    {displayedTransferAccountChange && (
+                    {/* รายการเปลี่ยนบัญชีที่บันทึกแล้ว (beneficiaryTypeId = 3) */}
+                    {savedTransferAccountChange && (
                         <Grid item xs={12}>
                             <TransferAccountChangeSection
-                                change={displayedTransferAccountChange}
+                                change={savedTransferAccountChange}
                                 productTypeId={customerDetail?.productTypeId}
                                 aplicationCode={customerDetail?.policyCode}
                                 claimId={detail?.claimId}
@@ -165,10 +160,10 @@ const DeathDisabilityClaimDetailsTab = ({
                                 claimNo={claimNo}
                                 customerName={customerName}
                                 amount={totalPayoutAmount}
-                                onUnsavedChange={setTransferAccountChange}
                                 onSavedChangeDocuments={(docs) =>
                                     setSavedTransferAccountDocuments((prev) => [...prev, ...docs])
                                 }
+                                onSavedChangeDeleted={() => setSavedTransferAccountDocuments([])}
                             />
                         </Grid>
                     )}

@@ -12,7 +12,7 @@ const toTransferAccountChange = (item: GetDeathAndDisabilityBeneficiaryDtoRespon
     const payeeName = [item.titleName, item.firstName, item.lastName].filter(Boolean).join(" ");
     return {
         beneficiaryId: item.beneficiaryId,
-        reason: item.changeReasonRemark ?? "-",
+        reason: item.changeReasonRemark ?? "",
         payeeName: payeeName || "-",
         payeeTitleId: Number(item.titleId) || undefined,
         payeeFirstName: item.firstName ?? "",

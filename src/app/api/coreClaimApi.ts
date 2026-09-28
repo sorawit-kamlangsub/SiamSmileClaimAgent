@@ -18,6 +18,7 @@ import {
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
     UpdateBeneficiaryDtoRequest,
+    InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest,
     UpsertClaimDecisionDtoRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
     UpsertDeathAndDisabilityClaimDecisionDtoRequest,
@@ -785,6 +786,35 @@ export const useUpdateBeneficiary = (
             onErrorCallback?.(error.message);
         },
     });
+};
+
+/**
+ * บันทึกผู้รับเงินตามบัญชีที่เปลี่ยน (เงินสดมอบหน้างาน) พร้อมเอกสารประกอบ (POST /beneficiary/site-cash/insert)
+ * — สำเร็จแล้วโหลดรายการผู้รับผลประโยชน์และเอกสารของเคสใหม่
+ */
+export const useInsertBeneficiaryForRecordOnSiteCashPayment = (
+    onSuccessCallback?: (response: BaseResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest) =>
+            coreClaimClient.insertBeneficiaryForRecordOnSiteCashPayment(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else {
+                    queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey], { refetchType: "all" });
+                    queryClient.invalidateQueries([getDocumentByCaseIdQueryKey], { refetchType: "all" });
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
 };
 
 export const useGetCaseDisabilityBenefitByCaseId = (

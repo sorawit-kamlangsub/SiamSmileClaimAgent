@@ -7,9 +7,12 @@ import CustomPaper from "../../../../_common/components/CustomComponent/CustomPa
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
 import { GetDeathAndDisabilityBeneficiaryDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { useInsertBeneficiaryForRecordOnSiteCashPayment } from "../../../../../api/coreClaimApi";
+import { swalError } from "../../../../_common";
 import ChangeTransferAccountDialog from "./ChangeTransferAccountDialog";
 import EditBeneficiaryDialog from "./EditBeneficiaryDialog";
 import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
+import { BENEFICIARY_TYPE_ID } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
 
 const CARD_BORDER = "#D6E6F5";
 
@@ -36,9 +39,10 @@ type DeathDisabilityBeneficiarySectionProps = {
     /** ใช้กับตารางสแกนเอกสารใน dialog เปลี่ยนบัญชี */
     productTypeId: number | undefined;
     aplicationCode: string | undefined;
-    /** บันทึกใน dialog เปลี่ยนบัญชีสำเร็จ — parent (tab) เก็บไว้แสดง section รายละเอียดการเปลี่ยนบัญชี */
-    onTransferAccountChanged: (change: TransferAccountChange) => void;
-    /** มีรายการเปลี่ยนบัญชีแล้ว (beneficiaryTypeId = 3 หรือที่เพิ่งกรอก) — ปิดปุ่มเงินสดมอบหน้างาน ให้แก้/ลบจาก section นั้นแทน */
+    /** ใช้บันทึกรายการเปลี่ยนบัญชี (InsertBeneficiaryForRecordOnSiteCashPayment) */
+    claimId: string | undefined;
+    caseId: string | undefined;
+    /** มีรายการเปลี่ยนบัญชีแล้ว (beneficiaryTypeId = 3) — ปิดปุ่มเงินสดมอบหน้างาน ให้แก้/ลบจาก section นั้นแทน */
     hasTransferAccountChange: boolean;
 };
 
@@ -56,10 +60,43 @@ const DeathDisabilityBeneficiarySection = ({
     customerName,
     productTypeId,
     aplicationCode,
-    onTransferAccountChanged,
+    claimId,
+    caseId,
     hasTransferAccountChange,
 }: DeathDisabilityBeneficiarySectionProps) => {
     const [changeAccountOpen, setChangeAccountOpen] = useState(false);
+    const insertBeneficiary = useInsertBeneficiaryForRecordOnSiteCashPayment(undefined, (error) =>
+        swalError("บันทึกการเปลี่ยนบัญชีไม่สำเร็จ", error)
+    );
+    /** กดบันทึกใน dialog = บันทึกลง API ทันที — สำเร็จแล้วรายการ beneficiaryTypeId = 3 โหลดใหม่และแสดง section รายละเอียด */
+    const handleSaveTransferAccount = async (change: TransferAccountChange) => {
+        const response = await insertBeneficiary
+            .mutateAsync({
+                claimId,
+                caseId,
+                // TODO(death-disability-api): bankAccountRelationTypeId หน้านี้ไม่มีข้อมูล — รอ BE ยืนยันค่าที่ต้องส่ง
+                policyBeneficiaryId: 0,
+                titleId: change.payeeTitleId?.toString(),
+                firstName: change.payeeFirstName || undefined,
+                lastName: change.payeeLastName || undefined,
+                bankId: change.bankId,
+                bankAccountNo: change.accountNo,
+                bankAccountName: change.accountName,
+                payoutAmount: totalAmount,
+                beneficiaryTypeId: BENEFICIARY_TYPE_ID.TRANSFER_ACCOUNT,
+                changeReasonRemark: change.reason,
+                caseDocument: change.attachedDocuments.map((doc) => ({
+                    documentId: doc.documentId,
+                    documentNo: doc.documentNo,
+                    claimDocumentTypeId: doc.claimDocumentTypeId,
+                    documentSubTypeId: doc.documentSubTypeId ?? 0,
+                    caseDocumentDetail: [],
+                })),
+            })
+            .catch(() => undefined);
+        if (!response?.isSuccess) return; // แจ้ง error แล้ว — ไม่ปิด dialog ให้แก้แล้วบันทึกใหม่ได้
+        setChangeAccountOpen(false);
+    };
     // แยก open ออกจาก editingOrder — ตอนปิดยังคงผู้รับฯ เดิมไว้ ไม่ให้ข้อมูลใน dialog กลายเป็นว่างระหว่าง animation ปิด
     const [editOpen, setEditOpen] = useState(false);
     // ลำดับที่ = ตำแหน่งในรายการที่ API ส่งมา (เริ่มที่ 1)
@@ -87,10 +124,8 @@ const DeathDisabilityBeneficiarySection = ({
             <ChangeTransferAccountDialog
                 open={changeAccountOpen}
                 onClose={() => setChangeAccountOpen(false)}
-                onSaved={(change) => {
-                    onTransferAccountChanged(change);
-                    setChangeAccountOpen(false);
-                }}
+                onSaved={handleSaveTransferAccount}
+                isSaving={insertBeneficiary.isLoading}
                 claimNo={claimNo}
                 customerName={customerName}
                 amount={totalAmount}

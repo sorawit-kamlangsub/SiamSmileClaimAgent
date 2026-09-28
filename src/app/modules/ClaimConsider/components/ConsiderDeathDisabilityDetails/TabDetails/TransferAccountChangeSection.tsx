@@ -6,9 +6,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
-import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import DocumentScanTable, { documentTypeId } from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { swalConfirm, swalError } from "../../../../_common";
-import { useUpdateBeneficiary } from "../../../../../api/coreClaimApi";
+import { useRemoveDocumentTypeCache, useUpdateBeneficiary } from "../../../../../api/coreClaimApi";
 import { CaseDocumentV2Request, UpdateBeneficiaryDtoRequest } from "../../../../../api/coreClaimApi.client";
 import {
     TRANSFER_ACCOUNT_DOCUMENT_TYPE,
@@ -29,16 +29,15 @@ type TransferAccountChangeSectionProps = {
     customerName: string;
     /** จำนวนเงินโอนรวม — payoutAmount ของผู้รับเงินตามบัญชีที่เปลี่ยน */
     amount: number;
-    /** แก้ไข/ลบรายการที่ยังไม่บันทึก (ไม่มี beneficiaryId) — เก็บไว้ที่ parent ส่งตอนบันทึกผลพิจารณา, undefined = ลบ */
-    onUnsavedChange: (change: TransferAccountChange | undefined) => void;
     /** เอกสารที่แนบตอนแก้ไขรายการที่บันทึกแล้ว — parent ส่งไปผูกกับเคสตอนบันทึกผลพิจารณา */
     onSavedChangeDocuments: (docs: CaseDocumentV2Request[]) => void;
+    /** ลบรายการที่บันทึกแล้วสำเร็จ — parent ล้างเอกสารที่แนบตอนแก้ไขรายการนี้ ไม่ให้ส่งไปกับผลพิจารณา */
+    onSavedChangeDeleted: () => void;
 };
 
 /**
  * Section "รายละเอียดการเปลี่ยนบัญชีปลายทางการโอนเงิน"
- * - รายการที่บันทึกแล้วของเคส (beneficiaryTypeId = 3): แก้ไข/ลบผ่าน POST /beneficiary/update ทันที
- * - รายการที่เพิ่งกรอกใน dialog (ยังไม่บันทึก): แก้ไข/ลบเฉพาะในหน้า — ส่งไปพร้อมบันทึกผลพิจารณา
+ * แสดงรายการ beneficiaryTypeId = 3 ที่บันทึกแล้วของเคส — แก้ไข/ลบผ่าน POST /beneficiary/update ทันที
  * ตารางเอกสารใช้ DocumentScanTable ประเภทเดียวกับใน dialog — ได้ documentCode/ไฟล์ชุดเดียวกันจาก cache
  */
 const TransferAccountChangeSection = ({
@@ -51,11 +50,15 @@ const TransferAccountChangeSection = ({
     claimNo,
     customerName,
     amount,
-    onUnsavedChange,
     onSavedChangeDocuments,
+    onSavedChangeDeleted,
 }: TransferAccountChangeSectionProps) => {
     const [editOpen, setEditOpen] = useState(false);
     const updateBeneficiary = useUpdateBeneficiary(undefined, (error) => swalError("ไม่สำเร็จ", error));
+    const removeDocumentTypeCache = useRemoveDocumentTypeCache();
+    // ลบแล้วล้าง cache master เอกสารประกอบการเปลี่ยนบัญชี — เพิ่มรายการใหม่จะได้ documentCode/documentId ใหม่
+    // ไม่ดึงไฟล์ของรายการที่ลบไปแล้วกลับมา (เอกสารที่ผูกกับเคสใน DB ต้องให้ BE ยกเลิกการผูกตอนลบ)
+    const clearTransferDocumentCache = () => removeDocumentTypeCache(documentTypeId[TRANSFER_ACCOUNT_DOCUMENT_TYPE]);
 
     const toUpdateRequest = (item: TransferAccountChange): UpdateBeneficiaryDtoRequest => ({
         beneficiaryId: item.beneficiaryId,
@@ -74,11 +77,6 @@ const TransferAccountChangeSection = ({
     });
 
     const handleSaved = async (updated: TransferAccountChange) => {
-        if (!updated.beneficiaryId) {
-            onUnsavedChange(updated);
-            setEditOpen(false);
-            return;
-        }
         const response = await updateBeneficiary.mutateAsync(toUpdateRequest(updated)).catch(() => undefined);
         if (!response?.isSuccess) return; // แจ้ง error แล้ว — ไม่ปิด dialog ให้แก้แล้วบันทึกใหม่ได้
         onSavedChangeDocuments(updated.attachedDocuments);
@@ -93,13 +91,12 @@ const TransferAccountChangeSection = ({
             "ยกเลิก"
         );
         if (!isConfirmed) return;
-        if (!change.beneficiaryId) {
-            onUnsavedChange(undefined);
-            return;
-        }
-        await updateBeneficiary
+        const response = await updateBeneficiary
             .mutateAsync({ ...toUpdateRequest(change), isDeleteBeneficiary: true })
             .catch(() => undefined);
+        if (!response?.isSuccess) return;
+        clearTransferDocumentCache();
+        onSavedChangeDeleted();
     };
 
     return (
@@ -144,12 +141,12 @@ const TransferAccountChangeSection = ({
                 aplicationCode={aplicationCode}
                 initialChange={change}
                 isSaving={updateBeneficiary.isLoading}
-                // รายการที่บันทึกแล้วดึงเอกสารของเคสมาด้วย — รายการที่ยังไม่บันทึกใช้เอกสารจาก cache ของตาราง
-                caseId={change.beneficiaryId ? caseId : undefined}
+                // ดึงเอกสารประกอบการเปลี่ยนบัญชีที่ผูกกับเคสมาแสดงใน dialog
+                caseId={caseId}
                 claimSourceId={claimSourceId}
             />
             <Grid container spacing={2} p={2}>
-                <CustomDisplayText label="เหตุผลการเปลี่ยนบัญชีรับสินไหม" value={change.reason} md={4} />
+                <CustomDisplayText label="เหตุผลการเปลี่ยนบัญชีรับสินไหม" value={change.reason || "-"} md={4} />
                 <CustomDisplayText label="ชื่อผู้รับเงินแทน" value={change.payeeName} md={4} />
                 <CustomDisplayText
                     label="บัญชีรับสินไหมใหม่"
