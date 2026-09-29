@@ -244,7 +244,7 @@ const ClaimPASummaryPage: React.FC = () => {
                     title: "ทำรายการสำเร็จ",
                     width: 440,
                     html: `
-                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:16px;text-align:center;line-height:1.6;">
+                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:16px;text-align:center;line-height:3;">
                         ระบบได้ส่งข้อมูลให้ฝ่ายพิจารณาเคลมเรียบร้อย
                     </div>
                     ${itemsHtml}

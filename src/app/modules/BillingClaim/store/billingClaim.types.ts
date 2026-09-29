@@ -126,53 +126,6 @@ export type BillingExpenseFormItem = BillingExpenseDto & {
 export type BillingDocumentFormItem = BillingDocumentDto & { _rowKey: string };
 
 /**
- * ประเภทรายการเคลมของหน้าวางบิลโรงพยาบาล (Sheet 2-4 ของสเปค) — วันนี้ derive จาก query param `?type=`
- * เพราะ `BillingDetailDto` ยังไม่มีฟิลด์บอกประเภทโดยตรง (PENDING_BE_FIELDS.claimListTypeId)
- */
-export const BILLING_CLAIM_LIST_TYPES = {
-    opdHalf: "opd-half", // Sheet 2 : มี OCR ใบแจ้งค่ารักษา + รายการค่ารักษา(จากโรงพยาบาล)
-    opdFull: "opd-full", // Sheet 3 : ไม่มี OCR, มี Sim B1/B2
-    ipd: "ipd", // Sheet 4 : IPD — AN, ข้อบ่งชี้ Admit, วันนอน, สรุปค่าชดเชย
-} as const;
-
-export type BillingClaimListType = (typeof BILLING_CLAIM_LIST_TYPES)[keyof typeof BILLING_CLAIM_LIST_TYPES];
-
-export type BillingClaimListTypeConfig = {
-    label: string;
-    hasOcrReceipt: boolean;
-    hasHospitalExpenseSummary: boolean;
-    hasSimBSelector: boolean;
-};
-
-export const BILLING_CLAIM_LIST_TYPE_CONFIG: Record<BillingClaimListType, BillingClaimListTypeConfig> = {
-    [BILLING_CLAIM_LIST_TYPES.opdHalf]: {
-        label: "OPD Half",
-        hasOcrReceipt: true,
-        hasHospitalExpenseSummary: true,
-        hasSimBSelector: false,
-    },
-    [BILLING_CLAIM_LIST_TYPES.opdFull]: {
-        label: "OPD Full",
-        hasOcrReceipt: false,
-        hasHospitalExpenseSummary: false,
-        hasSimBSelector: true,
-    },
-    [BILLING_CLAIM_LIST_TYPES.ipd]: {
-        label: "IPD",
-        hasOcrReceipt: false,
-        hasHospitalExpenseSummary: false,
-        hasSimBSelector: true,
-    },
-};
-
-/** แปลงค่าจาก URL (?type=opd-full) เป็นประเภทรายการเคลม — ค่าอื่น/ไม่ระบุ = opd-half (default) */
-export const parseBillingClaimListType = (value: string | null): BillingClaimListType => {
-    if (value === BILLING_CLAIM_LIST_TYPES.opdFull) return BILLING_CLAIM_LIST_TYPES.opdFull;
-    if (value === BILLING_CLAIM_LIST_TYPES.ipd) return BILLING_CLAIM_LIST_TYPES.ipd;
-    return BILLING_CLAIM_LIST_TYPES.opdHalf;
-};
-
-/**
  * Section "ข้อมูลอุบัติเหตุจากการจราจร" — CR: Traffic Accident and Hospital Document Review
  * ยังไม่มีฟิลด์รองรับใน `BillingClaimDto` (ดู PENDING_BE_FIELDS.trafficAccident) จึงเป็น FE-only
  * ทั้งชุด อยู่ท้าย `BillingReviewFormValues` เหมือนฟิลด์ FE-only อื่น ๆ

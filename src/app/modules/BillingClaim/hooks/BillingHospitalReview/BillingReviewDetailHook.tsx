@@ -108,7 +108,11 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const hasSyncedRef = useRef(false);
     useEffect(() => {
         if (!detail?.data || hasSyncedRef.current) return;
-        formik.setValues(toFormValues(detail.data), false);
+        // จำนวนวันนอนอยู่ที่ root ของ BillingDetailDto (ไม่ใช่ใน data.claim) จึง sync แยกจาก toFormValues
+        formik.setValues(
+            { ...toFormValues(detail.data), ipdDays: detail.ipdDayCount ?? 0, icuDays: detail.icuDayCount ?? 0 },
+            false
+        );
         hasSyncedRef.current = true;
         // ปลดล็อก useGetDocumentType (DocumentScanTable "เอกสารประกอบการปฏิเสธ") — gate ด้วย
         // claimPHSlice.isEnabled ซึ่ง default false และไม่มีใครใน flow นี้ set ให้เดิม ทำให้ query โดน

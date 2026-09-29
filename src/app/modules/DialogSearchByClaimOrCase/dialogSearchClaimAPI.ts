@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationSortableDto } from "../_common";
 
-const apiURL = `${APIGW_CLAIM_FUND_API_URL}`;
+const apiURL = `${API_CLAIM_FUND_URL}/api/ClaimFund`;
 const getClaimByClaimOrCase = "getClaimByClaimOrCaseKey";
 
 interface SearchClaimOrCasePayload extends PaginationSortableDto {
@@ -18,7 +18,9 @@ export const useSearchClaimOrCase = (
     return useMutation((payload: SearchClaimOrCasePayload) => searchClaimByClaimOrCase(payload), {
         onSuccess: (response) => {
             if (!response?.isSuccess) {
-                onErrorCallback(response?.message || response?.exceptionMessage || "เกิดข้อผิดพลาด โปรดลองใหม่อีกครั้ง");
+                onErrorCallback(
+                    response?.message || response?.exceptionMessage || "เกิดข้อผิดพลาด โปรดลองใหม่อีกครั้ง"
+                );
             } else {
                 onSuccessCallBack(response);
             }
@@ -34,9 +36,7 @@ export const useSearchClaimOrCase = (
 
 const searchClaimByClaimOrCase = (payload: SearchClaimOrCasePayload) => {
     const url = encodeURLWithParams(`${apiURL}/Setting/SearchClaimOrCase`, payload);
-    return axios
-        .get(url)
-        .then((res) => {
-            return res.data;
-        });
+    return axios.get(url).then((res) => {
+        return res.data;
+    });
 };

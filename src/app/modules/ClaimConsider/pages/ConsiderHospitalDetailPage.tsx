@@ -11,6 +11,7 @@ import { useParams } from "react-router-dom";
 
 import HeaderCardCustomerDetails from "../components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
 import ClaimDetail from "../components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
+import ClaimStatusReasonCard from "../components/ConsiderDetails/HeaderDetailCards/ClaimStatusReasonCard";
 import HospitalClaimDetailsTab from "../components/ConsiderHospitalDetails/HospitalClaimDetailsTab";
 import ClaimTransationTab from "../components/ConsiderDetails/TabDetails/ClaimTransationTab";
 import PolicyBenefitTab from "../components/ConsiderDetails/TabDetails/PolicyBenefitTab";
@@ -48,6 +49,16 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
 
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId, caseId);
     const detail = detailData?.data;
+    // TODO(RC-005): ลบ cast นี้หลังรัน `npm run codegen` แทน coreClaimApi.client.ts — swagger ปัจจุบันเพิ่ม decision*
+    // ใน GetClaimDetailConsiderDtoResponse แล้ว แต่ client ที่ commit อยู่ยังไม่มี (ติด breaking change จุดอื่นของ contract)
+    const decisionDetail = detail as
+        | (NonNullable<typeof detail> & {
+              decisionId?: number;
+              decisionNameTH?: string;
+              decisionReasonName?: string;
+              decisionRemark?: string;
+          })
+        | undefined;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
         detail?.customerDetailId
@@ -121,6 +132,16 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                                 claimType={detail?.claimType}
                                 statusClaim={detail?.claimStatusName}
                                 claimStatusId={detail?.claimStatusId}
+                            />
+                        </Grid>
+
+                        {/* RC-005 5.1 : แสดงเฉพาะสถานะ รอแก้ไข / ปฏิเสธ / ยกเลิก (component คืน null เองในสถานะอื่น) */}
+                        <Grid item xs={12} sx={{ mb: 2, "&:empty": { display: "none" } }}>
+                            <ClaimStatusReasonCard
+                                decisionId={decisionDetail?.decisionId}
+                                decisionNameTH={decisionDetail?.decisionNameTH}
+                                decisionReasonName={decisionDetail?.decisionReasonName}
+                                decisionRemark={decisionDetail?.decisionRemark}
                             />
                         </Grid>
                     </>

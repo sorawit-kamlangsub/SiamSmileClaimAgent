@@ -1,9 +1,9 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
-import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL } from "../../../Const";
 import { encodeURLWithParams } from "../_common";
 
-const apiURL = APIGW_CLAIM_FUND_API_URL;
+const apiURL = `${API_CLAIM_FUND_URL}/api/ClaimFund`;
 const getRefundDataTable = "getRefundDataTableKey";
 const getRefundTransactionDetail = "getRefundTransactionDetailKey";
 

@@ -14,8 +14,8 @@ import {
 import { AppliedFilter } from "../ClaimConsiderCustomerMonitor/SearchFilterHook";
 import { useGetDeathAndDisabilityClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
 
-/** ตาม spec: แสดงปุ่มพิจารณาเคลมเฉพาะ รอพิจารณา(2)/รอแก้ไข(4) — สถานะอื่นแสดงแค่ปุ่มดูรายละเอียด */
-const CONSIDERABLE_CLAIM_TRANSACTION_TYPE_IDS = [2, 4];
+/** แสดงปุ่มพิจารณาเคลมเฉพาะ รอพิจารณา(2)/รอแก้ไข(4)/อยู่ระหว่างดำเนินการ(7) — สถานะอื่นแสดงแค่ปุ่มดูรายละเอียด */
+const CONSIDERABLE_CLAIM_TRANSACTION_TYPE_IDS = [2, 4, 7];
 
 const useDataTableConsiderDeathDisabilityHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();

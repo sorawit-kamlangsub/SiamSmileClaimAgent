@@ -99,7 +99,7 @@ export const mapDraftPayloadToFormValues = ({
     if (c?.hospitalId !== undefined) values.hospitalId = c.hospitalId;
     if (c?.chiefComplaintId !== undefined) values.chiefComplaintId = c.chiefComplaintId;
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
-    if (c?.chiefComplaintCustom !== undefined) values.detail = c.chiefComplaintCustom;
+    if (c?.illnessOrInjuryDetail !== undefined) values.detail = c.illnessOrInjuryDetail;
 
     if (c?.icD10_1stId !== undefined || c?.icD10_2ndId !== undefined || c?.icD10_3rdId !== undefined) {
         values.diagnoses = [

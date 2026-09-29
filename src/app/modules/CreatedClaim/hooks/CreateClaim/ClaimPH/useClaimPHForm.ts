@@ -19,7 +19,8 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/Create
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
-import { amountNumber, FingerKey } from "../organLoss.types";
+import { amountNumber } from "../organLoss.types";
+import { mapOrganLossToCaseItems } from "../organLossCaseItems";
 import { CauseOfIncident, CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 import { useParams } from "react-router-dom";
@@ -190,38 +191,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             let caseItems: CaseItemV2Request[] = [];
 
             if (isDisability) {
-                const benefitItem = customerBenefit?.data?.[0];
-
-                for (const organ of organLossItems) {
-                    let totalAmount = 0;
-                    if (organ.fingers) {
-                        const sides: ("left" | "right")[] = ["left", "right"];
-
-                        for (const side of sides) {
-                            for (const fingerKey of Object.keys(organ.fingers[side]) as FingerKey[]) {
-                                const finger = organ.fingers[side][fingerKey];
-                                if (!finger.selected || !finger.bodyPartId) continue;
-
-                                totalAmount += amountNumber(finger.amount);
-                            }
-                        }
-                    } else if (organ.bodyPartId) {
-                        totalAmount = amountNumber(organ.amount);
-                    }
-                    caseItems.push({
-                        inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
-                        standardMedicalExpenseId: benefitItem?.standardMedicalExpenseId ?? 0,
-                        quantity: 1,
-                        perUnit: benefitItem?.pricePerUnit ?? 0,
-                        originalAmount: totalAmount,
-                        discountAmount: 0,
-                        netCaseAmount: organ.totalAmount,
-                        medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
-                        nonCoveredAmount: amountNumber(organ.uncoveredAmount),
-                        nonCoveredReasonId: organ.uncoveredReason ?? 0,
-                        bodyPartId: organ.bodyPartId,
-                    });
-                }
+                // 1 caseItem ต่ออวัยวะ / ต่อนิ้ว พร้อม bodyPartId ของตัวเอง
+                caseItems = mapOrganLossToCaseItems(organLossItems, customerBenefit?.data?.[0]);
             } else if (isManualIPD) {
                 caseItems = items
                     .filter((item) => item.benefitId != null)
@@ -530,7 +501,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                remark: oldClaim.illnessOrInjuryDetail ?? formik.values.remark,
             },
             false
         );

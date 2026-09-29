@@ -180,3 +180,32 @@ export const getClaimAmountReconciliation = ({
 
     return { status: "ok", message: "ยอดเงินครบถ้วนตรงตามใบเสร็จ" };
 };
+
+/**
+ * ตรวจสอบยอดเงินแบบเคลมโรงพยาบาล (Step 2) — ไม่เทียบกับยอดเงินโอน
+ * RC-006 : สิทธิ์เบิก = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (ระบบคำนวณให้) ดังนั้น
+ * สิทธิ์เบิก + ส่วนลด + ยอดไม่คุ้มครอง = ยอดเบิกรวม (totalClaim) ต้องเท่ากับยอดเงินตามใบเสร็จรวม
+ * ปกติเท่ากันเสมอเพราะ claimAmount ผูกกับ receiptAmount — จะ error เฉพาะแถวที่ยังไม่ถูกคำนวณใหม่ (เช่น แถวจากแบบร่าง
+ * ที่ไม่มียอดเงินตามใบเสร็จ) ใช้ทั้งกรอบแจ้งเตือนใน ExpenseRecords และเกทปุ่ม "ถัดไป" ของ HospitalClaimDetailsTab
+ */
+export const getReceiptReconciliation = ({
+    totalReceipt,
+    totalClaim,
+}: {
+    totalReceipt: number;
+    totalClaim: number;
+}): ClaimAmountReconciliationResult => {
+    const receipt = Math.round(totalReceipt * 100) / 100;
+    const claim = Math.round(totalClaim * 100) / 100;
+
+    if (claim !== receipt) {
+        return {
+            status: "error",
+            message: `สิทธิ์เบิกรวมส่วนลดและยอดไม่คุ้มครอง (${fmtBaht(
+                claim
+            )} บาท) ต้องเท่ากับยอดเงินตามใบเสร็จ (${fmtBaht(receipt)} บาท)`,
+        };
+    }
+
+    return { status: "ok", message: "สิทธิ์เบิกรวมส่วนลดและยอดไม่คุ้มครอง เท่ากับยอดเงินตามใบเสร็จ" };
+};
