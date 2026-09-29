@@ -152,6 +152,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     isContinuous ? "คงเหลือ" : "สูงสุด"
                 } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
+            console.log("🚀 ~ useClaimPHForm ~ errors:", errors)
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {

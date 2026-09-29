@@ -5957,6 +5957,196 @@ export class CoreClaimClient {
         }
         return Promise.resolve<SaveClaimEditDraftDtoResponeServiceResponse>(null as any);
     }
+
+    /**
+     * API สำหรับ Insert Beneficiary (ประเภทเงินสดมอบหน้างาน)
+     * @param body (optional)
+     * @return Success
+     */
+    insertBeneficiaryForRecordOnSiteCashPayment(
+        body?: InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BaseResponseServiceResponse> {
+        let url_ = this.baseUrl + "/beneficiary/site-cash/insert";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processInsertBeneficiaryForRecordOnSiteCashPayment(_response);
+            });
+    }
+
+    protected processInsertBeneficiaryForRecordOnSiteCashPayment(
+        response: AxiosResponse
+    ): Promise<BaseResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BaseResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BaseResponseServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ Update Beneficiary (ผู้รับผลประโยชน์)
+     * @param body (optional)
+     * @return Success
+     */
+    updateBeneficiary(
+        body?: UpdateBeneficiaryDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BaseResponseServiceResponse> {
+        let url_ = this.baseUrl + "/beneficiary/update";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUpdateBeneficiary(_response);
+            });
+    }
+
+    protected processUpdateBeneficiary(response: AxiosResponse): Promise<BaseResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BaseResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BaseResponseServiceResponse>(null as any);
+    }
+
+    /**
+     * API สำหรับ บันทึกผลพิจารณาเคลมเสียชีวิตและทุพพลภาพ
+     * @param body (optional)
+     * @return Success
+     */
+    upsertDeathAndDisabilityClaimDecision(
+        body?: UpsertDeathAndDisabilityClaimDecisionDtoRequest | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse> {
+        let url_ = this.baseUrl + "/claim/death-disability/decision";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processUpsertDeathAndDisabilityClaimDecision(_response);
+            });
+    }
+
+    protected processUpsertDeathAndDisabilityClaimDecision(
+        response: AxiosResponse
+    ): Promise<UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse>(null as any);
+    }
 }
 
 export class HospitalBillingClient {
@@ -9209,6 +9399,26 @@ export interface BankInquiryDetailResponseDtoServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface BaseResponse {
+    isResult?: boolean;
+    result?: string | undefined;
+    msg?: string | undefined;
+}
+
+export interface BaseResponseServiceResponse {
+    data?: BaseResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface BeneficiarySaveClaimEditDraftRequest {
     beneficiaryId?: string;
     policyBeneficiaryId?: number;
@@ -9312,6 +9522,35 @@ export interface BillingDetailDto {
     data?: BillingReviewDataDto;
     totals?: BillingTotalsDto;
     requiredDocumentSubTypeIds?: number[] | undefined;
+    customerCode?: string | undefined;
+    productId?: number | undefined;
+    caseAdjudicationId?: string | undefined;
+    productTypeId?: number | undefined;
+    ipdDayCount?: number | undefined;
+    icuDayCount?: number | undefined;
+    totalDayCount?: number;
+    appStatusId?: number | undefined;
+    appStatusName?: string | undefined;
+    createdByUserName?: string | undefined;
+    createdCaseByBranchName?: string | undefined;
+    medicalSubTypeCode?: string | undefined;
+    claimStatusId?: number | undefined;
+    claimStatusName?: string | undefined;
+    medicalTypeCode?: string | undefined;
+    coverageTypeNameTH?: string | undefined;
+    diagnosis1Id?: number | undefined;
+    diagnosis2Id?: number | undefined;
+    diagnosis3Id?: number | undefined;
+    diagnosis4Id?: number | undefined;
+    diagnosis5Id?: number | undefined;
+    diagnosis6Id?: number | undefined;
+    diagnosis1Name?: string | undefined;
+    diagnosis2Name?: string | undefined;
+    diagnosis3Name?: string | undefined;
+    diagnosis4Name?: string | undefined;
+    diagnosis5Name?: string | undefined;
+    diagnosis6Name?: string | undefined;
+    reservationRemark?: string | undefined;
 }
 
 export interface BillingDetailDtoServiceResponse {
@@ -9681,37 +9920,13 @@ export interface CaseDisabilityV2Request {
     causeOfIncidentId?: number | undefined;
 }
 
-export interface CaseDocumentDetailSaveClaimEditDraftRequest {
-    caseDocumentDetailId?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    fullName?: string | undefined;
-    hospitalName?: string | undefined;
-    receiptAdmissionDate?: dayjs.Dayjs | undefined;
-    receiptNumber?: string | undefined;
-    receiptAmount?: number | undefined;
-    ocrDocumentTypeId?: number | undefined;
-    ocrResult?: string | undefined;
-}
-
-export interface CaseDocumentDetailV2Request {
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    fullName?: string | undefined;
-    hospitalName?: string | undefined;
-    receiptAdmissionDate?: dayjs.Dayjs | undefined;
-    receiptNumber?: string | undefined;
-    receiptAmount?: number | undefined;
-    ocrDocumentTypeId?: number | undefined;
-    ocrResult?: string | undefined;
-}
-
 export interface CaseDocumentSaveClaimEditDraftRequest {
     caseDocumentId?: string;
     documentId?: string;
     documentNo?: string | undefined;
     documentSubTypeId?: number | undefined;
-    caseDocumentDetail?: CaseDocumentDetailSaveClaimEditDraftRequest[] | undefined;
+    claimDocumentTypeId?: number | undefined;
+    ocr?: OCRSaveClaimEditDraftRequest[] | undefined;
 }
 
 export interface CaseDocumentV2Request {
@@ -9719,7 +9934,7 @@ export interface CaseDocumentV2Request {
     documentNo?: string | undefined;
     claimDocumentTypeId?: number | undefined;
     documentSubTypeId?: number;
-    details?: CaseDocumentDetailV2Request[] | undefined;
+    ocr?: OCRV2Request[] | undefined;
 }
 
 export interface CaseItemAdjudicationSaveClaimEditDraftRequest {
@@ -9759,7 +9974,7 @@ export interface CaseItemV2Request {
     netCaseAmount?: number;
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
-    nonCoveredReasonId?: number;
+    nonCoveredReasonId?: number | undefined;
     receiptAmount?: number | undefined;
     bodyPartId?: number | undefined;
 }
@@ -9881,7 +10096,7 @@ export interface CaseSaveClaimEditDraftRequest {
     an?: string | undefined;
     vn?: string | undefined;
     chiefComplaintId?: number | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     productId?: number | undefined;
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
@@ -9933,6 +10148,7 @@ export interface CaseTransferApprovalRejectResponseDtoListServiceResponse {
 }
 
 export interface CaseV2Request {
+    createdCaseByBranchId?: number | undefined;
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
     occurrenceTime?: TimeSpan;
@@ -9950,7 +10166,7 @@ export interface CaseV2Request {
     an?: string | undefined;
     vn?: string | undefined;
     chiefComplaintId?: number | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     productId?: number | undefined;
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
@@ -10095,25 +10311,13 @@ export interface ClaimEditDraftCaseDisabilityPayloadDto {
     disabilityPercent?: number | undefined;
 }
 
-export interface ClaimEditDraftCaseDocumentDetailPayloadDto {
-    caseDocumentDetailId?: string;
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    fullName?: string | undefined;
-    hospitalName?: string | undefined;
-    receiptAdmissionDate?: dayjs.Dayjs | undefined;
-    receiptNumber?: string | undefined;
-    receiptAmount?: number | undefined;
-    ocrDocumentTypeId?: number | undefined;
-    ocrResult?: string | undefined;
-}
-
 export interface ClaimEditDraftCaseDocumentPayloadDto {
     caseDocumentId?: string;
     documentId?: string;
     documentNo?: string | undefined;
     documentSubTypeId?: number | undefined;
-    caseDocumentDetail?: ClaimEditDraftCaseDocumentDetailPayloadDto[] | undefined;
+    claimDocumentTypeId?: number | undefined;
+    ocr?: ClaimEditDraftOCRPayloadDto[] | undefined;
 }
 
 export interface ClaimEditDraftCaseItemAdjudicationPayloadDto {
@@ -10163,7 +10367,7 @@ export interface ClaimEditDraftCasePayloadDto {
     an?: string | undefined;
     vn?: string | undefined;
     chiefComplaintId?: number | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     productId?: number | undefined;
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
@@ -10182,6 +10386,19 @@ export interface ClaimEditDraftCasePayloadDto {
     caseDisability?: ClaimEditDraftCaseDisabilityPayloadDto[] | undefined;
     beneficiary?: ClaimEditDraftBeneficiaryPayloadDto[] | undefined;
     caseDocument?: ClaimEditDraftCaseDocumentPayloadDto[] | undefined;
+}
+
+export interface ClaimEditDraftOCRPayloadDto {
+    ocrId?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
 }
 
 export interface ClaimEditDraftPayloadDto {
@@ -10428,6 +10645,8 @@ export interface DocumentReviewOverviewItemDtoResponse {
     documentId?: string | undefined;
     documentNo?: string | undefined;
     documentRemark?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
+    claimDocumentTypeName?: string | undefined;
     documentSubTypeId?: number | undefined;
     documentSubTypeCode?: string | undefined;
     documentSubTypeName?: string | undefined;
@@ -10718,7 +10937,7 @@ export interface GetCaseByClaimIdDtoResponse {
     claimNo?: string | undefined;
     incidentDate?: dayjs.Dayjs | undefined;
     lastestChiefComplaint?: string | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     totalCaseAmount?: number | undefined;
     totalPaidAmount?: number | undefined;
     caseId?: string;
@@ -10754,11 +10973,18 @@ export interface GetCaseByClaimIdDtoResponseListServiceResponse {
 
 export interface GetCaseDisabilityBenefitByCaseIdDtoResponse {
     caseDisabilityId?: string;
+    caseItemId?: string | undefined;
     caseId?: string | undefined;
     bodyPartId?: number | undefined;
     inputToStandardMappingId?: number | undefined;
     descriptionTH?: string | undefined;
+    originalAmount?: number | undefined;
     netCaseAmount?: number | undefined;
+    quantity?: number | undefined;
+    perUnit?: number | undefined;
+    discountAmount?: number | undefined;
+    nonCoveredAmount?: number | undefined;
+    nonCoveredReasonId?: number | undefined;
     standardMedicalExpenseId?: number | undefined;
     maxPrice?: number | undefined;
 }
@@ -10827,7 +11053,7 @@ export interface GetClaimContinueDtoResponse {
     incidentDate?: dayjs.Dayjs | undefined;
     chiefComplaintId?: number | undefined;
     chiefComplaint?: string | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     admissionDate?: dayjs.Dayjs | undefined;
     icD10Detail?: string | undefined;
     totalCaseAmount?: number | undefined;
@@ -10890,6 +11116,11 @@ export interface GetClaimDetailConsiderDtoResponse {
     caseVersion?: number | undefined;
     caseRowVersion?: string | undefined;
     caseId?: string | undefined;
+    decisionId?: number | undefined;
+    decisionNameTH?: string | undefined;
+    decisionReasonId?: number | undefined;
+    decisionReasonName?: string | undefined;
+    decisionRemark?: string | undefined;
     documentReceivedByUserId?: number | undefined;
     documentReceivedByUserName?: string | undefined;
     caseAmount?: number | undefined;
@@ -11442,6 +11673,8 @@ export interface GetDeathAndDisabilityBeneficiaryDtoResponse {
     bankAccountNo?: string | undefined;
     bankAccountName?: string | undefined;
     payoutAmount?: number | undefined;
+    beneficiaryTypeId?: number | undefined;
+    changeReasonRemark?: string | undefined;
 }
 
 export interface GetDeathAndDisabilityBeneficiaryDtoResponseListServiceResponse {
@@ -11866,7 +12099,7 @@ export interface GetIncreaseTransferLimitDetailResponseDto {
     remainingAmount?: number | undefined;
     /** วงเงินคงเหลือครั้งใหม่ */
     newRemainingLimit?: number | undefined;
-    /** ยอดเงินที่ขออนุมัติโอน */
+    /** ยอดวงเงินที่ขอเพิ่ม (CaseAmount - RemainingAmount) */
     requestedTransferAmount?: number | undefined;
     /** วงเงินปัจจุบัน */
     currentLimit?: number | undefined;
@@ -12040,7 +12273,7 @@ export interface GetPreviousClaimDtoResponse {
     totalNetPaidAmount?: number;
     remainingCoverageLimit?: number;
     remainingAmountAfterPreviousClaim?: number | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     chiefComplaintId?: number | undefined;
     hospitalId?: number | undefined;
 }
@@ -12227,6 +12460,7 @@ export interface IncreaseTransferLimitChangeStatusRequestDto {
     /** สาะนะรายการ */
     transferApprovalStatusId: number;
     rejectReasonId?: number;
+    approvalRemark?: string | undefined;
 }
 
 export interface IncreaseTransferLimitChangeStatusResponseDto {
@@ -12326,6 +12560,49 @@ export interface InputToStandardSubCategoryList {
     inputToStandardMappingList?: InputToStandardMappingDtoResponse[] | undefined;
 }
 
+export interface InsertBeneficiaryForRecordOnSiteCashPaymentCaseDocumentRequest {
+    caseDocumentId?: string;
+    documentId?: string;
+    documentNo?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
+    documentSubTypeId?: number;
+    documentReviewStatusId?: number | undefined;
+    documentReviewRemark?: string | undefined;
+    ocr?: InsertBeneficiaryForRecordOnSiteCashPaymentOCRRequest[] | undefined;
+}
+
+export interface InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest {
+    claimId?: string;
+    caseId?: string;
+    policyBeneficiaryId?: number;
+    titleId?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    idCard?: string | undefined;
+    phoneNo?: string | undefined;
+    relationId?: number | undefined;
+    bankAccountRelationTypeId?: number | undefined;
+    bankId?: number;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
+    payoutAmount?: number;
+    beneficiaryTypeId?: number;
+    changeReasonRemark?: string | undefined;
+    caseDocument?: InsertBeneficiaryForRecordOnSiteCashPaymentCaseDocumentRequest[] | undefined;
+}
+
+export interface InsertBeneficiaryForRecordOnSiteCashPaymentOCRRequest {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
+}
+
 export interface MedicalExpenseList {
     benefitId?: number | undefined;
     benefitName?: string | undefined;
@@ -12336,6 +12613,31 @@ export interface MedicalExpenseList {
     unPay?: number;
     receipt?: number;
     discount?: number;
+}
+
+export interface OCRSaveClaimEditDraftRequest {
+    ocrId?: string;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
+}
+
+export interface OCRV2Request {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
 }
 
 export interface PayTransferSettingHistoryResponseDto {
@@ -12871,6 +13173,28 @@ export interface UpdateAdditionalTransferResponseDtoServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface UpdateBeneficiaryDtoRequest {
+    beneficiaryId?: string;
+    claimId?: string;
+    caseId?: string;
+    relationId?: number | undefined;
+    relationTypeName?: string | undefined;
+    idCard?: string | undefined;
+    titleId?: string | undefined;
+    titleName?: string | undefined;
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    phoneNo?: string | undefined;
+    bankId?: number | undefined;
+    bankName?: string | undefined;
+    bankAccountNo?: string | undefined;
+    bankAccountName?: string | undefined;
+    payoutAmount?: number | undefined;
+    changeReasonRemark?: string | undefined;
+    beneficiaryTypeId?: number;
+    isDeleteBeneficiary?: boolean;
+}
+
 export interface UpdatePayTransferSettingRequestDto {
     paytransferSettingId: string;
 }
@@ -12958,26 +13282,15 @@ export interface UpsertClaimDecisionCaseDisabilityRequest {
     disabilityPercent?: number | undefined;
 }
 
-export interface UpsertClaimDecisionCaseDocumentDetailRequest {
-    firstName?: string | undefined;
-    lastName?: string | undefined;
-    fullName?: string | undefined;
-    hospitalName?: string | undefined;
-    receiptAdmissionDate?: dayjs.Dayjs | undefined;
-    receiptNumber?: string | undefined;
-    receiptAmount?: number | undefined;
-    ocrDocumentTypeId?: number | undefined;
-    ocrResult?: string | undefined;
-}
-
 export interface UpsertClaimDecisionCaseDocumentRequest {
     caseDocumentId?: string;
     documentId?: string;
     documentNo?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
     documentSubTypeId?: number;
     documentReviewStatusId?: number | undefined;
     documentReviewRemark?: string | undefined;
-    caseDocumentDetail?: UpsertClaimDecisionCaseDocumentDetailRequest[] | undefined;
+    ocr?: UpsertClaimDecisionOCRRequest[] | undefined;
 }
 
 export interface UpsertClaimDecisionCaseItemAdjudicationRequest {
@@ -12999,7 +13312,7 @@ export interface UpsertClaimDecisionCaseItemRequest {
     netCaseAmount?: number;
     medicalTypeId?: number | undefined;
     nonCoveredAmount?: number;
-    nonCoveredReasonId?: number;
+    nonCoveredReasonId?: number | undefined;
     receiptAmount?: number | undefined;
     bodyPartId?: number | undefined;
 }
@@ -13024,7 +13337,7 @@ export interface UpsertClaimDecisionCaseRequest {
     an?: string | undefined;
     vn?: string | undefined;
     chiefComplaintId?: number | undefined;
-    chiefComplaintCustom?: string | undefined;
+    illnessOrInjuryDetail?: string | undefined;
     productId?: number | undefined;
     icD10_1stId?: number | undefined;
     icD10_2ndId?: number | undefined;
@@ -13079,6 +13392,123 @@ export interface UpsertClaimDecisionDtoResponseServiceResponse {
     currentPage?: number | undefined;
     recordsPerPage?: number | undefined;
     pageIndex?: number | undefined;
+}
+
+export interface UpsertClaimDecisionOCRRequest {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
+}
+
+export interface UpsertDeathAndDisabilityCaseAdjudicationRequest {
+    decisionId?: number;
+    decisionDate?: dayjs.Dayjs;
+    approvedAdmissionDate?: dayjs.Dayjs | undefined;
+    approvedAdmissionTime?: TimeSpan;
+    approvedDischargeDate?: dayjs.Dayjs | undefined;
+    approvedDischargeTime?: TimeSpan;
+    coveredAmount?: number;
+    nonCoveredAmount?: number;
+    compensateAmount?: number;
+    approvedMedicalAmount?: number;
+    approvedCompensateAmount?: number;
+    patientPayAmount?: number;
+    isExgratia?: boolean;
+    exgratiaAmount?: number;
+    deductibleAmount?: number;
+    coPayAmount?: number;
+    coInsuranceAmount?: number;
+    rejectReasonId?: number | undefined;
+    rejectDate?: dayjs.Dayjs | undefined;
+    isLatest?: boolean;
+    approvedIPDDayCount?: number;
+    approvedICUDayCount?: number;
+    decisionReasonId?: number | undefined;
+    decisionRemark?: string | undefined;
+    caseItemAdjudications?: UpsertDeathAndDisabilityCaseItemAdjudicationRequest[] | undefined;
+}
+
+export interface UpsertDeathAndDisabilityCaseAssessmentRequest {
+    isDocumentComplete?: boolean;
+    documentReceivedDate?: dayjs.Dayjs;
+    documentCompleteDate?: dayjs.Dayjs;
+    isFraudSuspect?: boolean;
+    documentReceivedByUserId?: number | undefined;
+    documentReceivedByUserCode?: string | undefined;
+    documentReceivedByUserName?: string | undefined;
+}
+
+export interface UpsertDeathAndDisabilityCaseDocumentRequest {
+    caseDocumentId?: string;
+    documentId?: string;
+    documentNo?: string | undefined;
+    claimDocumentTypeId?: number | undefined;
+    documentSubTypeId?: number;
+    documentReviewStatusId?: number | undefined;
+    documentReviewRemark?: string | undefined;
+    ocr?: UpsertDeathAndDisabilityOCRRequest[] | undefined;
+}
+
+export interface UpsertDeathAndDisabilityCaseItemAdjudicationRequest {
+    caseItemId?: string;
+    standardMedicalExpenseId?: number | undefined;
+    netCaseAmount?: number;
+    eligibleAmount?: number;
+    approvedAmount?: number;
+    nonCoveredAmount?: number;
+    excessAmount?: number;
+}
+
+export interface UpsertDeathAndDisabilityClaimDecisionDtoRequest {
+    claimId?: string;
+    caseId?: string;
+    cancelReasonId?: number | undefined;
+    cancelDate?: dayjs.Dayjs | undefined;
+    caseAssessment?: UpsertDeathAndDisabilityCaseAssessmentRequest;
+    caseAdjudication?: UpsertDeathAndDisabilityCaseAdjudicationRequest;
+    caseDocument?: UpsertDeathAndDisabilityCaseDocumentRequest[] | undefined;
+}
+
+export interface UpsertDeathAndDisabilityClaimDecisionDtoResponse {
+    isResult?: boolean;
+    result?: string | undefined;
+    msg?: string | undefined;
+    claimId?: string | undefined;
+    claimNo?: string | undefined;
+    caseId?: string | undefined;
+    caseNo?: string | undefined;
+}
+
+export interface UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse {
+    data?: UpsertDeathAndDisabilityClaimDecisionDtoResponse;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface UpsertDeathAndDisabilityOCRRequest {
+    firstName?: string | undefined;
+    lastName?: string | undefined;
+    fullName?: string | undefined;
+    hospitalName?: string | undefined;
+    receiptAdmissionDate?: dayjs.Dayjs | undefined;
+    receiptNumber?: string | undefined;
+    receiptAmount?: number | undefined;
+    ocrDocumentTypeId?: number | undefined;
+    ocrResult?: string | undefined;
 }
 
 export interface AccountDetail {

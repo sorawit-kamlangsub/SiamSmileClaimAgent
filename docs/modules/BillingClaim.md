@@ -48,7 +48,7 @@ need to change.
 | File | Purpose |
 |---|---|
 | `BillingHospitalMonitorPage.tsx` | List page: dashboard + filter + table |
-| `BillingHospitalReviewPage.tsx` | Review page shell: header cards (+ ข้อมูลสถานศึกษา card when `variant.isPA`) + 2 active tabs (`ข้อมูลเคลม`, `ประวัติทำรายการ`) + 4 disabled tabs, `BillingClaimDetailsTab` |
+| `BillingHospitalReviewPage.tsx` | Review page shell: header cards (+ ข้อมูลสถานศึกษา card when `variant.isPA`) + 5 active tabs (`ข้อมูลเคลม`, `ประวัติทำรายการ`, and `ความคุ้มครอง`/`ประวัติเคลม`/`ประวัติการชำระเงิน` reused from ClaimConsider via `insured.policyCode`) + disabled `บันทึกข้อความ`, `BillingClaimDetailsTab`. The ความคุ้มครอง table stays empty until the backend sends productTypeId/productId/customerTypeCode (`PENDING_BE_FIELDS.policyBenefitProduct`) |
 | `BillingHospitalDocumentPage.tsx` | 4-line wrapper = `<BillingHospitalReviewPage readOnly />` (the "ดูรายละเอียด" eye-icon route) |
 | `BillingFundDisbursementPage.tsx` | "ตั้งเบิกกองทุน" (`/billing/customers`) list page: header cards + filter + multi-select table. UI shell only — see "Scope" above |
 
@@ -126,8 +126,8 @@ need to change.
   moved) / ปฏิเสธ (อนุมัติ isn't a button in this block anymore) + conditional สาเหตุ dropdown +
   รายละเอียด (required for แจ้งแก้ไข only) + "เอกสารประกอบการปฏิเสธ" (shown when ปฏิเสธ is
   selected) — reuses `DocumentScanTable`
-  (`CreatedClaim/.../DocumentScanTable`) the same way `ConsiderSection` does, `productTypeId={0}`
-  since `BillingDetailDto` still has no real product type (see Known gaps), with
+  (`CreatedClaim/.../DocumentScanTable`) the same way `ConsiderSection` does, `productTypeId`
+  from `BillingDetailDto.productTypeId` (passed as `productId`; falls back to `0` when BE omits it), with
   `alwaysFreshMasterList` so it always GETs fresh instead of caching the master row forever across
   different cases
 
@@ -140,8 +140,8 @@ need to change.
   used instead of a DTO field
 - `HeaderCardSchoolDetails` (ClaimConsider) — renders `-` in every field when given
   `customerDetail={undefined}`, which is exactly the placeholder billing needs today; gated on
-  `variant.isPA` (always `false` until the backend adds a product-type field, so it doesn't render
-  yet — see Known gaps)
+  `variant.isPA` (read from `BillingDetailDto.productTypeId` — school data itself is still pending,
+  so the card shows `-` in every field for now; see Known gaps)
 - `ContinuousClaimDialog` + `useContinuousClaimTable` (`CheckEligible`) — props-only, no shared
   Formik context, safe to reuse directly for "เคลมต่อเนื่อง"
 - `ClaimSummaryStep3` (`ClaimConsider/.../ExpensesTabs/`) — the รายการค่ารักษา (benefit
@@ -187,9 +187,9 @@ need to change.
   (อนุมัติ moved to its own Step 3 button), so `BillingReviewResultSection` stays a separate
   component. It **does** reuse the same master hook (`useGetDecisionReason`) and the same
   `decisionId` numbering as `ConsiderSection` (see Reason fields below).
-- `CLAIM_LIST_TYPE_CONFIG` (ClaimConsider `.../mock/hospitalConsiderMock.tsx`) — the file is named
-  `mock` and mixes real config with mock data; the 3-flag shape was copied into
-  `BILLING_CLAIM_LIST_TYPE_CONFIG` (`billingClaim.types.ts`) instead of importing across modules.
+- `CLAIM_LIST_TYPE_CONFIG` + `resolveClaimListType` (ClaimConsider `.../mock/hospitalConsiderMock.tsx`) —
+  imported directly by `useBillingProductVariant` so billing resolves ประเภทรายการเคลม exactly like
+  the พิจารณาเคลม รพ page (DFUAT-033: `medicalSubTypeCode` first, `medicalTypeId` fallback).
 
 **`BillingFundDisbursement/`** (ตั้งเบิกกองทุน list page — UI shell, no backend, see "Scope")
 - `FundDisbursementHeader.tsx` — 2 independent summary cards (จำนวนรายการรอวางบิล / จำนวนเงินรอวางบิล);
@@ -258,8 +258,7 @@ success, which is what makes the list page reflect a status change made on the r
   Step review-result buttons all read from it, not their own string literals),
   `BILLING_DOCUMENT_REVIEW_STATUS` (document result ids 2 ผ่าน / 3 ไม่ผ่าน / 4 รอเอกสารเพิ่มเติม —
   **unconfirmed with backend**, copied from the same assumption `ClaimConsider`'s mock file makes),
-  `BILLING_CLAIM_LIST_TYPE_CONFIG` (variant A/B/C flags, keyed by the `?type=` query param — see
-  Known gaps), `BILLING_DECISION_ID` (maps a review status to the Decision-master `decisionId`
+  `BILLING_DECISION_ID` (maps a review status to the Decision-master `decisionId`
   used to fetch its สาเหตุ options — see below), `BillingReviewFormValues` (flat form shape; see
   the doc comment in the file for why it isn't nested like the DTO — plus a block of **FE-only**
   fields added for the new spec that `toReviewDataDto` intentionally does not send to the backend
@@ -351,14 +350,9 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 
 | Screen field | Where | Expected DTO/endpoint | Current stand-in |
 |---|---|---|---|
-| Product type (PA/PH) | Header, Step 3 บัญชีรับเงินค่าชดเชย gate | `BillingDetailDto.productTypeId` | `useBillingProductVariant` hardcodes `false` for both `isPA`/`isPH` |
-| Claim list variant (OPD Half/Full/IPD) | Whole review page | `BillingDetailDto.claimListTypeId` | `?type=` query param (`BILLING_CLAIM_LIST_TYPE_CONFIG`) |
-| ข้อมูลสถานศึกษา | Header (PA only) | `BillingDetailDto` school block | `HeaderCardSchoolDetails` never renders (`isPA` false) |
-| เลขบัตรประชาชน / เบอร์โทรศัพท์ / สถานะ App | Header ข้อมูลผู้เอาประกัน | `BillingInsuredDto.idCard`/`phone`/`appStatus` — **confirmed 2026-09-22**: the live `GET /billing/hospital/{id}` response *does* include `insured.idCard`/`insured.phone` now (checked against a real payload), but the backend's own swagger schema for `BillingInsuredDto` still only declares `name`/`policyCode`/`studentCard`/`plan`/`coverageStart`/`coverageEnd` (`additionalProperties: false`) — the DTO/swagger annotation on the backend hasn't caught up to what it actually returns, so `npm run codegen` won't pick these up yet. This is purely a backend-side swagger gap, not a stale local generation — get the backend to add `IdCard`/`Phone` to the `BillingInsuredDto` swagger contract, then `npm run codegen`, then wire `idCardNo`/`phoneNumber` in `BillingHospitalReviewPage.tsx` (2 lines) and drop this row. `appStatus` was never in any handoff revision and wasn't in the checked payload either — still an open question for BE | `PENDING_BE` |
-| สถานะเคลม (CL) | Header | separate claim-status field (today shows the *billing* status — see risk 7.8 in the design conversation) | `billingStatusLabel(detail.statusId)` |
+| ข้อมูลสถานศึกษา | Header (PA only) | `BillingDetailDto` school block | `HeaderCardSchoolDetails` renders with `-` in every field when `isPA` |
 | วันที่เอกสารครบ | Step 1 รายละเอียดเคลม | `BillingClaimDto.documentCompleteDate` | form field defaults to today, no DTO round-trip |
 | ข้อบ่งชี้การ Admit | Step 1 ข้อมูลการเข้ารับการรักษา (IPD) | `BillingClaimDto.admitIndication` | `PENDING_BE` |
-| จำนวนวันนอน IPD/ICU | Step 1/3 (IPD) | `BillingClaimDto.ipdDays`/`icuDays` | form field defaults `0`, no DTO round-trip |
 | ยอดเงินตามใบเสร็จ / สิทธิ์เบิก ต่อรายการ | Step 2 ตาราง | `claimAmount` reused for ยอดเงินตามใบเสร็จ (real); สิทธิ์เบิก needs Benefit calc | `PENDING_BE` for สิทธิ์เบิก only |
 | ประเภทรายการค่าใช้จ่าย (Sim B1/B2) | Step 2 (variant B/C) | `BillingReviewDataDto.simBCategory` | disabled toggle, form default `SimB2` |
 | เป็นส่วนเกินจากบริษัทประกัน + บริษัทประกัน | Step 2 ตาราง (variant B/C) | `BillingExpenseDto.isInsuranceExcess`/`insuranceCompanyName` | `PENDING_BE` |
@@ -368,7 +362,6 @@ below renders `PENDING_BE` (`"-"` or a disabled control with `PENDING_BE_TOOLTIP
 | บัญชีรับเงินค่าชดเชย | Step 3 (PH + IPD) | `BillingReviewDataDto.payoutAccount` | never renders (`allowSeparateCompensation` false until `isPH` is real) |
 | เคลมต่อเนื่อง default จาก SmileConnect | Step 1 | `BillingReviewDataDto.continuousClaim` | checkbox starts unchecked; picking one manually via the dialog still works |
 | Step 3 ตารางสแกนเอกสาร | Step 3 | `BillingDetailDto` doesn't expose this document set | `BillingScanDocumentTable` gets `rows=[]` |
-| เอกสารประกอบการปฏิเสธ (ประเภทเอกสาร master) | Step 1/2 บล็อกปฏิเสธ | `useGetDocumentType` needs a real `productTypeId`, billing sends `0` | real `DocumentScanTable`, but master list for `productTypeId=0` likely returns no rows until BE adds the field — swap the hardcoded `0` for the real value once available |
 | ข้อมูลอุบัติเหตุจากการจราจร (ประเภทยานพาหนะ/ผู้ขับขี่-ผู้โดยสาร/เป็นส่วนเกิน พ.ร.บ.) | Step 1, `BillingTrafficAccidentSection` | `BillingClaimDto.trafficAccident` (`PENDING_BE_FIELDS.trafficAccident`) | form fields default มอเตอร์ไซค์/ผู้ขับขี่/ใช่ (CR-02), no DTO round-trip, control always disabled |
 | ตั้งเบิกกองทุน list (ทั้งหน้า) | `/billing/customers` | billing-fund disbursement filter/submit endpoint — doesn't exist at all | `useFundDisbursementList.ts` returns hardcoded empty data; "ยืนยันตั้งเบิก" permanently disabled |
 

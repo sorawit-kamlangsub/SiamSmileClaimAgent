@@ -621,6 +621,14 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     onBenefitAmountsChange={(value) => formik.setFieldValue("benefitAmounts", value)}
                                     onTransferAmountChange={(value) => formik.setFieldValue("transferAmount", value)}
                                     debounceMs={300}
+                                    transferAmountError={
+                                        (formik.touched.transferAmount ||
+                                            formik.submitCount > 0 ||
+                                            !!formik.values.transferAmount) &&
+                                        typeof formik.errors.transferAmount === "string"
+                                            ? formik.errors.transferAmount
+                                            : undefined
+                                    }
                                 />
                             </Grid>
                             <Grid item xs={12} mt={2}>

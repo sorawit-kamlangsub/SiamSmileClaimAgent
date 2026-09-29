@@ -15,8 +15,8 @@ type StatusColor = { bg: string; text: string };
 
 const statusColorMapById: Record<number, StatusColor> = {
     2: { bg: "#FFF3E0", text: "#EF6C00" },
-    3: { bg: "#E8F5E9", text: "#2E7D32" },
-    4: { bg: "#FDECEA", text: "#C62828" },
+    3: { bg: "#E1F5FE", text: "#0288D1" },
+    4: { bg: "#E8F5E9", text: "#2E7D32" },
 };
 
 export type IncreaseTransferMonitorRow = {
@@ -156,7 +156,7 @@ const useClaimCpgTransferDataTableHook = ({
                         <Link
                             component="button"
                             underline="hover"
-                            sx={{ color: "#1565C0", fontWeight: 600 }}
+                            sx={{ color: "#212121", fontWeight: 400 }}
                             onClick={() => handleViewRow(row)}
                         >
                             {row?.claimNo}

@@ -70,7 +70,7 @@ type ClaimSummaryStep3Props = {
     summary?: Partial<CompensationSummaryData>;
     /** ยอดเงินรวมตามใบเสร็จ — Sum ยอดตามใบเสร็จจากโรงพยาบาล (calculateResult.totalReceipt ดิบจาก API ไม่ผ่าน merge) */
     totalReceipt?: number;
-    /** ค่าใช้จ่ายทั้งหมดสุทธิ — Sum ยอดตามใบเสร็จจากโรงพยาบาล - Discount (calculateResult.totalNetAmount ดิบจาก API ไม่ผ่าน merge) */
+    /** ค่าใช้จ่ายทั้งหมดสุทธิ — calculateResult.medicalNet ดิบจาก API (ไม่ผ่าน merge) */
     totalNetAmount?: number;
     /**
      * ให้ผู้ใช้เลือก "โอนค่าชดเชยรวมกับค่ารักษา" ได้เอง (IPD / Day Case ที่ไม่ใช่ PA)
@@ -420,7 +420,7 @@ const ClaimSummaryStep3 = ({
                             sx={{ m: 0, display: "flex", py: 0.5 }}
                         />
                     </Box>
-                    <Divider />
+                    {/* <Divider /> */}
                     <SummaryLine label="ค่าชดเชยรวม" value={fmt(calc.compensateNet)} />
                     <SummaryLine label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)" value={fmt(calc.compensateInclude)} />
                     <SummaryLine
@@ -441,7 +441,10 @@ const ClaimSummaryStep3 = ({
                     icon={<AccountBalanceWalletOutlinedIcon sx={{ fontSize: 18 }} />}
                 />
                 <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden", mt: 1 }}>
-                    <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
+                    {/* มี "ค่าใช้จ่ายทั้งหมดสุทธิ" แล้วไม่ต้องแสดง "ค่าใช้จ่ายทั้งหมด" ซ้ำ (หน้าวางบิลไม่ส่ง totalNetAmount จึงยังแสดงเหมือนเดิม) */}
+                    {totalNetAmount === undefined && (
+                        <SummaryLine label="ค่าใช้จ่ายทั้งหมด" value={fmt(calc.medicalNet)} />
+                    )}
                     {totalReceipt !== undefined && (
                         <SummaryLine label="ยอดเงินรวมตามใบเสร็จ" value={fmt(totalReceipt)} />
                     )}

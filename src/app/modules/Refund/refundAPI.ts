@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dayjs } from "dayjs";
-import { APIGW_CLAIM_FUND_API_URL } from "../../../Const";
+import { API_CLAIM_FUND_URL } from "../../../Const";
 import { encodeURLWithParams, PaginationDto } from "../_common";
 
 const getRefundMonitor = "getRefundMonitorKey";
@@ -13,7 +13,7 @@ const getRefundStatus = "getRefundStatusKey";
 const getRefundClaimTransaction = "getRefundClaimTransactionKey";
 const getRefundTransferHistory = "getRefundTransferHistoryKey";
 const getRefundDecreaseTransaction = "getRefundDecreaseTransactionKey";
-const apiURL = `${APIGW_CLAIM_FUND_API_URL}`;
+const apiURL = `${API_CLAIM_FUND_URL}/api/ClaimFund`;
 
 export type GetRefundMonitorFilterType = {
     branceId: number | undefined | null;
@@ -189,9 +189,7 @@ const getCaseRefundApproveDetailData = (caseRefundId: string) => {
 
 const getRefundTransferTypes = "getRefundTransferTypesKey";
 export const useGetRefundTransferTypes = (adjustmentTypeId = 3) => {
-    return useQuery([getRefundTransferTypes, adjustmentTypeId], () =>
-        getRefundTransferTypesData(adjustmentTypeId)
-    );
+    return useQuery([getRefundTransferTypes, adjustmentTypeId], () => getRefundTransferTypesData(adjustmentTypeId));
 };
 
 const getRefundTransferTypesData = (adjustmentTypeId: number) => {
