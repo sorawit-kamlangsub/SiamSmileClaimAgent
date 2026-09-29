@@ -3,14 +3,13 @@ import { Grid } from "@mui/material";
 import { FormikProvider } from "formik";
 import { useNavigate } from "react-router-dom";
 import { DECISION_ID } from "../../../store/claimConsider.constants";
-import { swalError, swalSuccess } from "../../../../_common";
+import { swalError, swalSuccess, swalWarning } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
 import useDeathDisabilityBeneficiaryHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
 import useDeathDisabilityExpenseHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityExpenseHook";
 import useDeathDisabilityConsiderHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityConsiderHook";
 import useDeathDisabilityActionHook from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityActionHook";
-import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
 import {
     CaseDocumentV2Request,
     GetCustomerDetailByIdDtoResponse,
@@ -50,7 +49,8 @@ const DeathDisabilityClaimDetailsTab = ({
         detail,
         customerDetail
     );
-    const { beneficiaries, beneficiaryLoading, totalPayoutAmount } = useDeathDisabilityBeneficiaryHook(detail);
+    const { beneficiaries, beneficiaryLoading, totalPayoutAmount, savedTransferAccountChange } =
+        useDeathDisabilityBeneficiaryHook(detail);
     const {
         formik,
         revisionReasonOptions,
@@ -60,8 +60,8 @@ const DeathDisabilityClaimDetailsTab = ({
         cancelReasonOptions,
         cancelReasonLoading,
     } = useDeathDisabilityConsiderHook({ documentCompleteDate: detail?.documentCompleteDate });
-    // ผลการเปลี่ยนบัญชีจาก dialog เงินสดมอบหน้างาน — มีค่าแล้วจึงแสดง section รายละเอียดต่อจากผู้รับผลประโยชน์
-    const [transferAccountChange, setTransferAccountChange] = useState<TransferAccountChange>();
+    // เอกสารที่แนบตอนแก้ไขรายการเปลี่ยนบัญชีที่บันทึกแล้ว (beneficiaryTypeId = 3) — ส่งผูกกับเคสตอนบันทึกผลพิจารณา
+    const [savedTransferAccountDocuments, setSavedTransferAccountDocuments] = useState<CaseDocumentV2Request[]>([]);
     // เอกสารที่แนบไฟล์แล้วของแต่ละตาราง (onAttachedDocumentsChange) — ส่งไปกับผลพิจารณา
     const [scanDocuments, setScanDocuments] = useState<CaseDocumentV2Request[]>([]);
     const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
@@ -69,9 +69,8 @@ const DeathDisabilityClaimDetailsTab = ({
     const { handleSubmitDecision, isSubmitting } = useDeathDisabilityActionHook({
         formik,
         detail,
-        beneficiaries,
-        totalPayoutAmount,
-        transferAccountChange,
+        productTypeId: customerDetail?.productTypeId,
+        savedTransferAccountDocuments,
         scanDocuments,
         rejectDocuments,
         disabilityBenefits,
@@ -88,6 +87,11 @@ const DeathDisabilityClaimDetailsTab = ({
         await formik.submitForm();
         const errors = await formik.validateForm();
         if (Object.keys(errors).length > 0) return;
+        // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ
+        if (formik.values.considerResult === DECISION_ID.REJECTED && rejectDocuments.length === 0) {
+            swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
+            return;
+        }
         // อนุมัติ = จ่ายเงินจริง — ยอดโอนผู้รับผลประโยชน์ต้องเท่ายอดเงินรวมทั้งหมดของค่าใช้จ่าย (จ่ายต่ำกว่ายอดเคลมไม่ได้)
         if (formik.values.considerResult === DECISION_ID.APPROVED && !isPayoutComplete) {
             swalError(
@@ -138,15 +142,28 @@ const DeathDisabilityClaimDetailsTab = ({
                             customerName={customerName}
                             productTypeId={customerDetail?.productTypeId}
                             aplicationCode={customerDetail?.policyCode}
-                            onTransferAccountChanged={setTransferAccountChange}
+                            claimId={detail?.claimId}
+                            caseId={detail?.caseId}
+                            hasTransferAccountChange={!!savedTransferAccountChange}
                         />
                     </Grid>
-                    {transferAccountChange && (
+                    {/* รายการเปลี่ยนบัญชีที่บันทึกแล้ว (beneficiaryTypeId = 3) */}
+                    {savedTransferAccountChange && (
                         <Grid item xs={12}>
                             <TransferAccountChangeSection
-                                change={transferAccountChange}
+                                change={savedTransferAccountChange}
                                 productTypeId={customerDetail?.productTypeId}
                                 aplicationCode={customerDetail?.policyCode}
+                                claimId={detail?.claimId}
+                                caseId={detail?.caseId}
+                                claimSourceId={detail?.claimSourceId}
+                                claimNo={claimNo}
+                                customerName={customerName}
+                                amount={totalPayoutAmount}
+                                onSavedChangeDocuments={(docs) =>
+                                    setSavedTransferAccountDocuments((prev) => [...prev, ...docs])
+                                }
+                                onSavedChangeDeleted={() => setSavedTransferAccountDocuments([])}
                             />
                         </Grid>
                     )}
@@ -159,6 +176,7 @@ const DeathDisabilityClaimDetailsTab = ({
                             caseId={detail?.caseId}
                             claimSourceId={detail?.claimSourceId}
                             onAttachedDocumentsChange={setScanDocuments}
+                            filterCaseDocumentsByType
                         />
                     </Grid>
                     <Grid item xs={12}>

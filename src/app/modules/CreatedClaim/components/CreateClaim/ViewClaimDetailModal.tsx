@@ -212,7 +212,7 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoad
                                             }}
                                         >
                                             <Field label="อาการสำคัญ" value={item?.caseChiefComlaint} />
-                                            <Field label="หมายเหตุ" value={item?.chiefComplaintCustom} />
+                                            <Field label="หมายเหตุ" value={item?.illnessOrInjuryDetail} />
                                         </Box>
 
                                         <Box

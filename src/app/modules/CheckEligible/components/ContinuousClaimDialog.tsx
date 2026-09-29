@@ -163,7 +163,7 @@ const ContinuousClaimDialog: React.FC<Props> = ({ open, applicationId, onClose, 
                 ...cellAlignOptions({ align: "left" }),
                 customBodyRender: (value, tableMeta) => {
                     const row = rows[tableMeta.rowIndex];
-                    return value ?? row?.chiefComplaintCustom ?? "-";
+                    return value ?? row?.illnessOrInjuryDetail ?? "-";
                 },
             },
         },
@@ -200,7 +200,7 @@ const ContinuousClaimDialog: React.FC<Props> = ({ open, applicationId, onClose, 
             claimNo: selectedRow.claimNo,
             incidentDate: selectedRow.incidentDate ? dayjs(selectedRow.incidentDate).toISOString() : undefined,
             admissionDate: selectedRow.admissionDate ? dayjs(selectedRow.admissionDate).toISOString() : undefined,
-            chiefComplaint: selectedRow.chiefComplaint ?? selectedRow.chiefComplaintCustom,
+            chiefComplaint: selectedRow.chiefComplaint ?? selectedRow.illnessOrInjuryDetail,
             claimDetail: selectedRow.claimDetail,
             icD10Detail: selectedRow.icD10Detail,
             remainAmount: selectedRow.remainAmount,

@@ -27,8 +27,7 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 // 10 คู่สัญญาโรงพยาบาล
 // 11 เอกสารประกอบการพิจารณาเคลม
 // 12 ใบเสร็จโรงพยาบาล
-// 13 เอกสารประกอบการปฏิเสธ
-// 14 เอกสารประกอบการเปลี่ยนบัญชี
+// 13 เอกสารประกอบการเปลี่ยนบัญชี
 
 type DocumentTypeKey =
     | "บัตรประชาชน"
@@ -43,7 +42,6 @@ type DocumentTypeKey =
     | "คู่สัญญาโรงพยาบาล"
     | "เอกสารประกอบการพิจารณาเคลม"
     | "ใบเสร็จโรงพยาบาล"
-    | "เอกสารประกอบการปฏิเสธ"
     | "เอกสารประกอบการเปลี่ยนบัญชี";
 
 export const documentTypeId: Record<DocumentTypeKey, number> = {
@@ -59,8 +57,7 @@ export const documentTypeId: Record<DocumentTypeKey, number> = {
     คู่สัญญาโรงพยาบาล: 10,
     เอกสารประกอบการพิจารณาเคลม: 11,
     ใบเสร็จโรงพยาบาล: 12,
-    เอกสารประกอบการปฏิเสธ: 13,
-    เอกสารประกอบการเปลี่ยนบัญชี: 14,
+    เอกสารประกอบการเปลี่ยนบัญชี: 13,
 };
 
 type DocumentScanTableProps = {
@@ -81,6 +78,11 @@ type DocumentScanTableProps = {
     alwaysFreshMasterList?: boolean;
     /** ไม่ครอบด้วย CustomPaper (เหลือแค่ระยะ mt: 1) — ใช้เมื่อตารางอยู่ภายใน section/dialog ที่มีกรอบอยู่แล้ว (default false) */
     disablePaper?: boolean;
+    /**
+     * แสดงเฉพาะเอกสารของเคสที่ claimDocumentTypeId ตรงกับ documentType ของตารางนี้ (default false = แสดงทุกประเภท)
+     * ใช้เมื่อหน้าเดียวมีหลายตารางแยกตามประเภทเอกสาร เช่น พิจารณา D&D (ประกอบการพิจารณาเคลม / ประกอบการเปลี่ยนบัญชี)
+     */
+    filterCaseDocumentsByType?: boolean;
 };
 
 const DocumentScanTable = ({
@@ -94,6 +96,7 @@ const DocumentScanTable = ({
     onAttachedDocumentsChange,
     alwaysFreshMasterList = false,
     disablePaper = false,
+    filterCaseDocumentsByType = false,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
     const dispatch = useAppDispatch();
@@ -146,7 +149,9 @@ const DocumentScanTable = ({
     // นี้ (หาคู่ไม่เจอ) จะต่อท้ายไว้แทนที่จะทิ้ง
     const enrichedData: GetDocumentSubTypeDtoResponse[] = useMemo(() => {
         const masterRows = data?.data ?? [];
-        const caseRows = caseDocumentData?.data ?? [];
+        const caseRows = (caseDocumentData?.data ?? []).filter(
+            (caseRow) => !filterCaseDocumentsByType || caseRow.claimDocumentTypeId === documentTypeId[documentType]
+        );
         const usedCaseRowIndexes = new Set<number>();
 
         const merged = masterRows.map((masterRow) => {
@@ -171,7 +176,7 @@ const DocumentScanTable = ({
             }));
 
         return [...merged, ...extraCaseRows];
-    }, [data, caseDocumentData]);
+    }, [data, caseDocumentData, filterCaseDocumentsByType, documentType]);
 
     useEffect(() => {
         if (enrichedData.length > 0) {

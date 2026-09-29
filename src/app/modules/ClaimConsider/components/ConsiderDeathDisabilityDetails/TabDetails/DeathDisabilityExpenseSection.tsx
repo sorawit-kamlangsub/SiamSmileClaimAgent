@@ -88,7 +88,7 @@ const ExpenseItemCard = ({ item, title }: { item: DeathDisabilityExpenseItem; ti
                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, color: "#1B7F3B" }}>
                     <AccountBalanceWalletIcon fontSize="small" sx={{ color: PRIMARY }} />
                     <Typography fontWeight={600}>
-                        วงเงินสูงสุด {item.maximumLimit !== undefined ? item.maximumLimit.toLocaleString() : "-"} บาท
+                        วงเงินสูงสุด {item.maximumLimit != null ? item.maximumLimit.toLocaleString() : "0"} บาท
                     </Typography>
                 </Box>
                 <Typography color="text.secondary" mt={1}>
