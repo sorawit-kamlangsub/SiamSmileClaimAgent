@@ -161,8 +161,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             const isDeath = values.coverageTypeId === CoverageType.Death;
             const isMedical =
                 values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+            // ค่ารักษา/ค่าชดเชย แบบ IPD/DayCase — กรอกจำนวนเงินตามรายละเอียดความคุ้มครอง (CoverageAndTransferBox)
             const isManualIPD =
-                values.coverageTypeId === CoverageType.Medical &&
+                (values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate) &&
                 (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
             //เช็คจำนวนเอกสาร
             const hasError = docData.some((docById) => {
