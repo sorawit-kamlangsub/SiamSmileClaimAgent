@@ -116,7 +116,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                             vn: undefined,
 
                             chiefComplaintId: form.chiefComplaintId,
-                            illnessOrInjuryDetail: form.remark,
+                            illnessOrInjuryDetail: form.illnessOrInjuryDetail,
 
                             productId: insured?.productId ?? undefined,
                             icD10_1stId: form.diagnoses[0]?.icd10Id,

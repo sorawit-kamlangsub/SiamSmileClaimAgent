@@ -109,7 +109,7 @@ export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (mes
                     vn: undefined,
 
                     chiefComplaintId: form.chiefComplaintId,
-                    illnessOrInjuryDetail: form.remark,
+                    illnessOrInjuryDetail: form.illnessOrInjuryDetail,
 
                     icD10_1stId: form.diagnoses[0]?.icd10Id,
                     icD10_2ndId: form.diagnoses[1]?.icd10Id,

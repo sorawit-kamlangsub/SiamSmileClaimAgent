@@ -112,7 +112,7 @@ export interface ClaimFormValues {
     accidentPlace: string | undefined;
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
-    remark: string | undefined;
+    illnessOrInjuryDetail: string | undefined;
     ocrDocument: CaseDocumentV2Request[] | undefined;
 }
 
@@ -180,7 +180,7 @@ const defaultForm: ClaimFormValues = {
     accidentPlace: undefined,
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
-    remark: undefined,
+    illnessOrInjuryDetail: undefined,
     ocrDocument: [],
 };
 export interface DocumentDetailDto {
