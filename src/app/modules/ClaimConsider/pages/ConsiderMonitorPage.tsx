@@ -10,8 +10,13 @@ import useDashboardHook from "../hooks/ClaimConsiderCustomerMonitor/DashboardHoo
 import { useState } from "react";
 import dayjs from "dayjs";
 
+/** ตัวกรองสถานะของ Monitor เคลมลูกค้า ซ่อน อนุมัติ(9)/รอตรวจสอบการแก้ไข(8) — ประกาศนอก component ให้ reference คงที่ */
+const EXCLUDED_STATUS_IDS = [9, 8];
+
 const ConsiderMonitorPage = () => {
-    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook();
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook({
+        excludedStatusIds: EXCLUDED_STATUS_IDS,
+    });
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
         dateFrom: dayjs(),

@@ -81,13 +81,17 @@ type UseClaimExpenseDetailHookProps = {
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
     /** true เฉพาะฝั่ง "บันทึกข้อมูลเคลม - เคลมลูกค้า" (ExpenseDetails.tsx)
      * ตั้งแต่ RC-006 ทั้งสองฝั่ง default claimAmount = originalAmount เหมือนกันแล้ว (ดู frequentItems ด้านล่าง)
-     * คง prop ไว้เพื่อไม่ต้องแก้ฝั่งเคลมลูกค้า */
+     * RC-004 4.2 : ใช้ sync claimAmount = receiptAmount ตอนโหลดร่าง (เฉพาะเคลมลูกค้า) */
     isCustomerClaim?: boolean;
 };
 // รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
 // เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
 // ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
-const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
+const useClaimExpenseDetailHook = ({
+    detailData,
+    customerDetailData,
+    isCustomerClaim = false,
+}: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
     const { filledItems, filledItemsCaseId, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
         (s: RootState) => s.claimConsider
@@ -562,7 +566,16 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         // ใช้แค่ตั้งชื่อแถวที่ผู้ใช้เพิ่มเองตอนทำร่าง — ไม่ gate การ merge ด้วย isCategoryLoading เพราะแถว
         // ปกติ (99% ของเคส) ต้องไม่รอ category tree โหลด ถ้ามาไม่ทันแถวเพิ่มเองจะไม่มีชื่อ ยอมรับได้
         const categoryLeaves = categories.flatMap((cat) => cat.children.flatMap((sub) => sub.children));
-        const merged = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        const mergedDraft = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        // RC-004 4.2 (เคลมลูกค้า) : ไม่มีช่องกรอกยอดเบิกแล้ว claimAmount ต้องผูกกับยอดเงินตามใบเสร็จ
+        // ร่างเก่าที่เคยกรอกยอดเบิกเองจึง sync ให้ตรงตั้งแต่โหลด (เคลมโรงพยาบาลคงพฤติกรรมเดิม)
+        const merged = isCustomerClaim
+            ? mergedDraft.map((item) =>
+                  item.receiptAmount === undefined || item.receiptAmount === null
+                      ? item
+                      : { ...item, claimAmount: Number(item.receiptAmount) }
+              )
+            : mergedDraft;
         formikClaimLine.setFieldValue("items", merged);
         dispatch(setFilledClaimLineItems({ items: merged, caseId }));
         dispatch(setDraftExpenseApplied(draftRevisionId));
@@ -574,6 +587,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         frequentItems,
         isFrequentLoading,
         caseAdjudicationId,
+        benefitIdList,
         benefitName,
         showAddPanel,
         setShowAddPanel,

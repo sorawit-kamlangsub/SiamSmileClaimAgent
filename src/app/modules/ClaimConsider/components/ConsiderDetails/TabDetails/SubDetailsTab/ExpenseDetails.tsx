@@ -17,6 +17,8 @@ import { FormikProps } from "formik";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../../../api/coreClaimApi";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import usePolicyBenefitHook from "../../../../hooks/ClaimConsiderDetail/PolicyBenefitHook";
+import { useMemo } from "react";
 
 type ExpenseDetailsProps = {
     formik: FormikProps<ClaimConsiderValues>;
@@ -32,6 +34,16 @@ type ExpenseDetailsProps = {
 const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetailsProps) => {
     const nplAmount = detailData?.data?.nplAmount || 0;
     const expenseDetail = useClaimExpenseDetailHook({ detailData, customerDetailData, isCustomerClaim: true });
+    // RC-004 4.1 : สิทธิ์ความคุ้มครอง = ผลรวม maxPrice ของ Benefit ตามประเภทความคุ้มครองที่เลือก
+    // (benefitIdList มาจาก /standard-medical-expense/case ที่กรองด้วย coverageTypeId แล้ว) — API เดียวกับแท็บความคุ้มครอง
+    const { benefit: policyBenefit } = usePolicyBenefitHook({ customerDetail: customerDetailData?.data });
+    const coverageAmount = useMemo(
+        () =>
+            (policyBenefit?.data ?? [])
+                .filter((b) => b.benefitId !== undefined && expenseDetail.benefitIdList.includes(b.benefitId))
+                .reduce((sum, b) => sum + (b.maxPrice ?? 0), 0),
+        [policyBenefit, expenseDetail.benefitIdList]
+    );
     return (
         <>
             <CustomPaper>
@@ -54,9 +66,9 @@ const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetai
                             icon={<VerifiedUserIcon />}
                             iconBgColor="#E8F0FE"
                             iconColor="#1967D2"
-                            title="สิทธิ์เบิก"
+                            title="สิทธิ์ความคุ้มครอง"
                             subtitle={expenseDetail.benefitName ?? "ค่ารักษา"}
-                            amount={detailData?.data?.caseAmount || 0}
+                            amount={coverageAmount}
                             unit="บาท"
                             accentColor="#1967D2"
                         />

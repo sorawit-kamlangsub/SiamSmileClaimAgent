@@ -8,11 +8,16 @@ import { backgroundColorMapDecision, colorMapDecision } from "../../../../../fun
 /** decisionId ที่ต้องแสดง Card : 4 รอแก้ไข · 5 ปฏิเสธ · 6 ยกเลิก (ชุดเดียวกับ colorMapDecision) */
 export const CLAIM_STATUS_REASON_DECISION_IDS = [4, 5, 6];
 
+/** RC-003 3.1 (บันทึกข้อมูลเคลม - เคลมลูกค้า) : เพิ่ม 3 รอเอกสาร — ใช้เฉพาะเคลมลูกค้า */
+export const CUSTOMER_CLAIM_STATUS_REASON_DECISION_IDS = [3, ...CLAIM_STATUS_REASON_DECISION_IDS];
+
 type ClaimStatusReasonCardProps = {
     decisionId: number | undefined;
     decisionNameTH: string | undefined;
     decisionReasonName: string | undefined;
     decisionRemark: string | undefined;
+    /** decisionId ที่ต้องแสดง Card — default CLAIM_STATUS_REASON_DECISION_IDS (เคลมโรงพยาบาล) */
+    decisionIds?: number[];
 };
 
 const ACCENT = "#F59E0B";
@@ -40,8 +45,9 @@ const ClaimStatusReasonCard = ({
     decisionNameTH,
     decisionReasonName,
     decisionRemark,
+    decisionIds = CLAIM_STATUS_REASON_DECISION_IDS,
 }: ClaimStatusReasonCardProps) => {
-    if (!decisionId || !CLAIM_STATUS_REASON_DECISION_IDS.includes(decisionId)) return null;
+    if (!decisionId || !decisionIds.includes(decisionId)) return null;
 
     return (
         <Paper

@@ -10,8 +10,17 @@ import { useState } from "react";
 import dayjs from "dayjs";
 import ConsiderHospitalDataTable from "../components/ConsiderCustomerMonitor/ConsiderHospitalMonitor/ConsiderHospitalDataTable";
 
+/**
+ * ตัวกรองสถานะของ Monitor โรงพยาบาล ซ่อน อนุมัติ(9)/รอเอกสาร(3)
+ * DFUAT-038: เคลมโรงพยาบาลไม่มีสถานะ "รอเอกสาร" (3)
+ * "ยกเลิก" (6) เพิ่มกลับเข้าตัวกรองแล้ว — ปุ่ม "พิจารณาเคลม" ของแถวสถานะนี้ถูกซ่อนแทน (ดู HIDE_ADJUDICATE_BUTTON_STATUS_IDS ใน DataTableConsiderHospital.tsx)
+ */
+const EXCLUDED_STATUS_IDS = [9, 3];
+
 const ConsiderHospitalMonitorPage = () => {
-    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook({ isHospital: true });
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook({
+        excludedStatusIds: EXCLUDED_STATUS_IDS,
+    });
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
         dateFrom: dayjs(),

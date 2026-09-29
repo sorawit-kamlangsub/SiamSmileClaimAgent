@@ -22,37 +22,37 @@ export type AppliedFilter = Omit<SearchFilterType, "dateFrom" | "dateTo"> & {
 
 type UseSearchFilterHookParams = {
     onSearch?: (values: SearchFilterType) => void;
-    isHospital?: boolean;
     /** กำหนดสถานะที่แสดงเอง (เช่น Death & Disability) — ระบุแล้วจะแสดงเฉพาะ id เหล่านี้ รวม "อนุมัติ" (9) ด้วย */
     includedStatusIds?: number[];
+    /** สถานะที่ซ่อนจากตัวกรอง — ใช้เมื่อไม่ได้ระบุ includedStatusIds (ค่าเริ่มต้นซ่อน "อนุมัติ" (9)) */
+    excludedStatusIds?: number[];
 };
 
-// DFUAT-038: เคลมโรงพยาบาลไม่มีสถานะ "รอเอกสาร" (3) — ซ่อนออกจากตัวกรองสถานะของ Monitor โรงพยาบาล
-// "ยกเลิก" (6) เพิ่มกลับเข้าตัวกรองแล้ว — ปุ่ม "พิจารณาเคลม" ของแถวสถานะนี้ถูกซ่อนแทน (ดู HIDE_ADJUDICATE_BUTTON_STATUS_IDS ใน DataTableConsiderHospital.tsx)
-const HOSPITAL_EXCLUDED_STATUS_IDS = [3];
+/** ซ่อนสถานะ "อนุมัติ" (9) จากตัวกรองของ Monitor */
+const DEFAULT_EXCLUDED_STATUS_IDS = [9];
 
-const useSearchFilterHook = ({ onSearch, isHospital, includedStatusIds }: UseSearchFilterHookParams = {}) => {
+const useSearchFilterHook = ({
+    onSearch,
+    includedStatusIds,
+    excludedStatusIds = DEFAULT_EXCLUDED_STATUS_IDS,
+}: UseSearchFilterHookParams = {}) => {
     const currentDate = dayjs();
     const { data: claimTransactionTypeData, isLoading: claimTransactionTypeDataLoading } = useGetClaimTransactionType();
     const statusOptions = useMemo(
         () => [
             { value: 0, label: "ทั้งหมด" },
             ...(claimTransactionTypeData?.data ?? [])
-                .filter(
-                    (item) =>
-                        includedStatusIds
-                            ? includedStatusIds.includes(item.claimTransactionTypeId ?? -1)
-                            : item.claimTransactionTypeId !== 9 // ซ่อนสถานะ "อนุมัติ" (id 9)
-                )
-                .filter(
-                    (item) => !isHospital || !HOSPITAL_EXCLUDED_STATUS_IDS.includes(item.claimTransactionTypeId ?? -1)
+                .filter((item) =>
+                    includedStatusIds
+                        ? includedStatusIds.includes(item.claimTransactionTypeId ?? -1)
+                        : !excludedStatusIds.includes(item.claimTransactionTypeId ?? -1)
                 )
                 .map((item) => ({
                     value: item.claimTransactionTypeId ?? 0,
                     label: item.claimTransactionTypeName ?? "",
                 })),
         ],
-        [claimTransactionTypeData, isHospital, includedStatusIds]
+        [claimTransactionTypeData, includedStatusIds, excludedStatusIds]
     );
 
     const defaultValues: SearchFilterType = {

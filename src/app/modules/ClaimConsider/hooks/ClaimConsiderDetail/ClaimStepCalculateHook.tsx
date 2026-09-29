@@ -6,15 +6,10 @@ import {
     CalculateCaseClaimDtoRequest,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../api/coreClaimApi.client";
-import { useAppDispatch, useAppSelector } from "../../../../../redux";
+import { useAppDispatch } from "../../../../../redux";
 import { useCalculateCaseClaim } from "../../../../api/coreClaimApi";
 import { swalError } from "../../../_common";
-import {
-    ClaimConsiderValues,
-    ClaimExpenseItem,
-    claimConsiderSelector,
-    setCalculateExpenseResult,
-} from "../../store/claimConsiderSlice";
+import { ClaimConsiderValues, ClaimExpenseItem, setCalculateExpenseResult } from "../../store/claimConsiderSlice";
 import {
     getClaimAmountReconciliation,
     hasMissingReasonError,
@@ -71,9 +66,6 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     paymentAmount,
 }: UseClaimStepCalculateHookProps<TValues>) => {
     const dispatch = useAppDispatch();
-    // sync มาจาก ClaimExpenseDetailHook (/standard-medical-expense/case) — อ่านจาก store แทนการรับเป็น param
-    // เพื่อไม่ต้องแก้ call site ทั้งสองที่ของ hook นี้
-    const { caseAdjudicationId } = useAppSelector(claimConsiderSelector);
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -122,15 +114,14 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
         };
 
         return {
-            caseAdjudicationId: caseAdjudicationId ?? undefined,
-            isSimulateCase: false,
+            // ไม่ผูก adjudication ของเคส + คำนวณแบบจำลองยอด (เหมือนเคลม รพ.) — jsonDetail จะส่งไปอีกรอบตอนอนุมัติ
+            caseAdjudicationId: undefined,
+            isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
             jsonDetail: calculateDetail,
         };
     };
-
-    console.log("caseAdjudicationId", caseAdjudicationId);
 
     /** @returns สำเร็จหรือไม่ — handleNext ต้องเช็คก่อนเลื่อน step ต่อ ไม่งั้นเลื่อนไปหน้าสรุปทั้งที่ยอดคำนวณผิด/ไม่มี */
     const handleCalculate = async (): Promise<boolean> => {
