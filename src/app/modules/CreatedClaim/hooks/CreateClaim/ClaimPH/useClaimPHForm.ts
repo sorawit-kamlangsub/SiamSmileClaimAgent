@@ -118,7 +118,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             if (!values.symptomType) errors.symptomType = req;
             if (values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
                 errors.chiefComplaintId = req;
-            if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
+            if (values.symptomType === SymptomType.Other && !values.illnessOrInjuryDetail)
+                errors.illnessOrInjuryDetail = req;
             if (isDeath || isDisability) {
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
@@ -152,7 +153,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     isContinuous ? "คงเหลือ" : "สูงสุด"
                 } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
-            console.log("🚀 ~ useClaimPHForm ~ errors:", errors)
+            console.log("🚀 ~ useClaimPHForm ~ errors:", errors);
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
@@ -405,7 +406,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -465,7 +466,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -501,7 +502,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.illnessOrInjuryDetail ?? formik.values.remark,
+                illnessOrInjuryDetail: oldClaim.illnessOrInjuryDetail ?? formik.values.illnessOrInjuryDetail,
             },
             false
         );

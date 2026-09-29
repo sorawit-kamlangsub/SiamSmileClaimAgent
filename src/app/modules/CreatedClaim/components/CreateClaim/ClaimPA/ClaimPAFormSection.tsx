@@ -81,7 +81,7 @@ const FIELD_ORDER = [
     "accidentPlace",
     "symptomType",
     "chiefComplaintId",
-    "remark",
+    "illnessOrInjuryDetail",
     "transferAmount",
     "ocrDocumentSection",
 ] as const;
@@ -653,7 +653,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                         // สลับไปมาระหว่าง "ระบุอาการ" กับ "อื่นๆ" ต้องล้างค่าของอีกฝั่งที่ไม่ได้แสดงแล้ว
                                         // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับฝั่งที่เลือกจริงตอน submit
                                         if (nextSymptomType === SymptomType.ChiefComplaint) {
-                                            setFieldValue("remark", undefined);
+                                            setFieldValue("illnessOrInjuryDetail", undefined);
                                         } else {
                                             setFieldValue("chiefComplaintId", undefined);
                                             setFieldValue("chiefComplaintId_selectedText", undefined);
@@ -718,10 +718,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </>
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
-                            <Grid item xs={12} lg={9} ref={registerFieldRef("remark")}>
+                            <Grid item xs={12} lg={9} ref={registerFieldRef("illnessOrInjuryDetail")}>
                                 <FormikTextField
-                                    name="remark"
-                                    label="หมายเหตุ"
+                                    name="illnessOrInjuryDetail"
+                                    label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                     formik={formik}
                                     size="small"
                                     multiline

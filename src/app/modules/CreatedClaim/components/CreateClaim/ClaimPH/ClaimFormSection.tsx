@@ -157,7 +157,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                 "dischargeDate",
                 "symptomType",
                 "chiefComplaintId",
-                "remark",
+                "illnessOrInjuryDetail",
                 "notificationDate",
                 "documentCompleteDate",
                 "deathDate",
@@ -488,7 +488,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                         // สลับไปมาระหว่าง "ระบุอาการ" กับ "อื่นๆ" ต้องล้างค่าของอีกฝั่งที่ไม่ได้แสดงแล้ว
                                         // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับฝั่งที่เลือกจริงตอน submit
                                         if (nextSymptomType === SymptomType.ChiefComplaint) {
-                                            setFieldValue("remark", undefined);
+                                            setFieldValue("illnessOrInjuryDetail", undefined);
                                         } else {
                                             setFieldValue("chiefComplaintId", undefined);
                                             setFieldValue("chiefComplaintId_selectedText", undefined);
@@ -556,10 +556,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
                             <Grid item xs={12} lg={9}>
-                                <Box data-field-name="remark">
+                                <Box data-field-name="illnessOrInjuryDetail">
                                     <FormikTextField
-                                        name="remark"
-                                        label="หมายเหตุ"
+                                        name="illnessOrInjuryDetail"
+                                        label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                         formik={formik}
                                         size="small"
                                         multiline
