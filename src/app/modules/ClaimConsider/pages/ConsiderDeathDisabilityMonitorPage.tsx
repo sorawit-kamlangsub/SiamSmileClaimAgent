@@ -14,11 +14,12 @@ import useSearchFilterHook, {
 const DETAIL_PATH = ".";
 
 /**
- * ตาม spec: สถานะของหน้านี้มีแค่ รอพิจารณา(2)/อยู่ระหว่างดำเนินการ(7)/รอแก้ไข(4)/ปฏิเสธ(5)/ยกเลิก(6)/อนุมัติ(9)
- * ชื่อสถานะดึงจาก master ClaimTransactionType — ตัด รอเอกสาร(3)/รอตรวจสอบการแก้ไข(8) ออก
+ * ตาม spec: สถานะของหน้านี้มีแค่ รอพิจารณา(2)/อยู่ระหว่างดำเนินการ(7)/รอแก้ไข(4)/รอตรวจสอบการแก้ไข(8)/ปฏิเสธ(5)/ยกเลิก(6)/อนุมัติ(9)
+ * รอตรวจสอบการแก้ไข = ส่งพิจารณาอีกครั้งหลังแก้ไขเรียบร้อย
+ * ชื่อสถานะดึงจาก master ClaimTransactionType — ตัด รอเอกสาร(3) ออก
  * ประกาศนอก component ให้ reference คงที่ (อยู่ใน deps ของ useMemo ใน useSearchFilterHook)
  */
-const INCLUDED_STATUS_IDS = [2, 7, 4, 5, 6, 9];
+const INCLUDED_STATUS_IDS = [2, 7, 4, 8, 5, 6, 9];
 
 const getInitialAppliedFilter = (): AppliedFilter => ({
     ...getDefaultSearchFilter(dayjs()),
