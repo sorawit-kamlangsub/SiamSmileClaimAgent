@@ -689,6 +689,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
      */
     const buildApproveJsonDetail = (): CalculateCaseClaim => ({
         productId: customerDetailData?.data?.productId,
+        customerDetailId: customerDetailData?.data?.customerDetailId ?? undefined,
+        customerTypeCode: customerDetailData?.data?.customerTypeCode ?? undefined,
+        productName: customerDetailData?.data?.productName ?? undefined,
         coverageTypeId: formik.values.coverageTypeId,
         medicalTypeId: formik.values.medicalTypeId,
         incidentTypeId: formik.values.incidentTypeId,
@@ -704,6 +707,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             nonCoverAmount: item.notCovered,
             reasonId: item.reason,
             remark: item.remark,
+            receiptAmount: item.receiptAmount,
         })),
         disabilityList: [],
     });
