@@ -210,6 +210,8 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         showStayDays={variant.isIpdLike}
                                         allowSeparateCompensation={variant.allowSeparateCompensation}
                                         beLabels={detail}
+                                        caseAdjudicationId={detail?.caseAdjudicationId}
+                                        productId={detail?.productId}
                                     />
                                 </Grid>
                             </Grid>

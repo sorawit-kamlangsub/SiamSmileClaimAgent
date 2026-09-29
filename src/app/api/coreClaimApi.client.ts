@@ -9458,6 +9458,9 @@ export interface BillingDetailDto {
     data?: BillingReviewDataDto;
     totals?: BillingTotalsDto;
     requiredDocumentSubTypeIds?: number[] | undefined;
+    customerCode?: string | undefined;
+    productId?: number | undefined;
+    caseAdjudicationId?: string | undefined;
     productTypeId?: number | undefined;
     ipdDayCount?: number | undefined;
     icuDayCount?: number | undefined;

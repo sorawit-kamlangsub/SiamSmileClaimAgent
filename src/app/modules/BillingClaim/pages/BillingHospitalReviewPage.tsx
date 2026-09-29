@@ -55,15 +55,16 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
 
     /**
      * แท็บ "ความคุ้มครอง" ใช้ PolicyBenefitTab ร่วมกับหน้าพิจารณาเคลม รพ ซึ่งรับ customerDetail
-     * (GetCustomerDetailByIdDtoResponse) — billing map เท่าที่มี : `insured.policyCode` + `productTypeId`
-     * (productTypeId ทำให้ useGetPolicyBenefit เริ่มยิงได้ — enabled: !!productTypeId)
-     * TODO(PENDING-BE): PENDING_BE_FIELDS.policyBenefitProduct — ยังขาด `productId` (PH ต้องส่ง) และ
-     * `customerTypeCode` (PA ต้องส่ง) BE ส่งมาเมื่อไหร่ค่อย map เพิ่มตรงนี้
+     * (GetCustomerDetailByIdDtoResponse) — billing map เท่าที่มี : `insured.policyCode` + `productTypeId` +
+     * `productId` (PH ส่ง productId — usePolicyBenefitHook เลือกส่งเองตาม productTypeId)
+     * TODO(PENDING-BE): PENDING_BE_FIELDS.policyBenefitProduct — ยังขาด `customerTypeCode` (PA ต้องส่ง)
+     * BE ส่งมาเมื่อไหร่ค่อย map เพิ่มตรงนี้
      */
     const productTypeId = detail?.productTypeId;
+    const productId = detail?.productId;
     const policyBenefitCustomer = useMemo<GetCustomerDetailByIdDtoResponse | undefined>(
-        () => (policyCode ? { policyCode, productTypeId } : undefined),
-        [policyCode, productTypeId]
+        () => (policyCode ? { policyCode, productTypeId, productId } : undefined),
+        [policyCode, productTypeId, productId]
     );
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => setTabValue(newValue);
@@ -135,8 +136,18 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                 )}
 
                 <Grid item xs={12}>
+                    {/* แถวเดียวเสมอ : กลุ่ม Chip ยึดขวาคงขนาด (flexShrink 0) ส่วนแท็บหดตามพื้นที่ที่เหลือแล้วเลื่อนดู
+                        แนวนอน (scrollable + ปุ่ม ‹ ›) — รองรับจำนวนแท็บที่เพิ่มขึ้นในอนาคตโดยไม่ทับ Chip */}
                     <Paper elevation={2} sx={{ p: 1, borderRadius: 4, display: "flex", alignItems: "center", gap: 1 }}>
-                        <Tabs value={tabValue} onChange={handleChangeTab} aria-label="billing review tabs">
+                        <Tabs
+                            value={tabValue}
+                            onChange={handleChangeTab}
+                            aria-label="billing review tabs"
+                            variant="scrollable"
+                            scrollButtons="auto"
+                            allowScrollButtonsMobile
+                            sx={{ flex: "1 1 auto", minWidth: 0 }}
+                        >
                             <Tab icon={<DescriptionIcon />} iconPosition="start" label="ข้อมูลเคลม" value="1" />
                             <Tab icon={<ManageHistoryIcon />} iconPosition="start" label="ประวัติทำรายการ" value="2" />
                             <Tab icon={<VerifiedUserIcon />} iconPosition="start" label="ความคุ้มครอง" value="3" />
@@ -151,7 +162,15 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                             />
                         </Tabs>
 
-                        <Grid sx={{ ml: "auto", mr: 1, display: "flex", gap: 1 }}>
+                        <Grid
+                            sx={{
+                                ml: "auto",
+                                mr: 1,
+                                display: "flex",
+                                flexShrink: 0,
+                                gap: 1,
+                            }}
+                        >
                             {detail?.billingRequestCode && (
                                 // โทนน้ำเงินเข้มบนพื้นฟ้าอ่อน (สีเดียวกับ header ผู้เอาประกัน) — แยกจาก Chip ประเภทรายการเคลม
                                 // ที่เป็น outlined primary ให้อ่านออกว่าเป็น "เลขเอกสาร" คนละกลุ่มกับ "ประเภท"

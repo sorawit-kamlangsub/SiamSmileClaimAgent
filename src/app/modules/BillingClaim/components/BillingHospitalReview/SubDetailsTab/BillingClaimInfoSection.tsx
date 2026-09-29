@@ -4,7 +4,7 @@ import { useFormikContext } from "formik";
 
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
+import BillingInfoField from "./BillingInfoField";
 import { formatDateString } from "../../../../../functionHelpers";
 import useBillingClaimLabels, {
     BillingClaimBeLabels,
@@ -43,49 +43,50 @@ const BillingClaimInfoSection = ({
         <CustomPaper>
             <HeadingWithColor icon={<ArticleIcon sx={{ fontSize: 27 }} />} text="รายละเอียดเคลม" color="blue" />
             <Grid container spacing={2} sx={{ mt: 0.5 }}>
-                <CustomDisplayText label="เหตุของการเคลม" value={labels.incidentTypeName} />
-                <CustomDisplayText label="ประเภทความคุ้มครอง" value={labels.coverageTypeName} />
-                <CustomDisplayText label="ประเภทการรักษา" value={labels.medicalTypeName} />
-                <CustomDisplayText label="วันที่แจ้ง" value={fmtDate(submittedDate)} />
+                <BillingInfoField label="เหตุของการเคลม" value={labels.incidentTypeName} />
+                <BillingInfoField label="ประเภทความคุ้มครอง" value={labels.coverageTypeName} />
+                <BillingInfoField label="ประเภทการรักษา" value={labels.medicalTypeName} />
+                <BillingInfoField label="วันที่แจ้ง" value={fmtDate(submittedDate)} />
                 {/* PENDING-BE: PENDING_BE_FIELDS.documentCompleteDate — default วันนี้จนกว่า BE จะส่งค่ามา */}
-                <CustomDisplayText
+                <BillingInfoField
                     label="วันที่เอกสารครบ"
                     value={values.documentCompleteDate ? values.documentCompleteDate.format("DD/MM/BBBB") : PENDING_BE}
                 />
-                <CustomDisplayText label="วันที่เกิดเหตุ" value={fmtDate(values.occurrenceDate?.toString())} />
-                <CustomDisplayText label="เวลาที่เกิดเหตุ" value={fmtTime(values.occurrenceTime?.toString())} />
-                <CustomDisplayText label="วันที่เข้า รพ." value={fmtDate(values.admissionDate?.toString())} />
-                <CustomDisplayText label="เวลาที่เข้า รพ." value={fmtTime(values.admissionTime?.toString())} />
-                <CustomDisplayText label="วันที่ออก รพ." value={fmtDate(values.dischargeDate?.toString())} />
-                <CustomDisplayText label="เวลาที่ออก รพ." value={fmtTime(values.dischargeTime?.toString())} />
+                <BillingInfoField label="วันที่เกิดเหตุ" value={fmtDate(values.occurrenceDate?.toString())} />
+                <BillingInfoField label="เวลาที่เกิดเหตุ" value={fmtTime(values.occurrenceTime?.toString())} />
+                <BillingInfoField label="วันที่เข้า รพ." value={fmtDate(values.admissionDate?.toString())} />
+                <BillingInfoField label="เวลาที่เข้า รพ." value={fmtTime(values.admissionTime?.toString())} />
+                <BillingInfoField label="วันที่ออก รพ." value={fmtDate(values.dischargeDate?.toString())} />
+                <BillingInfoField label="เวลาที่ออก รพ." value={fmtTime(values.dischargeTime?.toString())} />
                 {showStayDays && (
                     <>
-                        <CustomDisplayText label="จำนวนวันนอน IPD" value={`${values.ipdDays} วัน`} />
-                        <CustomDisplayText label="จำนวนวันนอน ICU" value={`${values.icuDays} วัน`} />
-                        <CustomDisplayText label="จำนวนวันนอนรวม" value={`${totalStayDays} วัน`} />
+                        <BillingInfoField label="จำนวนวันนอน IPD" value={`${values.ipdDays} วัน`} />
+                        <BillingInfoField label="จำนวนวันนอน ICU" value={`${values.icuDays} วัน`} />
+                        <BillingInfoField label="จำนวนวันนอนรวม" value={`${totalStayDays} วัน`} />
                     </>
                 )}
-                <CustomDisplayText label="สถานพยาบาล" value={hospitalName} />
-                <CustomDisplayText
+                {/* IPD : แถวนี้มีแค่ วันนอน ICU / วันนอนรวม / สถานพยาบาล → ขยายสถานพยาบาลเป็นครึ่งแถวให้เต็มพอดี */}
+                <BillingInfoField label="สถานพยาบาล" value={hospitalName} md={showStayDays ? 6 : 3} />
+                <BillingInfoField
                     label="อาการสำคัญ"
                     value={values.chiefComplaintId_selectedText || labels.chiefComplaintName}
                     xs={12}
                     md={6}
                 />
-                <CustomDisplayText label="การวินิจฉัย 1" value={labels.diagnosis1Name} xs={12} md={6} />
-                <CustomDisplayText label="การวินิจฉัย 2" value={labels.diagnosis2Name} xs={12} md={6} />
-                <CustomDisplayText label="การวินิจฉัย 3" value={labels.diagnosis3Name} xs={12} md={6} />
+                <BillingInfoField label="การวินิจฉัย 1" value={labels.diagnosis1Name} xs={12} md={6} />
+                <BillingInfoField label="การวินิจฉัย 2" value={labels.diagnosis2Name} xs={12} md={6} />
+                <BillingInfoField label="การวินิจฉัย 3" value={labels.diagnosis3Name} xs={12} md={6} />
                 {/* การวินิจฉัย 4-6 : แสดงเฉพาะเมื่อ BE ส่งมา (เคลมส่วนใหญ่มีไม่เกิน 3) */}
                 {labels.diagnosis4Name && (
-                    <CustomDisplayText label="การวินิจฉัย 4" value={labels.diagnosis4Name} xs={12} md={6} />
+                    <BillingInfoField label="การวินิจฉัย 4" value={labels.diagnosis4Name} xs={12} md={6} />
                 )}
                 {labels.diagnosis5Name && (
-                    <CustomDisplayText label="การวินิจฉัย 5" value={labels.diagnosis5Name} xs={12} md={6} />
+                    <BillingInfoField label="การวินิจฉัย 5" value={labels.diagnosis5Name} xs={12} md={6} />
                 )}
                 {labels.diagnosis6Name && (
-                    <CustomDisplayText label="การวินิจฉัย 6" value={labels.diagnosis6Name} xs={12} md={6} />
+                    <BillingInfoField label="การวินิจฉัย 6" value={labels.diagnosis6Name} xs={12} md={6} />
                 )}
-                <CustomDisplayText label="รายละเอียด" value={values.note} xs={12} />
+                <BillingInfoField label="รายละเอียด" value={values.note} xs={12} md={6} />
             </Grid>
         </CustomPaper>
     );

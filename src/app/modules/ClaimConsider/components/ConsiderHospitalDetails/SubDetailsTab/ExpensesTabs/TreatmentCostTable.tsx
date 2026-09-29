@@ -37,7 +37,8 @@ const TreatmentCostTable = ({ formik, detailData, customerDetailData }: Treatmen
 
             <CustomPaper>
                 <HeadingWithColor text="รายการค่าใช้จ่าย" color="blue" icon={<NoteAddIcon sx={{ fontSize: 27 }} />} />
-                <ExpenseRecords expenseDetail={expenseDetail} />
+                {/* เคลมโรงพยาบาล : กรอบแจ้งเตือนยอดเงินเทียบยอดเงินตามใบเสร็จ ไม่เทียบเงินโอน */}
+                <ExpenseRecords expenseDetail={expenseDetail} reconciliationMode="receipt" />
             </CustomPaper>
         </>
     );

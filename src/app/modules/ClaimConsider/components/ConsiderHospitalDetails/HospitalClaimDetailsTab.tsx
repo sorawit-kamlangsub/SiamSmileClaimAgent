@@ -27,7 +27,12 @@ import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
 import useHospitalConsiderPayment from "../../hooks/ClaimConsiderHospital/useHospitalConsiderPayment";
-import { hasAmountSumError, hasMissingReasonError } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    getReceiptReconciliation,
+    hasAmountSumError,
+    hasMissingReasonError,
+    sumClaimExpenseItems,
+} from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { alertMissingNonCoveredReason } from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
@@ -443,6 +448,14 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             // มียอดไม่คุ้มครองแต่ยังไม่เลือกสาเหตุ — บล็อกก่อนคำนวณ แล้วพาไป focus แถวนั้น
             if (filledItems.some((item) => hasMissingReasonError(item))) {
                 alertMissingNonCoveredReason();
+                return;
+            }
+            // RC-006 : สิทธิ์เบิก + ส่วนลด + ยอดไม่คุ้มครอง (ยอดรวมทุกรายการ) ต้องเท่ากับยอดเงินตามใบเสร็จรวมเท่านั้น
+            // ไม่เท่ากัน = บล็อก ไม่ให้ไป Step 3 — ใช้ helper เดียวกับกรอบแจ้งเตือนใน ExpenseRecords (reconciliationMode="receipt")
+            const { totalReceipt, totalClaim } = sumClaimExpenseItems(filledItems);
+            const receiptReconciliation = getReceiptReconciliation({ totalReceipt, totalClaim });
+            if (receiptReconciliation.status === "error") {
+                swalError("ไม่สามารถดำเนินการต่อได้", receiptReconciliation.message);
                 return;
             }
             dispatch(
