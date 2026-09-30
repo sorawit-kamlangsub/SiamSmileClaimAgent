@@ -1,4 +1,5 @@
 import dayjs, { Dayjs } from "dayjs";
+import { useRef } from "react";
 import {
     useApproveClaimDecision,
     useGetDocumentByCaseId,
@@ -647,16 +648,28 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDecision(overrideDecisionId),
     });
 
+    /**
+     * กันกด "ยืนยันบันทึกผลพิจารณา" ซ้ำ (DFUAT-052) — ใช้ ref เพราะ isLoading ของ mutation ยังไม่อัปเดต
+     * จนกว่าจะ re-render รอบถัดไป กดรัว ๆ ก่อนหน้านั้นจะยิง /claim/decision ซ้ำ ทำให้ Transaction stamp หลายรอบ
+     */
+    const isConfirmingConsiderRef = useRef(false);
+
     /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง DECISION_ID.APPROVED (9) (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
+        if (isConfirmingConsiderRef.current) return;
         // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ (เคลมลูกค้า / เคลมโรงพยาบาล)
         const decisionId = overrideDecisionId ?? formik.values.considerResult;
         if (decisionId === DECISION_ID.REJECTED && !rejectDocuments?.length) {
             swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
             return;
         }
-        const payload = mapClaimDecisionPayload(overrideDecisionId);
-        await saveClaimDecision.mutateAsync(payload);
+        isConfirmingConsiderRef.current = true;
+        try {
+            const payload = mapClaimDecisionPayload(overrideDecisionId);
+            await saveClaimDecision.mutateAsync(payload);
+        } finally {
+            isConfirmingConsiderRef.current = false;
+        }
     };
 
     const mapCasePayableForApprove = (): CasePayableDraft => {

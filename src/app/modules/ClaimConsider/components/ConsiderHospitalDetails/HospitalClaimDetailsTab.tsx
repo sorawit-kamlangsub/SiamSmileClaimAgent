@@ -133,6 +133,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const [isPayoutAccountBlocking, setIsPayoutAccountBlocking] = useState(false);
     /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+    /** กำลัง validate + ยิงบันทึกผลพิจารณา — ปิดปุ่ม "ยืนยันบันทึกผลพิจารณา" กันกดซ้ำ (DFUAT-052) */
+    const [isConfirmingConsider, setIsConfirmingConsider] = useState(false);
     /** เอกสารประกอบการปฏิเสธที่แนบไฟล์แล้ว — หน้านี้ไม่มีตารางสแกนเอกสารทั่วไป จึงส่งแค่ชุดนี้ */
     const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
 
@@ -473,10 +475,16 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
     /** ยืนยันบันทึกผลพิจารณา (รอแก้ไข / ปฏิเสธ / ยกเลิก) : ต้องผ่าน Validate Step 1 ทั้งหมดก่อน */
     const handleConfirmConsiderResult = async () => {
-        const isValid = await validateStep1();
-        if (!isValid) return;
+        if (isConfirmingConsider) return;
+        setIsConfirmingConsider(true);
+        try {
+            const isValid = await validateStep1();
+            if (!isValid) return;
 
-        await handleConfirmConsider();
+            await handleConfirmConsider();
+        } finally {
+            setIsConfirmingConsider(false);
+        }
     };
 
     /**
@@ -704,7 +712,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     <Button
                                         variant="contained"
                                         startIcon={<SaveIcon />}
-                                        disabled={!formik.values.considerResult || isStep1Loading}
+                                        disabled={
+                                            !formik.values.considerResult || isStep1Loading || isConfirmingConsider
+                                        }
                                         onClick={handleConfirmConsiderResult}
                                         sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                     >
