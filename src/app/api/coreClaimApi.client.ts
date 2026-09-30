@@ -8539,6 +8539,198 @@ export class MastersClient {
     }
 
     /**
+     * ดึงเหตุผลความจำเป็นในการทำกายภาพบำบัดที่ยังใช้งานอยู่
+     * @param physicalTherapyNecessityReasonId (optional)
+     * @return Success
+     */
+    getPhysicalTherapyNecessityReason(
+        physicalTherapyNecessityReasonId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetPhysicalTherapyNecessityReasonDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/claim/physical-therapy/necessity-reason?";
+        if (physicalTherapyNecessityReasonId === null)
+            throw new Error("The parameter 'physicalTherapyNecessityReasonId' cannot be null.");
+        else if (physicalTherapyNecessityReasonId !== undefined)
+            url_ +=
+                "physicalTherapyNecessityReasonId=" + encodeURIComponent("" + physicalTherapyNecessityReasonId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetPhysicalTherapyNecessityReason(_response);
+            });
+    }
+
+    protected processGetPhysicalTherapyNecessityReason(
+        response: AxiosResponse
+    ): Promise<GetPhysicalTherapyNecessityReasonDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetPhysicalTherapyNecessityReasonDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetPhysicalTherapyNecessityReasonDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * ดึงบทบาทของผู้บาดเจ็บในอุบัติเหตุจราจรที่ยังใช้งานอยู่
+     * @param trafficAccidentPersonRoleId (optional)
+     * @return Success
+     */
+    getTrafficAccidentPersonRole(
+        trafficAccidentPersonRoleId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetTrafficAccidentPersonRoleDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/claim/traffic-accident/person-role?";
+        if (trafficAccidentPersonRoleId === null)
+            throw new Error("The parameter 'trafficAccidentPersonRoleId' cannot be null.");
+        else if (trafficAccidentPersonRoleId !== undefined)
+            url_ += "trafficAccidentPersonRoleId=" + encodeURIComponent("" + trafficAccidentPersonRoleId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetTrafficAccidentPersonRole(_response);
+            });
+    }
+
+    protected processGetTrafficAccidentPersonRole(
+        response: AxiosResponse
+    ): Promise<GetTrafficAccidentPersonRoleDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetTrafficAccidentPersonRoleDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetTrafficAccidentPersonRoleDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
+     * ดึงประเภทยานพาหนะในอุบัติเหตุจราจรที่ยังใช้งานอยู่
+     * @param trafficVehicleTypeId (optional)
+     * @return Success
+     */
+    getTrafficVehicleType(
+        trafficVehicleTypeId?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GetTrafficVehicleTypeDtoResponseListServiceResponse> {
+        let url_ = this.baseUrl + "/Masters/claim/traffic/vehicle-type?";
+        if (trafficVehicleTypeId === null) throw new Error("The parameter 'trafficVehicleTypeId' cannot be null.");
+        else if (trafficVehicleTypeId !== undefined)
+            url_ += "trafficVehicleTypeId=" + encodeURIComponent("" + trafficVehicleTypeId) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processGetTrafficVehicleType(_response);
+            });
+    }
+
+    protected processGetTrafficVehicleType(
+        response: AxiosResponse
+    ): Promise<GetTrafficVehicleTypeDtoResponseListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GetTrafficVehicleTypeDtoResponseListServiceResponse>(result200);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GetTrafficVehicleTypeDtoResponseListServiceResponse>(null as any);
+    }
+
+    /**
      * API สำหรับ Get ข้อมูล DocumentRecipientType (ประเภทผู้รับเอกสาร)
      * @param documentRecipientTypeId (optional)
      * @return Success
@@ -9983,6 +10175,12 @@ export interface CasePayableV2Request {
     payableCategoryId?: number;
 }
 
+export interface CasePhysicalTherapyV2Request {
+    isPhysicalTherapy?: boolean;
+    physicalTherapyNecessityReasonId?: number | undefined;
+    physicalTherapyNecessityReasonDetail?: string | undefined;
+}
+
 export interface CaseRefundApproveDetailResponseDto {
     /** เลข CL */
     claimNo?: string | undefined;
@@ -10180,6 +10378,7 @@ export interface CaseV2Request {
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
     reservationRemark?: string | undefined;
+    casePhysicalTherapy?: CasePhysicalTherapyV2Request[] | undefined;
     items?: CaseItemV2Request[] | undefined;
     registrations?: CaseRegistrationV2Request[] | undefined;
     assessments?: CaseAssessmentV2Request[] | undefined;
@@ -12027,6 +12226,7 @@ export interface GetHospitalClaimAdjudicationMonitorDtoResponse {
     customerDetailId?: string | undefined;
     totalCount?: number | undefined;
     caseId?: string | undefined;
+    isReadOnly?: boolean | undefined;
 }
 
 export interface GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse {
@@ -12188,6 +12388,25 @@ export interface GetPaymentStatusDtoResponse {
 
 export interface GetPaymentStatusDtoResponseListServiceResponse {
     data?: GetPaymentStatusDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetPhysicalTherapyNecessityReasonDtoResponse {
+    physicalTherapyNecessityReasonId?: number;
+    physicalTherapyNecessityReasonName?: string | undefined;
+}
+
+export interface GetPhysicalTherapyNecessityReasonDtoResponseListServiceResponse {
+    data?: GetPhysicalTherapyNecessityReasonDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -12398,6 +12617,44 @@ export interface GetTitleDtoResponse {
 
 export interface GetTitleDtoResponseListServiceResponse {
     data?: GetTitleDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetTrafficAccidentPersonRoleDtoResponse {
+    trafficAccidentPersonRoleId?: number;
+    trafficAccidentPersonRoleName?: string | undefined;
+}
+
+export interface GetTrafficAccidentPersonRoleDtoResponseListServiceResponse {
+    data?: GetTrafficAccidentPersonRoleDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GetTrafficVehicleTypeDtoResponse {
+    trafficVehicleTypeId?: number;
+    trafficVehicleTypeName?: string | undefined;
+}
+
+export interface GetTrafficVehicleTypeDtoResponseListServiceResponse {
+    data?: GetTrafficVehicleTypeDtoResponse[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;
@@ -13317,6 +13574,36 @@ export interface UpsertClaimDecisionCaseItemRequest {
     bodyPartId?: number | undefined;
 }
 
+export interface UpsertClaimDecisionCaseMedicalTreatmentRequest {
+    caseMedicalTreatmentId?: string | undefined;
+    underlyingDiseaseDetail?: string | undefined;
+    admissionIndication?: string | undefined;
+    treatmentMethod?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
+    illnessDetail?: string | undefined;
+    physicalExaminationDetail?: string | undefined;
+    hasPreviousTreatment?: boolean | undefined;
+    previousHealthcareFacilit?: string | undefined;
+    canTreatAsOutpatient?: boolean | undefined;
+    hasCompulsoryInsuranceExcess?: boolean | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    reservationRemark?: string | undefined;
+}
+
+export interface UpsertClaimDecisionCasePhysicalTherapyRequest {
+    casePhysicalTherapyId?: string | undefined;
+    isPhysicalTherapy?: boolean;
+    physicalTherapyNecessityReasonId?: number | undefined;
+    physicalTherapyNecessityReasonDetail?: string | undefined;
+}
+
 export interface UpsertClaimDecisionCaseRequest {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
@@ -13349,6 +13636,8 @@ export interface UpsertClaimDecisionCaseRequest {
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
+    caseMedicalTreatment?: UpsertClaimDecisionCaseMedicalTreatmentRequest;
+    casePhysicalTherapy?: UpsertClaimDecisionCasePhysicalTherapyRequest;
     caseItem?: UpsertClaimDecisionCaseItemRequest[] | undefined;
     caseAssessment?: UpsertClaimDecisionCaseAssessmentRequest;
     caseAdjudication?: UpsertClaimDecisionCaseAdjudicationRequest;
