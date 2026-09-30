@@ -22,6 +22,7 @@ import { ORGAN_ICON_MAP } from "./OrganLossIcons";
 import {
     amountNumber,
     calculateFingerSideTotal,
+    calculateRuleMaxAmount,
     countSelectedFingers,
     createFingerState,
     FINGER_KEY_TO_SUB_PART_ID,
@@ -51,6 +52,8 @@ import { useGetDeductionSource } from "../../../../api/coreClaimMastersApi";
 const CARD_BORDER = "#dbe6f3";
 const CARD_SOFT_BG = "#eef6ff";
 const PRIMARY = "#0b74bd";
+// nonCoveredReasonId ที่ใช้ตอนเติมยอดไม่คุ้มครองอัตโนมัติ (ยอดเบิกเกินยอดตาม %)
+const AUTO_UNCOVERED_REASON_ID = 12;
 
 export const StepBadge: React.FC<{ n: number }> = ({ n }) => (
     <Box
@@ -251,6 +254,8 @@ interface ModalState {
     amount: string;
     uncoveredAmount: string;
     uncoveredReason: number | undefined;
+    isUncoveredAuto: boolean; // ยอด/สาเหตุไม่คุ้มครองถูกเติมอัตโนมัติ (ยังไม่ถูกแก้เอง) → reset ได้เมื่อไม่เกินแล้ว
+    keepSavedUncovered: boolean; // เปิดแก้ไขรายการเดิม: คงยอด/สาเหตุไม่คุ้มครองที่บันทึกไว้ จนกว่า user จะแก้ยอดเบิก
     exgratiaDeductSourceId: number | undefined;
     exgratiaDeductDetail: string;
     note: string;
@@ -259,6 +264,24 @@ interface ModalState {
     fingerRules: Record<string, OrganRuleResult | null>;
     standardMedicalExpenseId: number | undefined;
 }
+
+// ── ยอดเบิกส่วนที่เกินยอดตาม % = ยอดไม่คุ้มครองขั้นต่ำ (กลุ่มนิ้ว: รวมส่วนที่เกินของแต่ละนิ้ว) ──
+const calculateExcessAmount = (m: ModalState, coverageAmount: number | undefined): number => {
+    let total = 0;
+    if (m.choice.isFinger) {
+        for (const side of ["left", "right"] as const) {
+            for (const fingerKey of FINGER_KEYS) {
+                const data = m.fingers?.[side][fingerKey];
+                const rule = m.fingerRules[`${side}-${fingerKey}`];
+                if (!data?.selected || !rule) continue;
+                total += Math.max(0, amountNumber(data.amount) - calculateRuleMaxAmount(rule, coverageAmount));
+            }
+        }
+    } else if (m.rule) {
+        total = Math.max(0, amountNumber(m.amount) - calculateRuleMaxAmount(m.rule, coverageAmount));
+    }
+    return Math.round(total * 100) / 100;
+};
 
 export interface OrganLossSelectorProps {
     value: OrganLossItem[];
@@ -319,6 +342,8 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
             amount: existing?.amount || (existing?.totalAmount ? String(existing.totalAmount) : ""),
             uncoveredAmount: existing?.uncoveredAmount || "",
             uncoveredReason: existing?.uncoveredReason,
+            isUncoveredAuto: false,
+            keepSavedUncovered: editIndex >= 0,
             exgratiaDeductSourceId: existing?.exgratiaDeductSourceId || undefined,
             exgratiaDeductDetail: existing?.exgratiaDeductDetail || "",
             note: existing?.note || "",
@@ -344,37 +369,38 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                 ...m.fingers,
                 [side]: { ...m.fingers[side], [fingerKey]: { ...m.fingers[side][fingerKey], ...patch } },
             };
-            return { ...m, fingers };
+            // user แก้นิ้ว/จำนวนข้อ/ยอดเบิก → เลิกคงยอดไม่คุ้มครองที่บันทึกไว้ ให้คำนวณอัตโนมัติได้
+            const isUserEdit = "selected" in patch || "joints" in patch || "amount" in patch;
+            return { ...m, fingers, keepSavedUncovered: isUserEdit ? false : m.keepSavedUncovered };
         });
     };
     const setRule = (rule: OrganRuleResult | null) => setModal((m) => (m ? { ...m, rule } : m));
     const setFingerRule = (side: "left" | "right", fingerKey: FingerKey, rule: OrganRuleResult | null) =>
         setModal((m) => (m ? { ...m, fingerRules: { ...m.fingerRules, [`${side}-${fingerKey}`]: rule } } : m));
 
+    // ── ยอดเบิกเกินยอดตาม % → เติมยอด/สาเหตุไม่คุ้มครองอัตโนมัติ
+    //    ไม่เกินแล้ว → reset กลับค่า default (เฉพาะกรณีที่ระบบเติมเอง ไม่ล้างค่าที่ user กรอก) ──
+    const applyAutoUncovered = (excess: number) =>
+        setModal((m) => {
+            if (!m || m.keepSavedUncovered) return m;
+            if (excess > 0) {
+                const uncoveredAmount = String(Math.round(excess * 100) / 100);
+                if (m.isUncoveredAuto && m.uncoveredAmount === uncoveredAmount) return m;
+                return { ...m, uncoveredAmount, uncoveredReason: AUTO_UNCOVERED_REASON_ID, isUncoveredAuto: true };
+            }
+            if (!m.isUncoveredAuto) return m;
+            return { ...m, uncoveredAmount: "", uncoveredReason: undefined, isUncoveredAuto: false };
+        });
+
     useEffect(() => {
         if (!modal || !modal.choice.isFinger) return;
+        applyAutoUncovered(calculateExcessAmount(modal, maxTransferAmount));
+    }, [modal?.fingers, modal?.fingerRules, maxTransferAmount]);
 
-        let totalExcess = 0;
-        const sides: ("left" | "right")[] = ["left", "right"];
-        for (const side of sides) {
-            for (const fingerKey of FINGER_KEYS) {
-                const data = modal.fingers![side][fingerKey];
-                if (!data.selected) continue;
-                const rule = modal.fingerRules[`${side}-${fingerKey}`];
-                if (!rule) continue;
+    // ── ยอดไม่คุ้มครองต้องไม่น้อยกว่าส่วนที่เกินยอดตาม % (กันแก้ยอดไม่คุ้มครองลงเองจนยอดสุทธิเกิน) ──
+    const requiredUncovered = modal ? calculateExcessAmount(modal, maxTransferAmount) : 0;
+    const isUncoveredTooLow = !!modal && amountNumber(modal.uncoveredAmount) < requiredUncovered;
 
-                const requestedAmount = amountNumber(data.amount); // ← ยอดที่ user กรอกจริง
-                const available = rule.coveredAmount - rule.sumUsedAmount;
-                if (requestedAmount > available) {
-                    totalExcess += requestedAmount - available;
-                }
-            }
-        }
-
-        if (totalExcess > 0) {
-            setModal((m) => (m ? { ...m, uncoveredAmount: String(totalExcess), uncoveredReason: 12 } : m));
-        }
-    }, [modal?.fingers, modal?.fingerRules]);
     const modalTotal = useMemo(() => {
         if (!modal) return 0;
         const gross = modal.choice.isFinger
@@ -776,7 +802,9 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                     patchModal={patchModal}
                                     customerId={customerId}
                                     modalTotal={modalTotal}
+                                    coverageAmount={maxTransferAmount}
                                     onRuleChange={setRule}
+                                    onExcessChange={applyAutoUncovered}
                                 />
                             )}
 
@@ -787,7 +815,17 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                     fullWidth
                                     inputMode="decimal"
                                     value={modal.uncoveredAmount}
-                                    onChange={(e) => patchModal({ uncoveredAmount: e.target.value })}
+                                    onChange={(e) =>
+                                        patchModal({ uncoveredAmount: e.target.value, isUncoveredAuto: false })
+                                    }
+                                    error={isUncoveredTooLow}
+                                    helperText={
+                                        isUncoveredTooLow
+                                            ? `ต้องไม่น้อยกว่า ${formatNoDecimal(requiredUncovered)} บาท`
+                                            : undefined
+                                    }
+                                    // theme ตั้ง helperText เป็น absolute → ทับช่องหมายเหตุด้านล่าง ให้กินพื้นที่จริงแทน
+                                    FormHelperTextProps={{ sx: { position: "static" } }}
                                 />
                                 <TextField
                                     select
@@ -795,7 +833,9 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                     size="small"
                                     fullWidth
                                     value={modal.uncoveredReason ?? ""}
-                                    onChange={(e) => patchModal({ uncoveredReason: Number(e.target.value) })}
+                                    onChange={(e) =>
+                                        patchModal({ uncoveredReason: Number(e.target.value), isUncoveredAuto: false })
+                                    }
                                 >
                                     {notCoveredReasons.map((r) => (
                                         <MenuItem key={r.value ?? r.label} value={r.value}>
@@ -850,7 +890,7 @@ const OrganLossSelector: React.FC<OrganLossSelectorProps> = ({
                                 <Button variant="outlined" color="inherit" onClick={closeModal}>
                                     ยกเลิก
                                 </Button>
-                                <Button variant="contained" onClick={handleSave}>
+                                <Button variant="contained" onClick={handleSave} disabled={isUncoveredTooLow}>
                                     บันทึก
                                 </Button>
                             </Box>
@@ -868,8 +908,10 @@ const SimpleModalBody: React.FC<{
     patchModal: (patch: Partial<ModalState>) => void;
     modalTotal: number;
     customerId: string | undefined;
+    coverageAmount: number | undefined;
     onRuleChange: (rule: OrganRuleResult | null) => void;
-}> = ({ modal, patchModal, customerId, onRuleChange }) => {
+    onExcessChange: (excess: number) => void;
+}> = ({ modal, patchModal, customerId, coverageAmount, onRuleChange, onExcessChange }) => {
     const isCombo = isComboOrganKey(modal.key);
     const comboParts = ORGAN_COMBO_PARTS[modal.key] || [];
 
@@ -911,21 +953,15 @@ const SimpleModalBody: React.FC<{
     const deductionSourceOptions = deductionSource?.data ?? [];
 
     const rule: OrganRuleResult | null = disabilityOptions[0] ?? null;
+    const maxAmount = rule ? calculateRuleMaxAmount(rule, coverageAmount) : undefined;
 
     useEffect(() => {
         onRuleChange(rule);
     }, [rule]);
 
     useEffect(() => {
-        if (!rule || isCombo === undefined) return;
-        const grossAmount = amountNumber(modal.amount);
-        const available = rule.coveredAmount - rule.sumUsedAmount;
-
-        if (grossAmount > available) {
-            const excess = grossAmount - available;
-            patchModal({ uncoveredAmount: String(excess), uncoveredReason: 12 });
-        }
-    }, [modal.amount, rule]);
+        onExcessChange(maxAmount === undefined ? 0 : amountNumber(modal.amount) - maxAmount);
+    }, [modal.amount, maxAmount]);
 
     // ── ตอนเปิด modal แก้ไขรายการ combo เดิม: reverse-lookup part1Id/part2Id จาก bodyPartId ที่เก็บไว้ ──
     useEffect(() => {
@@ -976,7 +1012,9 @@ const SimpleModalBody: React.FC<{
                                 value={modal.comboPart1Id}
                                 options={part1Options}
                                 loading={comboLoading}
-                                onChange={(id, name) => patchModal({ comboPart1Id: id, comboPart1Name: name })}
+                                onChange={(id, name) =>
+                                    patchModal({ comboPart1Id: id, comboPart1Name: name, keepSavedUncovered: false })
+                                }
                                 isCombo
                             />
                         </Box>
@@ -991,7 +1029,9 @@ const SimpleModalBody: React.FC<{
                                 value={modal.comboPart2Id}
                                 options={part2Options}
                                 loading={comboLoading}
-                                onChange={(id, name) => patchModal({ comboPart2Id: id, comboPart2Name: name })}
+                                onChange={(id, name) =>
+                                    patchModal({ comboPart2Id: id, comboPart2Name: name, keepSavedUncovered: false })
+                                }
                                 isCombo
                             />
                         </Box>
@@ -1008,7 +1048,9 @@ const SimpleModalBody: React.FC<{
                         value={modal.side}
                         options={singleOptions.map((o) => ({ id: o.bodyPartId, name: o.disabilitySideName }))}
                         loading={singleLoading}
-                        onChange={(id, name) => patchModal({ side: id, sideName: name, amount: "" })}
+                        onChange={(id, name) =>
+                            patchModal({ side: id, sideName: name, amount: "", keepSavedUncovered: false })
+                        }
                     />
                 </Box>
             )}
@@ -1019,12 +1061,8 @@ const SimpleModalBody: React.FC<{
                 fullWidth
                 inputMode="decimal"
                 value={modal.amount}
-                onChange={(e) => patchModal({ amount: e.target.value })}
-                helperText={
-                    rule
-                        ? `แนะนำ: ${formatNoDecimal(rule.coveredAmount * (rule.percent / 100))} บาท (${rule.percent}%)`
-                        : "กรอกยอดเบิกเอง"
-                }
+                onChange={(e) => patchModal({ amount: e.target.value, keepSavedUncovered: false })}
+                helperText={rule ? `แนะนำ: ${formatNoDecimal(maxAmount)} บาท (${rule.percent}%)` : "กรอกยอดเบิกเอง"}
                 sx={{ mt: isCombo ? 0 : undefined, mb: 2 }}
             />
 
@@ -1203,7 +1241,8 @@ const FingerCell: React.FC<{
         }
     }, [data.selected, matched?.bodyPartId, matched?.standardMedicalExpenseId]);
     useEffect(() => {
-        if (!data.selected) {
+        // ล้างเฉพาะที่มียอดค้าง — กันตอน mount นิ้วที่ไม่ได้เลือกไปนับเป็นการแก้ของ user (keepSavedUncovered)
+        if (!data.selected && data.amount) {
             setFingerField(side, fingerKey, { amount: "" });
         }
     }, [data.selected]);
