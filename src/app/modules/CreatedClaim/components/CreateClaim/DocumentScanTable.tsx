@@ -28,8 +28,9 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 // 11 เอกสารประกอบการพิจารณาเคลม
 // 12 ใบเสร็จโรงพยาบาล
 // 13 เอกสารประกอบการเปลี่ยนบัญชี
+// 14 เอกสารประกอบการปฏิเสธสินไหม
 
-type DocumentTypeKey =
+export type DocumentTypeKey =
     | "บัตรประชาชน"
     | "แบบฟอร์ม A"
     | "แบบฟอร์ม B"
@@ -42,7 +43,8 @@ type DocumentTypeKey =
     | "คู่สัญญาโรงพยาบาล"
     | "เอกสารประกอบการพิจารณาเคลม"
     | "ใบเสร็จโรงพยาบาล"
-    | "เอกสารประกอบการเปลี่ยนบัญชี";
+    | "เอกสารประกอบการเปลี่ยนบัญชี"
+    | "เอกสารประกอบการปฏิเสธสินไหม";
 
 export const documentTypeId: Record<DocumentTypeKey, number> = {
     บัตรประชาชน: 1,
@@ -58,6 +60,7 @@ export const documentTypeId: Record<DocumentTypeKey, number> = {
     เอกสารประกอบการพิจารณาเคลม: 11,
     ใบเสร็จโรงพยาบาล: 12,
     เอกสารประกอบการเปลี่ยนบัญชี: 13,
+    เอกสารประกอบการปฏิเสธสินไหม: 14,
 };
 
 type DocumentScanTableProps = {

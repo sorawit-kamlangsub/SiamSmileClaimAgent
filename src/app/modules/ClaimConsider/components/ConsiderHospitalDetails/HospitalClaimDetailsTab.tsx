@@ -609,6 +609,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         headingText="แจ้งผลการพิจารณาโรงพยาบาล"
                                         labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
                                         onRejectDocumentsChange={setRejectDocuments}
+                                        rejectDocumentType="ใบแจ้งปฏิเสธสินไหม"
                                     />
                                 </Grid>
                             </Grid>

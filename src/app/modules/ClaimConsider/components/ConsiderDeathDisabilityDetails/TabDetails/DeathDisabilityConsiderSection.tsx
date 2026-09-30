@@ -420,7 +420,7 @@ const DeathDisabilityConsiderSection = ({
                                 <DocumentScanTable
                                     disablePaper
                                     productTypeId={productTypeId ?? 0}
-                                    documentType="ใบแจ้งปฏิเสธสินไหม"
+                                    documentType="เอกสารประกอบการปฏิเสธสินไหม"
                                     aplicationCode={aplicationCode ?? ""}
                                     Header="เอกสารประกอบการปฏิเสธ"
                                     onAttachedDocumentsChange={onRejectDocumentsChange}
