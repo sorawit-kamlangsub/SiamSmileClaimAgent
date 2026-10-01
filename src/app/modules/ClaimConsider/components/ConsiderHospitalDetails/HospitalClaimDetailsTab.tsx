@@ -654,8 +654,18 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                             value={simBCategory}
                                             onChange={(e) => setSimBCategory(e.target.value as "SimB1" | "SimB2")}
                                         >
-                                            <FormControlLabel value="SimB1" control={<Radio />} label="Sim B1" />
-                                            <FormControlLabel value="SimB2" control={<Radio />} label="Sim B2" />
+                                            <FormControlLabel
+                                                value="SimB1"
+                                                control={<Radio />}
+                                                label="Sim B1"
+                                                disabled={readOnly}
+                                            />
+                                            <FormControlLabel
+                                                value="SimB2"
+                                                control={<Radio />}
+                                                label="Sim B2"
+                                                disabled={readOnly}
+                                            />
                                         </RadioGroup>
                                     </Paper>
                                 </Grid>
@@ -665,6 +675,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     formik={formik}
                                     detailData={detailData}
                                     customerDetailData={customerDetailData}
+                                    readOnly={readOnly}
                                 />
                             </Grid>
                         </Grid>

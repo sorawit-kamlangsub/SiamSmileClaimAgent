@@ -15,6 +15,8 @@ type TreatmentCostTableProps = {
     formik: FormikProps<any>;
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+    /** โหมดดูอย่างเดียว (DFUAT-066) : Step 2 แก้ไขไม่ได้ทั้ง OCR และตารางค่าใช้จ่าย */
+    readOnly?: boolean;
 };
 
 // รับ formik/detailData/customerDetailData เป็น props จาก HospitalClaimDetailsTab (useHospitalConsiderDetailHook)
@@ -22,7 +24,7 @@ type TreatmentCostTableProps = {
 // การเรียกซ้ำเดิมทำให้ยิง query/formik ผิดชุดข้อมูลซ้อนกันโดยไม่จำเป็น
 // useClaimExpenseDetailHook เรียกที่นี่จุดเดียวแล้วส่งผลลัพธ์ลง ExpenseRecords แทนให้ ExpenseRecords เรียกเอง
 // (ดูเหตุผลใน ExpenseRecords.tsx / ExpenseDetails.tsx — ฝั่งเคลมลูกค้าต้องใช้ผลลัพธ์เดียวกันนี้ก่อนถึงจุดนั้น)
-const TreatmentCostTable = ({ formik, detailData, customerDetailData }: TreatmentCostTableProps) => {
+const TreatmentCostTable = ({ formik, detailData, customerDetailData, readOnly = false }: TreatmentCostTableProps) => {
     const expenseDetail = useClaimExpenseDetailHook({ detailData, customerDetailData });
     return (
         <>
@@ -32,13 +34,17 @@ const TreatmentCostTable = ({ formik, detailData, customerDetailData }: Treatmen
                     text="OCR ใบแจ้งค่ารักษา"
                     color="blue"
                 />
-                <OcrReceiptSection formik={formik} applicationCode={customerDetailData?.data?.policyCode} />
+                <OcrReceiptSection
+                    formik={formik}
+                    applicationCode={customerDetailData?.data?.policyCode}
+                    readOnly={readOnly}
+                />
             </CustomPaper>
 
             <CustomPaper>
                 <HeadingWithColor text="รายการค่าใช้จ่าย" color="blue" icon={<NoteAddIcon sx={{ fontSize: 27 }} />} />
                 {/* เคลมโรงพยาบาล : กรอบแจ้งเตือนยอดเงินเทียบยอดเงินตามใบเสร็จ ไม่เทียบเงินโอน */}
-                <ExpenseRecords expenseDetail={expenseDetail} reconciliationMode="receipt" />
+                <ExpenseRecords expenseDetail={expenseDetail} reconciliationMode="receipt" readOnly={readOnly} />
             </CustomPaper>
         </>
     );
