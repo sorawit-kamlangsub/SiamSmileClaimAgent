@@ -232,6 +232,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                     },
                 ];
             }
+            // RC-003 3.4 : ติ๊ก "เป็นกายภาพบำบัด" แล้วต้องเลือกความจำเป็นทางการแพทย์
+            if (values.isPhysicalTherapyChecked && !values.physicalTherapyNecessityReasonId) {
+                errors.physicalTherapyNecessityReasonId = "โปรดเลือก";
+            }
             return errors;
         },
         onSubmit: () => {},

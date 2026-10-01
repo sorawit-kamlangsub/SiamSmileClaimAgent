@@ -52,6 +52,7 @@ const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
 type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
     formik: FormikProps<TValues>;
     customerDetail: GetCustomerDetailByIdDtoResponse | undefined;
+    "physicalTherapyNecessityReasonId",
     filledItems: ClaimExpenseItem[];
     stepsLength: number;
     /** ยอดที่จ่ายจริง (detail.paymentAmount) — ใช้เช็คยอดเงิน ClaimLine ก่อนปล่อยผ่าน Step 2 */
@@ -170,6 +171,9 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
 
         const firstErrorField = STEP_1_ERROR_ORDER.find((field) => errors[field]);
         if (firstErrorField) {
+            physicalTherapyNecessityReasonId: errors.physicalTherapyNecessityReasonId
+                ? true
+                : formik.touched.physicalTherapyNecessityReasonId,
             window.setTimeout(() => {
                 const fieldWrapper = document.querySelector<HTMLElement>(`[data-field-name="${firstErrorField}"]`);
                 fieldWrapper?.scrollIntoView({ behavior: "smooth", block: "center" });

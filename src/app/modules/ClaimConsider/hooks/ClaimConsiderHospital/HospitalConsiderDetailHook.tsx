@@ -129,6 +129,8 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     hn: "",
     reservationRemark: "",
 
+    // ของเคลมลูกค้า (RC-003 3.4) — เคลมโรงพยาบาลใช้ isPhysicalTherapy ด้านล่างแทน ใส่ไว้ให้ครบ type เท่านั้น
+    isPhysicalTherapyChecked: false,
     isPhysicalTherapy: "",
     physicalTherapyNecessityReasonId: undefined,
     physicalTherapyNecessityReasonDetail: "",

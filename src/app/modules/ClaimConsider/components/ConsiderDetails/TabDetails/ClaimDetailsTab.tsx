@@ -6,6 +6,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
+import PhysicalTherapySection from "./SubDetailsTab/PhysicalTherapySection";
 import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
 // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
 // import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
@@ -93,6 +94,15 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             rejectDocuments,
             excludeSavedCaseDocuments: true,
             // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
+            // RC-003 3.4 ข้อมูลกายภาพบำบัด — ไม่ติ๊กแล้วเหตุผลที่ค้างไว้ไม่ถูกส่ง
+            caseTreatmentFields: {
+                casePhysicalTherapy: {
+                    isPhysicalTherapy: formik.values.isPhysicalTherapyChecked,
+                    physicalTherapyNecessityReasonId: formik.values.isPhysicalTherapyChecked
+                        ? formik.values.physicalTherapyNecessityReasonId
+                        : undefined,
+                },
+            },
             onApproveSuccess: (response) => {
                 setConfirmApproveOpen(false);
                 setApproveResult({
@@ -178,6 +188,9 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                 <Grid container spacing={2}>
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
                                         <ExpenseDetails
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <PhysicalTherapySection />
+                                    </Grid>
                                             formik={formik}
                                             detailData={considerDetail.detailData}
                                             customerDetailData={considerDetail.customerDetailData}
