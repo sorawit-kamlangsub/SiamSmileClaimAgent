@@ -2,73 +2,28 @@ import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
 import { numberWithCommas } from "../../../../functionHelpers";
 import { Typography } from "@mui/material";
-import { PaginationDto, swalInfo } from "../../../_common";
+import { PaginationDto, swalError, swalInfo } from "../../../_common";
 import { useMemo, useState } from "react";
 import { useAppDispatch } from "../../../../../redux";
 import { setDialogOpen } from "../store/generateTransferSlice";
+import { HospitalTransferMonitorResponse, useGetHospitalTransferMonitor } from "../manageTransferHospitalAPI";
 
-type GenerateGroupTransferHookProps = {
-    statusId: number | undefined;
-    searchDetail: string;
-};
-
-const dataMock = [
-    {
-        caseId: "b1e2a4c6-1234-4a5b-8c9d-000000000001",
-        hospitalRefNo: "REF-690900001",
-        caseNo: "CC690900000018",
-        billSentDate: "01/08/2569",
-        customerName: "ด.ญ.กรณิกา สมวาจา",
-        hospitalName: "โรงพยาบาลกรุงเทพ",
-        amount: 3303.0,
-        statusId: 1,
-        statusName: "รอสร้างรายการ",
-    },
-    {
-        caseId: "b1e2a4c6-1234-4a5b-8c9d-000000000002",
-        hospitalRefNo: "REF-690900002",
-        caseNo: "CC690900000042",
-        billSentDate: "02/08/2569",
-        customerName: "นายสมชาย ใจดี",
-        hospitalName: "โรงพยาบาลพญาไท 3",
-        amount: 1750.5,
-        statusId: 1,
-        statusName: "รอสร้างรายการ",
-    },
-    {
-        caseId: "b1e2a4c6-1234-4a5b-8c9d-000000000003",
-        hospitalRefNo: "REF-690900003",
-        caseNo: "CC690900000057",
-        billSentDate: "03/08/2569",
-        customerName: "นางสาวรัชชนก สุวรรณโชค",
-        hospitalName: "โรงพยาบาลศิริราช",
-        amount: 5200.0,
-        statusId: 1,
-        statusName: "รอสร้างรายการ",
-    },
-    {
-        caseId: "b1e2a4c6-1234-4a5b-8c9d-000000000004",
-        hospitalRefNo: "REF-690900004",
-        caseNo: "CC690900000020",
-        billSentDate: "01/08/2569",
-        customerName: "ด.ญ.กรณิกา สมวาจา",
-        hospitalName: "โรงพยาบาลกรุงเทพ",
-        amount: 3300.0,
-        statusId: 1,
-        statusName: "รอสร้างรายการ",
-    },
-];
-
-const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupTransferHookProps) => {
+const useGenerateGroupTransferHook = () => {
     const dispatch = useAppDispatch();
+    const [data, setData] = useState<HospitalTransferMonitorResponse>();
     const [paginate, setPaginate] = useState<PaginationDto>({ page: 1, recordsPerPage: 10 });
     const [onRowsSelected, setOnRowsSelected] = useState<any[]>([]);
     const [rowsSelected, setRowsSelected] = useState<any[]>([]);
-    let data: any[] = [];
 
-    if (statusId === 1) {
-        data = dataMock;
-    }
+    const handleGetDataSuccess = (res: HospitalTransferMonitorResponse) => {
+        setData(res);
+    };
+
+    const handleError = (message: string) => {
+        swalError("แจ้งเตือน", message);
+    };
+
+    const { mutate, isLoading } = useGetHospitalTransferMonitor(handleGetDataSuccess, handleError);
 
     const column: MUIDataTableColumn[] = [
         {
@@ -81,11 +36,11 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
                     return (
                         <Typography
                             onClick={() => {
-                                swalInfo(data?.[rowIndex]?.caseId, "");
+                                swalInfo(data?.data?.[rowIndex]?.caseId ?? "", "");
                             }}
                             sx={{ color: "#4389B5", cursor: "pointer" }}
                         >
-                            {data?.[rowIndex]?.caseNo}
+                            {data?.data?.[rowIndex]?.caseNo}
                         </Typography>
                     );
                 },
@@ -98,8 +53,8 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
-                    const formatDate = data?.[rowIndex].billSentDate
-                        ? dayjs(data?.[rowIndex]?.billSentDate).format("DD/MM/YYYY")
+                    const formatDate = data?.data?.[rowIndex].billSentDate
+                        ? dayjs(data?.data?.[rowIndex]?.billSentDate).format("DD/MM/YYYY")
                         : "-";
                     return formatDate;
                 },
@@ -122,7 +77,7 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
-                    const formatNumberAmount = numberWithCommas(data?.[rowIndex]?.amount ?? 0);
+                    const formatNumberAmount = numberWithCommas(data?.data?.[rowIndex]?.amount ?? 0);
                     return formatNumberAmount;
                 },
             },
@@ -134,7 +89,7 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
-                    return data?.[rowIndex]?.statusName;
+                    return data?.data?.[rowIndex]?.statusNameTH;
                 },
             },
         },
@@ -152,7 +107,7 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
     ) => {
         setOnRowsSelected(selectedRowIndexes);
 
-        const rows = selectedRowIndexes.map((rowIndex) => data[rowIndex]);
+        const rows = selectedRowIndexes.map((rowIndex) => data?.data[rowIndex]);
         setRowsSelected(rows);
     };
 
@@ -165,6 +120,8 @@ const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupT
         data,
         column,
         paginate,
+        mutate,
+        isLoading,
         handleGenerateSuccess: handleGenerateDialogOpen,
         setPaginate,
         handleRowSelected,

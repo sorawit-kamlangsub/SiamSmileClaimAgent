@@ -11,8 +11,8 @@ type SearchTransferByStatusProps = {
 };
 
 export const statusMock = [
-    { id: 1, label: "รอสร้างรายการ" },
-    { id: 2, label: "รอโอน" },
+    { id: 2, label: "รอสร้างรายการ" },
+    { id: 3, label: "รอโอน" },
     { id: 4, label: "โอนสำเร็จ" },
     { id: 5, label: "โอนไม่สำเร็จ" },
 ];

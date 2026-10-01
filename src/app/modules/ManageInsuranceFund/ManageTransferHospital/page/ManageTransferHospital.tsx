@@ -6,7 +6,7 @@ import GenerateGroupTable from "../components/GenerateGroupTable";
 import GenerateDialogConfirm from "../components/GenerateDialogConfirm";
 
 const ManageTransferHospital = () => {
-    const { formik } = useSearchTransferByStatusHook();
+    const { formik, submittedSearch } = useSearchTransferByStatusHook();
 
     const handleSelectStatusFromEmptyState = (value: number | undefined) => {
         formik.setFieldValue("statusId", value);
@@ -16,7 +16,9 @@ const ManageTransferHospital = () => {
         <>
             <Grid container spacing={2}>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <SearchTransferByStatus formik={formik} />
+                    <form onSubmit={formik.handleSubmit}>
+                        <SearchTransferByStatus formik={formik} />
+                    </form>
                 </Grid>
                 {!formik.values.statusId && (
                     <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -26,11 +28,12 @@ const ManageTransferHospital = () => {
                         />
                     </Grid>
                 )}
-                {formik.values.statusId === 1 ? (
+                {submittedSearch?.values.statusId === 2 ? (
                     <Grid item xs={12} sm={12} md={12} lg={12}>
                         <GenerateGroupTable
-                            statusId={formik.values.statusId}
-                            searchDetail={formik.values.searchDetail}
+                            key={submittedSearch.requestId}
+                            statusId={submittedSearch.values.statusId}
+                            searchDetail={submittedSearch.values.searchDetail}
                         />{" "}
                     </Grid>
                 ) : null}

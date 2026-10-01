@@ -2,6 +2,7 @@ import { Box, Button, Grid, Typography } from "@mui/material";
 import useGenerateGroupTransferHook from "../hooks/GenerateGroupTransferHook";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import { StandardDataTable } from "../../../_common";
+import { useEffect } from "react";
 
 type GenerateGroupTableProps = {
     statusId: number | undefined;
@@ -9,11 +10,24 @@ type GenerateGroupTableProps = {
 };
 
 const GenerateGroupTable = ({ statusId, searchDetail }: GenerateGroupTableProps) => {
-    const { data, column, paginate, setPaginate, handleRowSelected, handleGenerateSuccess, onRowsSelected } =
-        useGenerateGroupTransferHook({
-            statusId: statusId,
-            searchDetail: searchDetail,
-        });
+    const {
+        data,
+        column,
+        paginate,
+        mutate,
+        isLoading,
+        setPaginate,
+        handleRowSelected,
+        handleGenerateSuccess,
+        onRowsSelected,
+    } = useGenerateGroupTransferHook();
+
+    useEffect(() => {
+        if (statusId) {
+            mutate({ statusId, hospitalName: searchDetail, paginate });
+        }
+    }, [statusId, searchDetail, paginate, mutate]);
+
     return (
         <Box
             sx={{
@@ -53,7 +67,8 @@ const GenerateGroupTable = ({ statusId, searchDetail }: GenerateGroupTableProps)
                         <StandardDataTable
                             name="generate"
                             columns={column}
-                            data={data ?? []}
+                            data={data?.data ?? []}
+                            isLoading={isLoading}
                             color="primary"
                             paginated={paginate}
                             setPaginated={setPaginate}
