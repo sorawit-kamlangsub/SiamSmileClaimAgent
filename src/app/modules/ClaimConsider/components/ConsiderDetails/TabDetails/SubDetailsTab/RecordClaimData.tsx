@@ -28,7 +28,7 @@ type RecordClaimDataProps = {
     causeOfIncident: ChipOption[];
     medicalType: ChipOption[];
     incidentTypeMappingLoading: boolean;
-    /** label ของช่อง detail — default "รายละเอียด" (เคลม รพ. RC-005 5.3 ใช้ "รายละเอียดการเจ็บป่วย/การบาดเจ็บ") */
+    /** label ของช่อง detail — default "รายละเอียดการเจ็บป่วย/การบาดเจ็บ" (เคลมลูกค้า RC-003 3.2 / เคลม รพ. RC-005 5.3) */
     detailLabel?: string;
     /* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
     continuousClaimRows: ContinuousClaimRow[];
@@ -49,7 +49,7 @@ const RecordClaimData = ({
     causeOfIncident,
     medicalType,
     incidentTypeMappingLoading,
-    detailLabel = "รายละเอียด",
+    detailLabel = "รายละเอียดการเจ็บป่วย/การบาดเจ็บ",
 }: RecordClaimDataProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
