@@ -15,6 +15,11 @@ import {
     hasMissingReasonError,
     sumClaimExpenseItems,
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    focusIpdCompensationError,
+    getIpdCompensationBlocker,
+    isIpdCompensationFlow,
+} from "../../store/ipdCompensationCalculator";
 
 /**
  * แจ้งเตือนว่ายังไม่เลือกสาเหตุไม่คุ้มครอง แล้ว (หลังปิด alert) เลื่อนไป focus ช่องสาเหตุของแถวแรกที่ยังไม่เลือก
@@ -47,6 +52,7 @@ const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
     "hospitalId",
     "chiefComplaintId",
     "diagnoses",
+    "physicalTherapyNecessityReasonId",
 ];
 
 type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
@@ -165,6 +171,9 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
             chiefComplaintId: errors.chiefComplaintId ? true : formik.touched.chiefComplaintId,
             hospitalId: errors.hospitalId ? true : formik.touched.hospitalId,
             diagnoses: errors.diagnoses ? [{ icd10Id: true }] : formik.touched.diagnoses,
+            physicalTherapyNecessityReasonId: errors.physicalTherapyNecessityReasonId
+                ? true
+                : formik.touched.physicalTherapyNecessityReasonId,
         };
         await formik.setTouched(touched, false);
 
@@ -200,14 +209,31 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
                     alertMissingNonCoveredReason();
                     return;
                 }
-                const totals = sumClaimExpenseItems(filledItems);
-                // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
-                // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ
-                // ทั้งที่ควรเป็น "pending" (ดู ClaimAmountReconciliationInput.paymentAmount)
-                const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
-                if (reconciliation.status === "error") {
-                    swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
-                    return;
+                if (isIpdCompensationFlow(formik.values.coverageTypeId, formik.values.medicalTypeId)) {
+                    // ค่ารักษา IPD/Day Case : ใช้ตัวคำนวณกลางชุดเดียวกับ UI (ExpenseRecords) — ข้อมูลค่าชดเชยไม่สมบูรณ์
+                    // หรือยอดโอนไม่ตรงยอดเงินสุทธิ = คงอยู่ Step 2 แล้วเลื่อน+focus ไปที่ข้อความผิดพลาด
+                    const blocker = getIpdCompensationBlocker({
+                        items: filledItems,
+                        coverageTypeId: formik.values.coverageTypeId,
+                        medicalTypeId: formik.values.medicalTypeId,
+                        ipdDays: formik.values.ipdDays,
+                        icuDays: formik.values.icuDays,
+                        paymentAmount,
+                    });
+                    if (blocker) {
+                        focusIpdCompensationError(blocker);
+                        return;
+                    }
+                } else {
+                    const totals = sumClaimExpenseItems(filledItems);
+                    // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
+                    // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ
+                    // ทั้งที่ควรเป็น "pending" (ดู ClaimAmountReconciliationInput.paymentAmount)
+                    const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
+                    if (reconciliation.status === "error") {
+                        swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
+                        return;
+                    }
                 }
                 const calculated = await handleCalculate();
                 if (!calculated) return;

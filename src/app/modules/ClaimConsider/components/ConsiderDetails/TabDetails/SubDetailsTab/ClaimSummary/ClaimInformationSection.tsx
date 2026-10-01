@@ -63,7 +63,7 @@ const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationS
             {diagnosis6 !== undefined && (
                 <CustomDisplayText label="คำวินิจฉัย 6" value={getIcd10Name(diagnosis6)} xs={12} md={12} />
             )}
-            <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
+            <CustomDisplayText label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ" value={values.detail ?? "-"} xs={12} md={12} />
         </Grid>
     );
 };

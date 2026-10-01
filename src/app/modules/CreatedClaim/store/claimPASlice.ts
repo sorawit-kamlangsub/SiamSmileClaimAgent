@@ -3,6 +3,7 @@ import { RootState } from "../../../../redux";
 import dayjs, { Dayjs } from "dayjs";
 import {
     BeneficiaryForm,
+    CarOwnerValues,
     ClaimBankAccount,
     ContactInfo,
     DeathPlaceType,
@@ -128,6 +129,8 @@ export interface ClaimPAFormValues {
     zebraNo: string | undefined;
     employeeCode: string | undefined;
     employeeName: string | undefined;
+    /** เจ้าของรถที่ผู้ใช้เลือกไว้ตอน Walk Out — ใช้คืนค่าเมื่อสลับกลับมา Walk Out (ไม่ได้ส่งเข้า payload) */
+    walkOutCarOwner: CarOwnerValues | undefined;
     //เหตุของการเคลม
     incidentTypeId: number | undefined;
     incidentTypeName: string | undefined;
@@ -192,6 +195,7 @@ const defaultForm: ClaimPAFormValues = {
     zebraNo: undefined,
     employeeCode: undefined,
     employeeName: undefined,
+    walkOutCarOwner: undefined,
     incidentTypeId: undefined,
     incidentTypeName: undefined,
     coverageTypeId: undefined,

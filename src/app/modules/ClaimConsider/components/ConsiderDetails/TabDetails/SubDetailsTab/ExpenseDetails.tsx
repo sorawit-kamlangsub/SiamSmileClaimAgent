@@ -33,7 +33,13 @@ type ExpenseDetailsProps = {
 // ด้านล่างต้องใช้ benefitName จาก hook นี้ ก่อนถึง ExpenseRecords — ส่งผลลัพธ์ทั้งก้อนต่อลงไปแทนเรียกซ้ำ
 const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetailsProps) => {
     const nplAmount = detailData?.data?.nplAmount || 0;
-    const expenseDetail = useClaimExpenseDetailHook({ detailData, customerDetailData, isCustomerClaim: true });
+    const expenseDetail = useClaimExpenseDetailHook({
+        detailData,
+        customerDetailData,
+        isCustomerClaim: true,
+        // จำนวนวันนอนรวมจาก Step 1 — ใช้คำนวณค่าชดเชยผู้ป่วยใน (ไม่แยกอัตรา IPD/ICU)
+        totalStayDays: (formik.values.ipdDays || 0) + (formik.values.icuDays || 0),
+    });
     // RC-004 4.1 : สิทธิ์ความคุ้มครอง = ผลรวม maxPrice ของ Benefit ตามประเภทความคุ้มครองที่เลือก
     // (benefitIdList มาจาก /standard-medical-expense/case ที่กรองด้วย coverageTypeId แล้ว) — API เดียวกับแท็บความคุ้มครอง
     const { benefit: policyBenefit } = usePolicyBenefitHook({ customerDetail: customerDetailData?.data });

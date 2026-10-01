@@ -37,6 +37,7 @@ import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
 import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
+import { useDocumentRecipientRules } from "../../../hooks/CreateClaim/useDocumentRecipientRules";
 import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
 import { useNavigate } from "react-router-dom";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
@@ -85,6 +86,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         getRequiredDocsByCoverageType,
         maxTransferAmount,
     } = useClaimPHForm({ onNext });
+    const { isServiceProviderDisabled, isCarOwnerDisabled } = useDocumentRecipientRules(formik);
     const { values, setFieldValue } = formik;
     const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
         values.coverageTypeId
@@ -293,6 +295,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     name="serviceProviderId"
                                     fullWidth
                                     required
+                                    disabled={isServiceProviderDisabled}
                                     selectedCallback={(item) => {
                                         formik.setFieldValue("serviceProviderName", item?.personName);
                                         formik.setFieldValue("serviceProviderCode", item?.employeeCode);
@@ -303,11 +306,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         <Grid item xs={12} md={4}>
                             <Box data-field-name="zebraId">
                                 <ZebraCarOwnerDropDown
-                                    firstItemText="-- เลือก --"
+                                    firstItemText="--- โปรดระบุ ---"
                                     formik={formik}
                                     name="zebraId"
                                     fullWidth
                                     required
+                                    disabled={isCarOwnerDisabled}
                                     selectedCallback={(item) => {
                                         formik.setFieldValue("zebraCode", item?.zebraCode);
                                         formik.setFieldValue("zebraNo", item?.zebraNo);

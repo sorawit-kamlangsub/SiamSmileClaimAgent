@@ -519,6 +519,19 @@ export enum MedicalType {
     DayCaseSurgery = 6,
 }
 
+/**
+ * ผู้รับเอกสาร (Master DocumentRecipientType)
+ * TODO: รอ API เพิ่ม Master Walk Out / Walk in / Pivot — ยืนยัน ID ทั้ง 3 ตัวอีกครั้ง (WalkOut = 2 ตาม default เดิม)
+ */
+export enum DocumentRecipientType {
+    WalkIn = 1,
+    WalkOut = 2,
+    Pivot = 3,
+}
+
+/** รหัสพนักงานของ "000 - คุณสำนักงาน" ใน Master ผู้ให้บริการ / เจ้าของรถ */
+export const OFFICE_EMPLOYEE_CODE = "000";
+
 export enum CauseOfIncident {
     Illness = 2, // โรคทั่วไป
     Accident = 3, // อุบัติเหตุทั่วไป

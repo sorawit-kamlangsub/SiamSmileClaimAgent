@@ -1,8 +1,9 @@
 import { useGetTitle } from "../../../../../api/coreClaimMastersApi";
-import FormikDropdown, { FormikDropdownProps } from "../../CustomFormik/FormikDropdown";
+import { FormikAutocomplete } from "../../CustomFormik";
+import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
 
 type TitlePersonDropdownProps = Omit<
-    FormikDropdownProps,
+    FormikAutocompleteProps,
     "data" | "isLoading" | "valueFieldName" | "label" | "displayFieldName"
 >;
 
@@ -10,9 +11,10 @@ const TitlePersonDropdown = ({ formik, ...props }: TitlePersonDropdownProps) => 
     const { data, isLoading } = useGetTitle(undefined, 2);
 
     return (
-        <FormikDropdown
+        <FormikAutocomplete
             data={data?.data ?? []}
             label="คำนำหน้าชื่อ"
+            sx={{ mt: 0 }}
             {...props}
             formik={formik}
             valueFieldName="titleId"

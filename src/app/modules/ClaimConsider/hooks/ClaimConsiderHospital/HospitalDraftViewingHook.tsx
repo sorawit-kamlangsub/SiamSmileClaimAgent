@@ -62,14 +62,12 @@ const useHospitalDraftViewingHook = (
             mappingData: incidentTypeMapping.data,
         });
 
-        // hn/an/vn : เฉพาะเคลมโรงพยาบาล — mapDraftPayloadToFormValues ไม่มี field พวกนี้
+        // hn : เฉพาะเคลมโรงพยาบาล — mapDraftPayloadToFormValues ไม่มี field นี้ (AN/VN ตัดออกจากฟอร์มแล้ว RC-005 5.2)
         if (payload.case?.hn !== undefined) draftValues.hn = payload.case.hn;
-        if (payload.case?.an !== undefined) draftValues.an = payload.case.an;
-        if (payload.case?.vn !== undefined) draftValues.vn = payload.case.vn;
 
         // diagnoses : mapper กลางคืนแค่ 3 ตำแหน่ง (ฟิลด์ร่วมกับเคลมลูกค้า ที่มีแค่ icD10_1st/2nd/3rdId)
         // แต่ฟอร์มเคลมโรงพยาบาลมี 6 ช่อง ต้องเติมตำแหน่ง 4-6 เอง ไม่งั้น formik.setValues จะทำให้ array
-        // สั้นลงเหลือ 3 (ช่อง 4-6 หายไปจาก UI ทันทีที่ดูฉบับร่าง) — ดึงจาก payload.case ตรงๆ เหมือน hn/an/vn
+        // สั้นลงเหลือ 3 (ช่อง 4-6 หายไปจาก UI ทันทีที่ดูฉบับร่าง) — ดึงจาก payload.case ตรงๆ เหมือน hn
         if (draftValues.diagnoses) {
             draftValues.diagnoses = [
                 ...draftValues.diagnoses,

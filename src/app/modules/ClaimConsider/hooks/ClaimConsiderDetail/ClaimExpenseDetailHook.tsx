@@ -26,6 +26,12 @@ import {
 } from "../../store/claimConsiderSlice";
 import { mergeDraftCaseItems } from "../../store/draftRevisionMappers";
 import {
+    calculateIpdCompensation,
+    getIpdTransferReconciliation,
+    IPD_COMPENSATION_DAILY_RATE,
+    isIpdCompensationFlow,
+} from "../../store/ipdCompensationCalculator";
+import {
     useGetClaimDetailConsider,
     useGetClaimEditDraftRevision,
     useGetCustomerDetailById,
@@ -83,6 +89,8 @@ type UseClaimExpenseDetailHookProps = {
      * ตั้งแต่ RC-006 ทั้งสองฝั่ง default claimAmount = originalAmount เหมือนกันแล้ว (ดู frequentItems ด้านล่าง)
      * RC-004 4.2 : ใช้ sync claimAmount = receiptAmount ตอนโหลดร่าง (เฉพาะเคลมลูกค้า) */
     isCustomerClaim?: boolean;
+    /** จำนวนวันนอนรวมจาก Step 1 (ipdDays + icuDays) — ใช้คำนวณค่าชดเชยผู้ป่วยใน (เฉพาะเคลมลูกค้า) */
+    totalStayDays?: number;
 };
 // รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
 // เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
@@ -91,6 +99,7 @@ const useClaimExpenseDetailHook = ({
     detailData,
     customerDetailData,
     isCustomerClaim = false,
+    totalStayDays,
 }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
     const { filledItems, filledItemsCaseId, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
@@ -152,8 +161,12 @@ const useClaimExpenseDetailHook = ({
         medicalTypeId,
         undefined,
         customerDetailData?.data?.productId ?? undefined,
-        customerDetailData?.data?.policyCode,
-        customerDetailData?.data?.productTypeId === 26 ? customerDetailData?.data?.customerTypeCode : undefined
+        // generated client throw ทันทีถ้า param เป็น null (รับได้แค่ undefined = ไม่ส่ง param) — BE คืน null ได้จริง
+        // เช่น customerTypeCode ของ PA นักเรียน ทำให้ request ไม่ถูกยิงและตารางว่างโดยไม่มี error บนจอ
+        customerDetailData?.data?.policyCode ?? undefined,
+        customerDetailData?.data?.productTypeId === 26
+            ? customerDetailData?.data?.customerTypeCode ?? undefined
+            : undefined
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
@@ -305,13 +318,21 @@ const useClaimExpenseDetailHook = ({
     // เพื่อไม่ให้ขึ้น warningDeficit ก่อนมีข้อมูลยอดโอนจริง
     const rawPaymentAmount = detailData?.data?.paymentAmount;
     const paymentAmount = rawPaymentAmount ?? 0;
-    const amountReconciliation = getClaimAmountReconciliation({
-        totalReceipt,
-        totalClaim,
-        totalDiscount,
-        totalNotCovered,
-        paymentAmount: rawPaymentAmount,
-    });
+    // ── ค่าชดเชยผู้ป่วยใน (เคลมลูกค้า ค่ารักษา IPD/Day Case) — คำนวณใหม่ทุก render จาก items + วันนอน
+    // ใช้ตัวคำนวณกลางชุดเดียวกับ gate ปุ่ม ถัดไป/อนุมัติ (getIpdCompensationBlocker) ──
+    const ipdCompensation =
+        isCustomerClaim && isIpdCompensationFlow(coverageTypeId, medicalTypeId)
+            ? calculateIpdCompensation({ items, totalStayDays, dailyRate: IPD_COMPENSATION_DAILY_RATE })
+            : undefined;
+    const amountReconciliation = ipdCompensation
+        ? getIpdTransferReconciliation(ipdCompensation, rawPaymentAmount)
+        : getClaimAmountReconciliation({
+              totalReceipt,
+              totalClaim,
+              totalDiscount,
+              totalNotCovered,
+              paymentAmount: rawPaymentAmount,
+          });
     const filterFilledItems = (items: ClaimExpenseItem[]) =>
         items.filter((item) => {
             const hasClaimAmount = item.claimAmount !== undefined && item.claimAmount !== null;
@@ -527,10 +548,11 @@ const useClaimExpenseDetailHook = ({
         }
         if (!matched) return;
         setExpandedIds((prev) => [...new Set([...prev, matched!.catId, matched!.subId])]);
-        const [code, ...desc] = matched.leaf.label.split(" ");
+        // รหัส Master เก็บแยกจากข้อความที่แสดง (ใช้ตรวจ IPD_Half_5) — ไม่ parse จาก label
+        const { code, label } = matched.leaf;
         handleSelectLeaf(
             code,
-            desc.join(" "),
+            label.startsWith(code) ? label.slice(code.length).trim() : label,
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
             matched.leaf.inputToStandardMappingId,
@@ -618,6 +640,7 @@ const useClaimExpenseDetailHook = ({
         netClaimAmount,
         paymentAmount,
         amountReconciliation,
+        ipdCompensation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
