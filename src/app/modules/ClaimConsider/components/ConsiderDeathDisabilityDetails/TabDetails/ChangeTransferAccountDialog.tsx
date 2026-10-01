@@ -20,7 +20,7 @@ import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
 import PersonIcon from "@mui/icons-material/Person";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SaveIcon from "@mui/icons-material/Save";
-import { FormikDropdown, FormikTextField } from "../../../../_common";
+import { FormikAutocomplete, FormikDropdown, FormikTextField } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { CaseDocumentV2Request } from "../../../../../api/coreClaimApi.client";
 import useChangeTransferAccountHook, {
@@ -139,15 +139,15 @@ const ChangeTransferAccountForm = ({
                     <Grid container spacing={2}>
                         <Grid item xs={12} sm={4} md={3}>
                             {/* ไม่ใช้ TitlePersonDropdown เพราะ label ตายตัว "คำนำหน้าชื่อ" — ใช้ master ชุดเดียวกัน (personTypeId = 2) */}
-                            <FormikDropdown
+                            <FormikAutocomplete
                                 formik={formik}
                                 name="payeeTitleId"
                                 label="คำนำหน้าผู้รับเงินแทน"
+                                sx={{ mt: 0 }}
                                 data={titleOptions}
                                 isLoading={titleLoading}
                                 valueFieldName="titleId"
                                 displayFieldName="titleName"
-                                firstItemText="---เลือก---"
                                 fullWidth
                                 required
                             />

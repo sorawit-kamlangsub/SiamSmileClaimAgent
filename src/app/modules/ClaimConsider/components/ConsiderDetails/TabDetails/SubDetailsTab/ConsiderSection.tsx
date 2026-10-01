@@ -9,7 +9,9 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 
 import { HeadingWithColor } from "../../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomPaper from "../../../../../_common/components/CustomComponent/CustomPaper";
-import DocumentScanTable from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import DocumentScanTable, {
+    DocumentTypeKey,
+} from "../../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
 import { DECISION_ID } from "../../../../store/claimConsider.constants";
 import { useFormikContext } from "formik";
@@ -110,6 +112,11 @@ type ConsiderSectionProps = {
     labelOverrides?: Partial<Record<number, string>>;
     /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — parent เก็บไว้ส่งไปกับผลพิจารณา */
     onRejectDocumentsChange?: (docs: CaseDocumentV2Request[]) => void;
+    /**
+     * ประเภทเอกสารของตาราง "เอกสารประกอบการปฏิเสธ" — default "เอกสารประกอบการปฏิเสธสินไหม" (14)
+     * (เคลมโรงพยาบาลใช้ "ใบแจ้งปฏิเสธสินไหม" (9))
+     */
+    rejectDocumentType?: DocumentTypeKey;
 };
 
 const ConsiderSection = ({
@@ -125,6 +132,7 @@ const ConsiderSection = ({
     headingText,
     labelOverrides,
     onRejectDocumentsChange,
+    rejectDocumentType = "เอกสารประกอบการปฏิเสธสินไหม",
 }: ConsiderSectionProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const formRef = useRef<HTMLDivElement>(null);
@@ -330,7 +338,7 @@ const ConsiderSection = ({
                             <DocumentScanTable
                                 disablePaper
                                 productTypeId={productId ?? 0}
-                                documentType="ใบแจ้งปฏิเสธสินไหม"
+                                documentType={rejectDocumentType}
                                 aplicationCode={aplicationCode ?? ""}
                                 Header="เอกสารประกอบการปฏิเสธ"
                                 onAttachedDocumentsChange={onRejectDocumentsChange}
