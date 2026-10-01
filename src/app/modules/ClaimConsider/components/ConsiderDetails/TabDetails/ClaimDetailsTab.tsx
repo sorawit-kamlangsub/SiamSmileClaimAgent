@@ -97,6 +97,8 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             // RC-003 3.4 ข้อมูลกายภาพบำบัด — ไม่ติ๊กแล้วเหตุผลที่ค้างไว้ไม่ถูกส่ง
             caseTreatmentFields: {
                 casePhysicalTherapy: {
+                    // id ของแถวเดิมจาก GetClaimDetailConsider — ให้ BE แก้แถวเดิม ไม่สร้างซ้ำ
+                    casePhysicalTherapyId: detail?.casePhysicalTherapyId,
                     isPhysicalTherapy: formik.values.isPhysicalTherapyChecked,
                     physicalTherapyNecessityReasonId: formik.values.isPhysicalTherapyChecked
                         ? formik.values.physicalTherapyNecessityReasonId

@@ -283,6 +283,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
         caseTreatmentFields: {
             caseMedicalTreatment: {
+                // id ของแถวเดิมจาก GetClaimDetailConsider — ให้ BE แก้แถวเดิม ไม่สร้างซ้ำ
+                caseMedicalTreatmentId: detail?.caseMedicalTreatmentId,
                 medicalLicenseNo: formik.values.doctorLicenseNo || undefined,
                 physicianName: formik.values.doctorName || undefined,
                 // RC-005 5.4 หมายเหตุ(ถ้ามี)
@@ -305,6 +307,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
             // RC-005 5.5 ความจำเป็นทางการแพทย์ : เหตุผลส่งเฉพาะตอนเลือก "ใช่"
             casePhysicalTherapy: formik.values.isPhysicalTherapy
                 ? {
+                      casePhysicalTherapyId: detail?.casePhysicalTherapyId,
                       isPhysicalTherapy: formik.values.isPhysicalTherapy === "yes",
                       physicalTherapyNecessityReasonId:
                           formik.values.isPhysicalTherapy === "yes"
