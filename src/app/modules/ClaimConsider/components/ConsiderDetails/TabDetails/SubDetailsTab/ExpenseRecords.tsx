@@ -43,6 +43,7 @@ import {
     hasMissingReasonError,
 } from "../../../../../ClaimSimulate/store/Claimsimulateutils";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import IpdCompensationSection from "./IpdCompensationSection";
 
 // ─── Reference styles ──────────────────────────────────────────────
 const REF = {
@@ -153,9 +154,10 @@ const TreeNodeRow = ({
 }) => {
     const isExpanded = expandedIds.includes(node.id);
     const hasChildren = node.children.length > 0;
-    const match = node.label.match(/^([\d.]+)\s+(.+)$/);
-    const code = match?.[1] ?? "";
-    const description = match?.[2] ?? node.label;
+    // ใช้รหัส Master (inputItemCode) ตรงๆ แยกจากข้อความที่แสดง — เดิม parse จาก label ด้วย regex ตัวเลข
+    // ทำให้รหัสแบบ "IPD_Half_5" กลายเป็น code ว่าง (ใช้ตรวจข้อยกเว้นค่าชดเชยผู้ป่วยในไม่ได้)
+    const code = node.code ?? "";
+    const description = code && node.label.startsWith(code) ? node.label.slice(code.length).trim() : node.label;
     const isLeaf = !hasChildren;
     const isSelected = isLeaf && selectedLeafId === node.id;
 
@@ -340,6 +342,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
         netClaimAmount,
         paymentAmount,
         amountReconciliation: paymentReconciliation,
+        ipdCompensation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
@@ -694,6 +697,9 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                 </TableContainer>
             </Box>
 
+            {/* ── ค่าชดเชยผู้ป่วยใน (เคลมลูกค้า ค่ารักษา IPD/Day Case) — หลังตารางค่ารักษา ก่อนสรุปยอดเงิน ── */}
+            {ipdCompensation && <IpdCompensationSection compensation={ipdCompensation} />}
+
             {/* ── สรุปยอดเงิน ── */}
             <Box
                 sx={{
@@ -728,8 +734,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                             gap: 1.5,
                             gridTemplateColumns: {
                                 xs: "1fr",
-                                sm: "repeat(3, 1fr)",
-                                md: "repeat(3, 1fr) auto",
+                                sm: ipdCompensation ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+                                md: ipdCompensation ? "repeat(4, 1fr) auto" : "repeat(3, 1fr) auto",
                             },
                             alignItems: "stretch",
                         }}
@@ -738,6 +744,10 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                             { label: "ยอดเงินตามใบเสร็จรวม", value: totalReceipt },
                             { label: "ส่วนลดรวม", value: totalDiscount },
                             { label: "ยอดไม่คุ้มครองรวม", value: totalNotCovered },
+                            // flow ค่าชดเชยผู้ป่วยใน : สิทธิ์เบิกรวม = ผลรวมสิทธิ์เบิกทุกแถว (ใบเสร็จ − ส่วนลด − ไม่คุ้มครอง)
+                            ...(ipdCompensation
+                                ? [{ label: "สิทธิ์เบิกรวม", value: ipdCompensation.eligibleTotal }]
+                                : []),
                         ].map((row) => (
                             <Box
                                 key={row.label}
@@ -799,7 +809,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                                     </Typography>
                                 </Box>
                                 <Typography fontWeight={700} color="success.main" whiteSpace="nowrap">
-                                    {fmt(netClaimAmount)}{" "}
+                                    {/* flow ค่าชดเชยผู้ป่วยใน : สิทธิ์เบิกรวม + ค่าชดเชย (ไม่บวกค่าชดเชยเมื่อมี IPD_Half_5) */}
+                                    {fmt(ipdCompensation ? ipdCompensation.net : netClaimAmount)}{" "}
                                     <Typography component="span" variant="caption">
                                         บาท
                                     </Typography>
@@ -842,20 +853,36 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                     </Box>
 
                     {/* ── ผลตรวจสอบยอดเงิน ClaimLine (ยอดที่จ่าย+ไม่คุ้มครอง เทียบใบเสร็จสุทธิ / เทียบสิทธิ์เบิก) ── */}
-                    <Alert
-                        severity={
-                            amountReconciliation.status === "ok"
-                                ? "success"
-                                : amountReconciliation.status === "error"
-                                ? "error"
-                                : amountReconciliation.status === "pending"
-                                ? "info"
-                                : "warning"
-                        }
-                        sx={{ mt: 1.5 }}
-                    >
-                        {amountReconciliation.message}
-                    </Alert>
+                    {ipdCompensation ? (
+                        // flow ค่าชดเชยผู้ป่วยใน : แสดงเฉพาะตอนยอดโอนไม่ตรง อัปเดตทันทีโดยไม่เลื่อนหน้า/แย่ง focus
+                        // (tabIndex -1 ให้ปุ่ม "ถัดไป"/"อนุมัติ" เลื่อนมา focus ได้เมื่อผู้ใช้กดดำเนินการต่อ)
+                        amountReconciliation.status === "error" ? (
+                            <Alert severity="error" sx={{ mt: 1.5 }} tabIndex={-1} data-ipd-transfer-error>
+                                {amountReconciliation.message}
+                            </Alert>
+                        ) : (
+                            amountReconciliation.status === "pending" && (
+                                <Alert severity="info" sx={{ mt: 1.5 }}>
+                                    {amountReconciliation.message}
+                                </Alert>
+                            )
+                        )
+                    ) : (
+                        <Alert
+                            severity={
+                                amountReconciliation.status === "ok"
+                                    ? "success"
+                                    : amountReconciliation.status === "error"
+                                    ? "error"
+                                    : amountReconciliation.status === "pending"
+                                    ? "info"
+                                    : "warning"
+                            }
+                            sx={{ mt: 1.5 }}
+                        >
+                            {amountReconciliation.message}
+                        </Alert>
+                    )}
 
                     <Divider sx={{ my: 2 }} />
 

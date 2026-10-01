@@ -11624,6 +11624,13 @@ export interface GetCustomerClaimAdjudicationMonitorDtoResponse {
     totalCount?: number | undefined;
     caseId?: string | undefined;
     caseCount?: number | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    isPhysicalTherapy?: boolean | undefined;
+    physicalTherapyNecessityReasonId?: number | undefined;
 }
 
 export interface GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse {
@@ -12227,6 +12234,13 @@ export interface GetHospitalClaimAdjudicationMonitorDtoResponse {
     totalCount?: number | undefined;
     caseId?: string | undefined;
     isReadOnly?: boolean | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    isPhysicalTherapy?: boolean | undefined;
+    physicalTherapyNecessityReasonId?: number | undefined;
 }
 
 export interface GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse {
