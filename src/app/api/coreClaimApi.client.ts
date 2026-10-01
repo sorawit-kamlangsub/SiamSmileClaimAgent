@@ -6907,15 +6907,19 @@ export class MastersClient {
     /**
      * API สำหรับ Get ข้อมูลพนักงาน
      * @param userId (optional)
+     * @param branchId (optional)
      * @return Success
      */
     users(
         userId?: number | undefined,
+        branchId?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<AllUserDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/users?";
         if (userId === null) throw new Error("The parameter 'userId' cannot be null.");
         else if (userId !== undefined) url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        if (branchId === null) throw new Error("The parameter 'branchId' cannot be null.");
+        else if (branchId !== undefined) url_ += "branchId=" + encodeURIComponent("" + branchId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -9932,6 +9936,7 @@ export interface CalculateCaseClaimDtoRequest {
     isSimulateCase?: boolean;
     isCheckIncludeCompensate?: boolean;
     isCheckIncludeCompensateAll?: boolean;
+    productTypeId?: number;
     jsonDetail?: CalculateCaseClaim;
 }
 
@@ -11340,6 +11345,15 @@ export interface GetClaimDetailConsiderDtoResponse {
     reservationRemark?: string | undefined;
     insuranceCompanyId?: number | undefined;
     medicalSubTypeCode?: string | undefined;
+    caseMedicalTreatmentId?: string | undefined;
+    casePhysicalTherapyId?: string | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    isPhysicalTherapy?: boolean | undefined;
+    physicalTherapyNecessityReasonId?: number | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
@@ -11624,13 +11638,6 @@ export interface GetCustomerClaimAdjudicationMonitorDtoResponse {
     totalCount?: number | undefined;
     caseId?: string | undefined;
     caseCount?: number | undefined;
-    isTrafficAccident?: boolean | undefined;
-    vehicleTypeId?: number | undefined;
-    otherVehicleType?: string | undefined;
-    trafficAccidentPersonRoleId?: number | undefined;
-    compulsoryInsuranceNotUsedReason?: string | undefined;
-    isPhysicalTherapy?: boolean | undefined;
-    physicalTherapyNecessityReasonId?: number | undefined;
 }
 
 export interface GetCustomerClaimAdjudicationMonitorDtoResponseListServiceResponse {
@@ -12234,13 +12241,6 @@ export interface GetHospitalClaimAdjudicationMonitorDtoResponse {
     totalCount?: number | undefined;
     caseId?: string | undefined;
     isReadOnly?: boolean | undefined;
-    isTrafficAccident?: boolean | undefined;
-    vehicleTypeId?: number | undefined;
-    otherVehicleType?: string | undefined;
-    trafficAccidentPersonRoleId?: number | undefined;
-    compulsoryInsuranceNotUsedReason?: string | undefined;
-    isPhysicalTherapy?: boolean | undefined;
-    physicalTherapyNecessityReasonId?: number | undefined;
 }
 
 export interface GetHospitalClaimAdjudicationMonitorDtoResponseListServiceResponse {
