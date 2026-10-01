@@ -13,6 +13,8 @@ type UseBillingCalculateHookParams = {
     caseAdjudicationId: string | undefined;
     /** `BillingDetailDto.productId` */
     productId: number | undefined;
+    /** `BillingDetailDto.productTypeId` (PH = 6, PA = 26) */
+    productTypeId: number | undefined;
     values: BillingReviewFormValues;
 };
 
@@ -55,13 +57,19 @@ const buildCalculateDetail = (productId: number | undefined, values: BillingRevi
  * ผลคำนวณสิทธิ์/ค่าชดเชยของรายการวางบิล สำหรับ Step 3 "สรุปรายการเคลม" — ยิง POST /calculate/caseclaim
  * (`useCalculateCaseClaim` ตัวเดียวกับหน้าพิจารณาเคลม รพ) :
  *  - `caseAdjudicationId` = `BillingDetailDto.caseAdjudicationId`
+ *  - `productTypeId` = `BillingDetailDto.productTypeId`
  *  - `jsonDetail` = ข้อมูลเคลม + รายการค่ารักษา ตาม field ที่หน้าพิจารณาเคลมโรงพยาบาลส่ง
  *  - `isSimulateCase` / `isCheckIncludeCompensate` / `isCheckIncludeCompensateAll` = false (ส่งชัดเจนทุกตัว)
  *
  * ยิงครั้งเดียวต่อการ mount (Step 3 ถูก mount ใหม่ทุกครั้งที่เข้า step นี้ — ทั้งจากปุ่ม "ถัดไป" และการกด
  * แถบ step ในโหมด readOnly) ค่าในฟอร์มเป็น Read-only ตั้งแต่โหลด detail จึงอ่านค่า ณ ตอนยิงได้เลย
  */
-const useBillingCalculateHook = ({ caseAdjudicationId, productId, values }: UseBillingCalculateHookParams) => {
+const useBillingCalculateHook = ({
+    caseAdjudicationId,
+    productId,
+    productTypeId,
+    values,
+}: UseBillingCalculateHookParams) => {
     const [result, setResult] = useState<CalculateCaseClaimDtoResponse>();
     const [isCalculating, setIsCalculating] = useState(false);
     const calculateCaseClaim = useCalculateCaseClaim(undefined, (error) => swalError("คำนวณสิทธิ์ไม่สำเร็จ", error));
@@ -77,6 +85,7 @@ const useBillingCalculateHook = ({ caseAdjudicationId, productId, values }: UseB
             isSimulateCase: false,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId,
             jsonDetail: buildCalculateDetail(productId, values),
         };
 

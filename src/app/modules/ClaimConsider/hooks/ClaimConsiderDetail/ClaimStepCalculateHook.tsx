@@ -125,6 +125,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
             isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId: customerDetail?.productTypeId ?? undefined,
             jsonDetail: calculateDetail,
         };
     };

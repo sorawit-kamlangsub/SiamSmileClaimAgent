@@ -345,6 +345,7 @@ export const useDaysCalculate = () => {
             isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId: selectedInsured?.productTypeId ?? undefined,
             jsonDetail: calculateDetail,
         };
 
