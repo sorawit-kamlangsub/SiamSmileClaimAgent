@@ -448,6 +448,9 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
         ];
         newValues.detail = detail.remark;
+        // ข้อมูลกายภาพบำบัด (RC-003 3.4) : default จากค่าที่บันทึกไว้ — GetClaimDetailConsider ส่งมาแล้ว
+        newValues.isPhysicalTherapyChecked = detail.isPhysicalTherapy === true;
+        newValues.physicalTherapyNecessityReasonId = detail.physicalTherapyNecessityReasonId ?? undefined;
 
         // ตั้งค่าทั้งหมดพร้อมกัน
         formik.setValues((prev) => ({ ...prev, ...newValues }), false);
