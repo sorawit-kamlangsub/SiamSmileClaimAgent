@@ -512,8 +512,32 @@ const useHospitalConsiderDetailHook = () => {
         formik.setFieldValue("ipdDays", detail.ipdDayCount ?? 0, false);
         formik.setFieldValue("icuDays", detail.icuDayCount ?? 0, false);
         // หมายเหตุ(ถ้ามี) — RC-005 5.4 : default จาก reservationRemark ยังแก้ไขต่อได้
-        // ความจำเป็นทางการแพทย์ / อุบัติเหตุจากการจราจร : GetClaimDetailConsider ยังไม่ส่งค่ากลับมา จึงเริ่มว่าง
         formik.setFieldValue("reservationRemark", detail.reservationRemark ?? "", false);
+
+        // ---- DFUAT-069 : default ความจำเป็นทางการแพทย์ / อุบัติเหตุจากการจราจร จาก SmileConnect ----
+        // (GetClaimDetailConsider ส่งมาแล้ว ยกเว้น "เป็นส่วนเกิน พ.ร.บ." กับ "รายละเอียดเพิ่มเติม" ที่ยังไม่มีใน response)
+        formik.setFieldValue(
+            "isPhysicalTherapy",
+            detail.isPhysicalTherapy === true ? "yes" : detail.isPhysicalTherapy === false ? "no" : "",
+            false
+        );
+        formik.setFieldValue(
+            "physicalTherapyNecessityReasonId",
+            detail.physicalTherapyNecessityReasonId ?? undefined,
+            false
+        );
+        formik.setFieldValue("trafficVehicleTypeId", detail.vehicleTypeId ?? undefined, false);
+        formik.setFieldValue("trafficOtherVehicleType", detail.otherVehicleType ?? "", false);
+        formik.setFieldValue("trafficAccidentPersonRoleId", detail.trafficAccidentPersonRoleId ?? undefined, false);
+        formik.setFieldValue(
+            "trafficCompulsoryInsuranceNotUsedReason",
+            detail.compulsoryInsuranceNotUsedReason ?? "",
+            false
+        );
+        // response ไม่มี hasCompulsoryInsuranceExcess — มีสาเหตุที่ไม่ใช้ พ.ร.บ. มา = ตอบ "ไม่ใช่" ไว้
+        if (detail.compulsoryInsuranceNotUsedReason) {
+            formik.setFieldValue("trafficHasCompulsoryInsuranceExcess", false, false);
+        }
 
         // ---- แพทย์เจ้าของไข้ ----
         formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);
