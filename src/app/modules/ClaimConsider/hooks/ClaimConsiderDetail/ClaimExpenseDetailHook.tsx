@@ -152,8 +152,12 @@ const useClaimExpenseDetailHook = ({
         medicalTypeId,
         undefined,
         customerDetailData?.data?.productId ?? undefined,
-        customerDetailData?.data?.policyCode,
-        customerDetailData?.data?.productTypeId === 26 ? customerDetailData?.data?.customerTypeCode : undefined
+        // generated client throw ทันทีถ้า param เป็น null (รับได้แค่ undefined = ไม่ส่ง param) — BE คืน null ได้จริง
+        // เช่น customerTypeCode ของ PA นักเรียน ทำให้ request ไม่ถูกยิงและตารางว่างโดยไม่มี error บนจอ
+        customerDetailData?.data?.policyCode ?? undefined,
+        customerDetailData?.data?.productTypeId === 26
+            ? customerDetailData?.data?.customerTypeCode ?? undefined
+            : undefined
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
