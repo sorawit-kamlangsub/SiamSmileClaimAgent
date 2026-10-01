@@ -28,6 +28,8 @@ type RecordClaimDataProps = {
     causeOfIncident: ChipOption[];
     medicalType: ChipOption[];
     incidentTypeMappingLoading: boolean;
+    /** label ของช่อง detail — default "รายละเอียด" (เคลม รพ. RC-005 5.3 ใช้ "รายละเอียดการเจ็บป่วย/การบาดเจ็บ") */
+    detailLabel?: string;
     /* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
     continuousClaimRows: ContinuousClaimRow[];
     continuousClaimOpen: boolean;
@@ -47,6 +49,7 @@ const RecordClaimData = ({
     causeOfIncident,
     medicalType,
     incidentTypeMappingLoading,
+    detailLabel = "รายละเอียด",
 }: RecordClaimDataProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
@@ -293,7 +296,7 @@ const RecordClaimData = ({
                             <Box data-field-name="remark">
                                 <FormikTextField
                                     name="detail"
-                                    label="รายละเอียด"
+                                    label={detailLabel}
                                     formik={formik}
                                     size="small"
                                     multiline

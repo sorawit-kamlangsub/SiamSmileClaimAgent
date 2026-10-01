@@ -54,8 +54,12 @@ selectors in `RecordClaimData`), `useGetSimBCategory`, `useGetSimB`, `useGetChie
 `useGetFormatType`, `useGetBeneficiary`, `useGetRelationType`, `useGetTitle`,
 `useGetDisabilityLossPart`, `useGetBodyPartByDisabilityLossPart`, `useGetBranch`,
 `useGetPaymentStatus`, `useGetDeductionSource`, `useGetEmployeeClaimPaymentLimit`,
-`useGetDecision`, `useGetDocumentReviewStatus` (feeds the ผ่าน/ไม่ผ่าน/รอเอกสารเพิ่มเติม toggle
-in `DocumentVerifyTable`), `useGetDecisionReason`, `useGetCancelReason`, `useGetRejectReason`, `useGetInsuranceCompany`.
+`useGetDecision`, `useGetDocumentReviewStatus` (ผ่าน/ไม่ผ่าน/รอเอกสารเพิ่มเติม — no longer used by
+`DocumentVerifyTable` since RC-005 5.7 dropped the result column), `useGetDecisionReason`, `useGetCancelReason`,
+`useGetRejectReason`, `useGetInsuranceCompany`, `useGetClaimTransactionType`, `useGetBenefit`,
+`useGetPhysicalTherapyNecessityReason` (RC-005 5.5 "ความจำเป็นทางการแพทย์" — `MedicalNecessitySection`),
+`useGetTrafficVehicleType` / `useGetTrafficAccidentPersonRole` (RC-005 5.6 "ข้อมูลอุบัติเหตุจากการจราจร" —
+`TrafficAccidentSection`).
 
 ## `docstorageApi.ts` — DocStorage API (`DOCSTORAGE_API_URL`)
 

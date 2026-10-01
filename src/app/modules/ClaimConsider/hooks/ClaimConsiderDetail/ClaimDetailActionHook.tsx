@@ -55,6 +55,12 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
     caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
     /**
+     * ข้อมูลการรักษา / ความจำเป็นทางการแพทย์ ที่มีเฉพาะเคลมโรงพยาบาล (RC-005 5.4-5.6)
+     * ส่งไปกับ case ของ /claim/decision (บันทึกผลพิจารณา + อนุมัติ) — ไม่ส่ง = ไม่แนบ (เคลมลูกค้า)
+     * SaveClaimEditDraft ยังไม่มีฟิลด์รองรับ จึงไม่ได้ไปกับบันทึกแบบร่าง
+     */
+    caseTreatmentFields?: Pick<UpsertClaimDecisionCaseRequest, "caseMedicalTreatment" | "casePhysicalTherapy">;
+    /**
      * ตารางตรวจสอบเอกสาร (ค่าดิบจาก formik ของเคลมโรงพยาบาล)
      * hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId เอง
      */
@@ -125,6 +131,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     customerDetailData,
     isCombinedWithMedicalAll = false,
     caseFields,
+    caseTreatmentFields,
     documentChecks,
     payoutAccount,
     onApproveSuccess,
@@ -624,6 +631,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             hn: caseFields?.hn,
             an: caseFields?.an,
             vn: caseFields?.vn,
+            caseMedicalTreatment: caseTreatmentFields?.caseMedicalTreatment,
+            casePhysicalTherapy: caseTreatmentFields?.casePhysicalTherapy,
             caseItem: mapCaseItemForDecision(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDecision(),
             caseAdjudication: mapCaseAdjudicationForDecision(overrideDecisionId),
