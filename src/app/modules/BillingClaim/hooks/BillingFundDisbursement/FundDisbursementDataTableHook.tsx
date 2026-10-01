@@ -13,7 +13,7 @@ const fmtDate = (value: string | undefined) => (value ? formatDateString(value, 
  * ทำหน้าที่แค่เตรียมโครง column + selection ให้พร้อมต่อทันทีที่มี endpoint
  */
 const useFundDisbursementDataTableHook = (
-    claimType: FundClaimType | "",
+    claimType: FundClaimType | undefined,
     appliedFilter: FundDisbursementFilterValues
 ) => {
     const [paginated, setPaginated] = useState<PaginationSortableDto>({ page: 1, recordsPerPage: 10 });
@@ -32,13 +32,13 @@ const useFundDisbursementDataTableHook = (
     };
 
     const selectedAmount = useMemo(
-        () => selectedIndexes.reduce((sum, index) => sum + (rows[index]?.disbursementAmount ?? 0), 0),
+        () => selectedIndexes.reduce((sum, index) => sum + (rows[index]?.billingAmount ?? 0), 0),
         [selectedIndexes, rows]
     );
 
     const isHospital = claimType === FUND_CLAIM_TYPE.hospital;
 
-    const dateColumn = (name: "notifiedDate" | "approvedDate", label: string): MUIDataTableColumn => ({
+    const dateColumn = (name: "notifiedDate" | "reviewedDate", label: string): MUIDataTableColumn => ({
         name,
         label,
         options: {
@@ -52,9 +52,9 @@ const useFundDisbursementDataTableHook = (
     // สถานพยาบาลด้วยไม่มีคอลัมน์นั้นเลย
     const column: MUIDataTableColumn[] = [
         ...(isHospital ? [] : [dateColumn("notifiedDate", "วันที่แจ้งเคลม")]),
-        dateColumn("approvedDate", "วันที่อนุมัติเคลม"),
+        dateColumn("reviewedDate", "วันที่อนุมัติเคลม"),
         {
-            name: "caseCode",
+            name: "caseNo",
             label: "เลขที่ Case",
             options: { ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }) },
         },
@@ -68,12 +68,12 @@ const useFundDisbursementDataTableHook = (
               ]
             : []),
         {
-            name: "approvedBy",
+            name: "approveName",
             label: "ผู้อนุมัติ",
             options: { ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }) },
         },
         {
-            name: "disbursementAmount",
+            name: "billingAmount",
             label: "จำนวนเงินตั้งเบิก",
             options: {
                 ...cellAlignOptions({ align: "right", cellWhiteSpace: "nowrap" }),
@@ -81,7 +81,7 @@ const useFundDisbursementDataTableHook = (
             },
         },
         {
-            name: "insuranceCompanyName",
+            name: "insuredCompanyName",
             label: "ชื่อบริษัทประกัน",
             options: { ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }) },
         },
@@ -94,6 +94,7 @@ const useFundDisbursementDataTableHook = (
         totalAmount,
         isLoading,
         pagination,
+        paginated,
         setPaginated,
         selectedIndexes,
         handleRowSelected,

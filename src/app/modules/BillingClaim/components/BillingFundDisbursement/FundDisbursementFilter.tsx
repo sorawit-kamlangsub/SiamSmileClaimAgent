@@ -66,7 +66,7 @@ const FundDisbursementFilter = ({ formik, onSearch, onClear }: FundDisbursementF
     return (
         <Paper elevation={3} sx={{ p: 2 }}>
             <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
+                <Grid item xs={12} sm={12} md={12} lg={12}>
                     <RequiredToggleField
                         formik={formik}
                         name="claimType"
@@ -74,14 +74,14 @@ const FundDisbursementFilter = ({ formik, onSearch, onClear }: FundDisbursementF
                         options={FUND_CLAIM_TYPE_OPTIONS}
                     />
                 </Grid>
-                <Grid item xs={12} sm={6}>
+                {/* <Grid item xs={12} sm={6}>
                     <RequiredToggleField
                         formik={formik}
                         name="productId"
                         label="ผลิตภัณฑ์"
                         options={productMultipleSelectData}
                     />
-                </Grid>
+                </Grid> */}
 
                 <Grid item xs={12} sm={6}>
                     <BranchAutocomplete formik={formik} name="branchId" withAllOption allOptionLabel="ทั้งหมด" />

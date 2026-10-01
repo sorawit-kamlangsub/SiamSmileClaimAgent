@@ -1,11 +1,11 @@
 import axios from "axios";
-import { API_URL } from "../../Const";
+import { APIGW_URL } from "../../Const";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AllUserDtoResponse, GetICD10DtoResponse, GetOrganizeDtoResponse, MastersClient } from "./coreClaimApi.client";
 import { useMemo } from "react";
 import { useBranchByUserPermission } from "../modules/_common/branchPermission";
 
-const coreClaimMastersClient = new MastersClient(API_URL, axios);
+const coreClaimMastersClient = new MastersClient(`${APIGW_URL}/claim/core`, axios);
 
 const getUserQuerykey = ["getUser"];
 const getIncidentTypeQueryKey = ["getIncidentType"];

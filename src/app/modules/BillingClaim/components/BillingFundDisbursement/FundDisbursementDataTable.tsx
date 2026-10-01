@@ -5,11 +5,12 @@ import { PaginationResultDto, PaginationSortableDto, StandardDataTable } from ".
 import { defaultOptionStandardDataTable, numberWithCommas } from "../../../../functionHelpers";
 import { FundDisbursementItem } from "../../store/fundDisbursement.types";
 import { PENDING_BE_TOOLTIP } from "../../store/billingPendingFields";
+import { HospitalBillingClaimFundMonitorDto } from "../../../../api/claimBillingApi.client";
 
 type FundDisbursementDataTableProps = {
     hasClaimType: boolean;
     column: MUIDataTableColumn[];
-    rows: FundDisbursementItem[];
+    rows: HospitalBillingClaimFundMonitorDto[];
     isLoading: boolean;
     pagination: PaginationResultDto;
     setPaginated: React.Dispatch<React.SetStateAction<PaginationSortableDto>>;
@@ -70,6 +71,7 @@ const FundDisbursementDataTable = ({
                 rowsSelected={selectedIndexes}
                 onRowSelectedIndex={onRowSelected}
                 options={{ ...defaultOptionStandardDataTable, selectableRows: "multiple" }}
+                displayToolbar={false}
             />
 
             <Grid
@@ -87,7 +89,13 @@ const FundDisbursementDataTable = ({
                 <Grid item>
                     <Tooltip title={PENDING_BE_TOOLTIP} arrow>
                         <span>
-                            <Button variant="contained" startIcon={<CheckCircleIcon />} disabled>
+                            <Button
+                                variant="contained"
+                                startIcon={<CheckCircleIcon />}
+                                onClick={() => {
+                                    console.log(selectedIndexes);
+                                }}
+                            >
                                 ยืนยันตั้งเบิก
                             </Button>
                         </span>
