@@ -6161,7 +6161,6 @@ export class HospitalBillingClient {
     }
 
     /**
-     * ค้นหารายการวางบิลโรงพยาบาลและคืน dashboard counts ตาม BillingDetail.
      * @param statusId (optional)
      * @param searchBy (optional)
      * @param searchDetail (optional)
@@ -10262,8 +10261,38 @@ export interface CaseItemV2Request {
     bodyPartId?: number | undefined;
 }
 
+export interface CaseMedicalTreatmentSaveClaimEditDraftRequest {
+    caseMedicalTreatmentId?: string | undefined;
+    underlyingDiseaseDetail?: string | undefined;
+    admissionIndication?: string | undefined;
+    treatmentMethod?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
+    illnessDetail?: string | undefined;
+    physicalExaminationDetail?: string | undefined;
+    hasPreviousTreatment?: boolean | undefined;
+    previousHealthcareFacilit?: string | undefined;
+    canTreatAsOutpatient?: boolean | undefined;
+    hasCompulsoryInsuranceExcess?: boolean | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    reservationRemark?: string | undefined;
+}
+
 export interface CasePayableV2Request {
     payableCategoryId?: number;
+}
+
+export interface CasePhysicalTherapySaveClaimEditDraftRequest {
+    casePhysicalTherapyId?: string | undefined;
+    isPhysicalTherapy?: boolean;
+    physicalTherapyNecessityReasonId?: number | undefined;
+    physicalTherapyNecessityReasonDetail?: string | undefined;
 }
 
 export interface CasePhysicalTherapyV2Request {
@@ -10397,6 +10426,8 @@ export interface CaseSaveClaimEditDraftRequest {
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
+    caseMedicalTreatment?: CaseMedicalTreatmentSaveClaimEditDraftRequest;
+    casePhysicalTherapy?: CasePhysicalTherapySaveClaimEditDraftRequest;
     caseItem?: CaseItemSaveClaimEditDraftRequest[] | undefined;
     caseAssessment?: CaseAssessmentSaveClaimEditDraftRequest;
     caseAdjudication?: CaseAdjudicationSaveClaimEditDraftRequest;
@@ -10637,6 +10668,29 @@ export interface ClaimEditDraftCaseItemPayloadDto {
     bodyPartId?: number | undefined;
 }
 
+export interface ClaimEditDraftCaseMedicalTreatmentPayloadDto {
+    caseMedicalTreatmentId?: string | undefined;
+    underlyingDiseaseDetail?: string | undefined;
+    admissionIndication?: string | undefined;
+    treatmentMethod?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
+    illnessDetail?: string | undefined;
+    physicalExaminationDetail?: string | undefined;
+    hasPreviousTreatment?: boolean | undefined;
+    previousHealthcareFacilit?: string | undefined;
+    canTreatAsOutpatient?: boolean | undefined;
+    hasCompulsoryInsuranceExcess?: boolean | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    reservationRemark?: string | undefined;
+}
+
 export interface ClaimEditDraftCasePayloadDto {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
@@ -10669,6 +10723,8 @@ export interface ClaimEditDraftCasePayloadDto {
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
+    caseMedicalTreatment?: ClaimEditDraftCaseMedicalTreatmentPayloadDto;
+    casePhysicalTherapy?: ClaimEditDraftCasePhysicalTherapyPayloadDto;
     caseItem?: ClaimEditDraftCaseItemPayloadDto[] | undefined;
     caseAssessment?: ClaimEditDraftCaseAssessmentPayloadDto;
     caseAdjudication?: ClaimEditDraftCaseAdjudicationPayloadDto;
@@ -10676,6 +10732,13 @@ export interface ClaimEditDraftCasePayloadDto {
     caseDisability?: ClaimEditDraftCaseDisabilityPayloadDto[] | undefined;
     beneficiary?: ClaimEditDraftBeneficiaryPayloadDto[] | undefined;
     caseDocument?: ClaimEditDraftCaseDocumentPayloadDto[] | undefined;
+}
+
+export interface ClaimEditDraftCasePhysicalTherapyPayloadDto {
+    casePhysicalTherapyId?: string | undefined;
+    isPhysicalTherapy?: boolean;
+    physicalTherapyNecessityReasonId?: number | undefined;
+    physicalTherapyNecessityReasonDetail?: string | undefined;
 }
 
 export interface ClaimEditDraftOCRPayloadDto {
@@ -11401,10 +11464,6 @@ export interface GetClaimDetailConsiderDtoResponse {
     remark?: string | undefined;
     customerDetailId?: string | undefined;
     createdDate?: dayjs.Dayjs | undefined;
-    claimVersion?: number;
-    claimRowVersion?: string | undefined;
-    caseVersion?: number | undefined;
-    caseRowVersion?: string | undefined;
     caseId?: string | undefined;
     decisionId?: number | undefined;
     decisionNameTH?: string | undefined;
