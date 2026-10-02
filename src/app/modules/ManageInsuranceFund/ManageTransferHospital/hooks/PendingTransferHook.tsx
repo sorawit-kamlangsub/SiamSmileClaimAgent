@@ -2,7 +2,7 @@ import { Box, Button } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import { PaginationDto, swalConfirm, swalError, swalSuccess } from "../../../_common";
 // import { useAppDispatch } from "../../../../../redux";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
     HospitalPendingTransferType,
     useGetHospitalPendingTransferMonitor,
@@ -11,6 +11,7 @@ import {
 import dayjs from "dayjs";
 import { numberWithCommas } from "../../../../functionHelpers";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { HospitalTransferMonitorType } from "../manageTransferHospitalAPI";
 
 const usePendingTransferHook = () => {
     // const dispatch = useAppDispatch();
@@ -25,10 +26,21 @@ const usePendingTransferHook = () => {
 
     const handleTransferSuccess = () => {
         swalSuccess("ทำรายการสำเร็จ", "");
+
+        if (lastRequest.current) {
+            mutateGetHospitalPendingTransfer(lastRequest.current);
+        }
     };
 
     const handleError = (message: string) => {
         swalError("แจ้งเตือน", message);
+    };
+
+    const lastRequest = useRef<HospitalTransferMonitorType>();
+
+    const fetchPendingTransfers = (payload: HospitalTransferMonitorType) => {
+        lastRequest.current = payload;
+        mutateGetHospitalPendingTransfer(payload);
     };
 
     const { mutate: mutateGetHospitalPendingTransfer, isLoading: isGetHospitalPendingTransferLoading } =
@@ -64,7 +76,7 @@ const usePendingTransferHook = () => {
     useMemo(() => {
         setOnRowsSelected([]);
         setRowsSelected([]);
-    }, [paginate]);
+    }, [paginate, fetchPendingTransfers]);
 
     const column: MUIDataTableColumn[] = [
         {
@@ -276,6 +288,8 @@ const usePendingTransferHook = () => {
         isGetHospitalPendingTransferLoading,
         // handleGenerateSuccess: handleGenerateDialogOpen,
         isTransferClaimHospitalNowLoading,
+        mutateTransferClaimHospitalNow,
+        fetchPendingTransfers,
         setPaginate,
         handleRowSelected,
         onRowsSelected,

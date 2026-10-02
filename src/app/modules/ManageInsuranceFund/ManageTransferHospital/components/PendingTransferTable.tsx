@@ -20,11 +20,12 @@ const PendingTransferTable = ({ statusId, searchDetail }: PendingTransferTablePr
         onRowsSelected,
         paginate,
         setPaginate,
+        fetchPendingTransfers,
     } = usePendingTransferHook();
 
     useEffect(() => {
-        if (statusId) {
-            mutateGetHospitalPendingTransfer({ statusId, hospitalName: searchDetail, paginate });
+        if (statusId !== undefined) {
+            fetchPendingTransfers({ statusId, hospitalName: searchDetail, paginate });
         }
     }, [statusId, searchDetail, paginate, mutateGetHospitalPendingTransfer]);
     return (
