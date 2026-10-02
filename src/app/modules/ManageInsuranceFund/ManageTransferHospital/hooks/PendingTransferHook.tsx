@@ -1,7 +1,7 @@
 import { Box, Button } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import { PaginationDto, swalConfirm, swalError, swalSuccess } from "../../../_common";
-import { useAppDispatch } from "../../../../../redux";
+// import { useAppDispatch } from "../../../../../redux";
 import { useMemo, useState } from "react";
 import {
     HospitalPendingTransferType,

@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_CLAIM_FUND_URL } from "../../../../Const";
-import { encodeURLWithParams, swalWarning } from "../../_common";
+import { encodeURLWithParams } from "../../_common";
 import { getHistorySetting } from "./historySettingAPI";
 
 const claimFundAPI_URL = `${API_CLAIM_FUND_URL}`;

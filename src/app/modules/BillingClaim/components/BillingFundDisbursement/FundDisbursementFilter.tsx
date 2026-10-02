@@ -4,7 +4,6 @@ import { FormikTextField } from "../../../_common";
 import BranchAutocomplete from "../../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
 import FormikAutocompleteApi from "../../../_common/components/CustomFormik/FormikAutocompleteApi";
 import { getUserFilter } from "../../../../api/coreClaimMastersApi";
-import { productMultipleSelectData } from "../../../ClaimConsider/components/_common/Constant/ConstantValues";
 import StatusFilterToggle from "../../../ClaimConsider/components/_common/StatusFilterToggle";
 import {
     FundDisbursementFilterValues,

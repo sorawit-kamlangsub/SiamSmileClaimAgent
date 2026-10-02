@@ -46,7 +46,7 @@ const FormikAutocompleteApi = ({
     const { setFieldValue, setFieldTouched } = formik;
 
     const [searchText, setSearchText] = useState("");
-    const [inputValue, setInputValue] = useState("");
+    const [_inputValue, setInputValue] = useState("");
 
     const { data: options, isLoading: queryLoading, isError } = useQueryGet(searchText, value);
     const loading = queryLoading || externalLoading;
