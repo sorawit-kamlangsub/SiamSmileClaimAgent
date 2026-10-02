@@ -8,11 +8,7 @@ import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
 import { useParams } from "react-router-dom";
 import { safeAtob } from "../../../../../functionHelpers";
 import { useAuth } from "../../../../_auth";
-
-const generateRequestId = () =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+import { useClaimRequestId } from "../useClaimRequestId";
 
 export const mapLocalCoreClaimToContinuedRequest = (
     local: LocalCoreClaim,
@@ -34,6 +30,7 @@ export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (mes
     const { oldClaimId: oldClaimIdParam } = useParams();
     const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
     const { userProfile } = useAuth();
+    const getRequestId = useClaimRequestId();
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);
     const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
@@ -68,7 +65,7 @@ export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (mes
     });
 
     const buildPayload = (beneficiaryList: BeneficiaryForm[]): CreateContinuedClaimDtoRequest =>
-        mapLocalCoreClaimToContinuedRequest(buildLocalCoreClaim(beneficiaryList), oldClaimId, generateRequestId());
+        mapLocalCoreClaimToContinuedRequest(buildLocalCoreClaim(beneficiaryList), oldClaimId, getRequestId());
 
     const createClaimPA = async (overrideBeneficiaries?: BeneficiaryForm[]) => {
         const beneficiaryList = overrideBeneficiaries ?? [];
