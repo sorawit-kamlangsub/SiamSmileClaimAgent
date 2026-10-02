@@ -101,6 +101,14 @@ export const mapDraftPayloadToFormValues = ({
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
     if (c?.illnessOrInjuryDetail !== undefined) values.detail = c.illnessOrInjuryDetail;
 
+    // RC-003 3.4 ข้อมูลกายภาพบำบัด (เคลมลูกค้า) — แบบร่างที่บันทึกก่อนมีฟิลด์นี้จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
+    // เคลมโรงพยาบาลใช้ isPhysicalTherapy ("yes" / "no") แทน — map เองใน HospitalDraftViewingHook
+    const physicalTherapy = c?.casePhysicalTherapy;
+    if (physicalTherapy) {
+        values.isPhysicalTherapyChecked = physicalTherapy.isPhysicalTherapy === true;
+        values.physicalTherapyNecessityReasonId = physicalTherapy.physicalTherapyNecessityReasonId ?? undefined;
+    }
+
     if (c?.icD10_1stId !== undefined || c?.icD10_2ndId !== undefined || c?.icD10_3rdId !== undefined) {
         values.diagnoses = [
             { icd10Id: c?.icD10_1stId ?? undefined, icd10Detail: undefined },
