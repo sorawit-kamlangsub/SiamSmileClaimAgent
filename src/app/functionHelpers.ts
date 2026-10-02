@@ -536,10 +536,11 @@ export enum CauseOfIncident {
     SchoolLiability = 8, // รับผิดสถานศึกษา
 }
 
-export const calculatePolicyAgeText = (coverageFrom?: string): string => {
-    if (!coverageFrom) return "-";
+/** ระยะเวลาจากวันที่ที่ระบุถึงวันนี้ เป็น "X ปี Y เดือน Z วัน" — ไม่มีวันที่ / วันที่ไม่ถูกต้อง / เป็นวันในอนาคต คืน "-" */
+const calculateElapsedText = (fromDate?: string): string => {
+    if (!fromDate) return "-";
 
-    const start = dayjs(coverageFrom);
+    const start = dayjs(fromDate);
     const end = dayjs(); // วันปัจจุบัน
 
     if (!start.isValid() || end.isBefore(start)) return "-";
@@ -554,3 +555,9 @@ export const calculatePolicyAgeText = (coverageFrom?: string): string => {
 
     return `${years} ปี ${months} เดือน ${days} วัน`;
 };
+
+/** อายุกรมธรรม์ นับจากวันเริ่มคุ้มครอง */
+export const calculatePolicyAgeText = (coverageFrom?: string): string => calculateElapsedText(coverageFrom);
+
+/** อายุปัจจุบัน นับจากวันเกิด */
+export const calculateAgeText = (birthDate?: string): string => calculateElapsedText(birthDate);

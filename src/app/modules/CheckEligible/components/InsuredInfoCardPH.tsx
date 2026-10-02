@@ -10,7 +10,12 @@ import { HeadingWithColor } from "../../_common/components/CustomComponent/Headi
 import CustomBox from "../../_common/components/CustomComponent/CustomBox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
-import { PH_APPLICATION_DETAIL_URL, getApplicationDetailUrl } from "../../../functionHelpers";
+import {
+    PH_APPLICATION_DETAIL_URL,
+    calculateAgeText,
+    calculatePolicyAgeText,
+    getApplicationDetailUrl,
+} from "../../../functionHelpers";
 
 const NATIONAL_ID_CARD_TYPE = 2;
 const PASSPORT_CARD_TYPE = 3;
@@ -109,20 +114,10 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => {
     }, [data]);
 
     // อายุปัจจุบัน คำนวณจากวันเกิด
-    const currentAge = useMemo(() => {
-        const d = data?.birthDate ? dayjs(data.birthDate) : null;
-        if (!d || !d.isValid()) return "-";
-        return `${dayjs().diff(d, "year")} ปี`;
-    }, [data]);
+    const currentAge = calculateAgeText(data?.birthDate?.toString());
 
     // อายุกรมธรรม์ คำนวณจาก coverageFrom ถึงปัจจุบัน
-    const policyAge = useMemo(() => {
-        const d = data?.coverageFrom ? dayjs(data.coverageFrom) : null;
-        if (!d || !d.isValid()) return "-";
-        const years = dayjs().diff(d, "year");
-        const months = dayjs().diff(d.add(years, "year"), "month");
-        return `${years} ปี ${months} เดือน`;
-    }, [data]);
+    const policyAge = calculatePolicyAgeText(data?.coverageFrom?.toString());
 
     const idCardNo = data?.cardTypeId === NATIONAL_ID_CARD_TYPE ? data?.cardDetail : undefined;
     const passportNo = data?.cardTypeId === PASSPORT_CARD_TYPE ? data?.cardDetail : undefined;
