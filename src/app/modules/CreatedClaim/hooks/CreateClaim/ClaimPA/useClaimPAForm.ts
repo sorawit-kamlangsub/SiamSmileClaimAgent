@@ -12,7 +12,8 @@ import dayjs from "dayjs";
 import { useGetCustomerBenefitDetailHalf } from "../../../../../api/coreClaimApi";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
-import { CoverageType, MedicalType } from "../../../../../functionHelpers";
+import { mapOrganLossToCaseItems } from "../organLossCaseItems";
+import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import {
     addClaimItem,
     ClaimInsuredItem,
@@ -23,6 +24,7 @@ import {
     LocalCaseDisability,
     LocalCaseDocument,
     LocalCaseEntry,
+    LocalCaseItem,
     LocalCaseRegistration,
     LocalCaseServicePerson,
     LocalClaimEntry,
@@ -60,7 +62,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const {
         form,
         oldClaim,
@@ -137,7 +139,8 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             if (!values.symptomType) errors.symptomType = req;
             if (!isContinuousDeath && values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
                 errors.chiefComplaintId = req;
-            if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
+            if (values.symptomType === SymptomType.Other && !values.illnessOrInjuryDetail)
+                errors.illnessOrInjuryDetail = req;
             if ((isDeath || isDisability) && !isContinuousDeath) {
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
@@ -240,6 +243,12 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 return;
             }
 
+            if (isMedical && ocr.hasMissingOcrDocumentId(ocr.ocrResult, ocr.ocrDocumentIds)) {
+                swalWarning("แจ้งเตือน", "บันทึกเอกสารที่สแกนไม่สำเร็จ กรุณาลบแล้วสแกนเอกสารใหม่อีกครั้ง");
+                setSubmitting(false);
+                return;
+            }
+
             const ocrDocument = isMedical
                 ? ocr.ocrDocumentPayload(ocr.ocrResult, ocr.ocrDocumentIds)
                 : values.ocrDocument;
@@ -309,10 +318,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
 
             const claimEntry: LocalClaimEntry = {
                 tempClaimId,
-                applicationId: applicationId ?? "",
+                policyCode: applicationId ?? "",
                 policyNo: undefined,
                 certificateNo: undefined,
-                customerId,
+                customerDetailId: customerId,
                 customerName: customerName ?? "",
                 incidentTypeId: values.incidentTypeId,
                 incidentDate: values.incidentDate,
@@ -423,7 +432,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                   )
                 : buildUniformBenefitAmountMap(filteredBenefits, values.transferAmount ?? 0);
 
-            const createCaseItem = mapBenefitToCaseItems(filteredBenefits, amountByStandardMedicalExpenseId);
+            // ทุพพลภาพ: 1 caseItem ต่ออวัยวะ / ต่อนิ้ว พร้อม bodyPartId (เหมือน PH) — ความคุ้มครองอื่นสร้างตามสิทธิประโยชน์
+            const createCaseItem: LocalCaseItem[] = isDisability
+                ? mapOrganLossToCaseItems(organLossItems, filteredBenefits[0])
+                : mapBenefitToCaseItems(filteredBenefits, amountByStandardMedicalExpenseId);
 
             const caseEntry: LocalCaseEntry = {
                 tempCaseId,
@@ -449,8 +461,10 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                     values.symptomType === SymptomType.ChiefComplaint || isDeath || isDisability
                         ? values.chiefComplaintId
                         : undefined,
-                chiefComplaintCustom:
-                    values.symptomType === SymptomType.Other || isDeath || isDisability ? values.remark : undefined,
+                illnessOrInjuryDetail:
+                    values.symptomType === SymptomType.Other || isDeath || isDisability
+                        ? values.illnessOrInjuryDetail
+                        : undefined,
                 productId,
                 icD10_1stId: isDeath || isDisability ? values.diagnoses[0]?.icd10Id : undefined,
                 icD10_2ndId: isDeath || isDisability ? values.diagnoses[1]?.icd10Id : undefined,
@@ -553,7 +567,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId,
         formattype,
         effectiveInsured?.customerTypeCode,
-        effectiveInsured?.customerCode,
+        effectiveInsured?.customerDetailId,
         isContinuous ? oldClaim?.claimNo : undefined
     );
 
@@ -619,7 +633,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -662,7 +676,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -726,7 +740,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 ],
                 hospitalId: oldClaim.hospitalId ?? formik.values.hospitalId,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                illnessOrInjuryDetail: oldClaim.illnessOrInjuryDetail ?? formik.values.illnessOrInjuryDetail,
             },
             false
         );
@@ -746,7 +760,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                illnessOrInjuryDetail: oldClaim.illnessOrInjuryDetail ?? formik.values.illnessOrInjuryDetail,
             },
             false
         );

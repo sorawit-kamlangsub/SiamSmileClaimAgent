@@ -33,7 +33,7 @@ type Props = {
     productTypeId?: number;
     productCategoryCode?: string;
     applicationId?: string;
-    customerId?: number;
+    customerId?: string;
     coverageFrom?: Dayjs;
     coverageTo?: Dayjs;
 };

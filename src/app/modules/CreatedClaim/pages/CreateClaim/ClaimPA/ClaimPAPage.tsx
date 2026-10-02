@@ -11,12 +11,13 @@ import { claimPASelector, resetState, setOldClaim } from "../../../store/claimPA
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import ClaimStickyHeader from "../../../components/CreateClaim/ClaimStickyHeader";
 import { useGetPreviousClaim } from "../../../../../api/coreClaimApi";
+import { safeAtob } from "../../../../../functionHelpers";
 
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { oldClaim, insured } = useAppSelector(claimPASelector);
     const {
         appId,
@@ -28,7 +29,7 @@ const ClaimPAPage: React.FC = () => {
         oldClaimId: oldClaimIdEncode,
     } = useClaimPA();
 
-    const realOldClaimId = isContinuous && oldClaimIdEncode ? atob(oldClaimIdEncode) : undefined;
+    const realOldClaimId = isContinuous ? safeAtob(oldClaimIdEncode) : undefined;
     const { data: previousClaimData } = useGetPreviousClaim(realOldClaimId ?? "");
     const previousClaim = previousClaimData?.data;
 

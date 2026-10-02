@@ -81,7 +81,7 @@ const FIELD_ORDER = [
     "accidentPlace",
     "symptomType",
     "chiefComplaintId",
-    "remark",
+    "illnessOrInjuryDetail",
     "transferAmount",
     "ocrDocumentSection",
 ] as const;
@@ -584,9 +584,18 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                             <RadioGroup
                                                 row
                                                 value={values.deathPlaceType}
-                                                onChange={(e) =>
-                                                    setFieldValue("deathPlaceType", Number(e.target.value))
-                                                }
+                                                onChange={(e) => {
+                                                    const nextDeathPlaceType = Number(e.target.value) as DeathPlaceType;
+                                                    setFieldValue("deathPlaceType", nextDeathPlaceType);
+                                                    // สลับสถานที่เสียชีวิตต้องล้างค่าฟิลด์ของตัวเลือกที่ไม่ได้แสดงแล้ว
+                                                    // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับตัวเลือกที่เลือกจริงตอน submit
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Hospital) {
+                                                        setFieldValue("hospitalId", undefined);
+                                                    }
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Other) {
+                                                        setFieldValue("accidentPlace", undefined);
+                                                    }
+                                                }}
                                             >
                                                 <FormControlLabel
                                                     value={DeathPlaceType.Home}
@@ -638,7 +647,18 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                 <RadioGroup
                                     row
                                     value={values.symptomType}
-                                    onChange={(e) => setFieldValue("symptomType", Number(e.target.value))}
+                                    onChange={(e) => {
+                                        const nextSymptomType = Number(e.target.value) as SymptomType;
+                                        setFieldValue("symptomType", nextSymptomType);
+                                        // สลับไปมาระหว่าง "ระบุอาการ" กับ "อื่นๆ" ต้องล้างค่าของอีกฝั่งที่ไม่ได้แสดงแล้ว
+                                        // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับฝั่งที่เลือกจริงตอน submit
+                                        if (nextSymptomType === SymptomType.ChiefComplaint) {
+                                            setFieldValue("illnessOrInjuryDetail", undefined);
+                                        } else {
+                                            setFieldValue("chiefComplaintId", undefined);
+                                            setFieldValue("chiefComplaintId_selectedText", undefined);
+                                        }
+                                    }}
                                 >
                                     <FormControlLabel
                                         value={SymptomType.ChiefComplaint}
@@ -698,10 +718,10 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             </>
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
-                            <Grid item xs={12} lg={9} ref={registerFieldRef("remark")}>
+                            <Grid item xs={12} lg={9} ref={registerFieldRef("illnessOrInjuryDetail")}>
                                 <FormikTextField
-                                    name="remark"
-                                    label="หมายเหตุ"
+                                    name="illnessOrInjuryDetail"
+                                    label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                     formik={formik}
                                     size="small"
                                     multiline

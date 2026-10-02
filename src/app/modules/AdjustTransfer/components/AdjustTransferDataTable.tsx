@@ -1,14 +1,11 @@
 import { Grid, Paper } from "@mui/material";
-import { useState } from "react";
-import { PaginationSortableDto, StandardDataTable } from "../../_common";
+import { StandardDataTable } from "../../_common";
 import useAdjustTransferDataTableHook from "../hooks/AdjustTransferDataTableHook";
 
 const AdjustTransferDataTable = () => {
-    const { columns, dataMock } = useAdjustTransferDataTableHook();
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 5,
-    });
+    const { columns, getClaimAdjustMonitorData, isGetClaimAdjustLoading, pagination, setPaginated } =
+        useAdjustTransferDataTableHook();
+
     return (
         <>
             <Grid container>
@@ -17,10 +14,11 @@ const AdjustTransferDataTable = () => {
                         <StandardDataTable
                             name="refund"
                             columns={columns}
-                            data={dataMock ?? []}
+                            data={getClaimAdjustMonitorData?.data ?? []}
                             color="primary"
-                            paginated={paginated}
+                            paginated={pagination}
                             setPaginated={setPaginated}
+                            isLoading={isGetClaimAdjustLoading}
                         />
                     </Paper>
                 </Grid>

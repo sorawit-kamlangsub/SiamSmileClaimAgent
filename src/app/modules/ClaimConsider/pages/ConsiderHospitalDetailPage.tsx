@@ -7,10 +7,11 @@ import PaymentsIcon from "@mui/icons-material/Payments";
 import StickyNote2Icon from "@mui/icons-material/StickyNote2";
 import { TabContext, TabPanel } from "@mui/lab";
 import { useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 
 import HeaderCardCustomerDetails from "../components/ConsiderDetails/HeaderDetailCards/HeaderCardCustomerDetails";
 import ClaimDetail from "../components/ConsiderDetails/HeaderDetailCards/ClaimDetail";
+import ClaimStatusReasonCard from "../components/ConsiderDetails/HeaderDetailCards/ClaimStatusReasonCard";
 import HospitalClaimDetailsTab from "../components/ConsiderHospitalDetails/HospitalClaimDetailsTab";
 import ClaimTransationTab from "../components/ConsiderDetails/TabDetails/ClaimTransationTab";
 import PolicyBenefitTab from "../components/ConsiderDetails/TabDetails/PolicyBenefitTab";
@@ -18,10 +19,11 @@ import ClaimHistoryTab from "../components/ConsiderDetails/TabDetails/ClaimHisto
 import PaymentHistoryTab from "../components/ConsiderDetails/TabDetails/PaymentHistoryTab";
 import {
     CLAIM_LIST_TYPE_CONFIG,
-    parseClaimListType,
+    resolveClaimListType,
 } from "../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../api/coreClaimApi";
-import { calculatePolicyAgeText, formatDateString } from "../../../functionHelpers";
+import { calculatePolicyAgeText, formatDateString, safeAtob } from "../../../functionHelpers";
+import useClearDocumentScanOnUnmount from "../../CreatedClaim/hooks/ClearDocumentScanHook";
 
 /**
  * หน้า "บันทึกข้อมูลเคลม - เคลมโรงพยาบาล (OPD Half / OPD Full)"
@@ -39,24 +41,37 @@ type ConsiderHospitalDetailPageProps = {
 
 const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetailPageProps) => {
     const [tabValue, setTabValue] = useState("1");
-    const [searchParams] = useSearchParams();
+    useClearDocumentScanOnUnmount();
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : "";
+    const claimId = safeAtob(id) ?? "";
     // route hospital/:id/:caseId(/document) — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : "";
+    const caseId = safeAtob(caseIdEncoded) ?? "";
 
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId, caseId);
     const detail = detailData?.data;
+    // TODO(RC-005): ลบ cast นี้หลังรัน `npm run codegen` แทน coreClaimApi.client.ts — swagger ปัจจุบันเพิ่ม decision*
+    // ใน GetClaimDetailConsiderDtoResponse แล้ว แต่ client ที่ commit อยู่ยังไม่มี (ติด breaking change จุดอื่นของ contract)
+    const decisionDetail = detail as
+        | (NonNullable<typeof detail> & {
+              decisionId?: number;
+              decisionNameTH?: string;
+              decisionReasonName?: string;
+              decisionRemark?: string;
+          })
+        | undefined;
 
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? undefined
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 
     const isHeaderLoading = detailDataLoading || customerDetailLoading;
 
-    /** ประเภทรายการเคลม อ่านจาก Query String เช่น ?type=opd-full (Default : OPD Half) */
-    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[parseClaimListType(searchParams.get("type"))];
+    /** ประเภทรายการเคลม — DFUAT-033 มาจากข้อมูลจริง (medicalTypeId/medicalSubTypeCode) ไม่ใช่ URL query string แล้ว */
+    const claimListTypeConfig =
+        CLAIM_LIST_TYPE_CONFIG[resolveClaimListType(detail?.medicalTypeId, detail?.medicalSubTypeCode)];
+    /** Chip แสดงค่าดิบจาก BE ตรงๆ (medicalSubTypeCode) ตามที่ยืนยันแล้วว่าใช้แสดงได้เลย ("IPD") — fallback เป็น label ที่คำนวณไว้เผื่อเคสเก่าที่ BE ยังไม่ส่ง field นี้มา */
+    const claimTypeDisplayLabel = detail?.medicalSubTypeCode ?? claimListTypeConfig.label;
 
     const handleChangeTab = (_event: React.SyntheticEvent, newValue: string) => {
         setTabValue(newValue);
@@ -119,6 +134,16 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                                 claimStatusId={detail?.claimStatusId}
                             />
                         </Grid>
+
+                        {/* RC-005 5.1 : แสดงเฉพาะสถานะ รอแก้ไข / ปฏิเสธ / ยกเลิก (component คืน null เองในสถานะอื่น) */}
+                        <Grid item xs={12} sx={{ mb: 2, "&:empty": { display: "none" } }}>
+                            <ClaimStatusReasonCard
+                                decisionId={decisionDetail?.decisionId}
+                                decisionNameTH={decisionDetail?.decisionNameTH}
+                                decisionReasonName={decisionDetail?.decisionReasonName}
+                                decisionRemark={decisionDetail?.decisionRemark}
+                            />
+                        </Grid>
                     </>
                 )}
 
@@ -145,7 +170,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                         </Tabs>
 
                         <Chip
-                            label={`ประเภทรายการเคลม : ${claimListTypeConfig.label}`}
+                            label={`ประเภทรายการเคลม : ${claimTypeDisplayLabel}`}
                             color="primary"
                             variant="outlined"
                             sx={{ ml: "auto", mr: 1, fontWeight: 700 }}
@@ -161,7 +186,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                         <ClaimTransationTab onViewDraft={() => setTabValue("1")} />
                     </TabPanel>
                     <TabPanel value="3">
-                        <PolicyBenefitTab customerDetailData={customerDetailData} />
+                        <PolicyBenefitTab customerDetail={customerDetail} />
                     </TabPanel>
                     <TabPanel value="4">
                         <ClaimHistoryTab applicationId={customerDetail?.policyCode} />

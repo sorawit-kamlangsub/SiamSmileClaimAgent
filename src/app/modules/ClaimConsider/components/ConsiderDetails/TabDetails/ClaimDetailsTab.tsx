@@ -7,8 +7,10 @@ import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
 import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
-import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
+// เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+// import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
 import {
+    CaseDocumentV2Request,
     GetClaimDetailConsiderDtoResponse,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../../api/coreClaimApi.client";
@@ -42,6 +44,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
     /** มีค่า = แสดง toast อนุมัติสำเร็จ (เก็บเลขที่ Claim/Case ที่ได้จาก response) */
     const [approveResult, setApproveResult] = useState<{ claimNo?: string; caseNo?: string }>();
+    const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
@@ -68,43 +71,54 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
         isStep1Loading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
-        continuousClaimRows,
-        continuousClaimOpen,
-        setContinuousClaimOpen,
-        handleToggleContinuousClaim,
-        handleSelectContinuousClaim,
-        handleClearContinuousClaim,
+        // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+        // continuousClaimRows,
+        // continuousClaimOpen,
+        // setContinuousClaimOpen,
+        // handleToggleContinuousClaim,
+        // handleSelectContinuousClaim,
+        // handleClearContinuousClaim,
     } = considerDetail;
-    const { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving } = useClaimDetailActionHook({
-        ...considerDetail,
-        isCombinedWithMedicalAll,
-        // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
-        onApproveSuccess: (response) => {
-            setConfirmApproveOpen(false);
-            setApproveResult({
-                claimNo: response.data?.claimNo ?? detail?.claimNo,
-                caseNo: response.data?.caseNo ?? detail?.caseNo,
-            });
-        },
-        // swalSuccess ไม่ได้ปิด allowOutsideClick — คลิกนอกกล่องก็ถือว่าจบงานแล้ว จึงไม่เช็ค isConfirmed
-        onConfirmConsiderSuccess: () => {
-            swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
-                leaveToMonitor()
-            );
-        },
-    });
-    const continuousClaim = formik.values.continuousClaim;
+    const { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving, isSavingDraft, isSavingDecision } =
+        useClaimDetailActionHook({
+            ...considerDetail,
+            isCombinedWithMedicalAll,
+            scanDocuments: attachedDocuments,
+            rejectDocuments,
+            excludeSavedCaseDocuments: true,
+            // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
+            onApproveSuccess: (response) => {
+                setConfirmApproveOpen(false);
+                setApproveResult({
+                    claimNo: response.data?.claimNo ?? detail?.claimNo,
+                    caseNo: response.data?.caseNo ?? detail?.caseNo,
+                });
+            },
+            // swalSuccess ไม่ได้ปิด allowOutsideClick — คลิกนอกกล่องก็ถือว่าจบงานแล้ว จึงไม่เช็ค isConfirmed
+            onConfirmConsiderSuccess: () => {
+                swalSuccess("บันทึกผลพิจารณาสำเร็จ", "เพิ่มในรายการประวัติการทำรายการเรียบร้อยแล้ว").then(() =>
+                    leaveToMonitor()
+                );
+            },
+        });
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const continuousClaim = formik.values.continuousClaim;
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
-    const { activeStep, setActiveStep, isLastStep, isCalculating, handleNext, handleBack } = useClaimStepCalculateHook({
-        formik,
-        customerDetail,
-        filledItems,
-        stepsLength: steps.length,
-        paymentAmount: detail?.paymentAmount,
-    });
+    const { activeStep, setActiveStep, isLastStep, isCalculating, isAdvancing, handleNext, handleBack } =
+        useClaimStepCalculateHook({
+            formik,
+            customerDetail,
+            filledItems,
+            stepsLength: steps.length,
+            paymentAmount: detail?.paymentAmount,
+        });
     return (
         <>
             <FormikProvider value={formik}>
@@ -123,6 +137,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                         {activeStep === 0 && (
                             <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
                                 <Grid container spacing={2}>
+                                    {/* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
                                     {continuousClaim && (
                                         <Grid item xs={12}>
                                             <ContinuousClaimBanner
@@ -133,6 +148,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             />
                                         </Grid>
                                     )}
+                                    */}
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
                                         <RecordClaimData
                                             incidentType={incidentType}
@@ -141,12 +157,6 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             causeOfIncident={[]}
                                             medicalType={medicalType}
                                             incidentTypeMappingLoading={incidentTypeMappingLoading}
-                                            continuousClaimRows={continuousClaimRows}
-                                            continuousClaimOpen={continuousClaimOpen}
-                                            onContinuousClaimOpenChange={setContinuousClaimOpen}
-                                            onContinuousClaimToggle={handleToggleContinuousClaim}
-                                            onContinuousClaimSelect={handleSelectContinuousClaim}
-                                            onContinuousClaimClear={handleClearContinuousClaim}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
@@ -197,6 +207,11 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                     aplicationCode={customerDetail?.policyCode ?? ""}
                                     decisionReason={decisionReason}
                                     decisionReasonLoading={decisionReasonLoading}
+                                    rejectReason={rejectReason}
+                                    rejectReasonLoading={rejectReasonLoading}
+                                    cancelReason={cancelReason}
+                                    cancelReasonLoading={cancelReasonLoading}
+                                    onRejectDocumentsChange={setRejectDocuments}
                                 />
                             </Grid>
                         )}
@@ -218,7 +233,12 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                             <Box sx={{ display: "flex", gap: 1.5, flexWrap: "wrap", justifyContent: "flex-end" }}>
                                 {!isLastStep && (
                                     <>
-                                        <Button variant="outlined" startIcon={<SaveAsIcon />} onClick={handleSaveDraft}>
+                                        <Button
+                                            variant="outlined"
+                                            startIcon={<SaveAsIcon />}
+                                            onClick={handleSaveDraft}
+                                            disabled={isSavingDraft}
+                                        >
                                             บันทึกแบบร่าง
                                         </Button>
 
@@ -226,6 +246,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="contained"
                                             startIcon={<SaveIcon />}
                                             disabled={
+                                                isSavingDecision ||
                                                 !formik.values.considerResult ||
                                                 !formik.values.decisionReasonId ||
                                                 !formik.values.decisionReasonDetail
@@ -242,7 +263,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="contained"
                                             endIcon={<ArrowForwardIcon />}
                                             onClick={handleNext}
-                                            disabled={activeStep === 1 && isCalculating}
+                                            disabled={isAdvancing || (activeStep === 1 && isCalculating)}
                                         >
                                             ถัดไป
                                         </Button>

@@ -98,8 +98,9 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    // ค่ารักษา/ค่าชดเชย แบบ IPD/DayCase — กรอกจำนวนเงินตามรายละเอียดความคุ้มครอง (CoverageAndTransferBox)
     const isManualIPD =
-        values.coverageTypeId === CoverageType.Medical &&
+        (values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate) &&
         (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
@@ -157,7 +158,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                 "dischargeDate",
                 "symptomType",
                 "chiefComplaintId",
-                "remark",
+                "illnessOrInjuryDetail",
                 "notificationDate",
                 "documentCompleteDate",
                 "deathDate",
@@ -413,9 +414,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                             <RadioGroup
                                                 row
                                                 value={values.deathPlaceType}
-                                                onChange={(e) =>
-                                                    setFieldValue("deathPlaceType", Number(e.target.value))
-                                                }
+                                                onChange={(e) => {
+                                                    const nextDeathPlaceType = Number(e.target.value) as DeathPlaceType;
+                                                    setFieldValue("deathPlaceType", nextDeathPlaceType);
+                                                    // สลับสถานที่เสียชีวิตต้องล้างค่าฟิลด์ของตัวเลือกที่ไม่ได้แสดงแล้ว
+                                                    // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับตัวเลือกที่เลือกจริงตอน submit
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Hospital) {
+                                                        setFieldValue("hospitalId", undefined);
+                                                    }
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Other) {
+                                                        setFieldValue("accidentPlace", undefined);
+                                                    }
+                                                }}
                                             >
                                                 <FormControlLabel
                                                     value={DeathPlaceType.Home}
@@ -473,7 +483,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 <RadioGroup
                                     row
                                     value={values.symptomType}
-                                    onChange={(e) => setFieldValue("symptomType", Number(e.target.value))}
+                                    onChange={(e) => {
+                                        const nextSymptomType = Number(e.target.value) as SymptomType;
+                                        setFieldValue("symptomType", nextSymptomType);
+                                        // สลับไปมาระหว่าง "ระบุอาการ" กับ "อื่นๆ" ต้องล้างค่าของอีกฝั่งที่ไม่ได้แสดงแล้ว
+                                        // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับฝั่งที่เลือกจริงตอน submit
+                                        if (nextSymptomType === SymptomType.ChiefComplaint) {
+                                            setFieldValue("illnessOrInjuryDetail", undefined);
+                                        } else {
+                                            setFieldValue("chiefComplaintId", undefined);
+                                            setFieldValue("chiefComplaintId_selectedText", undefined);
+                                        }
+                                    }}
                                 >
                                     <FormControlLabel
                                         value={SymptomType.ChiefComplaint}
@@ -536,10 +557,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
                             <Grid item xs={12} lg={9}>
-                                <Box data-field-name="remark">
+                                <Box data-field-name="illnessOrInjuryDetail">
                                     <FormikTextField
-                                        name="remark"
-                                        label="หมายเหตุ"
+                                        name="illnessOrInjuryDetail"
+                                        label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                         formik={formik}
                                         size="small"
                                         multiline
@@ -601,6 +622,14 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     onBenefitAmountsChange={(value) => formik.setFieldValue("benefitAmounts", value)}
                                     onTransferAmountChange={(value) => formik.setFieldValue("transferAmount", value)}
                                     debounceMs={300}
+                                    transferAmountError={
+                                        (formik.touched.transferAmount ||
+                                            formik.submitCount > 0 ||
+                                            !!formik.values.transferAmount) &&
+                                        typeof formik.errors.transferAmount === "string"
+                                            ? formik.errors.transferAmount
+                                            : undefined
+                                    }
                                 />
                             </Grid>
                             <Grid item xs={12} mt={2}>

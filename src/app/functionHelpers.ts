@@ -80,6 +80,19 @@ export const decodeFromBase64 = (str: string): string => {
     return decodeURIComponent(escape(atob(str)));
 };
 
+/**
+ * ถอด base64 อย่างปลอดภัย — คืน undefined แทนการ throw เมื่อ input ไม่ใช่ base64 ที่ถูกต้อง
+ * (เช่น bookmark เก่า/แก้ URL เอง) ไม่มี ErrorBoundary ดักในระบบ ถ้าปล่อยให้ throw ตรงๆ จะทำให้ทั้ง SPA ขาว
+ */
+export const safeAtob = (value: string | undefined): string | undefined => {
+    if (!value) return undefined;
+    try {
+        return atob(value);
+    } catch {
+        return undefined;
+    }
+};
+
 export const [startOfMonth, endOfMonth] = [
     dayjs().local().utcOffset(0).startOf("month"),
     dayjs().local().utcOffset(0).endOf("month"),
@@ -455,8 +468,16 @@ export const colorMapPaymentAppStatus: Record<number, "#11734B" | "#a56e07" | "#
     5: "#B32615", // ยกเลิกก่อน DCR
 };
 
+/** ชื่อสถานะ App ตาม appStatusId — ใช้เป็น fallback เมื่อ BE ส่ง id มาแต่ไม่ส่งชื่อ (ชุดเดียวกับสีด้านบน) */
+export const appStatusLabelMap: Record<number, string> = {
+    2: "ปกติ",
+    3: "มีกำหนดยกเลิก",
+    4: "ยกเลิก",
+    5: "ยกเลิกก่อน DCR",
+};
+
 //AppStatus
-export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9"> = {
+export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9" | "#D4EDBC"> = {
     2: "#FFF1CD", // รอพิจารณา
     3: "#FFF1CD", // รอเอกสาร
     4: "#FFF1CD", // รอแก้ไข
@@ -464,9 +485,10 @@ export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | 
     6: "#FFCFC9", // ยกเลิก
     7: "#FFF1CD", // อยู่ระหว่างดำเนินการ
     8: "#FFF1CD", // รอตรวจสอบการแก้ไข
+    9: "#D4EDBC", // อนุมัติ
 };
 
-export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615"> = {
+export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615" | "#11734B"> = {
     2: "#a56e07", // รอพิจารณา
     3: "#a56e07", // รอเอกสาร
     4: "#a56e07", // รอแก้ไข
@@ -474,6 +496,7 @@ export const colorMapClaimTransactionType: Record<number, "#a56e07" | "#B32615">
     6: "#B32615", // ยกเลิก
     7: "#a56e07", // อยู่ระหว่างดำเนินการ
     8: "#a56e07", // รอตรวจสอบการแก้ไข
+    9: "#11734B", // อนุมัติ
 };
 export enum IncidentType {
     Illness = 2,

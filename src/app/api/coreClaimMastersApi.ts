@@ -1,10 +1,11 @@
 import axios from "axios";
-import { API_URL } from "../../Const";
+import { APIGW_URL } from "../../Const";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AllUserDtoResponse, GetICD10DtoResponse, GetOrganizeDtoResponse, MastersClient } from "./coreClaimApi.client";
 import { useMemo } from "react";
+import { useBranchByUserPermission } from "../modules/_common/branchPermission";
 
-const coreClaimMastersClient = new MastersClient(API_URL, axios);
+const coreClaimMastersClient = new MastersClient(`${APIGW_URL}/claim/core`, axios);
 
 const getUserQuerykey = ["getUser"];
 const getIncidentTypeQueryKey = ["getIncidentType"];
@@ -35,6 +36,8 @@ const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
 const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
 const getDocumentReviewStatusQueryKey = ["getDocumentReviewStatus"];
+const getCancelReasonQueryKey = ["getCancelReason"];
+const getRejectReasonQueryKey = ["getRejectReason"];
 const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
 const getBenefitQueryKey = ["getBenefit"];
 
@@ -409,9 +412,14 @@ export const useGetBodyPartByDisabilityLossPart = (disabilityLossPartId?: number
 };
 
 export const useGetBranch = (branchId?: number | undefined) => {
-    return useQuery([getBranchQueryKey, branchId], () => coreClaimMastersClient.getBranch(branchId), {
+    const branchQuery = useQuery([getBranchQueryKey, branchId], () => coreClaimMastersClient.getBranch(branchId), {
         refetchOnWindowFocus: false,
     });
+    const filteredBranches = useBranchByUserPermission(branchQuery.data?.data);
+    return {
+        ...branchQuery,
+        data: branchQuery.data ? { ...branchQuery.data, data: filteredBranches } : branchQuery.data,
+    };
 };
 
 export const useGetPaymentStatus = (paymentStatusId?: number | undefined) => {
@@ -446,6 +454,28 @@ export const useGetDocumentReviewStatus = (documentReviewStatusId?: number | und
         () => coreClaimMastersClient.getDocumentReviewStatus(documentReviewStatusId),
         {
             cacheTime: 1000 * 60 * 60 * 24,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCancelReason = (cancelReasonId?: number | undefined, enabled = true) => {
+    return useQuery(
+        [getCancelReasonQueryKey, cancelReasonId],
+        () => coreClaimMastersClient.getCancelReason(cancelReasonId),
+        {
+            enabled,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetRejectReason = (rejectReasonId?: number | undefined, enabled = true) => {
+    return useQuery(
+        [getRejectReasonQueryKey, rejectReasonId],
+        () => coreClaimMastersClient.getRejectReason(rejectReasonId),
+        {
+            enabled,
             refetchOnWindowFocus: false,
         }
     );

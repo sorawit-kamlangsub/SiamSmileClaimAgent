@@ -10,8 +10,13 @@ import useDashboardHook from "../hooks/ClaimConsiderCustomerMonitor/DashboardHoo
 import { useState } from "react";
 import dayjs from "dayjs";
 
+/** ตัวกรองสถานะของ Monitor เคลมลูกค้า ซ่อน อนุมัติ(9)/รอตรวจสอบการแก้ไข(8) — ประกาศนอก component ให้ reference คงที่ */
+const EXCLUDED_STATUS_IDS = [9, 8];
+
 const ConsiderMonitorPage = () => {
-    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook();
+    const { formik, statusOptions, claimTransactionTypeDataLoading } = useSearchFilterHook({
+        excludedStatusIds: EXCLUDED_STATUS_IDS,
+    });
     const [appliedFilter, setAppliedFilter] = useState<AppliedFilter>({
         ...getDefaultSearchFilter(dayjs()),
         dateFrom: dayjs(),
@@ -19,13 +24,17 @@ const ConsiderMonitorPage = () => {
         isSearch: true,
         path: "customers",
     });
-    const { dashboardData, dashboardDataLoading } = useDashboardHook(appliedFilter);
+    const { dashboardData, dashboardDataLoading, dashboardDataError } = useDashboardHook(appliedFilter);
     const handleSearch = () => {
+        // ห้ามให้ dateFrom/dateTo เป็น undefined — useGetDashboardCustomerConsider ต้องมีวันที่ครบถึงจะ enabled
+        // แต่ useGetCustomerClaimAdjudicationMonitor ไม่ต้อง ถ้าผู้ใช้ล้างช่องวันที่ก่อนกดค้นหา dashboard จะ
+        // ค้างข้อมูลเก่า (query ถูก disable) ในขณะที่ตารางยิงค้นหาแบบไม่มีวันที่ต่อ ทำให้เห็นข้อมูลคนละช่วงกัน
+        // จึง fallback กลับไปใช้วันที่ที่ applied อยู่เดิมแทนการปล่อยว่าง
         setAppliedFilter({
             isSearch: true,
             dateType: formik.values.dateType,
-            dateFrom: formik.values.dateFrom ?? undefined,
-            dateTo: formik.values.dateTo ?? undefined,
+            dateFrom: formik.values.dateFrom ?? appliedFilter.dateFrom,
+            dateTo: formik.values.dateTo ?? appliedFilter.dateTo,
             product: formik.values.product,
             searchFrom: formik.values.searchFrom,
             searchDetail: formik.values.searchDetail,
@@ -51,7 +60,11 @@ const ConsiderMonitorPage = () => {
         <>
             <Grid container spacing={2} sx={{ py: 2 }}>
                 <Grid item xs={12} sm={12} md={12} lg={12}>
-                    <ConsiderCustomerHeader dashboardData={dashboardData} dashboardDataLoading={dashboardDataLoading} />
+                    <ConsiderCustomerHeader
+                        dashboardData={dashboardData}
+                        dashboardDataLoading={dashboardDataLoading}
+                        dashboardDataError={dashboardDataError}
+                    />
                 </Grid>
                 <Grid item xs={12} sm={12} md={12} lg={12} sx={{ py: 2 }}>
                     <ConsiderCustomerMonitorFilter

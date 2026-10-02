@@ -221,6 +221,13 @@ export const amountNumber = (value: string | number | undefined): number =>
 export const formatNoDecimal = (value: number | string | undefined): string =>
     Number(value || 0).toLocaleString("en-US", { maximumFractionDigits: 0 });
 
+// ── ยอดเบิกสูงสุดตาม % ของยอดความคุ้มครอง (maxTransferAmount; ไม่มีค่า → ใช้ coveredAmount ของ rule)
+//    คูณก่อนหาร กัน floating point เช่น 0.07 * 100000 ──
+export const calculateRuleMaxAmount = (rule: OrganRuleResult, coverageAmount: number | undefined): number => {
+    const base = coverageAmount && coverageAmount > 0 ? coverageAmount : rule.coveredAmount;
+    return Math.round(((base * rule.percent) / 100) * 100) / 100;
+};
+
 export const calculateFingerSideTotal = (fingers: OrganFingerState | null, side: "left" | "right"): number =>
     fingers
         ? FINGER_KEYS.reduce(

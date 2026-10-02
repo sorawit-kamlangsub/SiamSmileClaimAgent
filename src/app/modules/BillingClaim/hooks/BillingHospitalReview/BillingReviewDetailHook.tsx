@@ -7,7 +7,8 @@ import {
     useSubmitHospitalBilling,
     normalizeSubmitError,
 } from "../../../../api/hospitalBillingApi";
-import { useGetDecisionReason } from "../../../../api/coreClaimMastersApi";
+import { useGetDecisionReason, useGetRejectReason } from "../../../../api/coreClaimMastersApi";
+import { ReviewReasonOption } from "../../components/BillingHospitalReview/SubDetailsTab/BillingReviewResultSection";
 import { SubmitHospitalBillingDto } from "../../../../api/coreClaimApi.client";
 import { swalConfirm, swalError, swalSuccess, swalToast, swalWarning } from "../../../_common";
 import { round2, toFormValues, toReviewDataDto } from "../../store/billingMappers";
@@ -20,6 +21,7 @@ import {
 } from "../../store/billingClaim.types";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import useBillingDocumentHook from "./BillingDocumentHook";
+import { safeAtob } from "../../../../functionHelpers";
 
 const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     incidentTypeId: undefined,
@@ -65,6 +67,11 @@ const EMPTY_FORM_VALUES: BillingReviewFormValues = {
     icuDays: 0,
     simBCategory: "SimB2",
     mergeCompensation: true,
+    trafficVehicleType: undefined,
+    trafficVehicleOther: "",
+    trafficCasualtyStatus: undefined,
+    trafficIsPoroboExcess: undefined,
+    trafficNoPoroboReason: "",
 };
 
 /**
@@ -82,7 +89,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const dispatch = useAppDispatch();
     const { id } = useParams();
     const navigate = useNavigate();
-    const billingDetailId = id ? atob(id) : "";
+    const billingDetailId = safeAtob(id) ?? "";
 
     const {
         data: detailData,
@@ -101,7 +108,11 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     const hasSyncedRef = useRef(false);
     useEffect(() => {
         if (!detail?.data || hasSyncedRef.current) return;
-        formik.setValues(toFormValues(detail.data), false);
+        // จำนวนวันนอนอยู่ที่ root ของ BillingDetailDto (ไม่ใช่ใน data.claim) จึง sync แยกจาก toFormValues
+        formik.setValues(
+            { ...toFormValues(detail.data), ipdDays: detail.ipdDayCount ?? 0, icuDays: detail.icuDayCount ?? 0 },
+            false
+        );
         hasSyncedRef.current = true;
         // ปลดล็อก useGetDocumentType (DocumentScanTable "เอกสารประกอบการปฏิเสธ") — gate ด้วย
         // claimPHSlice.isEnabled ซึ่ง default false และไม่มีใครใน flow นี้ set ให้เดิม ทำให้ query โดน
@@ -115,7 +126,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         hasSyncedRef.current = false;
     };
 
-    /** แก้ไขได้เฉพาะ statusId = 1 (รอตรวจสอบ) — สถานะอื่นเป็นการดูย้อนหลังอย่างเดียว (handoff ข้อ 1) */
+    /** แก้ไขได้เฉพาะ statusId = BILLING_STATUS.pendingReview (รอตรวจสอบ) — สถานะอื่นเป็นการดูย้อนหลังอย่างเดียว (handoff ข้อ 1) */
     const isReadOnly = readOnlyProp || detail?.statusId !== BILLING_STATUS.pendingReview;
 
     /**
@@ -132,37 +143,39 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
 
     /**
      * สถานะ 2/4/5 ต้องระบุสาเหตุ — 2/5 ใช้ decisionId+decisionReasonId (Decision master), 4 ใช้
-     * rejectReasonId (ไม่มี master แยก ใช้ตัวเลือกชุดเดียวกับ decisionId ของสถานะ "ปฏิเสธ")
+     * rejectReasonId (ตัวเลือกจาก Master สาเหตุการปฏิเสธ — useGetRejectReason)
      */
     const reasonDecisionId = formik.values.reviewStatusId
         ? BILLING_DECISION_ID[formik.values.reviewStatusId]
         : undefined;
-    const { data: reviewReason, isLoading: reviewReasonLoading } = useGetDecisionReason(undefined, reasonDecisionId);
+    const isRejectedSelected = formik.values.reviewStatusId === BILLING_STATUS.rejected;
+    // ปฏิเสธ (4) ใช้ Master สาเหตุการปฏิเสธของตัวเอง (useGetRejectReason) — สถานะอื่นยังใช้ Decision master
+    const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
+        undefined,
+        isRejectedSelected ? undefined : reasonDecisionId
+    );
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(undefined, isRejectedSelected);
+    /** ตัวเลือก dropdown สาเหตุ (normalize เป็น id/name ให้ BillingReviewResultSection) */
+    const reviewReason: ReviewReasonOption[] = isRejectedSelected
+        ? (rejectReason?.data ?? []).map((item) => ({ id: item.rejectReasonId, name: item.rejectReasonName }))
+        : (decisionReason?.data ?? []).map((item) => ({ id: item.decisionReasonId, name: item.decisionReasonName }));
+    const reviewReasonLoading = isRejectedSelected ? rejectReasonLoading : decisionReasonLoading;
     const needsReason = reasonDecisionId !== undefined;
     /** *Enable ปุ่ม "ยืนยันบันทึกผลพิจารณา" เมื่อมีการเลือกผลการพิจารณา (+ สาเหตุถ้าจำเป็น) */
     const canSubmitReview = !!formik.values.reviewStatusId && (!needsReason || !!formik.values.reviewReasonId);
 
     const documentHook = useBillingDocumentHook(formik.values.documents);
 
-    /** required document subtype ทุกตัวต้องมีแถวและมีผลตรวจครบ — สัญญา BE จริง (handoff ข้อ 6) บังคับทุกครั้งที่ submit */
+    /**
+     * required document subtype ทุกตัวต้องมีแถวครบ — สัญญา BE จริง (handoff ข้อ 6) บังคับทุกครั้งที่ submit
+     *
+     * CR "Traffic Accident and Hospital Document Review" ข้อ CR-05 : ตัดคอลัมน์ "ผลการตรวจ" ออกจากตาราง
+     * ตรวจสอบเอกสารแล้ว จึงตัดเงื่อนไข "ต้องมีผลตรวจครบ" ออกจากเกทนี้ด้วย (คอลัมน์ที่ผูก validation ถูกตัด
+     * ไปแล้ว) เหลือแค่เช็คว่ามีแถวเอกสารของ subtype ที่จำเป็นครบหรือไม่
+     */
     const isDocumentSubTypeCoverageComplete = () => {
         const required = detail?.requiredDocumentSubTypeIds ?? [];
-        return required.every((subTypeId) => {
-            const rowsOfSubType = formik.values.documents.filter((d) => d.documentSubTypeId === subTypeId);
-            return (
-                rowsOfSubType.length > 0 &&
-                rowsOfSubType.every((d) => d.reviewStatusId !== undefined && d.reviewStatusId !== null)
-            );
-        });
-    };
-
-    /** gate ปุ่ม "ถัดไป" ของ Step 1 — สเปค : "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป" */
-    const validateStep1Documents = (): boolean => {
-        if (documentHook.hasAnyMissingResult()) {
-            swalError("ไม่สามารถดำเนินการต่อได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
-            return false;
-        }
-        return true;
+        return required.every((subTypeId) => formik.values.documents.some((d) => d.documentSubTypeId === subTypeId));
     };
 
     /**
@@ -184,15 +197,6 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         return !!result.isConfirmed;
     };
 
-    /** gate ปุ่ม "อนุมัติ" ของ Step 3 — ทุกแถวที่มีเอกสาร (Document Count > 0) ต้องมีผลเป็น "ผ่าน" */
-    const validateApprove = (): boolean => {
-        if (documentHook.hasAnyNotPassed()) {
-            swalToast("warning", "กรุณาเลือกผลการตรวจเป็น “ผ่าน” ให้ครบทุกรายการที่มีเอกสารก่อนอนุมัติ");
-            return false;
-        }
-        return true;
-    };
-
     /**
      * ยิง POST /billing/hospital/{id}/submit ด้วย `statusId` ที่ระบุ — ใช้ร่วมกันทั้ง "ยืนยันบันทึกผลพิจารณา"
      * (รอแก้ไข/ปฏิเสธ, อ่านสาเหตุ/หมายเหตุจาก `formik.values.reviewReasonId`/`reviewRemark`) และ "อนุมัติ"
@@ -210,11 +214,11 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             return false;
         }
         if (statusId === BILLING_STATUS.needsCorrection && !formik.values.reviewRemark) {
-            swalError("บันทึกไม่สำเร็จ", "กรุณาระบุรายละเอียดการรอแก้ไข");
+            swalError("บันทึกไม่สำเร็จ", "กรุณาระบุรายละเอียดการแจ้งแก้ไข");
             return false;
         }
         if (!isDocumentSubTypeCoverageComplete()) {
-            swalError("บันทึกไม่สำเร็จ", "เอกสารที่จำเป็นต้องมีครบและมีผลการตรวจทุกแถว");
+            swalError("บันทึกไม่สำเร็จ", "เอกสารที่จำเป็นต้องมีครบทุกรายการ");
             return false;
         }
 
@@ -263,7 +267,13 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             lastBodyKeyRef.current = undefined;
 
             if (statusId === BILLING_STATUS.passed) {
-                await swalToast("success", "บันทึกผลตรวจ “ผ่าน” สำเร็จ");
+                // rule 7 (handoff "Business Rule: อนุมัติรายการวางบิลโรงพยาบาล") : แจ้งผู้ใช้ว่ารายการ
+                // ถูกส่งไปที่ "ตั้งเบิกกองทุน > เคลมโรงพยาบาล" แล้ว — caller (BillingClaimDetailsTab) เป็นคน
+                // navigate ไปหน้านั้นต่อ
+                await swalToast(
+                    "success",
+                    "อนุมัติรายการวางบิลเรียบร้อย ระบบส่งรายการไปที่ตั้งเบิกกองทุน > เคลมโรงพยาบาล แล้ว"
+                );
             } else {
                 // `returnStatus = "Published"` หมายถึง RabbitMQ รับ event แล้วเท่านั้น ไม่ใช่ SmileConnect
                 // ประมวลผลสำเร็จ (handoff ข้อ 7) ห้ามอ้างว่า "ส่งกลับสำเร็จ" หรือ "SmileConnect รับแล้ว"
@@ -317,10 +327,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     };
 
     /** ปุ่ม "อนุมัติ" (Step 3) */
-    const handleApprove = async (): Promise<boolean> => {
-        if (!validateApprove()) return false;
-        return submitReview(BILLING_STATUS.passed);
-    };
+    const handleApprove = async (): Promise<boolean> => submitReview(BILLING_STATUS.passed);
 
     return {
         formik,
@@ -332,7 +339,6 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         reviewReasonLoading,
         canSubmitReview,
         documentHook,
-        validateStep1Documents,
         confirmStep2Amount,
         handleSubmitReviewResult,
         handleApprove,

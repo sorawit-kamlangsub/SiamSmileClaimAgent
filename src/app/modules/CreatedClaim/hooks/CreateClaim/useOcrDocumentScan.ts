@@ -5,7 +5,7 @@ import {
     OcrDocumentScanResult,
     RequiredDocsConfig,
 } from "../../components/CreateClaim/OcrDocumentScanSection";
-import { CaseDocumentDetailV2Request, CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
+import { OCRV2Request, CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import dayjs from "dayjs";
 
 const COVERAGE_TYPE_DOCS_MAP: Record<number, RequiredDocsConfig> = {
@@ -26,12 +26,12 @@ const ocrDocumentPayload = (
 ): CaseDocumentV2Request[] => {
     const list: CaseDocumentV2Request[] = [];
 
-    const pushDoc = (documentId: string | undefined, detail: CaseDocumentDetailV2Request) => {
+    const pushDoc = (documentId: string | undefined, detail: OCRV2Request) => {
         list.push({
             documentId,
             documentSubTypeId: CASE_DOCUMENT_SUB_TYPE_ID,
             claimDocumentTypeId: OCR_CLAIM_DOCUMENT_TYPE_ID,
-            details: [detail],
+            ocr: [detail],
         });
     };
 
@@ -85,6 +85,10 @@ const ocrDocumentPayload = (
     return list;
 };
 
+// เอกสารที่มีผล OCR แล้วแต่ยังไม่ได้ documentId จาก DocStorage (ยังอัปโหลดไม่เสร็จหรืออัปโหลดไม่สำเร็จ)
+const hasMissingOcrDocumentId = (ocrResult: OcrDocumentScanResult, documentIds: DocStorageDocumentIds): boolean =>
+    ocrDocumentPayload(ocrResult, documentIds).some((doc) => !doc.documentId);
+
 export const useOcrDocumentScan = () => {
     const [isOcrDocsValid, setIsOcrDocsValid] = useState(true);
     const [ocrResult, setOcrResult] = useState<OcrDocumentScanResult>({});
@@ -119,6 +123,7 @@ export const useOcrDocumentScan = () => {
         getRequiredDocsByCoverageType,
         shouldShowOcrDocumentScan,
         ocrDocumentPayload,
+        hasMissingOcrDocumentId,
         resetOcr,
     };
 };

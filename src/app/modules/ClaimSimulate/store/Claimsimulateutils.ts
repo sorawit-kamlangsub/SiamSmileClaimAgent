@@ -26,6 +26,10 @@ export const toAmount = (raw: string): number => {
     return Number.isFinite(n) ? Math.round(n * 100) / 100 : 0;
 };
 
+/** เหมือน toAmount แต่ช่องว่างคืน undefined (ไม่ใช่ 0) — ใช้กับช่องที่ผู้ใช้ไม่ได้กรอกจะได้ไม่โชว์ 0 */
+export const toOptionalAmount = (raw: string): number | undefined =>
+    sanitizeDecimalInput(raw) === "" ? undefined : toAmount(raw);
+
 export const toInteger = (raw: string): number => {
     const sanitized = sanitizeIntegerInput(raw);
     const n = parseInt(sanitized, 10);
@@ -175,4 +179,33 @@ export const getClaimAmountReconciliation = ({
     }
 
     return { status: "ok", message: "ยอดเงินครบถ้วนตรงตามใบเสร็จ" };
+};
+
+/**
+ * ตรวจสอบยอดเงินแบบเคลมโรงพยาบาล (Step 2) — ไม่เทียบกับยอดเงินโอน
+ * RC-006 : สิทธิ์เบิก = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (ระบบคำนวณให้) ดังนั้น
+ * สิทธิ์เบิก + ส่วนลด + ยอดไม่คุ้มครอง = ยอดเบิกรวม (totalClaim) ต้องเท่ากับยอดเงินตามใบเสร็จรวม
+ * ปกติเท่ากันเสมอเพราะ claimAmount ผูกกับ receiptAmount — จะ error เฉพาะแถวที่ยังไม่ถูกคำนวณใหม่ (เช่น แถวจากแบบร่าง
+ * ที่ไม่มียอดเงินตามใบเสร็จ) ใช้ทั้งกรอบแจ้งเตือนใน ExpenseRecords และเกทปุ่ม "ถัดไป" ของ HospitalClaimDetailsTab
+ */
+export const getReceiptReconciliation = ({
+    totalReceipt,
+    totalClaim,
+}: {
+    totalReceipt: number;
+    totalClaim: number;
+}): ClaimAmountReconciliationResult => {
+    const receipt = Math.round(totalReceipt * 100) / 100;
+    const claim = Math.round(totalClaim * 100) / 100;
+
+    if (claim !== receipt) {
+        return {
+            status: "error",
+            message: `สิทธิ์เบิกรวมส่วนลดและยอดไม่คุ้มครอง (${fmtBaht(
+                claim
+            )} บาท) ต้องเท่ากับยอดเงินตามใบเสร็จ (${fmtBaht(receipt)} บาท)`,
+        };
+    }
+
+    return { status: "ok", message: "สิทธิ์เบิกรวมส่วนลดและยอดไม่คุ้มครอง เท่ากับยอดเงินตามใบเสร็จ" };
 };

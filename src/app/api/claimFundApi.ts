@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { API_CLAIM_FUND_URL } from "../../Const";
 
+// แจ้งเคลม : EncryptText / CreatePayment ยิงตรงไป ClaimFund API (VITE_CLAIM_FUND_API_URL) ไม่ผ่าน API Gateway
 const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 
 const createTransferKey = "createTransfer";

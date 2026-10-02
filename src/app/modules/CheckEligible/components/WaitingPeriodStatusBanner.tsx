@@ -27,7 +27,6 @@ const STATUS_LABEL: Record<WaitingPeriodStatus, string> = {
 };
 
 const WaitingPeriodStatusBanner: React.FC<Props> = ({ incidentDate, coverageFrom }) => {
-    console.log("🚀 ~ WaitingPeriodStatusBanner ~ coverageFrom:", coverageFrom);
     const [detailOpen, setDetailOpen] = useState(false);
 
     // ต้องมีทั้งวันที่เกิดเหตุ (จาก formik) และวันที่เริ่มคุ้มครอง (จาก customerDetail) ถึงจะคำนวณระยะรอคอยได้
@@ -104,4 +103,3 @@ const WaitingPeriodStatusBanner: React.FC<Props> = ({ incidentDate, coverageFrom
 };
 
 export default WaitingPeriodStatusBanner;
-

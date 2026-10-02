@@ -14,12 +14,25 @@ import {
 } from "../../../../functionHelpers";
 import { useGetHospitalClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
 import { GetHospitalClaimAdjudicationMonitorDtoResponse } from "../../../../api/coreClaimApi.client";
+import ClaimNoWithContinuousBadge from "../../components/_common/ClaimNoWithContinuousBadge";
 
 /**
  * TODO(caseId): BE ยังไม่ส่ง caseId มากับ monitor list — cast ชั่วคราวจนกว่าจะ `npm run codegen`
  * ให้ GetHospitalClaimAdjudicationMonitorDtoResponse มี field caseId แล้วค่อยลบ type นี้ทิ้ง
+ * TODO(caseCount): BE ยังไม่ส่ง caseCount (ฝั่ง customer monitor มีแล้ว) — ระหว่างนี้ badge "เคลมต่อเนื่อง" จะไม่แสดง
+ * เมื่อ codegen แล้วมี field นี้ badge จะทำงานเอง
  */
-type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string };
+type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string; caseCount?: number };
+
+// ตาม spec: สถานะ "อยู่ระหว่างดำเนินการ" (7), "ปฏิเสธ" (5), "ยกเลิก" (6) แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
+const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [5, 6, 7];
+
+/**
+ * DFUAT-063 : รายการที่ SmileConnect จองสิทธิ์ (Reservation) / แจ้งเข้ารับการรักษา (Admission) — BE ส่ง isReadOnly = true
+ * ห้ามพิจารณา แสดงสถานะเป็น "อยู่ระหว่างดำเนินการ" (7) และกดดูรายละเอียดได้อย่างเดียว
+ */
+const IN_PROGRESS_STATUS_ID = 7;
+const IN_PROGRESS_STATUS_NAME = "อยู่ระหว่างดำเนินการ";
 
 const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -60,6 +73,18 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
         [claimHospitalData]
     );
 
+    /**
+     * TODO(caseCount): นับจำนวนเคสต่อ claimId จากแถวในหน้าปัจจุบันแทนไปก่อน — ถ้าเคสของเคลมเดียวกันอยู่คนละหน้าจะนับไม่ครบ
+     * (BE ใช้ COUNT(CaseId) OVER (PARTITION BY ClaimId) ก่อนแบ่งหน้า) เมื่อ BE ส่ง caseCount มาแล้วให้ลบส่วนนี้ทิ้ง
+     */
+    const pageCaseCountByClaimId = useMemo(() => {
+        const counts = new Map<string, number>();
+        claimHospitalData?.data?.forEach((row) => {
+            if (row.claimId) counts.set(row.claimId, (counts.get(row.claimId) ?? 0) + 1);
+        });
+        return counts;
+    }, [claimHospitalData]);
+
     const column: MUIDataTableColumn[] = [
         {
             name: "decisionDate",
@@ -74,6 +99,12 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
             label: "ClaimCode",
             options: {
                 ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
+                customBodyRenderLite: (rowIndex) => {
+                    const row = claimHospitalData?.data?.[rowIndex] as MonitorRowWithCaseId | undefined;
+                    const caseCount =
+                        row?.caseCount ?? (row?.claimId ? pageCaseCountByClaimId.get(row.claimId) : undefined);
+                    return <ClaimNoWithContinuousBadge claimNo={row?.claimNo} caseCount={caseCount} />;
+                },
             },
         },
         {
@@ -144,14 +175,11 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRenderLite: (rowIndex) => {
                     const row = claimHospitalData?.data?.[rowIndex];
-                    const value = row?.claimTransactionTypeName;
+                    const value = row?.isReadOnly ? IN_PROGRESS_STATUS_NAME : row?.claimTransactionTypeName;
                     if (!value) return "-";
-                    const bgColor = row?.claimTransactionTypeId
-                        ? backgroundColorMapClaimTransactionType[row?.claimTransactionTypeId]
-                        : undefined;
-                    const textColor = row?.claimTransactionTypeId
-                        ? colorMapClaimTransactionType[row?.claimTransactionTypeId]
-                        : undefined;
+                    const statusId = row?.isReadOnly ? IN_PROGRESS_STATUS_ID : row?.claimTransactionTypeId;
+                    const bgColor = statusId ? backgroundColorMapClaimTransactionType[statusId] : undefined;
+                    const textColor = statusId ? colorMapClaimTransactionType[statusId] : undefined;
                     return (
                         <Chip
                             label={value}
@@ -173,15 +201,17 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
             options: {
                 sort: false,
                 customBodyRenderLite: (rowIndex) => {
+                    const row = claimHospitalData?.data?.[rowIndex] as MonitorRowWithCaseId | undefined;
+                    const showAdjudicateButton =
+                        !row?.isReadOnly &&
+                        !HIDE_ADJUDICATE_BUTTON_STATUS_IDS.includes(row?.claimTransactionTypeId ?? -1);
                     return (
                         <>
-                            <Grid container sx={{ gap: 1.5 }}>
-                                <Tooltip title="พิจารณาเคลม">
+                            <Grid container sx={{ gap: 1.5 }} wrap="nowrap">
+                                <Tooltip title={showAdjudicateButton ? "พิจารณาเคลม" : ""}>
                                     <IconButton
+                                        disabled={!showAdjudicateButton}
                                         onClick={() => {
-                                            const row = claimHospitalData?.data?.[rowIndex] as
-                                                | MonitorRowWithCaseId
-                                                | undefined;
                                             navigate(
                                                 `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
                                                     row?.caseId ?? ""
@@ -189,6 +219,7 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                                             );
                                         }}
                                         sx={{
+                                            visibility: showAdjudicateButton ? "visible" : "hidden",
                                             backgroundColor: "#FFF1CD",
                                             ":hover": {
                                                 backgroundColor: "#e7cf95",
@@ -201,9 +232,6 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                                 <Tooltip title="ดูรายละเอียดเอกสาร">
                                     <IconButton
                                         onClick={() => {
-                                            const row = claimHospitalData?.data?.[rowIndex] as
-                                                | MonitorRowWithCaseId
-                                                | undefined;
                                             navigate(
                                                 `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
                                                     row?.caseId ?? ""

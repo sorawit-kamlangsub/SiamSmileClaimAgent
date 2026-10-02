@@ -195,7 +195,7 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoad
 
                                     <Divider sx={{ mb: 2 }} />
 
-                                    {/* แถวล่าง: อาการ+หมายเหตุ / ยอดเบิก-ยอดจ่าย */}
+                                    {/* แถวล่าง: อาการ+รายละเอียดการเจ็บป่วย/การบาดเจ็บ / ยอดเบิก-ยอดจ่าย */}
                                     <Box
                                         sx={{
                                             display: "grid",
@@ -212,7 +212,10 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoad
                                             }}
                                         >
                                             <Field label="อาการสำคัญ" value={item?.caseChiefComlaint} />
-                                            <Field label="หมายเหตุ" value={item?.chiefComplaintCustom} />
+                                            <Field
+                                                label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
+                                                value={item?.illnessOrInjuryDetail}
+                                            />
                                         </Box>
 
                                         <Box

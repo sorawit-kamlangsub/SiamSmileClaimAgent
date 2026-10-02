@@ -3,15 +3,16 @@ import { BillingDocumentDto, BillingExpenseDto } from "../../../api/coreClaimApi
 import { ContinuousClaimSelection } from "../../CheckEligible/components/ContinuousClaimDialog";
 
 /**
- * สถานะรายการวางบิลเคลมโรงพยาบาล — ตรงกับ contract จริงใน hospital-billing-fe.md ข้อ 4
- * (คนละความหมายกับตัวเลขที่เคยใช้ตอน mock — ห้ามสลับกลับ)
+ * สถานะรายการวางบิลเคลมโรงพยาบาล — ตรงกับ master BillingReviewStatusId ใน DB (ตรวจ 2026-09-24):
+ * 2 รอตรวจสอบ / 3 รอแก้ไข / 4 ผ่าน / 5 ปฏิเสธ / 6 ยกเลิก / 7 รอสร้างรายการ (7 ยังไม่ใช้ในหน้านี้)
+ * — ไม่ใช่ ClaimTransactionTypeId (อนุมัติ = 9 เป็นของ master นั้น ห้ามใช้ที่นี่)
  */
 export const BILLING_STATUS = {
-    pendingReview: 1, // PendingReview / รอตรวจสอบ
-    needsCorrection: 2, // NeedsCorrection / รอแก้ไข
-    passed: 3, // Passed / อนุมัติ — ไม่รองรับใน Filter, ส่ง statusId=3 จะได้ 400
-    rejected: 4, // Rejected / ปฏิเสธ
-    cancelled: 5, // Cancelled / ยกเลิก
+    pendingReview: 2, // รอพิจารณา / รอตรวจสอบ
+    needsCorrection: 3, // รอเอกสาร / รอแก้ไข
+    passed: 4, // ผ่าน / อนุมัติ — ไม่รองรับใน Filter
+    rejected: 5, // ปฏิเสธ
+    cancelled: 6, // ยกเลิก
 } as const;
 
 export type BillingStatusId = (typeof BILLING_STATUS)[keyof typeof BILLING_STATUS];
@@ -30,12 +31,13 @@ export const BILLING_CLAIM_TYPE_LABEL = "เคลมโรงพยาบาล
 /**
  * decisionId ของ Decision master ที่ผูกกับผลตรวจสอบวางบิลแต่ละสถานะ
  * เลขชุดเดียวกับ ConsiderSection ของ ClaimConsider (3 รอเอกสาร / 4 รอแก้ไข / 5 ปฏิเสธ / 6 ยกเลิก)
- * TODO: ยืนยันเลข decisionId กับ BE — handoff ไม่ได้ระบุไว้
+ * — ยืนยันกับ BE แล้วว่าตรงกับ master ClaimTransactionTypeId (2026-09-23)
  *
- * TODO(billing-reject-reason): สถานะ "ปฏิเสธ" (4) ใช้ entry นี้ (decisionId=5) เพื่อดึงรายการเหตุผลมาโชว์
- * บนจอชั่วคราวเท่านั้น — hospital-billing-fe.md ข้อ 9 ระบุว่า `rejectReasonId` เป็นคนละ master กับ
- * DecisionReason และ repository ยังไม่มี HTTP endpoint อ่าน RejectReason ห้าม reuse master นี้ถาวร
- * เมื่อ BE เพิ่ม endpoint ให้ย้าย status 4 ไปเรียก master ใหม่แยกจาก BILLING_DECISION_ID
+ * TODO(billing-reject-reason): สถานะ "ปฏิเสธ" (BILLING_STATUS.rejected) ใช้ entry นี้ (decisionId=5)
+ * เพื่อดึงรายการเหตุผลมาโชว์บนจอชั่วคราวเท่านั้น — hospital-billing-fe.md ข้อ 9 ระบุว่า `rejectReasonId`
+ * เป็นคนละ master กับ DecisionReason และ repository ยังไม่มี HTTP endpoint อ่าน RejectReason ห้าม
+ * reuse master นี้ถาวร เมื่อ BE เพิ่ม endpoint ให้ย้าย status rejected ไปเรียก master ใหม่แยกจาก
+ * BILLING_DECISION_ID
  */
 export const BILLING_DECISION_ID: Partial<Record<BillingStatusId, number>> = {
     [BILLING_STATUS.needsCorrection]: 4,
@@ -98,6 +100,16 @@ export const BILLING_DOCUMENT_REVIEW_STATUS = {
     waiting: 4,
 } as const;
 
+/** สีประจำผลการตรวจเอกสารแต่ละสถานะ (key = documentReviewStatusId) — ชุดสีเดียวกับ DOCUMENT_CHECK_RESULT_COLORS ของหน้าพิจารณาเคลม */
+export const BILLING_DOCUMENT_REVIEW_STATUS_COLOR: Record<number, string> = {
+    [BILLING_DOCUMENT_REVIEW_STATUS.passed]: "#178236",
+    [BILLING_DOCUMENT_REVIEW_STATUS.failed]: "#B32615",
+    [BILLING_DOCUMENT_REVIEW_STATUS.waiting]: "#A87808",
+};
+
+/** สีสำรองเมื่อเจอ documentReviewStatusId ที่ยังไม่ได้กำหนดสี */
+export const BILLING_DOCUMENT_REVIEW_STATUS_FALLBACK_COLOR = "#5A6B7B";
+
 /** เพิ่มแถวค่ารักษาใหม่ให้ `caseItemId` ว่างไว้ — BE รู้ว่าเป็นแถวใหม่จากตรงนี้ (handoff ข้อ 5) */
 export type BillingExpenseFormItem = BillingExpenseDto & {
     _rowKey: string;
@@ -114,51 +126,39 @@ export type BillingExpenseFormItem = BillingExpenseDto & {
 export type BillingDocumentFormItem = BillingDocumentDto & { _rowKey: string };
 
 /**
- * ประเภทรายการเคลมของหน้าวางบิลโรงพยาบาล (Sheet 2-4 ของสเปค) — วันนี้ derive จาก query param `?type=`
- * เพราะ `BillingDetailDto` ยังไม่มีฟิลด์บอกประเภทโดยตรง (PENDING_BE_FIELDS.claimListTypeId)
+ * Section "ข้อมูลอุบัติเหตุจากการจราจร" — CR: Traffic Accident and Hospital Document Review
+ * ยังไม่มีฟิลด์รองรับใน `BillingClaimDto` (ดู PENDING_BE_FIELDS.trafficAccident) จึงเป็น FE-only
+ * ทั้งชุด อยู่ท้าย `BillingReviewFormValues` เหมือนฟิลด์ FE-only อื่น ๆ
  */
-export const BILLING_CLAIM_LIST_TYPES = {
-    opdHalf: "opd-half", // Sheet 2 : มี OCR ใบแจ้งค่ารักษา + รายการค่ารักษา(จากโรงพยาบาล)
-    opdFull: "opd-full", // Sheet 3 : ไม่มี OCR, มี Sim B1/B2
-    ipd: "ipd", // Sheet 4 : IPD — AN, ข้อบ่งชี้ Admit, วันนอน, สรุปค่าชดเชย
+export const TRAFFIC_VEHICLE_TYPE = {
+    motorcycle: "motorcycle",
+    car: "car",
+    other: "other",
 } as const;
+export type TrafficVehicleType = (typeof TRAFFIC_VEHICLE_TYPE)[keyof typeof TRAFFIC_VEHICLE_TYPE];
 
-export type BillingClaimListType = (typeof BILLING_CLAIM_LIST_TYPES)[keyof typeof BILLING_CLAIM_LIST_TYPES];
+export const TRAFFIC_VEHICLE_TYPE_OPTIONS: { value: TrafficVehicleType; label: string }[] = [
+    { value: TRAFFIC_VEHICLE_TYPE.motorcycle, label: "มอเตอร์ไซค์" },
+    { value: TRAFFIC_VEHICLE_TYPE.car, label: "รถยนต์" },
+    { value: TRAFFIC_VEHICLE_TYPE.other, label: "อื่นๆ" },
+];
 
-export type BillingClaimListTypeConfig = {
-    label: string;
-    hasOcrReceipt: boolean;
-    hasHospitalExpenseSummary: boolean;
-    hasSimBSelector: boolean;
-};
+export const TRAFFIC_CASUALTY_STATUS = {
+    driver: "driver",
+    passenger: "passenger",
+} as const;
+export type TrafficCasualtyStatus = (typeof TRAFFIC_CASUALTY_STATUS)[keyof typeof TRAFFIC_CASUALTY_STATUS];
 
-export const BILLING_CLAIM_LIST_TYPE_CONFIG: Record<BillingClaimListType, BillingClaimListTypeConfig> = {
-    [BILLING_CLAIM_LIST_TYPES.opdHalf]: {
-        label: "OPD Half",
-        hasOcrReceipt: true,
-        hasHospitalExpenseSummary: true,
-        hasSimBSelector: false,
-    },
-    [BILLING_CLAIM_LIST_TYPES.opdFull]: {
-        label: "OPD Full",
-        hasOcrReceipt: false,
-        hasHospitalExpenseSummary: false,
-        hasSimBSelector: true,
-    },
-    [BILLING_CLAIM_LIST_TYPES.ipd]: {
-        label: "IPD",
-        hasOcrReceipt: false,
-        hasHospitalExpenseSummary: false,
-        hasSimBSelector: true,
-    },
-};
+export const TRAFFIC_CASUALTY_STATUS_OPTIONS: { value: TrafficCasualtyStatus; label: string }[] = [
+    { value: TRAFFIC_CASUALTY_STATUS.driver, label: "ผู้ขับขี่" },
+    { value: TRAFFIC_CASUALTY_STATUS.passenger, label: "ผู้โดยสาร" },
+];
 
-/** แปลงค่าจาก URL (?type=opd-full) เป็นประเภทรายการเคลม — ค่าอื่น/ไม่ระบุ = opd-half (default) */
-export const parseBillingClaimListType = (value: string | null): BillingClaimListType => {
-    if (value === BILLING_CLAIM_LIST_TYPES.opdFull) return BILLING_CLAIM_LIST_TYPES.opdFull;
-    if (value === BILLING_CLAIM_LIST_TYPES.ipd) return BILLING_CLAIM_LIST_TYPES.ipd;
-    return BILLING_CLAIM_LIST_TYPES.opdHalf;
-};
+/** เป็นส่วนเกิน พ.ร.บ. — เก็บเป็น boolean ตรง ๆ (ใช่ = true / ไม่ใช่ = false) */
+export const TRAFFIC_POROBO_EXCESS_OPTIONS: { value: boolean; label: string }[] = [
+    { value: true, label: "ใช่" },
+    { value: false, label: "ไม่ใช่" },
+];
 
 /**
  * ค่าฟอร์มหน้า "ตรวจสอบรายการวางบิล" — เก็บแบบ flat (ไม่ซ้อนตาม claim/medical ของ DTO)
@@ -241,4 +241,11 @@ export interface BillingReviewFormValues {
 
     // สรุปรายการเคลม (Step 3)
     mergeCompensation: boolean;
+
+    // ข้อมูลอุบัติเหตุจากการจราจร (Step 1) — วางบิลเคลมโรงพยาบาล : read-only เสมอ (CR-02)
+    trafficVehicleType: TrafficVehicleType | undefined;
+    trafficVehicleOther: string;
+    trafficCasualtyStatus: TrafficCasualtyStatus | undefined;
+    trafficIsPoroboExcess: boolean | undefined;
+    trafficNoPoroboReason: string;
 }

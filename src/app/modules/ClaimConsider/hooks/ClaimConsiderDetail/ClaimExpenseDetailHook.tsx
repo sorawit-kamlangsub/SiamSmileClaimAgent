@@ -79,8 +79,9 @@ interface ClaimLineFormValues {
 type UseClaimExpenseDetailHookProps = {
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
-    /** true เฉพาะฝั่ง "บันทึกข้อมูลเคลม - เคลมลูกค้า" (ExpenseDetails.tsx) — เคลมลูกค้ายังใช้ spec เดิมที่ default
-     * originalAmount ลง "สิทธิ์เบิก" ต่างจากเคลมโรงพยาบาลที่ default ลง "ยอดเงินตามใบเสร็จ" (ดู frequentItems ด้านล่าง) */
+    /** true เฉพาะฝั่ง "บันทึกข้อมูลเคลม - เคลมลูกค้า" (ExpenseDetails.tsx)
+     * ตั้งแต่ RC-006 ทั้งสองฝั่ง default claimAmount = originalAmount เหมือนกันแล้ว (ดู frequentItems ด้านล่าง)
+     * RC-004 4.2 : ใช้ sync claimAmount = receiptAmount ตอนโหลดร่าง (เฉพาะเคลมลูกค้า) */
     isCustomerClaim?: boolean;
 };
 // รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
@@ -89,7 +90,7 @@ type UseClaimExpenseDetailHookProps = {
 const useClaimExpenseDetailHook = ({
     detailData,
     customerDetailData,
-    isCustomerClaim,
+    isCustomerClaim = false,
 }: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
     const { filledItems, filledItemsCaseId, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
@@ -138,21 +139,23 @@ const useClaimExpenseDetailHook = ({
     });
     const items = formikClaimLine.values.items;
 
-    // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
+    // ── รายการที่ใช้บ่อย ───────────────────────────────────────────────────
     const {
         data: frequentData,
         isLoading: isFrequentLoading,
         isFetching: isFrequentFetching,
     } = useGetStandardMedicalExpenseByCase(
         detailData?.data?.caseId ?? "",
+        customerDetailData?.data?.productTypeId ?? 0,
         6, //simb2
         coverageTypeId,
         medicalTypeId,
-        true,
-        customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId ?? undefined,
+        customerDetailData?.data?.policyCode,
+        customerDetailData?.data?.productTypeId === 26 ? customerDetailData?.data?.customerTypeCode : undefined
     );
+
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
@@ -160,8 +163,9 @@ const useClaimExpenseDetailHook = ({
         medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId ?? undefined
     );
+
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
         return raw.map((item, idx) => ({
@@ -174,10 +178,12 @@ const useClaimExpenseDetailHook = ({
             description: item.descriptionTH ?? "",
             // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — ยอดไม่คุ้มครองเป็นค่าที่ User ต้องพิจารณา
             // กรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
-            // เคลมลูกค้า (isCustomerClaim) ยังใช้ spec เดิม: default originalAmount ลง "สิทธิ์เบิก" ไม่ใช่
-            // "ยอดเงินตามใบเสร็จ" — ต่างจากเคลมโรงพยาบาลที่แก้ไปแล้วใน commit 9c9c930
-            receiptAmount: isCustomerClaim ? undefined : item.originalAmount ?? undefined,
-            claimAmount: isCustomerClaim ? item.originalAmount ?? undefined : undefined,
+            // "ยอดเงินตามใบเสร็จ" default จาก originalAmount ทั้งเคลมลูกค้าและเคลมโรงพยาบาล (ส่งไปคำนวณเป็น
+            // receiptAmount → สรุปค่าใช้จ่ายโรงพยาบาลแสดง ยอดเงินรวมตามใบเสร็จ/ค่าใช้จ่ายทั้งหมดสุทธิ เหมือนกัน)
+            // claimAmount (ยอดเบิกก่อนหัก) default originalAmount เช่นกัน — เคลมลูกค้าตาม spec เดิม,
+            // เคลมโรงพยาบาลตาม RC-006 (สิทธิ์เบิก = ใบเสร็จ − ส่วนลด − ไม่คุ้มครอง, claimAmount ผูกกับใบเสร็จ)
+            receiptAmount: item.originalAmount ?? undefined,
+            claimAmount: item.originalAmount ?? undefined,
             discount: item.discountAmount ?? undefined,
             notCovered: undefined,
             // API อาจส่ง 0 เมื่อไม่มีสาเหตุ : normalize เป็น undefined กัน payload ส่ง reasonId = 0
@@ -189,7 +195,7 @@ const useClaimExpenseDetailHook = ({
             maximumLimit: item.maximumLimit,
             caseItemId: item.caseItemId,
         }));
-    }, [frequentData, isCustomerClaim]);
+    }, [frequentData]);
 
     /** caseAdjudicationId มาระดับ item — ทุกแถวของ case เดียวกันเป็นค่าเดียวกัน จึงหยิบตัวแรกที่ไม่ว่าง */
     const caseAdjudicationId = useMemo(
@@ -271,7 +277,14 @@ const useClaimExpenseDetailHook = ({
         }));
     }, [nonCoveredReasonData]);
 
-    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany();
+    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        999
+    );
 
     const insuranceCompanyOptions = useMemo(() => {
         const raw = insuranceCompany?.data ?? [];
@@ -279,7 +292,9 @@ const useClaimExpenseDetailHook = ({
             value: r.organizeId,
             label: r.organizeName ?? "-",
         }));
-    }, [nonCoveredReasonData]);
+    }, [insuranceCompany]);
+
+    const insuranceCompanyId = detailData?.data?.insuranceCompanyId;
 
     const { totalReceipt, totalClaim, totalDiscount, totalNotCovered } = sumClaimExpenseItems(items);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered; // ยอดเบิกสุทธิ
@@ -399,32 +414,25 @@ const useClaimExpenseDetailHook = ({
             maximumLimit: selectedItem.maximumLimit,
         });
 
+        // ทั้งสามเงื่อนไขนี้แยกกันไม่ได้ (discount/notCovered/amount ไม่ติดลบเสมอ ดังนั้น discount+notCovered > amount
+        // เป็นจริงทุกครั้งที่เงื่อนไขเดี่ยวข้อใดข้อหนึ่งเป็นจริง) ต้องใช้ if/else-if ไล่จากกรณีเฉพาะไปกรณีรวม
+        // ไม่งั้น setDiscountError/setNotCoveredError ที่เรียกทีหลังจะทับข้อความของกรณีเฉพาะทิ้งเสมอ
         let hasError = false;
-        if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
+        if (discount > amount && notCovered <= 0) {
             setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
+            setNotCoveredError("");
             hasError = true;
-        } else {
-            setDiscountError("");
-        }
-        if (notCovered > amount && (notCovered == 0 || notCovered == undefined)) {
+        } else if (notCovered > amount && discount <= 0) {
             setNotCoveredError("ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก");
+            setDiscountError("");
             hasError = true;
-        } else {
-            setNotCoveredError("");
-        }
-        if (discount + notCovered > amount) {
-            setNotCoveredError("ยอดไม่คุ้มครองรวมส่วนลดต้องไม่มากกว่ายอดเบิก");
+        } else if (discount + notCovered > amount) {
             setDiscountError("ส่วนลดรวมยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก");
+            setNotCoveredError("ยอดไม่คุ้มครองรวมส่วนลดต้องไม่มากกว่ายอดเบิก");
             hasError = true;
         } else {
+            setDiscountError("");
             setNotCoveredError("");
-            setDiscountError("");
-        }
-        if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
-            setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
-            hasError = true;
-        } else {
-            setDiscountError("");
         }
         // ยอดไม่คุ้มครอง > 0 ต้องระบุสาเหตุ
         if (hasMissingReasonError({ claimAmount: amount, discount, notCovered, reason })) {
@@ -446,7 +454,7 @@ const useClaimExpenseDetailHook = ({
             discount: discount,
             notCovered: notCovered,
             reason: reason,
-            remark: pendingRemark,
+            remark: pendingRemark.trim() || undefined,
             disabled: false,
             maximumLimit: selectedItem.maximumLimit,
         };
@@ -558,7 +566,16 @@ const useClaimExpenseDetailHook = ({
         // ใช้แค่ตั้งชื่อแถวที่ผู้ใช้เพิ่มเองตอนทำร่าง — ไม่ gate การ merge ด้วย isCategoryLoading เพราะแถว
         // ปกติ (99% ของเคส) ต้องไม่รอ category tree โหลด ถ้ามาไม่ทันแถวเพิ่มเองจะไม่มีชื่อ ยอมรับได้
         const categoryLeaves = categories.flatMap((cat) => cat.children.flatMap((sub) => sub.children));
-        const merged = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        const mergedDraft = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        // RC-004 4.2 (เคลมลูกค้า) : ไม่มีช่องกรอกยอดเบิกแล้ว claimAmount ต้องผูกกับยอดเงินตามใบเสร็จ
+        // ร่างเก่าที่เคยกรอกยอดเบิกเองจึง sync ให้ตรงตั้งแต่โหลด (เคลมโรงพยาบาลคงพฤติกรรมเดิม)
+        const merged = isCustomerClaim
+            ? mergedDraft.map((item) =>
+                  item.receiptAmount === undefined || item.receiptAmount === null
+                      ? item
+                      : { ...item, claimAmount: Number(item.receiptAmount) }
+              )
+            : mergedDraft;
         formikClaimLine.setFieldValue("items", merged);
         dispatch(setFilledClaimLineItems({ items: merged, caseId }));
         dispatch(setDraftExpenseApplied(draftRevisionId));
@@ -570,6 +587,7 @@ const useClaimExpenseDetailHook = ({
         frequentItems,
         isFrequentLoading,
         caseAdjudicationId,
+        benefitIdList,
         benefitName,
         showAddPanel,
         setShowAddPanel,
@@ -604,6 +622,7 @@ const useClaimExpenseDetailHook = ({
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
         insuranceCompanyLoading,
+        insuranceCompanyId,
         filteredCategories,
         isCategoryLoading,
         handleNext,

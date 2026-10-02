@@ -95,7 +95,7 @@ export const useClaimLineCalculate = () => {
         true,
         productTypeId,
         causeOfIncident,
-        planId
+        planId === null ? undefined : planId
     );
 
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
@@ -105,7 +105,7 @@ export const useClaimLineCalculate = () => {
         medicalType,
         productTypeId,
         causeOfIncident,
-        planId
+        planId === null ? undefined : planId
     );
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
     const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
@@ -242,10 +242,11 @@ export const useClaimLineCalculate = () => {
             maximumLimit: item.maximumLimit,
         });
 
+        // คงค่า undefined ไว้ถ้าไม่ได้โดน maximumLimit ปรับยอด — กันช่องที่ไม่ได้กรอกกลายเป็น 0
+        const isLimitApplied = adjusted.notCovered !== Number(item.notCovered ?? 0);
         const nextItem: ClaimLineItem = {
             ...item,
-            claimAmount: adjusted.claimAmount,
-            notCovered: adjusted.notCovered,
+            notCovered: isLimitApplied ? adjusted.notCovered : item.notCovered,
             reason: adjusted.reason,
         };
 
@@ -293,8 +294,8 @@ export const useClaimLineCalculate = () => {
     const hasNotCoveredError = items.some((item) => hasAmountSumError(item));
     // const hasReasonError = items.some((item) => hasMissingReasonError(item));
 
-    const handleAddToTable = () => {
-        if (!selectedItem) return;
+    const handleAddToTable = (): boolean => {
+        if (!selectedItem) return false;
 
         const isDuplicate = items.some(
             (item) => item.code === selectedItem.code && item.description === selectedItem.description
@@ -302,7 +303,7 @@ export const useClaimLineCalculate = () => {
 
         if (isDuplicate) {
             swalError("ไม่สามารถเพิ่มรายการได้", "รายการค่ารักษานี้ถูกเพิ่มไปแล้ว");
-            return;
+            return false;
         }
         const rawAmount = toAmount(pendingAmount);
         const rawDiscount = toAmount(pendingDiscount);
@@ -351,7 +352,7 @@ export const useClaimLineCalculate = () => {
         } else {
             setDiscountError("");
         }
-        if (hasError) return;
+        if (hasError) return false;
 
         const newItem: ClaimLineItem = {
             id: Date.now(),
@@ -359,8 +360,9 @@ export const useClaimLineCalculate = () => {
             code: selectedItem.code,
             description: selectedItem.description,
             claimAmount: amount,
-            discount: discount,
-            notCovered: notCovered,
+            // ช่องที่ไม่ได้กรอกเก็บเป็น undefined เพื่อให้ตารางแสดงช่องว่างแทน 0
+            discount: pendingDiscount === "" ? undefined : discount,
+            notCovered: pendingNotCovered === "" && notCovered === 0 ? undefined : notCovered,
             reason: reason,
             remark: undefined,
             disabled: false,
@@ -381,6 +383,7 @@ export const useClaimLineCalculate = () => {
         setDiscountError("");
         setNotCoveredError("");
         setReasonError("");
+        return true;
     };
 
     const headerDetailSignature = [

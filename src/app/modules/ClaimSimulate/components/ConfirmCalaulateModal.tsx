@@ -177,7 +177,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose }) => {
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
-            name: "amountNet",
+            name: "coveredAmount",
             label: "รายการเบิก",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
         },
@@ -574,7 +574,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose }) => {
                             sx={{ mb: 1 }}
                         />
                         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                            <SummaryLine label="ยอดเบิกรวม" value={fmt(summary.medicalNet)} />
+                            <SummaryLine label="ค่าใช้จ่ายทั้งหมดสุทธิ" value={fmt(summary.medicalNet)} />
                             <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
                             <SummaryLine
                                 label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"

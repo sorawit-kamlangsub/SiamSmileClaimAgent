@@ -26,8 +26,8 @@ const useTransactionStatusDataTableHook = ({ transactionId }: TransactionStatusD
             options: {
                 filter: false,
                 sort: false,
-                customBodyRenderLite: (rowIndex) => {
-                    const formatDate = getInquiryDetailData?.data?.[rowIndex]?.createdDate
+                customBodyRenderLite: (_rowIndex) => {
+                    const formatDate = getInquiryDetailData?.data?.createdDate
                         ? dayjs().format("DD/MM/YYYY HH:mm:ss")
                         : "-";
                     return formatDate;

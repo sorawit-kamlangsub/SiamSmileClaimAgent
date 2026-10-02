@@ -1,5 +1,5 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
+import { Box, Button, Grid, IconButton, LinearProgress, Tooltip } from "@mui/material";
 import { Visibility } from "@mui/icons-material";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useGetDocumentByCaseId, useGetDocumentType } from "../../../../api/coreClaimApi";
@@ -26,8 +26,11 @@ import AttachFileIcon from "@mui/icons-material/AttachFile";
 // 9  ใบแจ้งปฏิเสธสินไหม
 // 10 คู่สัญญาโรงพยาบาล
 // 11 เอกสารประกอบการพิจารณาเคลม
+// 12 ใบเสร็จโรงพยาบาล
+// 13 เอกสารประกอบการเปลี่ยนบัญชี
+// 14 เอกสารประกอบการปฏิเสธสินไหม
 
-type DocumentTypeKey =
+export type DocumentTypeKey =
     | "บัตรประชาชน"
     | "แบบฟอร์ม A"
     | "แบบฟอร์ม B"
@@ -38,7 +41,10 @@ type DocumentTypeKey =
     | "อื่นๆ"
     | "ใบแจ้งปฏิเสธสินไหม"
     | "คู่สัญญาโรงพยาบาล"
-    | "เอกสารประกอบการพิจารณาเคลม";
+    | "เอกสารประกอบการพิจารณาเคลม"
+    | "ใบเสร็จโรงพยาบาล"
+    | "เอกสารประกอบการเปลี่ยนบัญชี"
+    | "เอกสารประกอบการปฏิเสธสินไหม";
 
 export const documentTypeId: Record<DocumentTypeKey, number> = {
     บัตรประชาชน: 1,
@@ -52,6 +58,9 @@ export const documentTypeId: Record<DocumentTypeKey, number> = {
     ใบแจ้งปฏิเสธสินไหม: 9,
     คู่สัญญาโรงพยาบาล: 10,
     เอกสารประกอบการพิจารณาเคลม: 11,
+    ใบเสร็จโรงพยาบาล: 12,
+    เอกสารประกอบการเปลี่ยนบัญชี: 13,
+    เอกสารประกอบการปฏิเสธสินไหม: 14,
 };
 
 type DocumentScanTableProps = {
@@ -70,6 +79,13 @@ type DocumentScanTableProps = {
      * caseId มา merge ทับ) ไม่งั้นสองเคสที่ productTypeId ตรงกันจะเห็น documentCode ของเคสก่อนหน้าค้างอยู่
      */
     alwaysFreshMasterList?: boolean;
+    /** ไม่ครอบด้วย CustomPaper (เหลือแค่ระยะ mt: 1) — ใช้เมื่อตารางอยู่ภายใน section/dialog ที่มีกรอบอยู่แล้ว (default false) */
+    disablePaper?: boolean;
+    /**
+     * แสดงเฉพาะเอกสารของเคสที่ claimDocumentTypeId ตรงกับ documentType ของตารางนี้ (default false = แสดงทุกประเภท)
+     * ใช้เมื่อหน้าเดียวมีหลายตารางแยกตามประเภทเอกสาร เช่น พิจารณา D&D (ประกอบการพิจารณาเคลม / ประกอบการเปลี่ยนบัญชี)
+     */
+    filterCaseDocumentsByType?: boolean;
 };
 
 const DocumentScanTable = ({
@@ -82,6 +98,8 @@ const DocumentScanTable = ({
     claimSourceId,
     onAttachedDocumentsChange,
     alwaysFreshMasterList = false,
+    disablePaper = false,
+    filterCaseDocumentsByType = false,
 }: DocumentScanTableProps) => {
     const { isEnabled } = useAppSelector(claimPHSelector);
     const dispatch = useAppDispatch();
@@ -134,7 +152,9 @@ const DocumentScanTable = ({
     // นี้ (หาคู่ไม่เจอ) จะต่อท้ายไว้แทนที่จะทิ้ง
     const enrichedData: GetDocumentSubTypeDtoResponse[] = useMemo(() => {
         const masterRows = data?.data ?? [];
-        const caseRows = caseDocumentData?.data ?? [];
+        const caseRows = (caseDocumentData?.data ?? []).filter(
+            (caseRow) => !filterCaseDocumentsByType || caseRow.claimDocumentTypeId === documentTypeId[documentType]
+        );
         const usedCaseRowIndexes = new Set<number>();
 
         const merged = masterRows.map((masterRow) => {
@@ -159,7 +179,7 @@ const DocumentScanTable = ({
             }));
 
         return [...merged, ...extraCaseRows];
-    }, [data, caseDocumentData]);
+    }, [data, caseDocumentData, filterCaseDocumentsByType, documentType]);
 
     useEffect(() => {
         if (enrichedData.length > 0) {
@@ -282,31 +302,31 @@ const DocumentScanTable = ({
             },
         },
     ];
-    return (
+    const content = (
         <>
-            <CustomPaper sx={{ mt: 1 }}>
-                {!!Header && (
-                    <HeadingWithColor text={Header} color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
-                )}
-                {isLoading ? (
-                    <LinearProgress sx={{ height: "5px" }} />
-                ) : (
-                    <StandardDataTable
-                        name="scanDocumentTable"
-                        title=""
-                        data={enrichedData}
-                        isLoading={isLoading}
-                        columns={columns}
-                        color="primary"
-                        columnHeaderAlign="center"
-                        displayToolbar={false}
-                        displayFooter={false}
-                        options={defaultOptionStandardDataTable}
-                    />
-                )}
-            </CustomPaper>
+            {!!Header && (
+                <HeadingWithColor text={Header} color="blue" icon={<AttachFileIcon sx={{ fontSize: 27 }} />} />
+            )}
+            {isLoading ? (
+                <LinearProgress sx={{ height: "5px" }} />
+            ) : (
+                <StandardDataTable
+                    name="scanDocumentTable"
+                    title=""
+                    data={enrichedData}
+                    isLoading={isLoading}
+                    columns={columns}
+                    color="primary"
+                    columnHeaderAlign="center"
+                    displayToolbar={false}
+                    displayFooter={false}
+                    options={defaultOptionStandardDataTable}
+                />
+            )}
         </>
     );
+
+    return disablePaper ? <Box sx={{ mt: 2 }}>{content}</Box> : <CustomPaper sx={{ mt: 1 }}>{content}</CustomPaper>;
 };
 
 export default DocumentScanTable;

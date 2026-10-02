@@ -22,22 +22,37 @@ export type AppliedFilter = Omit<SearchFilterType, "dateFrom" | "dateTo"> & {
 
 type UseSearchFilterHookParams = {
     onSearch?: (values: SearchFilterType) => void;
+    /** กำหนดสถานะที่แสดงเอง (เช่น Death & Disability) — ระบุแล้วจะแสดงเฉพาะ id เหล่านี้ รวม "อนุมัติ" (9) ด้วย */
+    includedStatusIds?: number[];
+    /** สถานะที่ซ่อนจากตัวกรอง — ใช้เมื่อไม่ได้ระบุ includedStatusIds (ค่าเริ่มต้นซ่อน "อนุมัติ" (9)) */
+    excludedStatusIds?: number[];
 };
 
-const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
+/** ซ่อนสถานะ "อนุมัติ" (9) จากตัวกรองของ Monitor */
+const DEFAULT_EXCLUDED_STATUS_IDS = [9];
+
+const useSearchFilterHook = ({
+    onSearch,
+    includedStatusIds,
+    excludedStatusIds = DEFAULT_EXCLUDED_STATUS_IDS,
+}: UseSearchFilterHookParams = {}) => {
     const currentDate = dayjs();
     const { data: claimTransactionTypeData, isLoading: claimTransactionTypeDataLoading } = useGetClaimTransactionType();
     const statusOptions = useMemo(
         () => [
             { value: 0, label: "ทั้งหมด" },
             ...(claimTransactionTypeData?.data ?? [])
-                .filter((item) => item.claimTransactionTypeId !== 9) // ซ่อนสถานะ "อนุมัติ" (id 9)
+                .filter((item) =>
+                    includedStatusIds
+                        ? includedStatusIds.includes(item.claimTransactionTypeId ?? -1)
+                        : !excludedStatusIds.includes(item.claimTransactionTypeId ?? -1)
+                )
                 .map((item) => ({
                     value: item.claimTransactionTypeId ?? 0,
                     label: item.claimTransactionTypeName ?? "",
                 })),
         ],
-        [claimTransactionTypeData]
+        [claimTransactionTypeData, includedStatusIds, excludedStatusIds]
     );
 
     const defaultValues: SearchFilterType = {
@@ -51,8 +66,11 @@ const useSearchFilterHook = ({ onSearch }: UseSearchFilterHookParams = {}) => {
     };
     const formik = useFormik<SearchFilterType>({
         initialValues: defaultValues,
-        validate: () => {
+        validate: (values) => {
             const errors: FormikErrors<SearchFilterType> = {};
+            if (values.dateFrom && values.dateTo && values.dateTo.isBefore(values.dateFrom, "day")) {
+                errors.dateTo = "ถึงวันที่แจ้งเคลมต้องไม่น้อยกว่าจากวันที่แจ้งเคลม";
+            }
             return errors;
         },
         onSubmit: (values) => {

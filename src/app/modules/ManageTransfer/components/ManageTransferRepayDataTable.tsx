@@ -1,28 +1,26 @@
 import { Box, TableCell, TableRow } from "@mui/material";
-import { PaginationSortableDto, StandardDataTable } from "../../_common";
-import { useState } from "react";
 import useTransferRepayDataTableHook from "../hooks/TransferRepayDataTableHook";
-import TransactionStatusDataTable from "../../BankStatus/components/TransactionStatusDataTable";
-
-const renderExpandableRow = (rowData: any, _rowMeta: any) => {
-    const colSpan = rowData.length + 1;
-
-    return (
-        <TableRow sx={{ backgroundColor: "#F5F8FC" }}>
-            <TableCell colSpan={colSpan}>
-                <h3>รายละเอียด</h3>
-                <TransactionStatusDataTable transactionId="1" />
-            </TableCell>
-        </TableRow>
-    );
-};
+import { StandardDataTable } from "../../_common";
+import RepayTransferTransaction from "./RepayTransferTransaction";
 
 const ManageTransferRepayDataTable = () => {
-    const { columns, dataMock } = useTransferRepayDataTableHook();
-    const [paginated, setPaginated] = useState<PaginationSortableDto>({
-        page: 1,
-        recordsPerPage: 5,
-    });
+    const { columns, refundDataTableData, refundDataTableIsLoading, paginated, setPaginated } =
+        useTransferRepayDataTableHook();
+
+    const renderExpandableRow = (rowData: any, rowMeta: any) => {
+        const colSpan = rowData.length + 1;
+
+        const transactionId = refundDataTableData?.data?.[rowMeta.dataIndex]?.payTransferTransactionId;
+
+        return (
+            <TableRow sx={{ backgroundColor: "#F5F8FC" }}>
+                <TableCell colSpan={colSpan}>
+                    <h3>รายละเอียด</h3>
+                    {transactionId && <RepayTransferTransaction transactionId={transactionId} />}
+                </TableCell>
+            </TableRow>
+        );
+    };
 
     return (
         <>
@@ -37,10 +35,11 @@ const ManageTransferRepayDataTable = () => {
                     name="repayClaimTable"
                     color="primary"
                     title=""
-                    data={dataMock ?? []}
+                    data={refundDataTableData?.data ?? []}
                     columns={columns}
                     paginated={paginated}
                     setPaginated={setPaginated}
+                    isLoading={refundDataTableIsLoading}
                     options={{
                         expandableRows: true,
                         expandableRowsHeader: false,

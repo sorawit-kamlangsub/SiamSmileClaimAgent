@@ -79,11 +79,11 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
             claims: [
                 {
-                    applicationId: insured?.policyCode ?? "-",
+                    policyCode: insured?.policyCode ?? "-",
                     policyNo: insured?.policyNo ?? undefined,
                     certificateNo: insured?.certificateNo ?? undefined,
 
-                    customerId: insured?.customerId ?? 0,
+                    customerDetailId: insured?.customerId ?? "",
                     customerName: insured?.customerName ?? "-",
 
                     incidentTypeId: form.incidentTypeId,
@@ -94,6 +94,8 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
 
                     cases: [
                         {
+                            // สาขาของผู้ใช้ที่ login — ใช้บันทึกว่าเคสถูกสร้างโดยสาขาไหน
+                            createdCaseByBranchId: userProfile?.employeeBranchId,
                             coverageTypeId: form.coverageTypeId,
                             occurrenceDate: form.incidentDate,
                             admissionDate: isMedicalAll ? form.admissionDate : undefined,
@@ -114,7 +116,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
                             vn: undefined,
 
                             chiefComplaintId: form.chiefComplaintId,
-                            chiefComplaintCustom: form.remark,
+                            illnessOrInjuryDetail: form.illnessOrInjuryDetail,
 
                             productId: insured?.productId ?? undefined,
                             icD10_1stId: form.diagnoses[0]?.icd10Id,

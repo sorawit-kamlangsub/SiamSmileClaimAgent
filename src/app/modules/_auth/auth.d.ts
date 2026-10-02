@@ -25,6 +25,7 @@ export type CustomClaims = {
     LastName?: string;
     Branch_ID?: number;
     BranchDetail?: string;
+    employee_branchid?: number | string;
     Area_ID?: number;
     AreaDetail?: string;
     Department_ID?: number;
@@ -47,6 +48,7 @@ export type UserProperties = {
     lastName?: string;
     branchId?: number;
     branchDetail?: string;
+    employeeBranchId?: number;
     areaId?: number;
     areaDetail?: string;
     departmentId?: number;

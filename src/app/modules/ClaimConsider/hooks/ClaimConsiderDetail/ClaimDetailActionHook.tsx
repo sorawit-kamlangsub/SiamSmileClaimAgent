@@ -1,15 +1,22 @@
 import dayjs, { Dayjs } from "dayjs";
-import { useApproveClaimDecision, useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
+import { useRef } from "react";
+import {
+    useApproveClaimDecision,
+    useGetDocumentByCaseId,
+    useSaveClaimEditDraft,
+    useUpsertClaimDecision,
+} from "../../../../api/coreClaimApi";
 import {
     ApproveCasePayableRequest,
     ApproveClaimDecisionDtoRequest,
+    CaseDocumentV2Request,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
     CaseSaveClaimEditDraftRequest,
     CaseAssessmentSaveClaimEditDraftRequest,
     CaseAdjudicationSaveClaimEditDraftRequest,
     CaseDocumentSaveClaimEditDraftRequest,
-    CaseDocumentDetailSaveClaimEditDraftRequest,
+    OCRSaveClaimEditDraftRequest,
     TimeSpan,
     CaseItemAdjudicationSaveClaimEditDraftRequest,
     CaseItemSaveClaimEditDraftRequest,
@@ -19,17 +26,16 @@ import {
     UpsertClaimDecisionCaseAssessmentRequest,
     UpsertClaimDecisionCaseAdjudicationRequest,
     UpsertClaimDecisionCaseDocumentRequest,
-    UpsertClaimDecisionCaseDocumentDetailRequest,
+    UpsertClaimDecisionOCRRequest,
     UpsertClaimDecisionCaseRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
     CalculateCaseClaimDtoResponse,
     CalculateCaseClaim,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
-import { customFormatter, swalError, swalSuccess } from "../../../_common";
+import { customFormatter, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
-import { claimPHSelector } from "../../../CreatedClaim/store/claimPHSlice";
 import { useAppSelector } from "../../../../../redux";
 import {
     claimConsiderSelector,
@@ -37,6 +43,7 @@ import {
     ClaimExpenseItem,
     OcrReceiptRequest,
 } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 
 /**
  * รับ formik ของฟอร์มพิจารณาเคลม ค่าเป็นชนิดใดก็ได้ที่ต่อยอดจาก ClaimConsiderValues
@@ -83,13 +90,24 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
      * ไม่ส่งมา = ใช้ค่าจาก Redux ตามเดิม (เคลมลูกค้า)
      */
     calculateOverride?: CalculateCaseClaimDtoResponse | null;
+    /** เอกสารที่แนบไฟล์แล้วในตาราง "สแกนเอกสาร" (onAttachedDocumentsChange) — ไม่ส่ง = หน้านี้ไม่มีตารางนี้ */
+    scanDocuments?: CaseDocumentV2Request[];
+    /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — ส่งไปเฉพาะเมื่อผลพิจารณาเป็นปฏิเสธ */
+    rejectDocuments?: CaseDocumentV2Request[];
+    /**
+     * ไม่ส่งเอกสารที่ผูกกับเคสอยู่แล้ว (documentId + claimDocumentTypeId ตรงกับ GetDocumentByCaseId) ซ้ำใน caseDocument
+     * — เปิดเฉพาะเคลมลูกค้า (default false = ส่งทุกตัวตามเดิม)
+     */
+    excludeSavedCaseDocuments?: boolean;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
- * ค่า fallback ของ nonCoveredReasonId : BE บังคับต้องมี + > 0 ทุก caseItem แม้ไม่มียอดไม่คุ้มครอง
- * ใช้ id แรกของ Master สาเหตุไม่คุ้มครอง (BE จะ ignore เมื่อ nonCoveredAmount = 0)
+ * ผลพิจารณา "ปฏิเสธ" (5) / "ยกเลิก" (6) : ConsiderSection เลือกสาเหตุจาก Master RejectReason / CancelReason
+ * โดยตรง ค่าใน decisionReasonId ของฟอร์มจึงเป็น rejectReasonId / cancelReasonId ไม่ใช่ id ของ DecisionReason
  */
-const DEFAULT_NON_COVERED_REASON_ID = 1;
+/** decisionReasonId ที่ส่งเข้า caseAdjudication : ปฏิเสธ/ยกเลิกไม่มี DecisionReason (ส่งเป็น rejectReasonId/cancelReasonId แทน) */
+const toDecisionReasonId = (decisionId: number | undefined, reasonId: number | undefined): number | undefined =>
+    decisionId === DECISION_ID.REJECTED || decisionId === DECISION_ID.CANCELLED ? undefined : reasonId;
 
 /** BE ต้องการ documentId เป็น GUID เท่านั้น ใช้กรอง mock row ที่ยังเป็น string ธรรมดาออก */
 const isGuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -114,12 +132,47 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     onSaveDraftSuccess,
     calculateOverride,
     draftStep,
+    scanDocuments,
+    excludeSavedCaseDocuments = false,
+    rejectDocuments,
 }: UseClaimDetailActionHookParams<T>) => {
-    const { documentScanList } = useAppSelector(claimPHSelector);
+    // เอกสารที่ผูกกับเคสแล้ว — argument ชุดเดียวกับ DocumentScanTable ของเคลมลูกค้า (query key ตรงกัน ไม่ยิงซ้ำ)
+    const productTypeId = customerDetailData?.data?.productTypeId ?? 0;
+    const { data: caseDocumentData } = useGetDocumentByCaseId(
+        excludeSavedCaseDocuments && productTypeId ? detailData?.data?.caseId ?? "" : "",
+        productTypeId,
+        detailData?.data?.claimSourceId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        100
+    );
+    const isSavedToCase = (doc: CaseDocumentV2Request) =>
+        excludeSavedCaseDocuments &&
+        (caseDocumentData?.data ?? []).some(
+            (saved) => saved.documentId === doc.documentId && saved.claimDocumentTypeId === doc.claimDocumentTypeId
+        );
+    /**
+     * เอกสารที่สแกนในหน้านี้ — มาจาก onAttachedDocumentsChange ของแต่ละตาราง (เฉพาะแถวที่มีไฟล์จริง)
+     * ไม่อ่าน documentScanList ของ redux claimPH เพราะเป็น list กลางที่ DocumentScanTable ทุกหน้าเขียนลง
+     * (มีเอกสารของเคสอื่น / แถวที่ยังไม่แนบไฟล์ / ใบปฏิเสธที่เปลี่ยนสถานะไปแล้ว ปนอยู่)
+     */
+    const getScannedDocuments = (): CaseDocumentV2Request[] => {
+        const docs = [
+            ...(scanDocuments ?? []),
+            ...(formik.values.considerResult === DECISION_ID.REJECTED ? rejectDocuments ?? [] : []),
+        ];
+        return docs.filter(
+            (doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index && !isSavedToCase(doc)
+        );
+    };
     const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
     // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload
     const calculateResult = calculateOverride ?? calculateResultStore;
-    const caseItemId = crypto.randomUUID();
+    // caseItemId ต้อง unique ต่อแถว — ใช้ index เดียวกันจับคู่ caseItem กับ caseItemAdjudication ของมัน
+    // (mapCaseItemForDraft/mapCaseItemAdjudicationForDraft map จาก filledItems ลำดับเดียวกันโดยไม่มี filter)
+    const caseItemIds = filledItems.map(() => crypto.randomUUID());
     const totalClaim = filledItems.reduce((s, i) => s + (i.claimAmount || 0), 0);
     const totalDiscount = filledItems.reduce((s, i) => s + (i.discount || 0), 0);
     const totalNotCovered = filledItems.reduce((s, i) => s + (i.notCovered || 0), 0);
@@ -159,12 +212,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
     const getNetAmount = (item: ClaimExpenseItem) => (item.claimAmount ?? 0) - (item.discount ?? 0);
     const mapCaseItemForDraft = (): CaseItemSaveClaimEditDraftRequest[] => {
-        return filledItems.map((item): CaseItemSaveClaimEditDraftRequest => {
+        return filledItems.map((item, idx): CaseItemSaveClaimEditDraftRequest => {
             const nonCovered = Number(item.notCovered ?? 0);
             const reasonId = Number(item.reason ?? 0);
 
             return {
-                caseItemId: caseItemId,
+                caseItemId: caseItemIds[idx],
                 inputToStandardMappingId: item.inputToStandardMappingId,
                 standardMedicalExpenseId: item.standardMedicalExpenseId ?? 0,
                 quantity: 1,
@@ -174,17 +227,19 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 netCaseAmount: getNetAmount(item),
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
                 nonCoveredAmount: nonCovered,
-                nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+                nonCoveredReasonId: reasonId > 0 ? reasonId : undefined,
+                receiptAmount: item.receiptAmount,
+                bodyPartId: item.bodyPartId,
             };
         });
     };
 
     const mapCaseItemAdjudicationForDraft = (): CaseItemAdjudicationSaveClaimEditDraftRequest[] => {
         return filledItems.map(
-            (item): CaseItemAdjudicationSaveClaimEditDraftRequest => ({
+            (item, idx): CaseItemAdjudicationSaveClaimEditDraftRequest => ({
                 caseItemAdjusication: crypto.randomUUID(),
                 standardMedicalExpenseId: item.standardMedicalExpenseId,
-                caseItemId: caseItemId,
+                caseItemId: caseItemIds[idx],
                 netCaseAmount: getNetAmount(item),
                 eligibleAmount: getNetAmount(item) - (item.notCovered ?? 0),
                 approvedAmount: getNetAmount(item) - (item.notCovered ?? 0),
@@ -230,12 +285,12 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         return {
             decisionId: considerResult,
             decisionDate: considerResult !== undefined ? dayjs() : undefined,
-            decisionReasonId: decisionReasonId,
+            decisionReasonId: toDecisionReasonId(considerResult, decisionReasonId),
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: considerResult === 2 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: considerResult === 2 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: considerResult === 2 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: considerResult === 2 ? asTimeSpan(dischargeTime) : undefined,
+            approvedAdmissionDate: considerResult === DECISION_ID.APPROVED ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: considerResult === DECISION_ID.APPROVED ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: considerResult === DECISION_ID.APPROVED ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: considerResult === DECISION_ID.APPROVED ? asTimeSpan(dischargeTime) : undefined,
             approvedIPDDayCount: ipdDays,
             approvedICUDayCount: icuDays,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
@@ -249,8 +304,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: considerResult === 6 ? decisionReasonId : undefined,
-            rejectDate: considerResult === 6 ? dayjs() : undefined,
+            rejectReasonId: considerResult === DECISION_ID.REJECTED ? decisionReasonId : undefined,
+            rejectDate: considerResult === DECISION_ID.REJECTED ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDraft(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -265,31 +320,30 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: doc.documentId,
                 documentNo: doc.documentNo,
                 documentSubTypeId: doc.documentSubTypeId,
-                caseDocumentDetail: mapOcrReceiptDetailForDraft(doc.caseDocumentDetail),
+                ocr: mapOcrReceiptDetailForDraft(doc.caseDocumentDetail),
             })
         );
     };
 
-    /** จาก documentScanList (redux claimPH) — เอกสาร scan เฉย ๆ ไม่มี OCR detail */
+    /** เอกสาร scan เฉย ๆ (getScannedDocuments) — ไม่มี OCR detail */
     const mapDocumentScanListForDraft = (): CaseDocumentSaveClaimEditDraftRequest[] => {
-        return documentScanList.map(
+        return getScannedDocuments().map(
             (d): CaseDocumentSaveClaimEditDraftRequest => ({
                 documentId: d.documentId,
-                documentNo: d.documentCode,
+                documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId,
-                caseDocumentDetail: [],
+                claimDocumentTypeId: d.claimDocumentTypeId,
+                ocr: [],
             })
         );
     };
 
-    const mapOcrReceiptDetailForDraft = (
-        details: OcrReceiptRequest[] | undefined
-    ): CaseDocumentDetailSaveClaimEditDraftRequest[] => {
+    const mapOcrReceiptDetailForDraft = (details: OcrReceiptRequest[] | undefined): OCRSaveClaimEditDraftRequest[] => {
         if (!details?.length) return [];
 
         return details.map(
-            (doc): CaseDocumentDetailSaveClaimEditDraftRequest => ({
-                caseDocumentDetailId: doc.caseDocumentDetailId,
+            (doc): OCRSaveClaimEditDraftRequest => ({
+                ocrId: doc.caseDocumentDetailId,
                 firstName: doc.firstName,
                 lastName: doc.lastName,
                 fullName: doc.fullName,
@@ -322,6 +376,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
+            illnessOrInjuryDetail: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -345,6 +400,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDraft(),
+            cancelReasonId: values.considerResult === DECISION_ID.CANCELLED ? values.decisionReasonId : undefined,
+            cancelDate: values.considerResult === DECISION_ID.CANCELLED ? dayjs() : undefined,
         };
     };
 
@@ -356,13 +413,13 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         incidentDate: asDate(formik.values.incidentDate),
         incidentTime: asTimeSpan(formik.values.incidentTime),
         accidentPlace: formik.values.accidentPlace,
-        accidentDescription: formik.values.detail,
+        accidentDescription: undefined, //ไม่มี
         case: mapCaseForDraft(),
         draftStep: draftStep ?? 1,
         claimEditDraft: {
             baseClaimVersion: detailData?.data?.claimVersion ?? 0,
             baseCaseVersion: detailData?.data?.caseVersion ?? 0,
-            claimEditDraftStatusId: formik.values.considerResult === 5 ? 3 : 1, // แบบร่าง
+            claimEditDraftStatusId: formik.values.considerResult === DECISION_ID.REJECTED ? 3 : 1, // แบบร่าง
         },
     };
 
@@ -386,8 +443,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 netCaseAmount: getNetAmount(item),
                 medicalTypeId: formik.values.medicalTypeId ?? 0,
                 nonCoveredAmount: nonCovered,
-                // BE บังคับต้องมี + > 0 ทุกแถว : ใช้สาเหตุจริงถ้ามี ไม่งั้น fallback 1 (BE ignore เมื่อ nonCoveredAmount = 0)
-                nonCoveredReasonId: reasonId > 0 ? reasonId : DEFAULT_NON_COVERED_REASON_ID,
+                nonCoveredReasonId: reasonId > 0 ? reasonId : undefined,
+                receiptAmount: item.receiptAmount,
+                bodyPartId: item.bodyPartId,
             };
         });
     };
@@ -439,27 +497,28 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         return {
             decisionId: decisionId,
             decisionDate: dayjs(),
-            decisionReasonId: decisionReasonId,
+            decisionReasonId: toDecisionReasonId(decisionId, decisionReasonId),
             decisionRemark: decisionReasonDetail,
-            approvedAdmissionDate: decisionId === 9 ? asDate(admissionDate) : undefined,
-            approvedAdmissionTime: decisionId === 9 ? asTimeSpan(admissionTime) : undefined,
-            approvedDischargeDate: decisionId === 9 ? asDate(dischargeDate) : undefined,
-            approvedDischargeTime: decisionId === 9 ? asTimeSpan(dischargeTime) : undefined,
-            approvedIPDDayCount: decisionId === 9 ? formik.values.ipdDays : 0,
-            approvedICUDayCount: decisionId === 9 ? formik.values.icuDays : 0,
+            approvedAdmissionDate: decisionId === DECISION_ID.APPROVED ? asDate(admissionDate) : undefined,
+            approvedAdmissionTime: decisionId === DECISION_ID.APPROVED ? asTimeSpan(admissionTime) : undefined,
+            approvedDischargeDate: decisionId === DECISION_ID.APPROVED ? asDate(dischargeDate) : undefined,
+            approvedDischargeTime: decisionId === DECISION_ID.APPROVED ? asTimeSpan(dischargeTime) : undefined,
+            approvedIPDDayCount: decisionId === DECISION_ID.APPROVED ? formik.values.ipdDays : 0,
+            approvedICUDayCount: decisionId === DECISION_ID.APPROVED ? formik.values.icuDays : 0,
             coveredAmount: netClaimAmount, //รายการค่าใช้จ่าย
             nonCoveredAmount: totalNotCovered, //รายการค่าใช้จ่าย
-            compensateAmount: decisionId === 9 ? calculateResult?.compensateInclude : undefined, //ไม่มี
-            approvedMedicalAmount: decisionId === 9 ? calculateResult?.medicalPay : undefined, //ต้องอนุมัติ
-            approvedCompensateAmount: decisionId === 9 ? calculateResult?.compensateRemain : undefined, //ต้องอนุมัติ
-            patientPayAmount: decisionId === 9 ? calculateResult?.medicalUnpay : undefined, //เคลมโรงพยาบาลถึงจะมี
+            compensateAmount: decisionId === DECISION_ID.APPROVED ? calculateResult?.compensateInclude : undefined, //ไม่มี
+            approvedMedicalAmount: decisionId === DECISION_ID.APPROVED ? calculateResult?.medicalPay : undefined, //ต้องอนุมัติ
+            approvedCompensateAmount:
+                decisionId === DECISION_ID.APPROVED ? calculateResult?.compensateRemain : undefined, //ต้องอนุมัติ
+            patientPayAmount: decisionId === DECISION_ID.APPROVED ? calculateResult?.medicalUnpay : undefined, //เคลมโรงพยาบาลถึงจะมี
             isExgratia: false, //ไม่มี
             exgratiaAmount: 0, //ไม่มี
             deductibleAmount: 0, //ไม่มี
             coPayAmount: netClaimAmount, //ยอดเบิก
             coInsuranceAmount: 0, //ไม่มี
-            rejectReasonId: decisionId === 5 ? decisionReasonId : undefined,
-            rejectDate: decisionId === 5 ? dayjs() : undefined,
+            rejectReasonId: decisionId === DECISION_ID.REJECTED ? decisionReasonId : undefined,
+            rejectDate: decisionId === DECISION_ID.REJECTED ? dayjs() : undefined,
             isLatest: true,
             caseItemAdjudications: mapCaseItemAdjudicationForDecision(), // TODO: ไม่มีใน formik/detailData ตอนนี้
         };
@@ -473,30 +532,31 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: doc.documentId,
                 documentNo: doc.documentNo,
                 documentSubTypeId: doc.documentSubTypeId ?? 0,
-                caseDocumentDetail: mapOcrReceiptDetailForDecision(doc.caseDocumentDetail),
+                ocr: mapOcrReceiptDetailForDecision(doc.caseDocumentDetail),
             })
         );
     };
 
-    /** จาก documentScanList (redux claimPH) — เอกสาร scan เฉย ๆ ไม่มี OCR detail */
+    /** เอกสาร scan เฉย ๆ (getScannedDocuments) — ไม่มี OCR detail */
     const mapDocumentScanListForDecision = (): UpsertClaimDecisionCaseDocumentRequest[] => {
-        return documentScanList.map(
+        return getScannedDocuments().map(
             (d): UpsertClaimDecisionCaseDocumentRequest => ({
                 documentId: d.documentId,
-                documentNo: d.documentCode,
+                documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId ?? 0,
-                caseDocumentDetail: [],
+                claimDocumentTypeId: d.claimDocumentTypeId,
+                ocr: [],
             })
         );
     };
 
     const mapOcrReceiptDetailForDecision = (
         details: OcrReceiptRequest[] | undefined
-    ): UpsertClaimDecisionCaseDocumentDetailRequest[] => {
+    ): UpsertClaimDecisionOCRRequest[] => {
         if (!details?.length) return [];
 
         return details.map(
-            (doc): UpsertClaimDecisionCaseDocumentDetailRequest => ({
+            (doc): UpsertClaimDecisionOCRRequest => ({
                 firstName: doc.firstName,
                 lastName: doc.lastName,
                 fullName: doc.fullName,
@@ -523,7 +583,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                     documentSubTypeId: doc.documentSubTypeId,
                     documentReviewStatusId: doc.checkResult || undefined,
                     documentReviewRemark: doc.remark || undefined,
-                    caseDocumentDetail: [],
+                    ocr: [],
                 })
             );
 
@@ -547,6 +607,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
+            illnessOrInjuryDetail: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -570,6 +631,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             caseDisability: [], //ไม่มี
             beneficiary: [], //ไม่มี
             caseDocument: mapCaseDocumentForDecision(),
+            cancelReasonId: values.considerResult === DECISION_ID.CANCELLED ? values.decisionReasonId : undefined,
+            cancelDate: values.considerResult === DECISION_ID.CANCELLED ? dayjs() : undefined,
         };
     };
 
@@ -581,14 +644,32 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         incidentDate: asDate(formik.values.incidentDate),
         incidentTime: asTimeSpan(formik.values.incidentTime),
         accidentPlace: formik.values.accidentPlace,
-        accidentDescription: formik.values.detail,
+        accidentDescription: undefined, //ไม่มี
         case: mapCaseForDecision(overrideDecisionId),
     });
 
-    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง 2 (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
+    /**
+     * กันกด "ยืนยันบันทึกผลพิจารณา" ซ้ำ (DFUAT-052) — ใช้ ref เพราะ isLoading ของ mutation ยังไม่อัปเดต
+     * จนกว่าจะ re-render รอบถัดไป กดรัว ๆ ก่อนหน้านั้นจะยิง /claim/decision ซ้ำ ทำให้ Transaction stamp หลายรอบ
+     */
+    const isConfirmingConsiderRef = useRef(false);
+
+    /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง DECISION_ID.APPROVED (9) (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
-        const payload = mapClaimDecisionPayload(overrideDecisionId);
-        await saveClaimDecision.mutateAsync(payload);
+        if (isConfirmingConsiderRef.current) return;
+        // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ (เคลมลูกค้า / เคลมโรงพยาบาล)
+        const decisionId = overrideDecisionId ?? formik.values.considerResult;
+        if (decisionId === DECISION_ID.REJECTED && !rejectDocuments?.length) {
+            swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
+            return;
+        }
+        isConfirmingConsiderRef.current = true;
+        try {
+            const payload = mapClaimDecisionPayload(overrideDecisionId);
+            await saveClaimDecision.mutateAsync(payload);
+        } finally {
+            isConfirmingConsiderRef.current = false;
+        }
     };
 
     const mapCasePayableForApprove = (): CasePayableDraft => {
@@ -621,6 +702,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
      */
     const buildApproveJsonDetail = (): CalculateCaseClaim => ({
         productId: customerDetailData?.data?.productId,
+        customerDetailId: customerDetailData?.data?.customerDetailId ?? undefined,
+        customerTypeCode: customerDetailData?.data?.customerTypeCode ?? undefined,
+        productName: customerDetailData?.data?.productName ?? undefined,
         coverageTypeId: formik.values.coverageTypeId,
         medicalTypeId: formik.values.medicalTypeId,
         incidentTypeId: formik.values.incidentTypeId,
@@ -636,12 +720,13 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             nonCoverAmount: item.notCovered,
             reasonId: item.reason,
             remark: item.remark,
+            receiptAmount: item.receiptAmount,
         })),
         disabilityList: [],
     });
 
     const mapApproveClaimDecisionPayload = (): ApproveClaimDecisionDtoRequest => ({
-        claimDecision: mapClaimDecisionPayload(9),
+        claimDecision: mapClaimDecisionPayload(DECISION_ID.APPROVED),
         calculateCaseCode: calculateResult?.calculateCaseCode,
         isCombinedWithMedicalAll,
         // DTO ประกาศบัญชีปลายทางเป็น required แต่เคลมลูกค้าไม่ต้องส่ง
@@ -655,7 +740,14 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         await approveClaimDecision.mutateAsync(payload);
     };
 
-    return { handleSaveDraft, handleConfirmConsider, handleApprove, isApproving: approveClaimDecision.isLoading };
+    return {
+        handleSaveDraft,
+        handleConfirmConsider,
+        handleApprove,
+        isApproving: approveClaimDecision.isLoading,
+        isSavingDraft: saveClaimEditDraft.isLoading,
+        isSavingDecision: saveClaimDecision.isLoading,
+    };
 };
 
 export default useClaimDetailActionHook;

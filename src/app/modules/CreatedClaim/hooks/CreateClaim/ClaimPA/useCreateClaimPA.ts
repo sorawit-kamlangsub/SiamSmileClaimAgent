@@ -20,6 +20,7 @@ import { BeneficiaryForm, ClaimBankAccount, ContactInfo } from "../../../store/c
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { CoverageType } from "../../../../../functionHelpers";
 import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
+import { useAuth } from "../../../../_auth";
 
 const generateRequestId = () =>
     typeof crypto !== "undefined" && crypto.randomUUID
@@ -188,6 +189,7 @@ export const mapLocalCoreClaimToV2Request = (
 });
 
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
+    const { userProfile } = useAuth();
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);
     const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
@@ -204,6 +206,8 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
             ...claim,
             createCase: (claim.createCase ?? []).map((c) => ({
                 ...c,
+                // สาขาของผู้ใช้ที่ login — ใช้บันทึกว่าเคสถูกสร้างโดยสาขาไหน
+                createdCaseByBranchId: userProfile?.employeeBranchId,
                 createCaseContact:
                     c.coverageTypeId === CoverageType.Death || c.coverageTypeId === CoverageType.Disability
                         ? undefined

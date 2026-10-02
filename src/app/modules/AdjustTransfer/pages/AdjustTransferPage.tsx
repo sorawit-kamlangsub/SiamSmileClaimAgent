@@ -2,9 +2,16 @@ import { Grid } from "@mui/material";
 import AddCardIcon from "@mui/icons-material/AddCard";
 import SearchByBranchAndStatus from "../../Refund/_common/SearchByBranchAndStatus";
 import AdjustTransferDataTable from "../components/AdjustTransferDataTable";
+import DialogSearchClaim from "../../DialogSearchByClaimOrCase/components/DialogSearchClaim";
+import { useAppDispatch } from "../../../../redux";
+import { setIsOpenDialog } from "../../Refund/store/refundSlice";
+import BankEditDetailDialog from "../components/BankEditDetailDialog";
 
 const AdjustTransferPage = () => {
-    const handleSearch = () => {};
+    const dispatch = useAppDispatch();
+    const handleSearch = () => {
+        dispatch(setIsOpenDialog({ isOpen: true }));
+    };
     return (
         <>
             <Grid container spacing={2}>
@@ -19,6 +26,9 @@ const AdjustTransferPage = () => {
                     <AdjustTransferDataTable />
                 </Grid>
             </Grid>
+
+            <DialogSearchClaim buttonText="โอนเพิ่ม" />
+            <BankEditDetailDialog />
         </>
     );
 };

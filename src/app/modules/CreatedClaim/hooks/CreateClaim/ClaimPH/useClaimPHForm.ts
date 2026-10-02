@@ -19,8 +19,9 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/Create
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
-import { amountNumber, FingerKey } from "../organLoss.types";
-import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { amountNumber } from "../organLoss.types";
+import { mapOrganLossToCaseItems } from "../organLossCaseItems";
+import { CauseOfIncident, CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 import { useParams } from "react-router-dom";
 interface Options {
@@ -31,7 +32,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { form, oldClaim, insured, documentDetailById, organLossItems } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
@@ -117,7 +118,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             if (!values.symptomType) errors.symptomType = req;
             if (values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
                 errors.chiefComplaintId = req;
-            if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
+            if (values.symptomType === SymptomType.Other && !values.illnessOrInjuryDetail)
+                errors.illnessOrInjuryDetail = req;
             if (isDeath || isDisability) {
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
@@ -151,6 +153,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                     isContinuous ? "คงเหลือ" : "สูงสุด"
                 } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
+            console.log("🚀 ~ useClaimPHForm ~ errors:", errors);
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
@@ -158,8 +161,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             const isDeath = values.coverageTypeId === CoverageType.Death;
             const isMedical =
                 values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+            // ค่ารักษา/ค่าชดเชย แบบ IPD/DayCase — กรอกจำนวนเงินตามรายละเอียดความคุ้มครอง (CoverageAndTransferBox)
             const isManualIPD =
-                values.coverageTypeId === CoverageType.Medical &&
+                (values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate) &&
                 (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
             //เช็คจำนวนเอกสาร
             const hasError = docData.some((docById) => {
@@ -179,41 +183,18 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 return;
             }
 
+            if (isMedical && ocr.hasMissingOcrDocumentId(ocr.ocrResult, ocr.ocrDocumentIds)) {
+                swalWarning("แจ้งเตือน", "บันทึกเอกสารที่สแกนไม่สำเร็จ กรุณาลบแล้วสแกนเอกสารใหม่อีกครั้ง");
+                setSubmitting(false);
+                return;
+            }
+
             const items = customerBenefit?.data ?? [];
             let caseItems: CaseItemV2Request[] = [];
 
             if (isDisability) {
-                const benefitItem = customerBenefit?.data?.[0];
-
-                for (const organ of organLossItems) {
-                    let totalAmount = 0;
-                    if (organ.fingers) {
-                        const sides: ("left" | "right")[] = ["left", "right"];
-
-                        for (const side of sides) {
-                            for (const fingerKey of Object.keys(organ.fingers[side]) as FingerKey[]) {
-                                const finger = organ.fingers[side][fingerKey];
-                                if (!finger.selected || !finger.bodyPartId) continue;
-
-                                totalAmount += amountNumber(finger.amount);
-                            }
-                        }
-                    } else if (organ.bodyPartId) {
-                        totalAmount = amountNumber(organ.amount);
-                    }
-                    caseItems.push({
-                        inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
-                        standardMedicalExpenseId: benefitItem?.standardMedicalExpenseId ?? 0,
-                        quantity: 1,
-                        perUnit: benefitItem?.pricePerUnit ?? 0,
-                        originalAmount: totalAmount,
-                        discountAmount: 0,
-                        netCaseAmount: organ.totalAmount,
-                        medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
-                        nonCoveredAmount: amountNumber(organ.uncoveredAmount),
-                        nonCoveredReasonId: organ.uncoveredReason ?? 0,
-                    });
-                }
+                // 1 caseItem ต่ออวัยวะ / ต่อนิ้ว พร้อม bodyPartId ของตัวเอง
+                caseItems = mapOrganLossToCaseItems(organLossItems, customerBenefit?.data?.[0]);
             } else if (isManualIPD) {
                 caseItems = items
                     .filter((item) => item.benefitId != null)
@@ -381,7 +362,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId,
         formatType,
         undefined,
-        undefined,
+        insured?.customerDetailId,
         isContinuous ? oldClaim?.claimNo : undefined
     );
 
@@ -426,7 +407,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -486,7 +467,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -522,7 +503,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                illnessOrInjuryDetail: oldClaim.illnessOrInjuryDetail ?? formik.values.illnessOrInjuryDetail,
             },
             false
         );

@@ -1,16 +1,28 @@
 import { useParams } from "react-router-dom";
 import { useGetClaimTransactionLog } from "../../../../api/coreClaimApi";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
-import { useMemo, useState } from "react";
+import { safeAtob } from "../../../../functionHelpers";
+import { useMemo, useRef, useState } from "react";
 
 const useClaimTransactionHook = () => {
     const { id } = useParams();
-    const claimId = id ? atob(id) : undefined;
+    const claimId = safeAtob(id);
     const [paginated, setPaginated] = useState<PaginationSortableDto>({
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: transaction, isLoading: transactionLoading } = useGetClaimTransactionLog(
+    // ClaimDetailsTab ไม่ถูก unmount ตอนสลับไปดูอีกเคลม (เหมือนที่ ConsiderDetailHook.tsx แก้ไว้แล้ว)
+    // ถ้าไม่รีเซ็ต page ตรงนี้ด้วย แท็บนี้จะค้าง page เดิมของเคลมก่อนหน้าข้ามไปเคลมใหม่
+    const prevClaimIdRef = useRef(claimId);
+    if (prevClaimIdRef.current !== claimId) {
+        prevClaimIdRef.current = claimId;
+        setPaginated({ page: 1, recordsPerPage: 10 });
+    }
+    const {
+        data: transaction,
+        isLoading: transactionLoading,
+        isError: transactionError,
+    } = useGetClaimTransactionLog(
         claimId ?? "",
         undefined,
         undefined,
@@ -31,6 +43,7 @@ const useClaimTransactionHook = () => {
     return {
         transaction,
         transactionLoading,
+        transactionError,
         pagination,
         setPaginated,
     };
