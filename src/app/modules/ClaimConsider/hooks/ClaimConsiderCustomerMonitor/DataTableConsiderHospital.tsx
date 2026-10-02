@@ -24,8 +24,9 @@ import ClaimNoWithContinuousBadge from "../../components/_common/ClaimNoWithCont
  */
 type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string; caseCount?: number };
 
-// ตาม spec: สถานะ "อยู่ระหว่างดำเนินการ" (7), "ปฏิเสธ" (5), "ยกเลิก" (6) แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
-const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [5, 6, 7];
+// ตาม spec: สถานะ "รอแก้ไข" (4 — DFUAT-065), "ปฏิเสธ" (5), "ยกเลิก" (6), "อยู่ระหว่างดำเนินการ" (7)
+// แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
+const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [4, 5, 6, 7];
 
 /**
  * DFUAT-063 : รายการที่ SmileConnect จองสิทธิ์ (Reservation) / แจ้งเข้ารับการรักษา (Admission) — BE ส่ง isReadOnly = true

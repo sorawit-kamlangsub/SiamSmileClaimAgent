@@ -11,8 +11,10 @@ import { BeneficiaryForm, claimPHSelector } from "./../../../store/claimPHSlice"
 import { CoverageType, MedicalType } from "../../../../../functionHelpers";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
+import { useClaimRequestId } from "../useClaimRequestId";
 export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
+    const getRequestId = useClaimRequestId();
     const { form, bankAccounts, contacts, insured, organLossItems, caseItems, documentScanList } =
         useAppSelector(claimPHSelector);
     const isMedicalAll =
@@ -71,7 +73,7 @@ export const useCreateClaimPH = (onSuccess?: () => void, onError?: (message: str
         const payableCategoryId = isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6;
 
         return {
-            requestId: crypto.randomUUID(),
+            requestId: getRequestId(),
             claimSourceId: 2, // ClaimAgent
             productTypeId: 6,
             createdByUserCode: userProfile?.employeeCode,

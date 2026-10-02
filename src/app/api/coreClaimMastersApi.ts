@@ -40,6 +40,9 @@ const getCancelReasonQueryKey = ["getCancelReason"];
 const getRejectReasonQueryKey = ["getRejectReason"];
 const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
 const getBenefitQueryKey = ["getBenefit"];
+const getPhysicalTherapyNecessityReasonQueryKey = ["getPhysicalTherapyNecessityReason"];
+const getTrafficAccidentPersonRoleQueryKey = ["getTrafficAccidentPersonRole"];
+const getTrafficVehicleTypeQueryKey = ["getTrafficVehicleType"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -533,6 +536,39 @@ export const useGetBenefit = (benefitId?: number | undefined, benefitIdList?: nu
         () => coreClaimMastersClient.getBenefit(benefitId, benefitIdList),
         {
             enabled: benefitId !== undefined || !!benefitIdList?.length,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** เหตุผลความจำเป็นทางการแพทย์ (กายภาพบำบัด) — GET /Masters/claim/physical-therapy/necessity-reason */
+export const useGetPhysicalTherapyNecessityReason = (physicalTherapyNecessityReasonId?: number | undefined) => {
+    return useQuery(
+        [getPhysicalTherapyNecessityReasonQueryKey, physicalTherapyNecessityReasonId],
+        () => coreClaimMastersClient.getPhysicalTherapyNecessityReason(physicalTherapyNecessityReasonId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** ผู้ขับขี่ / ผู้โดยสาร (อุบัติเหตุจากการจราจร) — GET /Masters/claim/traffic-accident/person-role */
+export const useGetTrafficAccidentPersonRole = (trafficAccidentPersonRoleId?: number | undefined) => {
+    return useQuery(
+        [getTrafficAccidentPersonRoleQueryKey, trafficAccidentPersonRoleId],
+        () => coreClaimMastersClient.getTrafficAccidentPersonRole(trafficAccidentPersonRoleId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** ประเภทยานพาหนะ (อุบัติเหตุจากการจราจร) — GET /Masters/claim/traffic/vehicle-type */
+export const useGetTrafficVehicleType = (trafficVehicleTypeId?: number | undefined) => {
+    return useQuery(
+        [getTrafficVehicleTypeQueryKey, trafficVehicleTypeId],
+        () => coreClaimMastersClient.getTrafficVehicleType(trafficVehicleTypeId),
+        {
             refetchOnWindowFocus: false,
         }
     );

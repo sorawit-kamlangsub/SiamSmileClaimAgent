@@ -21,7 +21,7 @@ import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesT
 import { calculateCompensationSummary } from "./SubDetailsTab/ExpensesTabs/_common/calculateCompensationSummary";
 import { swalError, swalLoading, swalSuccess } from "../../../_common";
 import { swalHospitalApproveTransferSuccess } from "../../../_common/customSweetAlert";
-import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
+import { IncidentType, MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
 import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
@@ -34,11 +34,12 @@ import {
     sumClaimExpenseItems,
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
 import { alertMissingNonCoveredReason } from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
-import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
 // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
 // import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
+import MedicalNecessitySection from "./SubDetailsTab/MedicalNecessitySection";
+import TrafficAccidentSection from "./SubDetailsTab/TrafficAccidentSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
 import ConfirmHospitalCompensationTransferModal from "./ConfirmHospitalCompensationTransferModal";
@@ -110,9 +111,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         // handleToggleContinuousClaim,
         // handleSelectContinuousClaim,
         // handleClearContinuousClaim,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
         documentInfoByDocId,
         claimListTypeConfig,
         detailData,
@@ -167,6 +165,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
+
+    /** RC-005 5.6 : Section "ข้อมูลอุบัติเหตุจากการจราจร" แสดง/ส่งเฉพาะเหตุของการเคลม = อุบัติเหตุ */
+    const isAccident = formik.values.incidentTypeId === IncidentType.Accident;
 
     /**
      * จบงานบนหน้านี้แล้วกลับไปหน้า Monitor พิจารณาเคลม - เคลมโรงพยาบาล
@@ -279,8 +280,45 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         draftStep: activeStep + 1,
         caseFields: {
             hn: formik.values.hn || undefined,
-            an: formik.values.an || undefined,
-            vn: formik.values.vn || undefined,
+        },
+        caseTreatmentFields: {
+            caseMedicalTreatment: {
+                // id ของแถวเดิมจาก GetClaimDetailConsider — ให้ BE แก้แถวเดิม ไม่สร้างซ้ำ
+                caseMedicalTreatmentId: detail?.caseMedicalTreatmentId,
+                medicalLicenseNo: formik.values.doctorLicenseNo || undefined,
+                physicianName: formik.values.doctorName || undefined,
+                // RC-005 5.4 หมายเหตุ(ถ้ามี)
+                reservationRemark: formik.values.reservationRemark || undefined,
+                // RC-005 5.6 ข้อมูลอุบัติเหตุจากการจราจร : ส่งเฉพาะเหตุของการเคลม = อุบัติเหตุ (Section แสดงเฉพาะกรณีนี้)
+                ...(isAccident
+                    ? {
+                          isTrafficAccident: !!formik.values.trafficVehicleTypeId,
+                          vehicleTypeId: formik.values.trafficVehicleTypeId,
+                          otherVehicleType: formik.values.trafficOtherVehicleType || undefined,
+                          trafficAccidentPersonRoleId: formik.values.trafficAccidentPersonRoleId,
+                          hasCompulsoryInsuranceExcess: formik.values.trafficHasCompulsoryInsuranceExcess,
+                          compulsoryInsuranceNotUsedReason:
+                              formik.values.trafficHasCompulsoryInsuranceExcess === false
+                                  ? formik.values.trafficCompulsoryInsuranceNotUsedReason || undefined
+                                  : undefined,
+                      }
+                    : { isTrafficAccident: false }),
+            },
+            // RC-005 5.5 ความจำเป็นทางการแพทย์ : เหตุผลส่งเฉพาะตอนเลือก "ใช่"
+            casePhysicalTherapy: formik.values.isPhysicalTherapy
+                ? {
+                      casePhysicalTherapyId: detail?.casePhysicalTherapyId,
+                      isPhysicalTherapy: formik.values.isPhysicalTherapy === "yes",
+                      physicalTherapyNecessityReasonId:
+                          formik.values.isPhysicalTherapy === "yes"
+                              ? formik.values.physicalTherapyNecessityReasonId
+                              : undefined,
+                      physicalTherapyNecessityReasonDetail:
+                          formik.values.isPhysicalTherapy === "yes"
+                              ? formik.values.physicalTherapyNecessityReasonDetail || undefined
+                              : undefined,
+                  }
+                : undefined,
         },
         // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
         documentChecks: formik.values.documentChecks,
@@ -417,23 +455,12 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     // const currentCaseNo = detail?.caseNo ?? "";
     // const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
-    /** จำนวนไฟล์จริงใน DocStorage ของ documentId นั้น (0 = ยังไม่มีเอกสารแนบ) */
-    const getFileCount = (documentId: string) => documentInfoByDocId[documentId]?.fileCount ?? 0;
-
-    /** เอกสารที่มีไฟล์แนบต้องเลือกผลการตรวจครบก่อนกด "ถัดไป" (ชีท row 104-105) */
-    const isDocumentResultAllSelected = () =>
-        !formik.values.documentChecks.some((doc) => getFileCount(doc.documentId) > 0 && doc.checkResult === "");
-
     const handleNext = async () => {
-        // Step 1 : ต้องผ่าน Validate + เลือกผลการตรวจเอกสารครบ ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท)
+        // Step 1 : ต้องผ่าน Validate ก่อนจึงไป Step 2 ได้ — RC-005 5.8 ตัดเงื่อนไขเลือกผลการตรวจเอกสารครบออกแล้ว
         // ไม่รวม validate ของ "แจ้งผลการพิจารณาโรงพยาบาล" — มีผลเฉพาะตอนกด "ยืนยันบันทึกผลพิจารณา" (DFUAT-048)
         if (activeStep === 0) {
             const isValid = await validateStep1(false);
             if (!isValid) return;
-            if (!isDocumentResultAllSelected()) {
-                swalError("ยังดำเนินการต่อไม่ได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
-                return;
-            }
             // Step 1 → Step 2 : sync coverage/medical ลง Redux ให้ ExpenseRecords ใช้กรองรายการค่ารักษา
             // ส่งเฉพาะ 2 ฟิลด์นี้ — ห้ามส่ง formik.values ทั้งก้อน เพราะมี Dayjs (incidentDate ฯลฯ)
             // ที่ไม่ serializable ปนอยู่ ทำให้ Redux Toolkit ต้อง deep-scan ทั้ง store ทุกครั้งที่ dispatch จนหน้าค้าง
@@ -488,23 +515,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     };
 
     /**
-     * เอกสารที่มีไฟล์แนบทุกรายการต้องมีผลการตรวจเป็น "ผ่าน" ก่อนอนุมัติ
-     * (ชีท : Document Count > 0 และ Document Result ≠ ผ่าน → ไม่สามารถอนุมัติ)
+     * อนุมัติ (Step 3) : ผ่าน Validate Step 1 + ยอดค่าใช้จ่ายถูกต้อง (ไม่รวม "แจ้งผลการพิจารณาโรงพยาบาล" — DFUAT-048)
+     * RC-005 5.8 ตัดเงื่อนไข "เอกสารที่มีไฟล์ต้องผลตรวจเป็น ผ่าน ครบ" ออกแล้ว
      */
-    const isDocumentResultAllPassed = () =>
-        !formik.values.documentChecks.some(
-            (doc) => getFileCount(doc.documentId) > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
-        );
-
-    /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง (ไม่รวม "แจ้งผลการพิจารณาโรงพยาบาล" — DFUAT-048) */
     const handleApprove = async () => {
         const isValid = await validateStep1(false);
         if (!isValid) {
             setActiveStep(0);
-            return;
-        }
-        if (!isDocumentResultAllPassed()) {
-            swalError("ไม่สามารถอนุมัติได้", "กรุณาเลือกผลการตรวจเป็น ผ่าน ให้ครบทุกรายการที่มีเอกสาร");
             return;
         }
         if (hasDiscountError || hasNotCoveredError) {
@@ -585,19 +602,25 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         causeOfIncident={causeOfIncident}
                                         medicalType={medicalType}
                                         incidentTypeMappingLoading={incidentTypeMappingLoading}
+                                        detailLabel="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                     />
                                 </Grid>
                                 <Grid item xs={12} sx={readOnlySx}>
                                     <TreatmentInfoSection />
                                 </Grid>
                                 <Grid item xs={12} sx={readOnlySx}>
+                                    <MedicalNecessitySection />
+                                </Grid>
+                                {isAccident && (
+                                    <Grid item xs={12} sx={readOnlySx}>
+                                        <TrafficAccidentSection />
+                                    </Grid>
+                                )}
+                                <Grid item xs={12} sx={readOnlySx}>
                                     <AttendingDoctorSection />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <DocumentVerifyTable
-                                        onChange={handleDocumentCheckChange}
-                                        onScan={handleDocumentScan}
-                                        options={documentCheckResultOptions}
                                         documentInfoByDocumentId={documentInfoByDocId}
                                         readOnly={readOnly}
                                     />
@@ -635,8 +658,18 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                             value={simBCategory}
                                             onChange={(e) => setSimBCategory(e.target.value as "SimB1" | "SimB2")}
                                         >
-                                            <FormControlLabel value="SimB1" control={<Radio />} label="Sim B1" />
-                                            <FormControlLabel value="SimB2" control={<Radio />} label="Sim B2" />
+                                            <FormControlLabel
+                                                value="SimB1"
+                                                control={<Radio />}
+                                                label="Sim B1"
+                                                disabled={readOnly}
+                                            />
+                                            <FormControlLabel
+                                                value="SimB2"
+                                                control={<Radio />}
+                                                label="Sim B2"
+                                                disabled={readOnly}
+                                            />
                                         </RadioGroup>
                                     </Paper>
                                 </Grid>
@@ -646,6 +679,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     formik={formik}
                                     detailData={detailData}
                                     customerDetailData={customerDetailData}
+                                    readOnly={readOnly}
                                 />
                             </Grid>
                         </Grid>

@@ -39,7 +39,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const docData = Object.values(documentDetailById);
 
     const formik = useFormik<ClaimFormValues>({
-        initialValues: { ...form, serviceProviderId: userProfile?.userId },
+        initialValues: { ...form, serviceProviderId: form.serviceProviderId ?? userProfile?.userId },
         enableReinitialize: true,
         validate: (values) => {
             const errors: FormikErrors<ClaimFormValues> = {};

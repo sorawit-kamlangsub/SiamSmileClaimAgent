@@ -219,12 +219,17 @@ need to change.
   site; `handleSubmitReviewResult()` (Step 1/2 "ยืนยันบันทึกผลพิจารณา") and `handleApprove()`
   (Step 3 "อนุมัติ") both call it directly — there's no separate per-document-result validation
   gating either button any more (removed by CR-05, see "2026-09 UI rewrite" above); `submitReview`
-  itself still checks that every *required* document subtype has at least one row. `requestId`
-  (`crypto.randomUUID()`, one per submit *intent*) resets whenever `reviewStatusId`/
-  `reviewReasonId`/`reviewRemark` change, not just on success/409 — otherwise a failed submit
-  followed by the reviewer changing their mind would retry with the *old* requestId against a
-  *new* payload. Handles `409` by `swalWarning` + resetting `hasSyncedRef` + `refetchDetail()`
-  (never auto-resubmits the stale payload). On a successful "อนุมัติ" the caller
+  itself still checks that every *required* document subtype has at least one row. Since the
+  2026-10-02 contract the submit body carries **no** `requestId` / `expected*Version` /
+  `*rowVersion` — just `reviewStatusId`, the reason fields, `reviewRemark` and the full `data`;
+  `isSubmittingRef` blocks a synchronous double-click because nothing dedupes a repeated request
+  any more. Handles `409` (status no longer allows the action) by `swalWarning` + resetting
+  `hasSyncedRef` + `refetchDetail()` (never auto-resubmits). On 5xx / network / timeout
+  `recoverAfterUnknownOutcome()` refetches Detail + History with the same `billingDetailId`: still
+  รอตรวจสอบ → nothing was saved, the reviewer may press confirm again; status changed → a revision
+  exists, so it never submits again, and if the latest revision's `returnStatus` isn't `Published`
+  it offers `useRepublishHospitalBillingReview` with the real `revisionId` from History. On a
+  successful "อนุมัติ" the caller
   (`BillingClaimDetailsTab.tsx`) navigates to `/billing/customers?claimType=hospital` (ตั้งเบิกกองทุน
   แท็บเคลมโรงพยาบาล) instead of back to the Monitor page — handoff "Business Rule: อนุมัติรายการ
   วางบิลโรงพยาบาล"
