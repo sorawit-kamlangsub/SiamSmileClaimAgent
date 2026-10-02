@@ -4,6 +4,7 @@ import SearchTransferByStatus, { statusMock } from "../components/SearchTransfer
 import SelectStatusButton from "../components/SelectStatusButton";
 import GenerateGroupTable from "../components/GenerateGroupTable";
 import GenerateDialogConfirm from "../components/GenerateDialogConfirm";
+import GenerateDialogSuccess from "../components/GenerateDialogSuccess";
 
 const ManageTransferHospital = () => {
     const { formik, submittedSearch } = useSearchTransferByStatusHook();
@@ -38,6 +39,7 @@ const ManageTransferHospital = () => {
                     </Grid>
                 ) : null}
                 <GenerateDialogConfirm />
+                <GenerateDialogSuccess />
             </Grid>
         </>
     );

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { API_CLAIM_FUND_URL } from "../../../../Const";
 import { encodeURLWithParams, PaginationDto } from "../../_common";
 
@@ -75,6 +75,51 @@ const hospitalTransferMonitorData = (payload: HospitalTransferMonitorType) => {
         Page: payload.paginate.page,
         RecordsPerPage: payload.paginate.recordsPerPage,
     });
+    return axios
+        .post(url, payload)
+        .then((res) => {
+            if (res.data) {
+                if (res.data.isSuccess) {
+                    return res.data;
+                }
+            } else {
+                throw Error(res.data?.message);
+            }
+        })
+        .catch((err: Error) => {
+            throw err.message;
+        });
+};
+
+type GenerateGroupTransferType = {
+    hospitalId: number | undefined;
+    transferId: string;
+}[];
+
+export const useGenerateGroupTransfer = (
+    onSuccessCallBack: (response: any) => void,
+    onErrorCallback: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((payload: GenerateGroupTransferType) => transferHospitalGenerate(payload), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+
+            queryClient.invalidateQueries([getHospitalTransferByStatusKey]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback && onErrorCallback(error.message);
+            queryClient.invalidateQueries([getHospitalTransferByStatusKey]);
+        },
+    });
+};
+
+const transferHospitalGenerate = (payload: GenerateGroupTransferType) => {
+    const url = `${claimFundAPI_URL}/HospitalTransfer/v1/CreatePaymentHospital`;
     return axios
         .post(url, payload)
         .then((res) => {

@@ -1,9 +1,11 @@
-import { Box, Button, Dialog, Grid, Typography } from "@mui/material";
+import { Backdrop, Box, Button, CircularProgress, Dialog, Grid, Typography } from "@mui/material";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
-import { setDialogOpen } from "../store/generateTransferSlice";
+import { setDialogOpen, setDialogSuccessSummaryOpen } from "../store/generateTransferSlice";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import AccountBalanceOutlinedIcon from "@mui/icons-material/AccountBalanceOutlined";
 import { numberWithCommas } from "../../../../functionHelpers";
+import { useGenerateGroupTransfer } from "../manageTransferHospitalAPI";
+import { swalError } from "../../../_common";
 
 const GenerateDialogConfirm = () => {
     const dispatch = useAppDispatch();
@@ -23,6 +25,29 @@ const GenerateDialogConfirm = () => {
 
         return groups;
     }, {});
+
+    const handleSuccess = (res: any) => {
+        dispatch(setDialogSuccessSummaryOpen({ isOpen: true, generateSuccessListData: res }));
+        handleClose();
+    };
+
+    const handleError = (error: string) => {
+        swalError("แจ้งเตือน", error);
+    };
+
+    const { mutate: mutateGenerateGroup, isLoading: isGenerateGroupLoading } = useGenerateGroupTransfer(
+        handleSuccess,
+        handleError
+    );
+
+    const handleMutateGenerateGroup = () => {
+        const payload = (generateTransferDialog?.generateListData ?? []).map((item) => ({
+            hospitalId: item.hospitalId,
+            transferId: item.transferGroupId,
+        }));
+        mutateGenerateGroup(payload);
+    };
+
     return (
         <Dialog
             open={generateTransferDialog.isOpen}
@@ -185,7 +210,7 @@ const GenerateDialogConfirm = () => {
                                 color="success"
                                 sx={{ width: "45%" }}
                                 onClick={() => {
-                                    console.log(generateTransferDialog?.generateListData);
+                                    handleMutateGenerateGroup();
                                 }}
                             >
                                 ยืนยัน
@@ -194,6 +219,9 @@ const GenerateDialogConfirm = () => {
                     </Grid>
                 </Box>
             </Box>
+            <Backdrop open={isGenerateGroupLoading} sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <CircularProgress />
+            </Backdrop>
         </Dialog>
     );
 };
