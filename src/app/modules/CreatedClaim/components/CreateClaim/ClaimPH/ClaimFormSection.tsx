@@ -41,6 +41,7 @@ import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "..
 import { useNavigate } from "react-router-dom";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
+import { NEW_CLAIM_DRAFT_KEY } from "../ClaimDraftProvider";
 
 export const EMPTY_STATE_SX = {
     p: 2,
@@ -734,6 +735,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         applicationCode={insured?.policyCode as string}
                         onOcrLoadingChange={setIsOcrLoading}
                         onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
+                        draftKey={NEW_CLAIM_DRAFT_KEY}
                     />
                 </CustomPaper>
             )}

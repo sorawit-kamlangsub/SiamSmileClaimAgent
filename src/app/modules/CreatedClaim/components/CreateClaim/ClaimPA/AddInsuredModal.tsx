@@ -43,6 +43,7 @@ import { useGetClaimHistory, useGetCustomerSearchByPolicyCode } from "../../../.
 import { GetCustomerSearchByPolicyCodeDtoResponse } from "../../../../../api/coreClaimApi.client";
 import LinearLoading from "../../../../_common/components/CustomComponent/LinearLoading";
 import { generateTempId } from "../../../hooks/CreateClaim/ClaimPA/useClaimPAForm";
+import { NEW_CLAIM_DRAFT_KEY, useClaimDraftStore } from "../ClaimDraftProvider";
 
 interface InsuredDetailItem {
     label: string;
@@ -118,6 +119,7 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
     const fullScreen = useMediaQuery(theme.breakpoints.down("sm"));
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const claimDraftStore = useClaimDraftStore();
     const { insured } = useAppSelector(claimPASelector);
     const [selectedInsured, setSelectedInsured] = useState<SearchResult | null>(null);
     const [submittedSearch, setSubmittedSearch] = useState<{ searchIndex: number; searchDetail: string } | null>(null);
@@ -215,6 +217,8 @@ const AddInsuredModal: React.FC<Props> = ({ open, onClose }) => {
         dispatch(setTmpClaimItem([stubClaim]));
 
         dispatch(resetClaimForm());
+        // ผู้เอาประกันรายใหม่ เริ่มสแกนเอกสาร OCR / prefill เคลมต่อเนื่องใหม่ ไม่ดึง draft ค้าง
+        claimDraftStore?.remove(NEW_CLAIM_DRAFT_KEY);
 
         navigate(-1);
         handleClose();
