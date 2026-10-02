@@ -1,7 +1,7 @@
 import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
 import { numberWithCommas } from "../../../../functionHelpers";
-import { Typography } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 import { PaginationDto, swalError, swalInfo } from "../../../_common";
 import { useMemo, useState } from "react";
 import { useAppDispatch } from "../../../../../redux";
@@ -61,7 +61,7 @@ const useGenerateGroupTransferHook = () => {
             },
         },
         {
-            name: "customerName",
+            name: "insuredName",
             label: "ชื่อผู้เอาประกัน",
             options: { sort: false, filter: false },
         },
@@ -76,9 +76,22 @@ const useGenerateGroupTransferHook = () => {
             options: {
                 sort: false,
                 filter: false,
+                setCellHeaderProps: () => ({
+                    style: { textAlign: "center" },
+                }),
                 customBodyRenderLite: (rowIndex) => {
                     const formatNumberAmount = numberWithCommas(data?.data?.[rowIndex]?.amount ?? 0);
-                    return formatNumberAmount;
+                    return (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "end",
+                                alignItems: "center",
+                            }}
+                        >
+                            {formatNumberAmount}
+                        </Box>
+                    );
                 },
             },
         },
@@ -88,8 +101,23 @@ const useGenerateGroupTransferHook = () => {
             options: {
                 sort: false,
                 filter: false,
+                setCellHeaderProps: () => ({
+                    style: { textAlign: "center" },
+                }),
                 customBodyRenderLite: (rowIndex) => {
-                    return data?.data?.[rowIndex]?.statusNameTH;
+                    return (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            <Box sx={{ bgcolor: "#FFF7DC", color: "#C39A3B", borderRadius: 2, p: "7px" }}>
+                                {data?.data?.[rowIndex]?.statusNameTH}
+                            </Box>
+                        </Box>
+                    );
                 },
             },
         },
