@@ -73,8 +73,13 @@ selectors in `RecordClaimData`), `useGetSimBCategory`, `useGetSimB`, `useGetChie
 ## `hospitalBillingApi.ts` — Hospital Billing (`API_URL`), client = `HospitalBillingClient`
 
 `วางบิลเคลม > เคลมโรงพยาบาล` — real backend, GET/POST only, route + envelope unchanged since the
-2026-09-08 backend restructure (immutable review snapshot per billing round; `expectedVersion` /
-`rowVersion` are the only fields that decide `409 Conflict`). Contract revision 2026-09-14 renamed
+2026-09-08 backend restructure (immutable review snapshot per billing round). Contract revision
+2026-10-02 removed every concurrency/idempotency field from the HTTP contract (`requestId`,
+`expectedVersion`, `expectedCaseVersion`, `expectedClaimVersion`, `rowVersion`, `caseRowVersion`,
+`claimRowVersion` on submit; `version` / `*rowVersion` on Detail; `version` on the submit result) —
+the backend now locks per BillingDetail and checks the status inside the transaction, answering
+`409 Conflict` when the current status doesn't allow the action. `caseVersion` / `claimVersion`
+(read-only) and `BillingRevisionDto.version` (History, = VersionNo) stay. Contract revision 2026-09-14 renamed
 `externalBillingId`→`billingRequestId` and `billingNo`→`billingRequestCode`, and dropped
 `previousBillingDetailId` / `originalBilledAmount` / `ssEndDiscountAmount` from the HTTP response —
 no fallback on the old field names. See [modules/BillingClaim.md](modules/BillingClaim.md) for the
@@ -84,8 +89,16 @@ full module writeup.
 |---|---|
 | `useGetHospitalBillingFilter(statusId, searchBy, searchDetail, orderingField, ascendingOrder, page, recordsPerPage)` | GET `/billing/hospital/filter` — list + dashboard counts. Uses the shared `ClaimTransactionTypeId` numbering (confirmed with BE 2026-09-23); `statusId=9` (อนุมัติ) is rejected with 400, only 2/3/5/6 are valid (`BILLING_STATUS.pendingReview=2, needsCorrection=3, rejected=5, cancelled=6`) |
 | `useGetHospitalBillingDetail(billingDetailId)` | GET `/billing/hospital/{billingDetailId}` — working-copy source before edit/submit |
-| `useGetHospitalBillingHistory(billingDetailId)` | GET `/billing/hospital/{billingDetailId}/history` — `rounds` (all rounds of the case) + `revisions` (this round's review history) |
-| `useSubmitHospitalBilling` **(mutation)** | POST `/billing/hospital/{billingDetailId}/submit` — idempotent via caller-supplied `requestId`; invalidates filter/detail/history on success |
+| `useGetHospitalBillingHistory(billingDetailId, enabled = true)` | GET `/billing/hospital/{billingDetailId}/history` — `rounds` (all rounds of the case) + `revisions` (this round's review history). Pass `enabled = false` to skip the fetch on mount and pull it with `refetch()` (used by the post-timeout evidence check) |
+| `useSubmitHospitalBilling` **(mutation)** | POST `/billing/hospital/{billingDetailId}/submit` — **not idempotent** (no `requestId` any more): the caller must guard against double-submit and must never auto-retry; invalidates filter/detail/history on success |
+| `useRepublishHospitalBillingReview` **(mutation)** | POST `/billing/hospital/{billingDetailId}/revisions/{revisionId}/publish` — no body; re-sends an already saved revision's snapshot without creating a new revision/amount. HTTP 200 doesn't mean the receiver processed it — show the returned `returnStatus`. Invalidates filter/detail/history |
+
+`normalizeSubmitError` turns whatever the client throws into `{ httpStatus, message, isConflict (409),
+isNotFound (404), isOutcomeUnknown (5xx / network / timeout / unreadable status) }`. The file also
+registers an axios **response interceptor scoped to `${API_URL}/billing/hospital/*`** that re-serializes
+error bodies: the generated client calls `JSON.parse(response.data)` on every non-200 status, but axios
+has already parsed the body, so without it every HTTP error surfaced as a `SyntaxError` with the status
+lost. Other clients are untouched (and still have that behaviour).
 
 ## `claimFundApi.ts` — Claim Fund / Transfer service (raw axios, no NSwag client, `${API_CLAIM_FUND_URL}/api`)
 

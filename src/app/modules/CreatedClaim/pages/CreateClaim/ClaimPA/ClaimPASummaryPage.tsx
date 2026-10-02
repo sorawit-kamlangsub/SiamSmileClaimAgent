@@ -66,7 +66,6 @@ const ClaimPASummaryPage: React.FC = () => {
         isContinuous,
         createClaim: isContinuous ? createContinuedClaimPA : createClaimPA,
         confirmPayment: isContinuous ? confirmContinuedPayment : confirmPayment,
-        isClaimSuccess: (r) => (r?.isSuccess ?? r?.data?.isResult) === true,
     });
 
     useEffect(() => {
@@ -186,7 +185,7 @@ const ClaimPASummaryPage: React.FC = () => {
             const { claimResponse } = result?.value ?? {};
             const data = claimResponse?.data;
             const responseList = data?.responseList ?? [];
-            const isSuccess = claimResponse?.isSuccess ?? data?.isResult;
+            const isSuccess = claimResponse?.isSuccess === true && data?.isResult === true;
 
             if (result.isConfirmed && isSuccess && responseList.length > 0) {
                 if (isContinuous) {

@@ -8,17 +8,14 @@ import { BeneficiaryForm, claimPHSelector } from "../../../store/claimPHSlice";
 import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
-
-const generateRequestId = () =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+import { useClaimRequestId } from "../useClaimRequestId";
 
 export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { oldClaimId: oldClaimIdParam } = useParams();
     const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
 
     const { userProfile } = useAuth();
+    const getRequestId = useClaimRequestId();
     const { form, bankAccounts, contacts, organLossItems, caseItems, documentScanList } =
         useAppSelector(claimPHSelector);
 
@@ -80,7 +77,7 @@ export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (mes
         const payableCategoryId = isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6;
 
         return {
-            requestId: generateRequestId(),
+            requestId: getRequestId(),
             claimId: oldClaimId,
             createdByUserCode: userProfile?.employeeCode,
             createdByUserName: userProfile?.fullName,
