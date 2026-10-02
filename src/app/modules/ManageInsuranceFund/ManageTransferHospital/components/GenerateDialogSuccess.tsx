@@ -100,6 +100,7 @@ const GenerateDialogSuccess = () => {
                         border: "1px solid #B9DDF2",
                         borderRadius: "12px",
                         overflow: "hidden",
+                        mt: 1,
                     }}
                 >
                     <Box
@@ -130,7 +131,10 @@ const GenerateDialogSuccess = () => {
                                     }}
                                 >
                                     <Grid item xs={6}>
-                                        <Typography color="#526A7A">{item?.hospitalName}</Typography>
+                                        <Typography color="#31556D">{item?.hospitalName}</Typography>
+                                        <Typography variant="subtitle2" color="#0A73AE">
+                                            {item?.paymentCode}
+                                        </Typography>
                                     </Grid>
 
                                     <Grid item xs={3}>
@@ -146,19 +150,39 @@ const GenerateDialogSuccess = () => {
                                                 fontWeight: 700,
                                             }}
                                         >
-                                            {item.length} รายการ
+                                            {item?.totalCount} รายการ
                                         </Box>
                                     </Grid>
 
                                     <Grid item xs={3} sx={{ textAlign: "right" }}>
                                         <Typography color="#078B4F" fontWeight={700} fontSize={12}>
-                                            {numberWithCommas(item?.[item]?.netPaidAmount)} บาท
+                                            {numberWithCommas(item?.netPaidAmount)} บาท
                                         </Typography>
                                     </Grid>
                                 </Grid>
                             );
                         }
                     )}
+                </Box>
+                <Box sx={{ mt: 2 }}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={6} sm={6} md={6} lg={6}>
+                            <Box
+                                sx={{
+                                    bgcolor: "#FFF7DC",
+                                    color: "#C39A3B",
+                                    borderRadius: "20px",
+                                    px: 1.5,
+                                    py: 0.4,
+                                    width: "fit-content",
+                                    fontSize: 12,
+                                    fontWeight: 700,
+                                }}
+                            >
+                                รอโอน
+                            </Box>
+                        </Grid>
+                    </Grid>
                 </Box>
             </Box>
         </Dialog>
