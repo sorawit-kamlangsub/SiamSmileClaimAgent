@@ -11,9 +11,9 @@ type SearchTransferByStatusProps = {
 };
 
 export const statusMock = [
-    { id: 2, label: "รอสร้างรายการ" },
-    { id: 3, label: "รอโอน" },
-    { id: 4, label: "โอนสำเร็จ" },
+    { id: 1, label: "รอสร้างรายการ" },
+    { id: 2, label: "รอโอน" },
+    { id: 3, label: "โอนสำเร็จ" },
     { id: 5, label: "โอนไม่สำเร็จ" },
 ];
 
@@ -95,7 +95,7 @@ const SearchTransferByStatus = ({ formik }: SearchTransferByStatusProps) => {
                                 </Grid>
                             </Grid>
                         </Grid>
-                    ) : formik.values.statusId == 4 || formik.values.statusId == 5 ? (
+                    ) : formik.values.statusId == 3 || formik.values.statusId == 5 ? (
                         <Grid item xs={12} sm={12} md={10} lg={10}>
                             <Grid container spacing={2} alignItems="flex-end">
                                 <Grid item xs={12} sm={12} md={2.4} lg={2.4}>
