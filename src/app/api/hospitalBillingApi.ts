@@ -18,6 +18,28 @@ import { API_URL } from "../../Const";
  */
 const hospitalBillingClient = new HospitalBillingClient(API_URL, axios);
 
+/**
+ * generated client เรียก `JSON.parse(response.data)` กับทุก status ที่ไม่ใช่ 200 แต่ axios parse body เป็น
+ * object ให้แล้ว จึงโยน SyntaxError และ HTTP status หายไป (แยก 409/404/500 ไม่ได้) — แปลง body ของ error
+ * กลับเป็น string ให้ client parse เองได้และ throw envelope (มี `code` = HTTP status) ออกมาตามปกติ
+ *
+ * ผูกกับ axios ตัวกลาง (auth interceptor อยู่ที่ instance นี้) แต่จำกัดเฉพาะ `/billing/hospital/*`
+ * client อื่นจึงไม่ถูกกระทบ
+ */
+const HOSPITAL_BILLING_URL_PREFIX = `${API_URL}/billing/hospital/`;
+axios.interceptors.response.use(undefined, (error) => {
+    const response = axios.isAxiosError(error) ? error.response : undefined;
+    if (
+        response &&
+        error.config?.url?.startsWith(HOSPITAL_BILLING_URL_PREFIX) &&
+        typeof response.data === "object" &&
+        response.data !== null
+    ) {
+        response.data = JSON.stringify(response.data);
+    }
+    return Promise.reject(error);
+});
+
 const getHospitalBillingFilterQueryKey = ["getHospitalBillingFilter"];
 const getHospitalBillingDetailQueryKey = ["getHospitalBillingDetail"];
 const getHospitalBillingHistoryQueryKey = ["getHospitalBillingHistory"];
@@ -73,36 +95,40 @@ export const useGetHospitalBillingDetail = (billingDetailId: string | undefined)
     );
 };
 
-/** GET /billing/hospital/{billingDetailId}/history — รอบวางบิล (rounds) + ผลตรวจย้อนหลัง (revisions) */
-export const useGetHospitalBillingHistory = (billingDetailId: string | undefined) => {
+/**
+ * GET /billing/hospital/{billingDetailId}/history — รอบวางบิล (rounds) + ผลตรวจย้อนหลัง (revisions)
+ *
+ * `enabled = false` : ไม่ยิงตอน mount ใช้ `refetch()` ดึงเองเมื่อจำเป็น (เช่นตรวจหลักฐานหลัง timeout)
+ */
+export const useGetHospitalBillingHistory = (billingDetailId: string | undefined, enabled = true) => {
     return useQuery<BillingHistoryDtoServiceResponse>(
         [getHospitalBillingHistoryQueryKey, billingDetailId],
         () => hospitalBillingClient.history(billingDetailId ?? ""),
-        { enabled: !!billingDetailId, refetchOnWindowFocus: false }
+        { enabled: enabled && !!billingDetailId, refetchOnWindowFocus: false }
     );
 };
 
 /**
- * ข้อผิดพลาดจาก POST submit ที่ normalize แล้ว
+ * ข้อผิดพลาดจาก POST submit / publish ที่ normalize แล้ว
  *
- * `HospitalBillingClient.processSubmit` throw ค่าที่ parse จาก response body ตรง ๆ (ไม่ใช่ Error) เมื่อ
- * parse สำเร็จ — envelope ที่ throw ออกมามี `code` เป็น HTTP status ชนิด number (ตาม handoff ข้อ 10) แต่
- * axios error ตอน network ขาด/timeout (ไม่มี response เลย) ก็มี `code` เหมือนกันแต่เป็น string เช่น
+ * `HospitalBillingClient.process*` throw ค่าที่ parse จาก response body ตรง ๆ (ไม่ใช่ Error) เมื่อ
+ * parse สำเร็จ — envelope ที่ throw ออกมามี `code` เป็น HTTP status ชนิด number แต่ axios error ตอน
+ * network ขาด/timeout (ไม่มี response เลย) ก็มี `code` เหมือนกันแต่เป็น string เช่น
  * "ECONNABORTED"/"ERR_NETWORK" จึงต้องแยกชนิดก่อนใช้เป็น httpStatus, และเช็ค `status` (จาก ApiException
- * เมื่อ parse ไม่สำเร็จ) เป็น fallback
+ * เมื่อ body ว่าง) เป็น fallback
  */
 export type SubmitBillingError = {
     httpStatus?: number;
     message: string;
-    /** 409 — ข้อมูลเปลี่ยนไปจากที่อื่นแล้ว ต้องโหลดใหม่และใช้ requestId ใหม่เมื่อ submit อีกครั้ง (handoff ข้อ 7) */
+    /** 409 — สถานะปัจจุบันไม่อนุญาตให้ทำรายการ ต้องโหลดข้อมูลใหม่ ห้ามส่งซ้ำอัตโนมัติ */
     isConflict: boolean;
-    /** 404 — รายการไม่พบ/ไม่ active หรือข้อมูลที่จำเป็นไม่พร้อม (handoff ข้อ 10) */
+    /** 404 — รายการไม่พบ หรือ revision ไม่ตรงกับ BillingDetail */
     isNotFound: boolean;
     /**
-     * 500 หรือ network/timeout — ผลบันทึกอาจสำเร็จแล้วแต่ยังไม่แน่ชัด (handoff ข้อ 7/10) ต้อง retry ด้วย
-     * `requestId` และ body เดิมทุกค่าภายใต้ผู้ใช้เดิม ห้ามสร้าง `requestId` ใหม่
+     * 5xx / network / timeout / อ่าน status ไม่ได้ — ยังสรุปไม่ได้ว่าบันทึกแล้วหรือไม่ ต้องตรวจ
+     * Detail/History ก่อนตัดสินใจส่งอีกครั้ง
      */
-    isRetryable: boolean;
+    isOutcomeUnknown: boolean;
 };
 
 export const normalizeSubmitError = (error: unknown): SubmitBillingError => {
@@ -111,8 +137,6 @@ export const normalizeSubmitError = (error: unknown): SubmitBillingError => {
     const httpStatus =
         (typeof rawCode === "number" ? rawCode : undefined) ??
         (typeof asRecord?.status === "number" ? (asRecord.status as number) : undefined);
-    // axios error ที่ไม่มี response เลย (network ขาด/timeout) ถูก rethrow ดิบจาก HospitalBillingClient.submit()
-    const isNetworkOrTimeout = asRecord?.isAxiosError === true && httpStatus === undefined;
     const message =
         (asRecord?.message as string | undefined) ||
         (asRecord?.exceptionMessage as string | undefined) ||
@@ -123,15 +147,16 @@ export const normalizeSubmitError = (error: unknown): SubmitBillingError => {
         message,
         isConflict: httpStatus === 409,
         isNotFound: httpStatus === 404,
-        isRetryable: httpStatus === 500 || isNetworkOrTimeout,
+        isOutcomeUnknown: httpStatus === undefined || httpStatus >= 500,
     };
 };
 
 /**
  * POST /billing/hospital/{billingDetailId}/submit — ยืนยันผลตรวจสอบ
  *
- * Idempotent ด้วย `requestId` ในตัว body — caller ต้องคุม `requestId` เอง (สร้างใหม่ต่อ 1 ความตั้งใจ
- * บันทึก, ใช้ค่าเดิมซ้ำเมื่อ retry คำขอเดิม) invalidate ทั้ง filter/detail/history เมื่อสำเร็จ
+ * ไม่มี idempotency key แล้ว — BE lock ต่อ BillingDetail และตรวจสถานะใน transaction คำขอที่สถานะ
+ * ไม่อนุญาตได้ 409 caller ต้องกันกดซ้ำเองและห้าม retry อัตโนมัติ invalidate ทั้ง filter/detail/history
+ * เมื่อสำเร็จ
  */
 export const useSubmitHospitalBilling = (
     onSuccessCallback?: (response: BillingSubmitResultDtoServiceResponse) => void,
@@ -154,6 +179,28 @@ export const useSubmitHospitalBilling = (
             },
             onError: (error: unknown) => {
                 onErrorCallback?.(normalizeSubmitError(error));
+            },
+        }
+    );
+};
+
+/**
+ * POST /billing/hospital/{billingDetailId}/revisions/{revisionId}/publish — ส่งผลของ revision ที่บันทึกแล้ว
+ * อีกครั้ง (ไม่มี body)
+ *
+ * ใช้ snapshot เดิม ไม่สร้าง revision/ยอดใหม่ — HTTP 200 ไม่ได้แปลว่าปลายทางประมวลผลเรียบร้อย ให้แสดง
+ * ตาม `returnStatus` ที่ API คืน
+ */
+export const useRepublishHospitalBillingReview = () => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (params: { billingDetailId: string; revisionId: string }) =>
+            hospitalBillingClient.republishHospitalBillingReview(params.billingDetailId, params.revisionId),
+        {
+            onSuccess: () => {
+                queryClient.invalidateQueries([getHospitalBillingFilterQueryKey]);
+                queryClient.invalidateQueries([getHospitalBillingDetailQueryKey]);
+                queryClient.invalidateQueries([getHospitalBillingHistoryQueryKey]);
             },
         }
     );
