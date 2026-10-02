@@ -96,6 +96,7 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                                 name={detail?.insured?.name ?? "-"}
                                 idCardNo={detail?.insured?.idCard ?? "-"}
                                 applicationId={detail?.insured?.policyCode ?? "-"}
+                                productTypeId={detail?.productTypeId}
                                 phoneNumber={detail?.insured?.phone ?? "-"}
                                 appStatus={
                                     detail?.appStatusName ||

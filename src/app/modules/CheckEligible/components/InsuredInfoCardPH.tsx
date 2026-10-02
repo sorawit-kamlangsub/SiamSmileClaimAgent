@@ -10,9 +10,7 @@ import { HeadingWithColor } from "../../_common/components/CustomComponent/Headi
 import CustomBox from "../../_common/components/CustomComponent/CustomBox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
-
-// TODO: ยืนยัน URL จริงของหน้า Application Detail (PH) กับทีม เดิมโค้ดอ้างตัวแปรนี้แต่ไม่เคย declare
-const PH_DETAIL_URL = "";
+import { PH_APPLICATION_DETAIL_URL, getApplicationDetailUrl } from "../../../functionHelpers";
 
 const NATIONAL_ID_CARD_TYPE = 2;
 const PASSPORT_CARD_TYPE = 3;
@@ -129,11 +127,9 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => {
     const idCardNo = data?.cardTypeId === NATIONAL_ID_CARD_TYPE ? data?.cardDetail : undefined;
     const passportNo = data?.cardTypeId === PASSPORT_CARD_TYPE ? data?.cardDetail : undefined;
 
-    const applicationId = data?.policyCode ?? "-";
-
-    const applicationIdLink = (
+    const applicationIdLink = data?.policyCode ? (
         <Link
-            href={PH_DETAIL_URL}
+            href={getApplicationDetailUrl(PH_APPLICATION_DETAIL_URL, data.policyCode)}
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"
@@ -141,8 +137,10 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => {
             fontWeight={700}
             sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
         >
-            {applicationId}
+            {data.policyCode}
         </Link>
+    ) : (
+        "-"
     );
 
     return (

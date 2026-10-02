@@ -374,6 +374,14 @@ export const PRODUCT_TYPE_GROUP = {
 export const isProductType = (productTypeId: number | undefined, group: readonly number[]) =>
     productTypeId !== undefined && (group.includes(productTypeId) as boolean);
 
+// หน้ารายละเอียดใบคำขอ (Application ID) ในระบบเดิม — ใช้คู่กับ getApplicationDetailUrl
+export const PH_APPLICATION_DETAIL_URL = "https://sssph.siamsmile.co.th/Modules/PH/frmPHDetail.aspx?app=";
+export const PA_APPLICATION_DETAIL_URL = "https://ssspa.siamsmile.co.th/Modules/PA/frmApplicationDetail.aspx?app=";
+
+/** `?app=` คือ policyCode แปลงเป็น base64 — encodeURIComponent ซ้ำเพราะ base64 มี `+` ที่ query string อ่านเป็นช่องว่าง */
+export const getApplicationDetailUrl = (baseUrl: string, policyCode: string) =>
+    `${baseUrl}${encodeURIComponent(btoa(policyCode))}`;
+
 //ClaimStatus
 export const backgroundColorMapClaimStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
     2: "#D4EDBC", // Open
