@@ -6001,6 +6001,7 @@ export class HospitalBillingClient {
      * @param branchId (optional) 
      * @param reviewedByUserId (optional) 
      * @param claimSourceId (optional) 
+     * @param searchTypeId (optional) 
      * @param searchDetail (optional) 
      * @param orderingField (optional) 
      * @param ascendingOrder (optional) 
@@ -6008,7 +6009,7 @@ export class HospitalBillingClient {
      * @param recordsPerPage (optional) 
      * @return Success
      */
-    hospitalBillingClaimFundMonitor(branchId?: number | undefined, reviewedByUserId?: number | undefined, claimSourceId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<HospitalBillingClaimFundMonitorDtoListServiceResponse> {
+    hospitalBillingClaimFundMonitor(branchId?: number | undefined, reviewedByUserId?: number | undefined, claimSourceId?: number | undefined, searchTypeId?: number | undefined, searchDetail?: string | undefined, orderingField?: string | undefined, ascendingOrder?: boolean | undefined, page?: number | undefined, recordsPerPage?: number | undefined, cancelToken?: CancelToken | undefined): Promise<HospitalBillingClaimFundMonitorDtoListServiceResponse> {
         let url_ = this.baseUrl + "/billing/hospital/monitor?";
         if (branchId === null)
             throw new Error("The parameter 'branchId' cannot be null.");
@@ -6022,6 +6023,10 @@ export class HospitalBillingClient {
             throw new Error("The parameter 'claimSourceId' cannot be null.");
         else if (claimSourceId !== undefined)
             url_ += "ClaimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
+        if (searchTypeId === null)
+            throw new Error("The parameter 'searchTypeId' cannot be null.");
+        else if (searchTypeId !== undefined)
+            url_ += "SearchTypeId=" + encodeURIComponent("" + searchTypeId) + "&";
         if (searchDetail === null)
             throw new Error("The parameter 'searchDetail' cannot be null.");
         else if (searchDetail !== undefined)
@@ -6114,6 +6119,91 @@ export class HospitalBillingClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<HospitalBillingClaimFundMonitorDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * (ตั้งเบิก) รับรายการ BillingDetail สำหรับเตรียมสร้าง Billing Hospital โดยยังไม่มีการประมวลผลข้อมูล.
+     * @param body (optional) 
+     * @return Success
+     */
+    createBillingHospital(body?: CreateBillingHospitalDto | undefined, cancelToken?: CancelToken | undefined): Promise<GuidListServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/create";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                "Accept": "text/plain"
+            },
+            cancelToken
+        };
+
+        return this.instance.request(options_).catch((_error: any) => {
+            if (isAxiosError(_error) && _error.response) {
+                return _error.response;
+            } else {
+                throw _error;
+            }
+        }).then((_response: AxiosResponse) => {
+            return this.processCreateBillingHospital(_response);
+        });
+    }
+
+    protected processCreateBillingHospital(response: AxiosResponse): Promise<GuidListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200  = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GuidListServiceResponse>(result200);
+
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400  = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401  = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403  = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500  = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GuidListServiceResponse>(null as any);
     }
 
     /**
@@ -10328,6 +10418,11 @@ export interface CompensateExpenseList {
     discount?: number;
 }
 
+/** รายการ BillingDetail ที่จะนำไปสร้าง Billing Hospital ในขั้นตอนถัดไป. */
+export interface CreateBillingHospitalDto {
+    billingDetailIds?: string[] | undefined;
+}
+
 export interface CreateCaseAdjudicationDtoRequest {
     requestId: string;
     caseId: string;
@@ -12367,6 +12462,20 @@ export interface GetZebraCarOwnerDtoResponseListServiceResponse {
     pageIndex?: number | undefined;
 }
 
+export interface GuidListServiceResponse {
+    data?: string[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
 export interface HospitalBillingClaimFundMonitorDto {
     billingDetailId?: string;
     billingHeaderId?: string;
@@ -12377,6 +12486,7 @@ export interface HospitalBillingClaimFundMonitorDto {
     approveName?: string | undefined;
     billingAmount?: number;
     insuredCompanyName?: string | undefined;
+    readonly hospitalName?: string | undefined;
 }
 
 export interface HospitalBillingClaimFundMonitorDtoListServiceResponse {

@@ -1,6 +1,6 @@
 // ซ่อน UI เดิมของหน้า "ตั้งเบิกกองทุน" ไว้ชั่วคราว (2026-09-22) ตามที่ขอ — แสดงข้อความ
 // "อยู่ระหว่างพัฒนาระบบ" แทน คอมเมนต์ทั้ง import และ logic เดิมไว้ (ไม่ลบไฟล์/ไม่ลบโค้ด) เพื่อเปิดกลับได้ทันที
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Grid } from "@mui/material";
 import FundDisbursementHeader from "../components/BillingFundDisbursement/FundDisbursementHeader";
@@ -22,6 +22,7 @@ import { useGetHospitalBillingClaimMonitor } from "../billingClaimHospitalApi";
  */
 const BillingFundDisbursementPage = () => {
     const [searchParams] = useSearchParams();
+    const [rowsSelected, setRowsSelected] = useState<any[]>([]);
     const initialClaimType = parseFundClaimType(searchParams.get("claimType"));
 
     const { formik } = useFundDisbursementFilterHook(initialClaimType);
@@ -36,8 +37,8 @@ const BillingFundDisbursementPage = () => {
         selectedIndexes,
         handleRowSelected,
         selectedCount,
-        selectedAmount,
         paginated,
+        handleClearRowSelected,
     } = useFundDisbursementDataTableHook(appliedFilter.claimType, appliedFilter);
 
     const { data: getHospitalBillingClaimMonitorData, isLoading: isHospitalBillingClaimMonitorLoading } =
@@ -45,6 +46,7 @@ const BillingFundDisbursementPage = () => {
             formik.values.branchId,
             formik.values.userId,
             formik.values.claimType,
+            formik.values.searchBy,
             formik.values.searchDetail,
             undefined,
             undefined,
@@ -53,10 +55,19 @@ const BillingFundDisbursementPage = () => {
             formik.values.isSearch
         );
 
+    useEffect(() => {
+        if (selectedIndexes) {
+            const rows = selectedIndexes.map((rowIndex) => getHospitalBillingClaimMonitorData?.data?.[rowIndex]);
+            setRowsSelected(rows);
+        }
+
+        return () => {};
+    }, [selectedIndexes]);
+
     const totalCount = getHospitalBillingClaimMonitorData?.data?.length ?? 0;
     const totalAmount =
-        getHospitalBillingClaimMonitorData?.data?.reduce((sum, item) => sum + (item?.billingAmount ?? 0), 0) ??
-        0;
+        getHospitalBillingClaimMonitorData?.data?.reduce((sum, item) => sum + (item?.billingAmount ?? 0), 0) ?? 0;
+    const totalAmountSelected = rowsSelected.reduce((sum, item) => sum + (item?.billingAmount ?? 0), 0) ?? 0;
 
     const handleSearch = () => {
         formik.setFieldValue("isSearch", true);
@@ -66,6 +77,8 @@ const BillingFundDisbursementPage = () => {
     const handleClear = () => {
         formik.resetForm({ values: getDefaultFundFilter() });
         setAppliedFilter(getDefaultFundFilter());
+        setRowsSelected([]);
+        handleClearRowSelected();
     };
 
     return (
@@ -91,7 +104,8 @@ const BillingFundDisbursementPage = () => {
                     selectedIndexes={selectedIndexes}
                     onRowSelected={handleRowSelected}
                     selectedCount={selectedCount}
-                    selectedAmount={selectedAmount}
+                    selectedAmount={totalAmountSelected}
+                    selectedData={rowsSelected}
                 />
             </Grid>
         </Grid>

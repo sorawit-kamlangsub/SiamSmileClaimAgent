@@ -7,8 +7,6 @@
  * คอมเมนต์ TODO ที่กำกับไว้
  */
 
-import { Dayjs } from "dayjs";
-
 export const FUND_CLAIM_TYPE = {
     customer: 2,
     hospital: 3,
@@ -21,17 +19,17 @@ export const FUND_CLAIM_TYPE_OPTIONS: { value: FundClaimType; label: string }[] 
 ];
 
 /** แปลงค่าจาก URL (?claimType=hospital) — ค่าอื่น/ไม่ระบุ = ยังไม่เลือก (แสดง empty state ตามสเปค) */
-export const parseFundClaimType = (value: number | undefined): FundClaimType | undefined => {
-    if (value === FUND_CLAIM_TYPE.customer) return FUND_CLAIM_TYPE.customer;
-    if (value === FUND_CLAIM_TYPE.hospital) return FUND_CLAIM_TYPE.hospital;
+export const parseFundClaimType = (value: string | null): FundClaimType | undefined => {
+    if (value === "customer" || value === String(FUND_CLAIM_TYPE.customer)) return FUND_CLAIM_TYPE.customer;
+    if (value === "hospital" || value === String(FUND_CLAIM_TYPE.hospital)) return FUND_CLAIM_TYPE.hospital;
     return undefined;
 };
 
 export const FUND_SEARCH_BY = {
-    claimCode: "claimCode",
-    caseCode: "caseCode",
-    hospital: "hospital",
-    insuredName: "insuredName",
+    claimCode: 1,
+    caseCode: 2,
+    hospital: 3,
+    insuredName: 4,
 } as const;
 export type FundSearchByField = (typeof FUND_SEARCH_BY)[keyof typeof FUND_SEARCH_BY];
 

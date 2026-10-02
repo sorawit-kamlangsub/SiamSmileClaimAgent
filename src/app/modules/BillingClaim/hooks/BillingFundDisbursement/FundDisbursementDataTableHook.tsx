@@ -47,6 +47,10 @@ const useFundDisbursementDataTableHook = (
         },
     });
 
+    const handleClearRowSelected = () => {
+        setSelectedIndexes([]);
+    };
+
     // เคลมโรงพยาบาล (handoff หัวข้อ "ตารางเคลมโรงพยาบาล") : วันที่อนุมัติเคลม · เลขที่ Case · ชื่อสถานพยาบาล ·
     // ผู้อนุมัติ · จำนวนเงินตั้งเบิก · บริษัทประกัน — เคลมลูกค้า (mockup) : เพิ่มวันที่แจ้งเคลมนำหน้า แทนที่ชื่อ
     // สถานพยาบาลด้วยไม่มีคอลัมน์นั้นเลย
@@ -100,6 +104,7 @@ const useFundDisbursementDataTableHook = (
         handleRowSelected,
         selectedCount: selectedIndexes.length,
         selectedAmount,
+        handleClearRowSelected,
     };
 };
 
