@@ -123,7 +123,6 @@ const useGenerateGroupTransferHook = () => {
         },
     ];
 
-    //TODO - mutate handle when generate
     const handleGenerateDialogOpen = () => {
         dispatch(setDialogOpen({ isOpen: true, generateListData: rowsSelected }));
     };

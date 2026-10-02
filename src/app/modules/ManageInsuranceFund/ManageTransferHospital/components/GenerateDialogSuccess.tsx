@@ -1,4 +1,4 @@
-import { Box, Dialog, Grid, Typography } from "@mui/material";
+import { Box, Button, Dialog, Grid, Typography } from "@mui/material";
 import CheckIcon from "@mui/icons-material/Check";
 import { setDialogSuccessSummaryOpen } from "../store/generateTransferSlice";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
@@ -181,6 +181,18 @@ const GenerateDialogSuccess = () => {
                             >
                                 รอโอน
                             </Box>
+                        </Grid>
+                        <Grid item xs={6} sm={6} md={6} lg={6} sx={{ textAlign: "end" }}>
+                            <Button
+                                variant="contained"
+                                color="success"
+                                onClick={() => {
+                                    handleClose();
+                                }}
+                                sx={{ width: "50%" }}
+                            >
+                                สำเร็จ
+                            </Button>
                         </Grid>
                     </Grid>
                 </Box>
