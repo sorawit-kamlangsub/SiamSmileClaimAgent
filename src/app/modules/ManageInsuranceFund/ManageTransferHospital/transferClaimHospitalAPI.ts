@@ -4,7 +4,7 @@ import { API_CLAIM_FUND_URL } from "../../../../Const";
 import { encodeURLWithParams } from "../../_common";
 import { HospitalTransferMonitorType } from "./manageTransferHospitalAPI";
 
-const claimFundAPI_URL = `${API_CLAIM_FUND_URL}`;
+const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 
 const getHospitalPendingTransferByStatusKey = "getHospitalPendingTransferByStatus";
 
