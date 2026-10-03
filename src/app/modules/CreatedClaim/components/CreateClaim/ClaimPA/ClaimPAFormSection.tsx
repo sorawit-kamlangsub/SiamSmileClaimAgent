@@ -697,6 +697,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     <Grid item xs={12} lg={9} key={index}>
                                         <CD10Autocomplete
                                             name={`diagnoses.${index}.icd10Id`}
+                                            diagnosisNo={index + 1}
                                             formik={formik}
                                             loading={isOldClaimLoading}
                                             disabled={isOldClaimLoading}

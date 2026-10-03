@@ -20,7 +20,7 @@ const formatDate = (value?: { toString(): string } | null) =>
  * ข้อมูลจาก GetDeathAndDisabilityClaimDetailConsider
  */
 const DeathDisabilityClaimInfoSection = ({ info }: DeathDisabilityClaimInfoSectionProps) => {
-    // แสดงคำวินิจฉัย 3 ช่องเสมอตาม mockup (ช่องที่ไม่มีค่า CustomDisplayText แสดง "-")
+    // แสดงการวินิจฉัย 3 ช่องเสมอตาม mockup (ช่องที่ไม่มีค่า CustomDisplayText แสดง "-")
     const diagnoses = [info?.icD10_1, info?.icD10_2, info?.icD10_3];
     return (
         <CustomPaper>
@@ -38,10 +38,10 @@ const DeathDisabilityClaimInfoSection = ({ info }: DeathDisabilityClaimInfoSecti
                 <CustomDisplayText label="อาการสำคัญ" value={show(info?.chiefComplaint)} md={12} />
                 {diagnoses.map((diagnosis, index) => (
                     <CustomDisplayText
-                        // ช่องคำวินิจฉัยคงที่ 3 ช่อง ลำดับไม่เปลี่ยน
+                        // ช่องการวินิจฉัยคงที่ 3 ช่อง ลำดับไม่เปลี่ยน
                         // eslint-disable-next-line react/no-array-index-key
                         key={index}
-                        label={`คำวินิจฉัย ${index + 1}`}
+                        label={`การวินิจฉัย ${index + 1}`}
                         value={show(diagnosis)}
                         md={12}
                     />
