@@ -127,7 +127,9 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                                 branch={detail?.createdCaseByBranchName}
                                 claimNo={detail?.claimCode}
                                 caseNo={detail?.caseNo}
-                                claimType={variant.claimListTypeLabel}
+                                // DFUAT-072 : "ประเภทการเคลม" คือ เคลมโรงพยาบาล / เคลมลูกค้า — หน้านี้มีแต่เคลมโรงพยาบาล
+                                // (ประเภทการรักษา เช่น OPD/IPD แสดงที่ Chip ข้างแท็บอยู่แล้ว)
+                                claimType="เคลมโรงพยาบาล"
                                 statusClaim={detail?.claimStatusName}
                                 claimStatusId={detail?.claimStatusId}
                             />
@@ -186,7 +188,7 @@ const BillingHospitalReviewPage = ({ readOnly = false }: BillingHospitalReviewPa
                                 />
                             )}
                             <Chip
-                                label={`ประเภทรายการเคลม : ${claimTypeDisplayLabel}`}
+                                label={`ประเภทการรักษา : ${claimTypeDisplayLabel}`}
                                 color="primary"
                                 variant="outlined"
                                 sx={{ fontWeight: 700 }}

@@ -67,6 +67,9 @@ interface ClaimSimulateState {
     calculateResult: CalculateCaseClaimDtoResponse | null;
 }
 
+/** ค่าเริ่มต้นที่ส่งมาจากหน้าอื่น (เช่น ปุ่ม "เปิดโปรแกรมคำนวณวงเงินเคลม" ในหน้าแจ้งเคลม — DFUAT-083) */
+export type ClaimSimulatePrefill = Pick<ClaimSimulateState, "selectedInsured" | "header" | "daysCalculate">;
+
 const initialState: ClaimSimulateState = {
     selectedInsured: null,
     isInsuredSearchOpen: false,
@@ -148,6 +151,10 @@ const claimSimulateSlice = createSlice({
         resetClaimSimulate() {
             return initialState;
         },
+        /** เริ่มการคำนวณรอบใหม่จากข้อมูลที่ส่งมา — ล้างรายการค่ารักษา/ผลคำนวณของรอบก่อนทิ้ง */
+        prefillClaimSimulate(_state, action: PayloadAction<ClaimSimulatePrefill>) {
+            return { ...initialState, ...action.payload };
+        },
     },
 });
 
@@ -163,6 +170,7 @@ export const {
     setCalculateResult,
     resetSimulateItems,
     resetClaimSimulate,
+    prefillClaimSimulate,
 } = claimSimulateSlice.actions;
 
 export const claimSimulateSelector = (state: RootState) => state.claimsimulate;

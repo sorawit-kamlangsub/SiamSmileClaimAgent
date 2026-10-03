@@ -6161,7 +6161,6 @@ export class HospitalBillingClient {
     }
 
     /**
-     * ค้นหารายการวางบิลโรงพยาบาลและคืน dashboard counts ตาม BillingDetail.
      * @param statusId (optional)
      * @param searchBy (optional)
      * @param searchDetail (optional)
@@ -6268,6 +6267,219 @@ export class HospitalBillingClient {
             return throwException("An unexpected server error occurred.", status, _responseText, _headers);
         }
         return Promise.resolve<BillingListDtoServiceResponse>(null as any);
+    }
+
+    /**
+     * ค้นหารายการวางบิลสถานะ Passed สำหรับ ClaimFund ตามสาขาที่สร้าง Claim ผู้อนุมัติและคำค้น พร้อมแบ่งหน้า.
+     * @param branchId (optional)
+     * @param reviewedByUserId (optional)
+     * @param claimSourceId (optional)
+     * @param searchTypeId (optional)
+     * @param searchDetail (optional)
+     * @param orderingField (optional)
+     * @param ascendingOrder (optional)
+     * @param page (optional)
+     * @param recordsPerPage (optional)
+     * @return Success
+     */
+    hospitalBillingClaimFundMonitor(
+        branchId?: number | undefined,
+        reviewedByUserId?: number | undefined,
+        claimSourceId?: number | undefined,
+        searchTypeId?: number | undefined,
+        searchDetail?: string | undefined,
+        orderingField?: string | undefined,
+        ascendingOrder?: boolean | undefined,
+        page?: number | undefined,
+        recordsPerPage?: number | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<HospitalBillingClaimFundMonitorDtoListServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/monitor?";
+        if (branchId === null) throw new Error("The parameter 'branchId' cannot be null.");
+        else if (branchId !== undefined) url_ += "BranchId=" + encodeURIComponent("" + branchId) + "&";
+        if (reviewedByUserId === null) throw new Error("The parameter 'reviewedByUserId' cannot be null.");
+        else if (reviewedByUserId !== undefined)
+            url_ += "ReviewedByUserId=" + encodeURIComponent("" + reviewedByUserId) + "&";
+        if (claimSourceId === null) throw new Error("The parameter 'claimSourceId' cannot be null.");
+        else if (claimSourceId !== undefined) url_ += "ClaimSourceId=" + encodeURIComponent("" + claimSourceId) + "&";
+        if (searchTypeId === null) throw new Error("The parameter 'searchTypeId' cannot be null.");
+        else if (searchTypeId !== undefined) url_ += "SearchTypeId=" + encodeURIComponent("" + searchTypeId) + "&";
+        if (searchDetail === null) throw new Error("The parameter 'searchDetail' cannot be null.");
+        else if (searchDetail !== undefined) url_ += "searchDetail=" + encodeURIComponent("" + searchDetail) + "&";
+        if (orderingField === null) throw new Error("The parameter 'orderingField' cannot be null.");
+        else if (orderingField !== undefined) url_ += "orderingField=" + encodeURIComponent("" + orderingField) + "&";
+        if (ascendingOrder === null) throw new Error("The parameter 'ascendingOrder' cannot be null.");
+        else if (ascendingOrder !== undefined)
+            url_ += "ascendingOrder=" + encodeURIComponent("" + ascendingOrder) + "&";
+        if (page === null) throw new Error("The parameter 'page' cannot be null.");
+        else if (page !== undefined) url_ += "Page=" + encodeURIComponent("" + page) + "&";
+        if (recordsPerPage === null) throw new Error("The parameter 'recordsPerPage' cannot be null.");
+        else if (recordsPerPage !== undefined)
+            url_ += "recordsPerPage=" + encodeURIComponent("" + recordsPerPage) + "&";
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "GET",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processHospitalBillingClaimFundMonitor(_response);
+            });
+    }
+
+    protected processHospitalBillingClaimFundMonitor(
+        response: AxiosResponse
+    ): Promise<HospitalBillingClaimFundMonitorDtoListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<HospitalBillingClaimFundMonitorDtoListServiceResponse>(result200);
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400 = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<HospitalBillingClaimFundMonitorDtoListServiceResponse>(null as any);
+    }
+
+    /**
+     * (ตั้งเบิก) สร้างรายการรอโอนเงินจาก BillingDetail ที่ผ่านการตรวจ.
+     * @param body (optional)
+     * @return Success
+     */
+    createBillingHospital(
+        body?: CreateBillingHospitalDto | undefined,
+        cancelToken?: CancelToken | undefined
+    ): Promise<GuidListServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/create";
+        url_ = url_.replace(/[?&]$/, "");
+
+        const content_ = JSON.stringify(body, customFormatter);
+
+        let options_: AxiosRequestConfig = {
+            data: content_,
+            method: "POST",
+            url: url_,
+            headers: {
+                "Content-Type": "application/json-patch+json",
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processCreateBillingHospital(_response);
+            });
+    }
+
+    protected processCreateBillingHospital(response: AxiosResponse): Promise<GuidListServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<GuidListServiceResponse>(result200);
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400 = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+        } else if (status === 409) {
+            const _responseText = response.data;
+            let result409: any = null;
+            let resultData409 = _responseText;
+            result409 = JSON.parse(resultData409);
+            return throwException("Conflict", status, _responseText, _headers, result409);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<GuidListServiceResponse>(null as any);
     }
 
     /**
@@ -7324,6 +7536,7 @@ export class MastersClient {
      * @param productTypeId (optional)
      * @param causeOfIncidentId (optional)
      * @param plandId (optional)
+     * @param incidentTypeId (optional)
      * @return Success
      */
     getSimB(
@@ -7334,6 +7547,7 @@ export class MastersClient {
         productTypeId?: number | undefined,
         causeOfIncidentId?: number | undefined,
         plandId?: number | undefined,
+        incidentTypeId?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<InputToStandardMappingDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/simb?";
@@ -7353,6 +7567,9 @@ export class MastersClient {
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
         if (plandId === null) throw new Error("The parameter 'plandId' cannot be null.");
         else if (plandId !== undefined) url_ += "plandId=" + encodeURIComponent("" + plandId) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -7409,6 +7626,7 @@ export class MastersClient {
      * @param productTypeId (optional)
      * @param causeOfIncidentId (optional)
      * @param planId (optional)
+     * @param incidentTypeId (optional)
      * @return Success
      */
     getSimBCategory(
@@ -7418,6 +7636,7 @@ export class MastersClient {
         productTypeId?: number | undefined,
         causeOfIncidentId?: number | undefined,
         planId?: number | undefined,
+        incidentTypeId?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<StandardMedicalExpenseCategoryDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/simb/category?";
@@ -7435,6 +7654,9 @@ export class MastersClient {
             url_ += "causeOfIncidentId=" + encodeURIComponent("" + causeOfIncidentId) + "&";
         if (planId === null) throw new Error("The parameter 'planId' cannot be null.");
         else if (planId !== undefined) url_ += "planId=" + encodeURIComponent("" + planId) + "&";
+        if (incidentTypeId === null) throw new Error("The parameter 'incidentTypeId' cannot be null.");
+        else if (incidentTypeId !== undefined)
+            url_ += "incidentTypeId=" + encodeURIComponent("" + incidentTypeId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -10262,8 +10484,38 @@ export interface CaseItemV2Request {
     bodyPartId?: number | undefined;
 }
 
+export interface CaseMedicalTreatmentSaveClaimEditDraftRequest {
+    caseMedicalTreatmentId?: string | undefined;
+    underlyingDiseaseDetail?: string | undefined;
+    admissionIndication?: string | undefined;
+    treatmentMethod?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
+    illnessDetail?: string | undefined;
+    physicalExaminationDetail?: string | undefined;
+    hasPreviousTreatment?: boolean | undefined;
+    previousHealthcareFacilit?: string | undefined;
+    canTreatAsOutpatient?: boolean | undefined;
+    hasCompulsoryInsuranceExcess?: boolean | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    reservationRemark?: string | undefined;
+}
+
 export interface CasePayableV2Request {
     payableCategoryId?: number;
+}
+
+export interface CasePhysicalTherapySaveClaimEditDraftRequest {
+    casePhysicalTherapyId?: string | undefined;
+    isPhysicalTherapy?: boolean;
+    physicalTherapyNecessityReasonId?: number | undefined;
+    physicalTherapyNecessityReasonDetail?: string | undefined;
 }
 
 export interface CasePhysicalTherapyV2Request {
@@ -10397,6 +10649,8 @@ export interface CaseSaveClaimEditDraftRequest {
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
+    caseMedicalTreatment?: CaseMedicalTreatmentSaveClaimEditDraftRequest;
+    casePhysicalTherapy?: CasePhysicalTherapySaveClaimEditDraftRequest;
     caseItem?: CaseItemSaveClaimEditDraftRequest[] | undefined;
     caseAssessment?: CaseAssessmentSaveClaimEditDraftRequest;
     caseAdjudication?: CaseAdjudicationSaveClaimEditDraftRequest;
@@ -10637,6 +10891,29 @@ export interface ClaimEditDraftCaseItemPayloadDto {
     bodyPartId?: number | undefined;
 }
 
+export interface ClaimEditDraftCaseMedicalTreatmentPayloadDto {
+    caseMedicalTreatmentId?: string | undefined;
+    underlyingDiseaseDetail?: string | undefined;
+    admissionIndication?: string | undefined;
+    treatmentMethod?: string | undefined;
+    investigationResults?: string | undefined;
+    isProcedurePerformed?: boolean | undefined;
+    medicalLicenseNo?: string | undefined;
+    physicianName?: string | undefined;
+    illnessDetail?: string | undefined;
+    physicalExaminationDetail?: string | undefined;
+    hasPreviousTreatment?: boolean | undefined;
+    previousHealthcareFacilit?: string | undefined;
+    canTreatAsOutpatient?: boolean | undefined;
+    hasCompulsoryInsuranceExcess?: boolean | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    reservationRemark?: string | undefined;
+}
+
 export interface ClaimEditDraftCasePayloadDto {
     coverageTypeId?: number | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
@@ -10669,6 +10946,8 @@ export interface ClaimEditDraftCasePayloadDto {
     nplAmount?: number | undefined;
     insuranceDiscountAmount?: number | undefined;
     customerDiscountAmount?: number | undefined;
+    caseMedicalTreatment?: ClaimEditDraftCaseMedicalTreatmentPayloadDto;
+    casePhysicalTherapy?: ClaimEditDraftCasePhysicalTherapyPayloadDto;
     caseItem?: ClaimEditDraftCaseItemPayloadDto[] | undefined;
     caseAssessment?: ClaimEditDraftCaseAssessmentPayloadDto;
     caseAdjudication?: ClaimEditDraftCaseAdjudicationPayloadDto;
@@ -10676,6 +10955,13 @@ export interface ClaimEditDraftCasePayloadDto {
     caseDisability?: ClaimEditDraftCaseDisabilityPayloadDto[] | undefined;
     beneficiary?: ClaimEditDraftBeneficiaryPayloadDto[] | undefined;
     caseDocument?: ClaimEditDraftCaseDocumentPayloadDto[] | undefined;
+}
+
+export interface ClaimEditDraftCasePhysicalTherapyPayloadDto {
+    casePhysicalTherapyId?: string | undefined;
+    isPhysicalTherapy?: boolean;
+    physicalTherapyNecessityReasonId?: number | undefined;
+    physicalTherapyNecessityReasonDetail?: string | undefined;
 }
 
 export interface ClaimEditDraftOCRPayloadDto {
@@ -10742,6 +11028,11 @@ export interface CompensateExpenseList {
     dayOfUnit?: number;
     receipt?: number;
     discount?: number;
+}
+
+/** รายการ BillingDetail ที่จะนำไปสร้าง Billing Hospital ในขั้นตอนถัดไป. */
+export interface CreateBillingHospitalDto {
+    billingDetailIds?: string[] | undefined;
 }
 
 export interface CreateCaseAdjudicationDtoRequest {
@@ -11401,10 +11692,6 @@ export interface GetClaimDetailConsiderDtoResponse {
     remark?: string | undefined;
     customerDetailId?: string | undefined;
     createdDate?: dayjs.Dayjs | undefined;
-    claimVersion?: number;
-    claimRowVersion?: string | undefined;
-    caseVersion?: number | undefined;
-    caseRowVersion?: string | undefined;
     caseId?: string | undefined;
     decisionId?: number | undefined;
     decisionNameTH?: string | undefined;
@@ -12780,6 +13067,47 @@ export interface GetZebraCarOwnerDtoResponse {
 
 export interface GetZebraCarOwnerDtoResponseListServiceResponse {
     data?: GetZebraCarOwnerDtoResponse[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface GuidListServiceResponse {
+    data?: string[] | undefined;
+    isSuccess?: boolean;
+    message?: string | undefined;
+    code?: number | undefined;
+    exceptionMessage?: any | undefined;
+    serverDateTime?: dayjs.Dayjs;
+    totalAmountRecords?: number | undefined;
+    totalAmountPages?: number | undefined;
+    currentPage?: number | undefined;
+    recordsPerPage?: number | undefined;
+    pageIndex?: number | undefined;
+}
+
+export interface HospitalBillingClaimFundMonitorDto {
+    billingDetailId?: string;
+    billingHeaderId?: string;
+    noticeDate?: dayjs.Dayjs;
+    caseNo?: string | undefined;
+    caseId?: string;
+    reviewedDate?: dayjs.Dayjs | undefined;
+    approveName?: string | undefined;
+    billingAmount?: number;
+    insuredCompanyName?: string | undefined;
+    readonly hospitalName?: string | undefined;
+}
+
+export interface HospitalBillingClaimFundMonitorDtoListServiceResponse {
+    data?: HospitalBillingClaimFundMonitorDto[] | undefined;
     isSuccess?: boolean;
     message?: string | undefined;
     code?: number | undefined;

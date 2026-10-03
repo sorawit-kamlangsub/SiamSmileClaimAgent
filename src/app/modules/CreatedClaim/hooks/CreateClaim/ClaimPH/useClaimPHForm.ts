@@ -148,7 +148,14 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
-            else if ((isDeath || isDisability || isIPD) && Number(values.transferAmount) > maxTransferAmount) {
+            // DFUAT-090 : IPD/Day Case ที่ไม่ใช่เคลมต่อเนื่อง ไม่ block ที่นี่แล้ว — เดิมเทียบกับวงเงินของรายการสุดท้าย
+            // (ค่าชดเชย IPD) รายการเดียว ที่ถูกคือเทียบยอดโอนรวมกับ "วงเงินรวมสูงสุด" ของทุกรายการความคุ้มครอง แล้วเกิน =
+            // ขึ้น Modal ยืนยัน NPL (totalEligibleAmount + ConfirmExcessLimitTransferDialog ใน ClaimFormSection.handleSubmit)
+            // เคลมต่อเนื่อง : คงการเช็คเดิมไว้ทั้งหมด (เทียบกับวงเงินคงเหลือ) ไม่ให้กระทบ
+            else if (
+                (isDeath || isDisability || (isIPD && isContinuous)) &&
+                Number(values.transferAmount) > maxTransferAmount
+            ) {
                 errors.transferAmount = `ไม่เกินวงเงิน${
                     isContinuous ? "คงเหลือ" : "สูงสุด"
                 } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;

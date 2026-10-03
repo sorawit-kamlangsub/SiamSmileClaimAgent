@@ -57,8 +57,8 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     /**
      * ข้อมูลการรักษา / ความจำเป็นทางการแพทย์ ของเคลมโรงพยาบาล (RC-005 5.4-5.6)
      * เคลมลูกค้าส่งเฉพาะ casePhysicalTherapy (RC-003 3.4 ข้อมูลกายภาพบำบัด)
-     * ส่งไปกับ case ของ /claim/decision (บันทึกผลพิจารณา + อนุมัติ) — ไม่ส่ง = ไม่แนบ
-     * SaveClaimEditDraft ยังไม่มีฟิลด์รองรับ จึงไม่ได้ไปกับบันทึกแบบร่าง
+     * ส่งไปกับ case ของ /claim/decision (บันทึกผลพิจารณา + อนุมัติ) และ SaveClaimEditDraft (บันทึกแบบร่าง)
+     * DTO ของทั้ง 2 endpoint โครงสร้างเดียวกัน — ไม่ส่ง = ไม่แนบ
      */
     caseTreatmentFields?: Pick<UpsertClaimDecisionCaseRequest, "caseMedicalTreatment" | "casePhysicalTherapy">;
     /**
@@ -401,6 +401,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             hn: caseFields?.hn,
             an: caseFields?.an,
             vn: caseFields?.vn,
+            caseMedicalTreatment: caseTreatmentFields?.caseMedicalTreatment,
+            casePhysicalTherapy: caseTreatmentFields?.casePhysicalTherapy,
             caseItem: mapCaseItemForDraft(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDraft(),
             caseAdjudication: mapCaseAdjudicationForDraft(),

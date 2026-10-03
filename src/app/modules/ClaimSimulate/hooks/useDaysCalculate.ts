@@ -33,7 +33,7 @@ export interface DaysCalculateFormValues {
 // - 1 วัน 0 ชม - 1 วัน 5 ชม 59 นาที = 1 วัน
 // - 1 วัน 6 ชม ขึ้นไป = 2 วัน
 // สรุป: ทุก 1 วัน + >=6 ชม จะปัดขึ้น 1
-const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): number => {
+export const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): number => {
     if (!admit || !discharge) return 0;
 
     const diffMinutes = dayjs(discharge).diff(dayjs(admit), "minute");

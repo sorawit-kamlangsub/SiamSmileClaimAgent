@@ -3,10 +3,11 @@ import { ClaimAmountReconciliationResult } from "../../ClaimSimulate/store/Claim
 import { ClaimExpenseItem } from "./claimConsiderSlice";
 
 /**
- * อัตราค่าชดเชยผู้ป่วยในต่อวัน (บาท)
- * TODO: ยังไม่ยืนยันอัตรา — เปลี่ยนเป็นค่าจาก Benefit (compensationDailyRate) เมื่อ API พร้อม
+ * benefitId ของสิทธิ์ "ค่าชดเชยการนอนรักษาพยาบาลเป็นผู้ป่วยใน" (Master Benefit)
+ * DFUAT-101 : อัตราค่าชดเชยต่อวันอ่านจากสิทธิ์ความคุ้มครองของผู้เอาประกัน (pricePerUnit ของแถวนี้ —
+ * ดู useIpdCompensationBenefit) แทนค่าคงที่ 800 เดิม
  */
-export const IPD_COMPENSATION_DAILY_RATE = 800;
+export const IPD_COMPENSATION_BENEFIT_ID = 16;
 
 /** รหัส Master ของรายการค่ารักษาที่รวมค่าชดเชย IPD ไว้ในสิทธิ์เบิกแล้ว — ต้อง exact match เท่านั้น */
 export const IPD_HALF_5_CODE = "IPD_Half_5";
@@ -129,6 +130,8 @@ export interface IpdCompensationGateInput {
     ipdDays: number | undefined;
     icuDays: number | undefined;
     paymentAmount: number | undefined | null;
+    /** อัตราค่าชดเชยต่อวันจากสิทธิ์ความคุ้มครอง (useIpdCompensationBenefit) — ต้องเป็นค่าเดียวกับที่การ์ด Step 2 ใช้ */
+    dailyRate: number | undefined;
 }
 
 /**
@@ -142,12 +145,13 @@ export const getIpdCompensationBlocker = ({
     ipdDays,
     icuDays,
     paymentAmount,
+    dailyRate,
 }: IpdCompensationGateInput): string | undefined => {
     if (!isIpdCompensationFlow(coverageTypeId, medicalTypeId)) return undefined;
     const result = calculateIpdCompensation({
         items,
         totalStayDays: toNumber(ipdDays) + toNumber(icuDays),
-        dailyRate: IPD_COMPENSATION_DAILY_RATE,
+        dailyRate,
     });
     if (!result.valid) return IPD_COMPENSATION_ERROR_SELECTOR;
     if (getIpdTransferReconciliation(result, paymentAmount).status === "error") return IPD_TRANSFER_ERROR_SELECTOR;

@@ -13,7 +13,7 @@ const physicalTherapyOptions = [
 ];
 
 /**
- * RC-005 5.5 Section "ความจำเป็นทางการแพทย์ *" — ส่งเป็น case.casePhysicalTherapy
+ * RC-005 5.5 Section "ข้อมูลกายภาพบำบัด" (DFUAT-070 เปลี่ยนชื่อจาก "ความจำเป็นทางการแพทย์") — ส่งเป็น case.casePhysicalTherapy
  * บังคับเลือก ใช่/ไม่ใช่ · เลือก "ใช่" ต้องเลือกเหตุผลความจำเป็นจาก master necessity-reason (+ รายละเอียดเพิ่มเติม)
  * เลือก "ไม่ใช่" แล้วเหตุผลที่ค้างไว้ไม่ถูกส่ง — HospitalClaimDetailsTab ส่งเหตุผลเฉพาะตอน "ใช่"
  */
@@ -22,7 +22,7 @@ const MedicalNecessitySection = () => {
     const { data: necessityReasonData, isLoading: necessityReasonLoading } = useGetPhysicalTherapyNecessityReason();
 
     return (
-        <CollapsibleSection title="ความจำเป็นทางการแพทย์" icon={<MedicalServicesIcon sx={{ fontSize: 27 }} />}>
+        <CollapsibleSection title="ข้อมูลกายภาพบำบัด" icon={<MedicalServicesIcon sx={{ fontSize: 27 }} />}>
             <Grid container spacing={2}>
                 <Grid item xs={12} data-field-name="isPhysicalTherapy">
                     <Typography fontWeight={600} fontSize={16}>

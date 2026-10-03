@@ -17,8 +17,9 @@ type IncidentTypeMappingQueryData = ReturnType<typeof useGetIncidentTypeMapping>
  *
  * แยกออกมาจาก useHospitalConsiderDetailHook เพราะเป็นฟีเจอร์เสริมที่รันเงื่อนไขซับซ้อนของตัวเอง
  * (ต้องรอ phase 1 sync หลักเสร็จก่อน) แยกแล้วอ่านง่ายกว่ายัดรวมไว้ใน hook เดียว — reuse เฉพาะ
- * mapDraftPayloadToFormValues (ฟิลด์ร่วมกับเคลมลูกค้า) ส่วน hn/an/vn เป็นฟิลด์เฉพาะเคลมโรงพยาบาลที่
- * mapper กลางไม่มี (คืนแค่ ClaimConsiderValues) จึงดึงจาก payload.case เพิ่มเองตรงนี้
+ * mapDraftPayloadToFormValues (ฟิลด์ร่วมกับเคลมลูกค้า) ส่วน hn/an/vn และข้อมูลการรักษา / ความจำเป็นทางการแพทย์
+ * (caseMedicalTreatment / casePhysicalTherapy) เป็นฟิลด์เฉพาะเคลมโรงพยาบาลที่ mapper กลางไม่มี
+ * (คืนแค่ ClaimConsiderValues) จึงดึงจาก payload.case เพิ่มเองตรงนี้
  */
 const useHospitalDraftViewingHook = (
     formik: FormikProps<HospitalConsiderValues>,
@@ -64,6 +65,36 @@ const useHospitalDraftViewingHook = (
 
         // hn : เฉพาะเคลมโรงพยาบาล — mapDraftPayloadToFormValues ไม่มี field นี้ (AN/VN ตัดออกจากฟอร์มแล้ว RC-005 5.2)
         if (payload.case?.hn !== undefined) draftValues.hn = payload.case.hn;
+
+        // RC-005 5.5 ความจำเป็นทางการแพทย์ — แบบร่างที่บันทึกก่อนมีฟิลด์นี้จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
+        const physicalTherapy = payload.case?.casePhysicalTherapy;
+        if (physicalTherapy) {
+            draftValues.isPhysicalTherapy =
+                physicalTherapy.isPhysicalTherapy === true
+                    ? "yes"
+                    : physicalTherapy.isPhysicalTherapy === false
+                    ? "no"
+                    : "";
+            draftValues.physicalTherapyNecessityReasonId =
+                physicalTherapy.physicalTherapyNecessityReasonId ?? undefined;
+            draftValues.physicalTherapyNecessityReasonDetail =
+                physicalTherapy.physicalTherapyNecessityReasonDetail ?? "";
+        }
+
+        // RC-005 5.4 / 5.6 หมายเหตุ(ถ้ามี) + แพทย์เจ้าของไข้ + ข้อมูลอุบัติเหตุจากการจราจร
+        const medicalTreatment = payload.case?.caseMedicalTreatment;
+        if (medicalTreatment) {
+            draftValues.reservationRemark = medicalTreatment.reservationRemark ?? "";
+            draftValues.doctorLicenseNo = medicalTreatment.medicalLicenseNo ?? "";
+            draftValues.doctorName = medicalTreatment.physicianName ?? "";
+            draftValues.trafficVehicleTypeId = medicalTreatment.vehicleTypeId ?? undefined;
+            draftValues.trafficOtherVehicleType = medicalTreatment.otherVehicleType ?? "";
+            draftValues.trafficAccidentPersonRoleId = medicalTreatment.trafficAccidentPersonRoleId ?? undefined;
+            draftValues.trafficHasCompulsoryInsuranceExcess =
+                medicalTreatment.hasCompulsoryInsuranceExcess ?? undefined;
+            draftValues.trafficCompulsoryInsuranceNotUsedReason =
+                medicalTreatment.compulsoryInsuranceNotUsedReason ?? "";
+        }
 
         // diagnoses : mapper กลางคืนแค่ 3 ตำแหน่ง (ฟิลด์ร่วมกับเคลมลูกค้า ที่มีแค่ icD10_1st/2nd/3rdId)
         // แต่ฟอร์มเคลมโรงพยาบาลมี 6 ช่อง ต้องเติมตำแหน่ง 4-6 เอง ไม่งั้น formik.setValues จะทำให้ array

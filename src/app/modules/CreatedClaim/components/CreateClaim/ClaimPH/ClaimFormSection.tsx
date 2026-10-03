@@ -30,6 +30,7 @@ import ChipSelector from "../ChipSelector";
 import dayjs from "dayjs";
 import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
 import { claimPHSelector, DeathPlaceType, setOrganLossItems, SymptomType } from "../../../store/claimPHSlice";
+import { buildClaimSimulatePath, formatPrefillDate } from "../../../../ClaimSimulate/store/claimSimulatePrefill";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import DocumentScanTable from "../DocumentScanTable";
@@ -38,8 +39,13 @@ import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
 import { useDocumentRecipientRules } from "../../../hooks/CreateClaim/useDocumentRecipientRules";
-import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
-import { useNavigate } from "react-router-dom";
+import {
+    CoverageType,
+    handleClickLink,
+    isProductType,
+    MedicalType,
+    PRODUCT_TYPE_GROUP,
+} from "../../../../../functionHelpers";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
 
@@ -92,8 +98,29 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         values.coverageTypeId
     );
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
-    const { organLossItems } = useAppSelector(claimPHSelector);
+    const { organLossItems, oldClaim } = useAppSelector(claimPHSelector);
+
+    /**
+     * DFUAT-083 : เปิดโปรแกรมคำนวณวงเงินเคลมใน tab ใหม่ (หน้าแจ้งเคลมยังเปิดค้างไว้ ข้อมูลที่กรอกไม่หาย)
+     * พร้อมส่งข้อมูล App + ข้อมูลเคลมที่กรอกในหน้านี้ไปทาง query string — หน้าคำนวณใช้เป็นค่าเริ่มต้นและใช้ยิง
+     * /calculate/caseclaim, refresh แล้วข้อมูลผู้เอาประกันไม่หาย (โหลดใหม่จาก customerDetailId)
+     */
+    const handleOpenClaimSimulate = () => {
+        handleClickLink(
+            buildClaimSimulatePath({
+                customerDetailId: insured?.customerDetailId,
+                incidentTypeId: values.incidentTypeId,
+                coverageTypeId: values.coverageTypeId,
+                medicalTypeId: values.medicalTypeId,
+                causeOfIncidentId: values.causeOfIncidentId,
+                incidentDate: formatPrefillDate(values.incidentDate),
+                admissionDate: formatPrefillDate(values.admissionDate),
+                dischargeDate: formatPrefillDate(values.dischargeDate),
+                isContinuous,
+                continuousFromClaimId: oldClaim?.claimId,
+            })
+        );
+    };
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDisability = values.coverageTypeId === CoverageType.Disability;
@@ -644,7 +671,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                         size="large"
                                         startIcon={<CalculateIcon />}
                                         sx={{ mb: 1 }}
-                                        onClick={() => navigate("/claim-simulation")}
+                                        onClick={handleOpenClaimSimulate}
                                     >
                                         เปิดโปรแกรมคำนวณวงเงินเคลม
                                     </Button>

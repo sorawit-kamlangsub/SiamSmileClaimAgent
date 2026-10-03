@@ -28,6 +28,7 @@ import { claimConsiderSelector, resetState } from "../../../store/claimConsiderS
 import useClaimStepCalculateHook from "../../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 import ConfirmApproveClaimDialog from "./ConfirmApproveClaimDialog";
 import { focusIpdCompensationError, getIpdCompensationBlocker } from "../../../store/ipdCompensationCalculator";
+import useIpdCompensationBenefit from "../../../hooks/ClaimConsiderDetail/IpdCompensationBenefitHook";
 import { swalSuccess } from "../../../../_common";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -124,6 +125,13 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     // const continuousClaim = formik.values.continuousClaim;
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
+    // DFUAT-101 : อัตราค่าชดเชยผู้ป่วยในต่อวันจากสิทธิ์ความคุ้มครอง — ค่าเดียวกับการ์ด Step 2 (query เดียวกัน)
+    const { dailyRate: ipdCompensationDailyRate } = useIpdCompensationBenefit({
+        detail,
+        customerDetail,
+        coverageTypeId: formik.values.coverageTypeId,
+        medicalTypeId: formik.values.medicalTypeId,
+    });
     const { activeStep, setActiveStep, isLastStep, isCalculating, isAdvancing, handleNext, handleBack } =
         useClaimStepCalculateHook({
             formik,
@@ -131,6 +139,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             filledItems,
             stepsLength: steps.length,
             paymentAmount: detail?.paymentAmount,
+            ipdCompensationDailyRate,
         });
 
     /** ค่ารักษา IPD/Day Case : ค่าชดเชยไม่สมบูรณ์หรือยอดโอนไม่ตรง = ห้ามอนุมัติ พากลับ Step 2 ไปที่ข้อความผิดพลาด */
@@ -142,6 +151,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             ipdDays: formik.values.ipdDays,
             icuDays: formik.values.icuDays,
             paymentAmount: detail?.paymentAmount,
+            dailyRate: ipdCompensationDailyRate,
         });
         if (blocker) {
             setActiveStep(1);

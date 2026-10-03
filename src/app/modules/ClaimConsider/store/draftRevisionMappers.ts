@@ -101,6 +101,14 @@ export const mapDraftPayloadToFormValues = ({
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
     if (c?.illnessOrInjuryDetail !== undefined) values.detail = c.illnessOrInjuryDetail;
 
+    // RC-003 3.4 ข้อมูลกายภาพบำบัด (เคลมลูกค้า) — แบบร่างที่บันทึกก่อนมีฟิลด์นี้จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
+    // เคลมโรงพยาบาลใช้ isPhysicalTherapy ("yes" / "no") แทน — map เองใน HospitalDraftViewingHook
+    const physicalTherapy = c?.casePhysicalTherapy;
+    if (physicalTherapy) {
+        values.isPhysicalTherapyChecked = physicalTherapy.isPhysicalTherapy === true;
+        values.physicalTherapyNecessityReasonId = physicalTherapy.physicalTherapyNecessityReasonId ?? undefined;
+    }
+
     if (c?.icD10_1stId !== undefined || c?.icD10_2ndId !== undefined || c?.icD10_3rdId !== undefined) {
         values.diagnoses = [
             { icd10Id: c?.icD10_1stId ?? undefined, icd10Detail: undefined },
@@ -139,6 +147,13 @@ const draftItemKey = (i: { inputToStandardMappingId?: number; standardMedicalExp
     `${i.inputToStandardMappingId ?? 0}|${i.standardMedicalExpenseId ?? 0}`;
 
 /**
+ * RC-006 / RC-004 4.2 : claimAmount (ยอดเบิกก่อนหัก) ผูกกับยอดเงินตามใบเสร็จเสมอ — ตอนเติมจากแบบร่างจึงตั้ง
+ * 2 ค่านี้จากยอดเดียวกัน แบบร่างเก่าที่ไม่มี receiptAmount ใช้ originalAmount แทน
+ */
+const getDraftReceiptAmount = (draftItem: ClaimEditDraftCaseItemPayloadDto): number | undefined =>
+    draftItem.receiptAmount || draftItem.originalAmount || undefined;
+
+/**
  * merge ยอดจาก caseItem[] ของแบบร่างทับ "รายการที่ใช้บ่อย" (frequentItems) แทนการสร้างใหม่จากศูนย์
  * เพราะ caseItem ของแบบร่างไม่มี code/description/color/maximumLimit/bodyPartId — ถ้าสร้างใหม่ล้วนๆ
  * แถวจะไม่มีชื่อ/สี/เพดานให้แสดง
@@ -166,14 +181,17 @@ export const mergeDraftCaseItems = (
         const draftItem = queue?.shift();
 
         if (!draftItem) {
-            // แถวนี้ไม่มีในแบบร่าง = ผู้ใช้ไม่ได้กรอกตอนทำร่าง ล้างยอดทิ้งแต่คงแถวไว้ให้เห็น
-            return { ...master, claimAmount: undefined, discount: undefined, notCovered: undefined, reason: undefined };
+            // แถวนี้ไม่มีในแบบร่าง (เช่น บันทึกร่างตั้งแต่ Step 1 ก่อนเข้าหน้ารายการค่าใช้จ่าย) — คงค่าจากข้อมูลเคสไว้
+            // ทั้งแถว ห้ามล้างเฉพาะ claimAmount : receiptAmount ที่ค้างอยู่จะทำให้ "สิทธิ์เบิก" บนจอไม่ตรงกับยอดรวม
+            return master;
         }
 
         const notCovered = draftItem.nonCoveredAmount || undefined;
+        const receiptAmount = getDraftReceiptAmount(draftItem);
         return {
             ...master,
-            claimAmount: draftItem.originalAmount || undefined,
+            receiptAmount,
+            claimAmount: receiptAmount,
             discount: draftItem.discountAmount || undefined,
             notCovered,
             // draft เก่าอาจมี nonCoveredReasonId = 1 ติดมาทุกแถวแม้ nonCoveredAmount = 0 (เคยส่ง fallback)
@@ -192,6 +210,7 @@ export const mergeDraftCaseItems = (
                     l.standardMedicalExpenseId === draftItem.standardMedicalExpenseId
             );
             const notCovered = draftItem.nonCoveredAmount || undefined;
+            const receiptAmount = getDraftReceiptAmount(draftItem);
             leftoverRows.push({
                 // id ต้อง deterministic ไม่ชนกับ index-based id ของ frequentItems (0..n) — ไม่ใช้ Date.now()
                 // เพราะเปลี่ยนค่าทุกครั้งที่ merge effect รันซ้ำ (จะกลายเป็นแถวใหม่ทุกรอบ)
@@ -201,7 +220,8 @@ export const mergeDraftCaseItems = (
                 caseItemId: draftItem.caseItemId,
                 code: leaf?.code ?? "",
                 description: leaf ? leaf.label.replace(leaf.code, "").trim() : "-",
-                claimAmount: draftItem.originalAmount || undefined,
+                receiptAmount,
+                claimAmount: receiptAmount,
                 discount: draftItem.discountAmount || undefined,
                 notCovered,
                 reason: notCovered ? draftItem.nonCoveredReasonId || undefined : undefined,

@@ -28,9 +28,9 @@ import { mergeDraftCaseItems } from "../../store/draftRevisionMappers";
 import {
     calculateIpdCompensation,
     getIpdTransferReconciliation,
-    IPD_COMPENSATION_DAILY_RATE,
     isIpdCompensationFlow,
 } from "../../store/ipdCompensationCalculator";
+import useIpdCompensationBenefit from "./IpdCompensationBenefitHook";
 import {
     useGetClaimDetailConsider,
     useGetClaimEditDraftRevision,
@@ -120,6 +120,7 @@ const useClaimExpenseDetailHook = ({
      */
     const coverageTypeId = form.coverageTypeId ?? detailData?.data?.coverageTypeId;
     const medicalTypeId = form.medicalTypeId ?? detailData?.data?.medicalTypeId;
+    const incidentTypeId = form.incidentTypeId ?? detailData?.data?.incidentTypeId;
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [selectedItem, setSelectedItem] = useState<{
@@ -176,7 +177,8 @@ const useClaimExpenseDetailHook = ({
         medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId ?? undefined
+        customerDetailData?.data?.productId ?? undefined,
+        incidentTypeId
     );
 
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
@@ -320,9 +322,21 @@ const useClaimExpenseDetailHook = ({
     const paymentAmount = rawPaymentAmount ?? 0;
     // ── ค่าชดเชยผู้ป่วยใน (เคลมลูกค้า ค่ารักษา IPD/Day Case) — คำนวณใหม่ทุก render จาก items + วันนอน
     // ใช้ตัวคำนวณกลางชุดเดียวกับ gate ปุ่ม ถัดไป/อนุมัติ (getIpdCompensationBlocker) ──
+    // DFUAT-101 : อัตราต่อวัน + วงเงินตามสิทธิ์ มาจากสิทธิ์ความคุ้มครองของผู้เอาประกัน (ไม่ใช่ค่าคงที่)
+    const ipdCompensationBenefit = useIpdCompensationBenefit({
+        detail: detailData?.data,
+        customerDetail: customerDetailData?.data,
+        coverageTypeId: isCustomerClaim ? coverageTypeId : undefined,
+        medicalTypeId,
+    });
     const ipdCompensation =
         isCustomerClaim && isIpdCompensationFlow(coverageTypeId, medicalTypeId)
-            ? calculateIpdCompensation({ items, totalStayDays, dailyRate: IPD_COMPENSATION_DAILY_RATE })
+            ? calculateIpdCompensation({
+                  items,
+                  totalStayDays,
+                  dailyRate: ipdCompensationBenefit.dailyRate,
+                  benefitLimit: ipdCompensationBenefit.benefitLimit,
+              })
             : undefined;
     const amountReconciliation = ipdCompensation
         ? getIpdTransferReconciliation(ipdCompensation, rawPaymentAmount)

@@ -9,7 +9,8 @@ import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/Hos
 /**
  * Section "ข้อมูลการเข้ารับการรักษา"
  * RC-005 5.2 ตัด VN / AN / โรคประจำตัว / ข้อบ่งชี้ / วิธีการรักษา / ผล LAB / หัตถการ ออกแล้ว
- * เหลือ HN + หมายเหตุ(ถ้ามี) (5.4) — ค่าเริ่มต้นมาจาก SmileConnect ผ่าน GetClaimDetailConsider ยังแก้ไขต่อได้
+ * เหลือ HN + รายละเอียดเพิ่มเติม (ReservationRemark จาก SmileConnect — DFUAT-070 เดิมใช้ชื่อ "หมายเหตุ(ถ้ามี)")
+ * ค่าเริ่มต้นมาจาก SmileConnect ผ่าน GetClaimDetailConsider ยังแก้ไขต่อได้
  */
 const TreatmentInfoSection = () => {
     const formik = useFormikContext<HospitalConsiderValues>();
@@ -23,7 +24,7 @@ const TreatmentInfoSection = () => {
                 <Grid item xs={12}>
                     <FormikTextField
                         name="reservationRemark"
-                        label="หมายเหตุ(ถ้ามี)"
+                        label="รายละเอียดเพิ่มเติม"
                         formik={formik}
                         size="small"
                         multiline

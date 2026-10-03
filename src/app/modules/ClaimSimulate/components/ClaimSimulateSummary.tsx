@@ -31,7 +31,7 @@ import { useAppSelector } from "../../../../redux";
 import { useClaimSimulatePage } from "../hooks/useClaimSimulatePage";
 import { CLAIM_CAUSE_OPTIONS } from "../store/claimSimulateOptions";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useGetDataFromApi } from "../hooks/useGetDataFromApi";
 
 const REF = {
@@ -164,6 +164,7 @@ const DayStatCard: React.FC<{
 
 const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => {
     const navigate = useNavigate();
+    const { search } = useLocation();
     const { header, daysCalculate, selectedInsured } = useAppSelector((s) => s.claimsimulate);
 
     const {
@@ -209,7 +210,8 @@ const ClaimSimulateSummary: React.FC<{ onBack?: () => void }> = ({ onBack }) => 
         : null;
 
     useEffect(() => {
-        if (!selectedInsured?.policyCode) navigate("..");
+        // refresh หน้าสรุป = Redux ว่าง → กลับหน้าคำนวณ โดยคง query string (prefill) ไว้ให้โหลดผู้เอาประกันกลับมา
+        if (!selectedInsured?.policyCode) navigate({ pathname: "..", search });
     }, [selectedInsured?.policyCode]);
 
     return (
