@@ -1,8 +1,8 @@
-import { Box, Button } from "@mui/material";
+import { Box, Button, Menu, MenuItem } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import { PaginationDto, swalConfirm, swalError, swalSuccess } from "../../../_common";
 // import { useAppDispatch } from "../../../../../redux";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
     HospitalPendingTransferType,
     useGetHospitalPendingTransferMonitor,
@@ -12,6 +12,7 @@ import dayjs from "dayjs";
 import { numberWithCommas } from "../../../../functionHelpers";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { HospitalTransferMonitorType } from "../manageTransferHospitalAPI";
+import SpitButtonAction from "../components/SpitButtonAction";
 
 const usePendingTransferHook = () => {
     // const dispatch = useAppDispatch();
@@ -73,10 +74,10 @@ const usePendingTransferHook = () => {
         setRowsSelected(rows);
     };
 
-    useMemo(() => {
+    useEffect(() => {
         setOnRowsSelected([]);
         setRowsSelected([]);
-    }, [paginate, fetchPendingTransfers]);
+    }, [paginate]);
 
     const column: MUIDataTableColumn[] = [
         {
@@ -254,26 +255,10 @@ const usePendingTransferHook = () => {
                                 alignItems: "center",
                             }}
                         >
-                            <Button
-                                variant="outlined"
-                                sx={{
-                                    backgroundColor: "#F2FAFF",
-                                    borderBlockColorColor: "#03A9F4",
-                                    borderRadius: "72px",
-
-                                    "&:hover": {
-                                        backgroundColor: "#F2FAFF",
-                                    },
-                                }}
-                                onClick={() => {
-                                    handleTransferNow(data?.data?.[rowIndex]?.paymentId ?? "");
-                                }}
-                                // aria-controls={open ? "fade-menu" : undefined}
-                                // aria-haspopup="true"
-                                // aria-expanded={open ? "true" : undefined}
-                            >
-                                <MoreVertIcon sx={{ color: "#03A9F4", cursor: "pointer" }} />
-                            </Button>
+                            <SpitButtonAction
+                                handleTransfer={handleTransferNow}
+                                paymentId={data?.data?.[rowIndex]?.paymentId ?? ""}
+                            />
                         </Box>
                     );
                 },

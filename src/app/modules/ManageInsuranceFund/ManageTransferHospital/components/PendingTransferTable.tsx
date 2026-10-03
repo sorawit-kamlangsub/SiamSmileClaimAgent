@@ -60,7 +60,6 @@ const PendingTransferTable = ({ statusId, searchDetail }: PendingTransferTablePr
                     <Grid item xs={0} sm={0} md={3} lg={4}></Grid>
                     <Grid item xs={0} sm={0} md={4} lg={4}></Grid>
                     <Grid item xs={12} sm={12} md={4} lg={4} sx={{ textAlign: "end" }}>
-                        {" "}
                         <Button
                             variant="contained"
                             disabled={onRowsSelected?.length === 0}
