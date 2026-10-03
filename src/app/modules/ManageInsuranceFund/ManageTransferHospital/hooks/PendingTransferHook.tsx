@@ -1,4 +1,4 @@
-import { Box, Button, Menu, MenuItem } from "@mui/material";
+import { Box } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import { PaginationDto, swalConfirm, swalError, swalSuccess } from "../../../_common";
 // import { useAppDispatch } from "../../../../../redux";
@@ -10,7 +10,6 @@ import {
 } from "../transferClaimHospitalAPI";
 import dayjs from "dayjs";
 import { numberWithCommas } from "../../../../functionHelpers";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import { HospitalTransferMonitorType } from "../manageTransferHospitalAPI";
 import SpitButtonAction from "../components/SpitButtonAction";
 
