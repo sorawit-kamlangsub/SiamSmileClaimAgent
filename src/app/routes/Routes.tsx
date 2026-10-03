@@ -37,6 +37,8 @@ import ConsiderDeathDisabilityDetailPage from "../modules/ClaimConsider/pages/Co
 import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
+import ManagePaymentHospital from "../modules/ManageInsuranceFund/ManagePaymentHospital/pages/ManagePaymentHospital.tsx";
+import ManageTransferHospital from "../modules/ManageInsuranceFund/ManageTransferHospital/page/ManageTransferHospital.tsx";
 import BillingFundDisbursementPage from "../modules/BillingClaim/pages/BillingFundDisbursementPage.tsx";
 
 /**
@@ -348,6 +350,22 @@ const Routes: RouteMapType[] = [
                 element: <BillingHospitalDocumentPage />,
             },
         ],
+    },
+
+    {
+        path: "manage/insuranceFund/dashboard-fund",
+        title: "Dashboard สำรองเงิน",
+        element: <>Dashboard สำรองเงิน</>,
+    },
+    {
+        path: "manage/insuranceFund/transfer-hospital",
+        title: "โอนเงิน รพ.",
+        element: <ManageTransferHospital />,
+    },
+    {
+        path: "manage/insuranceFund/manage-payment-hospital",
+        title: "ตั้งค่าการจ่ายเงิน รพ.",
+        element: <ManagePaymentHospital />,
     },
 ];
 
