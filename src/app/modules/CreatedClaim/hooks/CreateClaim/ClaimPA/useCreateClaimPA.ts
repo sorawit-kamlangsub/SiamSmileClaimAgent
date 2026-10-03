@@ -21,11 +21,7 @@ import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { CoverageType } from "../../../../../functionHelpers";
 import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
 import { useAuth } from "../../../../_auth";
-
-const generateRequestId = () =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+import { useClaimRequestId } from "../useClaimRequestId";
 
 export const mapBenefitToCaseItems = (
     benefits: GetCustomerBenefitDetailHalfDtoResponse[],
@@ -190,6 +186,7 @@ export const mapLocalCoreClaimToV2Request = (
 
 export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { userProfile } = useAuth();
+    const getRequestId = useClaimRequestId();
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);
     const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
@@ -234,7 +231,7 @@ export const useCreateClaimPA = (onSuccess?: () => void, onError?: (message: str
     });
 
     const buildPayload = (beneficiaryList: BeneficiaryForm[]): CreateCoreClaimV2DtoRequest =>
-        mapLocalCoreClaimToV2Request(buildLocalCoreClaim(beneficiaryList), generateRequestId());
+        mapLocalCoreClaimToV2Request(buildLocalCoreClaim(beneficiaryList), getRequestId());
 
     // ── ขั้นที่ 1: บันทึกเคลม ──
     const createClaimPA = async (overrideBeneficiaries?: BeneficiaryForm[]) => {

@@ -30,14 +30,15 @@ type UseClaimTransferProcessOptions = {
     isContinuous: boolean;
     createClaim: CreateClaimFn;
     confirmPayment: ConfirmPaymentFn;
-    /** ตรวจว่าผลสร้างเคลมสำเร็จหรือไม่ — default เช็ค isSuccess หรือ data.isResult */
+    /** ตรวจว่าผลสร้างเคลมสำเร็จหรือไม่ — default เช็คทั้ง isSuccess และ data.isResult */
     isClaimSuccess?: (claimResponse: CreateCoreClaimDtoResponseServiceResponse) => boolean;
 };
 
 export type ClaimTransferRunResult = { ok: true; result: ClaimTransferPaymentResult } | { ok: false; message: string };
 
+// envelope สำเร็จ (isSuccess) ยังไม่พอ — กรณี RequestId ซ้ำ BE คืน isSuccess=true แต่ data.isResult=false
 const defaultIsClaimSuccess = (claimResponse: CreateCoreClaimDtoResponseServiceResponse) =>
-    !!(claimResponse?.isSuccess ?? claimResponse?.data?.isResult);
+    claimResponse?.isSuccess === true && claimResponse?.data?.isResult === true;
 
 const buildInitialSteps = (isContinuous: boolean): ClaimTransferStep[] =>
     isContinuous

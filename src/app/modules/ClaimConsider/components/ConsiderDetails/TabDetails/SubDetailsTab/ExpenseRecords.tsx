@@ -43,6 +43,7 @@ import {
     hasMissingReasonError,
 } from "../../../../../ClaimSimulate/store/Claimsimulateutils";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import IpdCompensationSection from "./IpdCompensationSection";
 
 // ─── Reference styles ──────────────────────────────────────────────
 const REF = {
@@ -153,9 +154,10 @@ const TreeNodeRow = ({
 }) => {
     const isExpanded = expandedIds.includes(node.id);
     const hasChildren = node.children.length > 0;
-    const match = node.label.match(/^([\d.]+)\s+(.+)$/);
-    const code = match?.[1] ?? "";
-    const description = match?.[2] ?? node.label;
+    // ใช้รหัส Master (inputItemCode) ตรงๆ แยกจากข้อความที่แสดง — เดิม parse จาก label ด้วย regex ตัวเลข
+    // ทำให้รหัสแบบ "IPD_Half_5" กลายเป็น code ว่าง (ใช้ตรวจข้อยกเว้นค่าชดเชยผู้ป่วยในไม่ได้)
+    const code = node.code ?? "";
+    const description = code && node.label.startsWith(code) ? node.label.slice(code.length).trim() : node.label;
     const isLeaf = !hasChildren;
     const isSelected = isLeaf && selectedLeafId === node.id;
 
@@ -294,13 +296,22 @@ interface ExpenseRecordsProps {
      * - "receipt" (เคลมโรงพยาบาล) : ไม่เทียบเงินโอน — ยอดเงินสุทธิต้องเท่ากับยอดเงินตามใบเสร็จ (getReceiptReconciliation)
      */
     reconciliationMode?: "payment" | "receipt";
+    /**
+     * โหมดดูอย่างเดียว (DFUAT-066 : ปุ่มดูรายละเอียดจาก Monitor พิจารณาเคลมโรงพยาบาล) — ปิดทุกช่อง/ปุ่มใน
+     * ตารางค่าใช้จ่าย และซ่อนบล็อก "รายการค่ารักษาเพิ่มเติม" · default false (หน้าพิจารณาปกติแก้ไขได้ตามเดิม)
+     */
+    readOnly?: boolean;
 }
 
 // รับ expenseDetail (ผลลัพธ์จาก useClaimExpenseDetailHook) เป็น prop จากผู้เรียก (ExpenseDetails /
 // TreatmentCostTable) แทนการเรียก hook เองที่นี่ — hook นี้หนัก (formik + query หลายตัว + effect sync ลง
 // Redux) ผู้เรียกบางจุด (ExpenseDetails) ต้องใช้ผลลัพธ์บางส่วน (เช่น benefitName) ก่อนถึงจุดนี้อยู่แล้ว
 // เรียกซ้ำอีกรอบในนี้จะยิง query/formik/effect ซ้ำสองชุดโดยไม่จำเป็น
-const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconciliationMode = "payment" }) => {
+const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
+    expenseDetail,
+    reconciliationMode = "payment",
+    readOnly = false,
+}) => {
     const {
         expenseItems: filledItems,
         showAddPanel,
@@ -331,6 +342,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
         netClaimAmount,
         paymentAmount,
         amountReconciliation: paymentReconciliation,
+        ipdCompensation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
@@ -347,15 +359,16 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
     } = expenseDetail;
 
     /**
-     * เคลมโรงพยาบาล (RC-006) : "สิทธิ์เบิก" ระบบคำนวณให้อัตโนมัติ = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (Disable)
-     * claimAmount (ยอดเบิกก่อนหัก ส่งเป็น originalAmount) จึงผูกกับยอดเงินตามใบเสร็จเสมอ — สูตรยอดเงินสุทธิ /
-     * validation ส่วนลด-ไม่คุ้มครองเดิมยังใช้ได้ตามเดิม ส่วนเคลมลูกค้า ("payment") ไม่ถูกแตะ
+     * เคลมโรงพยาบาล (RC-006) + เคลมลูกค้า (RC-004 4.2) : "สิทธิ์เบิก" ระบบคำนวณให้อัตโนมัติ
+     * = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (Disable) claimAmount (ยอดเบิกก่อนหัก ส่งเป็น originalAmount)
+     * จึงผูกกับยอดเงินตามใบเสร็จเสมอ — สูตรยอดเงินสุทธิ / validation ส่วนลด-ไม่คุ้มครองเดิมยังใช้ได้ตามเดิม
+     * ส่วนเกณฑ์ตรวจยอดเงิน (amountReconciliation) ยังแยกตาม reconciliationMode เหมือนเดิม
      */
     const isHospitalClaim = reconciliationMode === "receipt";
     const updateItem = (item: Parameters<typeof handleUpdateItem>[0]) =>
-        handleUpdateItem(isHospitalClaim ? { ...item, claimAmount: Number(item.receiptAmount ?? 0) } : item);
-    /** ยอดที่ส่วนลด/ยอดไม่คุ้มครองห้ามเกิน — เคลมโรงพยาบาลเทียบยอดเงินตามใบเสร็จ (= claimAmount) */
-    const baseAmountLabel = isHospitalClaim ? "ยอดเงินตามใบเสร็จ" : "ยอดเบิก";
+        handleUpdateItem({ ...item, claimAmount: Number(item.receiptAmount ?? 0) });
+    /** ยอดที่ส่วนลด/ยอดไม่คุ้มครองห้ามเกิน — เทียบยอดเงินตามใบเสร็จ (= claimAmount) */
+    const baseAmountLabel = "ยอดเงินตามใบเสร็จ";
 
     const amountReconciliation = isHospitalClaim
         ? getReceiptReconciliation({ totalReceipt, totalClaim: netClaimAmount + totalDiscount + totalNotCovered })
@@ -406,7 +419,9 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
     };
 
     return (
-        <Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+        // readOnly : <fieldset disabled> ปิด input/button แบบ native ทุกตัวข้างใน (รวมการพิมพ์ผ่านคีย์บอร์ด)
+        // ส่วน MUI Select ไม่ใช่ native control ต้องส่ง disabled เองรายตัว
+        <Box component="fieldset" disabled={readOnly} sx={{ p: { xs: 1.5, sm: 2.5 }, m: 0, border: 0, minWidth: 0 }}>
             {/* ── ตารางรายการค่ารักษา ── */}
             <Box
                 sx={{
@@ -444,25 +459,12 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                 <TableCell sx={{ ...headCell, width: "30%", textAlign: "left" }}>
                                     รายการค่ารักษา
                                 </TableCell>
-                                {isHospitalClaim ? (
-                                    // เคลมโรงพยาบาล (RC-006 6.1) : เรียงคอลัมน์ใหม่ — สิทธิ์เบิกย้ายไปหลังสาเหตุไม่คุ้มครอง
-                                    <>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินตามใบเสร็จ</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>ส่วนลด</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินไม่คุ้มครอง</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "15%" }}>สาเหตุไม่คุ้มครอง</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>สิทธิ์เบิก</TableCell>
-                                    </>
-                                ) : (
-                                    <>
-                                        {/* ★ ใหม่ */}
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินตามใบเสร็จ</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>สิทธิ์เบิก</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>ส่วนลด</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "10%" }}>ยอดไม่คุ้มครอง</TableCell>
-                                        <TableCell sx={{ ...headCell, width: "15%" }}>สาเหตุไม่คุ้มครอง</TableCell>
-                                    </>
-                                )}
+                                {/* RC-006 6.1 / RC-004 4.2 : สิทธิ์เบิกอยู่หลังสาเหตุไม่คุ้มครอง */}
+                                <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินตามใบเสร็จ</TableCell>
+                                <TableCell sx={{ ...headCell, width: "10%" }}>ส่วนลด</TableCell>
+                                <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินไม่คุ้มครอง</TableCell>
+                                <TableCell sx={{ ...headCell, width: "15%" }}>สาเหตุไม่คุ้มครอง</TableCell>
+                                <TableCell sx={{ ...headCell, width: "10%" }}>สิทธิ์เบิก</TableCell>
                                 <TableCell sx={{ ...headCell, width: "15%" }}>หมายเหตุ</TableCell>
                                 <TableCell sx={{ ...headCell, width: 40 }}>ลบ</TableCell>
                             </TableRow>
@@ -480,8 +482,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                     const rowSumError = hasAmountSumError(item);
                                     const rowReasonError = hasMissingReasonError(item);
 
-                                    // เคลมโรงพยาบาล : สิทธิ์เบิก = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (ไม่ติดลบ)
-                                    const hospitalClaimRight = Math.max(
+                                    // สิทธิ์เบิก = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (ไม่ติดลบ)
+                                    const claimRight = Math.max(
                                         Number(item.receiptAmount ?? 0) -
                                             Number(item.discount ?? 0) -
                                             Number(item.notCovered ?? 0),
@@ -511,39 +513,19 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                         </TableCell>
                                     );
 
-                                    /* สิทธิ์เบิก — เคลมโรงพยาบาลคำนวณอัตโนมัติ *Default 0.00 และ Disable */
-                                    const claimCell = isHospitalClaim ? (
+                                    /* สิทธิ์เบิก — ระบบคำนวณอัตโนมัติ *Default 0.00 และ Disable */
+                                    const claimCell = (
                                         <TableCell sx={{ ...bodyCell, p: 0.5 }}>
                                             <NumericFormat
                                                 customInput={TextField}
                                                 size="small"
                                                 fullWidth
                                                 sx={tableInputSx}
-                                                value={hospitalClaimRight}
+                                                value={claimRight}
                                                 thousandSeparator
                                                 decimalScale={2}
                                                 fixedDecimalScale
                                                 disabled
-                                            />
-                                        </TableCell>
-                                    ) : (
-                                        <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                            <NumericFormat
-                                                customInput={TextField}
-                                                size="small"
-                                                fullWidth
-                                                sx={tableInputSx}
-                                                value={item.claimAmount ?? ""}
-                                                onValueChange={(v) =>
-                                                    handleUpdateItem({
-                                                        ...item,
-                                                        claimAmount: v.floatValue ?? 0,
-                                                    })
-                                                }
-                                                thousandSeparator
-                                                decimalScale={2}
-                                                fixedDecimalScale
-                                                allowNegative={false}
                                             />
                                         </TableCell>
                                     );
@@ -630,6 +612,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                                 <FormControl fullWidth size="small" error={rowReasonError}>
                                                     <Select
                                                         displayEmpty
+                                                        disabled={readOnly}
                                                         value={item.reason ?? ""}
                                                         sx={tableSelectSx}
                                                         onChange={(e) =>
@@ -667,24 +650,12 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                                     {item.code} {item.description}
                                                 </Typography>
                                             </TableCell>
-                                            {isHospitalClaim ? (
-                                                // เคลมโรงพยาบาล (RC-006 6.1)
-                                                <>
-                                                    {receiptCell}
-                                                    {discountCell}
-                                                    {notCoveredCell}
-                                                    {reasonCell}
-                                                    {claimCell}
-                                                </>
-                                            ) : (
-                                                <>
-                                                    {receiptCell}
-                                                    {claimCell}
-                                                    {discountCell}
-                                                    {notCoveredCell}
-                                                    {reasonCell}
-                                                </>
-                                            )}
+                                            {/* RC-006 6.1 / RC-004 4.2 */}
+                                            {receiptCell}
+                                            {discountCell}
+                                            {notCoveredCell}
+                                            {reasonCell}
+                                            {claimCell}
 
                                             {/* หมายเหตุ */}
                                             <TableCell sx={{ ...bodyCell, p: 0.5 }}>
@@ -726,6 +697,9 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                 </TableContainer>
             </Box>
 
+            {/* ── ค่าชดเชยผู้ป่วยใน (เคลมลูกค้า ค่ารักษา IPD/Day Case) — หลังตารางค่ารักษา ก่อนสรุปยอดเงิน ── */}
+            {ipdCompensation && <IpdCompensationSection compensation={ipdCompensation} />}
+
             {/* ── สรุปยอดเงิน ── */}
             <Box
                 sx={{
@@ -760,8 +734,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                             gap: 1.5,
                             gridTemplateColumns: {
                                 xs: "1fr",
-                                sm: "repeat(3, 1fr)",
-                                md: "repeat(3, 1fr) auto",
+                                sm: ipdCompensation ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+                                md: ipdCompensation ? "repeat(4, 1fr) auto" : "repeat(3, 1fr) auto",
                             },
                             alignItems: "stretch",
                         }}
@@ -770,6 +744,10 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                             { label: "ยอดเงินตามใบเสร็จรวม", value: totalReceipt },
                             { label: "ส่วนลดรวม", value: totalDiscount },
                             { label: "ยอดไม่คุ้มครองรวม", value: totalNotCovered },
+                            // flow ค่าชดเชยผู้ป่วยใน : สิทธิ์เบิกรวม = ผลรวมสิทธิ์เบิกทุกแถว (ใบเสร็จ − ส่วนลด − ไม่คุ้มครอง)
+                            ...(ipdCompensation
+                                ? [{ label: "สิทธิ์เบิกรวม", value: ipdCompensation.eligibleTotal }]
+                                : []),
                         ].map((row) => (
                             <Box
                                 key={row.label}
@@ -831,7 +809,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                     </Typography>
                                 </Box>
                                 <Typography fontWeight={700} color="success.main" whiteSpace="nowrap">
-                                    {fmt(netClaimAmount)}{" "}
+                                    {/* flow ค่าชดเชยผู้ป่วยใน : สิทธิ์เบิกรวม + ค่าชดเชย (ไม่บวกค่าชดเชยเมื่อมี IPD_Half_5) */}
+                                    {fmt(ipdCompensation ? ipdCompensation.net : netClaimAmount)}{" "}
                                     <Typography component="span" variant="caption">
                                         บาท
                                     </Typography>
@@ -874,20 +853,36 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                     </Box>
 
                     {/* ── ผลตรวจสอบยอดเงิน ClaimLine (ยอดที่จ่าย+ไม่คุ้มครอง เทียบใบเสร็จสุทธิ / เทียบสิทธิ์เบิก) ── */}
-                    <Alert
-                        severity={
-                            amountReconciliation.status === "ok"
-                                ? "success"
-                                : amountReconciliation.status === "error"
-                                ? "error"
-                                : amountReconciliation.status === "pending"
-                                ? "info"
-                                : "warning"
-                        }
-                        sx={{ mt: 1.5 }}
-                    >
-                        {amountReconciliation.message}
-                    </Alert>
+                    {ipdCompensation ? (
+                        // flow ค่าชดเชยผู้ป่วยใน : แสดงเฉพาะตอนยอดโอนไม่ตรง อัปเดตทันทีโดยไม่เลื่อนหน้า/แย่ง focus
+                        // (tabIndex -1 ให้ปุ่ม "ถัดไป"/"อนุมัติ" เลื่อนมา focus ได้เมื่อผู้ใช้กดดำเนินการต่อ)
+                        amountReconciliation.status === "error" ? (
+                            <Alert severity="error" sx={{ mt: 1.5 }} tabIndex={-1} data-ipd-transfer-error>
+                                {amountReconciliation.message}
+                            </Alert>
+                        ) : (
+                            amountReconciliation.status === "pending" && (
+                                <Alert severity="info" sx={{ mt: 1.5 }}>
+                                    {amountReconciliation.message}
+                                </Alert>
+                            )
+                        )
+                    ) : (
+                        <Alert
+                            severity={
+                                amountReconciliation.status === "ok"
+                                    ? "success"
+                                    : amountReconciliation.status === "error"
+                                    ? "error"
+                                    : amountReconciliation.status === "pending"
+                                    ? "info"
+                                    : "warning"
+                            }
+                            sx={{ mt: 1.5 }}
+                        >
+                            {amountReconciliation.message}
+                        </Alert>
+                    )}
 
                     <Divider sx={{ my: 2 }} />
 
@@ -949,6 +944,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                     <Select
                                         displayEmpty
                                         fullWidth
+                                        disabled={readOnly}
                                         value={selectedInsuranceCompany}
                                         onChange={(e) => setSelectedInsuranceCompany(e.target.value)}
                                         sx={{
@@ -982,8 +978,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                 </Box>
             </Box>
 
-            {/* ── รายการค่ารักษาเพิ่มเติม — แสดงเฉพาะประเภทความคุ้มครอง = ค่ารักษา ── */}
-            {isMedicalCoverage && (
+            {/* ── รายการค่ารักษาเพิ่มเติม — แสดงเฉพาะประเภทความคุ้มครอง = ค่ารักษา (โหมดดูอย่างเดียวไม่แสดง) ── */}
+            {isMedicalCoverage && !readOnly && (
                 <Box
                     sx={{
                         mt: 2.5,
@@ -1188,8 +1184,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                     value={pendingReceiptAmount}
                                     onValueChange={(v) => {
                                         setPendingReceiptAmount(v.value);
-                                        // เคลมโรงพยาบาล : ยอดเบิก (claimAmount) ผูกกับยอดเงินตามใบเสร็จ ไม่ให้กรอกเอง
-                                        if (isHospitalClaim) setPendingAmount(v.value);
+                                        // ยอดเบิก (claimAmount) ผูกกับยอดเงินตามใบเสร็จ ไม่ให้กรอกเอง
+                                        setPendingAmount(v.value);
                                     }}
                                     thousandSeparator
                                     decimalScale={2}
@@ -1198,22 +1194,6 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail, reconcil
                                     disabled={!selectedItem}
                                     sx={refInputSx}
                                 />
-                                {!isHospitalClaim && (
-                                    <NumericFormat
-                                        customInput={TextField}
-                                        size="small"
-                                        fullWidth
-                                        label="ยอดเบิก"
-                                        value={pendingAmount}
-                                        onValueChange={(v) => setPendingAmount(v.value)}
-                                        thousandSeparator
-                                        decimalScale={2}
-                                        fixedDecimalScale
-                                        allowNegative={false}
-                                        disabled={!selectedItem}
-                                        sx={refInputSx}
-                                    />
-                                )}
 
                                 <Box display="flex" gap={1.25} flexDirection={{ xs: "column", sm: "row" }}>
                                     <NumericFormat

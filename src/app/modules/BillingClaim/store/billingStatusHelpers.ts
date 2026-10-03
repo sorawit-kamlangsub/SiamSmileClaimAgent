@@ -34,5 +34,6 @@ export const billingStatusLabel = (statusId?: number): string =>
 export const billingReturnStatusLabel = (raw: string | undefined): string => {
     if (raw === "Published") return "ส่งเข้าคิวแล้ว";
     if (raw === "Pending") return "รอส่งเข้าคิว";
+    if (raw === "Failed") return "ส่งไม่สำเร็จ";
     return raw ?? "-";
 };

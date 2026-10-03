@@ -88,7 +88,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const docData = Object.values(documentDetailById);
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const formik = useFormik<ClaimPAFormValues>({
-        initialValues: { ...form, serviceProviderId: userProfile?.userId },
+        initialValues: { ...form, serviceProviderId: form.serviceProviderId ?? userProfile?.userId },
         enableReinitialize: true,
         validate: (values) => {
             const errors: FormikErrors<ClaimPAFormValues> = {};

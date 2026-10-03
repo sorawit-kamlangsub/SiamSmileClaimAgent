@@ -212,6 +212,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         beLabels={detail}
                                         caseAdjudicationId={detail?.caseAdjudicationId}
                                         productId={detail?.productId}
+                                        productTypeId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>

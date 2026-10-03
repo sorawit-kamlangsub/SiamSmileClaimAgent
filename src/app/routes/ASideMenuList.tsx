@@ -95,6 +95,19 @@ export const ASideMenuList = () => {
                     <MenuItem path="/billing/customers" icon="person" text="ตั้งเบิกกองทุน" />
                     <MenuItem path="/billing/hospital" icon="local_hospital" text="ตรวจสอบรพ.วางบิล" />
                 </ParentMenu>
+                <ParentMenu icon={<AccountBalanceIcon />} text="จัดการเงินกองทุน" permissions={[]}>
+                    <MenuItem path="/manage/insuranceFund/dashboard-fund" icon={"savings"} text="Dashboard สำรองเงิน" />
+                    <MenuItem
+                        path="/manage/insuranceFund/transfer-hospital"
+                        icon={"local_hospital"}
+                        text="โอนเงิน รพ."
+                    />
+                    <MenuItem
+                        path="/manage/insuranceFund/manage-payment-hospital"
+                        icon={"settings"}
+                        text="ตั้งค่าการจ่ายเงิน รพ."
+                    />
+                </ParentMenu>
                 {/* <ParentMenu icon={<PaymentsIcon />} text="จัดการเงินเคลม" permissions={[]}>
                     <MenuItem path="/payment-monitor" icon={<AddCardIcon />} text="โอนเพิ่ม" />
                     <MenuItem path="/test-permission" icon={<ManageSearchIcon />} text="ค้นหาการแจ้งเคลม" />

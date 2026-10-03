@@ -24,8 +24,16 @@ import ClaimNoWithContinuousBadge from "../../components/_common/ClaimNoWithCont
  */
 type MonitorRowWithCaseId = GetHospitalClaimAdjudicationMonitorDtoResponse & { caseId?: string; caseCount?: number };
 
-// ตาม spec: สถานะ "อยู่ระหว่างดำเนินการ" (7), "ปฏิเสธ" (5), "ยกเลิก" (6) แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
-const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [5, 6, 7];
+// ตาม spec: สถานะ "รอแก้ไข" (4 — DFUAT-065), "ปฏิเสธ" (5), "ยกเลิก" (6), "อยู่ระหว่างดำเนินการ" (7)
+// แสดงเฉพาะปุ่มดูรายละเอียด ซ่อนปุ่มพิจารณาเคลม
+const HIDE_ADJUDICATE_BUTTON_STATUS_IDS = [4, 5, 6, 7];
+
+/**
+ * DFUAT-063 : รายการที่ SmileConnect จองสิทธิ์ (Reservation) / แจ้งเข้ารับการรักษา (Admission) — BE ส่ง isReadOnly = true
+ * ห้ามพิจารณา แสดงสถานะเป็น "อยู่ระหว่างดำเนินการ" (7) และกดดูรายละเอียดได้อย่างเดียว
+ */
+const IN_PROGRESS_STATUS_ID = 7;
+const IN_PROGRESS_STATUS_NAME = "อยู่ระหว่างดำเนินการ";
 
 const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
     const navigate = useNavigate();
@@ -168,14 +176,11 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRenderLite: (rowIndex) => {
                     const row = claimHospitalData?.data?.[rowIndex];
-                    const value = row?.claimTransactionTypeName;
+                    const value = row?.isReadOnly ? IN_PROGRESS_STATUS_NAME : row?.claimTransactionTypeName;
                     if (!value) return "-";
-                    const bgColor = row?.claimTransactionTypeId
-                        ? backgroundColorMapClaimTransactionType[row?.claimTransactionTypeId]
-                        : undefined;
-                    const textColor = row?.claimTransactionTypeId
-                        ? colorMapClaimTransactionType[row?.claimTransactionTypeId]
-                        : undefined;
+                    const statusId = row?.isReadOnly ? IN_PROGRESS_STATUS_ID : row?.claimTransactionTypeId;
+                    const bgColor = statusId ? backgroundColorMapClaimTransactionType[statusId] : undefined;
+                    const textColor = statusId ? colorMapClaimTransactionType[statusId] : undefined;
                     return (
                         <Chip
                             label={value}
@@ -198,9 +203,9 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
                 sort: false,
                 customBodyRenderLite: (rowIndex) => {
                     const row = claimHospitalData?.data?.[rowIndex] as MonitorRowWithCaseId | undefined;
-                    const showAdjudicateButton = !HIDE_ADJUDICATE_BUTTON_STATUS_IDS.includes(
-                        row?.claimTransactionTypeId ?? -1
-                    );
+                    const showAdjudicateButton =
+                        !row?.isReadOnly &&
+                        !HIDE_ADJUDICATE_BUTTON_STATUS_IDS.includes(row?.claimTransactionTypeId ?? -1);
                     return (
                         <>
                             <Grid container sx={{ gap: 1.5 }} wrap="nowrap">

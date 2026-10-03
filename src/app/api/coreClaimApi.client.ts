@@ -6635,6 +6635,102 @@ export class HospitalBillingClient {
         }
         return Promise.resolve<BillingSubmitResultDtoServiceResponse>(null as any);
     }
+
+    /**
+     * ส่ง snapshot ของ revision ที่บันทึกแล้วอีกครั้ง โดยไม่สร้างผลตรวจใหม่.
+     * @return Success
+     */
+    republishHospitalBillingReview(
+        billingDetailId: string,
+        revisionId: string,
+        cancelToken?: CancelToken | undefined
+    ): Promise<BillingSubmitResultDtoServiceResponse> {
+        let url_ = this.baseUrl + "/billing/hospital/{billingDetailId}/revisions/{revisionId}/publish";
+        if (billingDetailId === undefined || billingDetailId === null)
+            throw new Error("The parameter 'billingDetailId' must be defined.");
+        url_ = url_.replace("{billingDetailId}", encodeURIComponent("" + billingDetailId));
+        if (revisionId === undefined || revisionId === null)
+            throw new Error("The parameter 'revisionId' must be defined.");
+        url_ = url_.replace("{revisionId}", encodeURIComponent("" + revisionId));
+        url_ = url_.replace(/[?&]$/, "");
+
+        let options_: AxiosRequestConfig = {
+            method: "POST",
+            url: url_,
+            headers: {
+                Accept: "text/plain",
+            },
+            cancelToken,
+        };
+
+        return this.instance
+            .request(options_)
+            .catch((_error: any) => {
+                if (isAxiosError(_error) && _error.response) {
+                    return _error.response;
+                } else {
+                    throw _error;
+                }
+            })
+            .then((_response: AxiosResponse) => {
+                return this.processRepublishHospitalBillingReview(_response);
+            });
+    }
+
+    protected processRepublishHospitalBillingReview(
+        response: AxiosResponse
+    ): Promise<BillingSubmitResultDtoServiceResponse> {
+        const status = response.status;
+        let _headers: any = {};
+        if (response.headers && typeof response.headers === "object") {
+            for (let k in response.headers) {
+                if (response.headers.hasOwnProperty(k)) {
+                    _headers[k] = response.headers[k];
+                }
+            }
+        }
+        if (status === 200) {
+            const _responseText = response.data;
+            let result200: any = null;
+            let resultData200 = _responseText;
+            result200 = resultData200;
+            return Promise.resolve<BillingSubmitResultDtoServiceResponse>(result200);
+        } else if (status === 400) {
+            const _responseText = response.data;
+            let result400: any = null;
+            let resultData400 = _responseText;
+            result400 = JSON.parse(resultData400);
+            return throwException("Bad Request", status, _responseText, _headers, result400);
+        } else if (status === 401) {
+            const _responseText = response.data;
+            let result401: any = null;
+            let resultData401 = _responseText;
+            result401 = JSON.parse(resultData401);
+            return throwException("Unauthorized", status, _responseText, _headers, result401);
+        } else if (status === 403) {
+            const _responseText = response.data;
+            let result403: any = null;
+            let resultData403 = _responseText;
+            result403 = JSON.parse(resultData403);
+            return throwException("Forbidden", status, _responseText, _headers, result403);
+        } else if (status === 404) {
+            const _responseText = response.data;
+            let result404: any = null;
+            let resultData404 = _responseText;
+            result404 = JSON.parse(resultData404);
+            return throwException("Not Found", status, _responseText, _headers, result404);
+        } else if (status === 500) {
+            const _responseText = response.data;
+            let result500: any = null;
+            let resultData500 = _responseText;
+            result500 = JSON.parse(resultData500);
+            return throwException("Server Error", status, _responseText, _headers, result500);
+        } else if (status !== 200 && status !== 204) {
+            const _responseText = response.data;
+            return throwException("An unexpected server error occurred.", status, _responseText, _headers);
+        }
+        return Promise.resolve<BillingSubmitResultDtoServiceResponse>(null as any);
+    }
 }
 
 export class IClaimClient {
@@ -6907,15 +7003,19 @@ export class MastersClient {
     /**
      * API สำหรับ Get ข้อมูลพนักงาน
      * @param userId (optional)
+     * @param branchId (optional)
      * @return Success
      */
     users(
         userId?: number | undefined,
+        branchId?: number | undefined,
         cancelToken?: CancelToken | undefined
     ): Promise<AllUserDtoResponseListServiceResponse> {
         let url_ = this.baseUrl + "/Masters/users?";
         if (userId === null) throw new Error("The parameter 'userId' cannot be null.");
         else if (userId !== undefined) url_ += "userId=" + encodeURIComponent("" + userId) + "&";
+        if (branchId === null) throw new Error("The parameter 'branchId' cannot be null.");
+        else if (branchId !== undefined) url_ += "branchId=" + encodeURIComponent("" + branchId) + "&";
         url_ = url_.replace(/[?&]$/, "");
 
         let options_: AxiosRequestConfig = {
@@ -9529,9 +9629,6 @@ export interface ApproveClaimDecisionDtoRequest {
 }
 
 export interface ApproveHospitalBillingDto {
-    requestId?: string;
-    expectedVersion?: number;
-    rowVersion: string;
     reviewRemark?: string | undefined;
 }
 
@@ -9699,16 +9796,10 @@ export interface BillingDetailDto {
     provinceName?: string | undefined;
     submittedDate?: dayjs.Dayjs;
     statusId?: number;
-    version?: number;
-    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Case. */
+    /** เวอร์ชันปัจจุบันของ Case สำหรับแสดงผลเท่านั้น. */
     caseVersion?: number;
-    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Claim. */
+    /** เวอร์ชันปัจจุบันของ Claim สำหรับแสดงผลเท่านั้น. */
     claimVersion?: number;
-    rowVersion?: string | undefined;
-    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Case. */
-    caseRowVersion?: string | undefined;
-    /** คงไว้เพื่อ backward compatibility; Submit ไม่ใช้ตรวจ concurrency ของ Claim. */
-    claimRowVersion?: string | undefined;
     reviewRemark?: string | undefined;
     insured?: BillingInsuredDto;
     data?: BillingReviewDataDto;
@@ -9882,7 +9973,6 @@ export interface BillingSubmitResultDto {
     billingDetailId?: string;
     revisionId?: string;
     statusId?: number;
-    version?: number;
     netBillableAmount?: number;
     returnRequestId?: string | undefined;
     returnStatus?: string | undefined;
@@ -9932,6 +10022,7 @@ export interface CalculateCaseClaimDtoRequest {
     isSimulateCase?: boolean;
     isCheckIncludeCompensate?: boolean;
     isCheckIncludeCompensateAll?: boolean;
+    productTypeId?: number;
     jsonDetail?: CalculateCaseClaim;
 }
 
@@ -11340,6 +11431,15 @@ export interface GetClaimDetailConsiderDtoResponse {
     reservationRemark?: string | undefined;
     insuranceCompanyId?: number | undefined;
     medicalSubTypeCode?: string | undefined;
+    caseMedicalTreatmentId?: string | undefined;
+    casePhysicalTherapyId?: string | undefined;
+    isTrafficAccident?: boolean | undefined;
+    vehicleTypeId?: number | undefined;
+    otherVehicleType?: string | undefined;
+    trafficAccidentPersonRoleId?: number | undefined;
+    compulsoryInsuranceNotUsedReason?: string | undefined;
+    isPhysicalTherapy?: boolean | undefined;
+    physicalTherapyNecessityReasonId?: number | undefined;
 }
 
 export interface GetClaimDetailConsiderDtoResponseServiceResponse {
@@ -13317,17 +13417,6 @@ export interface StandardMedicalExpenseCategoryDtoResponseListServiceResponse {
 }
 
 export interface SubmitHospitalBillingDto {
-    requestId?: string;
-    expectedVersion?: number;
-    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
-    expectedCaseVersion?: number;
-    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
-    expectedClaimVersion?: number;
-    rowVersion: string;
-    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
-    caseRowVersion: string;
-    /** Deprecated compatibility field; ระบบรับค่าไว้แต่ไม่ใช้ตรวจ Submit conflict. */
-    claimRowVersion: string;
     reviewStatusId?: number;
     rejectReasonId?: number | undefined;
     decisionReasonId?: number | undefined;

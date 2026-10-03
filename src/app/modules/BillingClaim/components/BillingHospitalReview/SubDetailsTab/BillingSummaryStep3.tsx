@@ -35,6 +35,8 @@ type BillingSummaryStep3Props = {
     caseAdjudicationId?: string;
     /** `BillingDetailDto.productId` — ส่งใน `jsonDetail` ของ calculate/caseclaim */
     productId?: number;
+    /** `BillingDetailDto.productTypeId` (PH = 6, PA = 26) — ส่งใน request ของ calculate/caseclaim */
+    productTypeId?: number;
 };
 
 const fmtDate = (v: string | undefined) => formatDateString(v, "DD/MM/BBBB");
@@ -60,6 +62,7 @@ const BillingSummaryStep3 = ({
     beLabels,
     caseAdjudicationId,
     productId,
+    productTypeId,
 }: BillingSummaryStep3Props) => {
     const formik = useFormikContext<BillingReviewFormValues>();
     const { values } = formik;
@@ -68,6 +71,7 @@ const BillingSummaryStep3 = ({
     const { result: calculateResult, isCalculating } = useBillingCalculateHook({
         caseAdjudicationId,
         productId,
+        productTypeId,
         values,
     });
 

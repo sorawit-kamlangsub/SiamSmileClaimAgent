@@ -543,6 +543,20 @@ export enum MedicalType {
     DayCaseSurgery = 6,
 }
 
+/**
+ * ผู้รับเอกสาร (Master DocumentRecipientType)
+ * NotApplicable (n/a) ไม่แสดงเป็นตัวเลือกในหน้าแจ้งเคลม PH / PA — ดู DocumentRecipientTypeDropDown
+ */
+export enum DocumentRecipientType {
+    NotApplicable = 1,
+    WalkOut = 2,
+    WalkIn = 3,
+    Pivot = 4,
+}
+
+/** รหัสพนักงานของ "000 - คุณสำนักงาน" ใน Master ผู้ให้บริการ / เจ้าของรถ */
+export const OFFICE_EMPLOYEE_CODE = "000";
+
 export enum CauseOfIncident {
     Illness = 2, // โรคทั่วไป
     Accident = 3, // อุบัติเหตุทั่วไป

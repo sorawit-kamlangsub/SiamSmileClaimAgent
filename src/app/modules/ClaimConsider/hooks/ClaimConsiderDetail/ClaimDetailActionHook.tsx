@@ -1,4 +1,5 @@
 import dayjs, { Dayjs } from "dayjs";
+import { useRef } from "react";
 import {
     useApproveClaimDecision,
     useGetDocumentByCaseId,
@@ -53,6 +54,13 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     isCombinedWithMedicalAll?: boolean;
     /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
     caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
+    /**
+     * ข้อมูลการรักษา / ความจำเป็นทางการแพทย์ ของเคลมโรงพยาบาล (RC-005 5.4-5.6)
+     * เคลมลูกค้าส่งเฉพาะ casePhysicalTherapy (RC-003 3.4 ข้อมูลกายภาพบำบัด)
+     * ส่งไปกับ case ของ /claim/decision (บันทึกผลพิจารณา + อนุมัติ) — ไม่ส่ง = ไม่แนบ
+     * SaveClaimEditDraft ยังไม่มีฟิลด์รองรับ จึงไม่ได้ไปกับบันทึกแบบร่าง
+     */
+    caseTreatmentFields?: Pick<UpsertClaimDecisionCaseRequest, "caseMedicalTreatment" | "casePhysicalTherapy">;
     /**
      * ตารางตรวจสอบเอกสาร (ค่าดิบจาก formik ของเคลมโรงพยาบาล)
      * hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId เอง
@@ -124,6 +132,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     customerDetailData,
     isCombinedWithMedicalAll = false,
     caseFields,
+    caseTreatmentFields,
     documentChecks,
     payoutAccount,
     onApproveSuccess,
@@ -623,6 +632,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             hn: caseFields?.hn,
             an: caseFields?.an,
             vn: caseFields?.vn,
+            caseMedicalTreatment: caseTreatmentFields?.caseMedicalTreatment,
+            casePhysicalTherapy: caseTreatmentFields?.casePhysicalTherapy,
             caseItem: mapCaseItemForDecision(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDecision(),
             caseAdjudication: mapCaseAdjudicationForDecision(overrideDecisionId),
@@ -647,16 +658,28 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDecision(overrideDecisionId),
     });
 
+    /**
+     * กันกด "ยืนยันบันทึกผลพิจารณา" ซ้ำ (DFUAT-052) — ใช้ ref เพราะ isLoading ของ mutation ยังไม่อัปเดต
+     * จนกว่าจะ re-render รอบถัดไป กดรัว ๆ ก่อนหน้านั้นจะยิง /claim/decision ซ้ำ ทำให้ Transaction stamp หลายรอบ
+     */
+    const isConfirmingConsiderRef = useRef(false);
+
     /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง DECISION_ID.APPROVED (9) (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
+        if (isConfirmingConsiderRef.current) return;
         // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ (เคลมลูกค้า / เคลมโรงพยาบาล)
         const decisionId = overrideDecisionId ?? formik.values.considerResult;
         if (decisionId === DECISION_ID.REJECTED && !rejectDocuments?.length) {
             swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
             return;
         }
-        const payload = mapClaimDecisionPayload(overrideDecisionId);
-        await saveClaimDecision.mutateAsync(payload);
+        isConfirmingConsiderRef.current = true;
+        try {
+            const payload = mapClaimDecisionPayload(overrideDecisionId);
+            await saveClaimDecision.mutateAsync(payload);
+        } finally {
+            isConfirmingConsiderRef.current = false;
+        }
     };
 
     const mapCasePayableForApprove = (): CasePayableDraft => {
@@ -689,6 +712,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
      */
     const buildApproveJsonDetail = (): CalculateCaseClaim => ({
         productId: customerDetailData?.data?.productId,
+        customerDetailId: customerDetailData?.data?.customerDetailId ?? undefined,
+        customerTypeCode: customerDetailData?.data?.customerTypeCode ?? undefined,
+        productName: customerDetailData?.data?.productName ?? undefined,
         coverageTypeId: formik.values.coverageTypeId,
         medicalTypeId: formik.values.medicalTypeId,
         incidentTypeId: formik.values.incidentTypeId,
@@ -704,6 +730,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             nonCoverAmount: item.notCovered,
             reasonId: item.reason,
             remark: item.remark,
+            receiptAmount: item.receiptAmount,
         })),
         disabilityList: [],
     });

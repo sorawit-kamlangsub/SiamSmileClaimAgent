@@ -24,7 +24,6 @@ import { DECISION_ID } from "../../store/claimConsider.constants";
 import { parseTimeSpan } from "../../store/draftRevisionMappers";
 import {
     CLAIM_LIST_TYPE_CONFIG,
-    DOCUMENT_CHECK_RESULTS,
     DocumentCheckRow,
     resolveClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
@@ -47,17 +46,30 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     causeOfIncidentId: number | undefined;
     causeOfIncidentName: string | undefined;
 
-    /** ข้อมูลการเข้ารับการรักษา */
+    /**
+     * ข้อมูลการเข้ารับการรักษา — RC-005 5.2 ตัด VN / AN / โรคประจำตัว / ข้อบ่งชี้ / วิธีการรักษา / ผล LAB /
+     * หัตถการ ออกแล้ว เหลือ HN + หมายเหตุ(ถ้ามี) (5.4 : caseMedicalTreatment.reservationRemark)
+     */
     hn: string;
-    vn: string;
-    /** AN + ข้อบ่งชี้การ Admit : เฉพาะประเภทการรักษา IPD */
-    an: string;
-    admitIndication: string;
-    underlyingDisease: string;
-    treatmentMethod: string;
-    labResult: string;
-    additionalDetail: string;
-    hasProcedure: string;
+    reservationRemark: string;
+
+    /**
+     * RC-005 5.5 ความจำเป็นทางการแพทย์ (case.casePhysicalTherapy)
+     * isPhysicalTherapy : "" = ยังไม่เลือก / "yes" / "no" — ใช่ ต้องเลือกเหตุผลจาก master necessity-reason
+     */
+    isPhysicalTherapy: "" | "yes" | "no";
+    physicalTherapyNecessityReasonId: number | undefined;
+    physicalTherapyNecessityReasonDetail: string;
+
+    /**
+     * RC-005 5.6 ข้อมูลอุบัติเหตุจากการจราจร (case.caseMedicalTreatment) — แสดงเฉพาะเหตุของการเคลม = อุบัติเหตุ
+     * ชุดช่องเดียวกับหน้าวางบิล (BillingTrafficAccidentSection) แต่แก้ไขได้ ตัวเลือกมาจาก master
+     */
+    trafficVehicleTypeId: number | undefined;
+    trafficOtherVehicleType: string;
+    trafficAccidentPersonRoleId: number | undefined;
+    trafficHasCompulsoryInsuranceExcess: boolean | undefined;
+    trafficCompulsoryInsuranceNotUsedReason: string;
 
     /** แพทย์เจ้าของไข้ */
     doctorLicenseNo: string;
@@ -115,14 +127,19 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     continuousClaim: undefined,
 
     hn: "",
-    vn: "",
-    an: "",
-    admitIndication: "",
-    underlyingDisease: "",
-    treatmentMethod: "",
-    labResult: "",
-    additionalDetail: "",
-    hasProcedure: "",
+    reservationRemark: "",
+
+    // ของเคลมลูกค้า (RC-003 3.4) — เคลมโรงพยาบาลใช้ isPhysicalTherapy ด้านล่างแทน ใส่ไว้ให้ครบ type เท่านั้น
+    isPhysicalTherapyChecked: false,
+    isPhysicalTherapy: "",
+    physicalTherapyNecessityReasonId: undefined,
+    physicalTherapyNecessityReasonDetail: "",
+
+    trafficVehicleTypeId: undefined,
+    trafficOtherVehicleType: "",
+    trafficAccidentPersonRoleId: undefined,
+    trafficHasCompulsoryInsuranceExcess: undefined,
+    trafficCompulsoryInsuranceNotUsedReason: "",
 
     doctorLicenseNo: "",
     doctorName: "",
@@ -149,15 +166,10 @@ const FIELD_ERROR_ORDER = [
     "diagnoses",
     "ipdDays",
     "hn",
-    "vn",
-    "an",
-    "admitIndication",
-    "underlyingDisease",
-    "treatmentMethod",
-    "hasProcedure",
+    "isPhysicalTherapy",
+    "physicalTherapyNecessityReasonId",
     "doctorLicenseNo",
     "doctorName",
-    "documentChecks",
     "decisionReasonId",
     "decisionReasonDetail",
 ];
@@ -205,33 +217,22 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 
     // ── ข้อมูลการเข้ารับการรักษา ──
     if (!values.hn.trim()) errors.hn = req;
-    if (!values.vn.trim()) errors.vn = req;
-    // AN + ข้อบ่งชี้การ Admit : บังคับเฉพาะประเภทการรักษา IPD และ Day Case Surgery
-    if (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery) {
-        if (!values.an.trim()) errors.an = req;
-        if (!values.admitIndication.trim()) errors.admitIndication = req;
-    }
     // จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
     if (values.medicalTypeId === MedicalType.IPD) {
         if (!values.ipdDays || values.ipdDays < 1) errors.ipdDays = req;
     }
-    if (!values.underlyingDisease.trim()) errors.underlyingDisease = req;
-    if (!values.treatmentMethod.trim()) errors.treatmentMethod = req;
-    if (!values.hasProcedure) errors.hasProcedure = sel;
+
+    // ── ความจำเป็นทางการแพทย์ (RC-005 5.5) : บังคับเลือก ใช่/ไม่ใช่ — ใช่ ต้องเลือกเหตุผลด้วย ──
+    if (!values.isPhysicalTherapy) errors.isPhysicalTherapy = sel;
+    if (values.isPhysicalTherapy === "yes" && !values.physicalTherapyNecessityReasonId) {
+        errors.physicalTherapyNecessityReasonId = sel;
+    }
 
     // ── แพทย์เจ้าของไข้ ──
     if (!values.doctorLicenseNo.trim()) errors.doctorLicenseNo = req;
     if (!values.doctorName.trim()) errors.doctorName = req;
 
-    // ── ตรวจสอบเอกสาร : หมายเหตุบังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม ──
-    const hasMissingDocumentRemark = values.documentChecks.some(
-        (row) =>
-            (row.checkResult === DOCUMENT_CHECK_RESULTS.failed || row.checkResult === DOCUMENT_CHECK_RESULTS.waiting) &&
-            !row.remark.trim()
-    );
-    if (hasMissingDocumentRemark) {
-        errors.documentChecks = "กรุณากรอกหมายเหตุของเอกสารที่ผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม";
-    }
+    // ตรวจสอบเอกสาร : RC-005 5.7/5.8 ตัดคอลัมน์ผลการตรวจ/หมายเหตุ และ validation ที่ผูกกับผลตรวจรายแถวออกแล้ว
 
     // ── ผลการพิจารณา : ตรวจเมื่อผู้ใช้เลือกผลการพิจารณาแล้ว ──
     if (values.considerResult) {
@@ -318,16 +319,12 @@ const useHospitalConsiderDetailHook = () => {
         formik.resetForm({ values: buildInitialValues() });
     }
 
-    const {
-        caseDocumentLoading,
-        caseReviewOverviewLoading,
-        documentInfoByDocId,
-        documentStorageListLoading,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
-        documentCheckResultOptionsLoading,
-    } = useHospitalDocumentVerifyHook(formik, caseKey, detail?.caseId, customerDetail?.productTypeId);
+    const { caseDocumentLoading, documentInfoByDocId, documentStorageListLoading } = useHospitalDocumentVerifyHook(
+        formik,
+        caseKey,
+        detail?.caseId,
+        customerDetail?.productTypeId
+    );
 
     const {
         continuousClaimRows,
@@ -509,26 +506,38 @@ const useHospitalConsiderDetailHook = () => {
 
         // ---- ข้อมูลการเข้ารับการรักษา : default จาก SmileConnect ที่ BE ส่งผ่าน GetClaimDetailConsider ----
         formik.setFieldValue("hn", detail.hn ?? "", false);
-        formik.setFieldValue("vn", detail.vn ?? "", false);
-        formik.setFieldValue("an", detail.an ?? "", false);
         // จำนวนวันนอน IPD/ICU ที่ SmileConnect แจ้งมา — BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16) ไม่มีช่องกรอก
         // เองในจอนี้เลย (TreatmentInfoSection ไม่มี input ของ ipdDays/icuDays) ต้อง default จากตรงนี้เท่านั้น
         // ไม่งั้น validateHospitalConsider บังคับ ipdDays >= 1 ตอน medicalTypeId = IPD จะติดค้างกรอกไม่ได้เลย
         formik.setFieldValue("ipdDays", detail.ipdDayCount ?? 0, false);
         formik.setFieldValue("icuDays", detail.icuDayCount ?? 0, false);
-        formik.setFieldValue("underlyingDisease", detail.underlyingDiseaseDetail ?? "", false);
-        formik.setFieldValue("treatmentMethod", detail.treatmentMethod ?? "", false);
-        formik.setFieldValue("labResult", detail.investigationResults ?? "", false);
+        // หมายเหตุ(ถ้ามี) — RC-005 5.4 : default จาก reservationRemark ยังแก้ไขต่อได้
+        formik.setFieldValue("reservationRemark", detail.reservationRemark ?? "", false);
+
+        // ---- DFUAT-069 : default ความจำเป็นทางการแพทย์ / อุบัติเหตุจากการจราจร จาก SmileConnect ----
+        // (GetClaimDetailConsider ส่งมาแล้ว ยกเว้น "เป็นส่วนเกิน พ.ร.บ." กับ "รายละเอียดเพิ่มเติม" ที่ยังไม่มีใน response)
         formik.setFieldValue(
-            "hasProcedure",
-            detail.isProcedurePerformed === true ? "yes" : detail.isProcedurePerformed === false ? "no" : "",
+            "isPhysicalTherapy",
+            detail.isPhysicalTherapy === true ? "yes" : detail.isPhysicalTherapy === false ? "no" : "",
             false
         );
-        // admitIndication : BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16, admissionIndication) — ยังแก้ไขต่อได้ตามเดิม
-        // ไม่เหมือน ipdDays/icuDays เพราะช่องนี้มี input จริงใน TreatmentInfoSection อยู่แล้ว
-        formik.setFieldValue("admitIndication", detail.admissionIndication ?? "", false);
-        // additionalDetail : map จาก reservationRemark (BE ส่งมาใหม่ 2026-09-16) — ยังแก้ไขต่อได้ตามเดิม
-        formik.setFieldValue("additionalDetail", detail.reservationRemark ?? "", false);
+        formik.setFieldValue(
+            "physicalTherapyNecessityReasonId",
+            detail.physicalTherapyNecessityReasonId ?? undefined,
+            false
+        );
+        formik.setFieldValue("trafficVehicleTypeId", detail.vehicleTypeId ?? undefined, false);
+        formik.setFieldValue("trafficOtherVehicleType", detail.otherVehicleType ?? "", false);
+        formik.setFieldValue("trafficAccidentPersonRoleId", detail.trafficAccidentPersonRoleId ?? undefined, false);
+        formik.setFieldValue(
+            "trafficCompulsoryInsuranceNotUsedReason",
+            detail.compulsoryInsuranceNotUsedReason ?? "",
+            false
+        );
+        // response ไม่มี hasCompulsoryInsuranceExcess — มีสาเหตุที่ไม่ใช้ พ.ร.บ. มา = ตอบ "ไม่ใช่" ไว้
+        if (detail.compulsoryInsuranceNotUsedReason) {
+            formik.setFieldValue("trafficHasCompulsoryInsuranceExcess", false, false);
+        }
 
         // ---- แพทย์เจ้าของไข้ ----
         formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);
@@ -658,7 +667,6 @@ const useHospitalConsiderDetailHook = () => {
         detailDataLoading,
         customerDetailLoading,
         caseDocumentLoading,
-        caseReviewOverviewLoading,
         documentInfoByDocId,
         documentStorageListLoading,
         incidentType,
@@ -681,10 +689,6 @@ const useHospitalConsiderDetailHook = () => {
         handleToggleContinuousClaim,
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
-        documentCheckResultOptionsLoading,
     };
 };
 

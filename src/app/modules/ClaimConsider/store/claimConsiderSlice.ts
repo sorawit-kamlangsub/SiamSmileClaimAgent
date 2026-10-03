@@ -83,6 +83,12 @@ export interface ClaimConsiderValues {
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
     detail: string | undefined;
+    /**
+     * RC-003 3.4 ข้อมูลกายภาพบำบัด (เคลมลูกค้า) — Checkbox "เป็นกายภาพบำบัด" ติ๊กแล้วต้องเลือกความจำเป็นทางการแพทย์
+     * ตั้งชื่อแยกจาก isPhysicalTherapy ของ HospitalConsiderValues ("" | "yes" | "no") ที่ extends type นี้
+     */
+    isPhysicalTherapyChecked: boolean;
+    physicalTherapyNecessityReasonId: number | undefined;
     considerResult: number | undefined;
     decisionReasonId: number | undefined;
     decisionReasonDetail: string | undefined;
@@ -150,6 +156,8 @@ const defaultForm: ClaimConsiderValues = {
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
     detail: undefined,
+    isPhysicalTherapyChecked: false,
+    physicalTherapyNecessityReasonId: undefined,
     considerResult: undefined,
     decisionReasonId: undefined,
     decisionReasonDetail: undefined,
