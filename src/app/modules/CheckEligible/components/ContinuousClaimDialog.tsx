@@ -326,7 +326,7 @@ const ContinuousClaimDialog: React.FC<Props> = ({ open, applicationId, onClose, 
                                     </Grid>
                                     <Grid item xs={12}>
                                         <InfoBox
-                                            label="การวินิจฉัย1 (Diagnosis1) :"
+                                            label="การวินิจฉัย 1 (Diagnosis 1) :"
                                             value={selectedRow.icD10Detail ?? "-"}
                                         />
                                     </Grid>

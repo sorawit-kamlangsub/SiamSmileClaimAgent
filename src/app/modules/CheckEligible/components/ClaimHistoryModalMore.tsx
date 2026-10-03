@@ -232,7 +232,7 @@ const ClaimHistoryModalMore: React.FC<Props> = ({
                                 {/* อาการสำคัญ */}
                                 <Box mb={1.5}>
                                     <Typography fontSize={12} color="text.secondary">
-                                        อาการสำคัญ
+                                        อาการสำคัญ (ChiefComplaint)
                                     </Typography>
                                     <Typography fontSize={14} fontWeight={600}>
                                         {item.lastestChiefComplaint || "-"}
