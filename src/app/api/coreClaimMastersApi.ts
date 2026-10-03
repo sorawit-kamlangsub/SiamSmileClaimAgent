@@ -135,7 +135,8 @@ export const useGetSimBCategory = (
     medicalTypeId?: number | undefined,
     productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    planId?: number | undefined
+    planId?: number | undefined,
+    incidentTypeId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -146,6 +147,7 @@ export const useGetSimBCategory = (
             productTypeId,
             causeOfIncidentId,
             planId,
+            incidentTypeId,
         ],
         () =>
             coreClaimMastersClient.getSimBCategory(
@@ -154,7 +156,8 @@ export const useGetSimBCategory = (
                 medicalTypeId,
                 productTypeId,
                 causeOfIncidentId,
-                planId
+                planId,
+                incidentTypeId
             ),
         {
             enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
@@ -170,7 +173,8 @@ export const useGetSimB = (
     isUseOften?: boolean | undefined,
     productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    plandId?: number | undefined
+    plandId?: number | undefined,
+    incidentTypeId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -182,6 +186,7 @@ export const useGetSimB = (
             productTypeId,
             causeOfIncidentId,
             plandId,
+            incidentTypeId,
         ],
         () =>
             coreClaimMastersClient.getSimB(
@@ -191,7 +196,8 @@ export const useGetSimB = (
                 isUseOften,
                 productTypeId,
                 causeOfIncidentId,
-                plandId
+                plandId,
+                incidentTypeId
             ),
         {
             enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),

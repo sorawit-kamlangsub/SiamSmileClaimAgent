@@ -120,6 +120,7 @@ const useClaimExpenseDetailHook = ({
      */
     const coverageTypeId = form.coverageTypeId ?? detailData?.data?.coverageTypeId;
     const medicalTypeId = form.medicalTypeId ?? detailData?.data?.medicalTypeId;
+    const incidentTypeId = form.incidentTypeId ?? detailData?.data?.incidentTypeId;
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [selectedItem, setSelectedItem] = useState<{
@@ -176,7 +177,8 @@ const useClaimExpenseDetailHook = ({
         medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId ?? undefined
+        customerDetailData?.data?.productId ?? undefined,
+        incidentTypeId
     );
 
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
