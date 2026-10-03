@@ -62,6 +62,8 @@ type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
     stepsLength: number;
     /** ยอดที่จ่ายจริง (detail.paymentAmount) — ใช้เช็คยอดเงิน ClaimLine ก่อนปล่อยผ่าน Step 2 */
     paymentAmount?: number;
+    /** อัตราค่าชดเชยผู้ป่วยในต่อวันจากสิทธิ์ความคุ้มครอง (useIpdCompensationBenefit) — ใช้กับ gate Step 2 */
+    ipdCompensationDailyRate?: number;
 };
 
 const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
@@ -70,6 +72,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     filledItems,
     stepsLength,
     paymentAmount,
+    ipdCompensationDailyRate,
 }: UseClaimStepCalculateHookProps<TValues>) => {
     const dispatch = useAppDispatch();
     const [activeStep, setActiveStep] = useState(0);
@@ -220,6 +223,7 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
                         ipdDays: formik.values.ipdDays,
                         icuDays: formik.values.icuDays,
                         paymentAmount,
+                        dailyRate: ipdCompensationDailyRate,
                     });
                     if (blocker) {
                         focusIpdCompensationError(blocker);
