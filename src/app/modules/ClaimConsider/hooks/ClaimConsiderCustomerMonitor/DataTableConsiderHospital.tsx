@@ -126,7 +126,7 @@ const useDataTableConsiderHospitalHook = (appliedFilter: AppliedFilter) => {
         },
         {
             name: "medicalType",
-            label: "ประเภทรายการเคลม",
+            label: "ประเภทการรักษา",
             options: {
                 ...cellAlignOptions({ align: "center", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (value) => (value ? value : "-"),

@@ -170,7 +170,7 @@ const ConsiderHospitalDetailPage = ({ readOnly = false }: ConsiderHospitalDetail
                         </Tabs>
 
                         <Chip
-                            label={`ประเภทรายการเคลม : ${claimTypeDisplayLabel}`}
+                            label={`ประเภทการรักษา : ${claimTypeDisplayLabel}`}
                             color="primary"
                             variant="outlined"
                             sx={{ ml: "auto", mr: 1, fontWeight: 700 }}
