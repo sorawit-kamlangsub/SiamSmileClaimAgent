@@ -211,7 +211,10 @@ const ViewClaimDetailModal: React.FC<Props> = ({ open, onClose, caseData, isLoad
                                                 gap: 2,
                                             }}
                                         >
-                                            <Field label="อาการสำคัญ" value={item?.caseChiefComlaint} />
+                                            <Field
+                                                label="อาการสำคัญ (ChiefComplaint)"
+                                                value={item?.caseChiefComlaint}
+                                            />
                                             <Field
                                                 label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                                 value={item?.illnessOrInjuryDetail}

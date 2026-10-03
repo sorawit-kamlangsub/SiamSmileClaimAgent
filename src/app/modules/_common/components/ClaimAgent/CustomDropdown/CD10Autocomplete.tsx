@@ -22,7 +22,9 @@ const CD10Autocomplete = ({ formik, diagnosisNo, ...props }: CD10AutocompletePro
                 valueFieldName="icD10Id"
                 displayFieldName="icD10Detail"
                 useQueryGet={useGetICD10Filter}
-                label={diagnosisNo ? `การวินิจฉัย ${diagnosisNo}` : "การวินิจฉัย"}
+                label={
+                    diagnosisNo ? `การวินิจฉัย ${diagnosisNo} (Diagnosis ${diagnosisNo})` : "การวินิจฉัย (Diagnosis)"
+                }
                 formik={formik}
             />
         </>
