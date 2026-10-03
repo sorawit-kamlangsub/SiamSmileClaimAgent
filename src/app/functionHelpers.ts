@@ -518,6 +518,22 @@ export enum CoverageType {
     Death = 5,
 }
 
+// ลำดับการแสดงประเภทความคุ้มครอง (ทุพพลภาพขึ้นก่อนเสียชีวิต) — id ที่ไม่อยู่ในรายการจะต่อท้ายตามลำดับเดิมจาก API
+const COVERAGE_TYPE_DISPLAY_ORDER: number[] = [
+    CoverageType.Medical,
+    CoverageType.Compensate,
+    CoverageType.Disability,
+    CoverageType.Death,
+];
+
+export const compareCoverageTypeOrder = (a?: number, b?: number): number => {
+    const rank = (id?: number) => {
+        const index = COVERAGE_TYPE_DISPLAY_ORDER.indexOf(id ?? 0);
+        return index === -1 ? COVERAGE_TYPE_DISPLAY_ORDER.length : index;
+    };
+    return rank(a) - rank(b);
+};
+
 export enum MedicalType {
     OPD = 1,
     IPD = 2,

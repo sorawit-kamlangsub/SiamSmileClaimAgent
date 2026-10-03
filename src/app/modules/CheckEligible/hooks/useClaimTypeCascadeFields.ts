@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { FormikProps } from "formik";
 import { useGetIncidentType, useGetIncidentTypeMapping } from "../../../api/coreClaimMastersApi";
-import { isProductType, PRODUCT_TYPE_GROUP } from "../../../functionHelpers";
+import { compareCoverageTypeOrder, isProductType, PRODUCT_TYPE_GROUP } from "../../../functionHelpers";
 import { ToolbarFormValues } from "./useCheckEligibleToolbar";
 
 const CLAIM_SOURCE_ID_CHECK_ELIGIBLE = 2;
@@ -52,10 +52,12 @@ export const useClaimTypeCascadeFields = (
     );
     const mappingRows = mappingData?.data ?? [];
 
-    const coverageTypeOptions = dedupeByField(mappingRows, "coverageTypeId").map((row) => ({
-        value: row.coverageTypeId as number,
-        label: row.coverageTypeNameTH ?? "-",
-    }));
+    const coverageTypeOptions = dedupeByField(mappingRows, "coverageTypeId")
+        .map((row) => ({
+            value: row.coverageTypeId as number,
+            label: row.coverageTypeNameTH ?? "-",
+        }))
+        .sort((a, b) => compareCoverageTypeOrder(a.value, b.value));
 
     const rowsForCoverageType = mappingRows.filter((row) => row.coverageTypeId === coverageType);
 

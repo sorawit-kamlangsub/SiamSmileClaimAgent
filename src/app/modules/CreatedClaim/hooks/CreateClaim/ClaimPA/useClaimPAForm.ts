@@ -14,7 +14,7 @@ import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
 import { mapOrganLossToCaseItems } from "../organLossCaseItems";
 import { NEW_CLAIM_DRAFT_KEY, useClaimDraftStore } from "../../../components/CreateClaim/ClaimDraftProvider";
-import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
+import { compareCoverageTypeOrder, CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import {
     addClaimItem,
     ClaimInsuredItem,
@@ -527,7 +527,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
                 },
             ])
         ).values(),
-    ];
+    ].sort((a, b) => compareCoverageTypeOrder(a.id, b.id));
 
     const medicalType: ChipOption[] = [
         ...new Map(

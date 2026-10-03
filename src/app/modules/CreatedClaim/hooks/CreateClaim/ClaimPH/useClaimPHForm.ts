@@ -22,7 +22,14 @@ import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
 import { mapOrganLossToCaseItems } from "../organLossCaseItems";
 import { NEW_CLAIM_DRAFT_KEY, useClaimDraftStore } from "../../../components/CreateClaim/ClaimDraftProvider";
-import { CauseOfIncident, CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../../functionHelpers";
+import {
+    CauseOfIncident,
+    compareCoverageTypeOrder,
+    CoverageType,
+    IncidentType,
+    MedicalType,
+    safeAtob,
+} from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 import { useParams } from "react-router-dom";
 interface Options {
@@ -275,7 +282,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 },
             ])
         ).values(),
-    ];
+    ].sort((a, b) => compareCoverageTypeOrder(a.id, b.id));
 
     const medicalType: ChipOption[] = [
         ...new Map(
