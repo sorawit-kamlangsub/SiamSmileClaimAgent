@@ -13,6 +13,7 @@ import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimP
 // import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
 import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
 import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
+import ClaimSimulateLayout from "../modules/ClaimSimulate/pages/ClaimSimulateLayout.tsx";
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
@@ -131,7 +132,8 @@ const Routes: RouteMapType[] = [
     {
         path: "/claim-simulation",
         title: "คำนวณวงเงินเคลม",
-        element: <Outlet />,
+        // layout ล้างค่าของหน้าคำนวณตอนออกจากเมนูนี้ (DFUAT-108)
+        element: <ClaimSimulateLayout />,
         permissions: [],
         condition: "AND",
         children: [

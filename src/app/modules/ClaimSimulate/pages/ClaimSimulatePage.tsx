@@ -8,15 +8,10 @@ import { prefillClaimSimulate } from "../store/claimSimulateSlice";
 import {
     buildClaimSimulatePrefill,
     CLAIM_SIMULATE_PREFILL_PARAM,
+    getAppliedClaimSimulatePrefill,
     parseClaimSimulatePrefill,
+    setAppliedClaimSimulatePrefill,
 } from "../store/claimSimulatePrefill";
-
-/**
- * prefill ชุดล่าสุดที่ใส่ลง Redux แล้ว — เก็บระดับ module (ไม่ใช่ state) เพราะต้องรอดการ unmount/remount ของหน้านี้
- * ตอนไปหน้าสรุปแล้วกดกลับ ไม่งั้นจะใส่ prefill ซ้ำแล้วล้างรายการค่ารักษาที่ผู้ใช้กรอกไว้ทิ้ง
- * refresh หน้าเว็บ = module โหลดใหม่ ค่านี้กลับเป็น null พร้อมกับ Redux ที่ว่าง จึงใส่ prefill ใหม่ได้ถูกจังหวะ
- */
-let lastAppliedPrefill: string | null = null;
 
 const ClaimSimulatePage: React.FC = () => {
     const navigate = useNavigate();
@@ -34,13 +29,13 @@ const ClaimSimulatePage: React.FC = () => {
     );
 
     /** prefill ชุดที่ใส่ลง Redux แล้ว — ใส่ครั้งเดียวต่อชุด ไม่ทับค่าที่ผู้ใช้แก้ต่อในหน้านี้ */
-    const [appliedPrefill, setAppliedPrefill] = useState<string | null>(lastAppliedPrefill);
+    const [appliedPrefill, setAppliedPrefill] = useState<string | null>(getAppliedClaimSimulatePrefill);
     const isInsuredReady = !prefillParams?.customerDetailId || isInsuredFetched;
 
     useEffect(() => {
         if (!prefillParams || appliedPrefill === encodedPrefill || !isInsuredReady) return;
         dispatch(prefillClaimSimulate(buildClaimSimulatePrefill(prefillParams, insuredData?.data)));
-        lastAppliedPrefill = encodedPrefill;
+        setAppliedClaimSimulatePrefill(encodedPrefill);
         setAppliedPrefill(encodedPrefill);
     }, [prefillParams, encodedPrefill, appliedPrefill, isInsuredReady, insuredData, dispatch]);
 
