@@ -5,9 +5,10 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 type SpiltButtonActionProps = {
     paymentId: string;
     handleTransfer: (paymentId: string) => void;
+    statusId: number | undefined;
 };
 
-const SpitButtonAction = ({ paymentId, handleTransfer }: SpiltButtonActionProps) => {
+const SpitButtonAction = ({ paymentId, handleTransfer, statusId }: SpiltButtonActionProps) => {
     const [anchorEl, setAnchorEl] = React.useState(null);
 
     const handleClick = (event: any) => {
@@ -61,7 +62,7 @@ const SpitButtonAction = ({ paymentId, handleTransfer }: SpiltButtonActionProps)
                     onClick={() => {
                         handleTransfer(paymentId);
                     }}
-                    // disabled={handleEnable(statusId).enableDetail}
+                    disabled={statusId !== 2}
                 >
                     โอนทันที
                 </MenuItem>

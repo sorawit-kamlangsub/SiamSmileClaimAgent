@@ -1,19 +1,19 @@
 import { Box } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
-import { PaginationDto, swalConfirm, swalError, swalSuccess } from "../../../_common";
+import { PaginationDto, swalError } from "../../../_common";
 // import { useAppDispatch } from "../../../../../redux";
 import { useEffect, useRef, useState } from "react";
-import {
-    HospitalPendingTransferType,
-    useGetHospitalPendingTransferMonitor,
-    useTransferClaimHospitalNow,
-} from "../transferClaimHospitalAPI";
+import { HospitalPendingTransferType, useGetHospitalPendingTransferMonitor } from "../transferClaimHospitalAPI";
 import dayjs from "dayjs";
 import { numberWithCommas } from "../../../../functionHelpers";
 import { HospitalTransferMonitorType } from "../manageTransferHospitalAPI";
 import SpitButtonAction from "../components/SpitButtonAction";
 
-const usePendingTransferHook = () => {
+type useTransferSuccessTableHookProp = {
+    statusId: number | undefined;
+};
+
+const useTransferSuccessTableHook = ({ statusId }: useTransferSuccessTableHookProp) => {
     // const dispatch = useAppDispatch();
     const [data, setData] = useState<HospitalPendingTransferType>();
     const [paginate, setPaginate] = useState<PaginationDto>({ page: 1, recordsPerPage: 10 });
@@ -22,14 +22,6 @@ const usePendingTransferHook = () => {
 
     const handleGetDataSuccess = (res: any) => {
         setData(res);
-    };
-
-    const handleTransferSuccess = () => {
-        swalSuccess("ทำรายการสำเร็จ", "");
-
-        if (lastRequest.current) {
-            mutateGetHospitalPendingTransfer(lastRequest.current);
-        }
     };
 
     const handleError = (message: string) => {
@@ -45,17 +37,6 @@ const usePendingTransferHook = () => {
 
     const { mutate: mutateGetHospitalPendingTransfer, isLoading: isGetHospitalPendingTransferLoading } =
         useGetHospitalPendingTransferMonitor(handleGetDataSuccess, handleError);
-
-    const { mutate: mutateTransferClaimHospitalNow, isLoading: isTransferClaimHospitalNowLoading } =
-        useTransferClaimHospitalNow(handleTransferSuccess, handleError);
-
-    const handleTransferNow = (paymentId: string) => {
-        swalConfirm("ยืนยันทำรายการ", "", "ยืนยัน", "ยกเลิก").then((res) => {
-            if (res.isConfirmed) {
-                mutateTransferClaimHospitalNow(paymentId);
-            }
-        });
-    };
 
     const handleSentTransfer = () => {
         // dispatch(setDialogOpen({ isOpen: true, generateListData: rowsSelected }));
@@ -89,27 +70,13 @@ const usePendingTransferHook = () => {
         },
         {
             name: "paymentDate",
-            label: "วันที่ทำรายการ",
+            label: "วันที่โอนเงิน",
             options: {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
                     const formatDate = data?.data?.[rowIndex].paymentDate
                         ? dayjs(data?.data?.[rowIndex]?.paymentDate).format("DD/MM/YYYY")
-                        : "-";
-                    return formatDate;
-                },
-            },
-        },
-        {
-            name: "expectedPaymentDate",
-            label: "วันที่คาดว่าเงินจะออก",
-            options: {
-                sort: false,
-                filter: false,
-                customBodyRenderLite: (rowIndex) => {
-                    const formatDate = data?.data?.[rowIndex].expectedPaymentDate
-                        ? dayjs(data?.data?.[rowIndex]?.expectedPaymentDate).format("DD/MM/YYYY")
                         : "-";
                     return formatDate;
                 },
@@ -228,9 +195,44 @@ const usePendingTransferHook = () => {
                                 alignItems: "center",
                             }}
                         >
-                            <Box sx={{ bgcolor: "#FFF7DC", color: "#C39A3B", borderRadius: 2, p: "7px" }}>
-                                {data?.data?.[rowIndex]?.statusNameTH}
-                            </Box>
+                            {statusId === 3 ? (
+                                <Box sx={{ bgcolor: "#E7F8EE", color: "#429B7B", borderRadius: 2, p: "7px" }}>
+                                    {data?.data?.[rowIndex]?.statusNameTH}
+                                </Box>
+                            ) : statusId === 5 ? (
+                                <Box sx={{ bgcolor: "#f8e7e7", color: "#BF360C", borderRadius: 2, p: "7px" }}>
+                                    {data?.data?.[rowIndex]?.statusNameTH}
+                                </Box>
+                            ) : (
+                                "-"
+                            )}
+                        </Box>
+                    );
+                },
+            },
+        },
+        {
+            name: "",
+            label: "สถานะส่งเมล",
+            options: {
+                sort: false,
+                filter: false,
+                customBodyRenderLite: (rowIndex) => {
+                    return (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                            }}
+                        >
+                            {data?.data?.[rowIndex]?.isSelectable ? (
+                                <Box sx={{ bgcolor: "#EEF5F8", color: "#A0ACB6", borderRadius: 2, p: "7px" }}>
+                                    {data?.data?.[rowIndex]?.statusNameTH}
+                                </Box>
+                            ) : (
+                                "-"
+                            )}
                         </Box>
                     );
                 },
@@ -255,9 +257,9 @@ const usePendingTransferHook = () => {
                             }}
                         >
                             <SpitButtonAction
-                                handleTransfer={handleTransferNow}
+                                handleTransfer={() => {}}
                                 paymentId={data?.data?.[rowIndex]?.paymentId ?? ""}
-                                statusId={2}
+                                statusId={statusId}
                             />
                         </Box>
                     );
@@ -271,9 +273,6 @@ const usePendingTransferHook = () => {
         paginate,
         mutateGetHospitalPendingTransfer,
         isGetHospitalPendingTransferLoading,
-        // handleGenerateSuccess: handleGenerateDialogOpen,
-        isTransferClaimHospitalNowLoading,
-        mutateTransferClaimHospitalNow,
         fetchPendingTransfers,
         setPaginate,
         handleRowSelected,
@@ -282,4 +281,4 @@ const usePendingTransferHook = () => {
     };
 };
 
-export default usePendingTransferHook;
+export default useTransferSuccessTableHook;
