@@ -34,6 +34,8 @@ const useCheckEligibleToolbar = () => {
         validate: (values) => {
             const errors: FormikErrors<ToolbarFormValues> = {};
             if (!values.incidentDate) errors.incidentDate = "โปรดระบุ";
+            else if (values.incidentDate.isAfter(dayjs(), "day"))
+                errors.incidentDate = "วันที่เกิดเหตุต้องไม่เกินวันปัจจุบัน";
             if (!values.claimCause) errors.claimCause = "โปรดระบุ";
             if (!values.coverageType) errors.coverageType = "โปรดระบุ";
             if (values.isContinuous && !values.continuousClaim) {
