@@ -127,15 +127,21 @@ const BillingSummaryStep3 = ({
                     />
                     <CustomDisplayText label="สถานพยาบาล" value={hospitalName} />
                     <CustomDisplayText
-                        label="อาการสำคัญ"
+                        label="อาการสำคัญ (ChiefComplaint)"
                         value={values.chiefComplaintId_selectedText || labels.chiefComplaintName}
                     />
-                    <CustomDisplayText label="คำวินิจฉัย 1" value={labels.diagnosis1Name} />
-                    <CustomDisplayText label="คำวินิจฉัย 2" value={labels.diagnosis2Name ?? "-"} />
-                    <CustomDisplayText label="คำวินิจฉัย 3" value={labels.diagnosis3Name ?? "-"} />
-                    {labels.diagnosis4Name && <CustomDisplayText label="คำวินิจฉัย 4" value={labels.diagnosis4Name} />}
-                    {labels.diagnosis5Name && <CustomDisplayText label="คำวินิจฉัย 5" value={labels.diagnosis5Name} />}
-                    {labels.diagnosis6Name && <CustomDisplayText label="คำวินิจฉัย 6" value={labels.diagnosis6Name} />}
+                    <CustomDisplayText label="การวินิจฉัย 1 (Diagnosis 1)" value={labels.diagnosis1Name} />
+                    <CustomDisplayText label="การวินิจฉัย 2 (Diagnosis 2)" value={labels.diagnosis2Name ?? "-"} />
+                    <CustomDisplayText label="การวินิจฉัย 3 (Diagnosis 3)" value={labels.diagnosis3Name ?? "-"} />
+                    {labels.diagnosis4Name && (
+                        <CustomDisplayText label="การวินิจฉัย 4 (Diagnosis 4)" value={labels.diagnosis4Name} />
+                    )}
+                    {labels.diagnosis5Name && (
+                        <CustomDisplayText label="การวินิจฉัย 5 (Diagnosis 5)" value={labels.diagnosis5Name} />
+                    )}
+                    {labels.diagnosis6Name && (
+                        <CustomDisplayText label="การวินิจฉัย 6 (Diagnosis 6)" value={labels.diagnosis6Name} />
+                    )}
                     <CustomDisplayText label="หมายเหตุ" value={values.note} xs={12} />
                 </Grid>
             </CustomPaper>

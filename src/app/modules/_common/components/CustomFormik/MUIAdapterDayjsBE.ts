@@ -9,7 +9,10 @@ export default class MUIAdapterDayjsBE extends AdapterDayjs {
             formatString = formatString.replace("YYYY", "BBBB").replace("YY", "BB");
         }
 
-        return value.format(formatString);
+        // DFUAT-110 : ใช้ locale ของ adapter (adapterLocale = "th" จาก MUIDateTimeThProvider) ตอน format เสมอ เหมือน
+        // AdapterDayjs ตัวแม่ — เดิม format ด้วย locale ที่ติดมากับ value ถ้า value ถูกสร้างตอน global locale ไม่ใช่ไทย
+        // ชื่อเดือนในหัวปฏิทินจะออกเป็นภาษาอังกฤษ ("July 2569") ทั้งที่ชื่อวันในสัปดาห์เป็นไทย
+        return (this.locale ? value.locale(this.locale) : value).format(formatString);
     };
 
     setYear = (value: Dayjs, year: number) => {

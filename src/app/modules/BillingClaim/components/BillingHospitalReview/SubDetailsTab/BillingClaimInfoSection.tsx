@@ -68,23 +68,38 @@ const BillingClaimInfoSection = ({
                 {/* IPD : แถวนี้มีแค่ วันนอน ICU / วันนอนรวม / สถานพยาบาล → ขยายสถานพยาบาลเป็นครึ่งแถวให้เต็มพอดี */}
                 <BillingInfoField label="สถานพยาบาล" value={hospitalName} md={showStayDays ? 6 : 3} />
                 <BillingInfoField
-                    label="อาการสำคัญ"
+                    label="อาการสำคัญ (ChiefComplaint)"
                     value={values.chiefComplaintId_selectedText || labels.chiefComplaintName}
                     xs={12}
                     md={6}
                 />
-                <BillingInfoField label="การวินิจฉัย 1" value={labels.diagnosis1Name} xs={12} md={6} />
-                <BillingInfoField label="การวินิจฉัย 2" value={labels.diagnosis2Name} xs={12} md={6} />
-                <BillingInfoField label="การวินิจฉัย 3" value={labels.diagnosis3Name} xs={12} md={6} />
+                <BillingInfoField label="การวินิจฉัย 1 (Diagnosis 1)" value={labels.diagnosis1Name} xs={12} md={6} />
+                <BillingInfoField label="การวินิจฉัย 2 (Diagnosis 2)" value={labels.diagnosis2Name} xs={12} md={6} />
+                <BillingInfoField label="การวินิจฉัย 3 (Diagnosis 3)" value={labels.diagnosis3Name} xs={12} md={6} />
                 {/* การวินิจฉัย 4-6 : แสดงเฉพาะเมื่อ BE ส่งมา (เคลมส่วนใหญ่มีไม่เกิน 3) */}
                 {labels.diagnosis4Name && (
-                    <BillingInfoField label="การวินิจฉัย 4" value={labels.diagnosis4Name} xs={12} md={6} />
+                    <BillingInfoField
+                        label="การวินิจฉัย 4 (Diagnosis 4)"
+                        value={labels.diagnosis4Name}
+                        xs={12}
+                        md={6}
+                    />
                 )}
                 {labels.diagnosis5Name && (
-                    <BillingInfoField label="การวินิจฉัย 5" value={labels.diagnosis5Name} xs={12} md={6} />
+                    <BillingInfoField
+                        label="การวินิจฉัย 5 (Diagnosis 5)"
+                        value={labels.diagnosis5Name}
+                        xs={12}
+                        md={6}
+                    />
                 )}
                 {labels.diagnosis6Name && (
-                    <BillingInfoField label="การวินิจฉัย 6" value={labels.diagnosis6Name} xs={12} md={6} />
+                    <BillingInfoField
+                        label="การวินิจฉัย 6 (Diagnosis 6)"
+                        value={labels.diagnosis6Name}
+                        xs={12}
+                        md={6}
+                    />
                 )}
                 <BillingInfoField label="รายละเอียด" value={values.note} xs={12} md={6} />
             </Grid>

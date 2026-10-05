@@ -363,6 +363,28 @@ export const useDaysCalculate = () => {
         }
     };
 
+    /**
+     * DFUAT-109 : เลือกเคลมต่อเนื่องแล้ว default "วันที่เกิดเหตุ" ให้ตรงกับเคลมที่เลือกอัตโนมัติ
+     * ทำครั้งเดียวต่อการเลือกแต่ละครั้ง (จำ claimId ล่าสุดไว้) — ผู้ใช้แก้วันที่ต่อเองได้ และไม่ถูกทับตอนรายการเคลมโหลดซ้ำ
+     */
+    const selectedContinueClaim = formik.values.isContinuous
+        ? claimContinueOptions.find((opt) => opt.claimId === formik.values.continuousFromClaimNo)
+        : undefined;
+    const selectedContinueClaimId = selectedContinueClaim?.claimId;
+    const selectedContinueIncidentDate = selectedContinueClaim?.incidentDate;
+    const defaultedContinueClaimIdRef = useRef<string | undefined>(undefined);
+    useEffect(() => {
+        if (!selectedContinueClaimId) {
+            defaultedContinueClaimIdRef.current = undefined;
+            return;
+        }
+        if (defaultedContinueClaimIdRef.current === selectedContinueClaimId) return;
+        defaultedContinueClaimIdRef.current = selectedContinueClaimId;
+        const incidentDate = selectedContinueIncidentDate ? dayjs(selectedContinueIncidentDate) : undefined;
+        // sync ลง Redux ทำโดย effect ของวันที่ด้านบน (ฟัง formik.values.dateHappen)
+        if (incidentDate?.isValid()) formik.setFieldValue("dateHappen", incidentDate);
+    }, [selectedContinueClaimId, selectedContinueIncidentDate]);
+
     const handleContinuousChange = (checked: boolean) => {
         formik.setFieldValue("isContinuous", checked);
         if (!checked) formik.setFieldValue("continuousFromClaimNo", "");

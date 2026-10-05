@@ -160,7 +160,7 @@ const ViewClaimHistoryModal: React.FC<Props> = ({
 
                                 <Box sx={{ flex: 1, minWidth: 160 }}>
                                     <Typography fontSize={12} color="text.secondary">
-                                        อาการสำคัญ
+                                        อาการสำคัญ (ChiefComplaint)
                                     </Typography>
                                     <Typography fontSize={14} fontWeight={600}>
                                         {item.lastestChiefComplaint || "-"}

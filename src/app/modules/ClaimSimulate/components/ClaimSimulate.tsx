@@ -54,7 +54,8 @@ import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePi
 import { FormikDropdown } from "../../_common";
 
 import { useClaimSimulatePage } from "../hooks/useClaimSimulatePage";
-import { sanitizeDecimalInput, toOptionalAmount, toInteger, hasAmountSumError } from "../store/Claimsimulateutils";
+import { toInteger, hasAmountSumError } from "../store/Claimsimulateutils";
+import { NumericFormat } from "react-number-format";
 import InsuredSearchModal from "./InsuredSearchModal";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -120,12 +121,6 @@ const hideSpinButtonSx = {
     "& input[type=number]": { MozAppearance: "textfield" },
 };
 
-// ช่องจำนวนเงินในแผง "รายการค่ารักษาที่เลือก"
-const refAmountInputSx = {
-    ...refInputSx,
-    ...hideSpinButtonSx,
-};
-
 const tableInputSx = {
     ...refInputSx,
     "& .MuiOutlinedInput-root": {
@@ -134,16 +129,6 @@ const tableInputSx = {
     },
     "& .MuiOutlinedInput-input": { padding: "4px 8px", textAlign: "center" as const },
     ...hideSpinButtonSx,
-};
-
-// กันการพิมพ์ e / E / + / - ในช่องจำนวนเงิน (input type="number" ยอมให้พิมพ์ได้โดย default)
-const blockNonAmountKeys = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (["e", "E", "+", "-"].includes(e.key)) e.preventDefault();
-};
-
-// กัน scroll เมาส์แล้วค่าเปลี่ยนเองตอน focus อยู่ในช่อง type="number"
-const blurOnWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (e.target instanceof HTMLInputElement) e.target.blur();
 };
 
 // input ที่ MUI ติด error (aria-invalid) — ไม่รวม native input ที่ซ่อนอยู่ใต้ Select
@@ -1349,23 +1334,21 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
 
                                                                     {/* Claim Amount */}
                                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                                        <TextField
+                                                                        <NumericFormat
+                                                                            customInput={TextField}
                                                                             size="small"
                                                                             fullWidth
                                                                             sx={tableInputSx}
-                                                                            onKeyDown={blockNonAmountKeys}
-                                                                            onWheel={blurOnWheel}
                                                                             value={item.claimAmount ?? ""}
-                                                                            onChange={(e) =>
+                                                                            onValueChange={(v) =>
                                                                                 handleUpdateItem({
                                                                                     ...item,
-                                                                                    claimAmount: toOptionalAmount(
-                                                                                        e.target.value
-                                                                                    ),
+                                                                                    claimAmount: v.floatValue,
                                                                                 })
                                                                             }
-                                                                            type="number"
-                                                                            inputProps={{ min: 0 }}
+                                                                            thousandSeparator
+                                                                            decimalScale={2}
+                                                                            allowNegative={false}
                                                                         />
                                                                     </TableCell>
 
@@ -1380,25 +1363,25 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                             }
                                                                             {...errorTooltipProps}
                                                                         >
-                                                                            <TextField
-                                                                                size="small"
-                                                                                fullWidth
-                                                                                sx={tableInputSx}
-                                                                                onKeyDown={blockNonAmountKeys}
-                                                                                onWheel={blurOnWheel}
-                                                                                value={item.discount ?? ""}
-                                                                                onChange={(e) =>
-                                                                                    handleUpdateItem({
-                                                                                        ...item,
-                                                                                        discount: toOptionalAmount(
-                                                                                            e.target.value
-                                                                                        ),
-                                                                                    })
-                                                                                }
-                                                                                type="number"
-                                                                                error={discountError}
-                                                                                inputProps={{ min: 0 }}
-                                                                            />
+                                                                            <Box>
+                                                                                <NumericFormat
+                                                                                    customInput={TextField}
+                                                                                    size="small"
+                                                                                    fullWidth
+                                                                                    sx={tableInputSx}
+                                                                                    value={item.discount ?? ""}
+                                                                                    onValueChange={(v) =>
+                                                                                        handleUpdateItem({
+                                                                                            ...item,
+                                                                                            discount: v.floatValue,
+                                                                                        })
+                                                                                    }
+                                                                                    thousandSeparator
+                                                                                    decimalScale={2}
+                                                                                    allowNegative={false}
+                                                                                    error={discountError}
+                                                                                />
+                                                                            </Box>
                                                                         </Tooltip>
                                                                     </TableCell>
 
@@ -1412,25 +1395,25 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                                             }
                                                                             {...errorTooltipProps}
                                                                         >
-                                                                            <TextField
-                                                                                size="small"
-                                                                                fullWidth
-                                                                                sx={tableInputSx}
-                                                                                onKeyDown={blockNonAmountKeys}
-                                                                                onWheel={blurOnWheel}
-                                                                                value={item.notCovered ?? ""}
-                                                                                onChange={(e) =>
-                                                                                    handleUpdateItem({
-                                                                                        ...item,
-                                                                                        notCovered: toOptionalAmount(
-                                                                                            e.target.value
-                                                                                        ),
-                                                                                    })
-                                                                                }
-                                                                                type="number"
-                                                                                error={rowSumError}
-                                                                                inputProps={{ min: 0 }}
-                                                                            />
+                                                                            <Box>
+                                                                                <NumericFormat
+                                                                                    customInput={TextField}
+                                                                                    size="small"
+                                                                                    fullWidth
+                                                                                    sx={tableInputSx}
+                                                                                    value={item.notCovered ?? ""}
+                                                                                    onValueChange={(v) =>
+                                                                                        handleUpdateItem({
+                                                                                            ...item,
+                                                                                            notCovered: v.floatValue,
+                                                                                        })
+                                                                                    }
+                                                                                    thousandSeparator
+                                                                                    decimalScale={2}
+                                                                                    allowNegative={false}
+                                                                                    error={rowSumError}
+                                                                                />
+                                                                            </Box>
                                                                         </Tooltip>
                                                                     </TableCell>
 
@@ -1771,60 +1754,53 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                             }}
                                                         />
 
-                                                        <TextField
+                                                        <NumericFormat
+                                                            customInput={TextField}
                                                             size="small"
                                                             fullWidth
-                                                            type="number"
                                                             label="ยอดเบิก"
                                                             value={pendingAmount}
-                                                            onChange={(e) =>
-                                                                setPendingAmount(sanitizeDecimalInput(e.target.value))
-                                                            }
+                                                            valueIsNumericString
+                                                            onValueChange={(v) => setPendingAmount(v.value)}
                                                             disabled={!selectedItem}
-                                                            sx={refAmountInputSx}
-                                                            onKeyDown={blockNonAmountKeys}
-                                                            onWheel={blurOnWheel}
-                                                            inputProps={{ min: 0 }}
+                                                            sx={refInputSx}
+                                                            thousandSeparator
+                                                            decimalScale={2}
+                                                            allowNegative={false}
                                                         />
 
                                                         <Box display="flex" gap={1.25}>
-                                                            <TextField
+                                                            <NumericFormat
+                                                                customInput={TextField}
                                                                 size="small"
                                                                 fullWidth
-                                                                type="number"
                                                                 label="ส่วนลด"
                                                                 value={pendingDiscount}
-                                                                onChange={(e) =>
-                                                                    setPendingDiscount(
-                                                                        sanitizeDecimalInput(e.target.value)
-                                                                    )
-                                                                }
+                                                                valueIsNumericString
+                                                                onValueChange={(v) => setPendingDiscount(v.value)}
                                                                 disabled={!selectedItem}
                                                                 error={!!discountError}
                                                                 helperText={discountError}
-                                                                sx={refAmountInputSx}
-                                                                onKeyDown={blockNonAmountKeys}
-                                                                onWheel={blurOnWheel}
-                                                                inputProps={{ min: 0 }}
+                                                                sx={refInputSx}
+                                                                thousandSeparator
+                                                                decimalScale={2}
+                                                                allowNegative={false}
                                                             />
-                                                            <TextField
+                                                            <NumericFormat
+                                                                customInput={TextField}
                                                                 size="small"
                                                                 fullWidth
-                                                                type="number"
                                                                 label="ยอดไม่คุ้มครอง"
                                                                 value={pendingNotCovered}
-                                                                onChange={(e) =>
-                                                                    setPendingNotCovered(
-                                                                        sanitizeDecimalInput(e.target.value)
-                                                                    )
-                                                                }
+                                                                valueIsNumericString
+                                                                onValueChange={(v) => setPendingNotCovered(v.value)}
                                                                 disabled={!selectedItem}
                                                                 error={!!notCoveredError}
                                                                 helperText={notCoveredError}
-                                                                sx={refAmountInputSx}
-                                                                onKeyDown={blockNonAmountKeys}
-                                                                onWheel={blurOnWheel}
-                                                                inputProps={{ min: 0 }}
+                                                                sx={refInputSx}
+                                                                thousandSeparator
+                                                                decimalScale={2}
+                                                                allowNegative={false}
                                                             />
                                                         </Box>
 

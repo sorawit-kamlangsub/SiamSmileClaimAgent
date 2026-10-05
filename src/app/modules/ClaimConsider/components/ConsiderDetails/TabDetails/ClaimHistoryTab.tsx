@@ -108,7 +108,7 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
         },
         {
             name: "icD10Detail",
-            label: "คำวินิจฉัย1 (Diagnosis1)",
+            label: "การวินิจฉัย1 (Diagnosis1)",
             options: {
                 ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (value?: string) => value ?? "-",

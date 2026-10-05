@@ -78,7 +78,7 @@ const DeathDisabilityHeaderDetails = ({
                                 name={customerDetail?.customerName ?? "-"}
                                 idCardNo={customerDetail?.cardTypeId === 2 ? customerDetail?.cardDetail ?? "-" : "-"}
                                 applicationId={customerDetail?.policyCode ?? "-"}
-                                onApplicationIdClick={() => {}}
+                                productTypeId={customerDetail?.productTypeId}
                                 phoneNumber={customerDetail?.mobilePhoneNumber ?? "-"}
                                 appStatus={customerDetail?.appStatus ?? "-"}
                                 appStatusId={customerDetail?.appStatusId ?? 0}

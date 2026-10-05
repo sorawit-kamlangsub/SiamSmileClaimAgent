@@ -13,7 +13,7 @@ const ChiefComplaintAutocomplete = ({ formik, ...props }: ChiefComplaintAutocomp
     return (
         <FormikAutocomplete
             data={data?.data ?? []}
-            label="อาการสำคัญ"
+            label="อาการสำคัญ (ChiefComplaint)"
             fullWidth
             {...props}
             formik={formik}

@@ -18,6 +18,20 @@ export const CLAIM_SIMULATE_PREFILL_PARAM = "prefill";
 const DATE_TIME_FORMAT = "YYYY-MM-DDTHH:mm:ss";
 
 /**
+ * prefill ชุดล่าสุดที่ใส่ลง Redux แล้ว — เก็บระดับ module (ไม่ใช่ state) เพราะต้องรอดการ unmount/remount ของหน้า
+ * คำนวณตอนไปหน้าสรุปแล้วกดกลับ ไม่งั้นจะใส่ prefill ซ้ำแล้วล้างรายการค่ารักษาที่ผู้ใช้กรอกไว้ทิ้ง
+ * ล้างเมื่อออกจากเมนูคำนวณวงเงินเคลม (ClaimSimulateLayout — พร้อมกับ Redux) และตอน refresh (module โหลดใหม่)
+ */
+let lastAppliedPrefill: string | null = null;
+export const getAppliedClaimSimulatePrefill = () => lastAppliedPrefill;
+export const setAppliedClaimSimulatePrefill = (encoded: string | null) => {
+    lastAppliedPrefill = encoded;
+};
+export const clearAppliedClaimSimulatePrefill = () => {
+    lastAppliedPrefill = null;
+};
+
+/**
  * DFUAT-083 : ข้อมูล App + ข้อมูลเคลมที่กรอกในหน้าแจ้งเคลม ส่งต่อให้หน้า "คำนวณวงเงินเคลม" ผ่าน URL
  * (เปิดเป็น tab ใหม่ จึงใช้ Redux ของ tab เดิมไม่ได้ และต้องอยู่รอดตอน refresh) — เก็บเฉพาะ id / วันที่
  * ข้อมูลผู้เอาประกันให้หน้าคำนวณโหลดเองจาก customerDetailId

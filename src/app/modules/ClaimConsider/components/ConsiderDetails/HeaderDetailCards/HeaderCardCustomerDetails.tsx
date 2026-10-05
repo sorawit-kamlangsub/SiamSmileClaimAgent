@@ -2,7 +2,15 @@ import { Box, Grid, Typography } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import VerifiedIcon from "@mui/icons-material/Verified";
 import ShieldIcon from "@mui/icons-material/Shield";
-import { backgroundColorMapAppStatus, colorMapPaymentAppStatus } from "../../../../../functionHelpers";
+import {
+    PA_APPLICATION_DETAIL_URL,
+    PH_APPLICATION_DETAIL_URL,
+    PRODUCT_TYPE_GROUP,
+    backgroundColorMapAppStatus,
+    colorMapPaymentAppStatus,
+    getApplicationDetailUrl,
+    isProductType,
+} from "../../../../../functionHelpers";
 
 type InfoChipProps = {
     label: string;
@@ -27,7 +35,8 @@ export type PolicyHolderInfoBannerProps = {
     name: string;
     idCardNo: string;
     applicationId: string;
-    onApplicationIdClick?: () => void;
+    /** ใช้เลือกหน้ารายละเอียดใบคำขอ (PH → sssph, PA → ssspa) — product อื่นไม่ทำเป็นลิงก์ */
+    productTypeId?: number;
     phoneNumber: string;
     appStatus: string;
     appStatusId?: number;
@@ -41,7 +50,7 @@ const HeaderCardCustomerDetails = ({
     name = "",
     idCardNo = "",
     applicationId = "",
-    onApplicationIdClick,
+    productTypeId,
     phoneNumber = "",
     appStatus = "",
     appStatusId,
@@ -50,6 +59,15 @@ const HeaderCardCustomerDetails = ({
     coverageEndDate = "",
     productDetail: planNo = "",
 }: PolicyHolderInfoBannerProps) => {
+    const applicationDetailBaseUrl = isProductType(productTypeId, PRODUCT_TYPE_GROUP.PH)
+        ? PH_APPLICATION_DETAIL_URL
+        : isProductType(productTypeId, PRODUCT_TYPE_GROUP.PA)
+        ? PA_APPLICATION_DETAIL_URL
+        : undefined;
+    const applicationDetailUrl =
+        applicationDetailBaseUrl && applicationId && applicationId !== "-"
+            ? getApplicationDetailUrl(applicationDetailBaseUrl, applicationId)
+            : undefined;
     const appStatusBgColor = appStatusId ? backgroundColorMapAppStatus[appStatusId] : undefined;
     const appStatusTextColor = appStatusId ? colorMapPaymentAppStatus[appStatusId] : undefined;
 
@@ -126,17 +144,21 @@ const HeaderCardCustomerDetails = ({
                         </Typography>
                         <Typography sx={{ fontSize: "0.8rem", color: "#FFFFFF", wordBreak: "break-word" }}>
                             Application ID :{" "}
-                            <Box
-                                component="span"
-                                onClick={onApplicationIdClick}
-                                sx={{
-                                    textDecoration: "underline",
-                                    cursor: onApplicationIdClick ? "pointer" : "default",
-                                    fontWeight: 700,
-                                }}
-                            >
-                                {applicationId}
-                            </Box>
+                            {applicationDetailUrl ? (
+                                <Box
+                                    component="a"
+                                    href={applicationDetailUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    sx={{ color: "inherit", textDecoration: "underline", fontWeight: 700 }}
+                                >
+                                    {applicationId}
+                                </Box>
+                            ) : (
+                                <Box component="span" sx={{ fontWeight: 700 }}>
+                                    {applicationId}
+                                </Box>
+                            )}
                         </Typography>
                     </Grid>
 
