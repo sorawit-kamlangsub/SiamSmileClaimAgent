@@ -427,8 +427,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDraft(),
         draftStep: draftStep ?? 1,
         claimEditDraft: {
-            baseClaimVersion: detailData?.data?.claimVersion ?? 0,
-            baseCaseVersion: detailData?.data?.caseVersion ?? 0,
+            // backend ถอด claimVersion / caseVersion ออกจาก GetClaimDetailConsider แล้ว แต่ request ยังบังคับส่ง
+            baseClaimVersion: 0,
+            baseCaseVersion: 0,
             claimEditDraftStatusId: formik.values.considerResult === DECISION_ID.REJECTED ? 3 : 1, // แบบร่าง
         },
     };
