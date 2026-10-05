@@ -376,6 +376,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
         return {
             coverageTypeId: values.coverageTypeId,
+            notificationDate: asDate(values.notificationDate), // วันที่แจ้ง
             occurrenceDate: asDate(values.incidentDate),
             occurrenceTime: asTimeSpan(values.incidentTime),
             admissionDate: asDate(values.admissionDate),
@@ -610,6 +611,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
 
         return {
             coverageTypeId: values.coverageTypeId,
+            notificationDate: asDate(values.notificationDate), // วันที่แจ้ง
             occurrenceDate: asDate(values.incidentDate),
             occurrenceTime: asTimeSpan(values.incidentTime),
             admissionDate: asDate(values.admissionDate),
