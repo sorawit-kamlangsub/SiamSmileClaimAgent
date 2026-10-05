@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { API_CLAIM_FUND_URL } from "../../../../Const";
 import { encodeURLWithParams } from "../../_common";
 
-const claimFundAPI_URL = `${API_CLAIM_FUND_URL}`;
+const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
 
 export const getHistorySetting = "getHistorySettingKey";
 
