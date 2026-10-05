@@ -55,6 +55,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
 import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+import { NEW_CLAIM_DRAFT_KEY } from "../ClaimDraftProvider";
 
 const EMPTY_STATE_SX = {
     p: 2,
@@ -135,6 +136,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
         (c) => c.tempClaimId !== editingTempClaimId
     ).length;
     const isAddingAdditionalInsured = otherInsuredCount > 0;
+    // draft (OCR / prefill) แยกตามรายการผู้เอาประกัน — รายการใหม่ใช้ NEW_CLAIM_DRAFT_KEY แล้วย้ายไป id ของรายการตอน submit
+    const ocrDraftKey = editingItemId ?? NEW_CLAIM_DRAFT_KEY;
 
     const coverageTypeOptions = isAddingAdditionalInsured
         ? (coverageType ?? []).filter((opt) => opt.id !== CoverageType.Death && opt.id !== CoverageType.Disability)
@@ -260,7 +263,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
     };
 
     useEffect(() => {
-        if (!isAddingAdditionalInsured) return;
+        // ล้างเฉพาะตอนเริ่มกรอกผู้เอาประกันรายใหม่ — กดย้อนกลับมาแก้รายการเดิม (มี editingItemId) ต้องคงค่าไว้
+        if (!isAddingAdditionalInsured || editingItemId) return;
 
         formik.resetForm();
         resetOcr();
@@ -693,6 +697,7 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                                     <Grid item xs={12} lg={9} key={index}>
                                         <CD10Autocomplete
                                             name={`diagnoses.${index}.icd10Id`}
+                                            diagnosisNo={index + 1}
                                             formik={formik}
                                             loading={isOldClaimLoading}
                                             disabled={isOldClaimLoading}
@@ -842,6 +847,8 @@ const ClaimPAFormSection: React.FC<Props> = ({ onNext }) => {
                             color="blue"
                         />
                         <OcrDocumentScanSection
+                            key={ocrDraftKey}
+                            draftKey={ocrDraftKey}
                             requiredDocs={getRequiredDocsByCoverageType(formik.values.coverageTypeId ?? 0)}
                             onFilesValidChange={setIsOcrDocsValid}
                             systemFullName={insured?.customerName}

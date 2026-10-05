@@ -48,6 +48,7 @@ import {
 } from "../../../../../functionHelpers";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
+import { NEW_CLAIM_DRAFT_KEY } from "../ClaimDraftProvider";
 
 export const EMPTY_STATE_SX = {
     p: 2,
@@ -558,6 +559,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     <Grid item xs={12} lg={9} key={index}>
                                         <CD10Autocomplete
                                             name={`diagnoses.${index}.icd10Id`}
+                                            diagnosisNo={index + 1}
                                             formik={formik}
                                             loading={isOldClaimLoading}
                                             disabled={isOldClaimLoading}
@@ -765,6 +767,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         applicationCode={insured?.policyCode as string}
                         onOcrLoadingChange={setIsOcrLoading}
                         onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
+                        draftKey={NEW_CLAIM_DRAFT_KEY}
                     />
                 </CustomPaper>
             )}

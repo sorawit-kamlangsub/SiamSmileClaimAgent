@@ -374,6 +374,14 @@ export const PRODUCT_TYPE_GROUP = {
 export const isProductType = (productTypeId: number | undefined, group: readonly number[]) =>
     productTypeId !== undefined && (group.includes(productTypeId) as boolean);
 
+// หน้ารายละเอียดใบคำขอ (Application ID) ในระบบเดิม — ใช้คู่กับ getApplicationDetailUrl
+export const PH_APPLICATION_DETAIL_URL = "https://sssph.siamsmile.co.th/Modules/PH/frmPHDetail.aspx?app=";
+export const PA_APPLICATION_DETAIL_URL = "https://ssspa.siamsmile.co.th/Modules/PA/frmApplicationDetail.aspx?app=";
+
+/** `?app=` คือ policyCode แปลงเป็น base64 — encodeURIComponent ซ้ำเพราะ base64 มี `+` ที่ query string อ่านเป็นช่องว่าง */
+export const getApplicationDetailUrl = (baseUrl: string, policyCode: string) =>
+    `${baseUrl}${encodeURIComponent(btoa(policyCode))}`;
+
 //ClaimStatus
 export const backgroundColorMapClaimStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
     2: "#D4EDBC", // Open
@@ -510,6 +518,22 @@ export enum CoverageType {
     Death = 5,
 }
 
+// ลำดับการแสดงประเภทความคุ้มครอง (ทุพพลภาพขึ้นก่อนเสียชีวิต) — id ที่ไม่อยู่ในรายการจะต่อท้ายตามลำดับเดิมจาก API
+const COVERAGE_TYPE_DISPLAY_ORDER: number[] = [
+    CoverageType.Medical,
+    CoverageType.Compensate,
+    CoverageType.Disability,
+    CoverageType.Death,
+];
+
+export const compareCoverageTypeOrder = (a?: number, b?: number): number => {
+    const rank = (id?: number) => {
+        const index = COVERAGE_TYPE_DISPLAY_ORDER.indexOf(id ?? 0);
+        return index === -1 ? COVERAGE_TYPE_DISPLAY_ORDER.length : index;
+    };
+    return rank(a) - rank(b);
+};
+
 export enum MedicalType {
     OPD = 1,
     IPD = 2,
@@ -542,10 +566,11 @@ export enum CauseOfIncident {
     SchoolLiability = 8, // รับผิดสถานศึกษา
 }
 
-export const calculatePolicyAgeText = (coverageFrom?: string): string => {
-    if (!coverageFrom) return "-";
+/** ระยะเวลาจากวันที่ที่ระบุถึงวันนี้ เป็น "X ปี Y เดือน Z วัน" — ไม่มีวันที่ / วันที่ไม่ถูกต้อง / เป็นวันในอนาคต คืน "-" */
+const calculateElapsedText = (fromDate?: string): string => {
+    if (!fromDate) return "-";
 
-    const start = dayjs(coverageFrom);
+    const start = dayjs(fromDate);
     const end = dayjs(); // วันปัจจุบัน
 
     if (!start.isValid() || end.isBefore(start)) return "-";
@@ -560,3 +585,9 @@ export const calculatePolicyAgeText = (coverageFrom?: string): string => {
 
     return `${years} ปี ${months} เดือน ${days} วัน`;
 };
+
+/** อายุกรมธรรม์ นับจากวันเริ่มคุ้มครอง */
+export const calculatePolicyAgeText = (coverageFrom?: string): string => calculateElapsedText(coverageFrom);
+
+/** อายุปัจจุบัน นับจากวันเกิด */
+export const calculateAgeText = (birthDate?: string): string => calculateElapsedText(birthDate);

@@ -21,7 +21,15 @@ import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
 import { amountNumber } from "../organLoss.types";
 import { mapOrganLossToCaseItems } from "../organLossCaseItems";
-import { CauseOfIncident, CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../../functionHelpers";
+import { NEW_CLAIM_DRAFT_KEY, useClaimDraftStore } from "../../../components/CreateClaim/ClaimDraftProvider";
+import {
+    CauseOfIncident,
+    compareCoverageTypeOrder,
+    CoverageType,
+    IncidentType,
+    MedicalType,
+    safeAtob,
+} from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 import { useParams } from "react-router-dom";
 interface Options {
@@ -35,6 +43,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const isContinuous = safeAtob(isContinuousParam) === "true";
     const { form, oldClaim, insured, documentDetailById, organLossItems } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
+    const claimDraftStore = useClaimDraftStore();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const docData = Object.values(documentDetailById);
 
@@ -280,7 +289,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 },
             ])
         ).values(),
-    ];
+    ].sort((a, b) => compareCoverageTypeOrder(a.id, b.id));
 
     const medicalType: ChipOption[] = [
         ...new Map(
@@ -421,8 +430,11 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     }, [formik.values.incidentTypeId]);
 
     const prevIncidentTypeId = useRef(formik.values.incidentTypeId);
+    const prevCoverageTypeId = useRef(formik.values.coverageTypeId);
 
     useEffect(() => {
+        const isCoverageChanged = prevCoverageTypeId.current !== formik.values.coverageTypeId;
+        prevCoverageTypeId.current = formik.values.coverageTypeId;
         if (isFirstRenderCoverage.current) {
             isFirstRenderCoverage.current = false;
             return;
@@ -434,6 +446,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         // เคลมต่อเนื่อง: prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
         if (isContinuous) return;
         if (!formik.values.coverageTypeId) return;
+        // incidentTypeMapping โหลดใหม่ (เช่นกลับจากหน้าสรุปหลัง cache หมดอายุ) แต่ประเภทไม่ได้เปลี่ยน — ไม่ต้องล้างค่า
+        if (!isCoverageChanged) return;
 
         const isMedicalAuto =
             formik.values.coverageTypeId === 3 &&
@@ -490,18 +504,35 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         }
     }, [formik.values.coverageTypeId, formik.values.incidentTypeId, incidentTypeMapping]);
 
+    // เปลี่ยนประเภทการเบิก → ล้างยอดตามรายละเอียดความคุ้มครองที่ค้างจากประเภทเดิม
+    // (CoverageAndTransferBox ไม่ reset ตอน mount แล้ว เพื่อคงค่าตอนกดย้อนกลับจากหน้าสรุป)
+    const prevMedicalTypeId = useRef(formik.values.medicalTypeId);
+    useEffect(() => {
+        if (prevMedicalTypeId.current === formik.values.medicalTypeId) return;
+        prevMedicalTypeId.current = formik.values.medicalTypeId;
+        formik.setFieldValue("benefitAmounts", {}, false);
+        formik.setFieldValue("transferAmount", 0, false);
+    }, [formik.values.medicalTypeId]);
+
     const totalOrganLossAmount = useMemo(
         () => organLossItems.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0),
         [organLossItems]
     );
+    // sync เฉพาะตอนยอดสูญเสียอวัยวะเปลี่ยนจริง — ไม่ทับยอดที่กรอกไว้ตอน mount ใหม่ (กดย้อนกลับจากหน้าสรุป)
+    const prevTotalOrganLossAmount = useRef(totalOrganLossAmount);
     useEffect(() => {
+        if (prevTotalOrganLossAmount.current === totalOrganLossAmount) return;
+        prevTotalOrganLossAmount.current = totalOrganLossAmount;
         formik.setFieldValue("transferAmount", totalOrganLossAmount);
     }, [totalOrganLossAmount]);
     // เคลมต่อเนื่องปกติ: default ค่าจากเคลมตั้งต้น (ครั้งเดียว)
-    const didPrefillContinuous = useRef(false);
+    // prefill ไปแล้วใน route นี้ (กดย้อนกลับจากหน้าสรุป) ไม่ต้อง prefill ทับค่าที่แก้ไว้
+    // เก็บใน ClaimDraftProvider ไม่ใช้ form ใน store เพราะ store ไม่ถูกล้างตอนเข้าเคลมใหม่
+    const didPrefillContinuous = useRef(!!claimDraftStore?.get(NEW_CLAIM_DRAFT_KEY)?.isContinuousPrefilled);
     useEffect(() => {
         if (!isContinuous || !oldClaim || didPrefillContinuous.current) return;
         didPrefillContinuous.current = true;
+        claimDraftStore?.update(NEW_CLAIM_DRAFT_KEY, { isContinuousPrefilled: true });
         formik.setValues(
             {
                 ...formik.values,

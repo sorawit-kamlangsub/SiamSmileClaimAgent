@@ -3,7 +3,7 @@ import { Box, Divider, IconButton, Link, Tooltip, Typography, Zoom } from "@mui/
 import EditIcon from "@mui/icons-material/Edit";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
-import { formatDateString } from "../../../../../functionHelpers";
+import { PA_APPLICATION_DETAIL_URL, formatDateString, getApplicationDetailUrl } from "../../../../../functionHelpers";
 import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 
@@ -46,9 +46,19 @@ const InsuredInfoSection: React.FC<Props> = ({ data, onEdit }) => (
             <Row
                 label="Application ID"
                 value={
-                    <Link href="" target="_blank" rel="noreferrer" fontWeight={700}>
-                        {data?.policyCode}
-                    </Link>
+                    data?.policyCode ? (
+                        <Link
+                            href={getApplicationDetailUrl(PA_APPLICATION_DETAIL_URL, data.policyCode)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="hover"
+                            fontWeight={700}
+                        >
+                            {data.policyCode}
+                        </Link>
+                    ) : (
+                        "-"
+                    )
                 }
             />
             <Row label="ชื่อผู้เอาประกัน" value={`${data?.customerName}`} />

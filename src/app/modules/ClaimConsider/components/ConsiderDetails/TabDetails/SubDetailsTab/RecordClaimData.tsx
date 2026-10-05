@@ -287,6 +287,7 @@ const RecordClaimData = ({
                             <Grid item xs={12} lg={12} key={index}>
                                 <CD10Autocomplete
                                     name={`diagnoses.${index}.icd10Id`}
+                                    diagnosisNo={index + 1}
                                     formik={formik}
                                     required={index === 0}
                                 />

@@ -335,7 +335,7 @@ const CoverageSummaryPanel: React.FC<Props> = ({ benefitData, isLoading, applica
                                 <Stack spacing={0.5}>
                                     <Typography fontSize={14} color="primary" fontWeight={600}>
                                         <Typography component="span" fontSize={14} color="text.secondary">
-                                            อาการสำคัญ :
+                                            อาการสำคัญ (ChiefComplaint) :
                                         </Typography>{" "}
                                         {continuousClaim.chiefComplaint ?? "-"}
                                     </Typography>

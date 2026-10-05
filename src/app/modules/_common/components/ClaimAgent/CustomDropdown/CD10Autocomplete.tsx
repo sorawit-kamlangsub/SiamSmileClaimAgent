@@ -9,9 +9,11 @@ type CD10AutocompleteProps = Omit<
     /** loading จากภายนอก (เช่น รอ prefill icD10Id จากเคลมตั้งต้น) — แสดง progress + disable ช่อง */
     loading?: boolean;
     disabled?: boolean;
+    /** ลำดับการวินิจฉัย (เริ่มที่ 1) — แสดงต่อท้าย label เช่น "การวินิจฉัย 1" */
+    diagnosisNo?: number;
 };
 
-const CD10Autocomplete = ({ formik, ...props }: CD10AutocompleteProps) => {
+const CD10Autocomplete = ({ formik, diagnosisNo, ...props }: CD10AutocompleteProps) => {
     return (
         <>
             <FormikAutocompleteApi
@@ -20,7 +22,9 @@ const CD10Autocomplete = ({ formik, ...props }: CD10AutocompleteProps) => {
                 valueFieldName="icD10Id"
                 displayFieldName="icD10Detail"
                 useQueryGet={useGetICD10Filter}
-                label="การวินิจฉัย "
+                label={
+                    diagnosisNo ? `การวินิจฉัย ${diagnosisNo} (Diagnosis ${diagnosisNo})` : "การวินิจฉัย (Diagnosis)"
+                }
                 formik={formik}
             />
         </>

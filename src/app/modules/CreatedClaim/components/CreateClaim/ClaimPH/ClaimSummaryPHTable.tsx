@@ -3,6 +3,7 @@ import { Box, Grid, Link, Typography } from "@mui/material";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import DescriptionIcon from "@mui/icons-material/Description";
 import { CustomTypographyWithOutGrid } from "../../../../_common/components/CustomComponent/CustomTypographyWithOutGrid";
+import { PH_APPLICATION_DETAIL_URL, getApplicationDetailUrl } from "../../../../../functionHelpers";
 
 interface SummaryRow {
     appId: string;
@@ -30,9 +31,21 @@ const ClaimSummaryPHTable: React.FC<Props> = ({ data }) => {
                         <CustomTypographyWithOutGrid
                             label="Application ID"
                             value={
-                                <Link href="#" underline="hover" fontWeight={700} fontSize={15} color="primary.main">
-                                    {row.appId}
-                                </Link>
+                                row.appId ? (
+                                    <Link
+                                        href={getApplicationDetailUrl(PH_APPLICATION_DETAIL_URL, row.appId)}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        underline="hover"
+                                        fontWeight={700}
+                                        fontSize={15}
+                                        color="primary.main"
+                                    >
+                                        {row.appId}
+                                    </Link>
+                                ) : (
+                                    "-"
+                                )
                             }
                         />
                     </Grid>
