@@ -1,0 +1,6 @@
+{
+  "name": "openai",
+  "dependencies": {
+    "@openai/codex": "^0.160.1"
+  }
+}
