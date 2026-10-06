@@ -2,28 +2,22 @@ import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
 import { numberWithCommas } from "../../../../functionHelpers";
 import { Box, Typography } from "@mui/material";
-import { PaginationDto, swalError, swalInfo } from "../../../_common";
+import { PaginationResultDto, PaginationSortableDto, swalInfo } from "../../../_common";
 import { useMemo, useState } from "react";
 import { useAppDispatch } from "../../../../../redux";
 import { setDialogOpen } from "../store/generateTransferSlice";
-import { HospitalTransferMonitorResponse, useGetHospitalTransferMonitor } from "../manageTransferHospitalAPI";
+import { useGetHospitalTransferMonitorData } from "../manageTransferHospitalAPI";
 
-const useGenerateGroupTransferHook = () => {
+type GenerateGroupTransferHookProps = {
+    statusId: number | undefined;
+    searchDetail: string;
+};
+
+const useGenerateGroupTransferHook = ({ statusId, searchDetail }: GenerateGroupTransferHookProps) => {
     const dispatch = useAppDispatch();
-    const [data, setData] = useState<HospitalTransferMonitorResponse>();
-    const [paginate, setPaginate] = useState<PaginationDto>({ page: 1, recordsPerPage: 10 });
+    const [paginate, setPaginate] = useState<PaginationSortableDto>({ page: 1, recordsPerPage: 10 });
     const [onRowsSelected, setOnRowsSelected] = useState<any[]>([]);
     const [rowsSelected, setRowsSelected] = useState<any[]>([]);
-
-    const handleGetDataSuccess = (res: HospitalTransferMonitorResponse) => {
-        setData(res);
-    };
-
-    const handleError = (message: string) => {
-        swalError("แจ้งเตือน", message);
-    };
-
-    const { mutate, isLoading } = useGetHospitalTransferMonitor(handleGetDataSuccess, handleError);
 
     const column: MUIDataTableColumn[] = [
         {
@@ -36,11 +30,11 @@ const useGenerateGroupTransferHook = () => {
                     return (
                         <Typography
                             onClick={() => {
-                                swalInfo(data?.data?.[rowIndex]?.caseId ?? "", "");
+                                swalInfo(getHospitalTransferData?.data?.[rowIndex]?.caseId ?? "", "");
                             }}
                             sx={{ color: "#4389B5", cursor: "pointer" }}
                         >
-                            {data?.data?.[rowIndex]?.caseNo}
+                            {getHospitalTransferData?.data?.[rowIndex]?.caseNo}
                         </Typography>
                     );
                 },
@@ -53,8 +47,8 @@ const useGenerateGroupTransferHook = () => {
                 sort: false,
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
-                    const formatDate = data?.data?.[rowIndex].billSentDate
-                        ? dayjs(data?.data?.[rowIndex]?.billSentDate).format("DD/MM/YYYY")
+                    const formatDate = getHospitalTransferData?.data?.[rowIndex].billSentDate
+                        ? dayjs(getHospitalTransferData?.data?.[rowIndex]?.billSentDate).format("DD/MM/YYYY")
                         : "-";
                     return formatDate;
                 },
@@ -80,7 +74,7 @@ const useGenerateGroupTransferHook = () => {
                     style: { textAlign: "center" },
                 }),
                 customBodyRenderLite: (rowIndex) => {
-                    const formatNumberAmount = numberWithCommas(data?.data?.[rowIndex]?.amount ?? 0);
+                    const formatNumberAmount = numberWithCommas(getHospitalTransferData?.data?.[rowIndex]?.amount ?? 0);
                     return (
                         <Box
                             sx={{
@@ -114,7 +108,7 @@ const useGenerateGroupTransferHook = () => {
                             }}
                         >
                             <Box sx={{ bgcolor: "#FFF7DC", color: "#C39A3B", borderRadius: 2, p: "7px" }}>
-                                {data?.data?.[rowIndex]?.statusNameTH}
+                                {getHospitalTransferData?.data?.[rowIndex]?.statusNameTH}
                             </Box>
                         </Box>
                     );
@@ -134,21 +128,34 @@ const useGenerateGroupTransferHook = () => {
     ) => {
         setOnRowsSelected(selectedRowIndexes);
 
-        const rows = selectedRowIndexes.map((rowIndex) => data?.data[rowIndex]);
+        const rows = selectedRowIndexes.map((rowIndex) => getHospitalTransferData?.data[rowIndex]);
         setRowsSelected(rows);
     };
+
+    const { data: getHospitalTransferData, isLoading: isGetHospitalTransferLoading } =
+        useGetHospitalTransferMonitorData({ statusId: statusId, hospitalName: searchDetail, paginate });
 
     useMemo(() => {
         setOnRowsSelected([]);
         setRowsSelected([]);
-    }, [paginate]);
+    }, [paginate, getHospitalTransferData?.data]);
+
+    const pagination: PaginationResultDto = useMemo(
+        () => ({
+            totalAmountRecords: getHospitalTransferData?.totalAmountRecords ?? 0,
+            totalAmountPages: getHospitalTransferData?.totalAmountPages ?? 0,
+            currentPage: getHospitalTransferData?.currentPage ?? 0,
+            recordsPerPage: getHospitalTransferData?.recordsPerPage ?? 0,
+            pageIndex: getHospitalTransferData?.pageIndex ?? 0,
+        }),
+        [getHospitalTransferData]
+    );
 
     return {
-        data,
+        getHospitalTransferData,
         column,
-        paginate,
-        mutate,
-        isLoading,
+        pagination,
+        isGetHospitalTransferLoading,
         handleGenerateSuccess: handleGenerateDialogOpen,
         setPaginate,
         handleRowSelected,

@@ -2,7 +2,6 @@ import { Box, Button, Grid, Typography } from "@mui/material";
 import useGenerateGroupTransferHook from "../hooks/GenerateGroupTransferHook";
 import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import { StandardDataTable } from "../../../_common";
-import { useEffect } from "react";
 
 type GenerateGroupTableProps = {
     statusId: number | undefined;
@@ -11,22 +10,15 @@ type GenerateGroupTableProps = {
 
 const GenerateGroupTable = ({ statusId, searchDetail }: GenerateGroupTableProps) => {
     const {
-        data,
+        getHospitalTransferData,
         column,
-        paginate,
-        mutate,
-        isLoading,
+        pagination,
+        isGetHospitalTransferLoading,
         setPaginate,
         handleRowSelected,
         handleGenerateSuccess,
         onRowsSelected,
-    } = useGenerateGroupTransferHook();
-
-    useEffect(() => {
-        if (statusId) {
-            mutate({ statusId, hospitalName: searchDetail, paginate });
-        }
-    }, [statusId, searchDetail, paginate, mutate]);
+    } = useGenerateGroupTransferHook({ statusId: statusId, searchDetail: searchDetail });
 
     return (
         <Box
@@ -67,10 +59,10 @@ const GenerateGroupTable = ({ statusId, searchDetail }: GenerateGroupTableProps)
                         <StandardDataTable
                             name="generate"
                             columns={column}
-                            data={data?.data ?? []}
-                            isLoading={isLoading}
+                            data={getHospitalTransferData?.data ?? []}
+                            isLoading={isGetHospitalTransferLoading}
                             color="primary"
-                            paginated={paginate}
+                            paginated={pagination}
                             setPaginated={setPaginate}
                             rowsSelected={onRowsSelected}
                             onRowSelectedIndex={handleRowSelected}

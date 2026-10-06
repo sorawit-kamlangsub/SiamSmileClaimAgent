@@ -9,21 +9,9 @@ type TransferSuccessTableProps = {
 };
 
 const TransferSuccessTable = ({ statusId, searchDetail }: TransferSuccessTableProps) => {
-    const {
-        column,
-        data,
-        isGetHospitalPendingTransferLoading,
-        mutateGetHospitalPendingTransfer,
-        paginate,
-        setPaginate,
-        fetchPendingTransfers,
-    } = useTransferSuccessTableHook({ statusId: statusId });
+    const { getHospitalMonitorByStatusData, isGetHospitalMonitorByStatusDataLoading, column, pagination, setPaginate } =
+        useTransferSuccessTableHook({ statusId: statusId, searchDetail });
 
-    useEffect(() => {
-        if (statusId !== undefined) {
-            fetchPendingTransfers({ statusId, hospitalName: searchDetail, paginate });
-        }
-    }, [statusId, searchDetail, paginate, mutateGetHospitalPendingTransfer]);
     return (
         <Box
             sx={{
@@ -43,10 +31,10 @@ const TransferSuccessTable = ({ statusId, searchDetail }: TransferSuccessTablePr
                         <StandardDataTable
                             name="generate"
                             columns={column}
-                            data={data?.data ?? []}
-                            isLoading={isGetHospitalPendingTransferLoading}
+                            data={getHospitalMonitorByStatusData?.data ?? []}
+                            isLoading={isGetHospitalMonitorByStatusDataLoading}
                             color="primary"
-                            paginated={paginate}
+                            paginated={pagination}
                             setPaginated={setPaginate}
                         />
                     </Grid>

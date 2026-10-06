@@ -1,7 +1,7 @@
 import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_CLAIM_FUND_URL } from "../../../../Const";
-import { encodeURLWithParams } from "../../_common";
+import { encodeURLWithParams, swalWarning } from "../../_common";
 import { HospitalTransferMonitorType } from "./manageTransferHospitalAPI";
 
 const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
@@ -42,28 +42,15 @@ export type HospitalPendingTransferType = {
     pageIndex: number | undefined;
 };
 
-export const useGetHospitalPendingTransferMonitor = (
-    onSuccessCallBack: (response: HospitalPendingTransferType[]) => void,
-    onErrorCallback: (error: string) => void
-) => {
-    const queryClient = useQueryClient();
-    return useMutation((payload: HospitalTransferMonitorType) => hospitalPendingTransferMonitorData(payload), {
-        onSuccess: (response) => {
-            if (!response.isSuccess) {
-                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
-            } else {
-                onSuccessCallBack(response);
-            }
-
-            queryClient.invalidateQueries([getHospitalPendingTransferByStatusKey]);
-        },
-        onError: (error: Error) => {
-            onErrorCallback && onErrorCallback(error.message);
-            queryClient.invalidateQueries([getHospitalPendingTransferByStatusKey]);
-        },
-    });
+export const useGetHospitalMonitorDataByStatus = (payload: HospitalTransferMonitorType) => {
+    return useQuery(
+        [getHospitalPendingTransferByStatusKey, payload],
+        () => hospitalPendingTransferMonitorData(payload),
+        {
+            enabled: payload.statusId !== 1 && !!payload.statusId,
+        }
+    );
 };
-
 const hospitalPendingTransferMonitorData = (payload: HospitalTransferMonitorType) => {
     const url = encodeURLWithParams(`${claimFundAPI_URL}/HospitalTransfer/v1/HospitalTransferStatusMonitor`, {
         Page: payload.paginate.page,
@@ -113,11 +100,11 @@ const hospitalTransferPaymentNow = (paymentId: string) => {
         .post(url, { paymentId: paymentId })
         .then((res) => {
             if (res.data) {
-                if (res.data.isSuccess) {
+                if (res.data?.isSuccess) {
                     return res.data;
+                } else {
+                    return swalWarning("แจ้งเตือน", res.data?.message);
                 }
-            } else {
-                throw Error(res.data?.message);
             }
         })
         .catch((err: Error) => {

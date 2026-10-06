@@ -1,7 +1,6 @@
 import { Box, Button, Grid, Typography } from "@mui/material";
 import PaymentsIcon from "@mui/icons-material/Payments";
 import { StandardDataTable } from "../../../_common";
-import { useEffect } from "react";
 import usePendingTransferHook from "../hooks/PendingTransferHook";
 
 type PendingTransferTableProps = {
@@ -12,22 +11,15 @@ type PendingTransferTableProps = {
 const PendingTransferTable = ({ statusId, searchDetail }: PendingTransferTableProps) => {
     const {
         column,
-        data,
+        getHospitalMonitorByStatusData,
         handleRowSelected,
         handleSentTransfer,
-        isGetHospitalPendingTransferLoading,
-        mutateGetHospitalPendingTransfer,
+        isGetHospitalMonitorByStatusDataLoading,
         onRowsSelected,
-        paginate,
+        pagination,
         setPaginate,
-        fetchPendingTransfers,
-    } = usePendingTransferHook();
+    } = usePendingTransferHook({ statusId: statusId, searchDetail: searchDetail });
 
-    useEffect(() => {
-        if (statusId !== undefined) {
-            fetchPendingTransfers({ statusId, hospitalName: searchDetail, paginate });
-        }
-    }, [statusId, searchDetail, paginate, mutateGetHospitalPendingTransfer]);
     return (
         <Box
             sx={{
@@ -47,10 +39,10 @@ const PendingTransferTable = ({ statusId, searchDetail }: PendingTransferTablePr
                         <StandardDataTable
                             name="generate"
                             columns={column}
-                            data={data?.data ?? []}
-                            isLoading={isGetHospitalPendingTransferLoading}
+                            data={getHospitalMonitorByStatusData?.data ?? []}
+                            isLoading={isGetHospitalMonitorByStatusDataLoading}
                             color="primary"
-                            paginated={paginate}
+                            paginated={pagination}
                             setPaginated={setPaginate}
                             rowsSelected={onRowsSelected}
                             onRowSelectedIndex={handleRowSelected}
