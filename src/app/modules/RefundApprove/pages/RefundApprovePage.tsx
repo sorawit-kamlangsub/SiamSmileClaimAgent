@@ -2,7 +2,6 @@ import { Box, Grid } from "@mui/material";
 import { useState } from "react";
 import RefundApproveDataTable from "../components/RefundApproveDataTable";
 import ApproveRefundDialog from "../components/ApproveRefundDialog";
-import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 import RefundSearchFilterForm, {
     RefundSearchFilterValues,
 } from "../../Refund/_common/RefundSearchFilterForm";
@@ -11,8 +10,8 @@ const RefundApprovePage = () => {
     const [filter, setFilter] = useState<RefundSearchFilterValues | undefined>(undefined);
     const [hasSearched, setHasSearched] = useState(false);
     const [searchKey, setSearchKey] = useState(0);
-    const [approveRow, setApproveRow] = useState<RefundApproveMonitorRow | null>(null);
-    const [viewRow, setViewRow] = useState<RefundApproveMonitorRow | null>(null);
+    const [approveCaseRefundId, setApproveCaseRefundId] = useState<string | null>(null);
+    const [viewCaseRefundId, setViewCaseRefundId] = useState<string | null>(null);
 
     const handleSearch = (values: RefundSearchFilterValues) => {
         setFilter(values);
@@ -38,17 +37,21 @@ const RefundApprovePage = () => {
                         filter={filter}
                         hasSearched={hasSearched}
                         searchKey={searchKey}
-                        onEdit={setApproveRow}
-                        onView={setViewRow}
+                        onEdit={(row) => setApproveCaseRefundId(row.caseRefundId ?? null)}
+                        onView={(row) => setViewCaseRefundId(row.caseRefundId ?? null)}
                     />
                 </Box>
             </Grid>
-            <ApproveRefundDialog open={approveRow !== null} row={approveRow} onClose={() => setApproveRow(null)} />
+            <ApproveRefundDialog
+                open={approveCaseRefundId !== null}
+                caseRefundId={approveCaseRefundId}
+                onClose={() => setApproveCaseRefundId(null)}
+            />
             <ApproveRefundDialog
                 mode="view"
-                open={viewRow !== null}
-                row={viewRow}
-                onClose={() => setViewRow(null)}
+                open={viewCaseRefundId !== null}
+                caseRefundId={viewCaseRefundId}
+                onClose={() => setViewCaseRefundId(null)}
             />
         </Grid>
     );
