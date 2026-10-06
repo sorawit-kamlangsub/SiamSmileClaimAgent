@@ -15,7 +15,7 @@ const SearchFilter = () => {
                                 formik={formik}
                                 name="searchDetail"
                                 label="ค้นหา"
-                                placeholder="กรุณากรอกเลขที่ CPG / CL"
+                                placeholder="กรุณากรอกเลขที่ CL / CC"
                                 required
                             />
                         </Grid>

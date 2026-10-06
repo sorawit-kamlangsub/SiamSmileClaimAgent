@@ -69,6 +69,15 @@ export interface BeneficiaryForm {
     source?: "system" | "manual";
 }
 
+/** ค่าเจ้าของรถ (Master ZebraCarOwner) ใน Claim Entry */
+export interface CarOwnerValues {
+    zebraId: number | undefined;
+    zebraCode: string | undefined;
+    zebraNo: string | undefined;
+    employeeCode: string | undefined;
+    employeeName: string | undefined;
+}
+
 export interface ClaimFormValues {
     // ผู้รับเอกสาร
     documentRecipientTypeId: number | undefined;
@@ -83,6 +92,8 @@ export interface ClaimFormValues {
     zebraNo: string | undefined;
     employeeCode: string | undefined;
     employeeName: string | undefined;
+    /** เจ้าของรถที่ผู้ใช้เลือกไว้ตอน Walk Out — ใช้คืนค่าเมื่อสลับกลับมา Walk Out (ไม่ได้ส่งเข้า payload) */
+    walkOutCarOwner: CarOwnerValues | undefined;
     //เหตุของการเคลม
     incidentTypeId: number | undefined;
     incidentTypeName: string | undefined;
@@ -112,7 +123,7 @@ export interface ClaimFormValues {
     accidentPlace: string | undefined;
     chiefComplaintId: number | undefined;
     chiefComplaintId_selectedText: string | undefined;
-    remark: string | undefined;
+    illnessOrInjuryDetail: string | undefined;
     ocrDocument: CaseDocumentV2Request[] | undefined;
 }
 
@@ -150,6 +161,7 @@ const defaultForm: ClaimFormValues = {
     zebraNo: undefined,
     employeeCode: undefined,
     employeeName: undefined,
+    walkOutCarOwner: undefined,
     incidentTypeId: undefined,
     incidentTypeName: undefined,
     coverageTypeId: undefined,
@@ -180,7 +192,7 @@ const defaultForm: ClaimFormValues = {
     accidentPlace: undefined,
     chiefComplaintId: undefined,
     chiefComplaintId_selectedText: undefined,
-    remark: undefined,
+    illnessOrInjuryDetail: undefined,
     ocrDocument: [],
 };
 export interface DocumentDetailDto {
@@ -315,6 +327,11 @@ const claimPHSlice = createSlice({
                 ...incoming,
             ];
         },
+        /** ล้างเฉพาะเอกสารที่สแกน — หน้าที่ไม่ใช่การสร้างเคลมเรียกตอนออกจากหน้า ไม่ให้เอกสารของเคสนั้นค้างไปหน้าอื่น */
+        clearDocumentScan: (state) => {
+            state.documentScanList = [];
+            state.documentDetailById = {};
+        },
         setOrganLossItems: (state, action: PayloadAction<OrganLossItem[]>) => {
             state.organLossItems = action.payload;
         },
@@ -380,6 +397,7 @@ export const {
     setEnabled,
     setDocumentDetailById,
     setDocument,
+    clearDocumentScan,
     setOrganLossItems,
     setBeneficiaries,
     updateBeneficiary,

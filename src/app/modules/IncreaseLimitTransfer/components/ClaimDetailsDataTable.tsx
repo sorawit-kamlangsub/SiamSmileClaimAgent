@@ -5,15 +5,15 @@ import { ClaimSearchFilterValues } from "../_common/ClaimSearchFilterForm";
 type ClaimDetailsDataTableProps = {
     filter: ClaimSearchFilterValues | undefined;
     hasSearched: boolean;
-    searchKey: number;
+    searchTrigger?: number;
     onEdit?: (row: IncreaseTransferMonitorRow) => void;
 };
 
-const ClaimDetailsDataTable = ({ filter, hasSearched, searchKey, onEdit }: ClaimDetailsDataTableProps) => {
+const ClaimDetailsDataTable = ({ filter, hasSearched, searchTrigger, onEdit }: ClaimDetailsDataTableProps) => {
     const { columns, data, isLoading, isError, error, pagination, setPaginated } = useClaimCpgTransferDataTableHook({
         filter,
         hasSearched,
-        searchKey,
+        searchTrigger,
         onEdit,
     });
 

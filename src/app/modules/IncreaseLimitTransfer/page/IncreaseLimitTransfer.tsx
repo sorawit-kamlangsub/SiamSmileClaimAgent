@@ -8,13 +8,13 @@ import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 const IncreaseLimitTransfer = () => {
     const [filter, setFilter] = useState<ClaimSearchFilterValues | undefined>(undefined);
     const [hasSearched, setHasSearched] = useState(false);
-    const [searchKey, setSearchKey] = useState(0);
+    const [searchTrigger, setSearchTrigger] = useState(0);
     const [detailRow, setDetailRow] = useState<IncreaseTransferMonitorRow | null>(null);
 
     const handleSearch = (values: ClaimSearchFilterValues) => {
         setFilter(values);
         setHasSearched(true);
-        setSearchKey((prevKey) => prevKey + 1);
+        setSearchTrigger((count) => count + 1);
     };
 
     return (
@@ -32,16 +32,25 @@ const IncreaseLimitTransfer = () => {
                             backgroundColor: "#FFFFFF",
                         }}
                     >
-                        <ClaimDetailsDataTable
-                            filter={filter}
-                            hasSearched={hasSearched}
-                            searchKey={searchKey}
-                            onEdit={setDetailRow}
-                        />
+                    <ClaimDetailsDataTable
+                        filter={filter}
+                        hasSearched={hasSearched}
+                        searchTrigger={searchTrigger}
+                        onEdit={(row) => setDetailRow(row)}
+                    />
                     </Box>
                 </Grid>
             </Grid>
-            <IncreaseLimitDetailDialog open={detailRow !== null} row={detailRow} onClose={() => setDetailRow(null)} />
+            <IncreaseLimitDetailDialog
+                open={detailRow !== null}
+                row={detailRow}
+                onClose={() => setDetailRow(null)}
+                onApproved={() => {
+                    setFilter(undefined);
+                    setHasSearched(false);
+                    setSearchTrigger((count) => count + 1);
+                }}
+            />
         </>
     );
 };

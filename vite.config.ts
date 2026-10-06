@@ -98,7 +98,7 @@ export default defineConfig(({ command, mode }) => {
             drop: ["console", "debugger"],
         },
         build: {
-            outDir: `${mode}`,
+            outDir: `${mode}/${dateFormat}_${VITE_APP_NAME.replace(/ /g, "")}`,
             emptyOutDir: true,
             rollupOptions: {
                 input: {

@@ -7,6 +7,7 @@ import {
     TimeSpan,
 } from "../../../api/coreClaimApi.client";
 import { ClaimConsiderValues, ClaimExpenseItem } from "./claimConsiderSlice";
+import { DECISION_ID } from "./claimConsider.constants";
 
 /**
  * TimeSpan จาก NSwag พิมพ์เป็น object แต่ backend ส่งจริงเป็น string "HH:mm:ss" เสมอ (ดู asTimeSpan
@@ -92,13 +93,24 @@ export const mapDraftPayloadToFormValues = ({
     const dischargeTime = parseTimeSpan(c?.dischargeTime);
     if (dischargeTime) values.dischargeTime = dischargeTime;
 
+    const notificationDate = asDate(c?.notificationDate);
+    if (notificationDate) values.notificationDate = notificationDate; // วันที่แจ้ง
+
     const documentCompleteDate = asDate(c?.caseAssessment?.documentCompleteDate);
     if (documentCompleteDate) values.documentCompleteDate = documentCompleteDate;
 
     if (c?.hospitalId !== undefined) values.hospitalId = c.hospitalId;
     if (c?.chiefComplaintId !== undefined) values.chiefComplaintId = c.chiefComplaintId;
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
-    if (payload.accidentDescription !== undefined) values.detail = payload.accidentDescription;
+    if (c?.illnessOrInjuryDetail !== undefined) values.detail = c.illnessOrInjuryDetail;
+
+    // RC-003 3.4 / RC-005 5.5 ข้อมูลกายภาพบำบัด (เคลมลูกค้า + เคลมโรงพยาบาล) — แบบร่างที่บันทึกก่อนมีฟิลด์นี้
+    // จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
+    const physicalTherapy = c?.casePhysicalTherapy;
+    if (physicalTherapy) {
+        values.isPhysicalTherapyChecked = physicalTherapy.isPhysicalTherapy === true;
+        values.physicalTherapyNecessityReasonId = physicalTherapy.physicalTherapyNecessityReasonId ?? undefined;
+    }
 
     if (c?.icD10_1stId !== undefined || c?.icD10_2ndId !== undefined || c?.icD10_3rdId !== undefined) {
         values.diagnoses = [
@@ -110,7 +122,14 @@ export const mapDraftPayloadToFormValues = ({
 
     const adjudication = c?.caseAdjudication;
     if (adjudication?.decisionId !== undefined) values.considerResult = adjudication.decisionId;
-    if (adjudication?.decisionReasonId !== undefined) values.decisionReasonId = adjudication.decisionReasonId;
+    // ปฏิเสธ (5) / ยกเลิก (6) : สาเหตุที่เลือกใน ConsiderSection คือ rejectReasonId / cancelReasonId
+    const reasonId =
+        adjudication?.decisionId === DECISION_ID.REJECTED
+            ? adjudication.rejectReasonId
+            : adjudication?.decisionId === DECISION_ID.CANCELLED
+            ? c?.cancelReasonId
+            : adjudication?.decisionReasonId;
+    if (reasonId !== undefined) values.decisionReasonId = reasonId;
     if (adjudication?.decisionRemark !== undefined) values.decisionReasonDetail = adjudication.decisionRemark;
     if (adjudication?.approvedIPDDayCount !== undefined) values.ipdDays = adjudication.approvedIPDDayCount;
     if (adjudication?.approvedICUDayCount !== undefined) values.icuDays = adjudication.approvedICUDayCount;
@@ -131,12 +150,20 @@ const draftItemKey = (i: { inputToStandardMappingId?: number; standardMedicalExp
     `${i.inputToStandardMappingId ?? 0}|${i.standardMedicalExpenseId ?? 0}`;
 
 /**
+ * RC-006 / RC-004 4.2 : claimAmount (ยอดเบิกก่อนหัก) ผูกกับยอดเงินตามใบเสร็จเสมอ — ตอนเติมจากแบบร่างจึงตั้ง
+ * 2 ค่านี้จากยอดเดียวกัน แบบร่างเก่าที่ไม่มี receiptAmount ใช้ originalAmount แทน
+ */
+const getDraftReceiptAmount = (draftItem: ClaimEditDraftCaseItemPayloadDto): number | undefined =>
+    draftItem.receiptAmount || draftItem.originalAmount || undefined;
+
+/**
  * merge ยอดจาก caseItem[] ของแบบร่างทับ "รายการที่ใช้บ่อย" (frequentItems) แทนการสร้างใหม่จากศูนย์
  * เพราะ caseItem ของแบบร่างไม่มี code/description/color/maximumLimit/bodyPartId — ถ้าสร้างใหม่ล้วนๆ
  * แถวจะไม่มีชื่อ/สี/เพดานให้แสดง
  *
- * ห้าม match ด้วย caseItemId: ฝั่ง save (ClaimDetailActionHook.tsx) generate uuid ตัวเดียวแล้วใส่ซ้ำทุก
- * แถว ทำให้ caseItemId ในแบบร่างไม่ unique — ต้อง match ด้วย inputToStandardMappingId+standardMedicalExpenseId
+ * ห้าม match ด้วย caseItemId: แบบร่างเก่าที่บันทึกไว้ก่อนแก้ ClaimDetailActionHook.tsx (เคย generate uuid
+ * ตัวเดียวใส่ซ้ำทุกแถว) ยังมี caseItemId ไม่ unique อยู่ — ต้อง match ด้วย inputToStandardMappingId+standardMedicalExpenseId
+ * ต่อไปเพื่อรองรับข้อมูลเก่า แม้แบบร่างใหม่จะมี caseItemId unique ต่อแถวแล้วก็ตาม
  */
 export const mergeDraftCaseItems = (
     frequentItems: ClaimExpenseItem[],
@@ -157,17 +184,20 @@ export const mergeDraftCaseItems = (
         const draftItem = queue?.shift();
 
         if (!draftItem) {
-            // แถวนี้ไม่มีในแบบร่าง = ผู้ใช้ไม่ได้กรอกตอนทำร่าง ล้างยอดทิ้งแต่คงแถวไว้ให้เห็น
-            return { ...master, claimAmount: undefined, discount: undefined, notCovered: undefined, reason: undefined };
+            // แถวนี้ไม่มีในแบบร่าง (เช่น บันทึกร่างตั้งแต่ Step 1 ก่อนเข้าหน้ารายการค่าใช้จ่าย) — คงค่าจากข้อมูลเคสไว้
+            // ทั้งแถว ห้ามล้างเฉพาะ claimAmount : receiptAmount ที่ค้างอยู่จะทำให้ "สิทธิ์เบิก" บนจอไม่ตรงกับยอดรวม
+            return master;
         }
 
         const notCovered = draftItem.nonCoveredAmount || undefined;
+        const receiptAmount = getDraftReceiptAmount(draftItem);
         return {
             ...master,
-            claimAmount: draftItem.originalAmount || undefined,
+            receiptAmount,
+            claimAmount: receiptAmount,
             discount: draftItem.discountAmount || undefined,
             notCovered,
-            // forward mapper เขียน DEFAULT_NON_COVERED_REASON_ID (1) ลงทุกแถวแม้ nonCoveredAmount = 0
+            // draft เก่าอาจมี nonCoveredReasonId = 1 ติดมาทุกแถวแม้ nonCoveredAmount = 0 (เคยส่ง fallback)
             // ต้อง guard ไม่งั้นทุกแถวจะโชว์ "สาเหตุไม่คุ้มครอง" มั่วและกระทบ validation ตอนกดถัดไป
             reason: notCovered ? draftItem.nonCoveredReasonId || undefined : undefined,
         };
@@ -183,6 +213,7 @@ export const mergeDraftCaseItems = (
                     l.standardMedicalExpenseId === draftItem.standardMedicalExpenseId
             );
             const notCovered = draftItem.nonCoveredAmount || undefined;
+            const receiptAmount = getDraftReceiptAmount(draftItem);
             leftoverRows.push({
                 // id ต้อง deterministic ไม่ชนกับ index-based id ของ frequentItems (0..n) — ไม่ใช้ Date.now()
                 // เพราะเปลี่ยนค่าทุกครั้งที่ merge effect รันซ้ำ (จะกลายเป็นแถวใหม่ทุกรอบ)
@@ -192,7 +223,8 @@ export const mergeDraftCaseItems = (
                 caseItemId: draftItem.caseItemId,
                 code: leaf?.code ?? "",
                 description: leaf ? leaf.label.replace(leaf.code, "").trim() : "-",
-                claimAmount: draftItem.originalAmount || undefined,
+                receiptAmount,
+                claimAmount: receiptAmount,
                 discount: draftItem.discountAmount || undefined,
                 notCovered,
                 reason: notCovered ? draftItem.nonCoveredReasonId || undefined : undefined,

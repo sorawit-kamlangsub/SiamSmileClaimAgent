@@ -1,11 +1,11 @@
 import axios from "axios";
-import { API_URL } from "../../Const";
+import { APIGW_URL } from "../../Const";
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { AllUserDtoResponse, GetICD10DtoResponse, GetOrganizeDtoResponse, MastersClient } from "./coreClaimApi.client";
 import { useMemo } from "react";
 import { useBranchByUserPermission } from "../modules/_common/branchPermission";
 
-const coreClaimMastersClient = new MastersClient(API_URL, axios);
+const coreClaimMastersClient = new MastersClient(`${APIGW_URL}/claim/core`, axios);
 
 const getUserQuerykey = ["getUser"];
 const getIncidentTypeQueryKey = ["getIncidentType"];
@@ -32,13 +32,17 @@ const getBodyPartByDisabilityLossPartQueryKey = ["getBodyPartByDisabilityLossPar
 const getPaymentStatusQueryKey = ["getPaymentStatus"];
 const getBranchQueryKey = ["getBranch"];
 const getDeductionSourceQueryKey = ["getDeductionSource"];
-const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getDecisionQueryKey = ["getDecision"];
 const getDecisionReasonQueryKey = ["getDecisionReason"];
 const getInsuranceCompanyQueryKey = ["getInsuranceCompany"];
 const getDocumentReviewStatusQueryKey = ["getDocumentReviewStatus"];
+const getCancelReasonQueryKey = ["getCancelReason"];
+const getRejectReasonQueryKey = ["getRejectReason"];
 const getClaimTransactionTypeQueryKey = ["getClaimTransactionType"];
 const getBenefitQueryKey = ["getBenefit"];
+const getPhysicalTherapyNecessityReasonQueryKey = ["getPhysicalTherapyNecessityReason"];
+const getTrafficAccidentPersonRoleQueryKey = ["getTrafficAccidentPersonRole"];
+const getTrafficVehicleTypeQueryKey = ["getTrafficVehicleType"];
 
 export const useGetUser = (userId?: number | undefined) => {
     return useQuery([getUserQuerykey, userId], () => coreClaimMastersClient.users(userId), {
@@ -131,7 +135,8 @@ export const useGetSimBCategory = (
     medicalTypeId?: number | undefined,
     productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    planId?: number | undefined
+    planId?: number | undefined,
+    incidentTypeId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -142,6 +147,7 @@ export const useGetSimBCategory = (
             productTypeId,
             causeOfIncidentId,
             planId,
+            incidentTypeId,
         ],
         () =>
             coreClaimMastersClient.getSimBCategory(
@@ -150,7 +156,8 @@ export const useGetSimBCategory = (
                 medicalTypeId,
                 productTypeId,
                 causeOfIncidentId,
-                planId
+                planId,
+                incidentTypeId
             ),
         {
             enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
@@ -166,7 +173,8 @@ export const useGetSimB = (
     isUseOften?: boolean | undefined,
     productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    plandId?: number | undefined
+    plandId?: number | undefined,
+    incidentTypeId?: number | undefined
 ) => {
     return useQuery(
         [
@@ -178,6 +186,7 @@ export const useGetSimB = (
             productTypeId,
             causeOfIncidentId,
             plandId,
+            incidentTypeId,
         ],
         () =>
             coreClaimMastersClient.getSimB(
@@ -187,7 +196,8 @@ export const useGetSimB = (
                 isUseOften,
                 productTypeId,
                 causeOfIncidentId,
-                plandId
+                plandId,
+                incidentTypeId
             ),
         {
             enabled: !!formatTypeId && !!coverageTypeId && !!productTypeId && !!(medicalTypeId || causeOfIncidentId),
@@ -441,16 +451,6 @@ export const useGetDeductionSource = (deductionSourceId?: number | undefined) =>
     );
 };
 
-export const useGetEmployeeClaimPaymentLimit = (userId: number) => {
-    return useQuery(
-        [getEmployeeClaimPaymentLimitQueryKey, userId],
-        () => coreClaimMastersClient.employeePaymentLimit(userId),
-        {
-            refetchOnWindowFocus: false,
-        }
-    );
-};
-
 export const useGetDecision = (decisionId?: number | undefined) => {
     return useQuery([getDecisionQueryKey, decisionId], () => coreClaimMastersClient.getDecision(decisionId), {
         refetchOnWindowFocus: false,
@@ -463,6 +463,28 @@ export const useGetDocumentReviewStatus = (documentReviewStatusId?: number | und
         () => coreClaimMastersClient.getDocumentReviewStatus(documentReviewStatusId),
         {
             cacheTime: 1000 * 60 * 60 * 24,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetCancelReason = (cancelReasonId?: number | undefined, enabled = true) => {
+    return useQuery(
+        [getCancelReasonQueryKey, cancelReasonId],
+        () => coreClaimMastersClient.getCancelReason(cancelReasonId),
+        {
+            enabled,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetRejectReason = (rejectReasonId?: number | undefined, enabled = true) => {
+    return useQuery(
+        [getRejectReasonQueryKey, rejectReasonId],
+        () => coreClaimMastersClient.getRejectReason(rejectReasonId),
+        {
+            enabled,
             refetchOnWindowFocus: false,
         }
     );
@@ -520,6 +542,39 @@ export const useGetBenefit = (benefitId?: number | undefined, benefitIdList?: nu
         () => coreClaimMastersClient.getBenefit(benefitId, benefitIdList),
         {
             enabled: benefitId !== undefined || !!benefitIdList?.length,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** เหตุผลความจำเป็นทางการแพทย์ (กายภาพบำบัด) — GET /Masters/claim/physical-therapy/necessity-reason */
+export const useGetPhysicalTherapyNecessityReason = (physicalTherapyNecessityReasonId?: number | undefined) => {
+    return useQuery(
+        [getPhysicalTherapyNecessityReasonQueryKey, physicalTherapyNecessityReasonId],
+        () => coreClaimMastersClient.getPhysicalTherapyNecessityReason(physicalTherapyNecessityReasonId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** ผู้ขับขี่ / ผู้โดยสาร (อุบัติเหตุจากการจราจร) — GET /Masters/claim/traffic-accident/person-role */
+export const useGetTrafficAccidentPersonRole = (trafficAccidentPersonRoleId?: number | undefined) => {
+    return useQuery(
+        [getTrafficAccidentPersonRoleQueryKey, trafficAccidentPersonRoleId],
+        () => coreClaimMastersClient.getTrafficAccidentPersonRole(trafficAccidentPersonRoleId),
+        {
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** ประเภทยานพาหนะ (อุบัติเหตุจากการจราจร) — GET /Masters/claim/traffic/vehicle-type */
+export const useGetTrafficVehicleType = (trafficVehicleTypeId?: number | undefined) => {
+    return useQuery(
+        [getTrafficVehicleTypeQueryKey, trafficVehicleTypeId],
+        () => coreClaimMastersClient.getTrafficVehicleType(trafficVehicleTypeId),
+        {
             refetchOnWindowFocus: false,
         }
     );

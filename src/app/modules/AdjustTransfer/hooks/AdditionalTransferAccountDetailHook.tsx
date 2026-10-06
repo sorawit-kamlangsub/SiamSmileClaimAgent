@@ -1,5 +1,5 @@
 import { useFormik } from "formik";
-import { useGetAdditionalTransferAccountDetail } from "../adjustTransferMonitorAPI";
+import { useGetAdditionalTransferAccountDetail } from "../../../api/coreClaimApi";
 
 type useAdditionalTransferAccountDetailHookProp = {
     paymentId: string;

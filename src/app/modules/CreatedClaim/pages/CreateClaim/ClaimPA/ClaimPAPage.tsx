@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
 import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAFormSection";
@@ -11,12 +11,13 @@ import { claimPASelector, resetState, setOldClaim } from "../../../store/claimPA
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import ClaimStickyHeader from "../../../components/CreateClaim/ClaimStickyHeader";
 import { useGetPreviousClaim } from "../../../../../api/coreClaimApi";
+import { safeAtob } from "../../../../../functionHelpers";
 
 const ClaimPAPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { oldClaim, insured } = useAppSelector(claimPASelector);
     const {
         appId,
@@ -28,7 +29,7 @@ const ClaimPAPage: React.FC = () => {
         oldClaimId: oldClaimIdEncode,
     } = useClaimPA();
 
-    const realOldClaimId = isContinuous && oldClaimIdEncode ? atob(oldClaimIdEncode) : undefined;
+    const realOldClaimId = isContinuous ? safeAtob(oldClaimIdEncode) : undefined;
     const { data: previousClaimData } = useGetPreviousClaim(realOldClaimId ?? "");
     const previousClaim = previousClaimData?.data;
 
@@ -49,6 +50,15 @@ const ClaimPAPage: React.FC = () => {
     }, [navigate, appId, refId, isContinuousEncode, oldClaimIdEncode]);
 
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
+    if (!claimInfo) {
+        return (
+            <Paper variant="outlined" sx={{ p: "1.5rem", mb: "1.5rem", textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                    ไม่พบข้อมูล
+                </Typography>
+            </Paper>
+        );
+    }
     return (
         <Box>
             <ClaimStickyHeader data={claimInfo} />

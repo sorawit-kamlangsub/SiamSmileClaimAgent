@@ -2,11 +2,11 @@ import { Box, Button, Grid } from "@mui/material";
 import { useFormik } from "formik";
 import { FormikDropdown } from "../../_common";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
-import { useGetPaymentStatus } from "../../IncreaseLimitTransfer/_common/masterAPI";
-import { useGetRefundStatus } from "../refundAPI";
+import { useGetPaymentStatuses, useGetRefundStatus } from "../../../api/coreClaimApi";
 import { useEffect } from "react";
 import { useAppDispatch } from "../../../../redux";
 import { resetFilterSearch, setSearchMonitorByFilter } from "../store/refundSlice";
+import { useAuth } from "../../_auth";
 
 export interface SelectOption {
     value: string | number;
@@ -40,15 +40,20 @@ const SearchByBranchAndStatus = ({
     statusSource = "payment",
     floatingButton = false,
 }: SearchByBranchAndStatusProps) => {
+    const { userProfile } = useAuth();
     const isRefundSource = statusSource === "refund";
-    const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatus(
+    const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatuses(
         isRefundSource ? false : true
     );
     const { data: refundStatus, isLoading: refundStatusIsLoading } = useGetRefundStatus(isRefundSource);
     const statusData = isRefundSource ? refundStatus?.data ?? [] : paymentStatus?.data ?? [];
     const statusIsLoading = isRefundSource ? refundStatusIsLoading : paymentStatusIsLoading;
     const formik = useFormik<BranchStatusFilterValues>({
-        initialValues: { ...defaultValues, ...initialValues },
+        initialValues: {
+            ...defaultValues,
+            branch: userProfile?.branchId,
+            ...initialValues,
+        },
         onSubmit: (values) => {
             onButtonClick(values);
         },

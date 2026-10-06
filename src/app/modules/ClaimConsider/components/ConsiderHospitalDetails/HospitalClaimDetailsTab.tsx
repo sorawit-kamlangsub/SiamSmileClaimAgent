@@ -14,22 +14,32 @@ import useHospitalClaimStepCalculateHook from "../../hooks/ClaimConsiderHospital
 import StepToggleBar from "../ConsiderDetails/TabDetails/SubDetailsTab/StepToggleBar";
 import RecordClaimData from "../ConsiderDetails/TabDetails/SubDetailsTab/RecordClaimData";
 import ConsiderSection from "../ConsiderDetails/TabDetails/SubDetailsTab/ConsiderSection";
+import { DECISION_ID } from "../../store/claimConsider.constants";
+import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import ClaimSummary from "../ConsiderDetails/TabDetails/SubDetailsTab/ClaimSummary";
 import ClaimSummaryStep3, { Step3PayoutAccount } from "./SubDetailsTab/ExpensesTabs/ClaimSummaryStep3";
 import { calculateCompensationSummary } from "./SubDetailsTab/ExpensesTabs/_common/calculateCompensationSummary";
 import { swalError, swalLoading, swalSuccess } from "../../../_common";
 import { swalHospitalApproveTransferSuccess } from "../../../_common/customSweetAlert";
-import { MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
+import { IncidentType, MedicalType, PRODUCT_TYPE_GROUP, isProductType } from "../../../../functionHelpers";
 import { useGetCustomerBankAccount } from "../../../../api/coreClaimApi";
 import { useGetBank } from "../../../../api/coreClaimMastersApi";
 import useHospitalConsiderDetailHook from "../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import useClaimDetailActionHook from "../../hooks/ClaimConsiderDetail/ClaimDetailActionHook";
-import useClaimExpenseDetailHook from "../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
 import useHospitalConsiderPayment from "../../hooks/ClaimConsiderHospital/useHospitalConsiderPayment";
-import { DOCUMENT_CHECK_RESULTS } from "./mock/hospitalConsiderMock";
-import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
+import {
+    getReceiptReconciliation,
+    hasAmountSumError,
+    hasMissingReasonError,
+    sumClaimExpenseItems,
+} from "../../../ClaimSimulate/store/Claimsimulateutils";
+import { alertMissingNonCoveredReason } from "../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
+// เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+// import ContinuousClaimBanner from "./SubDetailsTab/ContinuousClaimBanner";
 import TreatmentInfoSection from "./SubDetailsTab/TreatmentInfoSection";
 import AttendingDoctorSection from "./SubDetailsTab/AttendingDoctorSection";
+import MedicalNecessitySection from "./SubDetailsTab/MedicalNecessitySection";
+import TrafficAccidentSection from "./SubDetailsTab/TrafficAccidentSection";
 import DocumentVerifyTable from "./SubDetailsTab/DocumentVerifyTable";
 import TreatmentCostTable from "./SubDetailsTab/ExpensesTabs/TreatmentCostTable";
 import ConfirmHospitalCompensationTransferModal from "./ConfirmHospitalCompensationTransferModal";
@@ -90,15 +100,17 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
-        continuousClaimRows,
-        continuousClaimOpen,
-        setContinuousClaimOpen,
-        handleToggleContinuousClaim,
-        handleSelectContinuousClaim,
-        handleClearContinuousClaim,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
+        // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+        // continuousClaimRows,
+        // continuousClaimOpen,
+        // setContinuousClaimOpen,
+        // handleToggleContinuousClaim,
+        // handleSelectContinuousClaim,
+        // handleClearContinuousClaim,
         documentInfoByDocId,
         claimListTypeConfig,
         detailData,
@@ -119,6 +131,10 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const [isPayoutAccountBlocking, setIsPayoutAccountBlocking] = useState(false);
     /** Modal "ยืนยันการทำรายการ" ก่อนอนุมัติ กรณีโอนค่าชดเชยแยก (IPD PH) */
     const [confirmApproveOpen, setConfirmApproveOpen] = useState(false);
+    /** กำลัง validate + ยิงบันทึกผลพิจารณา — ปิดปุ่ม "ยืนยันบันทึกผลพิจารณา" กันกดซ้ำ (DFUAT-052) */
+    const [isConfirmingConsider, setIsConfirmingConsider] = useState(false);
+    /** เอกสารประกอบการปฏิเสธที่แนบไฟล์แล้ว — หน้านี้ไม่มีตารางสแกนเอกสารทั่วไป จึงส่งแค่ชุดนี้ */
+    const [rejectDocuments, setRejectDocuments] = useState<CaseDocumentV2Request[]>([]);
 
     /**
      * mount ใหม่ที่ Redux เป็นของเคสอื่น (ผ่านหน้า Monitor) หรือเปลี่ยนเคสในอินสแตนซ์เดิม
@@ -149,6 +165,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
     const detail = detailData?.data;
     const customerDetail = customerDetailData?.data;
+
+    /** RC-005 5.6 : Section "ข้อมูลอุบัติเหตุจากการจราจร" แสดง/ส่งเฉพาะเหตุของการเคลม = อุบัติเหตุ */
+    const isAccident = formik.values.incidentTypeId === IncidentType.Accident;
 
     /**
      * จบงานบนหน้านี้แล้วกลับไปหน้า Monitor พิจารณาเคลม - เคลมโรงพยาบาล
@@ -261,11 +280,42 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         draftStep: activeStep + 1,
         caseFields: {
             hn: formik.values.hn || undefined,
-            an: formik.values.an || undefined,
-            vn: formik.values.vn || undefined,
+        },
+        caseTreatmentFields: {
+            caseMedicalTreatment: {
+                // id ของแถวเดิมจาก GetClaimDetailConsider — ให้ BE แก้แถวเดิม ไม่สร้างซ้ำ
+                caseMedicalTreatmentId: detail?.caseMedicalTreatmentId,
+                medicalLicenseNo: formik.values.doctorLicenseNo || undefined,
+                physicianName: formik.values.doctorName || undefined,
+                // RC-005 5.4 หมายเหตุ(ถ้ามี)
+                reservationRemark: formik.values.reservationRemark || undefined,
+                // RC-005 5.6 ข้อมูลอุบัติเหตุจากการจราจร : ส่งเฉพาะเหตุของการเคลม = อุบัติเหตุ (Section แสดงเฉพาะกรณีนี้)
+                ...(isAccident
+                    ? {
+                          isTrafficAccident: !!formik.values.trafficVehicleTypeId,
+                          vehicleTypeId: formik.values.trafficVehicleTypeId,
+                          otherVehicleType: formik.values.trafficOtherVehicleType || undefined,
+                          trafficAccidentPersonRoleId: formik.values.trafficAccidentPersonRoleId,
+                          hasCompulsoryInsuranceExcess: formik.values.trafficHasCompulsoryInsuranceExcess,
+                          compulsoryInsuranceNotUsedReason:
+                              formik.values.trafficHasCompulsoryInsuranceExcess === false
+                                  ? formik.values.trafficCompulsoryInsuranceNotUsedReason || undefined
+                                  : undefined,
+                      }
+                    : { isTrafficAccident: false }),
+            },
+            // RC-005 5.5 ข้อมูลกายภาพบำบัด : ไม่ติ๊กแล้วเหตุผลที่ค้างไว้ไม่ถูกส่ง
+            casePhysicalTherapy: {
+                casePhysicalTherapyId: detail?.casePhysicalTherapyId,
+                isPhysicalTherapy: formik.values.isPhysicalTherapyChecked,
+                physicalTherapyNecessityReasonId: formik.values.isPhysicalTherapyChecked
+                    ? formik.values.physicalTherapyNecessityReasonId
+                    : undefined,
+            },
         },
         // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
         documentChecks: formik.values.documentChecks,
+        rejectDocuments,
         // ยอดที่ปรับตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" แล้ว — ให้ payload อนุมัติใช้ยอดนี้แทน calculateResult ดิบ
         calculateOverride,
         // ไม่มีค่าชดเชยคงเหลือต้องโอนแยก → ส่งบัญชีปลายทางใน casePayable เหมือนเดิม
@@ -326,9 +376,18 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
         },
     });
 
-    const { hasDiscountError, hasNotCoveredError } = useClaimExpenseDetailHook({ detailData, customerDetailData });
+    /**
+     * เดิมเรียก useClaimExpenseDetailHook ซ้ำอีกชุดแยกจาก instance ที่ TreatmentCostTable ใช้จริง (ผู้ใช้พิมพ์
+     * ค่าแล้วอัปเดตแต่ instance ของ TreatmentCostTable + dispatch ลง Redux `filledItems` เท่านั้น) formik
+     * ของ instance ตรงนี้ไม่มี enableReinitialize จึงค้างค่าตั้งต้น (ตอนเคลมโรงพยาบาล default "สิทธิ์เบิก" เป็น
+     * undefined) ทำให้ gate "อนุมัติ" เช็คยอดผิดชุดข้อมูล ติด error ทั้งที่ตารางบนจอกรอกถูกแล้ว — คำนวณจาก
+     * `filledItems` ใน Redux ตรง ๆ (ค่าเดียวกับที่ตารางเขียนกลับไปจริง) แทน
+     */
+    const hasDiscountError = filledItems.some((item) => Number(item.discount ?? 0) > Number(item.claimAmount ?? 0));
+    const hasNotCoveredError = filledItems.some((item) => hasAmountSumError(item));
 
-    const continuousClaim = formik.values.continuousClaim;
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const continuousClaim = formik.values.continuousClaim;
     const isLastStep = activeStep === steps.length - 1;
 
     /**
@@ -385,25 +444,23 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     const isSeparateCompensation = hasCompensationToTransfer;
 
     /** เลขที่เคส + สถานะของเคลมที่กำลังพิจารณาอยู่ */
-    const currentCaseNo = detail?.caseNo ?? "";
-    const currentCaseStatus = detail?.claimStatusName ?? undefined;
+    // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
+    // const currentCaseNo = detail?.caseNo ?? "";
+    // const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
-    /** จำนวนไฟล์จริงใน DocStorage ของ documentId นั้น (0 = ยังไม่มีเอกสารแนบ) */
-    const getFileCount = (documentId: string) => documentInfoByDocId[documentId]?.fileCount ?? 0;
-
-    /** เอกสารที่มีไฟล์แนบต้องเลือกผลการตรวจครบก่อนกด "ถัดไป" (ชีท row 104-105) */
-    const isDocumentResultAllSelected = () =>
-        !formik.values.documentChecks.some((doc) => getFileCount(doc.documentId) > 0 && doc.checkResult === "");
+    const [isExpenseLoading, setIsExpenseLoading] = useState(false);
+    /**
+     * หน้ากำลังโหลดข้อมูลของ step ใด step หนึ่ง (Step 1 ข้อมูลเคลม · Step 2 รายการค่าใช้จ่าย · คำนวณก่อนเข้า Step 3)
+     * ระหว่างนี้ปุ่มทำรายการท้ายหน้าทุกปุ่มกดไม่ได้ เหลือแค่ "กลับ" — กันบันทึก/อนุมัติด้วยข้อมูลที่ยังมาไม่ครบ
+     */
+    const isPageLoading = isStep1Loading || isExpenseLoading || isCalculating;
 
     const handleNext = async () => {
-        // Step 1 : ต้องผ่าน Validate + เลือกผลการตรวจเอกสารครบ ก่อนจึงไป Step 2 ได้ (อ้างอิงชีท)
+        // Step 1 : ต้องผ่าน Validate ก่อนจึงไป Step 2 ได้ — RC-005 5.8 ตัดเงื่อนไขเลือกผลการตรวจเอกสารครบออกแล้ว
+        // ไม่รวม validate ของ "แจ้งผลการพิจารณาโรงพยาบาล" — มีผลเฉพาะตอนกด "ยืนยันบันทึกผลพิจารณา" (DFUAT-048)
         if (activeStep === 0) {
-            const isValid = await validateStep1();
+            const isValid = await validateStep1(false);
             if (!isValid) return;
-            if (!isDocumentResultAllSelected()) {
-                swalError("ยังดำเนินการต่อไม่ได้", "กรุณาเลือกผลการตรวจให้ครบทุกรายการที่มีเอกสารก่อนดำเนินการถัดไป");
-                return;
-            }
             // Step 1 → Step 2 : sync coverage/medical ลง Redux ให้ ExpenseRecords ใช้กรองรายการค่ารักษา
             // ส่งเฉพาะ 2 ฟิลด์นี้ — ห้ามส่ง formik.values ทั้งก้อน เพราะมี Dayjs (incidentDate ฯลฯ)
             // ที่ไม่ serializable ปนอยู่ ทำให้ Redux Toolkit ต้อง deep-scan ทั้ง store ทุกครั้งที่ dispatch จนหน้าค้าง
@@ -417,6 +474,19 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
         // Step 2 → Step 3 : sync coverage/medical ลง Redux (เผื่อผู้ใช้แก้ค่า) แล้วเรียก /api/calculate/caseclaim
         if (activeStep === 1) {
+            // มียอดไม่คุ้มครองแต่ยังไม่เลือกสาเหตุ — บล็อกก่อนคำนวณ แล้วพาไป focus แถวนั้น
+            if (filledItems.some((item) => hasMissingReasonError(item))) {
+                alertMissingNonCoveredReason();
+                return;
+            }
+            // RC-006 : สิทธิ์เบิก + ส่วนลด + ยอดไม่คุ้มครอง (ยอดรวมทุกรายการ) ต้องเท่ากับยอดเงินตามใบเสร็จรวมเท่านั้น
+            // ไม่เท่ากัน = บล็อก ไม่ให้ไป Step 3 — ใช้ helper เดียวกับกรอบแจ้งเตือนใน ExpenseRecords (reconciliationMode="receipt")
+            const { totalReceipt, totalClaim } = sumClaimExpenseItems(filledItems);
+            const receiptReconciliation = getReceiptReconciliation({ totalReceipt, totalClaim });
+            if (receiptReconciliation.status === "error") {
+                swalError("ไม่สามารถดำเนินการต่อได้", receiptReconciliation.message);
+                return;
+            }
             dispatch(
                 setClaimForm({
                     coverageTypeId: formik.values.coverageTypeId,
@@ -432,30 +502,26 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
 
     /** ยืนยันบันทึกผลพิจารณา (รอแก้ไข / ปฏิเสธ / ยกเลิก) : ต้องผ่าน Validate Step 1 ทั้งหมดก่อน */
     const handleConfirmConsiderResult = async () => {
-        const isValid = await validateStep1();
-        if (!isValid) return;
+        if (isConfirmingConsider) return;
+        setIsConfirmingConsider(true);
+        try {
+            const isValid = await validateStep1();
+            if (!isValid) return;
 
-        await handleConfirmConsider();
+            await handleConfirmConsider();
+        } finally {
+            setIsConfirmingConsider(false);
+        }
     };
 
     /**
-     * เอกสารที่มีไฟล์แนบทุกรายการต้องมีผลการตรวจเป็น "ผ่าน" ก่อนอนุมัติ
-     * (ชีท : Document Count > 0 และ Document Result ≠ ผ่าน → ไม่สามารถอนุมัติ)
+     * อนุมัติ (Step 3) : ผ่าน Validate Step 1 + ยอดค่าใช้จ่ายถูกต้อง (ไม่รวม "แจ้งผลการพิจารณาโรงพยาบาล" — DFUAT-048)
+     * RC-005 5.8 ตัดเงื่อนไข "เอกสารที่มีไฟล์ต้องผลตรวจเป็น ผ่าน ครบ" ออกแล้ว
      */
-    const isDocumentResultAllPassed = () =>
-        !formik.values.documentChecks.some(
-            (doc) => getFileCount(doc.documentId) > 0 && doc.checkResult !== DOCUMENT_CHECK_RESULTS.passed
-        );
-
-    /** อนุมัติ (Step 3) : ผ่าน Validate Step 1 + เอกสารผ่านครบ + ยอดค่าใช้จ่ายถูกต้อง */
     const handleApprove = async () => {
-        const isValid = await validateStep1();
+        const isValid = await validateStep1(false);
         if (!isValid) {
             setActiveStep(0);
-            return;
-        }
-        if (!isDocumentResultAllPassed()) {
-            swalError("ไม่สามารถอนุมัติได้", "กรุณาเลือกผลการตรวจเป็น ผ่าน ให้ครบทุกรายการที่มีเอกสาร");
             return;
         }
         if (hasDiscountError || hasNotCoveredError) {
@@ -517,6 +583,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                     {activeStep === 0 ? (
                         <LoadingOverlay isLoading={isStep1Loading} message="กำลังโหลดข้อมูลเคลม...">
                             <Grid container spacing={2}>
+                                {/* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
                                 {continuousClaim && (
                                     <Grid item xs={12}>
                                         <ContinuousClaimBanner
@@ -526,6 +593,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         />
                                     </Grid>
                                 )}
+                                */}
                                 <Grid item xs={12} sx={readOnlySx}>
                                     <RecordClaimData
                                         incidentType={incidentType}
@@ -534,14 +602,17 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         causeOfIncident={causeOfIncident}
                                         medicalType={medicalType}
                                         incidentTypeMappingLoading={incidentTypeMappingLoading}
-                                        continuousClaimRows={continuousClaimRows}
-                                        continuousClaimOpen={continuousClaimOpen}
-                                        onContinuousClaimOpenChange={setContinuousClaimOpen}
-                                        onContinuousClaimToggle={handleToggleContinuousClaim}
-                                        onContinuousClaimSelect={handleSelectContinuousClaim}
-                                        onContinuousClaimClear={handleClearContinuousClaim}
+                                        detailLabel="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                     />
                                 </Grid>
+                                <Grid item xs={12} sx={readOnlySx}>
+                                    <MedicalNecessitySection />
+                                </Grid>
+                                {isAccident && (
+                                    <Grid item xs={12} sx={readOnlySx}>
+                                        <TrafficAccidentSection />
+                                    </Grid>
+                                )}
                                 <Grid item xs={12} sx={readOnlySx}>
                                     <TreatmentInfoSection />
                                 </Grid>
@@ -550,9 +621,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                 </Grid>
                                 <Grid item xs={12}>
                                     <DocumentVerifyTable
-                                        onChange={handleDocumentCheckChange}
-                                        onScan={handleDocumentScan}
-                                        options={documentCheckResultOptions}
                                         documentInfoByDocumentId={documentInfoByDocId}
                                         readOnly={readOnly}
                                     />
@@ -563,10 +631,16 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         aplicationCode={customerDetail?.policyCode ?? ""}
                                         decisionReason={decisionReason}
                                         decisionReasonLoading={decisionReasonLoading}
+                                        rejectReason={rejectReason}
+                                        rejectReasonLoading={rejectReasonLoading}
+                                        cancelReason={cancelReason}
+                                        cancelReasonLoading={cancelReasonLoading}
                                         // เคลม รพ. OPD ไม่มีปุ่ม "รอเอกสาร" (decisionId 3) และ "ยกเลิก" (decisionId 6) — CR Ver2
-                                        hiddenDecisionIds={[3, 6]}
+                                        hiddenDecisionIds={[DECISION_ID.PENDING_DOCUMENT, DECISION_ID.CANCELLED]}
                                         headingText="แจ้งผลการพิจารณาโรงพยาบาล"
                                         labelOverrides={HOSPITAL_DECISION_LABEL_OVERRIDES}
+                                        onRejectDocumentsChange={setRejectDocuments}
+                                        rejectDocumentType="ใบแจ้งปฏิเสธสินไหม"
                                     />
                                 </Grid>
                             </Grid>
@@ -584,8 +658,18 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                             value={simBCategory}
                                             onChange={(e) => setSimBCategory(e.target.value as "SimB1" | "SimB2")}
                                         >
-                                            <FormControlLabel value="SimB1" control={<Radio />} label="Sim B1" />
-                                            <FormControlLabel value="SimB2" control={<Radio />} label="Sim B2" />
+                                            <FormControlLabel
+                                                value="SimB1"
+                                                control={<Radio />}
+                                                label="Sim B1"
+                                                disabled={readOnly}
+                                            />
+                                            <FormControlLabel
+                                                value="SimB2"
+                                                control={<Radio />}
+                                                label="Sim B2"
+                                                disabled={readOnly}
+                                            />
                                         </RadioGroup>
                                     </Paper>
                                 </Grid>
@@ -595,6 +679,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     formik={formik}
                                     detailData={detailData}
                                     customerDetailData={customerDetailData}
+                                    readOnly={readOnly}
+                                    onLoadingChange={setIsExpenseLoading}
                                 />
                             </Grid>
                         </Grid>
@@ -612,6 +698,8 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     treatmentRows={step3TreatmentRows}
                                     compensationRows={step3CompensationRows}
                                     summary={step3Summary}
+                                    totalReceipt={calculateResult?.totalReceipt}
+                                    totalNetAmount={calculateResult?.medicalNet ?? 0}
                                     allowSeparateCompensation={allowSeparateCompensation}
                                     stayDays={stayDays}
                                     mergeChecked={mergeCompensation}
@@ -631,7 +719,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                             variant="outlined"
                             startIcon={<ArrowBackIcon />}
                             onClick={activeStep === 0 ? () => navigate(-1) : handleBack}
-                            sx={{ bgcolor: "#fff" }}
+                            sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                         >
                             กลับ
                         </Button>
@@ -652,14 +740,17 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="outlined"
                                         startIcon={<SaveAsIcon />}
                                         onClick={handleSaveDraft}
-                                        disabled={isStep1Loading}
+                                        disabled={isPageLoading}
+                                        sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                                     >
                                         บันทึกแบบร่าง
                                     </Button>
                                     <Button
                                         variant="contained"
                                         startIcon={<SaveIcon />}
-                                        disabled={!formik.values.considerResult || isStep1Loading}
+                                        disabled={
+                                            !formik.values.considerResult || isPageLoading || isConfirmingConsider
+                                        }
                                         onClick={handleConfirmConsiderResult}
                                         sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                     >
@@ -670,7 +761,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="contained"
                                         endIcon={<ArrowForwardIcon />}
                                         onClick={handleNext}
-                                        disabled={isCalculating || isStep1Loading}
+                                        disabled={isPageLoading}
                                     >
                                         {isCalculating ? "กำลังคำนวณ..." : "ถัดไป"}
                                     </Button>
@@ -682,7 +773,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     variant="contained"
                                     startIcon={<CheckCircleIcon />}
                                     onClick={handleApprove}
-                                    disabled={isPayoutAccountBlocking}
+                                    disabled={isPayoutAccountBlocking || isPageLoading}
                                     sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                 >
                                     อนุมัติ

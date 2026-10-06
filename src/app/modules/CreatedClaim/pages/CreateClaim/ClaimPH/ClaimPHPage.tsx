@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { claimPHSelector, setOldClaim } from "../../../store/claimPHSlice";
@@ -11,14 +11,15 @@ import ClaimHistoryCard from "../../../components/CreateClaim/ClaimHistoryCard";
 import { useClaimPH } from "../../../hooks/CreateClaim/ClaimPH/useClaimPH";
 import ClaimStickyHeader from "../../../components/CreateClaim/ClaimStickyHeader";
 import { useGetPreviousClaim } from "../../../../../api/coreClaimApi";
+import { safeAtob } from "../../../../../functionHelpers";
 
 const ClaimPHPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
 
     const { isContinuous: isContinuousParam, oldClaimId: oldClaimIdEncode } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
-    const realOldClaimId = isContinuous && oldClaimIdEncode ? atob(oldClaimIdEncode) : undefined;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
+    const realOldClaimId = isContinuous ? safeAtob(oldClaimIdEncode) : undefined;
 
     const { oldClaim } = useAppSelector(claimPHSelector);
     const { appId, refId, applicationId, claimInfo, isLoading } = useClaimPH();
@@ -33,6 +34,16 @@ const ClaimPHPage: React.FC = () => {
     }, [previousClaim, dispatch]);
 
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
+
+    if (!claimInfo) {
+        return (
+            <Paper variant="outlined" sx={{ p: "1.5rem", mb: "1.5rem", textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                    ไม่พบข้อมูล
+                </Typography>
+            </Paper>
+        );
+    }
 
     return (
         <>

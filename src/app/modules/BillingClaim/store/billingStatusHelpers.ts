@@ -27,6 +27,13 @@ export const billingStatusLabel = (statusId?: number): string =>
         ? BILLING_STATUS_LABEL[statusId as BillingStatusId]
         : "-";
 
-/** สถานะคำขอส่งกลับ — "Pending" = BE บันทึกคำขอแล้ว ยังไม่ยืนยันว่า SmileConnect รับ (handoff ข้อ "สถานะและเหตุผล") */
-export const billingReturnStatusLabel = (raw: string | undefined): string =>
-    raw === "Pending" ? "รอดำเนินการส่งกลับ" : raw ?? "-";
+/**
+ * สถานะคำขอส่งกลับ — ค่า `"Published"` หมายถึง RabbitMQ รับ event แล้วเท่านั้น ไม่ใช่ SmileConnect
+ * ประมวลผลสำเร็จ (hospital-billing-fe.md ข้อ 7) จึงห้ามแสดงว่า "SmileConnect รับแล้ว"
+ */
+export const billingReturnStatusLabel = (raw: string | undefined): string => {
+    if (raw === "Published") return "ส่งเข้าคิวแล้ว";
+    if (raw === "Pending") return "รอส่งเข้าคิว";
+    if (raw === "Failed") return "ส่งไม่สำเร็จ";
+    return raw ?? "-";
+};

@@ -2,6 +2,9 @@ import { Grid, Paper, Tab, Tabs, Skeleton } from "@mui/material";
 import HeaderCardCustomerDetails from "./HeaderDetailCards/HeaderCardCustomerDetails";
 import HeaderCardSchoolDetails from "./HeaderDetailCards/HeaderCardSchoolDetails";
 import ClaimDetail from "./HeaderDetailCards/ClaimDetail";
+import ClaimStatusReasonCard, {
+    CUSTOMER_CLAIM_STATUS_REASON_DECISION_IDS,
+} from "./HeaderDetailCards/ClaimStatusReasonCard";
 import { useState } from "react";
 import DescriptionIcon from "@mui/icons-material/Description";
 import ManageHistoryIcon from "@mui/icons-material/ManageHistory";
@@ -73,7 +76,7 @@ const HeaderDetails = ({
                                         customerDetail?.cardTypeId === 2 ? customerDetail?.cardDetail ?? "-" : "-"
                                     }
                                     applicationId={customerDetail?.policyCode ?? "-"}
-                                    onApplicationIdClick={() => {}}
+                                    productTypeId={customerDetail?.productTypeId}
                                     phoneNumber={customerDetail?.mobilePhoneNumber ?? "-"}
                                     appStatus={customerDetail?.appStatus ?? "-"}
                                     appStatusId={customerDetail?.appStatusId ?? 0}
@@ -113,6 +116,17 @@ const HeaderDetails = ({
                                     claimType={detail?.claimType}
                                     statusClaim={detail?.claimStatusName}
                                     claimStatusId={detail?.claimStatusId}
+                                />
+                            </Grid>
+
+                            {/* RC-003 3.1 : แสดงเฉพาะสถานะ รอเอกสาร / รอแก้ไข / ปฏิเสธ / ยกเลิก (component คืน null เองในสถานะอื่น) */}
+                            <Grid item xs={12} sx={{ mb: 2, "&:empty": { display: "none" } }}>
+                                <ClaimStatusReasonCard
+                                    decisionId={detail?.decisionId}
+                                    decisionNameTH={detail?.decisionNameTH}
+                                    decisionReasonName={detail?.decisionReasonName}
+                                    decisionRemark={detail?.decisionRemark}
+                                    decisionIds={CUSTOMER_CLAIM_STATUS_REASON_DECISION_IDS}
                                 />
                             </Grid>
                         </>
@@ -164,7 +178,7 @@ const HeaderDetails = ({
                             <ClaimTransationTab onViewDraft={() => setTabValue("1")} />
                         </TabPanel>
                         <TabPanel value="3">
-                            <PolicyBenefitTab customerDetailData={customerDetailData} />
+                            <PolicyBenefitTab customerDetail={customerDetail} />
                         </TabPanel>
                         <TabPanel value="4">
                             <ClaimHistoryTab applicationId={customerDetail?.policyCode} />

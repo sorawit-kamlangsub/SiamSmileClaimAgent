@@ -2,7 +2,6 @@ import React, { useMemo, useState } from "react";
 import {
     Avatar,
     Box,
-    Button,
     Checkbox,
     Dialog,
     DialogContent,
@@ -18,11 +17,9 @@ import {
     Typography,
     Zoom,
 } from "@mui/material";
-import SaveIcon from "@mui/icons-material/Save";
 import CloseIcon from "@mui/icons-material/Close";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
-import WarningAmberRoundedIcon from "@mui/icons-material/WarningAmberRounded";
 import LocalHospitalOutlinedIcon from "@mui/icons-material/LocalHospitalOutlined";
 import MonetizationOnOutlinedIcon from "@mui/icons-material/MonetizationOnOutlined";
 import SummarizeOutlinedIcon from "@mui/icons-material/SummarizeOutlined";
@@ -39,7 +36,6 @@ import HotelOutlinedIcon from "@mui/icons-material/HotelOutlined";
 interface Props {
     open: boolean;
     onClose: () => void;
-    onConfirm: () => void;
 }
 
 interface SummaryData {
@@ -97,11 +93,12 @@ export const calculateSummary = (data: SummaryData, mergeOption: MergeOption): S
     return result;
 };
 
-const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) => {
+const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose }) => {
     const { daysCalculate, calculateResult, selectedInsured } = useAppSelector((s) => s.claimsimulate);
     const fmt = (n: number) => n.toLocaleString("th-TH", { minimumFractionDigits: 2 });
 
-    const [mergeOption, setMergeOption] = useState<"single" | "all" | null>("single");
+    const [mergeChecked, setMergeChecked] = useState(true);
+    const mergeOption: MergeOption = mergeChecked ? "single" : null;
     const [copied, setCopied] = useState(false);
 
     const handleCopyMedicalPay = async (value: number) => {
@@ -180,7 +177,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
     const treatmentColumns: MUIDataTableColumn[] = [
         { name: "benefitName", label: "รายการ", options: { ...cellAlignOptions({ align: "left" }) } },
         {
-            name: "amountNet",
+            name: "coveredAmount",
             label: "รายการเบิก",
             options: { ...cellAlignOptions({ align: "right" }), customBodyRender: (v) => fmt(v) },
         },
@@ -530,25 +527,12 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                     control={
                                         <Checkbox
                                             size="small"
-                                            checked={mergeOption === "single"}
-                                            onChange={() => setMergeOption("single")}
+                                            checked={mergeChecked}
+                                            onChange={(e) => setMergeChecked(e.target.checked)}
                                             color="primary"
                                         />
                                     }
                                     label={<Typography variant="body2">โอนค่าชดเชยรวมกับค่ารักษา</Typography>}
-                                    sx={{ m: 0, display: "flex", py: 0.5 }}
-                                />
-                                <Divider />
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            size="small"
-                                            checked={mergeOption === "all"}
-                                            onChange={() => setMergeOption("all")}
-                                            color="primary"
-                                        />
-                                    }
-                                    label={<Typography variant="body2">โอนค่าชดเชยรวมกับค่ารักษา (ทั้งหมด)</Typography>}
                                     sx={{ m: 0, display: "flex", py: 0.5 }}
                                 />
                             </Box>
@@ -590,7 +574,7 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                             sx={{ mb: 1 }}
                         />
                         <Paper variant="outlined" sx={{ borderRadius: 2, overflow: "hidden" }}>
-                            <SummaryLine label="ยอดเบิกรวม" value={fmt(summary.medicalNet)} />
+                            <SummaryLine label="ค่าใช้จ่ายทั้งหมดสุทธิ" value={fmt(summary.medicalNet)} />
                             <SummaryLine label="สิทธิ์ความคุ้มครอง" value={fmt(summary.medicalCoverPay)} />
                             <SummaryLine
                                 label="ค่าชดเชย (รวมในสิทธิ์ความคุ้มครอง)"
@@ -658,37 +642,6 @@ const ConfirmCalaulateModal: React.FC<Props> = ({ open, onClose, onConfirm }) =>
                                 </Typography>
                             </Box>
                         </Paper>
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <HeadingWithColor
-                            text="กรุณาตรวจสอบข้อมูลให้ถูกต้องก่อนยืนยันการบันทึก"
-                            color="yellow"
-                            icon={<WarningAmberRoundedIcon sx={{ fontSize: 24 }} />}
-                            sx={{ mb: 0 }}
-                        />
-                    </Grid>
-
-                    <Grid item xs={12}>
-                        <Box display="flex" justifyContent="center">
-                            <Button
-                                variant="contained"
-                                color="success"
-                                size="medium"
-                                startIcon={<SaveIcon />}
-                                onClick={onConfirm}
-                                sx={{
-                                    px: 5,
-                                    borderRadius: 2,
-                                    fontWeight: 600,
-                                    boxShadow: 2,
-                                    "&:hover": { boxShadow: 4 },
-                                    minWidth: 200,
-                                }}
-                            >
-                                ยืนยันการบันทึก
-                            </Button>
-                        </Box>
                     </Grid>
                 </Grid>
             </DialogContent>

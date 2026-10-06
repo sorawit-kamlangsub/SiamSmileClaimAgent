@@ -7,6 +7,7 @@ import { HeadingWithColor } from "../../../_common/components/CustomComponent/He
 import { StandardDataTable } from "../../../_common";
 import { cellAlignOptions, defaultOptionStandardDataTable, formatDateString } from "../../../../functionHelpers";
 import useBillingHistoryHook from "../../hooks/BillingHospitalReview/BillingHistoryHook";
+import { BillingStatusId } from "../../store/billingClaim.types";
 import {
     backgroundColorMapBillingStatus,
     billingReturnStatusLabel,
@@ -39,8 +40,8 @@ const BillingHistoryTab = ({ currentBillingDetailId }: BillingHistoryTabProps) =
             },
         },
         {
-            name: "externalBillingId",
-            label: "เลขที่อ้างอิงจาก SmileConnect",
+            name: "billingRequestId",
+            label: "เลขที่คำขอวางบิลจาก SmileConnect",
             options: { ...cellAlignOptions({ align: "left" }), customBodyRender: (value) => value ?? "-" },
         },
         {
@@ -53,8 +54,8 @@ const BillingHistoryTab = ({ currentBillingDetailId }: BillingHistoryTabProps) =
                         label={billingStatusLabel(value)}
                         size="small"
                         sx={{
-                            backgroundColor: backgroundColorMapBillingStatus[value as 1 | 2 | 3 | 4 | 5],
-                            color: colorMapBillingStatus[value as 1 | 2 | 3 | 4 | 5],
+                            backgroundColor: backgroundColorMapBillingStatus[value as BillingStatusId],
+                            color: colorMapBillingStatus[value as BillingStatusId],
                             fontWeight: 600,
                             borderRadius: "16px",
                         }}
@@ -108,8 +109,8 @@ const BillingHistoryTab = ({ currentBillingDetailId }: BillingHistoryTabProps) =
                         label={billingStatusLabel(value)}
                         size="small"
                         sx={{
-                            backgroundColor: backgroundColorMapBillingStatus[value as 1 | 2 | 3 | 4 | 5],
-                            color: colorMapBillingStatus[value as 1 | 2 | 3 | 4 | 5],
+                            backgroundColor: backgroundColorMapBillingStatus[value as BillingStatusId],
+                            color: colorMapBillingStatus[value as BillingStatusId],
                             fontWeight: 600,
                             borderRadius: "16px",
                         }}

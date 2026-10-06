@@ -7,7 +7,13 @@ import {
     BillingReviewDataDto,
     TimeSpan,
 } from "../../../api/coreClaimApi.client";
-import { BillingDocumentFormItem, BillingExpenseFormItem, BillingReviewFormValues } from "./billingClaim.types";
+import {
+    BillingDocumentFormItem,
+    BillingExpenseFormItem,
+    BillingReviewFormValues,
+    TRAFFIC_CASUALTY_STATUS,
+    TRAFFIC_VEHICLE_TYPE,
+} from "./billingClaim.types";
 
 /**
  * Boundary ระหว่างรูปแบบข้อมูลบน HTTP กับ TypeScript type ที่ NSwag generate
@@ -95,12 +101,10 @@ export const toFormValues = (data: BillingReviewDataDto): BillingReviewFormValue
 
         expenses: (data.expenses ?? []).map(toExpenseFormItem),
         documents: (data.documents ?? []).map(toDocumentFormItem),
-        ssEndDiscountAmount: data.ssEndDiscountAmount ?? 0,
 
         reviewStatusId: undefined,
         reviewReasonId: undefined,
         reviewRemark: "",
-        rejectionDocuments: [],
 
         // ฟิลด์ FE-only (ดู comment บน BillingReviewFormValues) — ยังไม่มีค่าจาก BE ให้ sync จึงใช้ default
         isContinuousClaim: false,
@@ -111,6 +115,14 @@ export const toFormValues = (data: BillingReviewDataDto): BillingReviewFormValue
         icuDays: 0,
         simBCategory: "SimB2", // สเปค : Default Sim B2
         mergeCompensation: true,
+
+        // ข้อมูลอุบัติเหตุจากการจราจร — ยังไม่มีฟิลด์ต้นทางจาก BE (PENDING_BE_FIELDS.trafficAccident)
+        // สเปค CR-02 : ไม่มีข้อมูลต้นทาง ใช้ค่าเริ่มต้น มอเตอร์ไซค์ / ผู้ขับขี่ / ใช่ (เป็นส่วนเกิน พ.ร.บ.)
+        trafficVehicleType: TRAFFIC_VEHICLE_TYPE.motorcycle,
+        trafficVehicleOther: "",
+        trafficCasualtyStatus: TRAFFIC_CASUALTY_STATUS.driver,
+        trafficIsPoroboExcess: true,
+        trafficNoPoroboReason: "",
     };
 };
 
@@ -140,7 +152,8 @@ const toDocumentDto = (item: BillingDocumentFormItem): BillingDocumentDto => ({
  *
  * จงใจไม่ map ฟิลด์ FE-only ต่อไปนี้ขึ้น BE เพราะ `BillingReviewDataDto`/`BillingExpenseDto`/`BillingDocumentDto`
  * ยังไม่มี field รองรับ (ดู PENDING_BE_FIELDS ที่ billingPendingFields.ts) : isContinuousClaim, continuousClaim,
- * documentCompleteDate, admitIndication, ipdDays, icuDays, simBCategory, mergeCompensation, rejectionDocuments,
+ * documentCompleteDate, admitIndication, ipdDays, icuDays, simBCategory, mergeCompensation,
+ * trafficVehicleType, trafficVehicleOther, trafficCasualtyStatus, trafficIsPoroboExcess, trafficNoPoroboReason,
  * รวมถึง `_receiptAmount`/`_entitlementAmount`/`_isInsuranceExcess`/`_insuranceCompanyName` บนแต่ละแถว expenses
  * — ฟิลด์เหล่านี้อยู่ในฟอร์มเพื่อให้ UI bind ค่าได้เท่านั้น ยังไม่ round-trip ขึ้น BE จนกว่า contract จะรองรับ
  */
@@ -178,5 +191,4 @@ export const toReviewDataDto = (values: BillingReviewFormValues): BillingReviewD
     },
     expenses: values.expenses.map(toExpenseDto),
     documents: values.documents.map(toDocumentDto),
-    ssEndDiscountAmount: round2(values.ssEndDiscountAmount),
 });

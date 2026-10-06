@@ -26,12 +26,18 @@ import {
 } from "../../store/claimConsiderSlice";
 import { mergeDraftCaseItems } from "../../store/draftRevisionMappers";
 import {
+    calculateIpdCompensation,
+    getIpdTransferReconciliation,
+    isIpdCompensationFlow,
+} from "../../store/ipdCompensationCalculator";
+import useIpdCompensationBenefit from "./IpdCompensationBenefitHook";
+import {
     useGetClaimDetailConsider,
     useGetClaimEditDraftRevision,
     useGetCustomerDetailById,
     useGetStandardMedicalExpenseByCase,
 } from "../../../../api/coreClaimApi";
-import { CoverageType } from "../../../../functionHelpers";
+import { CoverageType, NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID } from "../../../../functionHelpers";
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
     // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
     // เป็น undefined ได้หลายรายการพร้อมกัน (fallback ?? 0 เดิมทำให้หลายโหนดชน id 0 พร้อมกัน
@@ -79,11 +85,22 @@ interface ClaimLineFormValues {
 type UseClaimExpenseDetailHookProps = {
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+    /** true เฉพาะฝั่ง "บันทึกข้อมูลเคลม - เคลมลูกค้า" (ExpenseDetails.tsx)
+     * ตั้งแต่ RC-006 ทั้งสองฝั่ง default claimAmount = originalAmount เหมือนกันแล้ว (ดู frequentItems ด้านล่าง)
+     * RC-004 4.2 : ใช้ sync claimAmount = receiptAmount ตอนโหลดร่าง (เฉพาะเคลมลูกค้า) */
+    isCustomerClaim?: boolean;
+    /** จำนวนวันนอนรวมจาก Step 1 (ipdDays + icuDays) — ใช้คำนวณค่าชดเชยผู้ป่วยใน (เฉพาะเคลมลูกค้า) */
+    totalStayDays?: number;
 };
 // รับ detailData/customerDetailData เป็น param แทนการเรียก useConsiderDetailHook() ซ้ำ (เดิมหน้านี้เรียก hook
 // เดียวกัน 3 จุด: ClaimDetailsTab, ExpenseDetails, ที่นี่ — แต่ละจุดยิง React Query hook + Formik ซ้ำชุดเดียวกันหมด
 // ทำให้ทุก async response ที่เข้ามาต้อง re-render subtree ทั้งก้อนซ้ำ 3 เท่า เป็นสาเหตุหลักที่หน้าค้างตอนกด "ถัดไป")
-const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimExpenseDetailHookProps) => {
+const useClaimExpenseDetailHook = ({
+    detailData,
+    customerDetailData,
+    isCustomerClaim = false,
+    totalStayDays,
+}: UseClaimExpenseDetailHookProps) => {
     const dispatch = useDispatch();
     const { filledItems, filledItemsCaseId, form, viewingDraft, draftExpenseAppliedRevisionId } = useSelector(
         (s: RootState) => s.claimConsider
@@ -103,6 +120,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
      */
     const coverageTypeId = form.coverageTypeId ?? detailData?.data?.coverageTypeId;
     const medicalTypeId = form.medicalTypeId ?? detailData?.data?.medicalTypeId;
+    const incidentTypeId = form.incidentTypeId ?? detailData?.data?.incidentTypeId;
     const [searchText, setSearchText] = useState("");
     const [expandedIds, setExpandedIds] = useState<number[]>([]);
     const [selectedItem, setSelectedItem] = useState<{
@@ -131,21 +149,27 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
     });
     const items = formikClaimLine.values.items;
 
-    // ── รายการที่ใช้บ่อย: isUseOften=true ───────────────────────────────────
+    // ── รายการที่ใช้บ่อย ───────────────────────────────────────────────────
     const {
         data: frequentData,
         isLoading: isFrequentLoading,
         isFetching: isFrequentFetching,
     } = useGetStandardMedicalExpenseByCase(
         detailData?.data?.caseId ?? "",
+        customerDetailData?.data?.productTypeId ?? 0,
         6, //simb2
         coverageTypeId,
         medicalTypeId,
-        true,
-        customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId ?? undefined,
+        // generated client throw ทันทีถ้า param เป็น null (รับได้แค่ undefined = ไม่ส่ง param) — BE คืน null ได้จริง
+        // เช่น customerTypeCode ของ PA นักเรียน ทำให้ request ไม่ถูกยิงและตารางว่างโดยไม่มี error บนจอ
+        customerDetailData?.data?.policyCode ?? undefined,
+        customerDetailData?.data?.productTypeId === 26
+            ? customerDetailData?.data?.customerTypeCode ?? undefined
+            : undefined
     );
+
     // ── รายการเพิ่มเติม (หมวดหมู่) ───────────────────────────────────────────
     const { data: categoryData, isLoading: isCategoryLoading } = useGetSimBCategory(
         6, //simb2
@@ -153,8 +177,10 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         medicalTypeId,
         customerDetailData?.data?.productTypeId,
         undefined,
-        customerDetailData?.data?.productId
+        customerDetailData?.data?.productId ?? undefined,
+        incidentTypeId
     );
+
     const frequentItems = useMemo((): ClaimExpenseItem[] => {
         const raw = frequentData?.data ?? [];
         return raw.map((item, idx) => ({
@@ -165,10 +191,14 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             inputToStandardMappingId: item.inputToStandardMappingId,
             code: item.inputItemCode ?? "",
             description: item.descriptionTH ?? "",
-            // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — สิทธิ์เบิก/ยอดไม่คุ้มครองเป็นค่าที่ User
-            // ต้องพิจารณากรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
+            // ยอดตามใบเสร็จจาก SmileConnect (originalAmount) — ยอดไม่คุ้มครองเป็นค่าที่ User ต้องพิจารณา
+            // กรอกเอง จึงห้าม default มาจาก fetch (ดูตาราง Field/Source ของ spec)
+            // "ยอดเงินตามใบเสร็จ" default จาก originalAmount ทั้งเคลมลูกค้าและเคลมโรงพยาบาล (ส่งไปคำนวณเป็น
+            // receiptAmount → สรุปค่าใช้จ่ายโรงพยาบาลแสดง ยอดเงินรวมตามใบเสร็จ/ค่าใช้จ่ายทั้งหมดสุทธิ เหมือนกัน)
+            // claimAmount (ยอดเบิกก่อนหัก) default originalAmount เช่นกัน — เคลมลูกค้าตาม spec เดิม,
+            // เคลมโรงพยาบาลตาม RC-006 (สิทธิ์เบิก = ใบเสร็จ − ส่วนลด − ไม่คุ้มครอง, claimAmount ผูกกับใบเสร็จ)
             receiptAmount: item.originalAmount ?? undefined,
-            claimAmount: undefined,
+            claimAmount: item.originalAmount ?? undefined,
             discount: item.discountAmount ?? undefined,
             notCovered: undefined,
             // API อาจส่ง 0 เมื่อไม่มีสาเหตุ : normalize เป็น undefined กัน payload ส่ง reasonId = 0
@@ -252,7 +282,10 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             .filter(Boolean) as typeof categories;
     }, [categories, searchText]);
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
-    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason(
+        undefined,
+        NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID
+    );
 
     const notCoveredReasonOptions = useMemo(() => {
         const raw = nonCoveredReasonData?.data ?? [];
@@ -262,7 +295,14 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         }));
     }, [nonCoveredReasonData]);
 
-    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany();
+    const { data: insuranceCompany, isLoading: insuranceCompanyLoading } = useGetInsuranceCompany(
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        999
+    );
 
     const insuranceCompanyOptions = useMemo(() => {
         const raw = insuranceCompany?.data ?? [];
@@ -270,7 +310,9 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             value: r.organizeId,
             label: r.organizeName ?? "-",
         }));
-    }, [nonCoveredReasonData]);
+    }, [insuranceCompany]);
+
+    const insuranceCompanyId = detailData?.data?.insuranceCompanyId;
 
     const { totalReceipt, totalClaim, totalDiscount, totalNotCovered } = sumClaimExpenseItems(items);
     const netClaimAmount = totalClaim - totalDiscount - totalNotCovered; // ยอดเบิกสุทธิ
@@ -281,13 +323,33 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
     // เพื่อไม่ให้ขึ้น warningDeficit ก่อนมีข้อมูลยอดโอนจริง
     const rawPaymentAmount = detailData?.data?.paymentAmount;
     const paymentAmount = rawPaymentAmount ?? 0;
-    const amountReconciliation = getClaimAmountReconciliation({
-        totalReceipt,
-        totalClaim,
-        totalDiscount,
-        totalNotCovered,
-        paymentAmount: rawPaymentAmount,
+    // ── ค่าชดเชยผู้ป่วยใน (เคลมลูกค้า ค่ารักษา IPD/Day Case) — คำนวณใหม่ทุก render จาก items + วันนอน
+    // ใช้ตัวคำนวณกลางชุดเดียวกับ gate ปุ่ม ถัดไป/อนุมัติ (getIpdCompensationBlocker) ──
+    // DFUAT-101 : อัตราต่อวัน + วงเงินตามสิทธิ์ มาจากสิทธิ์ความคุ้มครองของผู้เอาประกัน (ไม่ใช่ค่าคงที่)
+    const ipdCompensationBenefit = useIpdCompensationBenefit({
+        detail: detailData?.data,
+        customerDetail: customerDetailData?.data,
+        coverageTypeId: isCustomerClaim ? coverageTypeId : undefined,
+        medicalTypeId,
     });
+    const ipdCompensation =
+        isCustomerClaim && isIpdCompensationFlow(coverageTypeId, medicalTypeId)
+            ? calculateIpdCompensation({
+                  items,
+                  totalStayDays,
+                  dailyRate: ipdCompensationBenefit.dailyRate,
+                  benefitLimit: ipdCompensationBenefit.benefitLimit,
+              })
+            : undefined;
+    const amountReconciliation = ipdCompensation
+        ? getIpdTransferReconciliation(ipdCompensation, rawPaymentAmount)
+        : getClaimAmountReconciliation({
+              totalReceipt,
+              totalClaim,
+              totalDiscount,
+              totalNotCovered,
+              paymentAmount: rawPaymentAmount,
+          });
     const filterFilledItems = (items: ClaimExpenseItem[]) =>
         items.filter((item) => {
             const hasClaimAmount = item.claimAmount !== undefined && item.claimAmount !== null;
@@ -390,32 +452,25 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             maximumLimit: selectedItem.maximumLimit,
         });
 
+        // ทั้งสามเงื่อนไขนี้แยกกันไม่ได้ (discount/notCovered/amount ไม่ติดลบเสมอ ดังนั้น discount+notCovered > amount
+        // เป็นจริงทุกครั้งที่เงื่อนไขเดี่ยวข้อใดข้อหนึ่งเป็นจริง) ต้องใช้ if/else-if ไล่จากกรณีเฉพาะไปกรณีรวม
+        // ไม่งั้น setDiscountError/setNotCoveredError ที่เรียกทีหลังจะทับข้อความของกรณีเฉพาะทิ้งเสมอ
         let hasError = false;
-        if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
+        if (discount > amount && notCovered <= 0) {
             setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
+            setNotCoveredError("");
             hasError = true;
-        } else {
-            setDiscountError("");
-        }
-        if (notCovered > amount && (notCovered == 0 || notCovered == undefined)) {
+        } else if (notCovered > amount && discount <= 0) {
             setNotCoveredError("ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก");
+            setDiscountError("");
             hasError = true;
-        } else {
-            setNotCoveredError("");
-        }
-        if (discount + notCovered > amount) {
-            setNotCoveredError("ยอดไม่คุ้มครองรวมส่วนลดต้องไม่มากกว่ายอดเบิก");
+        } else if (discount + notCovered > amount) {
             setDiscountError("ส่วนลดรวมยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก");
+            setNotCoveredError("ยอดไม่คุ้มครองรวมส่วนลดต้องไม่มากกว่ายอดเบิก");
             hasError = true;
         } else {
+            setDiscountError("");
             setNotCoveredError("");
-            setDiscountError("");
-        }
-        if (discount > amount && (notCovered == 0 || notCovered == undefined)) {
-            setDiscountError("ส่วนลดต้องไม่มากกว่ายอดเบิก");
-            hasError = true;
-        } else {
-            setDiscountError("");
         }
         // ยอดไม่คุ้มครอง > 0 ต้องระบุสาเหตุ
         if (hasMissingReasonError({ claimAmount: amount, discount, notCovered, reason })) {
@@ -437,7 +492,7 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
             discount: discount,
             notCovered: notCovered,
             reason: reason,
-            remark: pendingRemark,
+            remark: pendingRemark.trim() || undefined,
             disabled: false,
             maximumLimit: selectedItem.maximumLimit,
         };
@@ -510,10 +565,11 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         }
         if (!matched) return;
         setExpandedIds((prev) => [...new Set([...prev, matched!.catId, matched!.subId])]);
-        const [code, ...desc] = matched.leaf.label.split(" ");
+        // รหัส Master เก็บแยกจากข้อความที่แสดง (ใช้ตรวจ IPD_Half_5) — ไม่ parse จาก label
+        const { code, label } = matched.leaf;
         handleSelectLeaf(
             code,
-            desc.join(" "),
+            label.startsWith(code) ? label.slice(code.length).trim() : label,
             matched.leaf.id,
             matched.leaf.standardMedicalExpenseId,
             matched.leaf.inputToStandardMappingId,
@@ -549,18 +605,40 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         // ใช้แค่ตั้งชื่อแถวที่ผู้ใช้เพิ่มเองตอนทำร่าง — ไม่ gate การ merge ด้วย isCategoryLoading เพราะแถว
         // ปกติ (99% ของเคส) ต้องไม่รอ category tree โหลด ถ้ามาไม่ทันแถวเพิ่มเองจะไม่มีชื่อ ยอมรับได้
         const categoryLeaves = categories.flatMap((cat) => cat.children.flatMap((sub) => sub.children));
-        const merged = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        const mergedDraft = mergeDraftCaseItems(frequentItems, draftCaseItems, categoryLeaves);
+        // RC-004 4.2 (เคลมลูกค้า) : ไม่มีช่องกรอกยอดเบิกแล้ว claimAmount ต้องผูกกับยอดเงินตามใบเสร็จ
+        // ร่างเก่าที่เคยกรอกยอดเบิกเองจึง sync ให้ตรงตั้งแต่โหลด (เคลมโรงพยาบาลคงพฤติกรรมเดิม)
+        const merged = isCustomerClaim
+            ? mergedDraft.map((item) =>
+                  item.receiptAmount === undefined || item.receiptAmount === null
+                      ? item
+                      : { ...item, claimAmount: Number(item.receiptAmount) }
+              )
+            : mergedDraft;
         formikClaimLine.setFieldValue("items", merged);
         dispatch(setFilledClaimLineItems({ items: merged, caseId }));
         dispatch(setDraftExpenseApplied(draftRevisionId));
     }, [draftRevisionId, draftExpenseAppliedRevisionId, draftRevision, frequentItems, isFrequentLoading, categories]);
+
+    // ── สถานะโหลดของ section รายการค่าใช้จ่าย (ให้ UI แสดง loading แทน "ไม่พบรายการ"/dropdown ว่าง) ──
+    // - ตารางยังว่างและกำลังยิง/รอ seed รายการค่ารักษา : query ที่ยัง disabled เพราะรอ detailData/customerDetailData
+    //   นับเป็นโหลดด้วย (react-query v4 : isLoading = true แต่ isFetching = false) ส่วน disabled ถาวรเพราะข้อมูล
+    //   ไม่ครบไม่นับ กัน spinner ค้าง · มีแถวอยู่แล้ว (ผู้ใช้กำลังแก้) ไม่นับ กัน refetch เบื้องหลังมาบังงาน
+    // - master สาเหตุไม่คุ้มครองยังไม่มา : dropdown ในแถวจะแสดงค่าที่บันทึกไว้ไม่ได้
+    const isWaitingClaimData = isFrequentLoading && (!detailData || !customerDetailData);
+    const isExpenseItemsLoading =
+        items.length === 0 && (isFrequentFetching || isWaitingClaimData || frequentItems.length > 0);
+    const isExpenseLoading = isExpenseItemsLoading || isNonCoveredReasonLoading;
 
     return {
         formikClaimLine,
         expenseItems: items,
         frequentItems,
         isFrequentLoading,
+        isExpenseItemsLoading,
+        isExpenseLoading,
         caseAdjudicationId,
+        benefitIdList,
         benefitName,
         showAddPanel,
         setShowAddPanel,
@@ -591,10 +669,12 @@ const useClaimExpenseDetailHook = ({ detailData, customerDetailData }: UseClaimE
         netClaimAmount,
         paymentAmount,
         amountReconciliation,
+        ipdCompensation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
         insuranceCompanyLoading,
+        insuranceCompanyId,
         filteredCategories,
         isCategoryLoading,
         handleNext,

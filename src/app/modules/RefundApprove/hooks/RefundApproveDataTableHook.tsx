@@ -2,7 +2,7 @@ import { Box, IconButton, Link, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
-import { useGetRefundApproveMonitorWithFilter } from "../../Refund/refundAPI";
+import { useGetRefundApproveMonitor } from "../../../api/coreClaimApi";
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { useMemo, useState } from "react";
 import dayjs from "dayjs";
@@ -34,12 +34,13 @@ export type RefundApproveMonitorRow = {
     caseNo?: string;
     branceName?: string;
     customerName?: string;
-    createdDate?: string;
+    createdDate?: string | dayjs.Dayjs;
     totalNetPaidAmount?: number;
     refundAmount?: number;
     refundStatusId?: number;
     refundStatusNameTH?: string;
     remark?: string;
+    caseRefundId?: string;
 };
 
 export type RefundApproveDataTableHookProps = {
@@ -86,16 +87,21 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit,
         isLoading: isGetRefundLoading,
         isError: isGetRefundError,
         error: getRefundError,
-    } = useGetRefundApproveMonitorWithFilter({
-        branceId: filter?.branchId ?? null,
-        refundStatusId: filter?.statusId ?? null,
-        searchDetail: filter?.searchText,
-        transferDateFrom: filter?.transferDateFrom,
-        transferDateTo: filter?.transferDateTo,
-        searchKey,
-        pagination: paginated,
-        enabled: hasSearched,
-    });
+    } = useGetRefundApproveMonitor(
+        filter?.searchText,
+        paginated.orderingField,
+        paginated.ascendingOrder,
+        paginated.page ?? 1,
+        paginated.recordsPerPage ?? 10,
+        {
+            branceId: filter?.branchId,
+            refundStatusId: filter?.statusId,
+            fromDate: filter?.transferDateFrom,
+            toDate: filter?.transferDateTo,
+        },
+        searchKey ?? 0,
+        hasSearched
+    );
 
     const pagination: PaginationResultDto = useMemo(
         () => ({
@@ -198,12 +204,12 @@ const useRefundApproveDataTableHook = ({ filter, hasSearched, searchKey, onEdit,
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
                     const row = data[dataIndex];
+                    const statusId = row?.refundStatusId;
                     const status =
                         row?.refundStatusNameTH ??
-                        refundStatusNameMapById[row?.refundStatusId] ??
-                        row?.status ??
+                        (statusId !== undefined ? refundStatusNameMapById[statusId] : undefined) ??
                         "-";
-                    const color = statusColorMapById[row?.refundStatusId] ?? defaultStatusColor;
+                    const color = statusId !== undefined ? statusColorMapById[statusId] : defaultStatusColor;
                     return <StatusPill status={status} color={color} />;
                 },
             },

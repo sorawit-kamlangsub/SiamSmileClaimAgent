@@ -7,12 +7,14 @@ import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
 import ClaimPAPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPAPage";
 import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPASummaryPage";
+import { ClaimDraftProvider } from "../modules/CreatedClaim/components/CreateClaim/ClaimDraftProvider";
 // import ClaimLinePage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLinePage";
 // import ClaimLineSummaryPage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLineSummaryPage";
 // import DaysCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/DaysCalculatePage.tsx";
 // import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
 import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
 import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
+import ClaimSimulateLayout from "../modules/ClaimSimulate/pages/ClaimSimulateLayout.tsx";
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
@@ -32,10 +34,14 @@ import AdjustTransferPage from "../modules/AdjustTransfer/pages/AdjustTransferPa
 import ManageRefundDetailPage from "../modules/ManageClaimTransferDetails/pages/ManageRefundDetailPage.tsx";
 import ManageAdjustDetailPage from "../modules/ManageClaimTransferDetails/pages/ManageAdjustDetailPage.tsx";
 import ConsiderHospitalMonitorPage from "../modules/ClaimConsider/pages/ConsiderHospitalMonitorPage.tsx";
+import ConsiderDeathDisabilityMonitorPage from "../modules/ClaimConsider/pages/ConsiderDeathDisabilityMonitorPage.tsx";
+import ConsiderDeathDisabilityDetailPage from "../modules/ClaimConsider/pages/ConsiderDeathDisabilityDetailPage.tsx";
 import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
-import BillingCustomerPage from "../modules/BillingClaim/pages/BillingCustomerPage.tsx";
+import ManagePaymentHospital from "../modules/ManageInsuranceFund/ManagePaymentHospital/pages/ManagePaymentHospital.tsx";
+import ManageTransferHospital from "../modules/ManageInsuranceFund/ManageTransferHospital/page/ManageTransferHospital.tsx";
+import BillingFundDisbursementPage from "../modules/BillingClaim/pages/BillingFundDisbursementPage.tsx";
 
 /**
  * Config ของ route ของ Project
@@ -87,7 +93,7 @@ const Routes: RouteMapType[] = [
     {
         path: "claim/ph/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PH",
-        element: <Outlet />,
+        element: <ClaimDraftProvider />,
         permissions: [],
         condition: "AND",
         children: [
@@ -108,7 +114,7 @@ const Routes: RouteMapType[] = [
     {
         path: "claim/pa/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PA",
-        element: <Outlet />,
+        element: <ClaimDraftProvider />,
         permissions: [],
         condition: "AND",
         children: [
@@ -129,7 +135,8 @@ const Routes: RouteMapType[] = [
     {
         path: "/claim-simulation",
         title: "คำนวณวงเงินเคลม",
-        element: <Outlet />,
+        // layout ล้างค่าของหน้าคำนวณตอนออกจากเมนูนี้ (DFUAT-108)
+        element: <ClaimSimulateLayout />,
         permissions: [],
         condition: "AND",
         children: [
@@ -296,6 +303,23 @@ const Routes: RouteMapType[] = [
             },
         ],
     },
+    {
+        path: "/consider/death-disability-monitor",
+        title: "Death & Disability",
+        element: <Outlet />,
+        children: [
+            {
+                index: true,
+                title: "Death & Disability",
+                element: <ConsiderDeathDisabilityMonitorPage />,
+            },
+            {
+                path: ":id/:caseId",
+                title: "พิจารณาเคลม - Death & Disability",
+                element: <ConsiderDeathDisabilityDetailPage />,
+            },
+        ],
+    },
     // ===== วางบิลเคลม =====
     {
         path: "/billing",
@@ -305,30 +329,46 @@ const Routes: RouteMapType[] = [
         children: [
             {
                 index: true,
-                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                title: "วางบิลเคลม - ตรวจสอบรพ.วางบิล",
                 element: <Navigate to="hospital" replace />,
             },
             {
                 path: "customers",
-                title: "วางบิลเคลม - เคลมลูกค้า",
-                element: <BillingCustomerPage />,
+                title: "วางบิลเคลม - ตั้งเบิกกองทุน",
+                element: <BillingFundDisbursementPage />,
             },
             {
                 path: "hospital",
-                title: "วางบิลเคลม - เคลมโรงพยาบาล",
+                title: "วางบิลเคลม - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalMonitorPage />,
             },
             {
                 path: "hospital/:id/review",
-                title: "ตรวจสอบรายการวางบิล - เคลมโรงพยาบาล",
+                title: "ตรวจสอบรายการวางบิล - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalReviewPage />,
             },
             {
                 path: "hospital/:id/document",
-                title: "ดูรายละเอียดการวางบิล - เคลมโรงพยาบาล",
+                title: "ดูรายละเอียดการวางบิล - ตรวจสอบรพ.วางบิล",
                 element: <BillingHospitalDocumentPage />,
             },
         ],
+    },
+
+    {
+        path: "manage/insuranceFund/dashboard-fund",
+        title: "Dashboard สำรองเงิน",
+        element: <>Dashboard สำรองเงิน</>,
+    },
+    {
+        path: "manage/insuranceFund/transfer-hospital",
+        title: "โอนเงิน รพ.",
+        element: <ManageTransferHospital />,
+    },
+    {
+        path: "manage/insuranceFund/manage-payment-hospital",
+        title: "ตั้งค่าการจ่ายเงิน รพ.",
+        element: <ManagePaymentHospital />,
     },
 ];
 

@@ -6,11 +6,9 @@ import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { mapCaseEntryToV2, mapBeneficiariesToRequest, mapBankAccountToBeneficiary } from "./useCreateClaimPA";
 import { useConfirmClaimPayment } from "./useConfirmClaimPayment";
 import { useParams } from "react-router-dom";
-
-const generateRequestId = () =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+import { safeAtob } from "../../../../../functionHelpers";
+import { useAuth } from "../../../../_auth";
+import { useClaimRequestId } from "../useClaimRequestId";
 
 export const mapLocalCoreClaimToContinuedRequest = (
     local: LocalCoreClaim,
@@ -30,7 +28,9 @@ export const mapLocalCoreClaimToContinuedRequest = (
 
 export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { oldClaimId: oldClaimIdParam } = useParams();
-    const oldClaimId = oldClaimIdParam ? atob(oldClaimIdParam) : "";
+    const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
+    const { userProfile } = useAuth();
+    const getRequestId = useClaimRequestId();
     const { bankAccounts, contacts, tmpCoreClaim } = useAppSelector(claimPASelector);
     const selectedContact = contacts.find((c) => c.isDefault) ?? contacts[0];
     const selectedAccount = bankAccounts.find((a) => a.isDefault) ?? bankAccounts[0];
@@ -48,6 +48,8 @@ export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (mes
             ...claim,
             createCase: (claim.createCase ?? []).map((c) => ({
                 ...c,
+                // สาขาของผู้ใช้ที่ login — ใช้บันทึกว่าเคสถูกสร้างโดยสาขาไหน
+                createdCaseByBranchId: userProfile?.employeeBranchId,
                 createBeneficiary:
                     beneficiaryList.length > 0
                         ? mapBeneficiariesToRequest(beneficiaryList, claim.tempClaimId, c.tempCaseId)
@@ -63,7 +65,7 @@ export const useCreateContinuedClaimPA = (onSuccess?: () => void, onError?: (mes
     });
 
     const buildPayload = (beneficiaryList: BeneficiaryForm[]): CreateContinuedClaimDtoRequest =>
-        mapLocalCoreClaimToContinuedRequest(buildLocalCoreClaim(beneficiaryList), oldClaimId, generateRequestId());
+        mapLocalCoreClaimToContinuedRequest(buildLocalCoreClaim(beneficiaryList), oldClaimId, getRequestId());
 
     const createClaimPA = async (overrideBeneficiaries?: BeneficiaryForm[]) => {
         const beneficiaryList = overrideBeneficiaries ?? [];

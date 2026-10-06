@@ -1,27 +1,31 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
-import { CoverageType, MedicalType } from "../../../../functionHelpers";
+import { useAppDispatch } from "../../../../../redux";
+import { CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
+import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
     useGetAllHospital,
     useGetChiefComplaint,
+    useGetCancelReason,
     useGetDecisionReason,
     useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
+    useGetRejectReason,
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import { ClaimConsiderValues } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import { parseTimeSpan } from "../../store/draftRevisionMappers";
 import {
     CLAIM_LIST_TYPE_CONFIG,
-    DOCUMENT_CHECK_RESULTS,
     DocumentCheckRow,
-    parseClaimListType,
+    resolveClaimListType,
 } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useHospitalDocumentVerifyHook from "./HospitalDocumentVerifyHook";
 import useHospitalContinuousClaimHook from "./HospitalContinuousClaimHook";
@@ -42,17 +46,28 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     causeOfIncidentId: number | undefined;
     causeOfIncidentName: string | undefined;
 
-    /** ข้อมูลการเข้ารับการรักษา */
+    /**
+     * ข้อมูลการเข้ารับการรักษา — RC-005 5.2 ตัด VN / AN / โรคประจำตัว / ข้อบ่งชี้ / วิธีการรักษา / ผล LAB /
+     * หัตถการ ออกแล้ว เหลือ HN + หมายเหตุ(ถ้ามี) (5.4 : caseMedicalTreatment.reservationRemark)
+     */
     hn: string;
-    vn: string;
-    /** AN + ข้อบ่งชี้การ Admit : เฉพาะประเภทการรักษา IPD */
-    an: string;
-    admitIndication: string;
-    underlyingDisease: string;
-    treatmentMethod: string;
-    labResult: string;
-    additionalDetail: string;
-    hasProcedure: string;
+    reservationRemark: string;
+
+    /**
+     * RC-005 5.5 ข้อมูลกายภาพบำบัด (case.casePhysicalTherapy) — ใช้ isPhysicalTherapyChecked ของ ClaimConsiderValues
+     * (Checkbox ชุดเดียวกับเคลมลูกค้า) ติ๊กแล้วต้องเลือกเหตุผลจาก master necessity-reason
+     */
+    physicalTherapyNecessityReasonId: number | undefined;
+
+    /**
+     * RC-005 5.6 ข้อมูลอุบัติเหตุจากการจราจร (case.caseMedicalTreatment) — แสดงเฉพาะเหตุของการเคลม = อุบัติเหตุ
+     * ชุดช่องเดียวกับหน้าวางบิล (BillingTrafficAccidentSection) แต่แก้ไขได้ ตัวเลือกมาจาก master
+     */
+    trafficVehicleTypeId: number | undefined;
+    trafficOtherVehicleType: string;
+    trafficAccidentPersonRoleId: number | undefined;
+    trafficHasCompulsoryInsuranceExcess: boolean | undefined;
+    trafficCompulsoryInsuranceNotUsedReason: string;
 
     /** แพทย์เจ้าของไข้ */
     doctorLicenseNo: string;
@@ -87,7 +102,7 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     dischargeTime: undefined,
     // ชีทระบุ Default = วันที่ปัจจุบัน
     documentCompleteDate: dayjs(),
-    createdDate: undefined,
+    notificationDate: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,
@@ -110,14 +125,16 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     continuousClaim: undefined,
 
     hn: "",
-    vn: "",
-    an: "",
-    admitIndication: "",
-    underlyingDisease: "",
-    treatmentMethod: "",
-    labResult: "",
-    additionalDetail: "",
-    hasProcedure: "",
+    reservationRemark: "",
+
+    isPhysicalTherapyChecked: false,
+    physicalTherapyNecessityReasonId: undefined,
+
+    trafficVehicleTypeId: undefined,
+    trafficOtherVehicleType: "",
+    trafficAccidentPersonRoleId: undefined,
+    trafficHasCompulsoryInsuranceExcess: undefined,
+    trafficCompulsoryInsuranceNotUsedReason: "",
 
     doctorLicenseNo: "",
     doctorName: "",
@@ -128,16 +145,13 @@ const buildInitialValues = (): HospitalConsiderValues => ({
 /** claimSourceId ของเคลมที่เข้ามาทางระบบพิจารณา (ใช้ยิง IncidentTypeMapping) */
 const CLAIM_SOURCE_CONSIDER = 2;
 
-/** decisionId ของผลการพิจารณา "รอแก้ไข" (ต้องกรอกรายละเอียดการรอแก้ไข) */
-const DECISION_REVISION = 4;
-
 /** ลำดับช่องที่ใช้เลื่อนหน้าจอไปยัง error แรกเมื่อกด "ถัดไป" / "ยืนยันบันทึกผลพิจารณา" */
 const FIELD_ERROR_ORDER = [
     "incidentTypeId",
     "coverageTypeId",
     "medicalTypeId",
     "causeOfIncidentId",
-    "createdDate",
+    "notificationDate",
     "documentCompleteDate",
     "incidentDate",
     "admissionDate",
@@ -146,16 +160,13 @@ const FIELD_ERROR_ORDER = [
     "chiefComplaintId",
     "diagnoses",
     "ipdDays",
+    "physicalTherapyNecessityReasonId",
+    "trafficVehicleTypeId",
+    "trafficAccidentPersonRoleId",
+    "trafficHasCompulsoryInsuranceExcess",
     "hn",
-    "vn",
-    "an",
-    "admitIndication",
-    "underlyingDisease",
-    "treatmentMethod",
-    "hasProcedure",
     "doctorLicenseNo",
     "doctorName",
-    "documentChecks",
     "decisionReasonId",
     "decisionReasonDetail",
 ];
@@ -179,11 +190,21 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     if (isMedical && !values.medicalTypeId) errors.medicalTypeId = sel;
     if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = sel;
 
-    if (!values.createdDate) errors.createdDate = req;
+    if (!values.notificationDate) errors.notificationDate = req;
     if (!values.documentCompleteDate) errors.documentCompleteDate = req;
     if (!values.incidentDate) errors.incidentDate = req;
     if (!values.admissionDate) errors.admissionDate = req;
-    if (!values.dischargeDate) errors.dischargeDate = req;
+    if (!values.dischargeDate) {
+        errors.dischargeDate = req;
+    } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
+        errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+    } else if (
+        values.medicalTypeId === MedicalType.OPD &&
+        values.admissionDate &&
+        !dayjs(values.dischargeDate).isSame(values.admissionDate, "day")
+    ) {
+        errors.dischargeDate = "OPD จำนวนวันนอนต้องเป็น 0 วัน";
+    }
     if (!values.hospitalId) errors.hospitalId = sel;
     if (!values.chiefComplaintId) errors.chiefComplaintId = sel;
 
@@ -193,35 +214,33 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 
     // ── ข้อมูลการเข้ารับการรักษา ──
     if (!values.hn.trim()) errors.hn = req;
-    if (!values.vn.trim()) errors.vn = req;
-    // AN + ข้อบ่งชี้การ Admit + จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
+    // จำนวนวันนอน : บังคับเฉพาะประเภทการรักษา IPD (ชีท IPD row 161-162, 227, 229)
     if (values.medicalTypeId === MedicalType.IPD) {
-        if (!values.an.trim()) errors.an = req;
-        if (!values.admitIndication.trim()) errors.admitIndication = req;
         if (!values.ipdDays || values.ipdDays < 1) errors.ipdDays = req;
     }
-    if (!values.underlyingDisease.trim()) errors.underlyingDisease = req;
-    if (!values.treatmentMethod.trim()) errors.treatmentMethod = req;
-    if (!values.hasProcedure) errors.hasProcedure = sel;
+
+    // ── ข้อมูลกายภาพบำบัด (RC-005 5.5) : ติ๊ก "เป็นการกายภาพบำบัด" แล้วต้องเลือกความจำเป็นทางการแพทย์ ──
+    if (values.isPhysicalTherapyChecked && !values.physicalTherapyNecessityReasonId) {
+        errors.physicalTherapyNecessityReasonId = sel;
+    }
+
+    // ── ข้อมูลอุบัติเหตุจากการจราจร (RC-005 5.6) : บังคับครบ 3 หัวข้อ เฉพาะเหตุของการเคลม = อุบัติเหตุ (Section แสดงเฉพาะกรณีนี้) ──
+    if (values.incidentTypeId === IncidentType.Accident) {
+        if (!values.trafficVehicleTypeId) errors.trafficVehicleTypeId = sel;
+        if (!values.trafficAccidentPersonRoleId) errors.trafficAccidentPersonRoleId = sel;
+        if (values.trafficHasCompulsoryInsuranceExcess === undefined) errors.trafficHasCompulsoryInsuranceExcess = sel;
+    }
 
     // ── แพทย์เจ้าของไข้ ──
     if (!values.doctorLicenseNo.trim()) errors.doctorLicenseNo = req;
     if (!values.doctorName.trim()) errors.doctorName = req;
 
-    // ── ตรวจสอบเอกสาร : หมายเหตุบังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม ──
-    const hasMissingDocumentRemark = values.documentChecks.some(
-        (row) =>
-            (row.checkResult === DOCUMENT_CHECK_RESULTS.failed || row.checkResult === DOCUMENT_CHECK_RESULTS.waiting) &&
-            !row.remark.trim()
-    );
-    if (hasMissingDocumentRemark) {
-        errors.documentChecks = "กรุณากรอกหมายเหตุของเอกสารที่ผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม";
-    }
+    // ตรวจสอบเอกสาร : RC-005 5.7/5.8 ตัดคอลัมน์ผลการตรวจ/หมายเหตุ และ validation ที่ผูกกับผลตรวจรายแถวออกแล้ว
 
     // ── ผลการพิจารณา : ตรวจเมื่อผู้ใช้เลือกผลการพิจารณาแล้ว ──
     if (values.considerResult) {
         if (!values.decisionReasonId) errors.decisionReasonId = sel;
-        if (values.considerResult === DECISION_REVISION && !values.decisionReasonDetail?.trim()) {
+        if (values.considerResult === DECISION_ID.REVISION && !values.decisionReasonDetail?.trim()) {
             errors.decisionReasonDetail = req;
         }
     }
@@ -230,26 +249,26 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
 };
 
 const useHospitalConsiderDetailHook = () => {
+    const dispatch = useAppDispatch();
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : undefined;
+    const claimId = safeAtob(id);
     // route hospital/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
+    const caseId = safeAtob(caseIdEncoded);
     /** เอกลักษณ์ของเคสที่กำลังเปิดอยู่ — ใช้ตรวจว่าเปลี่ยนเคสหรือไม่ (route ใช้ element เดิมเสมอ ไม่ remount) */
     const caseKey = claimId && caseId ? `${claimId}:${caseId}` : undefined;
-    const [searchParams] = useSearchParams();
-
-    /**
-     * ประเภทรายการเคลมของเคสนี้ (ตอนนี้อ่านจาก Query String เพราะ BE ยังไม่ส่งมา)
-     * ตัวอย่าง : ?type=opd-full
-     */
-    const claimListType = parseClaimListType(searchParams.get("type"));
-    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
 
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
     const detail = detailData?.data;
 
+    /**
+     * ประเภทรายการเคลมของเคสนี้ — มาจากข้อมูลจริง (DFUAT-033 เดิมอ่านจาก URL `?type=` ที่ไม่เคยมีใคร set
+     * เลยทุกเคสตกไปที่ default "opd-half" หมด ดู resolveClaimListType ที่ hospitalConsiderMock.tsx)
+     */
+    const claimListType = resolveClaimListType(detail?.medicalTypeId, detail?.medicalSubTypeCode);
+    const claimListTypeConfig = CLAIM_LIST_TYPE_CONFIG[claimListType];
+
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? undefined
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 
@@ -303,16 +322,12 @@ const useHospitalConsiderDetailHook = () => {
         formik.resetForm({ values: buildInitialValues() });
     }
 
-    const {
-        caseDocumentLoading,
-        caseReviewOverviewLoading,
-        documentInfoByDocId,
-        documentStorageListLoading,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
-        documentCheckResultOptionsLoading,
-    } = useHospitalDocumentVerifyHook(formik, caseKey, detail?.caseId, customerDetail?.productTypeId);
+    const { caseDocumentLoading, documentInfoByDocId, documentStorageListLoading } = useHospitalDocumentVerifyHook(
+        formik,
+        caseKey,
+        detail?.caseId,
+        customerDetail?.productTypeId
+    );
 
     const {
         continuousClaimRows,
@@ -327,9 +342,17 @@ const useHospitalConsiderDetailHook = () => {
     /**
      * ตรวจฟอร์ม Step 1 ทั้งหมดก่อนกด "ถัดไป" หรือ "ยืนยันบันทึกผลพิจารณา"
      * คืน true เมื่อผ่าน, false เมื่อมี error (mark touched + เลื่อนไปช่องแรกที่ผิด)
+     *
+     * `includeConsiderResult = false` (ปุ่ม "ถัดไป") ละ error ของ "แจ้งผลการพิจารณาโรงพยาบาล"
+     * (decisionReasonId/decisionReasonDetail) — validate ส่วนนี้มีผลเฉพาะตอนกด "ยืนยันบันทึกผลพิจารณา"
+     * (DFUAT-048)
      */
-    const validateStep1 = async (): Promise<boolean> => {
+    const validateStep1 = async (includeConsiderResult = true): Promise<boolean> => {
         const errs = await formik.validateForm();
+        if (!includeConsiderResult) {
+            delete errs.decisionReasonId;
+            delete errs.decisionReasonDetail;
+        }
         const errorKeys = Object.keys(errs);
         if (errorKeys.length === 0) return true;
 
@@ -356,7 +379,8 @@ const useHospitalConsiderDetailHook = () => {
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
-    const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
+    // isInitialLoading: เคลมที่ไม่มี incidentTypeId query ไม่ถูก enabled — ไม่ให้ Step 1 ค้าง loading จนครบเพดาน 8 วิ
+    const { data: incidentTypeMapping, isInitialLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         activeIncidentTypeId,
         CLAIM_SOURCE_CONSIDER,
         customerDetail?.productTypeId,
@@ -414,6 +438,39 @@ const useHospitalConsiderDetailHook = () => {
         [incidentTypeMapping, formik.values.coverageTypeId]
     );
 
+    /**
+     * reset cascade 2 ตัวนี้ต้องประกาศ "ก่อน" effect ที่ sync ค่าจาก detail (phase 1/2 + แบบร่าง) เสมอ
+     *
+     * effect ใน commit เดียวกันรันตามลำดับที่ประกาศ — กลับเข้าเคสครั้งที่ 2 ข้อมูลทุก query อยู่ใน cache แล้ว
+     * phase 1 จึง sync ได้ตั้งแต่ commit แรกที่ mount (ตั้ง prev*Ref + hasSyncedMainRef = true) ถ้า cascade
+     * รันตามหลังใน commit เดียวกันจะเห็น ref เป็นค่าใหม่ แต่ formik.values ใน closure ยังเป็น undefined
+     * (setFieldValue ยังไม่ทัน re-render) เลยเข้าใจผิดว่า user เปลี่ยนค่าเอง แล้วล้าง "ประเภทความคุ้มครอง"/
+     * "ประเภทการรักษา" ที่เพิ่ง default ทิ้ง — เข้าครั้งแรกไม่เจอเพราะ query ยังโหลดไม่เสร็จตอน mount
+     * พอรันก่อน : commit ที่ sync จะเทียบค่าเก่ากับ ref เก่า (ไม่ทำอะไร) และ render ถัดไปค่ากับ ref ตรงกันพอดี
+     */
+    // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
+    useEffect(() => {
+        if (!hasSyncedMainRef.current) return;
+        if (prevIncidentTypeIdRef.current === formik.values.incidentTypeId) return;
+
+        formik.setFieldValue("coverageTypeId", undefined, false);
+        formik.setFieldValue("coverageTypeName", undefined, false);
+        formik.setFieldValue("medicalTypeId", undefined, false);
+        formik.setFieldValue("causeOfIncidentId", undefined, false);
+        prevIncidentTypeIdRef.current = formik.values.incidentTypeId;
+        prevCoverageTypeIdRef.current = undefined;
+    }, [formik.values.incidentTypeId]);
+
+    // ---- reset cascade: user เปลี่ยน coverageTypeId เอง ----
+    useEffect(() => {
+        if (!hasSyncedMainRef.current) return;
+        if (prevCoverageTypeIdRef.current === formik.values.coverageTypeId) return;
+
+        formik.setFieldValue("medicalTypeId", undefined, false);
+        formik.setFieldValue("causeOfIncidentId", undefined, false);
+        prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
+    }, [formik.values.coverageTypeId]);
+
     // ---- phase 1: sync incidentType, coverageType, date/time, diagnoses, remark ----
     useEffect(() => {
         if (!detail || hasSyncedMainRef.current) return;
@@ -459,8 +516,10 @@ const useHospitalConsiderDetailHook = () => {
                 false
             );
         }
-        if (detail.createdDate) {
-            formik.setFieldValue("createdDate", dayjs(detail.createdDate), false);
+        // วันที่แจ้ง : อ่านจาก notificationDate (ค่าที่บันทึกผลพิจารณา/แบบร่างเขียนกลับ) — เคลมเก่าที่ยังไม่มีค่า fallback ไป createdDate
+        const notificationDate = detail.notificationDate ?? detail.createdDate;
+        if (notificationDate) {
+            formik.setFieldValue("notificationDate", dayjs(notificationDate), false);
         }
         if (detail.documentCompleteDate) {
             formik.setFieldValue("documentCompleteDate", dayjs(detail.documentCompleteDate), false);
@@ -486,23 +545,46 @@ const useHospitalConsiderDetailHook = () => {
 
         // ---- ข้อมูลการเข้ารับการรักษา : default จาก SmileConnect ที่ BE ส่งผ่าน GetClaimDetailConsider ----
         formik.setFieldValue("hn", detail.hn ?? "", false);
-        formik.setFieldValue("vn", detail.vn ?? "", false);
-        formik.setFieldValue("an", detail.an ?? "", false);
-        formik.setFieldValue("underlyingDisease", detail.underlyingDiseaseDetail ?? "", false);
-        formik.setFieldValue("treatmentMethod", detail.treatmentMethod ?? "", false);
-        formik.setFieldValue("labResult", detail.investigationResults ?? "", false);
+        // จำนวนวันนอน IPD/ICU ที่ SmileConnect แจ้งมา — BE เพิ่ง codegen ส่งมาใหม่ (2026-09-16) ไม่มีช่องกรอก
+        // เองในจอนี้เลย (TreatmentInfoSection ไม่มี input ของ ipdDays/icuDays) ต้อง default จากตรงนี้เท่านั้น
+        // ไม่งั้น validateHospitalConsider บังคับ ipdDays >= 1 ตอน medicalTypeId = IPD จะติดค้างกรอกไม่ได้เลย
+        formik.setFieldValue("ipdDays", detail.ipdDayCount ?? 0, false);
+        formik.setFieldValue("icuDays", detail.icuDayCount ?? 0, false);
+        // หมายเหตุ(ถ้ามี) — RC-005 5.4 : default จาก reservationRemark ยังแก้ไขต่อได้
+        formik.setFieldValue("reservationRemark", detail.reservationRemark ?? "", false);
+
+        // ---- DFUAT-069 : default ความจำเป็นทางการแพทย์ / อุบัติเหตุจากการจราจร จาก SmileConnect ----
+        // (GetClaimDetailConsider ส่งมาแล้ว ยกเว้น "เป็นส่วนเกิน พ.ร.บ." กับ "รายละเอียดเพิ่มเติม" ที่ยังไม่มีใน response)
+        formik.setFieldValue("isPhysicalTherapyChecked", detail.isPhysicalTherapy === true, false);
         formik.setFieldValue(
-            "hasProcedure",
-            detail.isProcedurePerformed === true ? "yes" : detail.isProcedurePerformed === false ? "no" : "",
+            "physicalTherapyNecessityReasonId",
+            detail.physicalTherapyNecessityReasonId ?? undefined,
             false
         );
-        // admitIndication / additionalDetail : BE ยังไม่ส่ง default มา ปล่อยว่างให้กรอกมือ
+        formik.setFieldValue("trafficVehicleTypeId", detail.vehicleTypeId ?? undefined, false);
+        formik.setFieldValue("trafficOtherVehicleType", detail.otherVehicleType ?? "", false);
+        formik.setFieldValue("trafficAccidentPersonRoleId", detail.trafficAccidentPersonRoleId ?? undefined, false);
+        formik.setFieldValue(
+            "trafficCompulsoryInsuranceNotUsedReason",
+            detail.compulsoryInsuranceNotUsedReason ?? "",
+            false
+        );
+        // response ไม่มี hasCompulsoryInsuranceExcess — มีสาเหตุที่ไม่ใช้ พ.ร.บ. มา = ตอบ "ไม่ใช่" ไว้
+        if (detail.compulsoryInsuranceNotUsedReason) {
+            formik.setFieldValue("trafficHasCompulsoryInsuranceExcess", false, false);
+        }
 
         // ---- แพทย์เจ้าของไข้ ----
         formik.setFieldValue("doctorLicenseNo", detail.medicalLicenseNo ?? "", false);
         formik.setFieldValue("doctorName", detail.physicianName ?? "", false);
 
         hasSyncedMainRef.current = true;
+        // ปลดล็อก useGetDocumentType (DocumentScanTable) — gate ด้วย claimPHSlice.isEnabled ซึ่ง default
+        // false และไม่มีใครใน flow เคลมโรงพยาบาล set ให้เดิม ทำให้ query โดน disable ค้างตลอดไป (react-query
+        // v4 ทำให้ isLoading ของ query ที่ disable ตั้งแต่แรกค้างเป็น true ตลอดกาล) ตาราง "เอกสารประกอบการ
+        // ปฏิเสธ" เลยเห็น loading bar ค้าง ไม่เคยยิง GET เลยสักครั้ง — เคลมลูกค้า (ConsiderDetailHook) set
+        // ค่านี้ตรงจุดเดียวกันอยู่แล้ว จึงไม่เจอปัญหานี้
+        dispatch(setEnabled(true));
     }, [detail, incidentType, coverageType]);
 
     // ---- phase 2: sync medicalType/causeOfIncident (รอ coverageTypeId ถูก set จาก phase 1 ก่อน) ----
@@ -538,32 +620,24 @@ const useHospitalConsiderDetailHook = () => {
         prevCoverageTypeIdRef
     );
 
-    // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
-    useEffect(() => {
-        if (!hasSyncedMainRef.current) return;
-        if (prevIncidentTypeIdRef.current === formik.values.incidentTypeId) return;
-
-        formik.setFieldValue("coverageTypeId", undefined, false);
-        formik.setFieldValue("coverageTypeName", undefined, false);
-        formik.setFieldValue("medicalTypeId", undefined, false);
-        formik.setFieldValue("causeOfIncidentId", undefined, false);
-        prevIncidentTypeIdRef.current = formik.values.incidentTypeId;
-        prevCoverageTypeIdRef.current = undefined;
-    }, [formik.values.incidentTypeId]);
-
-    // ---- reset cascade: user เปลี่ยน coverageTypeId เอง ----
-    useEffect(() => {
-        if (!hasSyncedMainRef.current) return;
-        if (prevCoverageTypeIdRef.current === formik.values.coverageTypeId) return;
-
-        formik.setFieldValue("medicalTypeId", undefined, false);
-        formik.setFieldValue("causeOfIncidentId", undefined, false);
-        prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
-    }, [formik.values.coverageTypeId]);
-
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
+    // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
+    const decisionReasonDecisionId =
+        formik.values.considerResult === DECISION_ID.REJECTED || formik.values.considerResult === DECISION_ID.CANCELLED
+            ? undefined
+            : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
-        formik.values.considerResult
+        decisionReasonDecisionId
+    );
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.REJECTED
+    );
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.CANCELLED
     );
 
     /**
@@ -605,7 +679,6 @@ const useHospitalConsiderDetailHook = () => {
         detailDataLoading,
         customerDetailLoading,
         caseDocumentLoading,
-        caseReviewOverviewLoading,
         documentInfoByDocId,
         documentStorageListLoading,
         incidentType,
@@ -617,6 +690,10 @@ const useHospitalConsiderDetailHook = () => {
         incidentTypeMappingLoading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         continuousClaimRows,
         continuousClaimRowsLoading,
         continuousClaimOpen,
@@ -624,10 +701,6 @@ const useHospitalConsiderDetailHook = () => {
         handleToggleContinuousClaim,
         handleSelectContinuousClaim,
         handleClearContinuousClaim,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
-        documentCheckResultOptionsLoading,
     };
 };
 

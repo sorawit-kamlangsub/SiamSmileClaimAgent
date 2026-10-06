@@ -1,5 +1,5 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetRefundDetailMonitors } from "../repayAPI";
+import { useGetFailedPayTransferDetail } from "../../../api/coreClaimApi";
 import dayjs from "dayjs";
 
 type RefundTransferTransactionDetailProp = {
@@ -7,9 +7,8 @@ type RefundTransferTransactionDetailProp = {
 };
 
 const useRefundTransferTransactionDetailHook = ({ transactionId }: RefundTransferTransactionDetailProp) => {
-    const { data: getRefundDetailData, isLoading: getRefundDetailIsLoading } = useGetRefundDetailMonitors({
-        payTransferTransactionId: transactionId,
-    });
+    const { data: getRefundDetailData, isLoading: getRefundDetailIsLoading } =
+        useGetFailedPayTransferDetail(transactionId);
 
     const columns: MUIDataTableColumn[] = [
         {

@@ -10,12 +10,11 @@ import {
     useCaseRefundApproveUpdateStatus,
     useGetCaseRefundApproveDetail,
     useGetCaseRefundRejectReasons,
-} from "../../Refund/refundAPI";
-import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
+} from "../../../api/coreClaimApi";
 
 type ApproveRefundDialogProps = {
     open: boolean;
-    row: RefundApproveMonitorRow | null;
+    caseRefundId: string | null;
     onClose: () => void;
     mode?: "approve" | "view";
 };
@@ -23,29 +22,6 @@ type ApproveRefundDialogProps = {
 type ApproveRefundDialogFormValues = {
     rejectReasonId: number | undefined;
     note: string;
-};
-
-type ApproveRefundCaseDetail = {
-    caseId?: string;
-    caseNo?: string;
-    customerName?: string;
-    coverageTypeNameTH?: string;
-    totalNetPaidAmount?: number;
-    additionalAmount?: number;
-};
-
-type ApproveRefundDetail = {
-    caseRefundId?: string;
-    claimNo?: string;
-    customerName?: string;
-    createdBy?: string;
-    countItem?: number;
-    refundCount?: number;
-    remainingAmount?: number;
-    totalNetPaidAmount?: number;
-    totalRefundAmount?: number;
-    claimId?: string;
-    caseDetails?: ApproveRefundCaseDetail[];
 };
 
 const defaultValues: ApproveRefundDialogFormValues = {
@@ -61,9 +37,8 @@ const formatNumber = (value: number | undefined | null) =>
               maximumFractionDigits: 2,
           });
 
-const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRefundDialogProps) => {
-    const caseId = row?.caseId ?? "";
-    const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseId);
+const ApproveRefundDialog = ({ open, caseRefundId, onClose, mode = "approve" }: ApproveRefundDialogProps) => {
+    const { data: refundDetailRes, isLoading: isDetailLoading } = useGetCaseRefundApproveDetail(caseRefundId ?? "");
     const { data: refundReasonsRes } = useGetCaseRefundRejectReasons();
     const [openSlipDialog, setOpenSlipDialog] = useState(false);
     const [slipFileUrl, setSlipFileUrl] = useState("");
@@ -71,9 +46,9 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
     const isPdfSlip = slipFileUrl.toLowerCase().endsWith(".pdf");
     const slipSrc = isPdfSlip ? `${slipFileUrl}#zoom=50` : slipFileUrl;
 
-    const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
-    const caseRefundId = detail?.caseRefundId ?? caseId;
-    const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
+    const detail = refundDetailRes?.data;
+    const detailCaseRefundId = detail?.caseRefundId ?? "";
+    const reasonOptions = refundReasonsRes?.data ?? [];
 
     const handleUpdateStatusSuccess = () => {
         setIsSubmitting(false);
@@ -109,7 +84,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
         onSubmit: (values) => {
             setIsSubmitting(true);
             updateStatusMutate({
-                caseRefundId,
+                caseRefundId: detailCaseRefundId,
                 caseRefundStatusId: 4,
                 caseRefundRejectReasonId: values.rejectReasonId,
                 caseRefundRejectReasonRemark: values.note,
@@ -121,7 +96,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
         if (open) {
             formik.resetForm({ values: defaultValues });
         }
-    }, [open, row?.caseId]);
+    }, [open, caseRefundId]);
 
     const handleApproveClick = async () => {
         formik.setFieldError("rejectReasonId", undefined);
@@ -135,17 +110,15 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
         if (result.isConfirmed) {
             setIsSubmitting(true);
             updateStatusMutate({
-                caseRefundId,
+                caseRefundId: detailCaseRefundId,
                 caseRefundStatusId: 3,
             });
         }
     };
 
     const handleOpenSlip = () => {
-        if (row?.refundNo) {
-            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
-            setOpenSlipDialog(true);
-        }
+        setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
+        setOpenSlipDialog(true);
     };
 
     const handleRejectClick = async () => {
@@ -242,22 +215,22 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                         <Grid container spacing={2}>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่เคลม :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{row?.claimNo ?? "-"}</Typography>
+                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{detail?.claimNo ?? "-"}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>เลขที่เคส :</Typography>
-                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{row?.caseNo ?? "-"}</Typography>
+                                <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>{detail?.caseNo ?? "-"}</Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>สาขา :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {row?.branceName ?? "-"}
+                                    {detail?.branchName ?? "-"}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>ชื่อ - สกุล ผู้เอาประกัน :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {detail?.customerName ?? row?.customerName ?? "-"}
+                                    {detail?.insuredName ?? "-"}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>
@@ -276,7 +249,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                                 <Grid item xs={12} sm={6} md={4}>
                                     <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>แจ้งโอน :</Typography>
                                     <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                        {formatNumber(detail?.remainingAmount)}
+                                        {formatNumber(detail?.transferAmount)}
                                     </Typography>
                                 </Grid>
                             )}
@@ -290,11 +263,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                                 <Grid item xs={12} sm={6} md={4}>
                                     <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>คงเหลือ :</Typography>
                                     <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                        {formatNumber(
-                                            detail?.remainingAmount != null && detail?.totalRefundAmount != null
-                                                ? detail.remainingAmount - detail.totalRefundAmount
-                                                : undefined
-                                        )}
+                                        {formatNumber(detail?.remainingAmount)}
                                     </Typography>
                                 </Grid>
                             )}
@@ -330,7 +299,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                                 variant="outlined"
                                 color="error"
                                 onClick={handleRejectClick}
-                                disabled={isSubmitting || isDetailLoading || !caseRefundId}
+                                disabled={isSubmitting || isDetailLoading || !detailCaseRefundId}
                             >
                                 ปฏิเสธ
                             </Button>
@@ -338,7 +307,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                                 variant="contained"
                                 startIcon={<SyncAltIcon />}
                                 onClick={handleApproveClick}
-                                disabled={isSubmitting || isDetailLoading || !caseRefundId}
+                                disabled={isSubmitting || isDetailLoading || !detailCaseRefundId}
                                 sx={{ backgroundColor: "#2E7D32", "&:hover": { backgroundColor: "#1B5E20" } }}
                             >
                                 อนุมัติ

@@ -10,9 +10,12 @@ import { HeadingWithColor } from "../../_common/components/CustomComponent/Headi
 import CustomBox from "../../_common/components/CustomComponent/CustomBox";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
-
-// TODO: ยืนยัน URL จริงของหน้า Application Detail (PH) กับทีม เดิมโค้ดอ้างตัวแปรนี้แต่ไม่เคย declare
-const PH_DETAIL_URL = "";
+import {
+    PH_APPLICATION_DETAIL_URL,
+    calculateAgeText,
+    calculatePolicyAgeText,
+    getApplicationDetailUrl,
+} from "../../../functionHelpers";
 
 const NATIONAL_ID_CARD_TYPE = 2;
 const PASSPORT_CARD_TYPE = 3;
@@ -111,29 +114,17 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => {
     }, [data]);
 
     // อายุปัจจุบัน คำนวณจากวันเกิด
-    const currentAge = useMemo(() => {
-        const d = data?.birthDate ? dayjs(data.birthDate) : null;
-        if (!d || !d.isValid()) return "-";
-        return `${dayjs().diff(d, "year")} ปี`;
-    }, [data]);
+    const currentAge = calculateAgeText(data?.birthDate?.toString());
 
     // อายุกรมธรรม์ คำนวณจาก coverageFrom ถึงปัจจุบัน
-    const policyAge = useMemo(() => {
-        const d = data?.coverageFrom ? dayjs(data.coverageFrom) : null;
-        if (!d || !d.isValid()) return "-";
-        const years = dayjs().diff(d, "year");
-        const months = dayjs().diff(d.add(years, "year"), "month");
-        return `${years} ปี ${months} เดือน`;
-    }, [data]);
+    const policyAge = calculatePolicyAgeText(data?.coverageFrom?.toString());
 
     const idCardNo = data?.cardTypeId === NATIONAL_ID_CARD_TYPE ? data?.cardDetail : undefined;
     const passportNo = data?.cardTypeId === PASSPORT_CARD_TYPE ? data?.cardDetail : undefined;
 
-    const applicationId = data?.policyCode ?? "-";
-
-    const applicationIdLink = (
+    const applicationIdLink = data?.policyCode ? (
         <Link
-            href={PH_DETAIL_URL}
+            href={getApplicationDetailUrl(PH_APPLICATION_DETAIL_URL, data.policyCode)}
             target="_blank"
             rel="noopener noreferrer"
             underline="hover"
@@ -141,8 +132,10 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => {
             fontWeight={700}
             sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
         >
-            {applicationId}
+            {data.policyCode}
         </Link>
+    ) : (
+        "-"
     );
 
     return (

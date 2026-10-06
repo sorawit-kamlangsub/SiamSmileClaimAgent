@@ -5,20 +5,17 @@ import { createContinuedClaim } from "../../../../../api/coreClaimApi";
 import { CaseDisabilityV2Request, CreateContinuedClaimDtoRequest } from "../../../../../api/coreClaimApi.client";
 import { useAuth } from "../../../../_auth";
 import { BeneficiaryForm, claimPHSelector } from "../../../store/claimPHSlice";
-import { CoverageType, MedicalType } from "../../../../../functionHelpers";
+import { CoverageType, MedicalType, safeAtob } from "../../../../../functionHelpers";
 import { FingerKey, OrganLossItem } from "../organLoss.types";
 import { getEncryptText, useCreatePayment } from "../../../../../api/claimFundApi";
-
-const generateRequestId = () =>
-    typeof crypto !== "undefined" && crypto.randomUUID
-        ? crypto.randomUUID()
-        : `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+import { useClaimRequestId } from "../useClaimRequestId";
 
 export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (message: string) => void) => {
     const { oldClaimId: oldClaimIdParam } = useParams();
-    const oldClaimId = oldClaimIdParam ? atob(oldClaimIdParam) : "";
+    const oldClaimId = safeAtob(oldClaimIdParam) ?? "";
 
     const { userProfile } = useAuth();
+    const getRequestId = useClaimRequestId();
     const { form, bankAccounts, contacts, organLossItems, caseItems, documentScanList } =
         useAppSelector(claimPHSelector);
 
@@ -80,13 +77,15 @@ export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (mes
         const payableCategoryId = isMedical ? 2 : isCompensate ? 3 : isDisability ? 5 : 6;
 
         return {
-            requestId: generateRequestId(),
+            requestId: getRequestId(),
             claimId: oldClaimId,
             createdByUserCode: userProfile?.employeeCode,
             createdByUserName: userProfile?.fullName,
 
             cases: [
                 {
+                    // สาขาของผู้ใช้ที่ login — ใช้บันทึกว่าเคสถูกสร้างโดยสาขาไหน
+                    createdCaseByBranchId: userProfile?.employeeBranchId,
                     coverageTypeId: form.coverageTypeId,
                     occurrenceDate: form.incidentDate,
                     admissionDate: isMedicalAll ? form.admissionDate : undefined,
@@ -107,7 +106,7 @@ export const useCreateContinuedClaimPH = (onSuccess?: () => void, onError?: (mes
                     vn: undefined,
 
                     chiefComplaintId: form.chiefComplaintId,
-                    chiefComplaintCustom: form.remark,
+                    illnessOrInjuryDetail: form.illnessOrInjuryDetail,
 
                     icD10_1stId: form.diagnoses[0]?.icd10Id,
                     icD10_2ndId: form.diagnoses[1]?.icd10Id,

@@ -1,24 +1,45 @@
 import axios from "axios";
 import {
+    AdditionalTransferMonitorRequestDto,
     ApproveClaimDecisionDtoRequest,
+    BaseResponseServiceResponse,
     CalculateCaseClaimDtoRequest,
     CalculateCaseClaimDtoResponseServiceResponse,
+    CaseRefundApproveUpdateStatusRequestDto,
+    CaseRefundApproveUpdateStatusResponseDtoServiceResponse,
+    ClaimFundClient,
     CoreClaimClient,
     CreateContinuedClaimDtoRequest,
     CreateCoreClaimDtoResponseServiceResponse,
     CreateCoreClaimV2DtoRequest,
+    CreateRefundRequestDto,
+    CreateRefundResponsetDtoServiceResponse,
     GetClaimHistoryDtoResponseListServiceResponse,
     GetDocumentSubTypeDtoRequest,
+    GetEmployeeClaimPaymentLimitResponseServiceResponse,
+    IncreaseTransferLimitChangeStatusRequestDto,
+    IncreaseTransferLimitChangeStatusResponseDtoServiceResponse,
+    IncreaseTransferLimitMonitorRequestDto,
+    RefundApproveMonitorRequestDto,
+    SaveAdditionalTransferRequest,
+    SaveAdditionalTransferResponseDtoServiceResponse,
     SaveClaimEditDraftDtoRequest,
     SaveClaimEditDraftDtoResponeServiceResponse,
+    SearchClaimOrCaseResponseDtoListServiceResponse,
+    UpdateBeneficiaryDtoRequest,
+    InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest,
     UpsertClaimDecisionDtoRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
+    UpsertDeathAndDisabilityClaimDecisionDtoRequest,
+    UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
 import { API_URL } from "../../Const";
+import { PaginationDto } from "../modules/_common";
 
 const coreClaimClient = new CoreClaimClient(API_URL, axios);
+const claimFundClient = new ClaimFundClient(API_URL, axios);
 
 const getCustomerSearchQueryKey = ["getCustomerSearch"];
 const getCustomerDetailByIdQueryKey = ["getCustomerDetailById"];
@@ -26,6 +47,7 @@ const getCustomerBenefitDetailSearchQueryKey = ["getCustomerBenefitDetailSearch"
 const getClaimContinueQueryKey = ["getClaimContinue"];
 const getDocumentSubTypeQueryKey = ["getDocumentSubType"];
 const getClaimHistoryQueryKey = ["getClaimHistory"];
+const getEmployeeClaimPaymentLimitQueryKey = ["getEmployeeClaimPaymentLimit"];
 const getCustomerBankAccountQueryKey = ["getCustomerBankAccount"];
 const getContactPersonQueryKey = ["getContactPerson"];
 const getCaseByClaimIdQueryKey = ["getCaseByClaimId"];
@@ -35,6 +57,11 @@ const getCustomerSearchByPolicyCodeQueryKey = ["getCustomerSearchByPolicyCode"];
 const getPolicyBenefitSheredQueryKey = ["getPolicyBenefitShered"];
 const getDashboardCustomerConsiderQueryKey = ["getDashboardCustomerConsider"];
 const getCustomerClaimAdjudicationMonitorQueryKey = ["getCustomerClaimAdjudicationMonitor"];
+const getDashboardDeathAndDisabilityClaimConsiderQueryKey = ["getDashboardDeathAndDisabilityClaimConsider"];
+const getDeathAndDisabilityClaimAdjudicationMonitorQueryKey = ["getDeathAndDisabilityClaimAdjudicationMonitor"];
+const getDeathAndDisabilityClaimDetailConsiderQueryKey = ["getDeathAndDisabilityClaimDetailConsider"];
+const getDeathAndDisabilityBeneficiaryQueryKey = ["getDeathAndDisabilityBeneficiary"];
+const getCaseDisabilityBenefitByCaseIdQueryKey = ["getCaseDisabilityBenefitByCaseId"];
 const getClaimDetailConsiderQueryKey = ["getClaimDetailConsider"];
 const getCaseReviewOverviewQueryKey = ["getCaseReviewOverview"];
 const getClaimTransactionLogQueryKey = ["getClaimTransactionLog"];
@@ -46,6 +73,186 @@ const getDocumentByCaseIdQueryKey = ["getDocumentByCaseId"];
 const getDCRQueryKey = ["getDCR"];
 const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
 
+// ---- ขยายวงเงิน (ClaimFund / IncreaseTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getIncreaseTransferLimitMonitorsQueryKey = ["getIncreaseTransferLimitMonitors"];
+const getIncreaseTransferLimitDetailQueryKey = ["getIncreaseTransferLimitDetail"];
+const getTransferApprovalStatusQueryKey = ["getTransferApprovalStatus"];
+const getCaseTransferApprovalRejectReasonStatusQueryKey = ["getCaseTransferApprovalRejectReasonStatus"];
+
+export const useGetTransferApprovalStatus = () => {
+    return useQuery([getTransferApprovalStatusQueryKey], () => claimFundClient.getTransferApprovalStatus(), {
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useGetIncreaseTransferLimitMonitors = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    filter?: IncreaseTransferLimitMonitorRequestDto,
+    searchTrigger?: number,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [
+            getIncreaseTransferLimitMonitorsQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+            searchTrigger,
+        ],
+        () =>
+            claimFundClient.increaseTransferLimitMonitors(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage,
+                filter
+            ),
+        {
+            enabled: enabled ?? true,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetIncreaseTransferLimitDetail = (caseTransferApprovalId?: string) => {
+    return useQuery(
+        [getIncreaseTransferLimitDetailQueryKey, caseTransferApprovalId],
+        () => claimFundClient.getIncreaseTransferLimitDetail(caseTransferApprovalId),
+        {
+            enabled: caseTransferApprovalId !== undefined && caseTransferApprovalId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseTransferApprovalRejectReasonStatus = () => {
+    return useQuery(
+        [getCaseTransferApprovalRejectReasonStatusQueryKey],
+        () => claimFundClient.getCaseTransferApprovalRejectReasonStatus(),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useIncreaseTransferLimitChangeStatus = (
+    onSuccessCallback?: (response: IncreaseTransferLimitChangeStatusResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: IncreaseTransferLimitChangeStatusRequestDto) => claimFundClient.increaseTransferLimitChangeStatus(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else {
+                    queryClient.invalidateQueries([getIncreaseTransferLimitMonitorsQueryKey], { refetchType: "all" });
+                    queryClient.invalidateQueries([getIncreaseTransferLimitDetailQueryKey], { refetchType: "all" });
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+// ---- สอบถามธนาคาร (ClaimFund / Inquiry) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+export const inquiryQueryKeys = {
+    monitors: "getInquiryMonitorsKey",
+    detail: "getInquiryDetailMonitorKey",
+} as const;
+
+export const useGetInquiryMonitors = (
+    searchDetail?: string,
+    orderingField?: string,
+    ascendingOrder?: boolean,
+    page?: number,
+    recordsPerPage?: number
+) => {
+    return useQuery(
+        [inquiryQueryKeys.monitors, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () => claimFundClient.inquiryMonitors(searchDetail, orderingField, ascendingOrder, page, recordsPerPage),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetInquiryDetail = (payTransferTransactionId: string) => {
+    return useQuery(
+        [inquiryQueryKeys.monitors, inquiryQueryKeys.detail, payTransferTransactionId],
+        () => claimFundClient.inquiryDetail(payTransferTransactionId),
+        {
+            enabled: !!payTransferTransactionId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+// ---- แก้ไขการโอนเงิน (ClaimFund / FailedPayTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getFailedPayTransferMonitorQueryKey = ["getFailedPayTransferMonitor"];
+const getFailedPayTransferDetailQueryKey = ["getFailedPayTransferDetail"];
+
+export const useGetFailedPayTransferMonitor = (
+    searchDetail?: string,
+    orderingField?: string,
+    ascendingOrder?: boolean,
+    page?: number,
+    recordsPerPage?: number
+) => {
+    return useQuery(
+        [
+            getFailedPayTransferMonitorQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            claimFundClient.failedPayTransferTransactionMonitor(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetFailedPayTransferDetail = (payTransferTransactionId: string) => {
+    return useQuery(
+        [getFailedPayTransferDetailQueryKey, payTransferTransactionId],
+        () => claimFundClient.failedPayTransferTransactionDetail(payTransferTransactionId),
+        {
+            enabled: !!payTransferTransactionId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
 /**
  * ล้าง cache ของ query ที่ได้รับผลกระทบจากการบันทึก/พิจารณาเคลม (ใช้ร่วมกันทั้งเคลมลูกค้าและเคลม รพ.
  * เพราะ mutation ชุดนี้ใช้ผ่าน useClaimDetailActionHook เหมือนกันทั้งสอง flow)
@@ -53,9 +260,11 @@ const getClaimEditDraftRevisionQueryKey = ["getClaimEditDraftRevision"];
  * ทำไมต้องมี : global staleTime = 5 นาที ถ้าไม่ invalidate ผู้ใช้ที่บันทึกแล้วกลับเข้ารายการเดิม
  * ภายใน 5 นาทีจะเห็นข้อมูล "ก่อนบันทึก" จาก cache จนกว่าจะ refresh ทั้งหน้า
  *
- * ทำไมใช้ refetchType "none" : query รายละเอียด/ค่ารักษา/เอกสาร ยัง active อยู่ตอนกดบันทึก และผู้ใช้
- * กำลังจะออกจากหน้าอยู่แล้ว การ refetch ตรงนั้นเป็น request ที่เสียเปล่าบนหน้าที่หนักที่สุด — แค่มาร์ค
- * ว่า stale ก็พอ รอบ mount ถัดไปจะยิงใหม่เอง (refetchOnMount ไม่ได้ถูก override จึงเป็น true ตาม default)
+ * ใช้ refetchType default ("active") ไม่ใช่ "none" — เดิมใช้ "none" โดยหวังว่า refetchOnMount default
+ * จะยิงใหม่เองตอน mount รอบถัดไป แต่ query พวกนี้มัก active อยู่ต่อเนื่อง (ผู้ใช้ไม่ได้ unmount component
+ * หลังกดบันทึก เช่น สลับ tab ในหน้าเดียวกัน) ทำให้ "รอบ mount ถัดไป" ไม่เกิดขึ้นจริง และข้อมูลเก่าค้างอยู่
+ * "active" จะ refetch ทันทีเฉพาะ query ที่มีคน mount อยู่ตอนนี้ ส่วน query ที่ inactive จะแค่ mark stale
+ * ตามปกติ (ไม่มี request เสียเปล่า)
  *
  * หมายเหตุรูปแบบ key : key ในไฟล์นี้เป็น array ซ้อน array เช่น [["getClaimDetailConsider"], claimId]
  * จึงต้องส่ง filter เป็น [key] ไม่ใช่ key เปล่าๆ ไม่งั้นจะเทียบ string กับ array แล้วไม่ match อะไรเลย
@@ -69,7 +278,7 @@ const invalidateClaimConsiderQueries = (queryClient: QueryClient) => {
         getCustomerClaimAdjudicationMonitorQueryKey,
         getHospitalClaimAdjudicationMonitorQueryKey,
         getDashboardCustomerConsiderQueryKey,
-    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey], { refetchType: "none" }));
+    ].forEach((queryKey) => queryClient.invalidateQueries([queryKey]));
 };
 
 export const useCalculateCaseClaim = (
@@ -138,11 +347,15 @@ export const useGetCustomerSearch = (
     );
 };
 
-export const useGetCustomerDetailById = (id: number | undefined) => {
-    return useQuery([getCustomerDetailByIdQueryKey, id], () => coreClaimClient.getCustomerDetailById(id as number), {
-        enabled: !!id,
-        refetchOnWindowFocus: false,
-    });
+export const useGetCustomerDetailById = (customerDetailId: string | undefined) => {
+    return useQuery(
+        [getCustomerDetailByIdQueryKey, customerDetailId],
+        () => coreClaimClient.getCustomerDetailById(customerDetailId as string),
+        {
+            enabled: !!customerDetailId,
+            refetchOnWindowFocus: false,
+        }
+    );
 };
 
 export const useGetCustomerBenefitDetailSearch = (
@@ -201,7 +414,27 @@ export const useCreateCoreClaim = (
     });
 };
 
-export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean) => {
+/**
+ * `alwaysFresh` (default false = พฤติกรรมเดิม cache ตลอดไปด้วย cacheTime/staleTime: Infinity — เหมาะกับ
+ * master list ของ document type ทั่วไปที่ไม่เปลี่ยนตามเคส) — ต้องเปิดเป็น true สำหรับ documentTypeId ที่
+ * endpoint คืน documentCode เฉพาะเคส (เช่น "ใบแจ้งปฏิเสธสินไหม") ไม่งั้นสอง case ที่ productTypeId ตรงกันจะ
+ * ได้ documentCode เดิมค้างจาก cache ตลอดไป (เอกสารไม่ตรงเคสที่กำลังพิจารณาอยู่)
+ */
+/**
+ * คืนฟังก์ชันล้าง cache ของ useGetDocumentType ตาม documentTypeId — ใช้กับตารางสแกนเอกสารที่ต้องแชร์ documentCode
+ * ระหว่าง 2 component ในหน้าเดียว (cache ปกติ) แล้วล้างทิ้งตอนออกจากหน้า กัน documentCode ค้างไปเคสถัดไป
+ */
+export const useRemoveDocumentTypeCache = () => {
+    const queryClient = useQueryClient();
+    return (documentTypeId: number) =>
+        queryClient.removeQueries({
+            queryKey: [getDocumentSubTypeQueryKey],
+            predicate: (query) =>
+                (query.queryKey[1] as GetDocumentSubTypeDtoRequest | undefined)?.documentTypeId === documentTypeId,
+        });
+};
+
+export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnabled?: boolean, alwaysFresh = false) => {
     return useQuery(
         [getDocumentSubTypeQueryKey, request],
         async () => {
@@ -209,18 +442,18 @@ export const useGetDocumentType = (request: GetDocumentSubTypeDtoRequest, isEnab
             return response;
         },
         {
-            cacheTime: Infinity,
-            staleTime: Infinity,
+            cacheTime: alwaysFresh ? 0 : Infinity,
+            staleTime: alwaysFresh ? 0 : Infinity,
             enabled: !!(isEnabled && request.documentTypeId),
             refetchOnWindowFocus: false,
-            refetchOnMount: false,
+            refetchOnMount: alwaysFresh ? "always" : false,
         }
     );
 };
 
 export const useGetClaimContinue = (
     applicationId?: string | undefined,
-    initialClaimId?: string | undefined,
+    initialCaseId?: string | undefined,
     searchDetail?: string | undefined,
     orderingField?: string | undefined,
     ascendingOrder?: boolean | undefined,
@@ -231,7 +464,7 @@ export const useGetClaimContinue = (
         [
             getClaimContinueQueryKey,
             applicationId,
-            initialClaimId,
+            initialCaseId,
             searchDetail,
             orderingField,
             ascendingOrder,
@@ -241,7 +474,7 @@ export const useGetClaimContinue = (
         () =>
             coreClaimClient.getClaimContinue(
                 applicationId,
-                initialClaimId,
+                initialCaseId,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
@@ -268,6 +501,7 @@ export const useGetClaimHistory = (
         () =>
             coreClaimClient.getClaimHistory(
                 applicationId,
+                undefined,
                 searchDetail,
                 orderingField,
                 ascendingOrder,
@@ -277,6 +511,16 @@ export const useGetClaimHistory = (
         {
             enabled: !!applicationId,
             refetchOnWindowFocus: true,
+        }
+    );
+};
+
+export const useGetEmployeeClaimPaymentLimit = (userId: number, requestedTransferAmount: number) => {
+    return useQuery<GetEmployeeClaimPaymentLimitResponseServiceResponse, Error>(
+        [getEmployeeClaimPaymentLimitQueryKey, userId, requestedTransferAmount],
+        () => coreClaimClient.getEmployeeClaimPaymentLimit(userId, requestedTransferAmount),
+        {
+            refetchOnWindowFocus: false,
         }
     );
 };
@@ -330,15 +574,15 @@ export const useGetCaseByClaimId = (
 };
 
 export const useCalculateCaseDisability = (
-    customerId?: number | undefined,
+    customerDetailId?: string | undefined,
     bodyPartId?: number | undefined,
     standardMedicalExpenseId?: number | undefined
 ) => {
     return useQuery(
-        [calculateCaseDisabilityQueryKey, customerId, bodyPartId, standardMedicalExpenseId],
-        () => coreClaimClient.calculateCaseDisability(customerId, bodyPartId, standardMedicalExpenseId),
+        [calculateCaseDisabilityQueryKey, customerDetailId, bodyPartId, standardMedicalExpenseId],
+        () => coreClaimClient.calculateCaseDisability(customerDetailId, bodyPartId, standardMedicalExpenseId),
         {
-            enabled: !!customerId && !!bodyPartId && !!standardMedicalExpenseId,
+            enabled: !!customerDetailId && !!bodyPartId && !!standardMedicalExpenseId,
             refetchOnWindowFocus: false,
         }
     );
@@ -346,7 +590,7 @@ export const useCalculateCaseDisability = (
 
 export const useGetCustomerBenefitDetailHalf = (
     policyCode?: string | undefined,
-    incidentDate?: Dayjs | undefined,
+    incidentDate?: dayjs.Dayjs | undefined,
     isContinue?: boolean | undefined,
     incidentTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
@@ -354,7 +598,7 @@ export const useGetCustomerBenefitDetailHalf = (
     causeOfIncidentId?: number | undefined,
     formatTypeId?: number | undefined,
     cusTomerTypeCode?: string | undefined,
-    customerCode?: string | undefined,
+    customerDetailId?: string | undefined,
     claimNo?: string | undefined
 ) => {
     return useQuery(
@@ -369,7 +613,7 @@ export const useGetCustomerBenefitDetailHalf = (
             causeOfIncidentId,
             formatTypeId,
             cusTomerTypeCode,
-            customerCode,
+            customerDetailId,
             claimNo,
         ],
         () =>
@@ -383,7 +627,7 @@ export const useGetCustomerBenefitDetailHalf = (
                 causeOfIncidentId,
                 formatTypeId,
                 cusTomerTypeCode,
-                customerCode,
+                customerDetailId,
                 claimNo
             ),
         {
@@ -436,6 +680,20 @@ export const useGetCustomerSearchByPolicyCode = (
     );
 };
 
+// TODO(backend): GetPolicyBenefitSheredDtoResponse ที่ codegen ได้ตอนนี้ว่างเปล่า (schema ฝั่ง backend มีปัญหา)
+// mock shape เดิมไว้ก่อนตรงนี้ — ลบ interface นี้แล้วใช้ GetPolicyBenefitSheredDtoResponse จาก client ตรงๆ ได้เลยเมื่อ backend แก้แล้ว + codegen ใหม่
+export interface PolicyBenefitSheredItem {
+    policyCode?: string;
+    benefitId?: number;
+    benefitCode?: string;
+    productId?: number;
+    benefitName?: string;
+    maxPrice?: number;
+    customerTypeCode?: string;
+    shortBenefit?: string;
+    fullBenefitDisplay?: string;
+}
+
 export const useGetPolicyBenefitShered = (
     applicaitonCode?: string | undefined,
     customerTypeCode?: string | undefined
@@ -445,6 +703,7 @@ export const useGetPolicyBenefitShered = (
         () => coreClaimClient.getPolicyBenefitShered(applicaitonCode, customerTypeCode),
         {
             enabled: !!applicaitonCode && !!customerTypeCode,
+            select: (res) => ({ ...res, data: res.data as unknown as PolicyBenefitSheredItem[] | undefined }),
         }
     );
 };
@@ -512,6 +771,180 @@ export const useGetCustomerClaimAdjudicationMonitor = (
             ),
         {
             enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDashboardDeathAndDisabilityClaimConsider = (
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined
+) => {
+    return useQuery(
+        [getDashboardDeathAndDisabilityClaimConsiderQueryKey, dateFrom, dateTo],
+        () => coreClaimClient.getDashboardDeathAndDisabilityClaimConsider(dateFrom, dateTo),
+        {
+            enabled: !!dateFrom && !!dateTo,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimAdjudicationMonitor = (
+    isSearch?: boolean,
+    dateFrom?: dayjs.Dayjs | undefined,
+    dateTo?: dayjs.Dayjs | undefined,
+    isProductTypeId_PH?: boolean | undefined,
+    isProductTypeId_PA?: boolean | undefined,
+    claimTransactionTypeId?: number | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [
+            getDeathAndDisabilityClaimAdjudicationMonitorQueryKey,
+            dateFrom,
+            dateTo,
+            isProductTypeId_PH,
+            isProductTypeId_PA,
+            claimTransactionTypeId,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            coreClaimClient.getDeathAndDisabilityClaimAdjudicationMonitor(
+                dateFrom,
+                dateTo,
+                isProductTypeId_PH,
+                isProductTypeId_PA,
+                claimTransactionTypeId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: !!isSearch,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityClaimDetailConsider = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityClaimDetailConsiderQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityClaimDetailConsider(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+export const useGetDeathAndDisabilityBeneficiary = (claimId: string, caseId: string) => {
+    return useQuery(
+        [getDeathAndDisabilityBeneficiaryQueryKey, claimId, caseId],
+        () => coreClaimClient.getDeathAndDisabilityBeneficiary(claimId, caseId),
+        {
+            enabled: !!claimId && !!caseId,
+            refetchOnWindowFocus: false,
+        }
+    );
+};
+
+/** แก้ไขข้อมูลผู้รับผลประโยชน์ (POST /beneficiary/update) — สำเร็จแล้วโหลดรายการผู้รับผลประโยชน์ใหม่ */
+export const useUpdateBeneficiary = (
+    onSuccessCallback?: (response: BaseResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((body: UpdateBeneficiaryDtoRequest) => coreClaimClient.updateBeneficiary(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess)
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            else {
+                queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey]);
+                onSuccessCallback?.(response);
+            }
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
+};
+
+/**
+ * บันทึกผู้รับเงินตามบัญชีที่เปลี่ยน (เงินสดมอบหน้างาน) พร้อมเอกสารประกอบ (POST /beneficiary/site-cash/insert)
+ * — สำเร็จแล้วโหลดรายการผู้รับผลประโยชน์และเอกสารของเคสใหม่
+ */
+export const useInsertBeneficiaryForRecordOnSiteCashPayment = (
+    onSuccessCallback?: (response: BaseResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest) =>
+            coreClaimClient.insertBeneficiaryForRecordOnSiteCashPayment(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else {
+                    queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey]);
+                    queryClient.invalidateQueries([getDocumentByCaseIdQueryKey]);
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+export const useGetCaseDisabilityBenefitByCaseId = (
+    caseId: string,
+    productTypeId?: number | undefined,
+    productId?: number | undefined,
+    incidentTypeId?: number | undefined,
+    coverageTypeId?: number | undefined,
+    causeOfIncidentId?: number | undefined,
+    policyCode?: string | undefined,
+    customerTypeCode?: string | undefined,
+    isEnabled = true
+) => {
+    return useQuery(
+        [
+            getCaseDisabilityBenefitByCaseIdQueryKey,
+            caseId,
+            productTypeId,
+            productId,
+            incidentTypeId,
+            coverageTypeId,
+            causeOfIncidentId,
+            policyCode,
+            customerTypeCode,
+        ],
+        () =>
+            coreClaimClient.getCaseDisabilityBenefitByCaseId(
+                caseId,
+                productTypeId,
+                productId,
+                incidentTypeId,
+                coverageTypeId,
+                causeOfIncidentId,
+                policyCode,
+                customerTypeCode
+            ),
+        {
+            enabled: isEnabled && !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );
@@ -644,6 +1077,36 @@ export const useUpsertClaimDecision = (
     );
 };
 
+/**
+ * บันทึกผลพิจารณาเคลมเสียชีวิตและทุพพลภาพ (POST /claim/death-disability/decision) — ใช้ endpoint เดียวทุกสถานะ
+ */
+export const useUpsertDeathAndDisabilityClaimDecision = (
+    onSuccessCallback?: (response: UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: UpsertDeathAndDisabilityClaimDecisionDtoRequest) =>
+            coreClaimClient.upsertDeathAndDisabilityClaimDecision(body),
+        {
+            onSuccess: (response) => {
+                invalidateClaimConsiderQueries(queryClient);
+                [
+                    getDeathAndDisabilityClaimDetailConsiderQueryKey,
+                    getDeathAndDisabilityClaimAdjudicationMonitorQueryKey,
+                    getDeathAndDisabilityBeneficiaryQueryKey,
+                ].forEach((queryKey) => queryClient.invalidateQueries([queryKey]));
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
 export const useApproveClaimDecision = (
     onSuccessCallback?: (response: UpsertClaimDecisionDtoResponseServiceResponse) => void,
     onErrorCallback?: (error: string) => void
@@ -675,39 +1138,42 @@ export const useGetPreviousClaim = (claimId: string) => {
 
 export const useGetStandardMedicalExpenseByCase = (
     caseId: string,
+    productTypeId: number,
     formatTypeId?: number | undefined,
     coverageTypeId?: number | undefined,
     medicalTypeId?: number | undefined,
-    isUseOften?: boolean | undefined,
-    productTypeId?: number | undefined,
     causeOfIncidentId?: number | undefined,
-    productId?: number | undefined
+    productId?: number | undefined,
+    applicationCode?: string | undefined,
+    customerTypeCode?: string | undefined
 ) => {
     return useQuery(
         [
             getStandardMedicalExpenseByCaseQueryKey,
             caseId,
+            productTypeId,
             formatTypeId,
             coverageTypeId,
             medicalTypeId,
-            isUseOften,
-            productTypeId,
             causeOfIncidentId,
             productId,
+            applicationCode,
+            customerTypeCode,
         ],
         () =>
             coreClaimClient.getStandardMedicalExpenseByCase(
                 caseId,
+                productTypeId,
                 formatTypeId,
                 coverageTypeId,
                 medicalTypeId,
-                isUseOften,
-                productTypeId,
                 causeOfIncidentId,
-                productId
+                productId,
+                applicationCode,
+                customerTypeCode
             ),
         {
-            enabled: !!caseId,
+            enabled: !!caseId && !!productTypeId,
             refetchOnWindowFocus: false,
         }
     );
@@ -834,4 +1300,415 @@ export const useGetClaimEditDraftRevision = (draftRevisionId?: string | undefine
             refetchOnWindowFocus: false,
         }
     );
+};
+
+// ---- โอนเพิ่ม (ClaimFund / AdditionalTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getAdditionalTransferMonitorQueryKey = ["getAdditionalTransferMonitor"];
+const getAdditionalTransferAccountDetailQueryKey = ["getAdditionalTransferAccountDetail"];
+const getSearchClaimOrCaseQueryKey = ["getSearchClaimOrCase"];
+const getAdditionalTransferDetailsQueryKey = ["getAdditionalTransferDetails"];
+const getAdjustmentReasonsQueryKey = ["getAdjustmentReasons"];
+const getClaimTransactionsQueryKey = ["getClaimTransactions"];
+const getTransferHistoryQueryKey = ["getTransferHistory"];
+
+export const useGetAdditionalTransferMonitor = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    filter?: AdditionalTransferMonitorRequestDto,
+    searchTrigger?: number,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [
+            getAdditionalTransferMonitorQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+            searchTrigger,
+        ],
+        () =>
+            claimFundClient.additionalTransferMonitor(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage,
+                filter
+            ),
+        {
+            enabled: enabled ?? true,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetAdditionalTransferAccountDetail = (paymentId?: string | undefined) => {
+    return useQuery(
+        [getAdditionalTransferAccountDetailQueryKey, paymentId],
+        () => claimFundClient.getAdditionalTransferAccountDetail(paymentId),
+        {
+            enabled: paymentId !== undefined && paymentId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useSearchClaimOrCase = (
+    onSuccessCallback?: (response: SearchClaimOrCaseResponseDtoListServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((searchDetail: string) => claimFundClient.searchClaimOrCase(searchDetail), {
+        onSuccess: (response) => {
+            if (!response?.isSuccess) {
+                onErrorCallback?.(response?.message || response?.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallback?.(response);
+            }
+            queryClient.invalidateQueries([getSearchClaimOrCaseQueryKey]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+            queryClient.invalidateQueries([getSearchClaimOrCaseQueryKey]);
+        },
+    });
+};
+
+export const useGetAdditionalTransferDetails = (caseId?: string | undefined) => {
+    return useQuery(
+        [getAdditionalTransferDetailsQueryKey, caseId],
+        () => claimFundClient.additionalTransferDetails(caseId),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetAdjustmentReasons = (adjustmentTypeId?: number | undefined) => {
+    return useQuery(
+        [getAdjustmentReasonsQueryKey, adjustmentTypeId],
+        () => claimFundClient.getAdjustmentReasons(adjustmentTypeId),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetClaimTransactions = (
+    caseId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getClaimTransactionsQueryKey, caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            claimFundClient.getClaimTransactions(
+                caseId,
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetTransferHistory = (
+    caseId?: string | undefined,
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined
+) => {
+    return useQuery(
+        [getTransferHistoryQueryKey, caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () =>
+            claimFundClient.transferHistory(caseId, searchDetail, orderingField, ascendingOrder, page, recordsPerPage),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useSaveAdditionalTransfer = (
+    onSuccessCallback?: (response: SaveAdditionalTransferResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((body: SaveAdditionalTransferRequest) => claimFundClient.saveAdditionalTransfer(body), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallback?.(response);
+            }
+            queryClient.invalidateQueries([getAdditionalTransferMonitorQueryKey], { refetchType: "all" });
+            queryClient.invalidateQueries([getAdditionalTransferDetailsQueryKey], { refetchType: "all" });
+            queryClient.invalidateQueries([getClaimTransactionsQueryKey], { refetchType: "all" });
+            queryClient.invalidateQueries([getTransferHistoryQueryKey], { refetchType: "all" });
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
+};
+
+// ---- อนุมัติคืนเงิน (ClaimFund / RefundApprove) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getRefundApproveMonitorQueryKey = ["getRefundApproveMonitor"];
+const getCaseRefundApproveDetailQueryKey = ["getCaseRefundApproveDetail"];
+const getCaseRefundRejectReasonsQueryKey = ["getCaseRefundRejectReasons"];
+
+export const useGetRefundApproveMonitor = (
+    searchDetail?: string | undefined,
+    orderingField?: string | undefined,
+    ascendingOrder?: boolean | undefined,
+    page?: number | undefined,
+    recordsPerPage?: number | undefined,
+    filter?: RefundApproveMonitorRequestDto,
+    searchTrigger?: number,
+    enabled?: boolean
+) => {
+    return useQuery(
+        [
+            getRefundApproveMonitorQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+            filter,
+            searchTrigger,
+        ],
+        () =>
+            claimFundClient.refundApproveMonitor(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage,
+                filter
+            ),
+        {
+            enabled: enabled ?? false,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseRefundApproveDetail = (caseRefundId?: string) => {
+    return useQuery(
+        [getCaseRefundApproveDetailQueryKey, caseRefundId],
+        () => claimFundClient.caseRefundApproveDetail(caseRefundId),
+        {
+            enabled: caseRefundId !== undefined && caseRefundId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetCaseRefundRejectReasons = () => {
+    return useQuery([getCaseRefundRejectReasonsQueryKey], () => claimFundClient.getCaseRefundRejectReasons(), {
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useCaseRefundApproveUpdateStatus = (
+    onSuccessCallback?: (response: CaseRefundApproveUpdateStatusResponseDtoServiceResponse) => void,
+    onErrorCallback?: (error: string) => void,
+    onWarningCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: CaseRefundApproveUpdateStatusRequestDto) => claimFundClient.caseRefundApproveUpdateStatus(body),
+        {
+            onSuccess: (response) => {
+                if (response.isSuccess && response.data?.isSuccess === false) {
+                    onWarningCallback?.(response.data.message ?? response.message ?? "Occurred error");
+                } else if (!response.isSuccess) {
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                } else {
+                    queryClient.invalidateQueries([getRefundApproveMonitorQueryKey], { refetchType: "all" });
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+// ---- สถานะการคืนเงิน (ClaimFund / Masters.GetRefundStatus) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getRefundStatusQueryKey = ["getRefundStatus"];
+
+export const useGetRefundStatus = (enabled = true) => {
+    return useQuery([getRefundStatusQueryKey], () => claimFundClient.getRefundStatus(), { enabled });
+};
+
+// ---- สถานะการจ่ายเงิน (ClaimFund / Masters.GetPaymentStatuses) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getPaymentStatusesQueryKey = ["getPaymentStatuses"];
+
+export const useGetPaymentStatuses = (enabled = true) => {
+    return useQuery([getPaymentStatusesQueryKey], () => claimFundClient.getPaymentStatuses(), { enabled });
+};
+
+// ---- คืนเงิน (ClaimFund / Refund) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+export type GetRefundMonitorFilterType = {
+    branceId: number | undefined | null;
+    refundStatusId: number | undefined | null;
+    pagination: PaginationDto;
+    searchDetail?: string | undefined | null;
+    searchKey?: number;
+    enabled?: boolean;
+};
+
+const getRefundMonitorQueryKey = ["getRefundMonitor"];
+const getRefundDetailQueryKey = ["getRefundDetail"];
+const getRefundReasonsQueryKey = ["getRefundReasons"];
+const getRefundClaimTransactionQueryKey = ["getRefundClaimTransaction"];
+const getRefundTransferHistoryQueryKey = ["getRefundTransferHistory"];
+const getRefundDecreaseTransactionQueryKey = ["getRefundDecreaseTransaction"];
+
+export const useGetRefundMonitorWithFilter = ({
+    branceId,
+    refundStatusId,
+    pagination,
+    searchDetail,
+    searchKey,
+    enabled,
+}: GetRefundMonitorFilterType) => {
+    return useQuery(
+        [getRefundMonitorQueryKey, branceId, refundStatusId, pagination, searchDetail, searchKey],
+        () =>
+            claimFundClient.refundMonitor(
+                searchDetail ?? undefined,
+                undefined,
+                undefined,
+                pagination.page ?? 1,
+                pagination.recordsPerPage ?? 10,
+                {
+                    branceId: branceId ?? undefined,
+                    refundStatusId: refundStatusId ?? undefined,
+                }
+            ),
+        {
+            enabled: enabled ?? !!refundStatusId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetRefundDetail = (caseId: string) => {
+    return useQuery([getRefundDetailQueryKey, caseId], () => claimFundClient.saveRefundDetails(caseId), {
+        enabled: caseId !== undefined && caseId !== "",
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useGetRefundReasons = () => {
+    return useQuery([getRefundReasonsQueryKey], () => claimFundClient.getRefundReasons(), {
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useGetRefundClaimTransaction = (caseId: string, pagination: PaginationDto) => {
+    return useQuery(
+        [getRefundClaimTransactionQueryKey, caseId, pagination],
+        () =>
+            claimFundClient.getClaimTransaction2(
+                caseId,
+                undefined,
+                undefined,
+                undefined,
+                pagination.page ?? 1,
+                pagination.recordsPerPage ?? 10
+            ),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetRefundTransferHistory = (caseId: string) => {
+    return useQuery([getRefundTransferHistoryQueryKey, caseId], () => claimFundClient.transferHistory2(caseId), {
+        enabled: caseId !== undefined && caseId !== "",
+        refetchOnMount: "always",
+        cacheTime: 0,
+    });
+};
+
+export const useGetRefundDecreaseTransaction = (caseId: string, pagination: PaginationDto) => {
+    return useQuery(
+        [getRefundDecreaseTransactionQueryKey, caseId, pagination],
+        () =>
+            claimFundClient.getDecreaseTransaction2(
+                caseId,
+                undefined,
+                undefined,
+                undefined,
+                pagination.page ?? 1,
+                pagination.recordsPerPage ?? 10
+            ),
+        {
+            enabled: caseId !== undefined && caseId !== "",
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export type CreateCaseRefundPayload = CreateRefundRequestDto;
+
+export const useCreateCaseRefund = (
+    onSuccessCallBack: (response: CreateRefundResponsetDtoServiceResponse) => void,
+    onErrorCallback: (error: string) => void,
+    onWarningCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    const mutation = useMutation((payload: CreateCaseRefundPayload) => claimFundClient.createCaseRefund(payload), {
+        onSuccess: (response) => {
+            if (response.isSuccess && response.data?.isSuccess === false) {
+                onWarningCallback?.(response.data.message ?? response.message ?? "Occurred error");
+            } else if (!response.isSuccess) {
+                onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                queryClient.invalidateQueries([getRefundDetailQueryKey], { refetchType: "all" });
+                onSuccessCallBack?.(response);
+            }
+        },
+        onError: (error: Error) => {
+            onErrorCallback?.(error.message);
+        },
+    });
+    return { mutate: mutation.mutate, isLoading: mutation.isLoading };
 };

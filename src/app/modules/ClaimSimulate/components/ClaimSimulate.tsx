@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
     Box,
     Button,
@@ -54,7 +54,8 @@ import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePi
 import { FormikDropdown } from "../../_common";
 
 import { useClaimSimulatePage } from "../hooks/useClaimSimulatePage";
-import { sanitizeDecimalInput, toAmount, toInteger, hasAmountSumError } from "../store/Claimsimulateutils";
+import { toInteger, hasAmountSumError } from "../store/Claimsimulateutils";
+import { NumericFormat } from "react-number-format";
 import InsuredSearchModal from "./InsuredSearchModal";
 import ConfirmCalaulateModal from "./ConfirmCalaulateModal";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -111,6 +112,15 @@ const formSelectSx = {
     "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: REF.primary, borderWidth: 1.5 },
 };
 
+// ซ่อนลูกศรขึ้น/ลงของ input type="number" (Chrome/Edge/Safari + Firefox)
+const hideSpinButtonSx = {
+    "& input[type=number]::-webkit-outer-spin-button, & input[type=number]::-webkit-inner-spin-button": {
+        WebkitAppearance: "none",
+        margin: 0,
+    },
+    "& input[type=number]": { MozAppearance: "textfield" },
+};
+
 const tableInputSx = {
     ...refInputSx,
     "& .MuiOutlinedInput-root": {
@@ -118,6 +128,26 @@ const tableInputSx = {
         height: 32,
     },
     "& .MuiOutlinedInput-input": { padding: "4px 8px", textAlign: "center" as const },
+    ...hideSpinButtonSx,
+};
+
+// input ที่ MUI ติด error (aria-invalid) — ไม่รวม native input ที่ซ่อนอยู่ใต้ Select
+// + กลุ่มตัวเลือกส่วนหัวที่ยังไม่ได้เลือก (ติด data-focus-error เอง)
+const ERROR_FOCUS_SELECTOR = 'input[aria-invalid="true"]:not([aria-hidden="true"]), [data-focus-error="true"]';
+
+/** เลื่อนหน้าจอไปหา + focus จุด error แรก (ตามลำดับบนจอ) ภายใน root */
+const focusFirstError = (root: HTMLElement | null) => {
+    // รอ 1 frame ให้ React render สถานะ error ที่เพิ่ง set ใน handler เดียวกันก่อน
+    requestAnimationFrame(() => {
+        const target = root?.querySelector<HTMLElement>(ERROR_FOCUS_SELECTOR);
+        if (!target) return;
+        const focusable =
+            target instanceof HTMLInputElement
+                ? target
+                : target.querySelector<HTMLElement>('[role="button"][tabindex="0"]') ?? target;
+        target.scrollIntoView({ behavior: "smooth", block: "center" });
+        focusable.focus({ preventScroll: true });
+    });
 };
 
 const tableSelectSx = {
@@ -421,7 +451,6 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
         handleIpdDaysChange,
         handleIcuDaysChange,
         handleContinuousChange,
-        handleConfirm,
         handleCloseConfirm,
         // expense table
         filledItems,
@@ -467,6 +496,10 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
     } = useClaimSimulatePage(onNext);
 
     const { claimContinueOptions, claimContinueLoading } = useGetDataFromApi(selectedInsured?.policyCode);
+
+    const headerSectionRef = useRef<HTMLDivElement>(null);
+    const itemsTableRef = useRef<HTMLDivElement>(null);
+    const addPanelRef = useRef<HTMLDivElement>(null);
 
     const isAddPanelDisabled = isCategoryLoading || !isHeaderReady;
 
@@ -604,6 +637,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
 
                 {/* ── 2) รายละเอียดเคลม ── */}
                 <Paper
+                    ref={headerSectionRef}
                     elevation={0}
                     sx={{
                         p: { xs: 2, sm: 2.5 },
@@ -636,7 +670,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         </Box>
                                     </Typography>
                                 </Box>
-                                <Box display="flex" gap={1.25} flexWrap="wrap">
+                                <Box display="flex" gap={1.25} flexWrap="wrap" data-focus-error={!header.claimCause}>
                                     {claimCauseOptions.map((opt) => {
                                         const isSelected = header.claimCause === opt.value;
                                         return (
@@ -715,7 +749,12 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         {noClaimCauseMessage}
                                     </Typography>
                                 ) : (
-                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                    <Box
+                                        display="flex"
+                                        gap={1.25}
+                                        flexWrap="wrap"
+                                        data-focus-error={!header.coverageType}
+                                    >
                                         {coverageTypeOptions.map((opt) => {
                                             const OptIcon = opt.icon;
                                             const isSelected = header.coverageType === opt.value;
@@ -787,7 +826,12 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             *
                                         </Box>
                                     </Box>
-                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                    <Box
+                                        display="flex"
+                                        gap={1.25}
+                                        flexWrap="wrap"
+                                        data-focus-error={!header.formatTypeId}
+                                    >
                                         {formatTypeOptions.map((opt) => {
                                             const isSelected = header.formatTypeId === opt.value;
                                             return (
@@ -861,7 +905,12 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         {noCoverageTypeMessage}
                                     </Typography>
                                 ) : isMedicalTypeVisible ? (
-                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                    <Box
+                                        display="flex"
+                                        gap={1.25}
+                                        flexWrap="wrap"
+                                        data-focus-error={!header.medicalType}
+                                    >
                                         {medicalTypeOptions.map((opt) => {
                                             const isSelected = header.medicalType === opt.value;
                                             return (
@@ -907,7 +956,12 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         })}
                                     </Box>
                                 ) : isCauseOfIncidentVisible ? (
-                                    <Box display="flex" gap={1.25} flexWrap="wrap">
+                                    <Box
+                                        display="flex"
+                                        gap={1.25}
+                                        flexWrap="wrap"
+                                        data-focus-error={!header.causeOfIncident}
+                                    >
                                         {causeOfIncidentOptions.map((opt) => {
                                             const isSelected = header.causeOfIncident === opt.value;
                                             return (
@@ -1086,6 +1140,8 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             type="number"
                                             value={formik.values.bedDays}
                                             onChange={(e) => handleIcuDaysChange(toInteger(e.target.value))}
+                                            error={formik.touched.bedDays && !!formik.errors.bedDays}
+                                            helperText={formik.touched.bedDays ? formik.errors.bedDays : ""}
                                             inputProps={{ min: 0 }}
                                             disabled
                                             sx={refInputSx}
@@ -1208,7 +1264,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                             </Typography>
                                         </Box>
 
-                                        <TableContainer>
+                                        <TableContainer ref={itemsTableRef}>
                                             <Table size="small" sx={{ minWidth: 760 }}>
                                                 <TableHead>
                                                     <TableRow>
@@ -1278,75 +1334,86 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
 
                                                                     {/* Claim Amount */}
                                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                                        <TextField
+                                                                        <NumericFormat
+                                                                            customInput={TextField}
                                                                             size="small"
                                                                             fullWidth
                                                                             sx={tableInputSx}
                                                                             value={item.claimAmount ?? ""}
-                                                                            onChange={(e) =>
+                                                                            onValueChange={(v) =>
                                                                                 handleUpdateItem({
                                                                                     ...item,
-                                                                                    claimAmount: toAmount(
-                                                                                        e.target.value
-                                                                                    ),
+                                                                                    claimAmount: v.floatValue,
                                                                                 })
                                                                             }
-                                                                            type="number"
-                                                                            inputProps={{ min: 0 }}
+                                                                            thousandSeparator
+                                                                            decimalScale={2}
+                                                                            allowNegative={false}
                                                                         />
                                                                     </TableCell>
 
                                                                     {/* Discount */}
                                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
                                                                         <Tooltip
-                                                                            title="ส่วนลดต้องไม่มากกว่ายอดเบิก"
-                                                                            disableHoverListener={!discountError}
+                                                                            // title ว่าง = ไม่แสดง tooltip เลย (ทั้ง hover/focus/touch)
+                                                                            title={
+                                                                                discountError
+                                                                                    ? "ส่วนลดต้องไม่มากกว่ายอดเบิก"
+                                                                                    : ""
+                                                                            }
                                                                             {...errorTooltipProps}
                                                                         >
-                                                                            <TextField
-                                                                                size="small"
-                                                                                fullWidth
-                                                                                sx={tableInputSx}
-                                                                                value={item.discount ?? ""}
-                                                                                onChange={(e) =>
-                                                                                    handleUpdateItem({
-                                                                                        ...item,
-                                                                                        discount: toAmount(
-                                                                                            e.target.value
-                                                                                        ),
-                                                                                    })
-                                                                                }
-                                                                                type="number"
-                                                                                error={discountError}
-                                                                                inputProps={{ min: 0 }}
-                                                                            />
+                                                                            <Box>
+                                                                                <NumericFormat
+                                                                                    customInput={TextField}
+                                                                                    size="small"
+                                                                                    fullWidth
+                                                                                    sx={tableInputSx}
+                                                                                    value={item.discount ?? ""}
+                                                                                    onValueChange={(v) =>
+                                                                                        handleUpdateItem({
+                                                                                            ...item,
+                                                                                            discount: v.floatValue,
+                                                                                        })
+                                                                                    }
+                                                                                    thousandSeparator
+                                                                                    decimalScale={2}
+                                                                                    allowNegative={false}
+                                                                                    error={discountError}
+                                                                                />
+                                                                            </Box>
                                                                         </Tooltip>
                                                                     </TableCell>
 
                                                                     {/* Not Covered */}
                                                                     <TableCell sx={{ ...bodyCell, p: 0.5 }}>
                                                                         <Tooltip
-                                                                            title="ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก"
+                                                                            title={
+                                                                                rowSumError
+                                                                                    ? "ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก"
+                                                                                    : ""
+                                                                            }
                                                                             {...errorTooltipProps}
-                                                                            disableHoverListener={!rowSumError}
                                                                         >
-                                                                            <TextField
-                                                                                size="small"
-                                                                                fullWidth
-                                                                                sx={tableInputSx}
-                                                                                value={item.notCovered ?? ""}
-                                                                                onChange={(e) =>
-                                                                                    handleUpdateItem({
-                                                                                        ...item,
-                                                                                        notCovered: toAmount(
-                                                                                            e.target.value
-                                                                                        ),
-                                                                                    })
-                                                                                }
-                                                                                type="number"
-                                                                                error={rowSumError}
-                                                                                inputProps={{ min: 0 }}
-                                                                            />
+                                                                            <Box>
+                                                                                <NumericFormat
+                                                                                    customInput={TextField}
+                                                                                    size="small"
+                                                                                    fullWidth
+                                                                                    sx={tableInputSx}
+                                                                                    value={item.notCovered ?? ""}
+                                                                                    onValueChange={(v) =>
+                                                                                        handleUpdateItem({
+                                                                                            ...item,
+                                                                                            notCovered: v.floatValue,
+                                                                                        })
+                                                                                    }
+                                                                                    thousandSeparator
+                                                                                    decimalScale={2}
+                                                                                    allowNegative={false}
+                                                                                    error={rowSumError}
+                                                                                />
+                                                                            </Box>
                                                                         </Tooltip>
                                                                     </TableCell>
 
@@ -1634,6 +1701,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                 {/* ── ฝั่งขวา: ฟอร์มเพิ่มรายการ (เรียงแนวตั้ง ตาม reference) ── */}
                                                 <Grid item xs={12} sm={5}>
                                                     <Box
+                                                        ref={addPanelRef}
                                                         sx={{
                                                             border: "1px solid",
                                                             borderColor: REF.lineStrong,
@@ -1686,54 +1754,53 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                             }}
                                                         />
 
-                                                        <TextField
+                                                        <NumericFormat
+                                                            customInput={TextField}
                                                             size="small"
                                                             fullWidth
-                                                            type="number"
                                                             label="ยอดเบิก"
                                                             value={pendingAmount}
-                                                            onChange={(e) =>
-                                                                setPendingAmount(sanitizeDecimalInput(e.target.value))
-                                                            }
+                                                            valueIsNumericString
+                                                            onValueChange={(v) => setPendingAmount(v.value)}
                                                             disabled={!selectedItem}
                                                             sx={refInputSx}
-                                                            inputProps={{ min: 0 }}
+                                                            thousandSeparator
+                                                            decimalScale={2}
+                                                            allowNegative={false}
                                                         />
 
                                                         <Box display="flex" gap={1.25}>
-                                                            <TextField
+                                                            <NumericFormat
+                                                                customInput={TextField}
                                                                 size="small"
                                                                 fullWidth
-                                                                type="number"
                                                                 label="ส่วนลด"
                                                                 value={pendingDiscount}
-                                                                onChange={(e) =>
-                                                                    setPendingDiscount(
-                                                                        sanitizeDecimalInput(e.target.value)
-                                                                    )
-                                                                }
+                                                                valueIsNumericString
+                                                                onValueChange={(v) => setPendingDiscount(v.value)}
                                                                 disabled={!selectedItem}
                                                                 error={!!discountError}
                                                                 helperText={discountError}
                                                                 sx={refInputSx}
-                                                                inputProps={{ min: 0 }}
+                                                                thousandSeparator
+                                                                decimalScale={2}
+                                                                allowNegative={false}
                                                             />
-                                                            <TextField
+                                                            <NumericFormat
+                                                                customInput={TextField}
                                                                 size="small"
                                                                 fullWidth
-                                                                type="number"
                                                                 label="ยอดไม่คุ้มครอง"
                                                                 value={pendingNotCovered}
-                                                                onChange={(e) =>
-                                                                    setPendingNotCovered(
-                                                                        sanitizeDecimalInput(e.target.value)
-                                                                    )
-                                                                }
+                                                                valueIsNumericString
+                                                                onValueChange={(v) => setPendingNotCovered(v.value)}
                                                                 disabled={!selectedItem}
                                                                 error={!!notCoveredError}
                                                                 helperText={notCoveredError}
                                                                 sx={refInputSx}
-                                                                inputProps={{ min: 0 }}
+                                                                thousandSeparator
+                                                                decimalScale={2}
+                                                                allowNegative={false}
                                                             />
                                                         </Box>
 
@@ -1787,7 +1854,11 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                                             variant="contained"
                                                             fullWidth
                                                             startIcon={<AddBoxOutlinedIcon />}
-                                                            onClick={handleAddToTable}
+                                                            onClick={() => {
+                                                                if (!handleAddToTable()) {
+                                                                    focusFirstError(addPanelRef.current);
+                                                                }
+                                                            }}
                                                             disabled={!selectedItem || !pendingAmount}
                                                             sx={{ borderRadius: 1.5, fontWeight: 700, mt: "auto" }}
                                                             size="medium"
@@ -1922,14 +1993,20 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                                         size="large"
                                         endIcon={<ArrowForwardIcon />}
                                         onClick={() => {
-                                            if (!validateHeaderAndFlagErrors()) return;
+                                            if (!validateHeaderAndFlagErrors()) {
+                                                focusFirstError(headerSectionRef.current);
+                                                return;
+                                            }
+                                            // ไม่ disable ปุ่มตอนตารางยอดผิด — ให้กดได้แล้วพาไปที่ช่องที่ผิดแทน
+                                            if (hasDiscountError || hasNotCoveredError) {
+                                                focusFirstError(itemsTableRef.current);
+                                                return;
+                                            }
                                             handleNext();
                                         }}
                                         fullWidth
                                         disabled={
                                             !hasAnyAmount ||
-                                            hasDiscountError ||
-                                            hasNotCoveredError ||
                                             // hasReasonError ||
                                             !selectedInsured
                                         }
@@ -1943,7 +2020,7 @@ const ClaimSimulate: React.FC<ClaimSimulateProps> = ({ onNext }) => {
                     </Grid>
                 )}
                 <InsuredSearchModal />
-                <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} onConfirm={handleConfirm} />
+                <ConfirmCalaulateModal open={openConfirm} onClose={handleCloseConfirm} />
             </Box>
         </LocalizationProvider>
     );

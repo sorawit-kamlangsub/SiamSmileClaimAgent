@@ -20,6 +20,7 @@ import InsightsIcon from "@mui/icons-material/Insights";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import LaunchIcon from "@mui/icons-material/Launch";
 import HistoryToggleOffIcon from "@mui/icons-material/HistoryToggleOff";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import LoadingOverlay from "../../../../_common/components/CustomComponent/LoadingOverlay";
@@ -43,8 +44,18 @@ type ClaimHistoryTabProps = {
 
 const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
     const navigate = useNavigate();
-    const { items, summary, isLoading, searchText, setSearchText, sortBy, setSortBy, pagination, setPaginated } =
-        useClaimHistoryTab(applicationId);
+    const {
+        items,
+        summary,
+        isLoading,
+        isError,
+        searchText,
+        setSearchText,
+        sortBy,
+        setSortBy,
+        pagination,
+        setPaginated,
+    } = useClaimHistoryTab(applicationId);
 
     const columns: MUIDataTableColumn[] = [
         {
@@ -97,7 +108,7 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
         },
         {
             name: "icD10Detail",
-            label: "คำวินิจฉัย1 (Diagnosis1)",
+            label: "การวินิจฉัย1 (Diagnosis1)",
             options: {
                 ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
                 customBodyRender: (value?: string) => value ?? "-",
@@ -226,7 +237,7 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
                 <TextField
                     size="small"
                     fullWidth
-                    placeholder="ค้นหาเลขที่เคลม / ชื่อสถานพยาบาล"
+                    placeholder="ค้นหาเลขที่เคลม"
                     value={searchText}
                     onChange={(e) => setSearchText(e.target.value)}
                     InputProps={{
@@ -251,8 +262,19 @@ const ClaimHistoryTab = ({ applicationId }: ClaimHistoryTabProps) => {
             <LoadingOverlay isLoading={isLoading} minHeight={300}>
                 {!isLoading && items.length === 0 ? (
                     <Box sx={{ py: 6, textAlign: "center" }}>
-                        <HistoryToggleOffIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
-                        <Typography color="text.disabled">ไม่พบประวัติการเคลม</Typography>
+                        {isError ? (
+                            <>
+                                <ErrorOutlineIcon sx={{ fontSize: 40, color: "error.main", mb: 1 }} />
+                                <Typography color="error.main">
+                                    ไม่สามารถโหลดประวัติการเคลมได้ กรุณาลองใหม่อีกครั้ง
+                                </Typography>
+                            </>
+                        ) : (
+                            <>
+                                <HistoryToggleOffIcon sx={{ fontSize: 40, color: "text.disabled", mb: 1 }} />
+                                <Typography color="text.disabled">ไม่พบประวัติการเคลม</Typography>
+                            </>
+                        )}
                     </Box>
                 ) : (
                     <StandardDataTable

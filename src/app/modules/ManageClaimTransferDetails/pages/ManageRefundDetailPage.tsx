@@ -52,7 +52,7 @@ const ManageRefundDetailPage = () => {
                         <Grid item>
                             <RefundRecordForm
                                 formik={formik}
-                                reasonOptions={reasonOptions}
+                                reasonOptions={reasonOptions ?? []}
                                 isLoadingDropdown={reasonOptionIsLoading}
                                 transferTypeOptions={transferTypeOptions}
                                 isTransferTypeLoading={transferTypeOptionIsLoading}

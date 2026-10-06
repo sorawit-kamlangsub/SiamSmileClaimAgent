@@ -1,0 +1,132 @@
+# API Inventory
+
+Every React Query hook exported from `src/app/api/*.ts` (the hand-written wrappers — never call
+the generated `*.client.ts` classes directly, see [project-structure.md](project-structure.md#data-layer)).
+Check here before adding a new hook — it may already exist. Names are self-explanatory `useGetX`
+query hooks unless noted `(mutation)`.
+
+## `coreClaimApi.ts` — Core Claim API (`API_URL`), client = `CoreClaimClient`
+
+| Hook | Purpose |
+|---|---|
+| `useCalculateCaseClaim` **(mutation)** | POST `/calculate/caseclaim` — runs the claim calculation (medical/compensate expense split, pay/unpay) that feeds Step 3 summaries |
+| `useGetCustomerSearch` | Search customers (create-claim flow) |
+| `useGetCustomerDetailById(id)` | Customer/policy-holder detail by numeric id |
+| `useGetCustomerBenefitDetailSearch` | Coverage/benefit detail search |
+| `useCreateCoreClaim` **(mutation)** | Create a new claim (V2 request) |
+| `useGetDocumentType(request, isEnabled)` | Document sub-type list |
+| `useGetClaimContinue` | Continuous-claim candidates for a policy (feeds "เคลมต่อเนื่อง" picker) |
+| `useGetClaimHistory` | Claim history list |
+| `useGetCustomerBankAccount(applicationId)` | Customer's bank account(s) |
+| `useGetContactPerson(applicationId, productTypeId)` | Contact person info |
+| `useGetCaseByClaimId` | Case record for a claim |
+| `useCalculateCaseDisability` **(mutation)** | Disability compensation calculation |
+| `useGetCustomerBenefitDetailHalf` | Benefit detail (half-year variant) |
+| `useGetCustomerSearchByPolicyCode` | Search customer by policy code |
+| `useGetPolicyBenefitShered` | Shared policy benefit lookup (sic — "Shered" in source) |
+| `useGetDashboardCustomerConsider(dateType, from, to)` | Dashboard summary counts for the consider-monitor pages (`customerTotalCount`, `hospitalWaitConsiderCount`, `hospitalRequestBillingCount`, …) |
+| `useGetCustomerClaimAdjudicationMonitor` | List rows for `/consider/monitor` (customer) |
+| `useGetClaimDetailConsider(claimId)` | Full claim detail for the consider/review detail pages |
+| `useGetCaseReviewOverview(caseId)` | GET `/document/case/{caseId}/overview` — document-review / decision / expense overview for a case (feeds the "ตรวจสอบเอกสาร" table in the hospital consider flow) |
+| `useGetClaimTransactionLog` | Transaction/status-change timeline for a claim |
+| `useGetPolicyBenefit` | Policy benefit table (grouped by category) |
+| `useSaveClaimEditDraft` **(mutation)** | POST `/claim/decision/draft` — save without finalizing a decision |
+| `useUpsertClaimDecision` **(mutation)** | POST `/claim/decision` — finalize a decision |
+| `useGetPreviousClaim(claimId)` | Previous claim linked to this one |
+| `useGetStandardMedicalExpenseByCase` | Standard medical-expense category tree for a case (feeds the expense line-item picker) |
+| `useGetHospitalClaimAdjudicationMonitor` | List rows for `/consider/hospital-monitor`. **⚠ Bug**: reuses `getCustomerClaimAdjudicationMonitorQueryKey` instead of its own key ([coreClaimApi.ts:633](../src/app/api/coreClaimApi.ts)) — with identical filter params, this can serve the customer monitor's cached data. Don't copy this pattern. |
+
+**Not yet wrapped**: `CoreClaimClient.approveClaimDecision` (`POST /claim/decision/approve`) exists
+on the generated client (added by an NSwag regen currently sitting as an uncommitted change to
+`coreClaimApi.client.ts`) but has no `useApproveClaimDecision` hook yet — next piece of work if
+you're touching the decision/approve flow.
+
+## `coreClaimMastersApi.ts` — Core Claim master data (`API_URL`), client = `MastersClient`
+
+All read-only `useGetX(id?)` lookups against `/Masters/*`. One row per master:
+
+`useGetUser`, `useGetIncidentType`, `useGetIncidentTypeMapping` (the big one — filters
+incident/coverage/medical/cause-of-incident combos by product+claim-source, drives the cascading
+selectors in `RecordClaimData`), `useGetSimBCategory`, `useGetSimB`, `useGetChiefComplaint`,
+`useGetDocumentRecipientType`, `useGetNonCoveredReason`, `useGetProvince`,
+`useGetBankAccountRelationType`, `useGetContactPersonType`, `useGetBank`, `useGetZebraCarOwner`,
+`useGetSchoolByProvinceId`, `useGetAllHospital`, `useGetHospitalDetailAllFilter`,
+`useGetFormatType`, `useGetBeneficiary`, `useGetRelationType`, `useGetTitle`,
+`useGetDisabilityLossPart`, `useGetBodyPartByDisabilityLossPart`, `useGetBranch`,
+`useGetPaymentStatus`, `useGetDeductionSource`, `useGetEmployeeClaimPaymentLimit`,
+`useGetDecision`, `useGetDocumentReviewStatus` (ผ่าน/ไม่ผ่าน/รอเอกสารเพิ่มเติม — no longer used by
+`DocumentVerifyTable` since RC-005 5.7 dropped the result column), `useGetDecisionReason`, `useGetCancelReason`,
+`useGetRejectReason`, `useGetInsuranceCompany`, `useGetClaimTransactionType`, `useGetBenefit`,
+`useGetPhysicalTherapyNecessityReason` (RC-005 5.5 "ความจำเป็นทางการแพทย์" — `MedicalNecessitySection`),
+`useGetTrafficVehicleType` / `useGetTrafficAccidentPersonRole` (RC-005 5.6 "ข้อมูลอุบัติเหตุจากการจราจร" —
+`TrafficAccidentSection`).
+
+## `docstorageApi.ts` — DocStorage API (`DOCSTORAGE_API_URL`)
+
+| Hook | Purpose |
+|---|---|
+| `useGetDocumentById(documentId)` | Fetch stored document metadata |
+| `useGetDocumentListByIds(documentIds[])` | GET `/document/documentid/list?documentIds=...` — metadata + `fileCount` for many documentIds at once (feeds the "ตรวจสอบเอกสาร" count column + the open-modal gate) |
+| `useGetDocumentFileByDocumentId(documentId?)` | GET `/document/{documentId}/documentFile` — real file list for one document (called when the document-detail modal opens) |
+| `useCreateDocumentToDocStorage` **(mutation)** | Upload a document |
+
+## `hospitalBillingApi.ts` — Hospital Billing (`API_URL`), client = `HospitalBillingClient`
+
+`วางบิลเคลม > เคลมโรงพยาบาล` — real backend, GET/POST only, route + envelope unchanged since the
+2026-09-08 backend restructure (immutable review snapshot per billing round). Contract revision
+2026-10-02 removed every concurrency/idempotency field from the HTTP contract (`requestId`,
+`expectedVersion`, `expectedCaseVersion`, `expectedClaimVersion`, `rowVersion`, `caseRowVersion`,
+`claimRowVersion` on submit; `version` / `*rowVersion` on Detail; `version` on the submit result) —
+the backend now locks per BillingDetail and checks the status inside the transaction, answering
+`409 Conflict` when the current status doesn't allow the action. `caseVersion` / `claimVersion`
+(read-only) and `BillingRevisionDto.version` (History, = VersionNo) stay. Contract revision 2026-09-14 renamed
+`externalBillingId`→`billingRequestId` and `billingNo`→`billingRequestCode`, and dropped
+`previousBillingDetailId` / `originalBilledAmount` / `ssEndDiscountAmount` from the HTTP response —
+no fallback on the old field names. See [modules/BillingClaim.md](modules/BillingClaim.md) for the
+full module writeup.
+
+| Hook | Purpose |
+|---|---|
+| `useGetHospitalBillingFilter(statusId, searchBy, searchDetail, orderingField, ascendingOrder, page, recordsPerPage)` | GET `/billing/hospital/filter` — list + dashboard counts. Uses the shared `ClaimTransactionTypeId` numbering (confirmed with BE 2026-09-23); `statusId=9` (อนุมัติ) is rejected with 400, only 2/3/5/6 are valid (`BILLING_STATUS.pendingReview=2, needsCorrection=3, rejected=5, cancelled=6`) |
+| `useGetHospitalBillingDetail(billingDetailId)` | GET `/billing/hospital/{billingDetailId}` — working-copy source before edit/submit |
+| `useGetHospitalBillingHistory(billingDetailId, enabled = true)` | GET `/billing/hospital/{billingDetailId}/history` — `rounds` (all rounds of the case) + `revisions` (this round's review history). Pass `enabled = false` to skip the fetch on mount and pull it with `refetch()` (used by the post-timeout evidence check) |
+| `useSubmitHospitalBilling` **(mutation)** | POST `/billing/hospital/{billingDetailId}/submit` — **not idempotent** (no `requestId` any more): the caller must guard against double-submit and must never auto-retry; invalidates filter/detail/history on success |
+| `useRepublishHospitalBillingReview` **(mutation)** | POST `/billing/hospital/{billingDetailId}/revisions/{revisionId}/publish` — no body; re-sends an already saved revision's snapshot without creating a new revision/amount. HTTP 200 doesn't mean the receiver processed it — show the returned `returnStatus`. Invalidates filter/detail/history |
+
+`normalizeSubmitError` turns whatever the client throws into `{ httpStatus, message, isConflict (409),
+isNotFound (404), isOutcomeUnknown (5xx / network / timeout / unreadable status) }`. The file also
+registers an axios **response interceptor scoped to `${API_URL}/billing/hospital/*`** that re-serializes
+error bodies: the generated client calls `JSON.parse(response.data)` on every non-200 status, but axios
+has already parsed the body, so without it every HTTP error surfaced as a `SyntaxError` with the status
+lost. Other clients are untouched (and still have that behaviour).
+
+## `claimFundApi.ts` — Claim Fund / Transfer service (raw axios, no NSwag client, `${API_CLAIM_FUND_URL}/api`)
+
+| Export | Purpose |
+|---|---|
+| `useCreatePayment` **(mutation)** | POST `/Transfer/v1/CreatePayment` |
+| `getEncryptText` (plain async fn, not a hook) | POST `/Transfer/v1/EncryptText` |
+
+## `ocrApi.ts` — OCR service (raw axios, `OCR_API_URL`)
+
+Plain async functions (no React Query hooks): `uploadIDCard`, `uploadReceipt`,
+`uploadMedicalCertificate`, `uploadPassport`, `uploadAlienCard` — all `POST .../ai/ocr/...`.
+
+## Dead / unused
+
+- `claimAgentApi.client.ts` (`ClaimAgentMasterClient`) — generated, but **no wrapper imports it anywhere**.
+- `claimAgentApi.ts` — empty file (0 bytes).
+- `claimAgentMaster.ts` — fully commented out; an intended wrapper that was never enabled.
+
+## Still no API for
+
+- **ตั้งเบิกกองทุน** (`วางบิลเคลม > ตั้งเบิกกองทุน`, `/billing/customers`, renamed from
+  "เคลมลูกค้า" by `CR-billing-claim-menu-renaming-and-approval-flow.md`) — no endpoint exists.
+  `BillingFundDisbursementPage.tsx` is a full UI shell (filter, summary cards, multi-select table)
+  built against `useFundDisbursementList.ts`, a hardcoded-empty adapter hook — swap that one hook
+  for a real `useQuery` once the backend ships a filter/list endpoint (expected shape:
+  claimType/productId/branchId/userId/searchBy/searchDetail + pagination/sort, matching
+  `FundDisbursementFilterValues` in `fundDisbursement.types.ts`) plus a submit endpoint for
+  "ยืนยันตั้งเบิก" (currently permanently disabled). `ตรวจสอบรพ.วางบิล` (the other half of
+  `วางบิลเคลม`, renamed from "เคลมโรงพยาบาล") is wired to a real backend — see
+  `hospitalBillingApi.ts` above and [modules/BillingClaim.md](modules/BillingClaim.md).

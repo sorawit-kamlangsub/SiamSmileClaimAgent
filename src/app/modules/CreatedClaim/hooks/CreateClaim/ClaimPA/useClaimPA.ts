@@ -15,23 +15,26 @@ import {
     setPendingInsured,
     setSchool,
 } from "../../../store/claimPASlice";
+import { safeAtob } from "../../../../../functionHelpers";
 
 export const useClaimPA = () => {
     const dispatch = useAppDispatch();
     const { appId, refId, oldClaimId, isContinuous } = useParams();
     const { pendingInsured } = useAppSelector(claimPASelector);
 
-    const customerId = refId ? parseInt(atob(refId)) : undefined;
-    const applicationId = appId ? atob(appId) : undefined;
+    const customerId = safeAtob(refId);
+    const applicationId = safeAtob(appId);
 
     const activeCustomerId = pendingInsured?.customerId ?? customerId;
     const activeApplicationId = pendingInsured?.policyCode ?? applicationId;
 
-    const claimInfoQuery = useGetCustomerDetailById(activeCustomerId as number);
+    const claimInfoQuery = useGetCustomerDetailById(activeCustomerId);
     const bankAccountQuery = useGetCustomerBankAccount(applicationId); // บัญชี/เบอร์ผูกกับเคสหลัก ไม่เปลี่ยนตามคนที่เพิ่ม
     const contactQuery = useGetContactPerson(applicationId ?? "", 26);
 
-    const isLoading = claimInfoQuery.isLoading || bankAccountQuery.isLoading || contactQuery.isLoading;
+    // isInitialLoading: id ใน URL ถอดไม่ได้ → query ไม่ถูก enabled — ไม่ให้ loading ค้าง (หน้าแสดง "ไม่พบข้อมูล" แทน)
+    const isLoading =
+        claimInfoQuery.isInitialLoading || bankAccountQuery.isInitialLoading || contactQuery.isInitialLoading;
 
     useEffect(() => {
         if (!claimInfoQuery.data?.data) return;

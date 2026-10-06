@@ -34,7 +34,7 @@ import { swalError } from "../../../../_common";
 import ClaimSummaryPAInfo from "../../../components/CreateClaim/ClaimPA/ClaimSummaryPAInfo";
 import { useBeneficiaryPA } from "../../../hooks/CreateClaim/ClaimPA/useBeneficiaryPA";
 import BeneficiarySectionPA from "../../../components/CreateClaim/ClaimPA/BeneficiarySectionPA";
-import { CoverageType } from "../../../../../functionHelpers";
+import { CoverageType, safeAtob } from "../../../../../functionHelpers";
 import { BeneficiaryForm } from "../../../store/claimPHSlice";
 import { BankAccountCard } from "../../../components/CreateClaim/BankAccountCard";
 import { ContactCard } from "../../../components/CreateClaim/ContactCard";
@@ -44,7 +44,7 @@ const ClaimPASummaryPage: React.FC = () => {
     const navigate = useNavigate();
     const dispatch = useAppDispatch();
     const { appId, refId, isContinuous: isContinuousParam, oldClaimId } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { bankAccounts, contacts, claimItems, school, form, tmpCoreClaim, editingItemId, oldClaim } = useAppSelector(
         (s) => s.claimpa
     );
@@ -66,7 +66,6 @@ const ClaimPASummaryPage: React.FC = () => {
         isContinuous,
         createClaim: isContinuous ? createContinuedClaimPA : createClaimPA,
         confirmPayment: isContinuous ? confirmContinuedPayment : confirmPayment,
-        isClaimSuccess: (r) => (r?.isSuccess ?? r?.data?.isResult) === true,
     });
 
     useEffect(() => {
@@ -186,7 +185,7 @@ const ClaimPASummaryPage: React.FC = () => {
             const { claimResponse } = result?.value ?? {};
             const data = claimResponse?.data;
             const responseList = data?.responseList ?? [];
-            const isSuccess = claimResponse?.isSuccess ?? data?.isResult;
+            const isSuccess = claimResponse?.isSuccess === true && data?.isResult === true;
 
             if (result.isConfirmed && isSuccess && responseList.length > 0) {
                 if (isContinuous) {
@@ -209,42 +208,39 @@ const ClaimPASummaryPage: React.FC = () => {
                     });
                     return;
                 }
-                const rowsHtml = responseList
+                const itemsHtml = responseList
                     .map(
                         (item: any, index: number) => `
-                <div style="display:flex;align-items:center;gap:8px;padding:8px 12px;background:${
-                    index % 2 === 0 ? "#F9FAFB" : "#FFFFFF"
-                };border-radius:8px;">
-                    <div style="flex:0 0 18px;width:18px;height:18px;border-radius:50%;background:#27AE60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;">${
-                        index + 1
-                    }</div>
-                    <span style="font-size:13.5px;font-weight:700;color:#27AE60;white-space:nowrap;">${
-                        item?.claimNo ?? "-"
-                    }</span>
-                    <span style="color:#BBB;font-size:12px;">→</span>
-                    <span style="font-size:13.5px;font-weight:700;color:#2F80ED;white-space:nowrap;">${
-                        item?.caseNo ?? "-"
-                    }</span>
+                <div style="background:#fff;border:1px solid #E5E5E5;border-radius:12px;padding:16px;width:300px;margin:0 auto;margin-bottom:${
+                    index < responseList.length - 1 ? "12px" : "0"
+                };box-shadow:0 2px 8px rgba(0,0,0,.12);text-align:left;">
+                    <div style="display:flex;align-items:center;margin-bottom:12px;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#27AE60;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">✓</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่เคลม :</div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <span style="font-size:18px;font-weight:700;color:#27AE60;">${
+                                    item?.claimNo ?? "-"
+                                }</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="display:flex;align-items:center;">
+                        <div style="width:24px;height:24px;border-radius:50%;background:#2F80ED;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold;margin-right:10px;">$</div>
+                        <div>
+                            <div style="font-size:12px;color:#888;">เลขที่เคส :</div>
+                            <div style="font-size:18px;font-weight:700;color:#2F80ED;">${item?.caseNo ?? "-"}</div>
+                        </div>
+                    </div>
                 </div>
             `
                     )
                     .join("");
-
-                const itemsHtml = `
-                <div style="max-width:380px;margin:0 auto;">
-                    <div style="font-size:11px;color:#999;text-align:center;margin-bottom:6px;">เลขที่เคลม → เลขที่เคส</div>
-                    <div style="display:flex;flex-direction:column;gap:5px;max-height:300px;overflow-y:auto;padding:2px;">
-                        ${rowsHtml}
-                    </div>
-                </div>
-            `;
-
                 Swal.fire({
                     icon: "success",
                     title: "ทำรายการสำเร็จ",
-                    width: 440,
                     html: `
-                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:16px;text-align:center;line-height:1.6;">
+                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:3;">
                         ระบบได้ส่งข้อมูลให้ฝ่ายพิจารณาเคลมเรียบร้อย
                     </div>
                     ${itemsHtml}
@@ -328,10 +324,10 @@ const ClaimPASummaryPage: React.FC = () => {
 
         Swal.fire({
             icon: "success",
-            title: "ทำรายการสำเร็จ",
+            title: outcome.result?.data?.result ?? "ทำรายการสำเร็จ",
             html: `
-                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:1.8;">
-                        ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS
+                    <div style="color:#666;font-size:14px;margin-top:-8px;margin-bottom:24px;text-align:center;line-height:2.4;">
+                        ${outcome.result?.data?.msg ?? "ระบบได้ทำรายการเรียบร้อย และระบบจะทำการโอนเงินหลังจากได้รับ SMS"}
                     </div>
                     <div style="max-height:200px;overflow-y:auto;padding-right:8px;">
                         ${itemsHtml}

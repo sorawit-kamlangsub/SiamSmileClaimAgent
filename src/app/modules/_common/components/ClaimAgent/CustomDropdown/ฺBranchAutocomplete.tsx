@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { useGetBranch } from "../../../../IncreaseLimitTransfer/_common/masterAPI";
+import { useGetBranch } from "../../../../../api/coreClaimMastersApi";
 import { FormikAutocomplete } from "../../CustomFormik";
 import { FormikAutocompleteProps } from "../../CustomFormik/FormikAutocomplete";
 import { useIsHeadOfficeBranch } from "../../../branchPermission";

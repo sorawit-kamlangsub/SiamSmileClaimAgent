@@ -41,29 +41,45 @@ const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationS
             <CustomDisplayText label="เหตุของการเคลม" value={values.incidentTypeName} />
             <CustomDisplayText label="ประเภทความคุ้มครอง" value={values.coverageTypeName} />
             <CustomDisplayText label="ประเภทการรักษา" value={values.medicalTypeName} />
-            <CustomDisplayText label="วันที่แจ้งเคลม" value={formatDate(createdClaimDate)} />
+            {/* วันที่แจ้ง : ค่าในฟอร์ม (ผู้ใช้แก้ได้ใน Step 1) ก่อน แล้วค่อย fallback ไปค่าจาก server */}
+            <CustomDisplayText label="วันที่แจ้งเคลม" value={formatDate(values.notificationDate ?? createdClaimDate)} />
             <CustomDisplayText label="วันที่เกิดเหตุ" value={formatDate(values.incidentDate)} />
             <CustomDisplayText label="เวลาที่เกิดเหตุ" value={formatTime(values.incidentTime)} />
             <CustomDisplayText label="วันที่เข้า รพ." value={formatDate(values.admissionDate)} />
             <CustomDisplayText label="เวลาที่เข้า รพ." value={formatTime(values.admissionTime)} />
             <CustomDisplayText label="วันที่ออก รพ." value={formatDate(values.dischargeDate)} />
             <CustomDisplayText label="เวลาที่ออก รพ." value={formatTime(values.dischargeTime)} />
-            <CustomDisplayText label="อาการสำคัญ" value={chiefComplaintName} xs={12} md={6} />
+            <CustomDisplayText label="อาการสำคัญ (ChiefComplaint)" value={chiefComplaintName} xs={12} md={6} />
             <CustomDisplayText label="สถานพยาบาล" value={hospitalName} xs={12} md={12} />
-            <CustomDisplayText label="คำวินิจฉัย 1" value={getIcd10Name(diagnosis1)} xs={12} md={12} />
-            <CustomDisplayText label="คำวินิจฉัย 2" value={getIcd10Name(diagnosis2)} xs={12} md={12} />
-            <CustomDisplayText label="คำวินิจฉัย 3" value={getIcd10Name(diagnosis3)} xs={12} md={12} />
+            <CustomDisplayText label="การวินิจฉัย 1 (Diagnosis 1)" value={getIcd10Name(diagnosis1)} xs={12} md={12} />
+            <CustomDisplayText label="การวินิจฉัย 2 (Diagnosis 2)" value={getIcd10Name(diagnosis2)} xs={12} md={12} />
+            <CustomDisplayText label="การวินิจฉัย 3 (Diagnosis 3)" value={getIcd10Name(diagnosis3)} xs={12} md={12} />
             {/* ตำแหน่ง 4-6 มีเฉพาะฟอร์มเคลมโรงพยาบาล (diagnoses 6 ช่อง) — เคลมอื่น diagnoses มีแค่ 3 ช่อง จึง undefined */}
             {diagnosis4 !== undefined && (
-                <CustomDisplayText label="คำวินิจฉัย 4" value={getIcd10Name(diagnosis4)} xs={12} md={12} />
+                <CustomDisplayText
+                    label="การวินิจฉัย 4 (Diagnosis 4)"
+                    value={getIcd10Name(diagnosis4)}
+                    xs={12}
+                    md={12}
+                />
             )}
             {diagnosis5 !== undefined && (
-                <CustomDisplayText label="คำวินิจฉัย 5" value={getIcd10Name(diagnosis5)} xs={12} md={12} />
+                <CustomDisplayText
+                    label="การวินิจฉัย 5 (Diagnosis 5)"
+                    value={getIcd10Name(diagnosis5)}
+                    xs={12}
+                    md={12}
+                />
             )}
             {diagnosis6 !== undefined && (
-                <CustomDisplayText label="คำวินิจฉัย 6" value={getIcd10Name(diagnosis6)} xs={12} md={12} />
+                <CustomDisplayText
+                    label="การวินิจฉัย 6 (Diagnosis 6)"
+                    value={getIcd10Name(diagnosis6)}
+                    xs={12}
+                    md={12}
+                />
             )}
-            <CustomDisplayText label="หมายเหตุ" value={values.detail ?? "-"} xs={12} md={12} />
+            <CustomDisplayText label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ" value={values.detail ?? "-"} xs={12} md={12} />
         </Grid>
     );
 };

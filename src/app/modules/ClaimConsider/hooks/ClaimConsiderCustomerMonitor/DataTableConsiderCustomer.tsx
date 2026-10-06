@@ -4,7 +4,7 @@ import FactCheckIcon from "@mui/icons-material/FactCheck";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { useNavigate } from "react-router-dom";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
-import React, { useEffect, useMemo } from "react";
+import React, { useMemo } from "react";
 import { AppliedFilter } from "./SearchFilterHook";
 import {
     backgroundColorMapClaimTransactionType,
@@ -14,6 +14,7 @@ import {
 } from "../../../../functionHelpers";
 import { useGetCustomerClaimAdjudicationMonitor } from "../../../../api/coreClaimApi";
 import { GetCustomerClaimAdjudicationMonitorDtoResponse } from "../../../../api/coreClaimApi.client";
+import ClaimNoWithContinuousBadge from "../../components/_common/ClaimNoWithContinuousBadge";
 
 /**
  * TODO(caseId): BE ยังไม่ส่ง caseId มากับ monitor list — cast ชั่วคราวจนกว่าจะ `npm run codegen`
@@ -34,26 +35,34 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
         recordsPerPage: 10,
     });
 
-    useEffect(() => {
+    // รีเซ็ต page ระหว่าง render (ไม่ใช่ useEffect) — ถ้ารอ useEffect, render รอบที่ appliedFilter เปลี่ยนใหม่
+    // จะยังยิง query ด้วย filter ใหม่ + page เก่าไปก่อน 1 ครั้ง (เช่น filter ใหม่มีแค่หน้าเดียวแต่ page ค้างที่ 3)
+    // แล้วค่อยถูกแก้เป็น page 1 ในรอบถัดไป ทำให้มี request เกิน/ผิดเกิดขึ้นจริง
+    const prevAppliedFilterRef = React.useRef(appliedFilter);
+    if (prevAppliedFilterRef.current !== appliedFilter) {
+        prevAppliedFilterRef.current = appliedFilter;
         setPaginated((prev) => ({ ...prev, page: 1 }));
-    }, [appliedFilter]);
+    }
 
-    const { data: claimTransactionData, isLoading: claimTransactionDataLoading } =
-        useGetCustomerClaimAdjudicationMonitor(
-            appliedFilter.isSearch,
-            appliedFilter.dateType,
-            appliedFilter.dateFrom,
-            appliedFilter.dateTo,
-            isProductTypeId_PH,
-            isProductTypeId_PA,
-            appliedFilter.statusId,
-            appliedFilter.searchFrom,
-            appliedFilter.searchDetail,
-            undefined,
-            undefined,
-            paginated.page,
-            paginated.recordsPerPage
-        );
+    const {
+        data: claimTransactionData,
+        isLoading: claimTransactionDataLoading,
+        isError: claimTransactionDataError,
+    } = useGetCustomerClaimAdjudicationMonitor(
+        appliedFilter.isSearch,
+        appliedFilter.dateType,
+        appliedFilter.dateFrom,
+        appliedFilter.dateTo,
+        isProductTypeId_PH,
+        isProductTypeId_PA,
+        appliedFilter.statusId,
+        appliedFilter.searchFrom,
+        appliedFilter.searchDetail,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
     const pagination: PaginationResultDto = useMemo(
         () => ({
             totalAmountRecords: claimTransactionData?.totalAmountRecords ?? 0,
@@ -79,6 +88,10 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             label: "ClaimCode",
             options: {
                 ...cellAlignOptions({ align: "left", cellWhiteSpace: "nowrap" }),
+                customBodyRenderLite: (rowIndex) => {
+                    const row = claimTransactionData?.data?.[rowIndex];
+                    return <ClaimNoWithContinuousBadge claimNo={row?.claimNo} caseCount={row?.caseCount} />;
+                },
             },
         },
         {
@@ -158,30 +171,30 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
                         !VIEW_ONLY_CLAIM_TRANSACTION_TYPE_IDS.includes(row.claimTransactionTypeId);
                     return (
                         <>
-                            <Grid container sx={{ gap: 1.5 }}>
-                                {canConsider && (
-                                    <Tooltip title="พิจารณาเคลม">
-                                        <IconButton
-                                            onClick={() => {
-                                                // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
-                                                // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
-                                                navigate(
-                                                    `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
-                                                        row?.caseId ?? ""
-                                                    )}`
-                                                );
-                                            }}
-                                            sx={{
-                                                backgroundColor: "#FFF1CD",
-                                                ":hover": {
-                                                    backgroundColor: "#e7cf95",
-                                                },
-                                            }}
-                                        >
-                                            <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
-                                        </IconButton>
-                                    </Tooltip>
-                                )}
+                            <Grid container sx={{ gap: 1.5 }} wrap="nowrap">
+                                <Tooltip title={canConsider ? "พิจารณาเคลม" : ""}>
+                                    <IconButton
+                                        disabled={!canConsider}
+                                        onClick={() => {
+                                            // route = customers/:id/:caseId — encode ทั้งคู่ด้วย btoa, ฝั่งรับ decode ด้วย atob
+                                            // TODO(caseId): ยังไม่มี row.caseId จริงจาก BE — เมื่อ codegen แล้วให้ค่านี้ทำงานเอง
+                                            navigate(
+                                                `${appliedFilter.path}/${btoa(row?.claimId ?? "")}/${btoa(
+                                                    row?.caseId ?? ""
+                                                )}`
+                                            );
+                                        }}
+                                        sx={{
+                                            visibility: canConsider ? "visible" : "hidden",
+                                            backgroundColor: "#FFF1CD",
+                                            ":hover": {
+                                                backgroundColor: "#e7cf95",
+                                            },
+                                        }}
+                                    >
+                                        <FactCheckIcon sx={{ color: "#a56e07" }}></FactCheckIcon>
+                                    </IconButton>
+                                </Tooltip>
                                 <Tooltip title="ดูรายละเอียด">
                                     <IconButton
                                         onClick={() => {
@@ -203,7 +216,14 @@ const useDataTableConsiderCustomerHook = (appliedFilter: AppliedFilter) => {
             },
         },
     ];
-    return { column, claimTransactionData, claimTransactionDataLoading, setPaginated, pagination };
+    return {
+        column,
+        claimTransactionData,
+        claimTransactionDataLoading,
+        claimTransactionDataError,
+        setPaginated,
+        pagination,
+    };
 };
 
 export default useDataTableConsiderCustomerHook;

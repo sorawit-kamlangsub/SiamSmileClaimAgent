@@ -2,7 +2,7 @@ import { Box, IconButton, Link, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { useGetRefundMonitorWithFilter } from "../refundAPI";
+import { useGetRefundMonitorWithFilter } from "../../../api/coreClaimApi";
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { useMemo, useState } from "react";
 import { useAppSelector } from "../../../../redux";
@@ -154,8 +154,8 @@ const useRefundDataTableHook = () => {
                 filter: false,
                 customBodyRenderLite: (dataIndex) => {
                     const row = getRefundMonitorData?.data?.[dataIndex];
-                    const status = row?.refundStatusNameTH ?? row?.status ?? "-";
-                    const color = statusColorMapById[row?.refundStatusId] ?? defaultStatusColor;
+                    const status = row?.refundStatusNameTH ?? "-";
+                    const color = statusColorMapById[row?.refundStatusId ?? -1] ?? defaultStatusColor;
                     return <StatusPill status={status} color={color} />;
                 },
             },

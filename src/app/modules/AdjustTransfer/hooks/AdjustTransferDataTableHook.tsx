@@ -2,7 +2,7 @@ import { Box, IconButton, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import EditIcon from "@mui/icons-material/Edit";
-import { useGetClaimAdjustMonitorWithFilter } from "../adjustTransferMonitorAPI";
+import { useGetAdditionalTransferMonitor } from "../../../api/coreClaimApi";
 import { PaginationResultDto, PaginationSortableDto } from "../../_common";
 import { useMemo, useState } from "react";
 import { numberWithCommas } from "../../../functionHelpers";
@@ -23,10 +23,10 @@ const StatusPill = ({
     paymentStatusId,
     paymentStatusNameTH,
 }: {
-    paymentStatusId: number;
-    paymentStatusNameTH: string;
+    paymentStatusId?: number;
+    paymentStatusNameTH?: string;
 }) => {
-    const { bg, text } = statusColorMap[paymentStatusId] ?? defaultStatusColor;
+    const { bg, text } = statusColorMap[paymentStatusId ?? 0] ?? defaultStatusColor;
 
     return (
         <Box
@@ -53,17 +53,25 @@ const useAdjustTransferDataTableHook = () => {
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: getClaimAdjustMonitorData, isLoading: isGetClaimAdjustLoading } = useGetClaimAdjustMonitorWithFilter({
-        branceId: searchMonitor.branchId ?? null,
-        paymentStatusId: searchMonitor.paymentStatusId ?? null,
-        pagination: paginated,
-    });
+    const { data: getClaimAdjustMonitorData, isLoading: isGetClaimAdjustLoading } = useGetAdditionalTransferMonitor(
+        undefined,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage,
+        {
+            branceId: searchMonitor.branchId ?? undefined,
+            paymentStatusId: searchMonitor.paymentStatusId ?? undefined,
+        },
+        undefined,
+        true
+    );
     // const handleView = (row: AdditionalTransferRow) => {
     //     // TODO: open view dialog / navigate to detail page
     //     console.log("view", row);
     // };
 
-    const handleEdit = (row: { caseId: string; totalNetPaidAmount: number }) => {
+    const handleEdit = (row: { caseId?: string; totalNetPaidAmount?: number }) => {
         dispatch(
             setSelectedRowForEdit({
                 paymentId: "588DD869-9E5C-46EB-8A0C-9C7C8328AB62",
@@ -179,6 +187,7 @@ const useAdjustTransferDataTableHook = () => {
                 filter: false,
                 customBodyRenderLite: (rowIndex) => {
                     const row = getClaimAdjustMonitorData?.data?.[rowIndex];
+                    if (!row) return null;
                     return (
                         <Box sx={{ display: "flex", gap: "4px" }}>
                             <IconButton size="small" onClick={() => {}}>

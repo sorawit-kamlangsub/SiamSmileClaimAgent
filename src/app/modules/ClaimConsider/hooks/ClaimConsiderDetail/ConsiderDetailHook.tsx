@@ -9,21 +9,24 @@ import {
 import {
     useGetAllHospital,
     useGetChiefComplaint,
+    useGetCancelReason,
     useGetDecisionReason,
     useGetICD10,
     useGetIncidentType,
     useGetIncidentTypeMapping,
+    useGetRejectReason,
 } from "../../../../api/coreClaimMastersApi";
 import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeOptions";
 import { ClaimTypeOption } from "../../../CreatedClaim/components/CreateClaim/ClaimTypeSelector";
 import { claimConsiderSelector, ClaimConsiderValues, resetState, setClaimForm } from "../../store/claimConsiderSlice";
+import { DECISION_ID } from "../../store/claimConsider.constants";
 import { mapDraftPayloadToFormValues, parseTimeSpan } from "../../store/draftRevisionMappers";
 import { useAppDispatch, useAppSelector } from "../../../../../redux";
 import { FormikErrors, useFormik } from "formik";
 import { ChipOption } from "../../../CreatedClaim/components/CreateClaim/ChipSelector";
 import dayjs, { Dayjs } from "dayjs";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
-import { CoverageType, formatDateString } from "../../../../functionHelpers";
+import { CoverageType, formatDateString, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { CaseDocumentV2Request } from "../../../../api/coreClaimApi.client";
 import { ContinuousClaimRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 
@@ -66,16 +69,16 @@ const calculateStayDays = (
 };
 
 type UseConsiderDetailHookOptions = {
-    /** true เฉพาะ instance ที่เป็นเจ้าของฟอร์มจริง (ClaimDetailsTab) — hook นี้ถูกเรียกอีก 2 จุด
-     * (ConsiderDetailPage, PolicyBenefitHook) ที่สร้าง formik ของตัวเองแยกต่างหาก ไม่ควร overlay ซ้ำ */
+    /** true เฉพาะ instance ที่เป็นเจ้าของฟอร์มจริง (ClaimDetailsTab) — hook นี้ถูกเรียกอีกจุด
+     * (ConsiderDetailPage) ที่สร้าง formik ของตัวเองแยกต่างหาก ไม่ควร overlay ซ้ำ */
     enableDraftOverlay?: boolean;
 };
 
 const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetailHookOptions = {}) => {
     const { id, caseId: caseIdEncoded } = useParams();
-    const claimId = id ? atob(id) : undefined;
+    const claimId = safeAtob(id);
     // route customers/:id/:caseId — :caseId ถูก encode ด้วย btoa จากหน้า monitor (คู่กับ :id)
-    const caseId = caseIdEncoded ? atob(caseIdEncoded) : undefined;
+    const caseId = safeAtob(caseIdEncoded);
     const dispatch = useAppDispatch();
     const { form, viewingDraft } = useAppSelector(claimConsiderSelector);
     const draftRevisionId = viewingDraft?.draftRevisionId;
@@ -84,7 +87,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     const { data: detailData, isLoading: detailDataLoading } = useGetClaimDetailConsider(claimId ?? "", caseId ?? "");
     const detail = detailData?.data;
     const { data: customerDetailData, isLoading: customerDetailLoading } = useGetCustomerDetailById(
-        detail?.customerId ?? 0
+        detail?.customerDetailId
     );
     const customerDetail = customerDetailData?.data;
 
@@ -92,13 +95,14 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
     const [continuousClaimOpen, setContinuousClaimOpen] = useState(false);
     const { data: claimContinueData } = useGetClaimContinue(
         customerDetail?.policyCode ?? undefined,
-        claimId?.toString()
+        caseId?.toString()
     );
     const continuousClaimRows: ContinuousClaimRow[] = useMemo(
         () =>
             (claimContinueData?.data ?? []).map((item) => ({
                 claimNo: item.claimNo ?? "-",
-                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
+                caseNo: item.caseNo ?? "-",
+                chiefComplaint: item.chiefComplaint ?? item.illnessOrInjuryDetail ?? "-",
                 incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
                 totalClaimAmount: item.totalCaseAmount ?? 0,
                 totalPaidAmount: item.totalPaidAmount ?? 0,
@@ -106,6 +110,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 claimInfo: item.claimDetail ?? "-",
                 diagnosis1: item.icD10Detail ?? "-",
                 remainingLimit: item.remainAmount ?? 0,
+                remark: item.illnessOrInjuryDetail ?? "-",
                 // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
                 previousCaseNo: "-",
                 previousCaseStatus: "-",
@@ -142,10 +147,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             if (!values.incidentTypeId) errors.incidentTypeId = req;
             if (!values.coverageTypeId) errors.coverageTypeId = req;
             if (!values.medicalTypeId) errors.medicalTypeId = req;
-            if (!values.createdDate) {
-                errors.createdDate = req;
-            } else if (dayjs(values.createdDate).isAfter(today)) {
-                errors.createdDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
+            if (!values.notificationDate) {
+                errors.notificationDate = req;
+            } else if (dayjs(values.notificationDate).isAfter(today)) {
+                errors.notificationDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
             }
             if (!values.documentCompleteDate) {
                 errors.documentCompleteDate = req;
@@ -176,6 +181,12 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องไม่ก่อนวันที่เกิดเหตุ";
             } else if (values.admissionDate && dayjs(values.dischargeDate).isBefore(values.admissionDate, "day")) {
                 errors.dischargeDate = "วันที่ออกโรงพยาบาลต้องหลังวันที่เข้าโรงพยาบาล";
+            } else if (
+                values.medicalTypeId === MedicalType.OPD &&
+                values.admissionDate &&
+                !dayjs(values.dischargeDate).isSame(values.admissionDate, "day")
+            ) {
+                errors.dischargeDate = "OPD วันที่ออกต้องเป็นวันเดียวกับวันที่เข้า";
             }
             if (!values.dischargeTime) errors.dischargeTime = req;
 
@@ -220,6 +231,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                         icd10Id: req,
                     },
                 ];
+            }
+            // RC-003 3.4 : ติ๊ก "เป็นกายภาพบำบัด" แล้วต้องเลือกความจำเป็นทางการแพทย์
+            if (values.isPhysicalTherapyChecked && !values.physicalTherapyNecessityReasonId) {
+                errors.physicalTherapyNecessityReasonId = "โปรดเลือก";
             }
             return errors;
         },
@@ -275,7 +290,8 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
-    const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
+    // isInitialLoading: เคลมที่ไม่มี incidentTypeId query ไม่ถูก enabled — ไม่ให้ Step 1 ค้าง loading จนครบเพดาน 8 วิ
+    const { data: incidentTypeMapping, isInitialLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         activeIncidentTypeId,
         2,
         customerDetail?.productTypeId,
@@ -419,8 +435,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             newValues.dischargeDate = dayjs(detail.dischargeDate);
             newValues.dischargeTime = parseTimeSpan(detail.dischargeTime) ?? dayjs(detail.dischargeDate);
         }
-        if (detail.createdDate) {
-            newValues.createdDate = dayjs(detail.createdDate);
+        // วันที่แจ้ง : อ่านจาก notificationDate (ค่าที่บันทึกผลพิจารณา/แบบร่างเขียนกลับ) — เคลมเก่าที่ยังไม่มีค่า fallback ไป createdDate
+        const notificationDate = detail.notificationDate ?? detail.createdDate;
+        if (notificationDate) {
+            newValues.notificationDate = dayjs(notificationDate);
         }
         if (detail.documentCompleteDate) {
             newValues.documentCompleteDate = dayjs(detail.documentCompleteDate);
@@ -433,6 +451,9 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
         ];
         newValues.detail = detail.remark;
+        // ข้อมูลกายภาพบำบัด (RC-003 3.4) : default จากค่าที่บันทึกไว้ — GetClaimDetailConsider ส่งมาแล้ว
+        newValues.isPhysicalTherapyChecked = detail.isPhysicalTherapy === true;
+        newValues.physicalTherapyNecessityReasonId = detail.physicalTherapyNecessityReasonId ?? undefined;
 
         // ตั้งค่าทั้งหมดพร้อมกัน
         formik.setValues((prev) => ({ ...prev, ...newValues }), false);
@@ -538,9 +559,24 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         formik.values.dischargeTime,
     ]);
 
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
+    // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)
+    const decisionReasonDecisionId =
+        formik.values.considerResult === DECISION_ID.REJECTED || formik.values.considerResult === DECISION_ID.CANCELLED
+            ? undefined
+            : formik.values.considerResult;
     const { data: decisionReason, isLoading: decisionReasonLoading } = useGetDecisionReason(
         undefined,
-        formik.values.considerResult
+        decisionReasonDecisionId
+    );
+    // ปฏิเสธ (5) / ยกเลิก (6) ใช้ Master ของตัวเอง — ยิงเฉพาะตอนเลือกผลนั้น
+    const { data: rejectReason, isLoading: rejectReasonLoading } = useGetRejectReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.REJECTED
+    );
+    const { data: cancelReason, isLoading: cancelReasonLoading } = useGetCancelReason(
+        undefined,
+        formik.values.considerResult === DECISION_ID.CANCELLED
     );
 
     /**
@@ -585,6 +621,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
         isStep1Loading,
         decisionReason,
         decisionReasonLoading,
+        rejectReason,
+        rejectReasonLoading,
+        cancelReason,
+        cancelReasonLoading,
         attachedDocuments,
         setAttachedDocuments,
         continuousClaimRows,

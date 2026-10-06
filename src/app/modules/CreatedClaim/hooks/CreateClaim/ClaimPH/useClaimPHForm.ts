@@ -19,8 +19,17 @@ import { COVERAGE_ICON_MAP, INCIDENT_ICON_MAP } from "../../../components/Create
 import { ClaimTypeOption } from "../../../components/CreateClaim/ClaimTypeSelector";
 import { useOcrDocumentScan } from "../useOcrDocumentScan";
 import { swalWarning } from "../../../../_common";
-import { amountNumber, FingerKey } from "../organLoss.types";
-import { CauseOfIncident, CoverageType, IncidentType, MedicalType } from "../../../../../functionHelpers";
+import { amountNumber } from "../organLoss.types";
+import { mapOrganLossToCaseItems } from "../organLossCaseItems";
+import { NEW_CLAIM_DRAFT_KEY, useClaimDraftStore } from "../../../components/CreateClaim/ClaimDraftProvider";
+import {
+    CauseOfIncident,
+    compareCoverageTypeOrder,
+    CoverageType,
+    IncidentType,
+    MedicalType,
+    safeAtob,
+} from "../../../../../functionHelpers";
 import { CaseItemV2Request } from "../../../../../api/coreClaimApi.client";
 import { useParams } from "react-router-dom";
 interface Options {
@@ -31,14 +40,15 @@ export const useClaimPHForm = ({ onNext }: Options) => {
     const dispatch = useAppDispatch();
     const { userProfile } = useAuth();
     const { isContinuous: isContinuousParam } = useParams();
-    const isContinuous = isContinuousParam ? atob(isContinuousParam) === "true" : false;
+    const isContinuous = safeAtob(isContinuousParam) === "true";
     const { form, oldClaim, insured, documentDetailById, organLossItems } = useAppSelector(claimPHSelector);
     const ocr = useOcrDocumentScan();
+    const claimDraftStore = useClaimDraftStore();
     const { data: incidentTypeRaw, isLoading: incidentTypeLoading } = useGetIncidentType();
     const docData = Object.values(documentDetailById);
 
     const formik = useFormik<ClaimFormValues>({
-        initialValues: { ...form, serviceProviderId: userProfile?.userId },
+        initialValues: { ...form, serviceProviderId: form.serviceProviderId ?? userProfile?.userId },
         enableReinitialize: true,
         validate: (values) => {
             const errors: FormikErrors<ClaimFormValues> = {};
@@ -117,7 +127,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             if (!values.symptomType) errors.symptomType = req;
             if (values.symptomType === SymptomType.ChiefComplaint && !values.chiefComplaintId)
                 errors.chiefComplaintId = req;
-            if (values.symptomType === SymptomType.Other && !values.remark) errors.remark = req;
+            if (values.symptomType === SymptomType.Other && !values.illnessOrInjuryDetail)
+                errors.illnessOrInjuryDetail = req;
             if (isDeath || isDisability) {
                 if (!values.notificationDate) errors.notificationDate = req;
                 if (!values.documentCompleteDate) errors.documentCompleteDate = req;
@@ -146,11 +157,19 @@ export const useClaimPHForm = ({ onNext }: Options) => {
 
             // ── จำนวนเงิน ──
             if (!values.transferAmount || values.transferAmount <= 0) errors.transferAmount = req;
-            else if ((isDeath || isDisability || isIPD) && Number(values.transferAmount) > maxTransferAmount) {
+            // DFUAT-090 : IPD/Day Case ที่ไม่ใช่เคลมต่อเนื่อง ไม่ block ที่นี่แล้ว — เดิมเทียบกับวงเงินของรายการสุดท้าย
+            // (ค่าชดเชย IPD) รายการเดียว ที่ถูกคือเทียบยอดโอนรวมกับ "วงเงินรวมสูงสุด" ของทุกรายการความคุ้มครอง แล้วเกิน =
+            // ขึ้น Modal ยืนยัน NPL (totalEligibleAmount + ConfirmExcessLimitTransferDialog ใน ClaimFormSection.handleSubmit)
+            // เคลมต่อเนื่อง : คงการเช็คเดิมไว้ทั้งหมด (เทียบกับวงเงินคงเหลือ) ไม่ให้กระทบ
+            else if (
+                (isDeath || isDisability || (isIPD && isContinuous)) &&
+                Number(values.transferAmount) > maxTransferAmount
+            ) {
                 errors.transferAmount = `ไม่เกินวงเงิน${
                     isContinuous ? "คงเหลือ" : "สูงสุด"
                 } ${maxTransferAmount.toLocaleString("th-TH")} บาท`;
             }
+            console.log("🚀 ~ useClaimPHForm ~ errors:", errors);
             return errors;
         },
         onSubmit: (values, { setSubmitting }) => {
@@ -158,8 +177,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
             const isDeath = values.coverageTypeId === CoverageType.Death;
             const isMedical =
                 values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
+            // ค่ารักษา/ค่าชดเชย แบบ IPD/DayCase — กรอกจำนวนเงินตามรายละเอียดความคุ้มครอง (CoverageAndTransferBox)
             const isManualIPD =
-                values.coverageTypeId === CoverageType.Medical &&
+                (values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate) &&
                 (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
             //เช็คจำนวนเอกสาร
             const hasError = docData.some((docById) => {
@@ -179,41 +199,18 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 return;
             }
 
+            if (isMedical && ocr.hasMissingOcrDocumentId(ocr.ocrResult, ocr.ocrDocumentIds)) {
+                swalWarning("แจ้งเตือน", "บันทึกเอกสารที่สแกนไม่สำเร็จ กรุณาลบแล้วสแกนเอกสารใหม่อีกครั้ง");
+                setSubmitting(false);
+                return;
+            }
+
             const items = customerBenefit?.data ?? [];
             let caseItems: CaseItemV2Request[] = [];
 
             if (isDisability) {
-                const benefitItem = customerBenefit?.data?.[0];
-
-                for (const organ of organLossItems) {
-                    let totalAmount = 0;
-                    if (organ.fingers) {
-                        const sides: ("left" | "right")[] = ["left", "right"];
-
-                        for (const side of sides) {
-                            for (const fingerKey of Object.keys(organ.fingers[side]) as FingerKey[]) {
-                                const finger = organ.fingers[side][fingerKey];
-                                if (!finger.selected || !finger.bodyPartId) continue;
-
-                                totalAmount += amountNumber(finger.amount);
-                            }
-                        }
-                    } else if (organ.bodyPartId) {
-                        totalAmount = amountNumber(organ.amount);
-                    }
-                    caseItems.push({
-                        inputToStandardMappingId: benefitItem?.inputToStandardMappingId ?? 0,
-                        standardMedicalExpenseId: benefitItem?.standardMedicalExpenseId ?? 0,
-                        quantity: 1,
-                        perUnit: benefitItem?.pricePerUnit ?? 0,
-                        originalAmount: totalAmount,
-                        discountAmount: 0,
-                        netCaseAmount: organ.totalAmount,
-                        medicalTypeId: benefitItem?.medicalTypeId ?? undefined,
-                        nonCoveredAmount: amountNumber(organ.uncoveredAmount),
-                        nonCoveredReasonId: organ.uncoveredReason ?? 0,
-                    });
-                }
+                // 1 caseItem ต่ออวัยวะ / ต่อนิ้ว พร้อม bodyPartId ของตัวเอง
+                caseItems = mapOrganLossToCaseItems(organLossItems, customerBenefit?.data?.[0]);
             } else if (isManualIPD) {
                 caseItems = items
                     .filter((item) => item.benefitId != null)
@@ -292,7 +289,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 },
             ])
         ).values(),
-    ];
+    ].sort((a, b) => compareCoverageTypeOrder(a.id, b.id));
 
     const medicalType: ChipOption[] = [
         ...new Map(
@@ -371,7 +368,9 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId
     );
 
-    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
+    // isInitialLoading: ยังเลือกเงื่อนไขไม่ครบ (เช่น ทุพพลภาพแต่ยังไม่เลือกสาเหตุ) query ไม่ถูก enabled
+    // — isLoading ของ react-query v4 จะค้าง true แทนที่จะแสดง "ไม่พบข้อมูล"
+    const { data: customerBenefit, isInitialLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         insured?.policyCode,
         formik.values.incidentDate,
         isContinuous,
@@ -381,7 +380,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         formik.values.causeOfIncidentId,
         formatType,
         undefined,
-        undefined,
+        insured?.customerDetailId,
         isContinuous ? oldClaim?.claimNo : undefined
     );
 
@@ -426,15 +425,18 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
     }, [formik.values.incidentTypeId]);
 
     const prevIncidentTypeId = useRef(formik.values.incidentTypeId);
+    const prevCoverageTypeId = useRef(formik.values.coverageTypeId);
 
     useEffect(() => {
+        const isCoverageChanged = prevCoverageTypeId.current !== formik.values.coverageTypeId;
+        prevCoverageTypeId.current = formik.values.coverageTypeId;
         if (isFirstRenderCoverage.current) {
             isFirstRenderCoverage.current = false;
             return;
@@ -446,6 +448,8 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         // เคลมต่อเนื่อง: prefill ค่าจากเคลมตั้งต้น ไม่ต้องรีเซ็ต cascade
         if (isContinuous) return;
         if (!formik.values.coverageTypeId) return;
+        // incidentTypeMapping โหลดใหม่ (เช่นกลับจากหน้าสรุปหลัง cache หมดอายุ) แต่ประเภทไม่ได้เปลี่ยน — ไม่ต้องล้างค่า
+        if (!isCoverageChanged) return;
 
         const isMedicalAuto =
             formik.values.coverageTypeId === 3 &&
@@ -486,7 +490,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 accidentPlace: undefined,
                 chiefComplaintId: undefined,
                 chiefComplaintId_selectedText: undefined,
-                remark: undefined,
+                illnessOrInjuryDetail: undefined,
             },
             false
         );
@@ -502,18 +506,35 @@ export const useClaimPHForm = ({ onNext }: Options) => {
         }
     }, [formik.values.coverageTypeId, formik.values.incidentTypeId, incidentTypeMapping]);
 
+    // เปลี่ยนประเภทการเบิก → ล้างยอดตามรายละเอียดความคุ้มครองที่ค้างจากประเภทเดิม
+    // (CoverageAndTransferBox ไม่ reset ตอน mount แล้ว เพื่อคงค่าตอนกดย้อนกลับจากหน้าสรุป)
+    const prevMedicalTypeId = useRef(formik.values.medicalTypeId);
+    useEffect(() => {
+        if (prevMedicalTypeId.current === formik.values.medicalTypeId) return;
+        prevMedicalTypeId.current = formik.values.medicalTypeId;
+        formik.setFieldValue("benefitAmounts", {}, false);
+        formik.setFieldValue("transferAmount", 0, false);
+    }, [formik.values.medicalTypeId]);
+
     const totalOrganLossAmount = useMemo(
         () => organLossItems.reduce((sum, i) => sum + amountNumber(i.totalAmount), 0),
         [organLossItems]
     );
+    // sync เฉพาะตอนยอดสูญเสียอวัยวะเปลี่ยนจริง — ไม่ทับยอดที่กรอกไว้ตอน mount ใหม่ (กดย้อนกลับจากหน้าสรุป)
+    const prevTotalOrganLossAmount = useRef(totalOrganLossAmount);
     useEffect(() => {
+        if (prevTotalOrganLossAmount.current === totalOrganLossAmount) return;
+        prevTotalOrganLossAmount.current = totalOrganLossAmount;
         formik.setFieldValue("transferAmount", totalOrganLossAmount);
     }, [totalOrganLossAmount]);
     // เคลมต่อเนื่องปกติ: default ค่าจากเคลมตั้งต้น (ครั้งเดียว)
-    const didPrefillContinuous = useRef(false);
+    // prefill ไปแล้วใน route นี้ (กดย้อนกลับจากหน้าสรุป) ไม่ต้อง prefill ทับค่าที่แก้ไว้
+    // เก็บใน ClaimDraftProvider ไม่ใช้ form ใน store เพราะ store ไม่ถูกล้างตอนเข้าเคลมใหม่
+    const didPrefillContinuous = useRef(!!claimDraftStore?.get(NEW_CLAIM_DRAFT_KEY)?.isContinuousPrefilled);
     useEffect(() => {
         if (!isContinuous || !oldClaim || didPrefillContinuous.current) return;
         didPrefillContinuous.current = true;
+        claimDraftStore?.update(NEW_CLAIM_DRAFT_KEY, { isContinuousPrefilled: true });
         formik.setValues(
             {
                 ...formik.values,
@@ -522,7 +543,7 @@ export const useClaimPHForm = ({ onNext }: Options) => {
                 medicalTypeId: oldClaim.medicalTypeId ?? formik.values.medicalTypeId,
                 incidentDate: oldClaim.incidentDate ? dayjs(oldClaim.incidentDate) : formik.values.incidentDate,
                 chiefComplaintId: oldClaim.chiefComplaintId ?? formik.values.chiefComplaintId,
-                remark: oldClaim.chiefComplaintCustom ?? formik.values.remark,
+                illnessOrInjuryDetail: oldClaim.illnessOrInjuryDetail ?? formik.values.illnessOrInjuryDetail,
             },
             false
         );

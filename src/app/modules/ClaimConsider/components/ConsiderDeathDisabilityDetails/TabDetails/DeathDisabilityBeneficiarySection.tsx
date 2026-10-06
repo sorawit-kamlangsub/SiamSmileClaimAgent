@@ -1,0 +1,216 @@
+import { useState } from "react";
+import { Alert, Box, Button, Grid, Typography } from "@mui/material";
+import PeopleIcon from "@mui/icons-material/People";
+import EditIcon from "@mui/icons-material/Edit";
+import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
+import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
+import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
+import { CustomDisplayText } from "../../../../_common/components/CustomComponent/CustomDisplayText";
+import { GetDeathAndDisabilityBeneficiaryDtoResponse } from "../../../../../api/coreClaimApi.client";
+import { useInsertBeneficiaryForRecordOnSiteCashPayment } from "../../../../../api/coreClaimApi";
+import { swalError } from "../../../../_common";
+import ChangeTransferAccountDialog from "./ChangeTransferAccountDialog";
+import EditBeneficiaryDialog from "./EditBeneficiaryDialog";
+import { TransferAccountChange } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
+import { BENEFICIARY_TYPE_ID } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/DeathDisabilityBeneficiaryHook";
+
+const CARD_BORDER = "#D6E6F5";
+
+const formatAmount = (value?: number) =>
+    (value ?? 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+/** ต่อข้อความที่มีค่า — API อาจส่ง null/ว่างมา ถ้าไม่เหลืออะไรเลยแสดง "-" */
+const joinText = (parts: (string | null | undefined)[], separator = " ") => {
+    const text = parts.filter((part) => part && part.trim() !== "").join(separator);
+    return text || "-";
+};
+const getFullName = (item?: GetDeathAndDisabilityBeneficiaryDtoResponse) =>
+    joinText([joinText([item?.titleName, item?.firstName], ""), item?.lastName].filter((part) => part !== "-"));
+
+type DeathDisabilityBeneficiarySectionProps = {
+    beneficiaries: GetDeathAndDisabilityBeneficiaryDtoResponse[];
+    isLoading: boolean;
+    /** ผลรวม payoutAmount ของผู้รับผลประโยชน์ทุกคน */
+    totalAmount: number;
+    /** ยอดเงินรวมทั้งหมดของรายละเอียดค่าใช้จ่าย — เพดานยอดโอน และต้องจ่ายครบก่อนอนุมัติ */
+    expenseTotalAmount: number;
+    claimNo: string;
+    customerName: string;
+    /** ใช้กับตารางสแกนเอกสารใน dialog เปลี่ยนบัญชี */
+    productTypeId: number | undefined;
+    aplicationCode: string | undefined;
+    /** ใช้บันทึกรายการเปลี่ยนบัญชี (InsertBeneficiaryForRecordOnSiteCashPayment) */
+    claimId: string | undefined;
+    caseId: string | undefined;
+    /** มีรายการเปลี่ยนบัญชีแล้ว (beneficiaryTypeId = 3) — ปิดปุ่มเงินสดมอบหน้างาน ให้แก้/ลบจาก section นั้นแทน */
+    hasTransferAccountChange: boolean;
+};
+
+/**
+ * Section "ผู้รับผลประโยชน์" (read-only + ปุ่ม)
+ * ปุ่ม "เงินสดมอบหน้างาน" เปิด dialog เปลี่ยนบัญชีปลายทางการโอนเงิน
+ * ปุ่ม "แก้ไขข้อมูล" เปิด dialog แก้ไขข้อมูลผู้รับผลประโยชน์ของการ์ดนั้น
+ */
+const DeathDisabilityBeneficiarySection = ({
+    beneficiaries,
+    isLoading,
+    totalAmount,
+    expenseTotalAmount,
+    claimNo,
+    customerName,
+    productTypeId,
+    aplicationCode,
+    claimId,
+    caseId,
+    hasTransferAccountChange,
+}: DeathDisabilityBeneficiarySectionProps) => {
+    const [changeAccountOpen, setChangeAccountOpen] = useState(false);
+    const insertBeneficiary = useInsertBeneficiaryForRecordOnSiteCashPayment(undefined, (error) =>
+        swalError("บันทึกการเปลี่ยนบัญชีไม่สำเร็จ", error)
+    );
+    /** กดบันทึกใน dialog = บันทึกลง API ทันที — สำเร็จแล้วรายการ beneficiaryTypeId = 3 โหลดใหม่และแสดง section รายละเอียด */
+    const handleSaveTransferAccount = async (change: TransferAccountChange) => {
+        const response = await insertBeneficiary
+            .mutateAsync({
+                claimId,
+                caseId,
+                // TODO(death-disability-api): bankAccountRelationTypeId หน้านี้ไม่มีข้อมูล — รอ BE ยืนยันค่าที่ต้องส่ง
+                policyBeneficiaryId: 0,
+                titleId: change.payeeTitleId?.toString(),
+                firstName: change.payeeFirstName || undefined,
+                lastName: change.payeeLastName || undefined,
+                bankId: change.bankId,
+                bankAccountNo: change.accountNo,
+                bankAccountName: change.accountName,
+                payoutAmount: totalAmount,
+                beneficiaryTypeId: BENEFICIARY_TYPE_ID.TRANSFER_ACCOUNT,
+                changeReasonRemark: change.reason,
+                caseDocument: change.attachedDocuments.map((doc) => ({
+                    documentId: doc.documentId,
+                    documentNo: doc.documentNo,
+                    claimDocumentTypeId: doc.claimDocumentTypeId,
+                    documentSubTypeId: doc.documentSubTypeId ?? 0,
+                    ocr: [],
+                })),
+            })
+            .catch(() => undefined);
+        if (!response?.isSuccess) return; // แจ้ง error แล้ว — ไม่ปิด dialog ให้แก้แล้วบันทึกใหม่ได้
+        setChangeAccountOpen(false);
+    };
+    // แยก open ออกจาก editingOrder — ตอนปิดยังคงผู้รับฯ เดิมไว้ ไม่ให้ข้อมูลใน dialog กลายเป็นว่างระหว่าง animation ปิด
+    const [editOpen, setEditOpen] = useState(false);
+    // ลำดับที่ = ตำแหน่งในรายการที่ API ส่งมา (เริ่มที่ 1)
+    const [editingIndex, setEditingIndex] = useState<number>();
+    const editingBeneficiary = editingIndex !== undefined ? beneficiaries[editingIndex] : undefined;
+    return (
+        <CustomPaper>
+            <HeadingWithColor
+                icon={<PeopleIcon sx={{ fontSize: 27 }} />}
+                text="ผู้รับผลประโยชน์"
+                color="blue"
+                sx={{ flexWrap: "wrap", gap: 1 }}
+                button={
+                    <Button
+                        variant="outlined"
+                        startIcon={<AccountBalanceWalletIcon />}
+                        onClick={() => setChangeAccountOpen(true)}
+                        disabled={hasTransferAccountChange}
+                        sx={{ borderRadius: 2, bgcolor: "#fff" }}
+                    >
+                        เงินสดมอบหน้างาน
+                    </Button>
+                }
+            />
+            <ChangeTransferAccountDialog
+                open={changeAccountOpen}
+                onClose={() => setChangeAccountOpen(false)}
+                onSaved={handleSaveTransferAccount}
+                isSaving={insertBeneficiary.isLoading}
+                claimNo={claimNo}
+                customerName={customerName}
+                amount={totalAmount}
+                productTypeId={productTypeId}
+                aplicationCode={aplicationCode}
+            />
+            <EditBeneficiaryDialog
+                open={editOpen && !!editingBeneficiary}
+                onClose={() => setEditOpen(false)}
+                order={(editingIndex ?? 0) + 1}
+                claimNo={claimNo}
+                customerName={customerName}
+                beneficiary={editingBeneficiary}
+                otherPayoutAmount={beneficiaries.reduce(
+                    (sum, item, index) => (index === editingIndex ? sum : sum + (item.payoutAmount ?? 0)),
+                    0
+                )}
+                totalTransferAmount={expenseTotalAmount}
+                onSaved={() => setEditOpen(false)}
+            />
+            {!isLoading && beneficiaries.length === 0 && (
+                <Typography color="text.secondary" textAlign="center" sx={{ mt: 2, py: 3 }}>
+                    ไม่พบข้อมูลผู้รับผลประโยชน์
+                </Typography>
+            )}
+            {beneficiaries.map((beneficiary, index) => (
+                <Box
+                    key={beneficiary.beneficiaryId ?? index}
+                    sx={{ mt: 2, p: 2, border: `1px solid ${CARD_BORDER}`, borderRadius: 3, bgcolor: "#F7FAFD" }}
+                >
+                    <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 1 }}>
+                        <Typography fontWeight={700}>ผู้รับผลประโยชน์ ลำดับที่ {index + 1}</Typography>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<EditIcon />}
+                            onClick={() => {
+                                setEditingIndex(index);
+                                setEditOpen(true);
+                            }}
+                            sx={{ ml: "auto", borderRadius: 2, bgcolor: "#fff" }}
+                        >
+                            แก้ไขข้อมูล
+                        </Button>
+                    </Box>
+                    <Grid container spacing={2} mt={0}>
+                        <CustomDisplayText
+                            label="ความสัมพันธ์"
+                            value={joinText([beneficiary.relationTypeName])}
+                            md={4}
+                        />
+                        <CustomDisplayText label="เลขบัตรประชาชน" value={joinText([beneficiary.idCard])} md={4} />
+                        <CustomDisplayText label="ชื่อ-นามสกุล" value={getFullName(beneficiary)} md={4} />
+                        <CustomDisplayText label="เบอร์โทรศัพท์" value={joinText([beneficiary.phoneNo])} md={4} />
+                        <CustomDisplayText
+                            label="บัญชีรับสินไหม"
+                            value={joinText([
+                                beneficiary.bankName,
+                                beneficiary.bankAccountNo,
+                                beneficiary.bankAccountName,
+                            ])}
+                            md={4}
+                        />
+                        <CustomDisplayText label="จำนวนเงิน" value={formatAmount(beneficiary.payoutAmount)} md={4} />
+                    </Grid>
+                </Box>
+            ))}
+            <Box sx={{ mt: 2, py: 1.5, borderRadius: 2, bgcolor: "#EAF3FC", textAlign: "center" }}>
+                <Typography fontWeight={600} color="#0D5C9E">
+                    จำนวนเงินโอนรวม : {formatAmount(totalAmount)} บาท
+                </Typography>
+            </Box>
+            {!isLoading &&
+                beneficiaries.length > 0 &&
+                Math.round(totalAmount * 100) !== Math.round(expenseTotalAmount * 100) && (
+                    <Alert severity="warning" sx={{ mt: 1.5, borderRadius: 2 }}>
+                        จำนวนเงินโอนรวม {formatAmount(totalAmount)} บาท ไม่เท่ากับยอดเงินรวมทั้งหมด{" "}
+                        {formatAmount(expenseTotalAmount)} บาท
+                        {totalAmount < expenseTotalAmount &&
+                            ` (ยังขาด ${formatAmount(expenseTotalAmount - totalAmount)} บาท)`}{" "}
+                        — ต้องเท่ากันจึงจะอนุมัติได้
+                    </Alert>
+                )}
+        </CustomPaper>
+    );
+};
+
+export default DeathDisabilityBeneficiarySection;

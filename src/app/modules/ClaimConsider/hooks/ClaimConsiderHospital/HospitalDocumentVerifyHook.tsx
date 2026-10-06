@@ -1,15 +1,10 @@
 import { useEffect, useMemo, useRef } from "react";
 import { FormikProps } from "formik";
-import { useGetCaseReviewOverview, useGetDocumentByCaseId } from "../../../../api/coreClaimApi";
+import { useGetDocumentByCaseId } from "../../../../api/coreClaimApi";
 import { GetDocumentByCaseIdDtoResponse } from "../../../../api/coreClaimApi.client";
 import { useGetDocumentListByIds } from "../../../../api/docstorageApi";
-import { useGetDocumentReviewStatus } from "../../../../api/coreClaimMastersApi";
-import {
-    DOCUMENT_CHECK_RESULT_COLORS,
-    DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
-    DocumentCheckResultOption,
-    DocumentCheckRow,
-} from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
+import { documentTypeId } from "../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
+import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import { HospitalConsiderValues } from "./HospitalConsiderDetailHook";
 
 /** claimSourceId ของเคลมโรงพยาบาล (ใช้ดึงรายการเอกสารของเคส — GET /document/case/filter) */
@@ -27,39 +22,30 @@ export type DocStorageDocInfo = {
     searchIndex: string;
 };
 
-/** ผลการตรวจ/หมายเหตุที่เคยบันทึกไว้ (จาก overview) ต่อ documentId */
-type DocumentReviewInfo = { checkResult: DocumentCheckRow["checkResult"]; remark: string };
-
 /**
  * map รายการเอกสารของเคส (GET /document/case/filter — useGetDocumentByCaseId, claimSourceId 3)
  * -> แถวตาราง "ตรวจสอบเอกสาร"
  *
  * - documentId / documentSubTypeId / ชื่อเอกสาร (claimDocumentTypeName) มาจาก endpoint นี้
- * - ผลการตรวจ + หมายเหตุที่เคยบันทึก merge จาก overview ด้วย documentId
+ * - RC-005 5.7/5.8 ตัดผลการตรวจ + หมายเหตุออกจากตารางแล้ว — checkResult/remark ว่างเสมอ
+ *   (ClaimDetailActionHook กรองแถวที่ไม่มี checkResult ออก จึงไม่ส่ง documentReviewStatusId ขึ้น BE)
  * - `files` ปล่อยว่างไว้เสมอ — จำนวนไฟล์มาจาก GET /document/documentid/list, รายการไฟล์มาจาก
  *   GET /document/{documentId}/documentFile (ตอนเปิด modal)
  */
-const mapDocumentChecks = (
-    documents: GetDocumentByCaseIdDtoResponse[],
-    reviewByDocId: Record<string, DocumentReviewInfo>
-): DocumentCheckRow[] =>
-    documents.map((doc) => {
-        const documentId = doc.documentId ?? doc.caseDocumentId ?? "";
-        const review = reviewByDocId[documentId];
-        return {
-            documentId,
-            documentSubTypeId: doc.documentSubTypeId,
-            documentCode: doc.documentCode ?? "",
-            documentName: doc.claimDocumentTypeName || "-",
-            files: [],
-            checkResult: review?.checkResult ?? "",
-            remark: review?.remark ?? "",
-        };
-    });
+const mapDocumentChecks = (documents: GetDocumentByCaseIdDtoResponse[]): DocumentCheckRow[] =>
+    documents.map((doc) => ({
+        documentId: doc.documentId ?? doc.caseDocumentId ?? "",
+        documentSubTypeId: doc.documentSubTypeId,
+        documentCode: doc.documentCode ?? "",
+        documentName: doc.claimDocumentTypeName || "-",
+        files: [],
+        checkResult: "",
+        remark: "",
+    }));
 
 /**
  * ตาราง "ตรวจสอบเอกสาร" ของหน้าพิจารณาเคลมโรงพยาบาล — แยกออกมาจาก useHospitalConsiderDetailHook
- * เพราะเป็นคนละความรับผิดชอบ (fetch รายการเอกสารของเคส + prefill ผลตรวจเดิม + handler แก้ผลตรวจ)
+ * เพราะเป็นคนละความรับผิดชอบ (fetch รายการเอกสารของเคส + ข้อมูลไฟล์จาก DocStorage)
  *
  * รับ formik ของ Step 1 มาแก้ field "documentChecks" โดยตรง, และรับ caseKey มาเองเพื่อรีเซ็ต flag
  * sync ตอนเปลี่ยนเคส (เหมือน useHospitalConsiderDetailHook — route ใช้ element เดิม ไม่ remount)
@@ -85,23 +71,11 @@ const useHospitalDocumentVerifyHook = (
         1,
         100
     );
-    const caseDocuments = useMemo(() => caseDocumentData?.data ?? [], [caseDocumentData]);
-
-    /** ผลการตรวจ/หมายเหตุที่เคยบันทึกไว้ — GET /document/case/{caseId}/overview (merge ด้วย documentId) */
-    const { data: caseReviewOverviewData, isLoading: caseReviewOverviewLoading } =
-        useGetCaseReviewOverview(detailCaseId);
-    const reviewByDocId = useMemo<Record<string, DocumentReviewInfo>>(() => {
-        const map: Record<string, DocumentReviewInfo> = {};
-        (caseReviewOverviewData?.data?.documentReview?.documents ?? []).forEach((doc) => {
-            if (doc.documentId) {
-                map[doc.documentId] = {
-                    checkResult: doc.documentReviewStatusId || "",
-                    remark: doc.documentReviewRemark || doc.documentRemark || "",
-                };
-            }
-        });
-        return map;
-    }, [caseReviewOverviewData]);
+    /** RC-005 5.9 : แสดงเฉพาะประเภทเอกสาร "ชุดรวมเอกสาร" (claimDocumentTypeId 7) */
+    const caseDocuments = useMemo(
+        () => (caseDocumentData?.data ?? []).filter((doc) => doc.claimDocumentTypeId === documentTypeId.ชุดรวมเอกสาร),
+        [caseDocumentData]
+    );
 
     /**
      * เอกสารจริงใน DocStorage ของทุก documentId ในเคสนี้ (GET /document/documentid/list)
@@ -142,64 +116,19 @@ const useHospitalDocumentVerifyHook = (
         hasSyncedDocumentsRef.current = false;
     }
 
-    // ---- sync: ตาราง "ตรวจสอบเอกสาร" จากรายการเอกสารของเคส (ครั้งเดียว ไม่ทับค่าที่ผู้ใช้แก้) ----
-    // รอ overview resolve ก่อน เพื่อ prefill ผลการตรวจ/หมายเหตุที่เคยบันทึกไว้ (merge ด้วย documentId)
+    // ---- sync: ตาราง "ตรวจสอบเอกสาร" จากรายการเอกสารของเคส (ครั้งเดียวต่อเคส) ----
     useEffect(() => {
         if (hasSyncedDocumentsRef.current) return;
         if (!caseDocumentData?.data) return;
-        if (caseReviewOverviewLoading) return;
 
-        formik.setFieldValue("documentChecks", mapDocumentChecks(caseDocuments, reviewByDocId), false);
+        formik.setFieldValue("documentChecks", mapDocumentChecks(caseDocuments), false);
         hasSyncedDocumentsRef.current = true;
-    }, [caseDocumentData, caseDocuments, caseReviewOverviewLoading, reviewByDocId]);
-
-    /** อัปเดตผลการตรวจ / หมายเหตุ ของเอกสารแต่ละรายการ */
-    const handleDocumentCheckChange = <TField extends keyof DocumentCheckRow>(
-        rowIndex: number,
-        field: TField,
-        value: DocumentCheckRow[TField]
-    ) => {
-        const nextRows = formik.values.documentChecks.map((row, index) =>
-            index === rowIndex ? { ...row, [field]: value } : row
-        );
-
-        formik.setFieldValue("documentChecks", nextRows);
-    };
-
-    /**
-     * สแกน/ค้นหาเอกสารแถวนั้นใหม่ : ล้างผลตรวจเดิมเฉพาะแถวนั้น เพื่อบังคับให้ตรวจซ้ำ (CR Ver2 ข้อ 4)
-     * ไม่ล้างหมายเหตุ — คงค่าเดิมไว้ตาม behavior เดิมของระบบ
-     */
-    const handleDocumentScan = (rowIndex: number) => {
-        handleDocumentCheckChange(rowIndex, "checkResult", "");
-    };
-
-    /** ตัวเลือกผลการตรวจเอกสาร (ผ่าน / ไม่ผ่าน / รอเอกสารเพิ่มเติม) จาก Master API */
-    const { data: documentReviewStatusRaw, isLoading: documentCheckResultOptionsLoading } =
-        useGetDocumentReviewStatus();
-    const documentCheckResultOptions: DocumentCheckResultOption[] = useMemo(
-        () =>
-            [...(documentReviewStatusRaw?.data ?? [])]
-                .sort((a, b) => (a.indexId ?? 0) - (b.indexId ?? 0))
-                .map((item) => ({
-                    value: item.documentReviewStatusId ?? 0,
-                    label: item.documentReviewStatusName ?? "",
-                    color:
-                        DOCUMENT_CHECK_RESULT_COLORS[item.documentReviewStatusId ?? 0] ??
-                        DOCUMENT_CHECK_RESULT_FALLBACK_COLOR,
-                })),
-        [documentReviewStatusRaw]
-    );
+    }, [caseDocumentData, caseDocuments]);
 
     return {
         caseDocumentLoading,
-        caseReviewOverviewLoading,
         documentInfoByDocId,
         documentStorageListLoading,
-        handleDocumentCheckChange,
-        handleDocumentScan,
-        documentCheckResultOptions,
-        documentCheckResultOptionsLoading,
     };
 };
 

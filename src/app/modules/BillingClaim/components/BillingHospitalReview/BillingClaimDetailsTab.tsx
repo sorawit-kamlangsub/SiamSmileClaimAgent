@@ -12,8 +12,11 @@ import { LoadingPlaceHolder } from "../../../_common";
 import useBillingReviewDetailHook from "../../hooks/BillingHospitalReview/BillingReviewDetailHook";
 import useBillingExpenseHook from "../../hooks/BillingHospitalReview/BillingExpenseHook";
 import useBillingProductVariant from "../../hooks/BillingHospitalReview/BillingProductVariantHook";
-import BillingContinuousClaimSection from "./SubDetailsTab/BillingContinuousClaimSection";
+// ซ่อน "เคลมต่อเนื่อง" และ "ข้อมูลอุบัติเหตุจากการจราจร" ออกจาก Step 1 ชั่วคราวตามที่ขอ (2026-09-22) —
+// คอมเมนต์ทั้ง import และจุด render ไว้ (ไม่ลบไฟล์/ไม่ลบ field ในฟอร์ม) เพื่อ enable กลับได้ทันทีที่ต้องการ
+// import BillingContinuousClaimSection from "./SubDetailsTab/BillingContinuousClaimSection";
 import BillingClaimInfoSection from "./SubDetailsTab/BillingClaimInfoSection";
+// import BillingTrafficAccidentSection from "./SubDetailsTab/BillingTrafficAccidentSection";
 import BillingTreatmentSection from "./SubDetailsTab/BillingTreatmentSection";
 import BillingAttendingDoctorSection from "./SubDetailsTab/BillingAttendingDoctorSection";
 import BillingDocumentTable from "./SubDetailsTab/BillingDocumentTable";
@@ -42,7 +45,6 @@ type BillingClaimDetailsTabProps = {
 const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProps) => {
     const navigate = useNavigate();
     const [activeStep, setActiveStep] = useState(0);
-    const [furthestStep, setFurthestStep] = useState(0);
 
     const {
         formik,
@@ -53,33 +55,32 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
         reviewReason,
         reviewReasonLoading,
         canSubmitReview,
-        validateStep1Documents,
         confirmStep2Amount,
         handleSubmitReviewResult,
         handleApprove,
     } = useBillingReviewDetailHook(readOnly);
     const expenseTotals = useBillingExpenseHook(formik);
-    const variant = useBillingProductVariant(formik.values.medicalTypeId);
+    const variant = useBillingProductVariant(
+        formik.values.medicalTypeId,
+        detail?.productTypeId,
+        detail?.medicalSubTypeCode
+    );
 
     const isLastStep = activeStep === steps.length - 1;
-
-    const goToStep = (next: number) => {
-        setActiveStep(next);
-        setFurthestStep((prev) => Math.max(prev, next));
-    };
 
     const handleBack = () => setActiveStep((prev) => Math.max(prev - 1, 0));
 
     const handleNext = async () => {
         if (activeStep === 0) {
-            if (!validateStep1Documents()) return;
-            goToStep(1);
+            // CR "Traffic Accident and Hospital Document Review" ข้อ CR-05 : ตัด validation ผลตรวจเอกสาร
+            // ออกจากเกทนี้แล้ว (คอลัมน์ "ผลการตรวจ" ถูกตัดออกจากตาราง) ไปต่อ Step 2 ได้ทันที
+            setActiveStep(1);
             return;
         }
         if (activeStep === 1) {
             const ok = await confirmStep2Amount(expenseTotals.totalClaimedAmount);
             if (!ok) return;
-            goToStep(2);
+            setActiveStep(2);
         }
     };
 
@@ -89,10 +90,13 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
         if (ok) navigate("/billing/hospital");
     };
 
-    /** ปุ่ม "อนุมัติ" (Step 3) */
+    /**
+     * ปุ่ม "อนุมัติ" (Step 3) — สำเร็จแล้วพารายการไปหน้า "ตั้งเบิกกองทุน" แท็บเคลมโรงพยาบาล (handoff
+     * "Business Rule: อนุมัติรายการวางบิลโรงพยาบาล" ข้อ 4/7) แทนที่จะย้อนกลับหน้าตรวจสอบรพ.วางบิลเหมือนเดิม
+     */
     const handleApproveClick = async () => {
         const ok = await handleApprove();
-        if (ok) navigate("/billing/hospital");
+        if (ok) navigate("/billing/customers?claimType=hospital");
     };
 
     const submittedDate = detail?.submittedDate?.toString();
@@ -109,29 +113,40 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                         steps={steps}
                         activeStep={activeStep}
                         onStepChange={setActiveStep}
-                        // โหมดดูอย่างเดียว (readOnly): ปุ่ม "ถัดไป" ถูกซ่อน furthestStep จึงค้างที่ 0 เสมอ —
-                        // เปิดให้กดข้าม step ได้อิสระ ไม่งั้นผู้ดูจะไปดู Step 2/3 ไม่ได้เลย
-                        isStepClickable={(index) => isReadOnly || index <= furthestStep}
+                        // โหมดแก้ไข: มีปุ่ม "กลับ"/"ถัดไป" ด้านล่างควบคุม step อยู่แล้ว ไม่ต้องกดแถบนี้ข้าม step เอง
+                        // โหมด readOnly: ปุ่ม "ถัดไป" ถูกซ่อน ต้องเปิดให้กดแถบนี้แทน ไม่งั้นจะไปดู step 2/3 ไม่ได้เลย
+                        isStepClickable={() => isReadOnly}
                     />
 
                     <Box sx={{ marginTop: "20px" }}>
                         {activeStep === 0 ? (
                             <Grid container spacing={2}>
+                                {/* ซ่อนชั่วคราว (2026-09-22) — ดูคอมเมนต์ที่ import ด้านบน
                                 <Grid item xs={12}>
                                     <BillingContinuousClaimSection
-                                        applicationId={detail?.insured?.applicationId}
+                                        applicationId={detail?.insured?.policyCode}
                                         readOnly={isReadOnly}
                                     />
                                 </Grid>
+                                */}
                                 <Grid item xs={12}>
                                     <BillingClaimInfoSection
                                         hospitalName={detail?.hospitalName}
                                         submittedDate={submittedDate}
                                         showStayDays={variant.isIpdLike}
+                                        beLabels={detail}
                                     />
                                 </Grid>
+                                {/* ซ่อนชั่วคราว (2026-09-22) — ดูคอมเมนต์ที่ import ด้านบน
                                 <Grid item xs={12}>
-                                    <BillingTreatmentSection showIpdFields={variant.isIpdLike} />
+                                    <BillingTrafficAccidentSection />
+                                </Grid>
+                                */}
+                                <Grid item xs={12}>
+                                    <BillingTreatmentSection
+                                        showIpdFields={variant.isIpdLike}
+                                        reservationRemark={detail?.reservationRemark}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <BillingAttendingDoctorSection />
@@ -147,6 +162,8 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
+                                        aplicationCode={detail?.insured?.policyCode}
+                                        productId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>
@@ -159,9 +176,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                 )}
                                 {variant.hasHospitalExpenseSummary && (
                                     <Grid item xs={12}>
-                                        <BillingHospitalExpenseSummary
-                                            originalBilledAmount={detail?.originalBilledAmount}
-                                        />
+                                        <BillingHospitalExpenseSummary totals={detail?.totals} />
                                     </Grid>
                                 )}
                                 <Grid item xs={12}>
@@ -181,6 +196,8 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         readOnly={isReadOnly}
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
+                                        aplicationCode={detail?.insured?.policyCode}
+                                        productId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>
@@ -192,6 +209,10 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         submittedDate={submittedDate}
                                         showStayDays={variant.isIpdLike}
                                         allowSeparateCompensation={variant.allowSeparateCompensation}
+                                        beLabels={detail}
+                                        caseAdjudicationId={detail?.caseAdjudicationId}
+                                        productId={detail?.productId}
+                                        productTypeId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>

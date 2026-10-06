@@ -30,6 +30,7 @@ import ChipSelector from "../ChipSelector";
 import dayjs from "dayjs";
 import ZebraCarOwnerDropDown from "../../../../_common/components/ClaimAgent/CustomDropdown/ZebraCarOwnerDropDown";
 import { claimPHSelector, DeathPlaceType, setOrganLossItems, SymptomType } from "../../../store/claimPHSlice";
+import { buildClaimSimulatePath, formatPrefillDate } from "../../../../ClaimSimulate/store/claimSimulatePrefill";
 import HospitalDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/HospitalDropdown";
 import CD10Autocomplete from "../../../../_common/components/ClaimAgent/CustomDropdown/CD10Autocomplete";
 import DocumentScanTable from "../DocumentScanTable";
@@ -37,10 +38,17 @@ import DeathClaimAmountCardPH from "./DeathClaimAmountCardPH";
 import OrganLossSelector from "../OrganLossSelector";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { useOrganLoss } from "../../../hooks/CreateClaim/useOrganLoss";
-import { CoverageType, isProductType, MedicalType, PRODUCT_TYPE_GROUP } from "../../../../../functionHelpers";
-import { useNavigate } from "react-router-dom";
+import { useDocumentRecipientRules } from "../../../hooks/CreateClaim/useDocumentRecipientRules";
+import {
+    CoverageType,
+    handleClickLink,
+    isProductType,
+    MedicalType,
+    PRODUCT_TYPE_GROUP,
+} from "../../../../../functionHelpers";
 import CoverageAndTransferBox from "../CoverageAndTransferBox";
 import ConfirmExcessLimitTransferDialog from "../ConfirmExcessLimitTransferDialog";
+import { NEW_CLAIM_DRAFT_KEY } from "../ClaimDraftProvider";
 
 export const EMPTY_STATE_SX = {
     p: 2,
@@ -85,21 +93,44 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
         getRequiredDocsByCoverageType,
         maxTransferAmount,
     } = useClaimPHForm({ onNext });
+    const { isServiceProviderDisabled, isCarOwnerDisabled } = useDocumentRecipientRules(formik);
     const { values, setFieldValue } = formik;
     const { organChoices, isOrganChoicesLoading, nonCoveredReasonData, isNonCoveredReasonLoading } = useOrganLoss(
         values.coverageTypeId
     );
     const dispatch = useAppDispatch();
-    const navigate = useNavigate();
-    const { organLossItems } = useAppSelector(claimPHSelector);
+    const { organLossItems, oldClaim } = useAppSelector(claimPHSelector);
+
+    /**
+     * DFUAT-083 : เปิดโปรแกรมคำนวณวงเงินเคลมใน tab ใหม่ (หน้าแจ้งเคลมยังเปิดค้างไว้ ข้อมูลที่กรอกไม่หาย)
+     * พร้อมส่งข้อมูล App + ข้อมูลเคลมที่กรอกในหน้านี้ไปทาง query string — หน้าคำนวณใช้เป็นค่าเริ่มต้นและใช้ยิง
+     * /calculate/caseclaim, refresh แล้วข้อมูลผู้เอาประกันไม่หาย (โหลดใหม่จาก customerDetailId)
+     */
+    const handleOpenClaimSimulate = () => {
+        handleClickLink(
+            buildClaimSimulatePath({
+                customerDetailId: insured?.customerDetailId,
+                incidentTypeId: values.incidentTypeId,
+                coverageTypeId: values.coverageTypeId,
+                medicalTypeId: values.medicalTypeId,
+                causeOfIncidentId: values.causeOfIncidentId,
+                incidentDate: formatPrefillDate(values.incidentDate),
+                admissionDate: formatPrefillDate(values.admissionDate),
+                dischargeDate: formatPrefillDate(values.dischargeDate),
+                isContinuous,
+                continuousFromClaimId: oldClaim?.claimId,
+            })
+        );
+    };
     const isMedical =
         values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate;
     const isDisability = values.coverageTypeId === CoverageType.Disability;
     const isDeath = values.coverageTypeId === CoverageType.Death;
 
     const isIPD = values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery;
+    // ค่ารักษา/ค่าชดเชย แบบ IPD/DayCase — กรอกจำนวนเงินตามรายละเอียดความคุ้มครอง (CoverageAndTransferBox)
     const isManualIPD =
-        values.coverageTypeId === CoverageType.Medical &&
+        (values.coverageTypeId === CoverageType.Medical || values.coverageTypeId === CoverageType.Compensate) &&
         (values.medicalTypeId === MedicalType.IPD || values.medicalTypeId === MedicalType.DayCaseSurgery);
     const isOPD = values.medicalTypeId === MedicalType.OPD;
     const showOcr = !!values.incidentTypeId && isMedical;
@@ -157,7 +188,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                 "dischargeDate",
                 "symptomType",
                 "chiefComplaintId",
-                "remark",
+                "illnessOrInjuryDetail",
                 "notificationDate",
                 "documentCompleteDate",
                 "deathDate",
@@ -292,6 +323,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     name="serviceProviderId"
                                     fullWidth
                                     required
+                                    disabled={isServiceProviderDisabled}
                                     selectedCallback={(item) => {
                                         formik.setFieldValue("serviceProviderName", item?.personName);
                                         formik.setFieldValue("serviceProviderCode", item?.employeeCode);
@@ -302,11 +334,12 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         <Grid item xs={12} md={4}>
                             <Box data-field-name="zebraId">
                                 <ZebraCarOwnerDropDown
-                                    firstItemText="-- เลือก --"
+                                    firstItemText="--- โปรดระบุ ---"
                                     formik={formik}
                                     name="zebraId"
                                     fullWidth
                                     required
+                                    disabled={isCarOwnerDisabled}
                                     selectedCallback={(item) => {
                                         formik.setFieldValue("zebraCode", item?.zebraCode);
                                         formik.setFieldValue("zebraNo", item?.zebraNo);
@@ -413,9 +446,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                             <RadioGroup
                                                 row
                                                 value={values.deathPlaceType}
-                                                onChange={(e) =>
-                                                    setFieldValue("deathPlaceType", Number(e.target.value))
-                                                }
+                                                onChange={(e) => {
+                                                    const nextDeathPlaceType = Number(e.target.value) as DeathPlaceType;
+                                                    setFieldValue("deathPlaceType", nextDeathPlaceType);
+                                                    // สลับสถานที่เสียชีวิตต้องล้างค่าฟิลด์ของตัวเลือกที่ไม่ได้แสดงแล้ว
+                                                    // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับตัวเลือกที่เลือกจริงตอน submit
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Hospital) {
+                                                        setFieldValue("hospitalId", undefined);
+                                                    }
+                                                    if (nextDeathPlaceType !== DeathPlaceType.Other) {
+                                                        setFieldValue("accidentPlace", undefined);
+                                                    }
+                                                }}
                                             >
                                                 <FormControlLabel
                                                     value={DeathPlaceType.Home}
@@ -473,7 +515,18 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                 <RadioGroup
                                     row
                                     value={values.symptomType}
-                                    onChange={(e) => setFieldValue("symptomType", Number(e.target.value))}
+                                    onChange={(e) => {
+                                        const nextSymptomType = Number(e.target.value) as SymptomType;
+                                        setFieldValue("symptomType", nextSymptomType);
+                                        // สลับไปมาระหว่าง "ระบุอาการ" กับ "อื่นๆ" ต้องล้างค่าของอีกฝั่งที่ไม่ได้แสดงแล้ว
+                                        // ไม่งั้นค่าเก่าจะค้างใน formik แล้วถูกส่งไปพร้อมกับฝั่งที่เลือกจริงตอน submit
+                                        if (nextSymptomType === SymptomType.ChiefComplaint) {
+                                            setFieldValue("illnessOrInjuryDetail", undefined);
+                                        } else {
+                                            setFieldValue("chiefComplaintId", undefined);
+                                            setFieldValue("chiefComplaintId_selectedText", undefined);
+                                        }
+                                    }}
                                 >
                                     <FormControlLabel
                                         value={SymptomType.ChiefComplaint}
@@ -506,6 +559,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     <Grid item xs={12} lg={9} key={index}>
                                         <CD10Autocomplete
                                             name={`diagnoses.${index}.icd10Id`}
+                                            diagnosisNo={index + 1}
                                             formik={formik}
                                             loading={isOldClaimLoading}
                                             disabled={isOldClaimLoading}
@@ -536,10 +590,10 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         )}
                         {(values.symptomType === SymptomType.Other || isDeath || isDisability) && (
                             <Grid item xs={12} lg={9}>
-                                <Box data-field-name="remark">
+                                <Box data-field-name="illnessOrInjuryDetail">
                                     <FormikTextField
-                                        name="remark"
-                                        label="หมายเหตุ"
+                                        name="illnessOrInjuryDetail"
+                                        label="รายละเอียดการเจ็บป่วย/การบาดเจ็บ"
                                         formik={formik}
                                         size="small"
                                         multiline
@@ -601,6 +655,14 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                     onBenefitAmountsChange={(value) => formik.setFieldValue("benefitAmounts", value)}
                                     onTransferAmountChange={(value) => formik.setFieldValue("transferAmount", value)}
                                     debounceMs={300}
+                                    transferAmountError={
+                                        (formik.touched.transferAmount ||
+                                            formik.submitCount > 0 ||
+                                            !!formik.values.transferAmount) &&
+                                        typeof formik.errors.transferAmount === "string"
+                                            ? formik.errors.transferAmount
+                                            : undefined
+                                    }
                                 />
                             </Grid>
                             <Grid item xs={12} mt={2}>
@@ -611,7 +673,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                                         size="large"
                                         startIcon={<CalculateIcon />}
                                         sx={{ mb: 1 }}
-                                        onClick={() => navigate("/claim-simulation")}
+                                        onClick={handleOpenClaimSimulate}
                                     >
                                         เปิดโปรแกรมคำนวณวงเงินเคลม
                                     </Button>
@@ -705,6 +767,7 @@ const ClaimFormSection: React.FC<Props> = ({ onNext }) => {
                         applicationCode={insured?.policyCode as string}
                         onOcrLoadingChange={setIsOcrLoading}
                         onDocumentIdsChange={(ids) => setOcrDocumentIds(ids)}
+                        draftKey={NEW_CLAIM_DRAFT_KEY}
                     />
                 </CustomPaper>
             )}

@@ -38,7 +38,10 @@ const useHospitalClaimStepCalculateHook = <TValues extends ClaimConsiderValues>(
 
     const buildCalculatePayload = (): CalculateCaseClaimDtoRequest => {
         const calculateDetail: CalculateCaseClaim = {
-            productId: customerDetail?.productId,
+            productId: customerDetail?.productId ?? undefined,
+            customerDetailId: customerDetail?.customerDetailId ?? undefined,
+            customerTypeCode: customerDetail?.customerTypeCode ?? undefined,
+            productName: customerDetail?.productName ?? undefined,
             coverageTypeId: formik.values.coverageTypeId,
             medicalTypeId: formik.values.medicalTypeId,
             incidentTypeId: formik.values.incidentTypeId,
@@ -54,6 +57,7 @@ const useHospitalClaimStepCalculateHook = <TValues extends ClaimConsiderValues>(
                 nonCoverAmount: item.notCovered,
                 reasonId: item.reason,
                 remark: item.remark,
+                receiptAmount: item.receiptAmount,
             })),
             disabilityList: [],
         };
@@ -65,6 +69,7 @@ const useHospitalClaimStepCalculateHook = <TValues extends ClaimConsiderValues>(
             isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId: customerDetail?.productTypeId ?? undefined,
             jsonDetail: calculateDetail,
         };
     };

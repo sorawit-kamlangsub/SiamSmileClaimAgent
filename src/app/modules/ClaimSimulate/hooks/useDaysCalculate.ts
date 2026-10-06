@@ -12,6 +12,7 @@ import {
     CalculateCaseDisability,
 } from "../../../api/coreClaimApi.client";
 import { useGetDataFromApi } from "./useGetDataFromApi";
+import { MedicalType } from "../../../functionHelpers";
 
 export interface DaysCalculateFormValues {
     claimCause: number | undefined;
@@ -32,7 +33,7 @@ export interface DaysCalculateFormValues {
 // - 1 วัน 0 ชม - 1 วัน 5 ชม 59 นาที = 1 วัน
 // - 1 วัน 6 ชม ขึ้นไป = 2 วัน
 // สรุป: ทุก 1 วัน + >=6 ชม จะปัดขึ้น 1
-const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): number => {
+export const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): number => {
     if (!admit || !discharge) return 0;
 
     const diffMinutes = dayjs(discharge).diff(dayjs(admit), "minute");
@@ -51,7 +52,52 @@ const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): nu
     return fullDays + extraDay;
 };
 
-const validate = (values: DaysCalculateFormValues) => {
+// ตรวจจำนวนวันตามประเภทการรักษา — error วันนอนแสดงที่วันที่เข้า/ออก และช่องจำนวนวันนอน
+const validateDaysByMedicalType = (
+    values: DaysCalculateFormValues,
+    bedDays: number,
+    medicalType: number | undefined,
+    errors: FormikErrors<DaysCalculateFormValues>
+) => {
+    const hasDates = !!values.admitDate && !!values.dischargeDate;
+    const ipdDays = values.ipdDays ?? 0;
+    const icuDays = values.icuDays ?? 0;
+
+    const setBedDaysError = (message: string) => {
+        errors.bedDays = message;
+        if (hasDates) {
+            errors.admitDate = message;
+            errors.dischargeDate = message;
+        }
+    };
+
+    if (medicalType === MedicalType.OPD) {
+        if (bedDays > 0) setBedDaysError("OPD วันนอนต้องเป็น 0 วัน");
+        if (ipdDays > 0) errors.ipdDays = "OPD ต้องเป็น 0 วัน";
+        if (icuDays > 0) errors.icuDays = "OPD ต้องเป็น 0 วัน";
+        return;
+    }
+
+    if (medicalType === MedicalType.IPD) {
+        if (bedDays <= 0) setBedDaysError("IPD ต้องนอนอย่างน้อย 1 วัน");
+        if (ipdDays <= 0) errors.ipdDays = "IPD ต้องมากกว่า 0 วัน";
+        return;
+    }
+
+    if (medicalType === MedicalType.DayCaseSurgery) {
+        if (bedDays <= 0) setBedDaysError("Day Case ต้องนอนอย่างน้อย 1 วัน");
+        if (icuDays <= 0) errors.icuDays = "Day Case ต้องมากกว่า 0 วัน";
+    }
+};
+
+/** ช่วงความคุ้มครองของผู้เอาประกันที่เลือก (selectedInsured.coverageFrom / coverageTo) */
+type CoveragePeriod = { coverageFrom?: Dayjs | undefined; coverageTo?: Dayjs | undefined };
+
+const validate = (
+    values: DaysCalculateFormValues,
+    medicalType: number | undefined,
+    coveragePeriod?: CoveragePeriod | null
+) => {
     const errors: FormikErrors<DaysCalculateFormValues> = {};
 
     if (!values.claimCause) {
@@ -68,6 +114,13 @@ const validate = (values: DaysCalculateFormValues) => {
 
     if (!values.dateHappen) {
         errors.dateHappen = "โปรดระบุ";
+    } else if (coveragePeriod?.coverageFrom) {
+        const dateHappen = dayjs(values.dateHappen);
+        if (dateHappen.isBefore(dayjs(coveragePeriod.coverageFrom), "day")) {
+            errors.dateHappen = "ไม่มีความคุ้มครองในวันเกิดเหตุ";
+        } else if (coveragePeriod.coverageTo && dateHappen.isAfter(dayjs(coveragePeriod.coverageTo), "day")) {
+            errors.dateHappen = "ไม่มีความคุ้มครองในวันเกิดเหตุ";
+        }
     }
 
     if (!values.admitDate) {
@@ -101,6 +154,9 @@ const validate = (values: DaysCalculateFormValues) => {
         errors.ipdDays = "จำนวนวัน IPD รวมกับ ICU ต้องเท่ากับจำนวนวันนอน";
         errors.icuDays = "จำนวนวัน IPD รวมกับ ICU ต้องเท่ากับจำนวนวันนอน";
     }
+
+    // ตรวจตามประเภทการรักษาทีหลังสุด เพื่อให้ข้อความนี้แสดงก่อน error ผลรวมวัน
+    validateDaysByMedicalType(values, bedDays, medicalType, errors);
 
     return errors;
 };
@@ -136,7 +192,7 @@ export const useDaysCalculate = () => {
             isContinuous: daysCalculate.isContinuous,
             continuousFromClaimNo: daysCalculate.continuousFromClaimNo || "",
         },
-        validate,
+        validate: (values) => validate(values, header.medicalType, selectedInsured),
         onSubmit: (values) => {
             dispatch(
                 setDaysCalculate({
@@ -213,6 +269,31 @@ export const useDaysCalculate = () => {
         prevBedDaysRef.current = days;
     }, [formik.values.dateHappen, formik.values.admitDate, formik.values.dischargeDate]);
 
+    // เปลี่ยนประเภทการรักษา → touch ช่องวัน + validate ใหม่ ให้ error แสดงทันที (ข้ามรอบ mount)
+    const isMedicalTypeMountedRef = useRef(false);
+    useEffect(() => {
+        if (!isMedicalTypeMountedRef.current) {
+            isMedicalTypeMountedRef.current = true;
+            return;
+        }
+        formik.setTouched(
+            { ...formik.touched, admitDate: true, dischargeDate: true, ipdDays: true, icuDays: true, bedDays: true },
+            true
+        );
+    }, [header.medicalType]);
+
+    // DFUAT-117 : เปลี่ยนวันที่เกิดเหตุ หรือเปลี่ยนผู้เอาประกัน → touch + validate ใหม่ ให้ error "ไม่อยู่ในช่วงความคุ้มครอง"
+    // แสดงทันทีโดยไม่ต้องรอกดถัดไป (ข้ามรอบ mount — ยังไม่เลือกผู้เอาประกันก็ยังไม่ต้องเตือน)
+    const isCoverageCheckMountedRef = useRef(false);
+    useEffect(() => {
+        if (!isCoverageCheckMountedRef.current) {
+            isCoverageCheckMountedRef.current = true;
+            return;
+        }
+        if (!selectedInsured) return;
+        formik.setFieldTouched("dateHappen", true, true);
+    }, [formik.values.dateHappen, selectedInsured?.customerDetailId]);
+
     const handleIpdDaysChange = (value: number) => {
         ipdAutoSetRef.current = true;
         formik.setFieldValue("ipdDays", value, true);
@@ -261,7 +342,9 @@ export const useDaysCalculate = () => {
             : [];
 
         const calculateDetail: CalculateCaseClaim = {
-            productId: selectedInsured?.productId,
+            productId: selectedInsured?.productId ?? undefined,
+            customerDetailId: selectedInsured?.customerDetailId ?? undefined,
+            productName: selectedInsured?.productName ?? undefined,
             coverageTypeId: header.coverageType,
             medicalTypeId: medicalTypeId,
             incidentTypeId: header.claimCause,
@@ -288,6 +371,7 @@ export const useDaysCalculate = () => {
             isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId: selectedInsured?.productTypeId ?? undefined,
             jsonDetail: calculateDetail,
         };
 
@@ -304,6 +388,28 @@ export const useDaysCalculate = () => {
             setIsCalculating(false);
         }
     };
+
+    /**
+     * DFUAT-109 : เลือกเคลมต่อเนื่องแล้ว default "วันที่เกิดเหตุ" ให้ตรงกับเคลมที่เลือกอัตโนมัติ
+     * ทำครั้งเดียวต่อการเลือกแต่ละครั้ง (จำ claimId ล่าสุดไว้) — ผู้ใช้แก้วันที่ต่อเองได้ และไม่ถูกทับตอนรายการเคลมโหลดซ้ำ
+     */
+    const selectedContinueClaim = formik.values.isContinuous
+        ? claimContinueOptions.find((opt) => opt.claimId === formik.values.continuousFromClaimNo)
+        : undefined;
+    const selectedContinueClaimId = selectedContinueClaim?.claimId;
+    const selectedContinueIncidentDate = selectedContinueClaim?.incidentDate;
+    const defaultedContinueClaimIdRef = useRef<string | undefined>(undefined);
+    useEffect(() => {
+        if (!selectedContinueClaimId) {
+            defaultedContinueClaimIdRef.current = undefined;
+            return;
+        }
+        if (defaultedContinueClaimIdRef.current === selectedContinueClaimId) return;
+        defaultedContinueClaimIdRef.current = selectedContinueClaimId;
+        const incidentDate = selectedContinueIncidentDate ? dayjs(selectedContinueIncidentDate) : undefined;
+        // sync ลง Redux ทำโดย effect ของวันที่ด้านบน (ฟัง formik.values.dateHappen)
+        if (incidentDate?.isValid()) formik.setFieldValue("dateHappen", incidentDate);
+    }, [selectedContinueClaimId, selectedContinueIncidentDate]);
 
     const handleContinuousChange = (checked: boolean) => {
         formik.setFieldValue("isContinuous", checked);

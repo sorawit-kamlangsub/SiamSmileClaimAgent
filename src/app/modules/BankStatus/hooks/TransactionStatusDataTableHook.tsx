@@ -1,5 +1,5 @@
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetInquiryDetailMonitors } from "../bankStatusCheckAPI";
+import { useGetInquiryDetail } from "../../../api/coreClaimApi";
 import dayjs from "dayjs";
 
 type TransactionStatusDataTableProp = {
@@ -7,9 +7,8 @@ type TransactionStatusDataTableProp = {
 };
 
 const useTransactionStatusDataTableHook = ({ transactionId }: TransactionStatusDataTableProp) => {
-    const { data: getInquiryDetailData, isLoading: getInquiryDetailIsLoading } = useGetInquiryDetailMonitors({
-        payTransferTransactionId: transactionId,
-    });
+    const { data: getInquiryDetailData, isLoading: getInquiryDetailIsLoading } =
+        useGetInquiryDetail(transactionId);
 
     const columns: MUIDataTableColumn[] = [
         {

@@ -1,5 +1,6 @@
-import { Box, Button, ToggleButton, ToggleButtonGroup, Tooltip, Typography } from "@mui/material";
+import { Box, Button, FormControlLabel, Radio, RadioGroup, Tooltip, Typography } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import ReceiptLongIcon from "@mui/icons-material/ReceiptLong";
 import { MUIDataTableColumn } from "mui-datatables";
@@ -8,10 +9,41 @@ import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
-import { cellAlignOptions, defaultOptionStandardDataTable, numberWithCommas } from "../../../../../functionHelpers";
+import {
+    cellAlignOptions,
+    defaultOptionStandardDataTable,
+    NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID,
+    numberWithCommas,
+} from "../../../../../functionHelpers";
 import { useGetNonCoveredReason } from "../../../../../api/coreClaimMastersApi";
 import { PENDING_BE, PENDING_BE_TOOLTIP } from "../../../store/billingPendingFields";
 import { BillingReviewFormValues } from "../../../store/billingClaim.types";
+
+const SIM_B_OPTIONS = [
+    { value: "SimB1", label: "Sim B1" },
+    { value: "SimB2", label: "Sim B2" },
+] as const;
+
+/**
+ * ตัวเลือก Sim B แบบการ์ด — ตัวที่เลือกขอบ/พื้นโทน primary, ตัวที่ไม่ได้เลือกขอบเทาอ่อน
+ * control เป็น disabled (ยังไม่มี field ใน contract — PENDING_BE_FIELDS.simBCategory) จึง override สีของ
+ * สถานะ disabled ให้ตัวที่เลือกยังเห็นชัดว่าเป็นค่าไหน แทนที่จะเทาเท่ากันทั้งคู่
+ */
+const simBOptionSx = (checked: boolean) => ({
+    m: 0,
+    pl: 0.5,
+    pr: 2,
+    py: 0.25,
+    borderRadius: 2,
+    border: "1px solid",
+    borderColor: checked ? "primary.main" : "divider",
+    bgcolor: checked ? "#E3F2FD" : "background.paper",
+    "& .MuiFormControlLabel-label.Mui-disabled": {
+        color: checked ? "#0D3D6B" : "text.disabled",
+        fontWeight: checked ? 700 : 500,
+    },
+    "& .MuiRadio-root.Mui-disabled.Mui-checked": { color: "primary.main" },
+});
 
 type BillingExpenseTableProps = {
     /** [B, C] แสดงตัวเลือก "ประเภทรายการค่าใช้จ่าย" Sim B1/B2 เหนือตาราง */
@@ -28,7 +60,10 @@ const BillingExpenseTable = ({ showSimBSelector = false }: BillingExpenseTablePr
     const formik = useFormikContext<BillingReviewFormValues>();
     const items = formik.values.expenses;
 
-    const { data: nonCoveredReasonData } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData } = useGetNonCoveredReason(
+        undefined,
+        NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID
+    );
     const nonCoveredReasonOptions = nonCoveredReasonData?.data ?? [];
     const nonCoveredReasonName = (id: number | undefined) =>
         id ? nonCoveredReasonOptions.find((o) => o.nonCoveredReasonId === id)?.nonCoveredReasonName ?? "-" : "-";
@@ -180,17 +215,26 @@ const BillingExpenseTable = ({ showSimBSelector = false }: BillingExpenseTablePr
 
             {showSimBSelector && (
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
-                        ประเภทรายการค่าใช้จ่าย
-                    </Typography>
-                    <Tooltip title={PENDING_BE_TOOLTIP} arrow>
-                        <span>
-                            <ToggleButtonGroup exclusive size="small" value={formik.values.simBCategory} disabled>
-                                <ToggleButton value="SimB1">Sim B1</ToggleButton>
-                                <ToggleButton value="SimB2">Sim B2</ToggleButton>
-                            </ToggleButtonGroup>
-                        </span>
-                    </Tooltip>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 0.5, mb: 1 }}>
+                        <Typography variant="body2" fontWeight={700}>
+                            ประเภทรายการค่าใช้จ่าย
+                        </Typography>
+                        <Tooltip title={PENDING_BE_TOOLTIP} arrow>
+                            <InfoOutlinedIcon sx={{ fontSize: 16, color: "text.secondary" }} />
+                        </Tooltip>
+                    </Box>
+                    <RadioGroup row value={formik.values.simBCategory} sx={{ gap: 1.5 }}>
+                        {SIM_B_OPTIONS.map((option) => (
+                            <FormControlLabel
+                                key={option.value}
+                                value={option.value}
+                                control={<Radio size="small" />}
+                                label={option.label}
+                                disabled
+                                sx={simBOptionSx(formik.values.simBCategory === option.value)}
+                            />
+                        ))}
+                    </RadioGroup>
                 </Box>
             )}
 
