@@ -147,10 +147,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             if (!values.incidentTypeId) errors.incidentTypeId = req;
             if (!values.coverageTypeId) errors.coverageTypeId = req;
             if (!values.medicalTypeId) errors.medicalTypeId = req;
-            if (!values.createdDate) {
-                errors.createdDate = req;
-            } else if (dayjs(values.createdDate).isAfter(today)) {
-                errors.createdDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
+            if (!values.notificationDate) {
+                errors.notificationDate = req;
+            } else if (dayjs(values.notificationDate).isAfter(today)) {
+                errors.notificationDate = "วันที่แจ้งต้องไม่เป็นวันที่อนาคต";
             }
             if (!values.documentCompleteDate) {
                 errors.documentCompleteDate = req;
@@ -434,8 +434,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             newValues.dischargeDate = dayjs(detail.dischargeDate);
             newValues.dischargeTime = parseTimeSpan(detail.dischargeTime) ?? dayjs(detail.dischargeDate);
         }
-        if (detail.createdDate) {
-            newValues.createdDate = dayjs(detail.createdDate);
+        // วันที่แจ้ง : อ่านจาก notificationDate (ค่าที่บันทึกผลพิจารณา/แบบร่างเขียนกลับ) — เคลมเก่าที่ยังไม่มีค่า fallback ไป createdDate
+        const notificationDate = detail.notificationDate ?? detail.createdDate;
+        if (notificationDate) {
+            newValues.notificationDate = dayjs(notificationDate);
         }
         if (detail.documentCompleteDate) {
             newValues.documentCompleteDate = dayjs(detail.documentCompleteDate);

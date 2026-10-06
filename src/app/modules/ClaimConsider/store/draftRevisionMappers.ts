@@ -93,6 +93,9 @@ export const mapDraftPayloadToFormValues = ({
     const dischargeTime = parseTimeSpan(c?.dischargeTime);
     if (dischargeTime) values.dischargeTime = dischargeTime;
 
+    const notificationDate = asDate(c?.notificationDate);
+    if (notificationDate) values.notificationDate = notificationDate; // วันที่แจ้ง
+
     const documentCompleteDate = asDate(c?.caseAssessment?.documentCompleteDate);
     if (documentCompleteDate) values.documentCompleteDate = documentCompleteDate;
 
@@ -101,8 +104,8 @@ export const mapDraftPayloadToFormValues = ({
     if (payload.accidentPlace !== undefined) values.accidentPlace = payload.accidentPlace;
     if (c?.illnessOrInjuryDetail !== undefined) values.detail = c.illnessOrInjuryDetail;
 
-    // RC-003 3.4 ข้อมูลกายภาพบำบัด (เคลมลูกค้า) — แบบร่างที่บันทึกก่อนมีฟิลด์นี้จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
-    // เคลมโรงพยาบาลใช้ isPhysicalTherapy ("yes" / "no") แทน — map เองใน HospitalDraftViewingHook
+    // RC-003 3.4 / RC-005 5.5 ข้อมูลกายภาพบำบัด (เคลมลูกค้า + เคลมโรงพยาบาล) — แบบร่างที่บันทึกก่อนมีฟิลด์นี้
+    // จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
     const physicalTherapy = c?.casePhysicalTherapy;
     if (physicalTherapy) {
         values.isPhysicalTherapyChecked = physicalTherapy.isPhysicalTherapy === true;

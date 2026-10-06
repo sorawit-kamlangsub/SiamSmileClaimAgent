@@ -304,21 +304,14 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                       }
                     : { isTrafficAccident: false }),
             },
-            // RC-005 5.5 ความจำเป็นทางการแพทย์ : เหตุผลส่งเฉพาะตอนเลือก "ใช่"
-            casePhysicalTherapy: formik.values.isPhysicalTherapy
-                ? {
-                      casePhysicalTherapyId: detail?.casePhysicalTherapyId,
-                      isPhysicalTherapy: formik.values.isPhysicalTherapy === "yes",
-                      physicalTherapyNecessityReasonId:
-                          formik.values.isPhysicalTherapy === "yes"
-                              ? formik.values.physicalTherapyNecessityReasonId
-                              : undefined,
-                      physicalTherapyNecessityReasonDetail:
-                          formik.values.isPhysicalTherapy === "yes"
-                              ? formik.values.physicalTherapyNecessityReasonDetail || undefined
-                              : undefined,
-                  }
-                : undefined,
+            // RC-005 5.5 ข้อมูลกายภาพบำบัด : ไม่ติ๊กแล้วเหตุผลที่ค้างไว้ไม่ถูกส่ง
+            casePhysicalTherapy: {
+                casePhysicalTherapyId: detail?.casePhysicalTherapyId,
+                isPhysicalTherapy: formik.values.isPhysicalTherapyChecked,
+                physicalTherapyNecessityReasonId: formik.values.isPhysicalTherapyChecked
+                    ? formik.values.physicalTherapyNecessityReasonId
+                    : undefined,
+            },
         },
         // ค่าดิบ — hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId
         documentChecks: formik.values.documentChecks,
@@ -606,9 +599,6 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     />
                                 </Grid>
                                 <Grid item xs={12} sx={readOnlySx}>
-                                    <TreatmentInfoSection />
-                                </Grid>
-                                <Grid item xs={12} sx={readOnlySx}>
                                     <MedicalNecessitySection />
                                 </Grid>
                                 {isAccident && (
@@ -616,6 +606,9 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         <TrafficAccidentSection />
                                     </Grid>
                                 )}
+                                <Grid item xs={12} sx={readOnlySx}>
+                                    <TreatmentInfoSection />
+                                </Grid>
                                 <Grid item xs={12} sx={readOnlySx}>
                                     <AttendingDoctorSection />
                                 </Grid>

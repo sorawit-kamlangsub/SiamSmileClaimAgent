@@ -66,20 +66,7 @@ const useHospitalDraftViewingHook = (
         // hn : เฉพาะเคลมโรงพยาบาล — mapDraftPayloadToFormValues ไม่มี field นี้ (AN/VN ตัดออกจากฟอร์มแล้ว RC-005 5.2)
         if (payload.case?.hn !== undefined) draftValues.hn = payload.case.hn;
 
-        // RC-005 5.5 ความจำเป็นทางการแพทย์ — แบบร่างที่บันทึกก่อนมีฟิลด์นี้จะไม่มีก้อนนี้ จึงไม่ทับค่าจาก detail
-        const physicalTherapy = payload.case?.casePhysicalTherapy;
-        if (physicalTherapy) {
-            draftValues.isPhysicalTherapy =
-                physicalTherapy.isPhysicalTherapy === true
-                    ? "yes"
-                    : physicalTherapy.isPhysicalTherapy === false
-                    ? "no"
-                    : "";
-            draftValues.physicalTherapyNecessityReasonId =
-                physicalTherapy.physicalTherapyNecessityReasonId ?? undefined;
-            draftValues.physicalTherapyNecessityReasonDetail =
-                physicalTherapy.physicalTherapyNecessityReasonDetail ?? "";
-        }
+        // RC-005 5.5 ข้อมูลกายภาพบำบัด : mapDraftPayloadToFormValues map isPhysicalTherapyChecked + เหตุผลให้แล้ว
 
         // RC-005 5.4 / 5.6 หมายเหตุ(ถ้ามี) + แพทย์เจ้าของไข้ + ข้อมูลอุบัติเหตุจากการจราจร
         const medicalTreatment = payload.case?.caseMedicalTreatment;
