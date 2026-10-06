@@ -6,10 +6,10 @@ import { useDispatch, useSelector } from "react-redux";
 import SearchToolbar from "../components/SearchToolbar";
 import CoverageSummaryPanel from "../components/CoverageSummaryPanel";
 import InsuredInfoCardPA from "../components/InsuredInfoCardPA";
-import { useGetCustomerBenefitDetailSearch, useGetCustomerDetailById } from "../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf, useGetCustomerDetailById } from "../../../api/coreClaimApi";
 import LinearLoading from "../../_common/components/CustomComponent/LinearLoading";
 import InsuredInfoCardPH from "../components/InsuredInfoCardPH";
-import { isProductType, PRODUCT_TYPE_GROUP, safeAtob } from "../../../functionHelpers";
+import { CoverageType, isProductType, PRODUCT_TYPE_GROUP, safeAtob } from "../../../functionHelpers";
 import PolicyBenefitSharedPanel from "../components/PolicyBenefitSharedPanel";
 
 const CheckEligibleDetailPage: React.FC = () => {
@@ -24,15 +24,26 @@ const CheckEligibleDetailPage: React.FC = () => {
 
     const { data: customerDetail, isLoading: customerDetailLoading } = useGetCustomerDetailById(customerId);
 
-    const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailSearch(
+    // formatTypeId ตามประเภทความคุ้มครอง (ค่าเดียวกับหน้าแจ้งเคลม — useClaimPAForm)
+    const formatTypeId =
+        CheckeLigibleDetails.coverageType === CoverageType.Disability
+            ? 3
+            : CheckeLigibleDetails.coverageType === CoverageType.Death
+            ? 4
+            : 7;
+
+    const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailHalf(
         customerDetail?.data?.policyCode,
         CheckeLigibleDetails.incidentDate ?? undefined,
         CheckeLigibleDetails.isContinuous ?? undefined,
         CheckeLigibleDetails.claimCause,
         CheckeLigibleDetails.coverageType,
         CheckeLigibleDetails.medicalType,
-        CheckeLigibleDetails.continuousClaim?.claimNo ?? undefined,
-        customerDetail?.data?.productTypeId === 26 ? customerDetail?.data?.customerTypeCode : undefined
+        CheckeLigibleDetails.causeOfIncident,
+        formatTypeId,
+        customerDetail?.data?.productTypeId === 26 ? customerDetail?.data?.customerTypeCode : undefined,
+        customerDetail?.data?.customerDetailId,
+        CheckeLigibleDetails.continuousClaim?.claimNo ?? undefined
     );
 
     const productId = customerDetail?.data?.productTypeId ?? 0;
