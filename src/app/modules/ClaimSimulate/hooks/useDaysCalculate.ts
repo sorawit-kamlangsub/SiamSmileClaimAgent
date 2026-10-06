@@ -90,7 +90,14 @@ const validateDaysByMedicalType = (
     }
 };
 
-const validate = (values: DaysCalculateFormValues, medicalType: number | undefined) => {
+/** ช่วงความคุ้มครองของผู้เอาประกันที่เลือก (selectedInsured.coverageFrom / coverageTo) */
+type CoveragePeriod = { coverageFrom?: Dayjs | undefined; coverageTo?: Dayjs | undefined };
+
+const validate = (
+    values: DaysCalculateFormValues,
+    medicalType: number | undefined,
+    coveragePeriod?: CoveragePeriod | null
+) => {
     const errors: FormikErrors<DaysCalculateFormValues> = {};
 
     if (!values.claimCause) {
@@ -107,6 +114,13 @@ const validate = (values: DaysCalculateFormValues, medicalType: number | undefin
 
     if (!values.dateHappen) {
         errors.dateHappen = "โปรดระบุ";
+    } else if (coveragePeriod?.coverageFrom) {
+        const dateHappen = dayjs(values.dateHappen);
+        if (dateHappen.isBefore(dayjs(coveragePeriod.coverageFrom), "day")) {
+            errors.dateHappen = "ไม่มีความคุ้มครองในวันเกิดเหตุ";
+        } else if (coveragePeriod.coverageTo && dateHappen.isAfter(dayjs(coveragePeriod.coverageTo), "day")) {
+            errors.dateHappen = "ไม่มีความคุ้มครองในวันเกิดเหตุ";
+        }
     }
 
     if (!values.admitDate) {
@@ -178,7 +192,7 @@ export const useDaysCalculate = () => {
             isContinuous: daysCalculate.isContinuous,
             continuousFromClaimNo: daysCalculate.continuousFromClaimNo || "",
         },
-        validate: (values) => validate(values, header.medicalType),
+        validate: (values) => validate(values, header.medicalType, selectedInsured),
         onSubmit: (values) => {
             dispatch(
                 setDaysCalculate({
@@ -267,6 +281,18 @@ export const useDaysCalculate = () => {
             true
         );
     }, [header.medicalType]);
+
+    // DFUAT-117 : เปลี่ยนวันที่เกิดเหตุ หรือเปลี่ยนผู้เอาประกัน → touch + validate ใหม่ ให้ error "ไม่อยู่ในช่วงความคุ้มครอง"
+    // แสดงทันทีโดยไม่ต้องรอกดถัดไป (ข้ามรอบ mount — ยังไม่เลือกผู้เอาประกันก็ยังไม่ต้องเตือน)
+    const isCoverageCheckMountedRef = useRef(false);
+    useEffect(() => {
+        if (!isCoverageCheckMountedRef.current) {
+            isCoverageCheckMountedRef.current = true;
+            return;
+        }
+        if (!selectedInsured) return;
+        formik.setFieldTouched("dateHappen", true, true);
+    }, [formik.values.dateHappen, selectedInsured?.customerDetailId]);
 
     const handleIpdDaysChange = (value: number) => {
         ipdAutoSetRef.current = true;

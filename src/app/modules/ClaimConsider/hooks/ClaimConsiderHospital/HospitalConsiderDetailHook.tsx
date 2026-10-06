@@ -3,7 +3,7 @@ import { useParams } from "react-router-dom";
 import { useFormik, FormikErrors, FormikTouched } from "formik";
 import dayjs from "dayjs";
 import { useAppDispatch } from "../../../../../redux";
-import { CoverageType, MedicalType, safeAtob } from "../../../../functionHelpers";
+import { CoverageType, IncidentType, MedicalType, safeAtob } from "../../../../functionHelpers";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../api/coreClaimApi";
 import { setEnabled } from "../../../CreatedClaim/store/claimPHSlice";
 import {
@@ -54,12 +54,10 @@ export interface HospitalConsiderValues extends ClaimConsiderValues {
     reservationRemark: string;
 
     /**
-     * RC-005 5.5 ความจำเป็นทางการแพทย์ (case.casePhysicalTherapy)
-     * isPhysicalTherapy : "" = ยังไม่เลือก / "yes" / "no" — ใช่ ต้องเลือกเหตุผลจาก master necessity-reason
+     * RC-005 5.5 ข้อมูลกายภาพบำบัด (case.casePhysicalTherapy) — ใช้ isPhysicalTherapyChecked ของ ClaimConsiderValues
+     * (Checkbox ชุดเดียวกับเคลมลูกค้า) ติ๊กแล้วต้องเลือกเหตุผลจาก master necessity-reason
      */
-    isPhysicalTherapy: "" | "yes" | "no";
     physicalTherapyNecessityReasonId: number | undefined;
-    physicalTherapyNecessityReasonDetail: string;
 
     /**
      * RC-005 5.6 ข้อมูลอุบัติเหตุจากการจราจร (case.caseMedicalTreatment) — แสดงเฉพาะเหตุของการเคลม = อุบัติเหตุ
@@ -104,7 +102,7 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     dischargeTime: undefined,
     // ชีทระบุ Default = วันที่ปัจจุบัน
     documentCompleteDate: dayjs(),
-    createdDate: undefined,
+    notificationDate: undefined,
     ipdDays: 0,
     icuDays: 0,
     totalDays: 0,
@@ -129,11 +127,8 @@ const buildInitialValues = (): HospitalConsiderValues => ({
     hn: "",
     reservationRemark: "",
 
-    // ของเคลมลูกค้า (RC-003 3.4) — เคลมโรงพยาบาลใช้ isPhysicalTherapy ด้านล่างแทน ใส่ไว้ให้ครบ type เท่านั้น
     isPhysicalTherapyChecked: false,
-    isPhysicalTherapy: "",
     physicalTherapyNecessityReasonId: undefined,
-    physicalTherapyNecessityReasonDetail: "",
 
     trafficVehicleTypeId: undefined,
     trafficOtherVehicleType: "",
@@ -156,7 +151,7 @@ const FIELD_ERROR_ORDER = [
     "coverageTypeId",
     "medicalTypeId",
     "causeOfIncidentId",
-    "createdDate",
+    "notificationDate",
     "documentCompleteDate",
     "incidentDate",
     "admissionDate",
@@ -165,9 +160,11 @@ const FIELD_ERROR_ORDER = [
     "chiefComplaintId",
     "diagnoses",
     "ipdDays",
-    "hn",
-    "isPhysicalTherapy",
     "physicalTherapyNecessityReasonId",
+    "trafficVehicleTypeId",
+    "trafficAccidentPersonRoleId",
+    "trafficHasCompulsoryInsuranceExcess",
+    "hn",
     "doctorLicenseNo",
     "doctorName",
     "decisionReasonId",
@@ -193,7 +190,7 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
     if (isMedical && !values.medicalTypeId) errors.medicalTypeId = sel;
     if (isCause && !values.causeOfIncidentId) errors.causeOfIncidentId = sel;
 
-    if (!values.createdDate) errors.createdDate = req;
+    if (!values.notificationDate) errors.notificationDate = req;
     if (!values.documentCompleteDate) errors.documentCompleteDate = req;
     if (!values.incidentDate) errors.incidentDate = req;
     if (!values.admissionDate) errors.admissionDate = req;
@@ -222,10 +219,16 @@ const validateHospitalConsider = (values: HospitalConsiderValues): FormikErrors<
         if (!values.ipdDays || values.ipdDays < 1) errors.ipdDays = req;
     }
 
-    // ── ความจำเป็นทางการแพทย์ (RC-005 5.5) : บังคับเลือก ใช่/ไม่ใช่ — ใช่ ต้องเลือกเหตุผลด้วย ──
-    if (!values.isPhysicalTherapy) errors.isPhysicalTherapy = sel;
-    if (values.isPhysicalTherapy === "yes" && !values.physicalTherapyNecessityReasonId) {
+    // ── ข้อมูลกายภาพบำบัด (RC-005 5.5) : ติ๊ก "เป็นการกายภาพบำบัด" แล้วต้องเลือกความจำเป็นทางการแพทย์ ──
+    if (values.isPhysicalTherapyChecked && !values.physicalTherapyNecessityReasonId) {
         errors.physicalTherapyNecessityReasonId = sel;
+    }
+
+    // ── ข้อมูลอุบัติเหตุจากการจราจร (RC-005 5.6) : บังคับครบ 3 หัวข้อ เฉพาะเหตุของการเคลม = อุบัติเหตุ (Section แสดงเฉพาะกรณีนี้) ──
+    if (values.incidentTypeId === IncidentType.Accident) {
+        if (!values.trafficVehicleTypeId) errors.trafficVehicleTypeId = sel;
+        if (!values.trafficAccidentPersonRoleId) errors.trafficAccidentPersonRoleId = sel;
+        if (values.trafficHasCompulsoryInsuranceExcess === undefined) errors.trafficHasCompulsoryInsuranceExcess = sel;
     }
 
     // ── แพทย์เจ้าของไข้ ──
@@ -479,8 +482,10 @@ const useHospitalConsiderDetailHook = () => {
                 false
             );
         }
-        if (detail.createdDate) {
-            formik.setFieldValue("createdDate", dayjs(detail.createdDate), false);
+        // วันที่แจ้ง : อ่านจาก notificationDate (ค่าที่บันทึกผลพิจารณา/แบบร่างเขียนกลับ) — เคลมเก่าที่ยังไม่มีค่า fallback ไป createdDate
+        const notificationDate = detail.notificationDate ?? detail.createdDate;
+        if (notificationDate) {
+            formik.setFieldValue("notificationDate", dayjs(notificationDate), false);
         }
         if (detail.documentCompleteDate) {
             formik.setFieldValue("documentCompleteDate", dayjs(detail.documentCompleteDate), false);
@@ -516,11 +521,7 @@ const useHospitalConsiderDetailHook = () => {
 
         // ---- DFUAT-069 : default ความจำเป็นทางการแพทย์ / อุบัติเหตุจากการจราจร จาก SmileConnect ----
         // (GetClaimDetailConsider ส่งมาแล้ว ยกเว้น "เป็นส่วนเกิน พ.ร.บ." กับ "รายละเอียดเพิ่มเติม" ที่ยังไม่มีใน response)
-        formik.setFieldValue(
-            "isPhysicalTherapy",
-            detail.isPhysicalTherapy === true ? "yes" : detail.isPhysicalTherapy === false ? "no" : "",
-            false
-        );
+        formik.setFieldValue("isPhysicalTherapyChecked", detail.isPhysicalTherapy === true, false);
         formik.setFieldValue(
             "physicalTherapyNecessityReasonId",
             detail.physicalTherapyNecessityReasonId ?? undefined,

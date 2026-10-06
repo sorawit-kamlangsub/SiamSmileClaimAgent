@@ -337,7 +337,7 @@ export const useClaimPAForm = ({ onNext }: Options) => {
             const createCaseRegistration: LocalCaseRegistration[] = [
                 {
                     tempCaseId,
-                    notificationDate: isDeath || isDisability ? values.notificationDate : undefined,
+                    notificationDate: isDeath || isDisability ? values.notificationDate : dayjs(),
                     notifyBy: userProfile?.fullName,
                     initialCoverageTypeId: values.coverageTypeId,
                     initialCaseAmount: values.transferAmount ?? 0,

@@ -41,7 +41,8 @@ const ClaimInformationSection = ({ values, createdClaimDate }: ClaimInformationS
             <CustomDisplayText label="เหตุของการเคลม" value={values.incidentTypeName} />
             <CustomDisplayText label="ประเภทความคุ้มครอง" value={values.coverageTypeName} />
             <CustomDisplayText label="ประเภทการรักษา" value={values.medicalTypeName} />
-            <CustomDisplayText label="วันที่แจ้งเคลม" value={formatDate(createdClaimDate)} />
+            {/* วันที่แจ้ง : ค่าในฟอร์ม (ผู้ใช้แก้ได้ใน Step 1) ก่อน แล้วค่อย fallback ไปค่าจาก server */}
+            <CustomDisplayText label="วันที่แจ้งเคลม" value={formatDate(values.notificationDate ?? createdClaimDate)} />
             <CustomDisplayText label="วันที่เกิดเหตุ" value={formatDate(values.incidentDate)} />
             <CustomDisplayText label="เวลาที่เกิดเหตุ" value={formatTime(values.incidentTime)} />
             <CustomDisplayText label="วันที่เข้า รพ." value={formatDate(values.admissionDate)} />

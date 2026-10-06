@@ -1,5 +1,6 @@
 import { Box, Divider, Stack, Typography, useMediaQuery } from "@mui/material";
 import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { useFormikContext } from "formik";
 
 import CollapsibleSection from "./CollapsibleSection";
@@ -18,15 +19,28 @@ const compulsoryInsuranceExcessOptions = [
  */
 export const isOtherVehicleTypeName = (name: string | undefined) => !!name?.includes("อื่น");
 
+/** master ผู้ขับขี่/ผู้โดยสารยังไม่มี flag บอกว่าแถวไหนคือ "ผู้ขับขี่" — ใช้ชื่อตัวเลือกแทน (แสดงคำเตือนผลตรวจแอลกอฮอล์) */
+const isDriverRoleName = (name: string | undefined) => !!name?.includes("ขับขี่");
+
 type TrafficAccidentColumnProps = {
     title: string;
+    /** ชื่อ field ของ formik — ใช้เลื่อนหน้าจอไปยัง error แรก (FIELD_ERROR_ORDER) */
+    fieldName: string;
     children: React.ReactNode;
 };
 
-/** คอลัมน์เดียวของ Section — หัวข้อ + ตัวเลือกชิดด้านบน (layout เดียวกับ BillingTrafficAccidentSection) */
-const TrafficAccidentColumn = ({ title, children }: TrafficAccidentColumnProps) => (
-    <Box sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1, minWidth: 0 }}>
-        <Typography sx={{ fontSize: "15px", fontWeight: 700, color: "text.secondary", mb: "8px" }}>{title}</Typography>
+/** คอลัมน์เดียวของ Section — หัวข้อ (บังคับเลือก) + ตัวเลือกชิดด้านบน (layout เดียวกับ BillingTrafficAccidentSection) */
+const TrafficAccidentColumn = ({ title, fieldName, children }: TrafficAccidentColumnProps) => (
+    <Box
+        data-field-name={fieldName}
+        sx={{ display: "flex", flexDirection: "column", alignItems: "flex-start", flex: 1, minWidth: 0 }}
+    >
+        <Typography sx={{ fontSize: "15px", fontWeight: 700, color: "text.secondary", mb: "8px" }}>
+            {title}{" "}
+            <Typography component="span" color="error">
+                *
+            </Typography>
+        </Typography>
         {children}
     </Box>
 );
@@ -34,7 +48,7 @@ const TrafficAccidentColumn = ({ title, children }: TrafficAccidentColumnProps) 
 /**
  * RC-005 5.6 Section "ข้อมูลอุบัติเหตุจากการจราจร" — ส่งเป็น case.caseMedicalTreatment
  * ชุดช่องเดียวกับหน้าวางบิล (BillingTrafficAccidentSection) แต่แก้ไขได้ และตัวเลือกมาจาก master
- * แสดงเฉพาะเมื่อ "เหตุของการเคลม" เป็นอุบัติเหตุ (parent เป็นคนคุม) — ไม่บังคับกรอก
+ * แสดงเฉพาะเมื่อ "เหตุของการเคลม" เป็นอุบัติเหตุ (parent เป็นคนคุม) — บังคับเลือกครบ 3 หัวข้อ (validateHospitalConsider)
  */
 const TrafficAccidentSection = () => {
     const formik = useFormikContext<HospitalConsiderValues>();
@@ -48,14 +62,22 @@ const TrafficAccidentSection = () => {
         (item) => item.trafficVehicleTypeId === formik.values.trafficVehicleTypeId
     );
 
+    const selectedPersonRole = personRoleData?.data?.find(
+        (item) => item.trafficAccidentPersonRoleId === formik.values.trafficAccidentPersonRoleId
+    );
+
     return (
-        <CollapsibleSection title="ข้อมูลอุบัติเหตุจากการจราจร" icon={<DirectionsCarIcon sx={{ fontSize: 27 }} />}>
+        <CollapsibleSection
+            title="ข้อมูลอุบัติเหตุจากการจราจร"
+            subtitle="ข้อมูลประกอบการพิจารณาสิทธิ์จากอุบัติเหตุทางถนน"
+            icon={<DirectionsCarIcon sx={{ fontSize: 27 }} />}
+        >
             <Stack
                 direction={isNarrow ? "column" : "row"}
                 divider={<Divider orientation={isNarrow ? "horizontal" : "vertical"} flexItem />}
                 spacing={isNarrow ? 2.5 : 3}
             >
-                <TrafficAccidentColumn title="ประเภทยานพาหนะ">
+                <TrafficAccidentColumn title="ประเภทยานพาหนะ" fieldName="trafficVehicleTypeId">
                     <FormikRadioGroup
                         name="trafficVehicleTypeId"
                         data={vehicleTypes}
@@ -75,7 +97,7 @@ const TrafficAccidentSection = () => {
                     )}
                 </TrafficAccidentColumn>
 
-                <TrafficAccidentColumn title="ผู้ขับขี่ หรือ ผู้โดยสาร">
+                <TrafficAccidentColumn title="ผู้ขับขี่ หรือ ผู้โดยสาร" fieldName="trafficAccidentPersonRoleId">
                     <FormikRadioGroup
                         name="trafficAccidentPersonRoleId"
                         data={personRoleData?.data ?? []}
@@ -83,9 +105,17 @@ const TrafficAccidentSection = () => {
                         displayFieldName="trafficAccidentPersonRoleName"
                         formik={formik}
                     />
+                    {isDriverRoleName(selectedPersonRole?.trafficAccidentPersonRoleName) && (
+                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
+                            <InfoOutlinedIcon sx={{ color: "warning.main" }} />
+                            <Typography color="text.secondary" fontSize={14}>
+                                กรุณาตรวจสอบผลตรวจแอลกอฮอล์ประกอบการพิจารณาเคลม
+                            </Typography>
+                        </Stack>
+                    )}
                 </TrafficAccidentColumn>
 
-                <TrafficAccidentColumn title="เป็นส่วนเกิน พ.ร.บ.">
+                <TrafficAccidentColumn title="เป็นส่วนเกิน พ.ร.บ." fieldName="trafficHasCompulsoryInsuranceExcess">
                     <FormikRadioGroup
                         name="trafficHasCompulsoryInsuranceExcess"
                         data={compulsoryInsuranceExcessOptions}
