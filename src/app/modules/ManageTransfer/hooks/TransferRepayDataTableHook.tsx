@@ -2,7 +2,7 @@ import { MUIDataTableColumn } from "mui-datatables";
 import { numberWithCommas } from "../../../functionHelpers";
 import { Box, IconButton } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
-import { useRefundDataTable } from "../repayAPI";
+import { useGetFailedPayTransferMonitor } from "../../../api/coreClaimApi";
 import { useAppSelector } from "../../../../redux";
 import { PaginationSortableDto } from "../../_common";
 import { useState } from "react";
@@ -14,11 +14,13 @@ const useTransferRepayDataTableHook = () => {
         recordsPerPage: 10,
     });
     const { searchRepay: searchRefund } = useAppSelector((state) => state.repay);
-    const { data: refundDataTableData, isLoading: refundDataTableIsLoading } = useRefundDataTable({
-        searchDetail: searchRefund.searchDetail,
-        page: paginated.page,
-        recordsPerPage: paginated.recordsPerPage,
-    });
+    const { data: refundDataTableData, isLoading: refundDataTableIsLoading } = useGetFailedPayTransferMonitor(
+        searchRefund.searchDetail,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
 
     const columns: MUIDataTableColumn[] = [
         {

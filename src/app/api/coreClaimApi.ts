@@ -171,6 +171,53 @@ export const useIncreaseTransferLimitChangeStatus = (
     );
 };
 
+// ---- แก้ไขการโอนเงิน (ClaimFund / FailedPayTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+const getFailedPayTransferMonitorQueryKey = ["getFailedPayTransferMonitor"];
+const getFailedPayTransferDetailQueryKey = ["getFailedPayTransferDetail"];
+
+export const useGetFailedPayTransferMonitor = (
+    searchDetail?: string,
+    orderingField?: string,
+    ascendingOrder?: boolean,
+    page?: number,
+    recordsPerPage?: number
+) => {
+    return useQuery(
+        [
+            getFailedPayTransferMonitorQueryKey,
+            searchDetail,
+            orderingField,
+            ascendingOrder,
+            page,
+            recordsPerPage,
+        ],
+        () =>
+            claimFundClient.failedPayTransferTransactionMonitor(
+                searchDetail,
+                orderingField,
+                ascendingOrder,
+                page,
+                recordsPerPage
+            ),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetFailedPayTransferDetail = (payTransferTransactionId: string) => {
+    return useQuery(
+        [getFailedPayTransferDetailQueryKey, payTransferTransactionId],
+        () => claimFundClient.failedPayTransferTransactionDetail(payTransferTransactionId),
+        {
+            enabled: !!payTransferTransactionId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
 /**
  * ล้าง cache ของ query ที่ได้รับผลกระทบจากการบันทึก/พิจารณาเคลม (ใช้ร่วมกันทั้งเคลมลูกค้าและเคลม รพ.
  * เพราะ mutation ชุดนี้ใช้ผ่าน useClaimDetailActionHook เหมือนกันทั้งสอง flow)
