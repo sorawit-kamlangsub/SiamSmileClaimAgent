@@ -19,7 +19,7 @@ type DialogSearchClaimProps = {
 const DialogSearchClaim = ({
     buttonText,
     showRefundStatusHint = false,
-    searchLabel = "กรุณากรอกเลขที่ CPG / CL",
+    searchLabel = "กรุณากรอกเลขที่ CL / CC",
 }: DialogSearchClaimProps) => {
     const { dialogRefund } = useAppSelector((state) => state.refund);
     const [searchResult, setSearchResult] = useState<any>(null);
