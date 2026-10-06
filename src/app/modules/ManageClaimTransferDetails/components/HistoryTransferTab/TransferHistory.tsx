@@ -43,6 +43,7 @@ const TransferHistory = () => {
                             data={payTransferDetails}
                             paginated={pagination}
                             setPaginated={setPaginated}
+                            color="primary"
                         />
                     </Paper>
                 </Grid>
@@ -56,6 +57,7 @@ const TransferHistory = () => {
                             data={refundHistoryDetails}
                             paginated={refundPaginated}
                             setPaginated={setRefundPaginated}
+                            color="primary"
                         />
                     </Paper>
                 </Grid>
