@@ -100,14 +100,16 @@
 |---|---|---|
 | `Refund/*` | Refund / RefundApprove | `Refund/refundAPI.ts`, `refundApproveAPI.ts` |
 | `Inquiry/*` | BankStatus (สอบถามธนาคาร) | `BankStatus/bankStatusCheckAPI.ts` |
-| `AdditionalTransfer/*` | AdjustTransfer | `AdjustTransfer/adjustTransferMonitorAPI.ts` |
+| `AdditionalTransfer/*` | AdjustTransfer (โอนเพิ่ม) | **`api/coreClaimApi.ts`** — ผ่าน `claimFundClient` (CodeGen `ClaimFundClient` + `VITE_API_URL`): `useGetAdditionalTransferMonitor`, `useGetAdditionalTransferAccountDetail`, `useGetAdditionalTransferDetails`, `useGetAdjustmentReasons`, `useGetClaimTransactions`, `useGetTransferHistory`, `useSaveAdditionalTransfer` + `useSearchClaimOrCase` (dialog search ใช้ร่วมกับ Refund) — เดิมเคยใช้ `AdjustTransfer/adjustTransferMonitorAPI.ts` (ลบแล้ว) |
 | `FailedPayTransfer/*` | ManageTransfer | `ManageTransfer/repayAPI.ts` (`/FailTransfer/...` — ดูข้อสังเกตด้านล่าง) |
 | `Setting/*` | ManageClaimFund | `ManageClaimFund/manageClaimFundAPI.ts` |
 | `IncreaseTransfer/*` | — | `increaseLimitTransferAPI.ts` ยังว่าง (รอเชื่อม) |
-| คุม base | — | `Const.ts`: `APIGW_CLAIM_FUND_API_URL` = `.../api/ClaimFund` (env `VITE_APIGW_CLAIM_FUND_API_URL`) |
+| คุม base | — | `Const.ts`: `APIGW_CLAIM_FUND_API_URL` = `.../api/ClaimFund` (env `VITE_APIGW_CLAIM_FUND_API_URL`); `API_URL` = `VITE_API_URL` (ใช้โดย `api/coreClaimApi.ts` claimFundClient) |
+
+> ⚠️ **`GetPaymentStatuses` (Masters) ที่ dropdown หน้าโอนเพิ่ม/โอนคืน ยังไม่มา CodeGen** — ใช้ `IncreaseLimitTransfer/_common/masterAPI.ts` `useGetPaymentStatus` → `${APIGW_URL}/claim/core/ClaimFund/Masters/GetPaymentStatuses` (base `APIGW_URL` = `VITE_APIGW_BASEURL`, ต่อ `/claim/core` แล้ว `/ClaimFund` อีกทอด) — ต่างจาก `api/coreClaimMastersApi.ts` `useGetPaymentStatus` ที่ใช้ `VITE_API_URL`
 
 ## ข้อสังเกต/กับดัก
 - Path ใน swagger เป็น `/api/ClaimFund/Inquiry/InquiryMonitors` → base ฝั่งโค้ดคือ `APIGW_CLAIM_FUND_API_URL` (env มี `/api/ClaimFund` ครบ) แล้วต่อ `/Inquiry/...`
 - `Page` (ตัวพิมพ์ใหญ่) ใน query — frontend ต้องส่งให้ตรง pattern นี้
 - `ManageTransfer/repayAPI.ts` โค้ดชี้ `/FailTransfer/...` แต่ swagger ใช้ชื่อ controller `FailedPayTransfer` — ต้องยืนยัน 2 อย่างว่ากันคนละ resource หรือ mapping กัน (เคยลงไว้ใน `.opencode-ai/ClaimFundAdditionalTransfer.md`)
-- `coreClaimApi.client.ts` (generated) มี class ClaimFundApi จาก swagger ของ APIGW แต่ไม่ถูก instantiate — โค้ดใช้ raw axios เองทั้งหมด
+- `coreClaimApi.client.ts` (generated) — ข้อความเดิม "มี class แต่ไม่ถูก instantiate / โค้ดใช้ raw axios เองทั้งหมด" **เก่าแล้ว**: flow **โอนเพิ่ม** ใช้ `claimFundClient = new ClaimFundClient(API_URL, axios)` (`coreClaimApi.ts:29`) + wrapper hooks แล้ว; โมดูลอื่น (Refund, BankStatus, ManageTransfer, ManageClaimFund, Survey) ยังใช้ raw axios อยู่

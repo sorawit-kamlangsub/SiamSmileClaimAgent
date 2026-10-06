@@ -10,7 +10,7 @@ import {
     useCaseRefundApproveUpdateStatus,
     useGetCaseRefundApproveDetail,
     useGetCaseRefundRejectReasons,
-} from "../../Refund/refundAPI";
+} from "../../../api/coreClaimApi";
 import { RefundApproveMonitorRow } from "../hooks/RefundApproveDataTableHook";
 
 type ApproveRefundDialogProps = {
@@ -23,29 +23,6 @@ type ApproveRefundDialogProps = {
 type ApproveRefundDialogFormValues = {
     rejectReasonId: number | undefined;
     note: string;
-};
-
-type ApproveRefundCaseDetail = {
-    caseId?: string;
-    caseNo?: string;
-    customerName?: string;
-    coverageTypeNameTH?: string;
-    totalNetPaidAmount?: number;
-    additionalAmount?: number;
-};
-
-type ApproveRefundDetail = {
-    caseRefundId?: string;
-    claimNo?: string;
-    customerName?: string;
-    createdBy?: string;
-    countItem?: number;
-    refundCount?: number;
-    remainingAmount?: number;
-    totalNetPaidAmount?: number;
-    totalRefundAmount?: number;
-    claimId?: string;
-    caseDetails?: ApproveRefundCaseDetail[];
 };
 
 const defaultValues: ApproveRefundDialogFormValues = {
@@ -71,9 +48,9 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
     const isPdfSlip = slipFileUrl.toLowerCase().endsWith(".pdf");
     const slipSrc = isPdfSlip ? `${slipFileUrl}#zoom=50` : slipFileUrl;
 
-    const detail = refundDetailRes?.data as ApproveRefundDetail | undefined;
+    const detail = refundDetailRes?.data;
     const caseRefundId = detail?.caseRefundId ?? caseId;
-    const reasonOptions = (refundReasonsRes?.data ?? []) as { id: number; name: string }[];
+    const reasonOptions = refundReasonsRes?.data ?? [];
 
     const handleUpdateStatusSuccess = () => {
         setIsSubmitting(false);
@@ -142,10 +119,8 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
     };
 
     const handleOpenSlip = () => {
-        if (row?.refundNo) {
-            setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
-            setOpenSlipDialog(true);
-        }
+        setSlipFileUrl("https://docstorage.uatsiamsmile.com/files/2026/9/18/DOCST202691809034424712.pdf");
+        setOpenSlipDialog(true);
     };
 
     const handleRejectClick = async () => {
@@ -257,7 +232,7 @@ const ApproveRefundDialog = ({ open, row, onClose, mode = "approve" }: ApproveRe
                             <Grid item xs={12} sm={6} md={4}>
                                 <Typography sx={{ fontSize: "0.75rem", color: "#757575" }}>ชื่อ - สกุล ผู้เอาประกัน :</Typography>
                                 <Typography sx={{ mt: 0.5, fontWeight: 600, color: "#1565C0" }}>
-                                    {detail?.customerName ?? row?.customerName ?? "-"}
+                                    {detail?.insuredName ?? row?.customerName ?? "-"}
                                 </Typography>
                             </Grid>
                             <Grid item xs={12} sm={6} md={4}>

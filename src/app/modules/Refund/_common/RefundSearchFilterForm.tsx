@@ -6,7 +6,7 @@ import { FormikDropdown, FormikTextField } from "../../_common";
 import FormikDatePicker from "../../_common/components/CustomFormik/FormikDatePicker";
 import BranchAutocomplete from "../../_common/components/ClaimAgent/CustomDropdown/ฺBranchAutocomplete";
 import dayjs, { Dayjs } from "dayjs";
-import { useGetRefundStatus } from "../refundAPI";
+import { useGetRefundStatus } from "../../../api/coreClaimApi";
 
 const currentDate = dayjs();
 

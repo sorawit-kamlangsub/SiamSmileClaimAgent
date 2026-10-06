@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { useGetTransferHistory } from "../../adjustClaimAPI";
+import { useGetTransferHistory } from "../../../../api/coreClaimApi";
 import { useMemo, useState } from "react";
 import { PaginationResultDto, PaginationSortableDto } from "../../../_common";
 const useTransferHistoryHook = () => {
@@ -8,7 +8,14 @@ const useTransferHistoryHook = () => {
         recordsPerPage: 10,
     });
     const { id = "" } = useParams();
-    const { data: transferHistoryData, isLoading: isTransferHistoryLoading } = useGetTransferHistory(id, paginated);
+    const { data: transferHistoryData, isLoading: isTransferHistoryLoading } = useGetTransferHistory(
+        id,
+        undefined,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
 
     const pagination: PaginationResultDto = useMemo(
         () => ({

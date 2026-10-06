@@ -3,13 +3,17 @@ import HistoryTableCard from "./HistoryTableCard";
 import useTransferHistoryHook from "../../hooks/Adjust/TransferHistoryTransferHook";
 import { useState } from "react";
 import { PaginationSortableDto } from "../../../_common";
-import { usePayTransferHistoryColumns, useRefundHistoryColumns } from "../../hooks/HistoryTable/HistoryTransferHook";
+import {
+    PayTransferDetail,
+    usePayTransferHistoryColumns,
+    useRefundHistoryColumns,
+} from "../../hooks/HistoryTable/HistoryTransferHook";
 
 const TransferHistory = () => {
     const { transferHistoryData, pagination, setPaginated, isTransferHistoryLoading } = useTransferHistoryHook();
 
     const payTransferDetails = transferHistoryData?.data?.payTransferDetails ?? [];
-    const refundHistoryDetails = transferHistoryData?.data?.refundHistoryDetails ?? [];
+    const refundHistoryDetails: PayTransferDetail[] = [];
 
     const [refundPaginated, setRefundPaginated] = useState<PaginationSortableDto>({
         page: 1,

@@ -56,7 +56,7 @@
 
 ### เสร็จแล้ว: หน้า `/manage/refund/detail` — เชื่อม API `Refund/CreateCaseRefund` ✅
 - ปุ่ม "แจ้งคืนเงิน" (`ManageRefundDetailPage.tsx` → `formik.handleSubmit()`) ยิง API จริงแทน mock แล้ว:
-  - `Refund/refundAPI.ts`: เพิ่ม `useCreateCaseRefund(onSuccess, onError)` + `createCaseRefund()` → `POST {APIGW_CLAIM_FUND_API_URL}/Refund/CreateCaseRefund` (mirror `useSaveAdjustTransfer` ใน `adjustClaimAPI.ts`)
+  - `Refund/refundAPI.ts`: เพิ่ม `useCreateCaseRefund(onSuccess, onError)` + `createCaseRefund()` → `POST {APIGW_CLAIM_FUND_API_URL}/Refund/CreateCaseRefund` (mirror `useSaveAdditionalTransfer` ใน `api/coreClaimApi.ts` — `adjustClaimAPI.ts` ตัวเดิมถูกลบไปแล้ว)
   - `ManageRefundDetailHook.tsx`: เลิก mock `mutate` → `const { mutate: saveCaseRefundMutate } = useCreateCaseRefund(handleSaveSuccess, handleSaveError)` (success=`swalSuccess`, error=`swalError`)
 - Mapping body `CreateCaseRefundPayload` (ยืนยันกับ user แล้ว):
   - `adjustmentTypeId` = `values.refundTransferType` (dropdown ประเภทการโอน)
