@@ -620,11 +620,23 @@ const useClaimExpenseDetailHook = ({
         dispatch(setDraftExpenseApplied(draftRevisionId));
     }, [draftRevisionId, draftExpenseAppliedRevisionId, draftRevision, frequentItems, isFrequentLoading, categories]);
 
+    // ── สถานะโหลดของ section รายการค่าใช้จ่าย (ให้ UI แสดง loading แทน "ไม่พบรายการ"/dropdown ว่าง) ──
+    // - ตารางยังว่างและกำลังยิง/รอ seed รายการค่ารักษา : query ที่ยัง disabled เพราะรอ detailData/customerDetailData
+    //   นับเป็นโหลดด้วย (react-query v4 : isLoading = true แต่ isFetching = false) ส่วน disabled ถาวรเพราะข้อมูล
+    //   ไม่ครบไม่นับ กัน spinner ค้าง · มีแถวอยู่แล้ว (ผู้ใช้กำลังแก้) ไม่นับ กัน refetch เบื้องหลังมาบังงาน
+    // - master สาเหตุไม่คุ้มครองยังไม่มา : dropdown ในแถวจะแสดงค่าที่บันทึกไว้ไม่ได้
+    const isWaitingClaimData = isFrequentLoading && (!detailData || !customerDetailData);
+    const isExpenseItemsLoading =
+        items.length === 0 && (isFrequentFetching || isWaitingClaimData || frequentItems.length > 0);
+    const isExpenseLoading = isExpenseItemsLoading || isNonCoveredReasonLoading;
+
     return {
         formikClaimLine,
         expenseItems: items,
         frequentItems,
         isFrequentLoading,
+        isExpenseItemsLoading,
+        isExpenseLoading,
         caseAdjudicationId,
         benefitIdList,
         benefitName,

@@ -13,17 +13,20 @@ import { PaymentSummaryCard } from "./PaymentSummaryCard";
 import { Grid } from "@mui/material";
 import { NPL_URL } from "../../../../../../../Const";
 import ExpenseRecords from "./ExpenseRecords";
+import LoadingOverlay from "../../../../../_common/components/CustomComponent/LoadingOverlay";
 import { FormikProps } from "formik";
 import { ClaimConsiderValues } from "../../../../store/claimConsiderSlice";
 import { useGetClaimDetailConsider, useGetCustomerDetailById } from "../../../../../../api/coreClaimApi";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
 import usePolicyBenefitHook from "../../../../hooks/ClaimConsiderDetail/PolicyBenefitHook";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 
 type ExpenseDetailsProps = {
     formik: FormikProps<ClaimConsiderValues>;
     detailData: ReturnType<typeof useGetClaimDetailConsider>["data"];
     customerDetailData: ReturnType<typeof useGetCustomerDetailById>["data"];
+    /** แจ้งสถานะโหลดของรายการค่าใช้จ่ายให้ผู้เรียก — ใช้ปิดปุ่มทำรายการท้ายหน้าระหว่างโหลด */
+    onLoadingChange?: (isLoading: boolean) => void;
 };
 
 // รับ formik/detailData/customerDetailData เป็น props จาก ClaimDetailsTab แทนการเรียก useConsiderDetailHook()
@@ -31,7 +34,7 @@ type ExpenseDetailsProps = {
 // ทำงานซ้ำ 3 เท่าทุกครั้งที่หน้านี้ mount — ดูรายละเอียดใน ClaimExpenseDetailHook.tsx)
 // เรียก useClaimExpenseDetailHook ที่นี่จุดเดียว (ก่อนหน้านี้ ExpenseRecords เรียกเอง) เพราะการ์ด "สิทธิ์เบิก"
 // ด้านล่างต้องใช้ benefitName จาก hook นี้ ก่อนถึง ExpenseRecords — ส่งผลลัพธ์ทั้งก้อนต่อลงไปแทนเรียกซ้ำ
-const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetailsProps) => {
+const ExpenseDetails = ({ formik, detailData, customerDetailData, onLoadingChange }: ExpenseDetailsProps) => {
     const nplAmount = detailData?.data?.nplAmount || 0;
     const expenseDetail = useClaimExpenseDetailHook({
         detailData,
@@ -40,6 +43,12 @@ const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetai
         // จำนวนวันนอนรวมจาก Step 1 — ใช้คำนวณค่าชดเชยผู้ป่วยใน (ไม่แยกอัตรา IPD/ICU)
         totalStayDays: (formik.values.ipdDays || 0) + (formik.values.icuDays || 0),
     });
+    // unmount (ออกจาก step นี้) = ไม่มีอะไรโหลดค้างแล้ว ต้องคืนค่า false ไม่งั้นปุ่มท้ายหน้าจะถูกปิดค้าง
+    const { isExpenseLoading } = expenseDetail;
+    useEffect(() => {
+        onLoadingChange?.(isExpenseLoading);
+        return () => onLoadingChange?.(false);
+    }, [isExpenseLoading]);
     // RC-004 4.1 : สิทธิ์ความคุ้มครอง = ผลรวม maxPrice ของ Benefit ตามประเภทความคุ้มครองที่เลือก
     // (benefitIdList มาจาก /standard-medical-expense/case ที่กรองด้วย coverageTypeId แล้ว) — API เดียวกับแท็บความคุ้มครอง
     const { benefit: policyBenefit } = usePolicyBenefitHook({ customerDetail: customerDetailData?.data });
@@ -112,7 +121,9 @@ const ExpenseDetails = ({ formik, detailData, customerDetailData }: ExpenseDetai
             </CustomPaper>
             <CustomPaper>
                 <HeadingWithColor text="รายการค่าใช้จ่าย" color="blue" icon={<NoteAddIcon sx={{ fontSize: 27 }} />} />
-                <ExpenseRecords expenseDetail={expenseDetail} />
+                <LoadingOverlay isLoading={expenseDetail.isExpenseLoading} message="กำลังโหลดรายการค่าใช้จ่าย...">
+                    <ExpenseRecords expenseDetail={expenseDetail} />
+                </LoadingOverlay>
             </CustomPaper>
         </>
     );

@@ -448,6 +448,13 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
     // const currentCaseNo = detail?.caseNo ?? "";
     // const currentCaseStatus = detail?.claimStatusName ?? undefined;
 
+    const [isExpenseLoading, setIsExpenseLoading] = useState(false);
+    /**
+     * หน้ากำลังโหลดข้อมูลของ step ใด step หนึ่ง (Step 1 ข้อมูลเคลม · Step 2 รายการค่าใช้จ่าย · คำนวณก่อนเข้า Step 3)
+     * ระหว่างนี้ปุ่มทำรายการท้ายหน้าทุกปุ่มกดไม่ได้ เหลือแค่ "กลับ" — กันบันทึก/อนุมัติด้วยข้อมูลที่ยังมาไม่ครบ
+     */
+    const isPageLoading = isStep1Loading || isExpenseLoading || isCalculating;
+
     const handleNext = async () => {
         // Step 1 : ต้องผ่าน Validate ก่อนจึงไป Step 2 ได้ — RC-005 5.8 ตัดเงื่อนไขเลือกผลการตรวจเอกสารครบออกแล้ว
         // ไม่รวม validate ของ "แจ้งผลการพิจารณาโรงพยาบาล" — มีผลเฉพาะตอนกด "ยืนยันบันทึกผลพิจารณา" (DFUAT-048)
@@ -673,6 +680,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     detailData={detailData}
                                     customerDetailData={customerDetailData}
                                     readOnly={readOnly}
+                                    onLoadingChange={setIsExpenseLoading}
                                 />
                             </Grid>
                         </Grid>
@@ -732,7 +740,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="outlined"
                                         startIcon={<SaveAsIcon />}
                                         onClick={handleSaveDraft}
-                                        disabled={isStep1Loading}
+                                        disabled={isPageLoading}
                                         sx={{ bgcolor: "#fff", boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.05)" }}
                                     >
                                         บันทึกแบบร่าง
@@ -741,7 +749,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="contained"
                                         startIcon={<SaveIcon />}
                                         disabled={
-                                            !formik.values.considerResult || isStep1Loading || isConfirmingConsider
+                                            !formik.values.considerResult || isPageLoading || isConfirmingConsider
                                         }
                                         onClick={handleConfirmConsiderResult}
                                         sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
@@ -753,7 +761,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                         variant="contained"
                                         endIcon={<ArrowForwardIcon />}
                                         onClick={handleNext}
-                                        disabled={isCalculating || isStep1Loading}
+                                        disabled={isPageLoading}
                                     >
                                         {isCalculating ? "กำลังคำนวณ..." : "ถัดไป"}
                                     </Button>
@@ -765,7 +773,7 @@ const HospitalClaimDetailsTab = ({ readOnly = false }: HospitalClaimDetailsTabPr
                                     variant="contained"
                                     startIcon={<CheckCircleIcon />}
                                     onClick={handleApprove}
-                                    disabled={isPayoutAccountBlocking}
+                                    disabled={isPayoutAccountBlocking || isPageLoading}
                                     sx={{ bgcolor: "#2E7D32", "&:hover": { bgcolor: "#1B5E20" } }}
                                 >
                                     อนุมัติ
