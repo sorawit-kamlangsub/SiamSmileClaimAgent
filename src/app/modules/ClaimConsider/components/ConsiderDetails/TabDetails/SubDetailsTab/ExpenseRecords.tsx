@@ -12,6 +12,7 @@ import {
     InputAdornment,
     MenuItem,
     Select,
+    Skeleton,
     Stack,
     Table,
     TableBody,
@@ -55,6 +56,10 @@ const REF = {
 };
 
 const FORM_FIELD_HEIGHT = 40;
+
+// โครงแถวตารางค่ารักษาระหว่างโหลด : ความกว้างชื่อรายการต่อแถว + คอลัมน์ช่องกรอก (ใบเสร็จ → หมายเหตุ)
+const SKELETON_ROW_NAME_WIDTHS = ["70%", "55%", "40%"];
+const SKELETON_INPUT_COLUMNS = ["receipt", "discount", "notCovered", "reason", "claimRight", "remark"];
 
 const refInputSx = {
     "& .MuiOutlinedInput-root": {
@@ -314,6 +319,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
 }) => {
     const {
         expenseItems: filledItems,
+        isExpenseItemsLoading,
         showAddPanel,
         setShowAddPanel,
         searchText,
@@ -448,7 +454,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                         รายการค่ารักษา(เบื้องต้น)
                     </Typography>
                     <Typography variant="caption" fontWeight={600} color="text.secondary">
-                        {filledItems.length} รายการ
+                        {isExpenseItemsLoading ? "กำลังโหลด..." : `${filledItems.length} รายการ`}
                     </Typography>
                 </Box>
 
@@ -470,9 +476,24 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
                             </TableRow>
                         </TableHead>
                         <TableBody>
-                            {filledItems.length === 0 ? (
+                            {isExpenseItemsLoading ? (
+                                // โครงแถวระหว่างโหลด : สูงเท่าช่องกรอกจริง ตารางจึงไม่กระตุกตอนข้อมูลมาถึง
+                                SKELETON_ROW_NAME_WIDTHS.map((nameWidth) => (
+                                    <TableRow key={nameWidth}>
+                                        <TableCell sx={bodyCell}>
+                                            <Skeleton variant="text" width={nameWidth} />
+                                        </TableCell>
+                                        {SKELETON_INPUT_COLUMNS.map((column) => (
+                                            <TableCell key={column} sx={{ ...bodyCell, p: 0.5 }}>
+                                                <Skeleton variant="rounded" height={32} />
+                                            </TableCell>
+                                        ))}
+                                        <TableCell sx={{ ...bodyCell, p: 0.5 }} />
+                                    </TableRow>
+                                ))
+                            ) : filledItems.length === 0 ? (
                                 <TableRow>
-                                    <TableCell colSpan={7} sx={{ textAlign: "center", py: 2, color: "text.disabled" }}>
+                                    <TableCell colSpan={8} sx={{ textAlign: "center", py: 2, color: "text.disabled" }}>
                                         ไม่พบรายการ
                                     </TableCell>
                                 </TableRow>

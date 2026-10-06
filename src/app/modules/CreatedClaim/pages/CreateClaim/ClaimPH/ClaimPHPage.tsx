@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { claimPHSelector, setOldClaim } from "../../../store/claimPHSlice";
@@ -34,6 +34,16 @@ const ClaimPHPage: React.FC = () => {
     }, [previousClaim, dispatch]);
 
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
+
+    if (!claimInfo) {
+        return (
+            <Paper variant="outlined" sx={{ p: "1.5rem", mb: "1.5rem", textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                    ไม่พบข้อมูล
+                </Typography>
+            </Paper>
+        );
+    }
 
     return (
         <>

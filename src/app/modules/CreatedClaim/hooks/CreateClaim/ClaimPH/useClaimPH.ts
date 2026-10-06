@@ -21,7 +21,9 @@ export const useClaimPH = () => {
     const bankAccountQuery = useGetCustomerBankAccount(applicationId);
     const contactQuery = useGetContactPerson(applicationId ?? "", 6);
 
-    const isLoading = claimInfoQuery.isLoading || bankAccountQuery.isLoading || contactQuery.isLoading;
+    // isInitialLoading: id ใน URL ถอดไม่ได้ → query ไม่ถูก enabled — ไม่ให้ loading ค้าง (หน้าแสดง "ไม่พบข้อมูล" แทน)
+    const isLoading =
+        claimInfoQuery.isInitialLoading || bankAccountQuery.isInitialLoading || contactQuery.isInitialLoading;
 
     useEffect(() => {
         if (!claimInfoQuery.data?.data) return;

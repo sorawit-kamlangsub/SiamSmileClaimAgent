@@ -1,4 +1,4 @@
-import { Box, IconButton, Link, Typography } from "@mui/material";
+import { Box, IconButton, Typography } from "@mui/material";
 import { MUIDataTableColumn } from "mui-datatables";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
@@ -153,14 +153,12 @@ const useClaimCpgTransferDataTableHook = ({
                 customBodyRenderLite: (dataIndex) => {
                     const row = rows[dataIndex];
                     return (
-                        <Link
-                            component="button"
-                            underline="hover"
-                            sx={{ color: "#212121", fontWeight: 400 }}
+                        <Typography
+                            sx={{ color: "#212121", fontWeight: 400}}
                             onClick={() => handleViewRow(row)}
                         >
                             {row?.claimNo}
-                        </Link>
+                        </Typography>
                     );
                 },
             },

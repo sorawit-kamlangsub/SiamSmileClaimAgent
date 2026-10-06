@@ -3,11 +3,11 @@ import dayjs from "dayjs";
 import { setBankLogo } from "../../../../../functionHelpers";
 
 export interface ReceivingAccountCardProps {
-    contactPerson: string;
-    accountNo: string;
-    accountName: string;
-    addedDate: string;
-    bankId: number | undefined;
+    contactPerson?: string;
+    accountNo?: string;
+    accountName?: string;
+    addedDate?: string;
+    bankId?: number | undefined;
 }
 
 const ReceivingAccountCard = ({

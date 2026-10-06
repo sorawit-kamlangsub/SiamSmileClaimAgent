@@ -142,6 +142,13 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             ipdCompensationDailyRate,
         });
 
+    const [isExpenseLoading, setIsExpenseLoading] = useState(false);
+    /**
+     * หน้ากำลังโหลดข้อมูลของ step ใด step หนึ่ง (Step 1 ข้อมูลเคลม · Step 2 รายการค่าใช้จ่าย · คำนวณก่อนเข้า Step 3)
+     * ระหว่างนี้ปุ่มทำรายการท้ายหน้าทุกปุ่มกดไม่ได้ เหลือแค่ "กลับ" — กันบันทึก/อนุมัติด้วยข้อมูลที่ยังมาไม่ครบ
+     */
+    const isPageLoading = isStep1Loading || isExpenseLoading || isCalculating;
+
     /** ค่ารักษา IPD/Day Case : ค่าชดเชยไม่สมบูรณ์หรือยอดโอนไม่ตรง = ห้ามอนุมัติ พากลับ Step 2 ไปที่ข้อความผิดพลาด */
     const handleApproveClick = () => {
         const blocker = getIpdCompensationBlocker({
@@ -225,6 +232,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             formik={formik}
                                             detailData={considerDetail.detailData}
                                             customerDetailData={considerDetail.customerDetailData}
+                                            onLoadingChange={setIsExpenseLoading}
                                         />
                                     </Grid>
                                 </Grid>
@@ -281,7 +289,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="outlined"
                                             startIcon={<SaveAsIcon />}
                                             onClick={handleSaveDraft}
-                                            disabled={isSavingDraft}
+                                            disabled={isSavingDraft || isPageLoading}
                                         >
                                             บันทึกแบบร่าง
                                         </Button>
@@ -290,6 +298,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="contained"
                                             startIcon={<SaveIcon />}
                                             disabled={
+                                                isPageLoading ||
                                                 isSavingDecision ||
                                                 !formik.values.considerResult ||
                                                 !formik.values.decisionReasonId ||
@@ -307,7 +316,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             variant="contained"
                                             endIcon={<ArrowForwardIcon />}
                                             onClick={handleNext}
-                                            disabled={isAdvancing || (activeStep === 1 && isCalculating)}
+                                            disabled={isAdvancing || isPageLoading}
                                         >
                                             ถัดไป
                                         </Button>
@@ -323,6 +332,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             "&:hover": { bgcolor: "#1B5E20" },
                                         }}
                                         onClick={handleApproveClick}
+                                        disabled={isPageLoading}
                                     >
                                         อนุมัติ
                                     </Button>

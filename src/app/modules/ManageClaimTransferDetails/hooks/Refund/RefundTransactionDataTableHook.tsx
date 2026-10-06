@@ -1,6 +1,6 @@
 import dayjs from "dayjs";
 import { MUIDataTableColumn } from "mui-datatables";
-import { useGetRefundClaimTransaction } from "../../../Refund/refundAPI";
+import { useGetRefundClaimTransaction } from "../../../../api/coreClaimApi";
 import { Box } from "@mui/material";
 import { numberWithCommas } from "../../../../functionHelpers";
 import { useMemo, useState } from "react";

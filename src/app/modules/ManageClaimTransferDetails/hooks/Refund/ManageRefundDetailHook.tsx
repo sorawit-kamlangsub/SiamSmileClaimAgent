@@ -5,10 +5,10 @@ import { useNavigate } from "react-router-dom";
 import {
     CreateCaseRefundPayload,
     useCreateCaseRefund,
+    useGetAdjustmentReasons,
     useGetRefundDetail,
     useGetRefundReasons,
-    useGetRefundTransferTypes,
-} from "../../../Refund/refundAPI";
+} from "../../../../api/coreClaimApi";
 import { RefundItemsFormValues } from "../../components/Refund/DetailTab/RefundItemsTable";
 import { RefundRecordFormValues } from "../../components/Refund/DetailTab/RefundRecordForm";
 
@@ -62,7 +62,7 @@ const useManageRefundDetailHook = (caseId: string) => {
     const navigate = useNavigate();
     const { data: refundDetailRes, isLoading: isDetailLoading } = useGetRefundDetail(caseId);
     const { data: refundReasonsRes, isLoading: isReasonLoading } = useGetRefundReasons();
-    const { data: transferTypeRes, isLoading: isTransferTypeLoading } = useGetRefundTransferTypes(3);
+    const { data: transferTypeRes, isLoading: isTransferTypeLoading } = useGetAdjustmentReasons(3);
 
     // TODO: ลบ mock เมื่อ backend คืนข้อมูลจริงจาก /Refund/SaveRefundDetails
     const detailData = refundDetailRes?.data ?? mockDetailData;
@@ -136,7 +136,7 @@ const useManageRefundDetailHook = (caseId: string) => {
                     refundReasonId: values.reasonId as number,
                     cacseId: caseId,
                     claimId: detailData?.claimId,
-                    refundDate: values.refundSlipDateTime?.format("YYYY-MM-DDTHH:mm:ss") ?? "",
+                    refundDate: values.refundSlipDateTime ?? undefined,
                     remark: values.note,
                     decreaseAmount: refundAmount,
                 };

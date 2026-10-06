@@ -5,6 +5,7 @@ import { RootState } from "../../../../redux";
 import { ClaimLineItem, resetSimulateItems, setFilledItems, setMedicalTypeId } from "../store/claimSimulateSlice";
 import { StandardMedicalExpenseCategoryDtoResponse } from "../../../api/coreClaimApi.client";
 import { useGetSimB, useGetSimBCategory, useGetNonCoveredReason } from "../../../api/coreClaimMastersApi";
+import { NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID } from "../../../functionHelpers";
 import { toAmount, hasAmountSumError, applyMaximumLimit } from "../store/Claimsimulateutils";
 import { swalError } from "../../_common/sweetAlert";
 
@@ -111,7 +112,10 @@ export const useClaimLineCalculate = () => {
         incidentTypeId
     );
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
-    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason(
+        undefined,
+        NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID
+    );
 
     const notCoveredReasonOptions = useMemo(() => {
         const raw = nonCoveredReasonData?.data ?? [];

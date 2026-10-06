@@ -379,7 +379,8 @@ const useHospitalConsiderDetailHook = () => {
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
-    const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
+    // isInitialLoading: เคลมที่ไม่มี incidentTypeId query ไม่ถูก enabled — ไม่ให้ Step 1 ค้าง loading จนครบเพดาน 8 วิ
+    const { data: incidentTypeMapping, isInitialLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         activeIncidentTypeId,
         CLAIM_SOURCE_CONSIDER,
         customerDetail?.productTypeId,
@@ -436,6 +437,39 @@ const useHospitalConsiderDetailHook = () => {
         ],
         [incidentTypeMapping, formik.values.coverageTypeId]
     );
+
+    /**
+     * reset cascade 2 ตัวนี้ต้องประกาศ "ก่อน" effect ที่ sync ค่าจาก detail (phase 1/2 + แบบร่าง) เสมอ
+     *
+     * effect ใน commit เดียวกันรันตามลำดับที่ประกาศ — กลับเข้าเคสครั้งที่ 2 ข้อมูลทุก query อยู่ใน cache แล้ว
+     * phase 1 จึง sync ได้ตั้งแต่ commit แรกที่ mount (ตั้ง prev*Ref + hasSyncedMainRef = true) ถ้า cascade
+     * รันตามหลังใน commit เดียวกันจะเห็น ref เป็นค่าใหม่ แต่ formik.values ใน closure ยังเป็น undefined
+     * (setFieldValue ยังไม่ทัน re-render) เลยเข้าใจผิดว่า user เปลี่ยนค่าเอง แล้วล้าง "ประเภทความคุ้มครอง"/
+     * "ประเภทการรักษา" ที่เพิ่ง default ทิ้ง — เข้าครั้งแรกไม่เจอเพราะ query ยังโหลดไม่เสร็จตอน mount
+     * พอรันก่อน : commit ที่ sync จะเทียบค่าเก่ากับ ref เก่า (ไม่ทำอะไร) และ render ถัดไปค่ากับ ref ตรงกันพอดี
+     */
+    // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
+    useEffect(() => {
+        if (!hasSyncedMainRef.current) return;
+        if (prevIncidentTypeIdRef.current === formik.values.incidentTypeId) return;
+
+        formik.setFieldValue("coverageTypeId", undefined, false);
+        formik.setFieldValue("coverageTypeName", undefined, false);
+        formik.setFieldValue("medicalTypeId", undefined, false);
+        formik.setFieldValue("causeOfIncidentId", undefined, false);
+        prevIncidentTypeIdRef.current = formik.values.incidentTypeId;
+        prevCoverageTypeIdRef.current = undefined;
+    }, [formik.values.incidentTypeId]);
+
+    // ---- reset cascade: user เปลี่ยน coverageTypeId เอง ----
+    useEffect(() => {
+        if (!hasSyncedMainRef.current) return;
+        if (prevCoverageTypeIdRef.current === formik.values.coverageTypeId) return;
+
+        formik.setFieldValue("medicalTypeId", undefined, false);
+        formik.setFieldValue("causeOfIncidentId", undefined, false);
+        prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
+    }, [formik.values.coverageTypeId]);
 
     // ---- phase 1: sync incidentType, coverageType, date/time, diagnoses, remark ----
     useEffect(() => {
@@ -585,29 +619,6 @@ const useHospitalConsiderDetailHook = () => {
         prevIncidentTypeIdRef,
         prevCoverageTypeIdRef
     );
-
-    // ---- reset cascade: user เปลี่ยน incidentTypeId เอง ----
-    useEffect(() => {
-        if (!hasSyncedMainRef.current) return;
-        if (prevIncidentTypeIdRef.current === formik.values.incidentTypeId) return;
-
-        formik.setFieldValue("coverageTypeId", undefined, false);
-        formik.setFieldValue("coverageTypeName", undefined, false);
-        formik.setFieldValue("medicalTypeId", undefined, false);
-        formik.setFieldValue("causeOfIncidentId", undefined, false);
-        prevIncidentTypeIdRef.current = formik.values.incidentTypeId;
-        prevCoverageTypeIdRef.current = undefined;
-    }, [formik.values.incidentTypeId]);
-
-    // ---- reset cascade: user เปลี่ยน coverageTypeId เอง ----
-    useEffect(() => {
-        if (!hasSyncedMainRef.current) return;
-        if (prevCoverageTypeIdRef.current === formik.values.coverageTypeId) return;
-
-        formik.setFieldValue("medicalTypeId", undefined, false);
-        formik.setFieldValue("causeOfIncidentId", undefined, false);
-        prevCoverageTypeIdRef.current = formik.values.coverageTypeId;
-    }, [formik.values.coverageTypeId]);
 
     // ปฏิเสธ (5) / ยกเลิก (6) ใช้ RejectReason / CancelReason แทน : ส่ง decisionId เป็น undefined
     // ให้ useGetDecisionReason ไม่ยิง (hook ตั้ง enabled: !!decisionId ไว้แล้ว)

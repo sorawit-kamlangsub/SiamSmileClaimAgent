@@ -6,7 +6,7 @@ import { MUIDataTableColumn } from "mui-datatables";
 import { PaginationSortableDto } from "../../../../_common";
 import { numberWithCommas } from "../../../../../functionHelpers";
 import { usePayTransferHistoryColumns } from "../../../hooks/HistoryTable/HistoryTransferHook";
-import { useGetRefundDecreaseTransaction, useGetRefundTransferHistory } from "../../../../Refund/refundAPI";
+import { useGetRefundDecreaseTransaction, useGetRefundTransferHistory } from "../../../../../api/coreClaimApi";
 
 const useRefundDecreaseColumns = (data: any[]): MUIDataTableColumn[] => [
     {

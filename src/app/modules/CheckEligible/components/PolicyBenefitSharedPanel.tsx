@@ -43,11 +43,10 @@ const getBenefitIcon = (text: string): SvgIconComponent => {
 };
 
 const PolicyBenefitSharedPanel: React.FC<Props> = ({ applicationId, customerTypeCode }) => {
-    const { data, isLoading } = useGetPolicyBenefitShered(applicationId, customerTypeCode);
+    // isInitialLoading: โหลดเฉพาะตอนเรียก API จริง
+    const { data, isInitialLoading: isLoading } = useGetPolicyBenefitShered(applicationId, customerTypeCode);
 
     const items: PolicyBenefitSheredItem[] = data?.data ?? [];
-
-    if (!isLoading && items.length === 0) return null;
 
     return (
         <LinearLoading isLoading={isLoading} sx={{ mt: "1.5rem" }}>
@@ -77,6 +76,12 @@ const PolicyBenefitSharedPanel: React.FC<Props> = ({ applicationId, customerType
                 </Box>
 
                 <Divider sx={{ mb: 2 }} />
+
+                {items.length === 0 && (
+                    <Typography variant="body2" color="text.secondary" textAlign="center" py={1}>
+                        ไม่พบข้อมูล
+                    </Typography>
+                )}
 
                 <Grid container spacing={2}>
                     {items.map((item, index) => {

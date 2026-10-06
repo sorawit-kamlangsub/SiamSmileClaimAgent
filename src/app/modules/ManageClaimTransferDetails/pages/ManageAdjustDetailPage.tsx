@@ -44,8 +44,8 @@ const ManageAdjustDetailPage = () => {
                         <Grid item>
                             <TransferRecordForm
                                 formik={formik}
-                                account={account}
-                                reasonOptions={reasonOptions}
+                                account={account ?? {}}
+                                reasonOptions={reasonOptions ?? []}
                                 isLoadingDropdown={reasonOptionIsLoading}
                             />
                         </Grid>
@@ -54,6 +54,7 @@ const ManageAdjustDetailPage = () => {
                             <Button
                                 variant="contained"
                                 onClick={() => formik.handleSubmit()}
+                                disabled={isAdjustLoading}
                                 sx={{
                                     backgroundColor: "#66BB6A",
                                     textTransform: "none",

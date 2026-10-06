@@ -32,7 +32,7 @@ export const ExtraPaymentSearchModal: React.FC<ExtraPaymentSearchModalProps> = (
         validate: (values) => {
             const errors: { seaechDetail?: string } = {};
             if (!values.seaechDetail) {
-                errors.seaechDetail = "กรุณากรอกเลขที่ CPG / CL";
+                errors.seaechDetail = "กรุณากรอกเลขที่ CL / CC";
             } else if (!/^[a-zA-Z0-9]+$/.test(values.seaechDetail)) {
                 errors.seaechDetail = "กรอกได้เฉพาะตัวเลขและตัวอักษรภาษาอังกฤษ";
             }

@@ -38,12 +38,13 @@ dropdown ยังเป็น mock; no store. Route:
 ## `_common/` (module-local, non-standard folder name)
 
 `ClaimSearchFilterForm.tsx` — self-contained formik search form (search-by/search-text/
-branch/status/date-range); `statusId` populated from `useGetPaymentIncreaseStatus`
-(`masterAPI.ts`, mock), `searchBy` has fixed options **เลขที่ CL (1) / เลขที่ CC (2)**;
+branch/status/date-range); `statusId` populated from `useGetTransferApprovalStatus`
+(`api/coreClaimApi.ts`, codegen `claimFundClient.getTransferApprovalStatus` → `GET {API_URL}/ClaimFund/Masters/GetTransferApprovalStatus`,
+DTO `TransferApprovalStatusResponseDto {id,name}`), `searchBy` has fixed options **เลขที่ CL (1) / เลขที่ CC (2)**;
 branch/date ยังไม่ถูกส่งไป API. **Reused cross-module by `RefundApprove`** — see
 [RefundApprove.md](RefundApprove.md).
 
-`masterAPI.ts` — `useGetBranch`, `useGetPaymentStatus`, `useGetPaymentIncreaseStatus`.
+`IncreaseLimitTransfer/_common/masterAPI.ts` — **ถูกลบแล้ว** (ไม่มีผู้ใช้: `useGetBranch`/`useGetPaymentStatus`/`useGetPaymentIncreaseStatus` เป็น dead code หลังสลับทั้งหมดไป codegen) — สาขาผ่าน `BranchAutocomplete` (codegen `coreClaimMastersApi.useGetBranch`), สถานะโอนผ่าน `useGetTransferApprovalStatus` (codegen).
 
 `increaseLimitTransferAPI.ts` — module API file: `useGetIncreaseTransferLimitMonitors` +
 `useGetIncreaseTransferLimitDetail` (detail GET, mock). Response types exported:
@@ -73,9 +74,9 @@ its own independent inline `useFormik` instead.
   `.../api/ClaimFund`), detail dialog. ⚠ **Mock path** เดียวกับข้างบน; fields ตรงกับ
   `IncreaseTransferLimitDetailDto` (caseId, claimNo, insuredName, amount, วงเงินต่างๆ,
   rejectReasons).
-- `useGetPaymentIncreaseStatus` (`_common/masterAPI.ts`) — GET
-  `{API_CLAIM_FUND_URL}/api/ClaimFund/Masters/GetPaymentIncreaseStatuses` (base `.../api/ClaimFund`),
-  feeds the status dropdown. ⚠ **Mock path** เดียวกับข้างบน.
+- `useGetTransferApprovalStatus` (`api/coreClaimApi.ts`, codegen) — GET
+  `{API_URL}/ClaimFund/Masters/GetTransferApprovalStatus`, feeds the status dropdown. ✅ **Real codegen API**
+  (เดิมใช้ `useGetPaymentIncreaseStatus` ใน `masterAPI.ts` — ถูกลบแล้ว).
 - `useUpdateIncreaseTransferLimitStatus` (`increaseLimitTransferAPI.ts`) — POST
   `{API_CLAIM_FUND_URL}/api/ClaimFund/IncreaseTransfer/UpdateIncreaseTransferLimitStatus` (base
   `.../api/ClaimFund`), เปลี่ยนสถานะอนุมัติ/ปฏิเสธขยายวงเงิน. Response envelope
@@ -83,8 +84,7 @@ its own independent inline `useFormik` instead.
 
 ## Gotchas
 
-monitor ต่อ backend จริงแล้ว (`IncreaseTransferLimitMonitors`); detail dialog / status dropdown /
-update-status ยังเป็น mock endpoint — ยังไม่มี backend จริง, view action ยังเป็น stub
+monitor ต่อ backend จริงแล้ว (`IncreaseTransferLimitMonitors`); detail dialog / update-status ยังเป็น mock endpoint — ยังไม่มี backend จริง, view action ยังเป็น stub
 (`console.log` + `// TODO`), `rejectReasonsId` ใน payload เป็น
 **draft** (map จาก `rejectReasonCode` ชั่วคราว เพราะ backend ยังไม่มี field นี้), `page/`
 (singular) folder naming, dead `ClaimSearchFilterFormHook.tsx`.

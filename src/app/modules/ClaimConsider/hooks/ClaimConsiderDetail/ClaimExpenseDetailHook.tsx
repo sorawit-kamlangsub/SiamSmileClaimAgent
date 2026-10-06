@@ -37,7 +37,7 @@ import {
     useGetCustomerDetailById,
     useGetStandardMedicalExpenseByCase,
 } from "../../../../api/coreClaimApi";
-import { CoverageType } from "../../../../functionHelpers";
+import { CoverageType, NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID } from "../../../../functionHelpers";
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
     // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
     // เป็น undefined ได้หลายรายการพร้อมกัน (fallback ?? 0 เดิมทำให้หลายโหนดชน id 0 พร้อมกัน
@@ -282,7 +282,10 @@ const useClaimExpenseDetailHook = ({
             .filter(Boolean) as typeof categories;
     }, [categories, searchText]);
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
-    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason(
+        undefined,
+        NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID
+    );
 
     const notCoveredReasonOptions = useMemo(() => {
         const raw = nonCoveredReasonData?.data ?? [];
@@ -617,11 +620,23 @@ const useClaimExpenseDetailHook = ({
         dispatch(setDraftExpenseApplied(draftRevisionId));
     }, [draftRevisionId, draftExpenseAppliedRevisionId, draftRevision, frequentItems, isFrequentLoading, categories]);
 
+    // ── สถานะโหลดของ section รายการค่าใช้จ่าย (ให้ UI แสดง loading แทน "ไม่พบรายการ"/dropdown ว่าง) ──
+    // - ตารางยังว่างและกำลังยิง/รอ seed รายการค่ารักษา : query ที่ยัง disabled เพราะรอ detailData/customerDetailData
+    //   นับเป็นโหลดด้วย (react-query v4 : isLoading = true แต่ isFetching = false) ส่วน disabled ถาวรเพราะข้อมูล
+    //   ไม่ครบไม่นับ กัน spinner ค้าง · มีแถวอยู่แล้ว (ผู้ใช้กำลังแก้) ไม่นับ กัน refetch เบื้องหลังมาบังงาน
+    // - master สาเหตุไม่คุ้มครองยังไม่มา : dropdown ในแถวจะแสดงค่าที่บันทึกไว้ไม่ได้
+    const isWaitingClaimData = isFrequentLoading && (!detailData || !customerDetailData);
+    const isExpenseItemsLoading =
+        items.length === 0 && (isFrequentFetching || isWaitingClaimData || frequentItems.length > 0);
+    const isExpenseLoading = isExpenseItemsLoading || isNonCoveredReasonLoading;
+
     return {
         formikClaimLine,
         expenseItems: items,
         frequentItems,
         isFrequentLoading,
+        isExpenseItemsLoading,
+        isExpenseLoading,
         caseAdjudicationId,
         benefitIdList,
         benefitName,

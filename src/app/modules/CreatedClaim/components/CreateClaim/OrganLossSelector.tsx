@@ -53,7 +53,7 @@ const CARD_BORDER = "#dbe6f3";
 const CARD_SOFT_BG = "#eef6ff";
 const PRIMARY = "#0b74bd";
 // nonCoveredReasonId ที่ใช้ตอนเติมยอดไม่คุ้มครองอัตโนมัติ (ยอดเบิกเกินยอดตาม %)
-const AUTO_UNCOVERED_REASON_ID = 12;
+const AUTO_UNCOVERED_REASON_ID = 9; // เกินวงเงิน
 
 export const StepBadge: React.FC<{ n: number }> = ({ n }) => (
     <Box
