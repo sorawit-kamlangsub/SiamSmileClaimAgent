@@ -28,6 +28,7 @@ type IncreaseLimitDetailDialogProps = {
     open: boolean;
     row: IncreaseTransferMonitorRow | null;
     onClose: () => void;
+    onApproved?: () => void;
 };
 
 const formatNumber = (value: number | undefined | null) =>
@@ -40,7 +41,7 @@ const formatNumber = (value: number | undefined | null) =>
 
 const formatBaht = (value: number | undefined | null) => `฿ ${formatNumber(value)}`;
 
-const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDialogProps) => {
+const IncreaseLimitDetailDialog = ({ open, row, onClose, onApproved }: IncreaseLimitDetailDialogProps) => {
     const caseTransferApprovalId = row?.caseTransferApprovalId ?? "";
     const { data: detailRes, isLoading: isDetailLoading } = useGetIncreaseTransferLimitDetail(caseTransferApprovalId);
 
@@ -83,6 +84,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
 
             await swalSuccess("ดำเนินการสำเร็จ", "บันทึกสถานะเรียบร้อยแล้ว");
             onClose();
+            onApproved?.();
         } catch (error) {
             await swalError("เกิดข้อผิดพลาด", error instanceof Error ? error.message : "Unknown error");
         }

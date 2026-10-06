@@ -32,16 +32,25 @@ const IncreaseLimitTransfer = () => {
                             backgroundColor: "#FFFFFF",
                         }}
                     >
-                        <ClaimDetailsDataTable
-                            filter={filter}
-                            hasSearched={hasSearched}
-                            searchTrigger={searchTrigger}
-                            onEdit={(row) => setDetailRow(row)}
-                        />
+                    <ClaimDetailsDataTable
+                        filter={filter}
+                        hasSearched={hasSearched}
+                        searchTrigger={searchTrigger}
+                        onEdit={(row) => setDetailRow(row)}
+                    />
                     </Box>
                 </Grid>
             </Grid>
-            <IncreaseLimitDetailDialog open={detailRow !== null} row={detailRow} onClose={() => setDetailRow(null)} />
+            <IncreaseLimitDetailDialog
+                open={detailRow !== null}
+                row={detailRow}
+                onClose={() => setDetailRow(null)}
+                onApproved={() => {
+                    setFilter(undefined);
+                    setHasSearched(false);
+                    setSearchTrigger((count) => count + 1);
+                }}
+            />
         </>
     );
 };
