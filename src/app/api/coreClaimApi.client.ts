@@ -10619,6 +10619,7 @@ export interface CaseRegistrationV2Request {
 
 export interface CaseSaveClaimEditDraftRequest {
     coverageTypeId?: number | undefined;
+    notificationDate?: dayjs.Dayjs | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
     occurrenceTime?: TimeSpan;
     admissionDate?: dayjs.Dayjs | undefined;
@@ -10916,6 +10917,7 @@ export interface ClaimEditDraftCaseMedicalTreatmentPayloadDto {
 
 export interface ClaimEditDraftCasePayloadDto {
     coverageTypeId?: number | undefined;
+    notificationDate?: dayjs.Dayjs | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
     occurrenceTime?: TimeSpan;
     admissionDate?: dayjs.Dayjs | undefined;
@@ -11793,6 +11795,8 @@ export interface GetClaimHistoryDtoResponse {
     causeOfIncidentId?: number | undefined;
     accidentDescription?: string | undefined;
     icD10Code?: string | undefined;
+    caseNo?: string | undefined;
+    admissionDate?: dayjs.Dayjs | undefined;
     totalCount?: number | undefined;
 }
 
@@ -14023,6 +14027,7 @@ export interface UpsertClaimDecisionCasePhysicalTherapyRequest {
 
 export interface UpsertClaimDecisionCaseRequest {
     coverageTypeId?: number | undefined;
+    notificationDate?: dayjs.Dayjs | undefined;
     occurrenceDate?: dayjs.Dayjs | undefined;
     occurrenceTime?: TimeSpan;
     admissionDate?: dayjs.Dayjs | undefined;

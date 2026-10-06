@@ -67,7 +67,7 @@ export interface ClaimConsiderValues {
     dischargeDate: Dayjs | undefined; //วันที่ออก รพ
     dischargeTime: Dayjs | undefined;
     documentCompleteDate: Dayjs | undefined; //วันที่เอกสารครบ
-    createdDate: Dayjs | undefined; //วันที่แจ้ง
+    notificationDate: Dayjs | undefined; //วันที่แจ้ง
     // deathDate: Dayjs | undefined; //วันที่เสียชีวิต
     // deathTime: Dayjs | undefined;
     /** เคลมต่อเนื่อง */
@@ -144,7 +144,7 @@ const defaultForm: ClaimConsiderValues = {
     icuDays: 0,
     totalDays: 0,
     documentCompleteDate: undefined,
-    createdDate: undefined,
+    notificationDate: undefined,
     hospitalId: undefined,
     hospitalName: undefined,
     diagnoses: [

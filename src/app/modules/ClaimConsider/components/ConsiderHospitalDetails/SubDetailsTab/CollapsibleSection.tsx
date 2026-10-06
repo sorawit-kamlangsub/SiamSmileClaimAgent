@@ -1,5 +1,5 @@
 import { ReactNode, useState } from "react";
-import { Box, Collapse, IconButton } from "@mui/material";
+import { Box, Collapse, IconButton, Typography } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
@@ -7,6 +7,8 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 
 type CollapsibleSectionProps = {
     title: string;
+    /** คำอธิบายใต้หัวข้อ — ไม่ส่ง = ไม่แสดง */
+    subtitle?: string;
     icon: ReactNode;
     children: ReactNode;
     /**
@@ -18,7 +20,7 @@ type CollapsibleSectionProps = {
 /**
  * Section แบบ Expand/Collapse ที่ใช้หัวข้อสีเดียวกับ Section อื่นในหน้าพิจารณาเคลม
  */
-const CollapsibleSection = ({ title, icon, children, defaultExpanded = true }: CollapsibleSectionProps) => {
+const CollapsibleSection = ({ title, subtitle, icon, children, defaultExpanded = true }: CollapsibleSectionProps) => {
     const [expanded, setExpanded] = useState(defaultExpanded);
 
     return (
@@ -42,6 +44,11 @@ const CollapsibleSection = ({ title, icon, children, defaultExpanded = true }: C
 
             <Collapse in={expanded} timeout="auto" unmountOnExit>
                 <Box px={2} pb={1}>
+                    {subtitle && (
+                        <Typography color="text.secondary" fontSize={14} mb={1.5}>
+                            {subtitle}
+                        </Typography>
+                    )}
                     {children}
                 </Box>
             </Collapse>
