@@ -6,6 +6,7 @@ import { useGetPaymentStatuses, useGetRefundStatus } from "../../../api/coreClai
 import { useEffect } from "react";
 import { useAppDispatch } from "../../../../redux";
 import { resetFilterSearch, setSearchMonitorByFilter } from "../store/refundSlice";
+import { useAuth } from "../../_auth";
 
 export interface SelectOption {
     value: string | number;
@@ -39,6 +40,7 @@ const SearchByBranchAndStatus = ({
     statusSource = "payment",
     floatingButton = false,
 }: SearchByBranchAndStatusProps) => {
+    const { userProfile } = useAuth();
     const isRefundSource = statusSource === "refund";
     const { data: paymentStatus, isLoading: paymentStatusIsLoading } = useGetPaymentStatuses(
         isRefundSource ? false : true
@@ -47,7 +49,11 @@ const SearchByBranchAndStatus = ({
     const statusData = isRefundSource ? refundStatus?.data ?? [] : paymentStatus?.data ?? [];
     const statusIsLoading = isRefundSource ? refundStatusIsLoading : paymentStatusIsLoading;
     const formik = useFormik<BranchStatusFilterValues>({
-        initialValues: { ...defaultValues, ...initialValues },
+        initialValues: {
+            ...defaultValues,
+            branch: userProfile?.branchId,
+            ...initialValues,
+        },
         onSubmit: (values) => {
             onButtonClick(values);
         },
