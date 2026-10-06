@@ -1,15 +1,15 @@
 import React, { useEffect } from "react";
-import { Grid } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { checkeligibleSelector, resetSearchCheckeLigibleDetails } from "../store/checkeligibleSlice";
 import { useDispatch, useSelector } from "react-redux";
 import SearchToolbar from "../components/SearchToolbar";
 import CoverageSummaryPanel from "../components/CoverageSummaryPanel";
 import InsuredInfoCardPA from "../components/InsuredInfoCardPA";
-import { useGetCustomerBenefitDetailSearch, useGetCustomerDetailById } from "../../../api/coreClaimApi";
+import { useGetCustomerBenefitDetailHalf, useGetCustomerDetailById } from "../../../api/coreClaimApi";
 import LinearLoading from "../../_common/components/CustomComponent/LinearLoading";
 import InsuredInfoCardPH from "../components/InsuredInfoCardPH";
-import { isProductType, PRODUCT_TYPE_GROUP, safeAtob } from "../../../functionHelpers";
+import { CoverageType, isProductType, PRODUCT_TYPE_GROUP, safeAtob } from "../../../functionHelpers";
 import PolicyBenefitSharedPanel from "../components/PolicyBenefitSharedPanel";
 
 const CheckEligibleDetailPage: React.FC = () => {
@@ -22,17 +22,30 @@ const CheckEligibleDetailPage: React.FC = () => {
 
     const { CheckeLigibleDetails, isSearchCheckeLigibleDetails } = useSelector(checkeligibleSelector);
 
-    const { data: customerDetail, isLoading: customerDetailLoading } = useGetCustomerDetailById(customerId);
+    // isInitialLoading: query ไม่ถูก enabled (cusId ใน URL ถอดไม่ได้ / ยังเลือกเงื่อนไขค้นหาไม่ครบ)
+    // — isLoading ของ react-query v4 จะค้าง true แทนที่จะแสดง "ไม่พบข้อมูล"
+    const { data: customerDetail, isInitialLoading: customerDetailLoading } = useGetCustomerDetailById(customerId);
 
-    const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailSearch(
+    // formatTypeId ตามประเภทความคุ้มครอง (ค่าเดียวกับหน้าแจ้งเคลม — useClaimPAForm)
+    const formatTypeId =
+        CheckeLigibleDetails.coverageType === CoverageType.Disability
+            ? 3
+            : CheckeLigibleDetails.coverageType === CoverageType.Death
+            ? 4
+            : 7;
+
+    const { data: benefitData, isInitialLoading: isBenefitLoading } = useGetCustomerBenefitDetailHalf(
         customerDetail?.data?.policyCode,
         CheckeLigibleDetails.incidentDate ?? undefined,
         CheckeLigibleDetails.isContinuous ?? undefined,
         CheckeLigibleDetails.claimCause,
         CheckeLigibleDetails.coverageType,
         CheckeLigibleDetails.medicalType,
-        CheckeLigibleDetails.continuousClaim?.claimNo ?? undefined,
-        customerDetail?.data?.productTypeId === 26 ? customerDetail?.data?.customerTypeCode : undefined
+        CheckeLigibleDetails.causeOfIncident,
+        formatTypeId,
+        customerDetail?.data?.productTypeId === 26 ? customerDetail?.data?.customerTypeCode : undefined,
+        customerDetail?.data?.customerDetailId,
+        CheckeLigibleDetails.continuousClaim?.claimNo ?? undefined
     );
 
     const productId = customerDetail?.data?.productTypeId ?? 0;
@@ -44,6 +57,16 @@ const CheckEligibleDetailPage: React.FC = () => {
             dispatch(resetSearchCheckeLigibleDetails());
         };
     }, [dispatch]);
+
+    if (!customerDetailLoading && !customerDetail?.data) {
+        return (
+            <Paper variant="outlined" sx={{ p: "1.5rem", mb: "1.5rem", textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                    ไม่พบข้อมูล
+                </Typography>
+            </Paper>
+        );
+    }
 
     return (
         <LinearLoading isLoading={customerDetailLoading} sx={{ mb: "1.5rem" }}>

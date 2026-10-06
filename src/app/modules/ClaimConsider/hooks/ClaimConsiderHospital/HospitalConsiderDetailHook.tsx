@@ -379,7 +379,8 @@ const useHospitalConsiderDetailHook = () => {
 
     const activeIncidentTypeId = formik.values.incidentTypeId || detail?.incidentTypeId || undefined;
 
-    const { data: incidentTypeMapping, isLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
+    // isInitialLoading: เคลมที่ไม่มี incidentTypeId query ไม่ถูก enabled — ไม่ให้ Step 1 ค้าง loading จนครบเพดาน 8 วิ
+    const { data: incidentTypeMapping, isInitialLoading: incidentTypeMappingLoading } = useGetIncidentTypeMapping(
         activeIncidentTypeId,
         CLAIM_SOURCE_CONSIDER,
         customerDetail?.productTypeId,

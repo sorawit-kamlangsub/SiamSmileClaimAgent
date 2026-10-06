@@ -6,10 +6,7 @@ import { HeadingWithColor } from "../../_common/components/CustomComponent/Headi
 import { checkeligibleSelector } from "../store/checkeligibleSlice";
 import { useAppSelector } from "../../../../redux";
 import { formatDateString } from "../../../functionHelpers";
-import {
-    GetClaimHistoryDtoResponse,
-    GetCustomerBenefitDetailSearchDtoResponse,
-} from "../../../api/coreClaimApi.client";
+import { GetClaimHistoryDtoResponse, GetCustomerBenefitDetailHalfDtoResponse } from "../../../api/coreClaimApi.client";
 import { BenefitIcon } from "./BenefitIcon";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
 import HistoryIcon from "@mui/icons-material/History";
@@ -36,14 +33,14 @@ type BenefitDisplay = {
 };
 
 type Props = {
-    benefitData?: GetCustomerBenefitDetailSearchDtoResponse[];
+    benefitData?: GetCustomerBenefitDetailHalfDtoResponse[];
     isLoading?: boolean;
     applicationId?: string;
 };
 
 // ─── Mapper ───────────────────────────────────────────────────────────────────
 
-const mapBenefitData = (data: GetCustomerBenefitDetailSearchDtoResponse[]): BenefitDisplay[] => {
+const mapBenefitData = (data: GetCustomerBenefitDetailHalfDtoResponse[]): BenefitDisplay[] => {
     return data.map((item, index) => ({
         id: index + 1,
         benefitId: item.benefitId,
@@ -100,17 +97,6 @@ const BenefitCard: React.FC<{ benefit: BenefitDisplay }> = ({ benefit }) => (
             <Box flex={1} minWidth={0}>
                 <Typography variant="body2" fontWeight={700} color="#1a5da8">
                     {benefit.title}{" "}
-                    {benefit.ratePerUnit && (
-                        <Typography
-                            component="span"
-                            variant="body2"
-                            fontWeight={700}
-                            color="#1a5da8"
-                            sx={{ whiteSpace: "nowrap" }}
-                        >
-                            {benefit.ratePerUnit}
-                        </Typography>
-                    )}
                 </Typography>
 
                 <Box display="flex" alignItems="center" gap={{ xs: 1, sm: 3, md: 0, lg: 9 }} flexWrap="wrap" mt={0.5}>

@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect } from "react";
-import { Box, Grid } from "@mui/material";
+import { Box, Grid, Paper, Typography } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import InsuredInfoSection from "../../../components/CreateClaim/ClaimPA/InsuredInfoSection";
 import ClaimPAFormSection from "../../../components/CreateClaim/ClaimPA/ClaimPAFormSection";
@@ -50,6 +50,15 @@ const ClaimPAPage: React.FC = () => {
     }, [navigate, appId, refId, isContinuousEncode, oldClaimIdEncode]);
 
     if (isLoading) return <LinearLoading isLoading={isLoading} />;
+    if (!claimInfo) {
+        return (
+            <Paper variant="outlined" sx={{ p: "1.5rem", mb: "1.5rem", textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                    ไม่พบข้อมูล
+                </Typography>
+            </Paper>
+        );
+    }
     return (
         <Box>
             <ClaimStickyHeader data={claimInfo} />
