@@ -54,29 +54,40 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
             setLimitReviewNoteError("");
         }
     }, [open]);
-    const changeStatus = useIncreaseTransferLimitChangeStatus(
-        () => {
-            swalSuccess("ดำเนินการสำเร็จ", "บันทึกสถานะเรียบร้อยแล้ว");
-            onClose();
-        },
-        (error) => {
-            swalError("เกิดข้อผิดพลาด", error);
-        }
-    );
+    const changeStatus = useIncreaseTransferLimitChangeStatus();
 
     const buildChangeStatusBody = (transferApprovalStatusId: number) =>
         ({
             caseTransferApprovalId,
             transferApprovalStatusId,
             approvalRemark: limitReviewNote,
-        } as IncreaseTransferLimitChangeStatusRequestDto & { approvalRemark?: string });
+        }) as IncreaseTransferLimitChangeStatusRequestDto & { approvalRemark?: string };
+
+    const submitChangeStatus = async (transferApprovalStatusId: number) => {
+        try {
+            const response = await changeStatus.mutateAsync(buildChangeStatusBody(transferApprovalStatusId));
+
+            if (!response.isSuccess || !response.data?.isSuccess) {
+                await swalError(
+                    "เกิดข้อผิดพลาด",
+                    response.data?.message || response.message || response.exceptionMessage || "Unknown error"
+                );
+                return;
+            }
+
+            await swalSuccess("ดำเนินการสำเร็จ", "บันทึกสถานะเรียบร้อยแล้ว");
+            onClose();
+        } catch (error) {
+            await swalError("เกิดข้อผิดพลาด", error instanceof Error ? error.message : "Unknown error");
+        }
+    };
 
     const handleApprove = async () => {
         const result = await swalConfirm("ยืนยันการอนุมัติ", "ยืนยันการอนุมัติการขยายวงเงินรายการนี้หรือไม่?");
         if (!result.isConfirmed) {
             return;
         }
-        changeStatus.mutate(buildChangeStatusBody(4));
+        await submitChangeStatus(4);
     };
 
     const handleHoldReview = async () => {
@@ -89,7 +100,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
         if (!result.isConfirmed) {
             return;
         }
-        changeStatus.mutate(buildChangeStatusBody(3));
+        await submitChangeStatus(3);
     };
 
     return (
@@ -231,7 +242,20 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
 
                         <Box sx={{ borderTop: "1px solid #E0E0E0", my: 2 }} />
 
-                        <Box sx={{ border: "1px solid #D9DEE5", borderRadius: 2, p: 2, pt: 1.5, flex: 1, display: "flex", flexDirection: "column", justifyContent: "flex-start", overflow: "hidden", gap: 1 }}>
+                        <Box
+                            sx={{
+                                border: "1px solid #D9DEE5",
+                                borderRadius: 2,
+                                p: 2,
+                                pt: 1.5,
+                                flex: 1,
+                                display: "flex",
+                                flexDirection: "column",
+                                justifyContent: "flex-start",
+                                overflow: "hidden",
+                                gap: 1,
+                            }}
+                        >
                             <Box>
                                 <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1.5 }}>
                                     <VerifiedUserIcon sx={{ color: "#0D4C8C", fontSize: 20 }} />
@@ -282,7 +306,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Grid>
 
                                 <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#FDECEC" }}>
-                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <Box
+                                        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                                    >
                                         <Typography sx={{ fontSize: "0.9rem", color: "#C62828" }}>
                                             จำนวนคงเหลือ (ภายในวัน) :
                                         </Typography>
@@ -316,7 +342,10 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                                 }}
                                             >
                                                 <LockOutlined sx={{ fontSize: 12, color: "#D32F2F" }} />
-                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#212121" }}>
+                                                <Typography
+                                                    component="span"
+                                                    sx={{ fontSize: "0.75rem", color: "#212121" }}
+                                                >
                                                     คำนวณโดยระบบ
                                                 </Typography>
                                             </Box>
@@ -361,12 +390,19 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                             }}
                                         >
                                             {limitReviewNoteError ? (
-                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#D32F2F" }}>
+                                                <Typography
+                                                    component="span"
+                                                    sx={{ fontSize: "0.75rem", color: "#D32F2F" }}
+                                                >
                                                     {limitReviewNoteError}
                                                 </Typography>
                                             ) : (
-                                                <Typography component="span" sx={{ fontSize: "0.75rem", color: "#757575" }}>
-                                                    ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ ไม่ใช่การปฏิเสธหรือโอนเงิน)
+                                                <Typography
+                                                    component="span"
+                                                    sx={{ fontSize: "0.75rem", color: "#757575" }}
+                                                >
+                                                    ต้องกรอกหมายเหตุก่อนกดปุ่ม "รอตรวจสอบ" (ระบบจะ Hold รายการ
+                                                    ไม่ใช่การปฏิเสธหรือโอนเงิน)
                                                 </Typography>
                                             )}
                                             <Typography
@@ -380,7 +416,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Grid>
 
                                 <Box sx={{ mt: 2, p: "10px 14px", borderRadius: 2, backgroundColor: "#F1F8E9" }}>
-                                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                    <Box
+                                        sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                                    >
                                         <Typography sx={{ fontSize: "0.9rem", color: "#33691E" }}>
                                             วงเงินคงเหลือ (ครั้งใหม่) :
                                         </Typography>
@@ -391,7 +429,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
                                 </Box>
                             </Box>
 
-                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2}}>
+                            <Box sx={{ mt: 1, display: "flex", justifyContent: "center", gap: 2 }}>
                                 <Button
                                     variant="contained"
                                     color="info"
