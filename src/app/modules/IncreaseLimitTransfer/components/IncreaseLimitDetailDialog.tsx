@@ -21,7 +21,7 @@ import {
     GetIncreaseTransferLimitDetailResponseDto,
     IncreaseTransferLimitChangeStatusRequestDto,
 } from "../../../api/coreClaimApi.client";
-import { swalConfirm, swalError, swalSuccess } from "../../_common";
+import { swalConfirm, swalError, swalSuccess, swalWarning } from "../../_common";
 import { IncreaseTransferMonitorRow } from "../hooks/ClaimDetailsDataTableHook";
 
 type IncreaseLimitDetailDialogProps = {
@@ -67,11 +67,17 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose }: IncreaseLimitDetailDi
         try {
             const response = await changeStatus.mutateAsync(buildChangeStatusBody(transferApprovalStatusId));
 
-            if (!response.isSuccess || !response.data?.isSuccess) {
-                await swalError(
-                    "เกิดข้อผิดพลาด",
+            if (!response.isSuccess) {
+                await swalError("เกิดข้อผิดพลาด", response.message || response.exceptionMessage || "Unknown error");
+                return;
+            }
+
+            if (!response.data?.isSuccess) {
+                await swalWarning(
+                    "แจ้งเตือน",
                     response.data?.message || response.message || response.exceptionMessage || "Unknown error"
                 );
+                onClose();
                 return;
             }
 
