@@ -54,6 +54,7 @@ const ManageAdjustDetailPage = () => {
                             <Button
                                 variant="contained"
                                 onClick={() => formik.handleSubmit()}
+                                disabled={isAdjustLoading}
                                 sx={{
                                     backgroundColor: "#66BB6A",
                                     textTransform: "none",

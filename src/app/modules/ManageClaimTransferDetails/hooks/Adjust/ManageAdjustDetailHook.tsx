@@ -1,4 +1,5 @@
 import { FormikErrors, useFormik } from "formik";
+import { useNavigate } from "react-router-dom";
 import { swalConfirm, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { useEffect } from "react";
 import {
@@ -19,11 +20,14 @@ const emptyFormValues: ClaimTransferAdditionalFormValues = {
 };
 
 const useManageAdjustDetailHook = (clNo: string) => {
+    const navigate = useNavigate();
     const { data: detailData, isLoading: isDetailLoading } = useGetAdditionalTransferDetails(clNo);
     const { data: reasonOptionsData, isLoading: reasonOptionIsLoading } = useGetAdjustmentReasons();
 
     const handleSaveSuccess = () => {
-        swalSuccess("ทำรายการสำเร็จ", "บันทึกรายการสำเร็จ");
+        swalSuccess("ทำรายการสำเร็จ", "บันทึกรายการสำเร็จ").then(() => {
+            navigate("/manage/adjust-transfer");
+        });
     };
     const handleSaveError = (err: string) => {
         swalError("แจ้งเตือน", err);
