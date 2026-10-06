@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { API_CLAIM_FUND_URL } from "../../../../Const";
 import { encodeURLWithParams, PaginationDto } from "../../_common";
 
@@ -48,25 +48,9 @@ export type HospitalTransferMonitorResponse = {
     pageIndex: number | undefined;
 };
 
-export const useGetHospitalTransferMonitor = (
-    onSuccessCallBack: (response: HospitalTransferMonitorResponse) => void,
-    onErrorCallback: (error: string) => void
-) => {
-    const queryClient = useQueryClient();
-    return useMutation((payload: HospitalTransferMonitorType) => hospitalTransferMonitorData(payload), {
-        onSuccess: (response) => {
-            if (!response.isSuccess) {
-                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
-            } else {
-                onSuccessCallBack(response);
-            }
-
-            queryClient.invalidateQueries([getHospitalTransferByStatusKey]);
-        },
-        onError: (error: Error) => {
-            onErrorCallback && onErrorCallback(error.message);
-            queryClient.invalidateQueries([getHospitalTransferByStatusKey]);
-        },
+export const useGetHospitalTransferMonitorData = (payload: HospitalTransferMonitorType) => {
+    return useQuery([getHospitalTransferByStatusKey, payload], () => hospitalTransferMonitorData(payload), {
+        enabled: payload.statusId === 1,
     });
 };
 
