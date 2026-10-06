@@ -24,7 +24,7 @@ import PersonalExclusionCard from "./PersonalExclusionCard";
 import PolicyConditionCard from "./PolicyConditionCard";
 import { PersonalExclusionNote } from "../hooks/useCheckEligibleDetail";
 import PolicyConditionExclusionModal from "./PolicyConditionExclusionModal";
-import { Dayjs } from "dayjs";
+import dayjs, { Dayjs } from "dayjs";
 import WaitingPeriodStatusBanner from "./WaitingPeriodStatusBanner";
 
 const mockNotes: PersonalExclusionNote[] = [{ id: 1, message: "ติดเงื่อนไข โรคกระเพาะอาหาร" }];
@@ -214,7 +214,13 @@ const SearchToolbar: React.FC<Props> = ({
                 <CustomPaper>
                     <Grid container spacing={2} alignItems="center" sx={{ mb: 2 }}>
                         <Grid item xs={12} sm={3} lg={3.5}>
-                            <FormikDatePicker formik={formik} name="incidentDate" label="วันที่เกิดเหตุ" fullWidth />
+                            <FormikDatePicker
+                                formik={formik}
+                                name="incidentDate"
+                                label="วันที่เกิดเหตุ"
+                                fullWidth
+                                maxDate={dayjs()}
+                            />
                         </Grid>
 
                         <Grid item xs={12} sm={3} lg={3.5}>

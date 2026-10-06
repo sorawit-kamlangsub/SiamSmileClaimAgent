@@ -1,4 +1,5 @@
 import React from "react";
+import dayjs from "dayjs";
 import { Button, Collapse, Grid } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import ClearIcon from "@mui/icons-material/Clear";
@@ -66,6 +67,7 @@ const MonitorToolbar: React.FC = () => {
                                             label="วันที่เกิดเหตุ"
                                             formik={formik}
                                             fullWidth
+                                            maxDate={dayjs()}
                                         />
                                     </Grid>
                                     <Grid item xs={12} sm={5} md={4} lg={3}>

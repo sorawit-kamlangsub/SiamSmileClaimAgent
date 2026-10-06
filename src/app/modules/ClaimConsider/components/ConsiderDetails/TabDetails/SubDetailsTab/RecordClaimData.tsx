@@ -150,9 +150,9 @@ const RecordClaimData = ({
                         </Grid>
                         {/* วันที่ต่างๆ */}
                         <Grid item xs={12} sm={6} md={3}>
-                            <Box data-field-name="createdDate">
+                            <Box data-field-name="notificationDate">
                                 <FormikDatePicker
-                                    name="createdDate"
+                                    name="notificationDate"
                                     label="วันที่แจ้ง"
                                     formik={formik}
                                     slotProps={{ textField: { size: "small" } }}

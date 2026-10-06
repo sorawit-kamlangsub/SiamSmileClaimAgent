@@ -93,6 +93,9 @@ export const mapDraftPayloadToFormValues = ({
     const dischargeTime = parseTimeSpan(c?.dischargeTime);
     if (dischargeTime) values.dischargeTime = dischargeTime;
 
+    const notificationDate = asDate(c?.notificationDate);
+    if (notificationDate) values.notificationDate = notificationDate; // วันที่แจ้ง
+
     const documentCompleteDate = asDate(c?.caseAssessment?.documentCompleteDate);
     if (documentCompleteDate) values.documentCompleteDate = documentCompleteDate;
 
