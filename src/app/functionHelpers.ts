@@ -518,6 +518,10 @@ export enum CoverageType {
     Death = 5,
 }
 
+// coverageTypeId ของ master สาเหตุไม่คุ้มครอง (NonCoveredReason) ชุดรายการค่าใช้จ่ายทั่วไป
+// (ชุดสูญเสียอวัยวะใช้ CoverageType.Disability)
+export const NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID = 1;
+
 // ลำดับการแสดงประเภทความคุ้มครอง (ทุพพลภาพขึ้นก่อนเสียชีวิต) — id ที่ไม่อยู่ในรายการจะต่อท้ายตามลำดับเดิมจาก API
 const COVERAGE_TYPE_DISPLAY_ORDER: number[] = [
     CoverageType.Medical,

@@ -236,12 +236,6 @@ export const calculateFingerSideTotal = (fingers: OrganFingerState | null, side:
           )
         : 0;
 
-export const UNCOVERED_REASON_OPTIONS = [
-    "สาเหตุไม่คุ้มครอง",
-    "ไม่เข้าเงื่อนไขความคุ้มครอง",
-    "เกินวงเงิน",
-    "เอกสารไม่ครบ",
-];
 export const EXGRATIA_DEDUCT_SOURCE_OPTIONS = [
     "แต้มผู้แทน",
     "เงินผู้แทน",

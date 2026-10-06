@@ -9,7 +9,12 @@ import { useFormikContext } from "formik";
 import CustomPaper from "../../../../_common/components/CustomComponent/CustomPaper";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
 import { StandardDataTable } from "../../../../_common";
-import { cellAlignOptions, defaultOptionStandardDataTable, numberWithCommas } from "../../../../../functionHelpers";
+import {
+    cellAlignOptions,
+    defaultOptionStandardDataTable,
+    NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID,
+    numberWithCommas,
+} from "../../../../../functionHelpers";
 import { useGetNonCoveredReason } from "../../../../../api/coreClaimMastersApi";
 import { PENDING_BE, PENDING_BE_TOOLTIP } from "../../../store/billingPendingFields";
 import { BillingReviewFormValues } from "../../../store/billingClaim.types";
@@ -55,7 +60,10 @@ const BillingExpenseTable = ({ showSimBSelector = false }: BillingExpenseTablePr
     const formik = useFormikContext<BillingReviewFormValues>();
     const items = formik.values.expenses;
 
-    const { data: nonCoveredReasonData } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData } = useGetNonCoveredReason(
+        undefined,
+        NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID
+    );
     const nonCoveredReasonOptions = nonCoveredReasonData?.data ?? [];
     const nonCoveredReasonName = (id: number | undefined) =>
         id ? nonCoveredReasonOptions.find((o) => o.nonCoveredReasonId === id)?.nonCoveredReasonName ?? "-" : "-";

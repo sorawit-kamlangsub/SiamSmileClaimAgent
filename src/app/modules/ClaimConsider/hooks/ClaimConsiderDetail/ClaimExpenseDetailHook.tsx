@@ -37,7 +37,7 @@ import {
     useGetCustomerDetailById,
     useGetStandardMedicalExpenseByCase,
 } from "../../../../api/coreClaimApi";
-import { CoverageType } from "../../../../functionHelpers";
+import { CoverageType, NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID } from "../../../../functionHelpers";
 const mapCategoriesToTree = (data: StandardMedicalExpenseCategoryDtoResponse[]) => {
     // id ของ tree ต้อง unique เสมอ — inputToStandardCategoryId/SubCategoryId/MappingId จาก backend
     // เป็น undefined ได้หลายรายการพร้อมกัน (fallback ?? 0 เดิมทำให้หลายโหนดชน id 0 พร้อมกัน
@@ -282,7 +282,10 @@ const useClaimExpenseDetailHook = ({
             .filter(Boolean) as typeof categories;
     }, [categories, searchText]);
     // ── สาเหตุไม่คุ้มครอง  ─────────────────────────
-    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason();
+    const { data: nonCoveredReasonData, isLoading: isNonCoveredReasonLoading } = useGetNonCoveredReason(
+        undefined,
+        NON_COVERED_REASON_GENERAL_COVERAGE_TYPE_ID
+    );
 
     const notCoveredReasonOptions = useMemo(() => {
         const raw = nonCoveredReasonData?.data ?? [];

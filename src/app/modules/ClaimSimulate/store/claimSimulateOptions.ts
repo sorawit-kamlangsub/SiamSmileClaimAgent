@@ -6,13 +6,6 @@ import PaidOutlinedIcon from "@mui/icons-material/Paid";
 import HealingIcon from "@mui/icons-material/Healing";
 import { SvgIconComponent } from "@mui/icons-material";
 
-export const NOT_COVERED_REASON_OPTIONS = [
-    { nonCoveredReasonId: "1", nonCoveredReasonName: "เกินสิทธิ์" },
-    { nonCoveredReasonId: "2", nonCoveredReasonName: "ไม่อยู่ในความคุ้มครอง" },
-    { nonCoveredReasonId: "3", nonCoveredReasonName: "โรคเดิม" },
-    { nonCoveredReasonId: "4", nonCoveredReasonName: "อื่นๆ" },
-];
-
 export const CLAIM_CAUSE_OPTIONS = [
     { value: 2, label: "เจ็บป่วย", description: "กรณีเข้ารักษาจากโรคหรืออาการเจ็บป่วยทั่วไป", icon: HealingIcon },
     {
