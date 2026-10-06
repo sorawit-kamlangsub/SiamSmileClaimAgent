@@ -561,7 +561,9 @@ export const useClaimPAForm = ({ onNext }: Options) => {
     const isDeath = formik.values.coverageTypeId === CoverageType.Death;
     const formattype = isDisability ? 3 : isDeath ? 4 : 7;
 
-    const { data: customerBenefit, isLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
+    // isInitialLoading: ยังเลือกเงื่อนไขไม่ครบ (เช่น ทุพพลภาพแต่ยังไม่เลือกสาเหตุ) query ไม่ถูก enabled
+    // — isLoading ของ react-query v4 จะค้าง true แทนที่จะแสดง "ไม่พบข้อมูล"
+    const { data: customerBenefit, isInitialLoading: customerBenefitLoading } = useGetCustomerBenefitDetailHalf(
         effectiveInsured?.policyCode,
         formik.values.incidentDate,
         isContinuous,

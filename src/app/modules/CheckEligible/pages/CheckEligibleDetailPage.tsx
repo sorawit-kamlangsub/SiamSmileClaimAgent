@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Grid } from "@mui/material";
+import { Grid, Paper, Typography } from "@mui/material";
 import { useParams } from "react-router-dom";
 import { checkeligibleSelector, resetSearchCheckeLigibleDetails } from "../store/checkeligibleSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -22,7 +22,9 @@ const CheckEligibleDetailPage: React.FC = () => {
 
     const { CheckeLigibleDetails, isSearchCheckeLigibleDetails } = useSelector(checkeligibleSelector);
 
-    const { data: customerDetail, isLoading: customerDetailLoading } = useGetCustomerDetailById(customerId);
+    // isInitialLoading: query ไม่ถูก enabled (cusId ใน URL ถอดไม่ได้ / ยังเลือกเงื่อนไขค้นหาไม่ครบ)
+    // — isLoading ของ react-query v4 จะค้าง true แทนที่จะแสดง "ไม่พบข้อมูล"
+    const { data: customerDetail, isInitialLoading: customerDetailLoading } = useGetCustomerDetailById(customerId);
 
     // formatTypeId ตามประเภทความคุ้มครอง (ค่าเดียวกับหน้าแจ้งเคลม — useClaimPAForm)
     const formatTypeId =
@@ -32,7 +34,7 @@ const CheckEligibleDetailPage: React.FC = () => {
             ? 4
             : 7;
 
-    const { data: benefitData, isLoading: isBenefitLoading } = useGetCustomerBenefitDetailHalf(
+    const { data: benefitData, isInitialLoading: isBenefitLoading } = useGetCustomerBenefitDetailHalf(
         customerDetail?.data?.policyCode,
         CheckeLigibleDetails.incidentDate ?? undefined,
         CheckeLigibleDetails.isContinuous ?? undefined,
@@ -55,6 +57,16 @@ const CheckEligibleDetailPage: React.FC = () => {
             dispatch(resetSearchCheckeLigibleDetails());
         };
     }, [dispatch]);
+
+    if (!customerDetailLoading && !customerDetail?.data) {
+        return (
+            <Paper variant="outlined" sx={{ p: "1.5rem", mb: "1.5rem", textAlign: "center" }}>
+                <Typography variant="body2" color="text.secondary">
+                    ไม่พบข้อมูล
+                </Typography>
+            </Paper>
+        );
+    }
 
     return (
         <LinearLoading isLoading={customerDetailLoading} sx={{ mb: "1.5rem" }}>
