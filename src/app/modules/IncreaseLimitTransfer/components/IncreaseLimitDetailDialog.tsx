@@ -119,6 +119,7 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose, onApproved }: IncreaseL
             PaperProps={{
                 sx: {
                     borderRadius: 3,
+                    height: "90vh",
                     overflow: "hidden",
                 },
             }}
@@ -162,7 +163,8 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose, onApproved }: IncreaseL
                 sx={{
                     pt: "15px",
                     pb: 0,
-                    overflow: "hidden",
+                    minHeight: 0,
+                    overflowY: "auto",
                     display: "flex",
                     flexDirection: "column",
                     height: "100%",
@@ -256,11 +258,9 @@ const IncreaseLimitDetailDialog = ({ open, row, onClose, onApproved }: IncreaseL
                                 borderRadius: 2,
                                 p: 2,
                                 pt: 1.5,
-                                flex: 1,
                                 display: "flex",
                                 flexDirection: "column",
                                 justifyContent: "flex-start",
-                                overflow: "hidden",
                                 gap: 1,
                             }}
                         >
