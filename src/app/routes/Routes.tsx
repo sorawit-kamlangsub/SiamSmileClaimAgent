@@ -7,12 +7,14 @@ import BlankPage from "../pages/BlankPage";
 import { RouteMapType } from "./AuthRoutes";
 import ClaimPAPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPAPage";
 import ClaimPASummaryPage from "../modules/CreatedClaim/pages/CreateClaim/ClaimPA/ClaimPASummaryPage";
+import { ClaimDraftProvider } from "../modules/CreatedClaim/components/CreateClaim/ClaimDraftProvider";
 // import ClaimLinePage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLinePage";
 // import ClaimLineSummaryPage from "../modules/CreatedClaim/pages/ClaimLine/ClaimLineSummaryPage";
 // import DaysCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/DaysCalculatePage.tsx";
 // import ClaimLineCalculatePage from "../modules/CreatedClaim/pages/ClaimSimulate/ClaimLineCalculatePage.tsx";
 import ClaimSimulateSummaryPage from "../modules/ClaimSimulate/pages/ClaimSimulateSummaryPage.tsx";
 import ClaimSimulatePage from "../modules/ClaimSimulate/pages/ClaimSimulatePage.tsx";
+import ClaimSimulateLayout from "../modules/ClaimSimulate/pages/ClaimSimulateLayout.tsx";
 import { ExtraPaymentListPage } from "../modules/ExtraPayment/pages/ExtraPaymentListPage.tsx";
 import ExtraPaymentPage from "../modules/ExtraPayment/pages/ExtraPaymentPage.tsx";
 import { SweetAlertTestPage } from "../pages/SweetAlertTestPage.tsx";
@@ -37,6 +39,8 @@ import ConsiderDeathDisabilityDetailPage from "../modules/ClaimConsider/pages/Co
 import BillingHospitalMonitorPage from "../modules/BillingClaim/pages/BillingHospitalMonitorPage.tsx";
 import BillingHospitalReviewPage from "../modules/BillingClaim/pages/BillingHospitalReviewPage.tsx";
 import BillingHospitalDocumentPage from "../modules/BillingClaim/pages/BillingHospitalDocumentPage.tsx";
+import ManagePaymentHospital from "../modules/ManageInsuranceFund/ManagePaymentHospital/pages/ManagePaymentHospital.tsx";
+import ManageTransferHospital from "../modules/ManageInsuranceFund/ManageTransferHospital/page/ManageTransferHospital.tsx";
 import BillingFundDisbursementPage from "../modules/BillingClaim/pages/BillingFundDisbursementPage.tsx";
 
 /**
@@ -89,7 +93,7 @@ const Routes: RouteMapType[] = [
     {
         path: "claim/ph/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PH",
-        element: <Outlet />,
+        element: <ClaimDraftProvider />,
         permissions: [],
         condition: "AND",
         children: [
@@ -110,7 +114,7 @@ const Routes: RouteMapType[] = [
     {
         path: "claim/pa/:appId/:refId/:isContinuous/:oldClaimId",
         title: "แจ้งเคลม - PA",
-        element: <Outlet />,
+        element: <ClaimDraftProvider />,
         permissions: [],
         condition: "AND",
         children: [
@@ -131,7 +135,8 @@ const Routes: RouteMapType[] = [
     {
         path: "/claim-simulation",
         title: "คำนวณวงเงินเคลม",
-        element: <Outlet />,
+        // layout ล้างค่าของหน้าคำนวณตอนออกจากเมนูนี้ (DFUAT-108)
+        element: <ClaimSimulateLayout />,
         permissions: [],
         condition: "AND",
         children: [
@@ -348,6 +353,22 @@ const Routes: RouteMapType[] = [
                 element: <BillingHospitalDocumentPage />,
             },
         ],
+    },
+
+    {
+        path: "manage/insuranceFund/dashboard-fund",
+        title: "Dashboard สำรองเงิน",
+        element: <>Dashboard สำรองเงิน</>,
+    },
+    {
+        path: "manage/insuranceFund/transfer-hospital",
+        title: "โอนเงิน รพ.",
+        element: <ManageTransferHospital />,
+    },
+    {
+        path: "manage/insuranceFund/manage-payment-hospital",
+        title: "ตั้งค่าการจ่ายเงิน รพ.",
+        element: <ManagePaymentHospital />,
     },
 ];
 

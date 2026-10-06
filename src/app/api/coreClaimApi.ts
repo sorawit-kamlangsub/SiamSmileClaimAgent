@@ -27,8 +27,11 @@ import {
     SaveClaimEditDraftDtoResponeServiceResponse,
     SearchClaimOrCaseResponseDtoListServiceResponse,
     UpdateBeneficiaryDtoRequest,
+    InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest,
     UpsertClaimDecisionDtoRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
+    UpsertDeathAndDisabilityClaimDecisionDtoRequest,
+    UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse,
 } from "./coreClaimApi.client";
 import { QueryClient, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import dayjs, { Dayjs } from "dayjs";
@@ -785,7 +788,7 @@ export const useUpdateBeneficiary = (
             if (!response.isSuccess)
                 onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
             else {
-                queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey], { refetchType: "all" });
+                queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey]);
                 onSuccessCallback?.(response);
             }
         },
@@ -793,6 +796,35 @@ export const useUpdateBeneficiary = (
             onErrorCallback?.(error.message);
         },
     });
+};
+
+/**
+ * บันทึกผู้รับเงินตามบัญชีที่เปลี่ยน (เงินสดมอบหน้างาน) พร้อมเอกสารประกอบ (POST /beneficiary/site-cash/insert)
+ * — สำเร็จแล้วโหลดรายการผู้รับผลประโยชน์และเอกสารของเคสใหม่
+ */
+export const useInsertBeneficiaryForRecordOnSiteCashPayment = (
+    onSuccessCallback?: (response: BaseResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: InsertBeneficiaryForRecordOnSiteCashPaymentDtoRequest) =>
+            coreClaimClient.insertBeneficiaryForRecordOnSiteCashPayment(body),
+        {
+            onSuccess: (response) => {
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else {
+                    queryClient.invalidateQueries([getDeathAndDisabilityBeneficiaryQueryKey]);
+                    queryClient.invalidateQueries([getDocumentByCaseIdQueryKey]);
+                    onSuccessCallback?.(response);
+                }
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
 };
 
 export const useGetCaseDisabilityBenefitByCaseId = (
@@ -952,6 +984,36 @@ export const useUpsertClaimDecision = (
         {
             onSuccess: (response) => {
                 invalidateClaimConsiderQueries(queryClient);
+                if (!response.isSuccess)
+                    onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
+                else onSuccessCallback?.(response);
+            },
+            onError: (error: Error) => {
+                onErrorCallback?.(error.message);
+            },
+        }
+    );
+};
+
+/**
+ * บันทึกผลพิจารณาเคลมเสียชีวิตและทุพพลภาพ (POST /claim/death-disability/decision) — ใช้ endpoint เดียวทุกสถานะ
+ */
+export const useUpsertDeathAndDisabilityClaimDecision = (
+    onSuccessCallback?: (response: UpsertDeathAndDisabilityClaimDecisionDtoResponseServiceResponse) => void,
+    onErrorCallback?: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation(
+        (body: UpsertDeathAndDisabilityClaimDecisionDtoRequest) =>
+            coreClaimClient.upsertDeathAndDisabilityClaimDecision(body),
+        {
+            onSuccess: (response) => {
+                invalidateClaimConsiderQueries(queryClient);
+                [
+                    getDeathAndDisabilityClaimDetailConsiderQueryKey,
+                    getDeathAndDisabilityClaimAdjudicationMonitorQueryKey,
+                    getDeathAndDisabilityBeneficiaryQueryKey,
+                ].forEach((queryKey) => queryClient.invalidateQueries([queryKey]));
                 if (!response.isSuccess)
                     onErrorCallback?.(response.message || response.exceptionMessage || "Unknown error");
                 else onSuccessCallback?.(response);

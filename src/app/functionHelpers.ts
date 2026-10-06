@@ -374,6 +374,14 @@ export const PRODUCT_TYPE_GROUP = {
 export const isProductType = (productTypeId: number | undefined, group: readonly number[]) =>
     productTypeId !== undefined && (group.includes(productTypeId) as boolean);
 
+// หน้ารายละเอียดใบคำขอ (Application ID) ในระบบเดิม — ใช้คู่กับ getApplicationDetailUrl
+export const PH_APPLICATION_DETAIL_URL = "https://sssph.siamsmile.co.th/Modules/PH/frmPHDetail.aspx?app=";
+export const PA_APPLICATION_DETAIL_URL = "https://ssspa.siamsmile.co.th/Modules/PA/frmApplicationDetail.aspx?app=";
+
+/** `?app=` คือ policyCode แปลงเป็น base64 — encodeURIComponent ซ้ำเพราะ base64 มี `+` ที่ query string อ่านเป็นช่องว่าง */
+export const getApplicationDetailUrl = (baseUrl: string, policyCode: string) =>
+    `${baseUrl}${encodeURIComponent(btoa(policyCode))}`;
+
 //ClaimStatus
 export const backgroundColorMapClaimStatus: Record<number, "#D4EDBC" | "#FFF1CD" | "#FFCFC9"> = {
     2: "#D4EDBC", // Open
@@ -468,6 +476,14 @@ export const colorMapPaymentAppStatus: Record<number, "#11734B" | "#a56e07" | "#
     5: "#B32615", // ยกเลิกก่อน DCR
 };
 
+/** ชื่อสถานะ App ตาม appStatusId — ใช้เป็น fallback เมื่อ BE ส่ง id มาแต่ไม่ส่งชื่อ (ชุดเดียวกับสีด้านบน) */
+export const appStatusLabelMap: Record<number, string> = {
+    2: "ปกติ",
+    3: "มีกำหนดยกเลิก",
+    4: "ยกเลิก",
+    5: "ยกเลิกก่อน DCR",
+};
+
 //AppStatus
 export const backgroundColorMapClaimTransactionType: Record<number, "#FFF1CD" | "#FFCFC9" | "#D4EDBC"> = {
     2: "#FFF1CD", // รอพิจารณา
@@ -502,6 +518,22 @@ export enum CoverageType {
     Death = 5,
 }
 
+// ลำดับการแสดงประเภทความคุ้มครอง (ทุพพลภาพขึ้นก่อนเสียชีวิต) — id ที่ไม่อยู่ในรายการจะต่อท้ายตามลำดับเดิมจาก API
+const COVERAGE_TYPE_DISPLAY_ORDER: number[] = [
+    CoverageType.Medical,
+    CoverageType.Compensate,
+    CoverageType.Disability,
+    CoverageType.Death,
+];
+
+export const compareCoverageTypeOrder = (a?: number, b?: number): number => {
+    const rank = (id?: number) => {
+        const index = COVERAGE_TYPE_DISPLAY_ORDER.indexOf(id ?? 0);
+        return index === -1 ? COVERAGE_TYPE_DISPLAY_ORDER.length : index;
+    };
+    return rank(a) - rank(b);
+};
+
 export enum MedicalType {
     OPD = 1,
     IPD = 2,
@@ -510,6 +542,20 @@ export enum MedicalType {
     HM = 5,
     DayCaseSurgery = 6,
 }
+
+/**
+ * ผู้รับเอกสาร (Master DocumentRecipientType)
+ * NotApplicable (n/a) ไม่แสดงเป็นตัวเลือกในหน้าแจ้งเคลม PH / PA — ดู DocumentRecipientTypeDropDown
+ */
+export enum DocumentRecipientType {
+    NotApplicable = 1,
+    WalkOut = 2,
+    WalkIn = 3,
+    Pivot = 4,
+}
+
+/** รหัสพนักงานของ "000 - คุณสำนักงาน" ใน Master ผู้ให้บริการ / เจ้าของรถ */
+export const OFFICE_EMPLOYEE_CODE = "000";
 
 export enum CauseOfIncident {
     Illness = 2, // โรคทั่วไป
@@ -520,10 +566,11 @@ export enum CauseOfIncident {
     SchoolLiability = 8, // รับผิดสถานศึกษา
 }
 
-export const calculatePolicyAgeText = (coverageFrom?: string): string => {
-    if (!coverageFrom) return "-";
+/** ระยะเวลาจากวันที่ที่ระบุถึงวันนี้ เป็น "X ปี Y เดือน Z วัน" — ไม่มีวันที่ / วันที่ไม่ถูกต้อง / เป็นวันในอนาคต คืน "-" */
+const calculateElapsedText = (fromDate?: string): string => {
+    if (!fromDate) return "-";
 
-    const start = dayjs(coverageFrom);
+    const start = dayjs(fromDate);
     const end = dayjs(); // วันปัจจุบัน
 
     if (!start.isValid() || end.isBefore(start)) return "-";
@@ -538,3 +585,9 @@ export const calculatePolicyAgeText = (coverageFrom?: string): string => {
 
     return `${years} ปี ${months} เดือน ${days} วัน`;
 };
+
+/** อายุกรมธรรม์ นับจากวันเริ่มคุ้มครอง */
+export const calculatePolicyAgeText = (coverageFrom?: string): string => calculateElapsedText(coverageFrom);
+
+/** อายุปัจจุบัน นับจากวันเกิด */
+export const calculateAgeText = (birthDate?: string): string => calculateElapsedText(birthDate);

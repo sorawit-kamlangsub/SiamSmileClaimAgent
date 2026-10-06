@@ -2,15 +2,13 @@ import React from "react";
 import { Box, Link, Typography } from "@mui/material";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { HeadingWithColor } from "../../../../_common/components/CustomComponent/HeadingWithColor";
-import { formatDateString } from "../../../../../functionHelpers";
+import { PH_APPLICATION_DETAIL_URL, formatDateString, getApplicationDetailUrl } from "../../../../../functionHelpers";
 import CustomBox from "../../../../_common/components/CustomComponent/CustomBox";
 import { GetCustomerDetailByIdDtoResponse } from "../../../../../api/coreClaimApi.client";
 
 interface Props {
     data?: GetCustomerDetailByIdDtoResponse;
 }
-
-const PH_DETAIL_URL = "https://sssph.siamsmile.co.th/Modules/PH/frmPHDetail";
 
 const Row = ({
     label,
@@ -62,9 +60,19 @@ const InsuredInfoCardPH: React.FC<Props> = ({ data }) => (
             <Row
                 label="Application ID"
                 value={
-                    <Link href={PH_DETAIL_URL} target="_blank" underline="hover" fontWeight={700}>
-                        {data?.policyCode || "-"}
-                    </Link>
+                    data?.policyCode ? (
+                        <Link
+                            href={getApplicationDetailUrl(PH_APPLICATION_DETAIL_URL, data.policyCode)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            underline="hover"
+                            fontWeight={700}
+                        >
+                            {data.policyCode}
+                        </Link>
+                    ) : (
+                        "-"
+                    )
                 }
             />
             <Row label="ชื่อผู้เอาประกัน" value={data?.customerName} />

@@ -8,8 +8,8 @@
  */
 
 export const FUND_CLAIM_TYPE = {
-    customer: "customer",
-    hospital: "hospital",
+    customer: 2,
+    hospital: 3,
 } as const;
 export type FundClaimType = (typeof FUND_CLAIM_TYPE)[keyof typeof FUND_CLAIM_TYPE];
 
@@ -20,16 +20,16 @@ export const FUND_CLAIM_TYPE_OPTIONS: { value: FundClaimType; label: string }[] 
 
 /** แปลงค่าจาก URL (?claimType=hospital) — ค่าอื่น/ไม่ระบุ = ยังไม่เลือก (แสดง empty state ตามสเปค) */
 export const parseFundClaimType = (value: string | null): FundClaimType | undefined => {
-    if (value === FUND_CLAIM_TYPE.customer) return FUND_CLAIM_TYPE.customer;
-    if (value === FUND_CLAIM_TYPE.hospital) return FUND_CLAIM_TYPE.hospital;
+    if (value === "customer" || value === String(FUND_CLAIM_TYPE.customer)) return FUND_CLAIM_TYPE.customer;
+    if (value === "hospital" || value === String(FUND_CLAIM_TYPE.hospital)) return FUND_CLAIM_TYPE.hospital;
     return undefined;
 };
 
 export const FUND_SEARCH_BY = {
-    claimCode: "claimCode",
-    caseCode: "caseCode",
-    hospital: "hospital",
-    insuredName: "insuredName",
+    claimCode: 1,
+    caseCode: 2,
+    hospital: 3,
+    insuredName: 4,
 } as const;
 export type FundSearchByField = (typeof FUND_SEARCH_BY)[keyof typeof FUND_SEARCH_BY];
 
@@ -41,22 +41,24 @@ export const FUND_SEARCH_BY_OPTIONS: { value: FundSearchByField; label: string }
 ];
 
 export type FundDisbursementFilterValues = {
-    claimType: FundClaimType | "";
+    claimType: FundClaimType | undefined;
     /** ค่าเดียวกับ `productMultipleSelectData` (ClaimConsider/.../Constant/ConstantValues.ts) : 6 = PH, 26 = PA */
-    productId: number | "";
-    branchId: number | "";
-    userId: string | "";
+    productId: number | undefined;
+    branchId: number | undefined;
+    userId: number | undefined;
     searchBy: FundSearchByField;
     searchDetail: string;
+    isSearch: boolean;
 };
 
 export const getDefaultFundFilter = (claimType?: FundClaimType): FundDisbursementFilterValues => ({
-    claimType: claimType ?? "",
-    productId: "",
-    branchId: "",
-    userId: "",
+    claimType: claimType ?? undefined,
+    productId: undefined,
+    branchId: undefined,
+    userId: undefined,
     searchBy: FUND_SEARCH_BY.claimCode,
     searchDetail: "",
+    isSearch: false,
 });
 
 /**
@@ -65,11 +67,12 @@ export const getDefaultFundFilter = (claimType?: FundClaimType): FundDisbursemen
  */
 export type FundDisbursementItem = {
     billingDetailId: string;
-    caseCode: string;
-    approvedDate?: string; // วันที่อนุมัติเคลม — ทั้ง 2 ประเภท
-    approvedBy?: string; // ผู้อนุมัติ — ทั้ง 2 ประเภท
-    disbursementAmount: number; // จำนวนเงินตั้งเบิก — ทั้ง 2 ประเภท
-    insuranceCompanyName?: string; // ชื่อบริษัทประกัน — ทั้ง 2 ประเภท
-    notifiedDate?: string; // วันที่แจ้งเคลม — เคลมลูกค้าเท่านั้น
-    hospitalName?: string; // ชื่อสถานพยาบาล — เคลมโรงพยาบาลเท่านั้น
+    billingHeaderId: string;
+    noticeDate: string;
+    caseNo: string;
+    caseId: string;
+    reviewedDate?: string; // วันที่อนุมัติเคลม — ทั้ง 2 ประเภท
+    approveName?: string; // ผู้อนุมัติ — ทั้ง 2 ประเภท
+    billingAmount: number;
+    insuredCompanyName?: string; // ชื่อบริษัทประกัน — ทั้ง 2 ประเภท
 };

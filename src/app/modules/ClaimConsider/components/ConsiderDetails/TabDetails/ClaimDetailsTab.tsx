@@ -6,6 +6,7 @@ import SaveIcon from "@mui/icons-material/Save";
 import SaveAsIcon from "@mui/icons-material/SaveAs";
 import StepToggleBar from "./SubDetailsTab/StepToggleBar";
 import RecordClaimData from "./SubDetailsTab/RecordClaimData";
+import PhysicalTherapySection from "./SubDetailsTab/PhysicalTherapySection";
 import DraftViewingBanner from "./SubDetailsTab/DraftViewingBanner";
 // เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
 // import ContinuousClaimBanner from "../../ConsiderHospitalDetails/SubDetailsTab/ContinuousClaimBanner";
@@ -26,6 +27,8 @@ import { useAppDispatch, useAppSelector } from "../../../../../../redux";
 import { claimConsiderSelector, resetState } from "../../../store/claimConsiderSlice";
 import useClaimStepCalculateHook from "../../../hooks/ClaimConsiderDetail/ClaimStepCalculateHook";
 import ConfirmApproveClaimDialog from "./ConfirmApproveClaimDialog";
+import { focusIpdCompensationError, getIpdCompensationBlocker } from "../../../store/ipdCompensationCalculator";
+import useIpdCompensationBenefit from "../../../hooks/ClaimConsiderDetail/IpdCompensationBenefitHook";
 import { swalSuccess } from "../../../../_common";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
@@ -91,6 +94,18 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             isCombinedWithMedicalAll,
             scanDocuments: attachedDocuments,
             rejectDocuments,
+            excludeSavedCaseDocuments: true,
+            // RC-003 3.4 ข้อมูลกายภาพบำบัด — ไม่ติ๊กแล้วเหตุผลที่ค้างไว้ไม่ถูกส่ง
+            caseTreatmentFields: {
+                casePhysicalTherapy: {
+                    // id ของแถวเดิมจาก GetClaimDetailConsider — ให้ BE แก้แถวเดิม ไม่สร้างซ้ำ
+                    casePhysicalTherapyId: detail?.casePhysicalTherapyId,
+                    isPhysicalTherapy: formik.values.isPhysicalTherapyChecked,
+                    physicalTherapyNecessityReasonId: formik.values.isPhysicalTherapyChecked
+                        ? formik.values.physicalTherapyNecessityReasonId
+                        : undefined,
+                },
+            },
             // BE ตอบ isSuccess=false โดยไม่ throw จึงต้องขึ้น toast จาก callback นี้ ไม่ใช่หลัง await handleApprove
             onApproveSuccess: (response) => {
                 setConfirmApproveOpen(false);
@@ -110,6 +125,13 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
     // const continuousClaim = formik.values.continuousClaim;
 
     const { filledItems, calculateResult } = useAppSelector(claimConsiderSelector);
+    // DFUAT-101 : อัตราค่าชดเชยผู้ป่วยในต่อวันจากสิทธิ์ความคุ้มครอง — ค่าเดียวกับการ์ด Step 2 (query เดียวกัน)
+    const { dailyRate: ipdCompensationDailyRate } = useIpdCompensationBenefit({
+        detail,
+        customerDetail,
+        coverageTypeId: formik.values.coverageTypeId,
+        medicalTypeId: formik.values.medicalTypeId,
+    });
     const { activeStep, setActiveStep, isLastStep, isCalculating, isAdvancing, handleNext, handleBack } =
         useClaimStepCalculateHook({
             formik,
@@ -117,7 +139,27 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
             filledItems,
             stepsLength: steps.length,
             paymentAmount: detail?.paymentAmount,
+            ipdCompensationDailyRate,
         });
+
+    /** ค่ารักษา IPD/Day Case : ค่าชดเชยไม่สมบูรณ์หรือยอดโอนไม่ตรง = ห้ามอนุมัติ พากลับ Step 2 ไปที่ข้อความผิดพลาด */
+    const handleApproveClick = () => {
+        const blocker = getIpdCompensationBlocker({
+            items: filledItems,
+            coverageTypeId: formik.values.coverageTypeId,
+            medicalTypeId: formik.values.medicalTypeId,
+            ipdDays: formik.values.ipdDays,
+            icuDays: formik.values.icuDays,
+            paymentAmount: detail?.paymentAmount,
+            dailyRate: ipdCompensationDailyRate,
+        });
+        if (blocker) {
+            setActiveStep(1);
+            focusIpdCompensationError(blocker);
+            return;
+        }
+        setConfirmApproveOpen(true);
+    };
     return (
         <>
             <FormikProvider value={formik}>
@@ -157,6 +199,9 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             medicalType={medicalType}
                                             incidentTypeMappingLoading={incidentTypeMappingLoading}
                                         />
+                                    </Grid>
+                                    <Grid item xs={12} sm={12} md={12} lg={12}>
+                                        <PhysicalTherapySection />
                                     </Grid>
                                     <Grid item xs={12} sm={12} md={12} lg={12}>
                                         <DocumentScanTable
@@ -277,7 +322,7 @@ const ClaimDetailsTab = ({ customerDetail, detail }: ClaimDetailsTabProps) => {
                                             bgcolor: "#2E7D32",
                                             "&:hover": { bgcolor: "#1B5E20" },
                                         }}
-                                        onClick={() => setConfirmApproveOpen(true)}
+                                        onClick={handleApproveClick}
                                     >
                                         อนุมัติ
                                     </Button>

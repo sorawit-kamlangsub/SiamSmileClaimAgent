@@ -1,5 +1,11 @@
 import dayjs, { Dayjs } from "dayjs";
-import { useApproveClaimDecision, useSaveClaimEditDraft, useUpsertClaimDecision } from "../../../../api/coreClaimApi";
+import { useRef } from "react";
+import {
+    useApproveClaimDecision,
+    useGetDocumentByCaseId,
+    useSaveClaimEditDraft,
+    useUpsertClaimDecision,
+} from "../../../../api/coreClaimApi";
 import {
     ApproveCasePayableRequest,
     ApproveClaimDecisionDtoRequest,
@@ -10,7 +16,7 @@ import {
     CaseAssessmentSaveClaimEditDraftRequest,
     CaseAdjudicationSaveClaimEditDraftRequest,
     CaseDocumentSaveClaimEditDraftRequest,
-    CaseDocumentDetailSaveClaimEditDraftRequest,
+    OCRSaveClaimEditDraftRequest,
     TimeSpan,
     CaseItemAdjudicationSaveClaimEditDraftRequest,
     CaseItemSaveClaimEditDraftRequest,
@@ -20,14 +26,14 @@ import {
     UpsertClaimDecisionCaseAssessmentRequest,
     UpsertClaimDecisionCaseAdjudicationRequest,
     UpsertClaimDecisionCaseDocumentRequest,
-    UpsertClaimDecisionCaseDocumentDetailRequest,
+    UpsertClaimDecisionOCRRequest,
     UpsertClaimDecisionCaseRequest,
     UpsertClaimDecisionDtoResponseServiceResponse,
     CalculateCaseClaimDtoResponse,
     CalculateCaseClaim,
 } from "../../../../api/coreClaimApi.client";
 import { FormikProps } from "formik";
-import { customFormatter, swalError, swalSuccess } from "../../../_common";
+import { customFormatter, swalError, swalSuccess, swalWarning } from "../../../_common";
 import { DocumentCheckRow } from "../../components/ConsiderHospitalDetails/mock/hospitalConsiderMock";
 import useConsiderDetailHook from "./ConsiderDetailHook";
 import { useAppSelector } from "../../../../../redux";
@@ -48,6 +54,13 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     isCombinedWithMedicalAll?: boolean;
     /** ฟิลด์ระดับ case ที่มีเฉพาะบางหน้า (เคลมโรงพยาบาล : HN / AN / VN) */
     caseFields?: Pick<UpsertClaimDecisionCaseRequest, "hn" | "an" | "vn">;
+    /**
+     * ข้อมูลการรักษา / ความจำเป็นทางการแพทย์ ของเคลมโรงพยาบาล (RC-005 5.4-5.6)
+     * เคลมลูกค้าส่งเฉพาะ casePhysicalTherapy (RC-003 3.4 ข้อมูลกายภาพบำบัด)
+     * ส่งไปกับ case ของ /claim/decision (บันทึกผลพิจารณา + อนุมัติ) และ SaveClaimEditDraft (บันทึกแบบร่าง)
+     * DTO ของทั้ง 2 endpoint โครงสร้างเดียวกัน — ไม่ส่ง = ไม่แนบ
+     */
+    caseTreatmentFields?: Pick<UpsertClaimDecisionCaseRequest, "caseMedicalTreatment" | "casePhysicalTherapy">;
     /**
      * ตารางตรวจสอบเอกสาร (ค่าดิบจาก formik ของเคลมโรงพยาบาล)
      * hook เป็นคนกรอง/แปลงเป็น case.caseDocument[].documentReviewStatusId เอง
@@ -88,6 +101,11 @@ type UseClaimDetailActionHookParams<T extends ClaimConsiderValues = ClaimConside
     scanDocuments?: CaseDocumentV2Request[];
     /** เอกสารที่แนบไฟล์แล้วในตาราง "เอกสารประกอบการปฏิเสธ" — ส่งไปเฉพาะเมื่อผลพิจารณาเป็นปฏิเสธ */
     rejectDocuments?: CaseDocumentV2Request[];
+    /**
+     * ไม่ส่งเอกสารที่ผูกกับเคสอยู่แล้ว (documentId + claimDocumentTypeId ตรงกับ GetDocumentByCaseId) ซ้ำใน caseDocument
+     * — เปิดเฉพาะเคลมลูกค้า (default false = ส่งทุกตัวตามเดิม)
+     */
+    excludeSavedCaseDocuments?: boolean;
 } & Pick<ReturnType<typeof useConsiderDetailHook>, "detailData" | "customerDetailData">;
 
 /**
@@ -114,6 +132,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     customerDetailData,
     isCombinedWithMedicalAll = false,
     caseFields,
+    caseTreatmentFields,
     documentChecks,
     payoutAccount,
     onApproveSuccess,
@@ -122,8 +141,26 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
     calculateOverride,
     draftStep,
     scanDocuments,
+    excludeSavedCaseDocuments = false,
     rejectDocuments,
 }: UseClaimDetailActionHookParams<T>) => {
+    // เอกสารที่ผูกกับเคสแล้ว — argument ชุดเดียวกับ DocumentScanTable ของเคลมลูกค้า (query key ตรงกัน ไม่ยิงซ้ำ)
+    const productTypeId = customerDetailData?.data?.productTypeId ?? 0;
+    const { data: caseDocumentData } = useGetDocumentByCaseId(
+        excludeSavedCaseDocuments && productTypeId ? detailData?.data?.caseId ?? "" : "",
+        productTypeId,
+        detailData?.data?.claimSourceId,
+        undefined,
+        undefined,
+        undefined,
+        1,
+        100
+    );
+    const isSavedToCase = (doc: CaseDocumentV2Request) =>
+        excludeSavedCaseDocuments &&
+        (caseDocumentData?.data ?? []).some(
+            (saved) => saved.documentId === doc.documentId && saved.claimDocumentTypeId === doc.claimDocumentTypeId
+        );
     /**
      * เอกสารที่สแกนในหน้านี้ — มาจาก onAttachedDocumentsChange ของแต่ละตาราง (เฉพาะแถวที่มีไฟล์จริง)
      * ไม่อ่าน documentScanList ของ redux claimPH เพราะเป็น list กลางที่ DocumentScanTable ทุกหน้าเขียนลง
@@ -134,7 +171,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             ...(scanDocuments ?? []),
             ...(formik.values.considerResult === DECISION_ID.REJECTED ? rejectDocuments ?? [] : []),
         ];
-        return docs.filter((doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index);
+        return docs.filter(
+            (doc, index) => docs.findIndex((d) => d.documentId === doc.documentId) === index && !isSavedToCase(doc)
+        );
     };
     const { filledItems, calculateResult: calculateResultStore } = useAppSelector(claimConsiderSelector);
     // เคลมโรงพยาบาลส่ง calculateOverride มาปรับยอดตามตัวเลือก "โอนค่าชดเชยรวมกับค่ารักษา" ก่อนสร้าง payload
@@ -289,7 +328,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: doc.documentId,
                 documentNo: doc.documentNo,
                 documentSubTypeId: doc.documentSubTypeId,
-                caseDocumentDetail: mapOcrReceiptDetailForDraft(doc.caseDocumentDetail),
+                ocr: mapOcrReceiptDetailForDraft(doc.caseDocumentDetail),
             })
         );
     };
@@ -301,19 +340,18 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: d.documentId,
                 documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId,
-                caseDocumentDetail: [],
+                claimDocumentTypeId: d.claimDocumentTypeId,
+                ocr: [],
             })
         );
     };
 
-    const mapOcrReceiptDetailForDraft = (
-        details: OcrReceiptRequest[] | undefined
-    ): CaseDocumentDetailSaveClaimEditDraftRequest[] => {
+    const mapOcrReceiptDetailForDraft = (details: OcrReceiptRequest[] | undefined): OCRSaveClaimEditDraftRequest[] => {
         if (!details?.length) return [];
 
         return details.map(
-            (doc): CaseDocumentDetailSaveClaimEditDraftRequest => ({
-                caseDocumentDetailId: doc.caseDocumentDetailId,
+            (doc): OCRSaveClaimEditDraftRequest => ({
+                ocrId: doc.caseDocumentDetailId,
                 firstName: doc.firstName,
                 lastName: doc.lastName,
                 fullName: doc.fullName,
@@ -346,7 +384,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
-            chiefComplaintCustom: values.detail,
+            illnessOrInjuryDetail: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -363,6 +401,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             hn: caseFields?.hn,
             an: caseFields?.an,
             vn: caseFields?.vn,
+            caseMedicalTreatment: caseTreatmentFields?.caseMedicalTreatment,
+            casePhysicalTherapy: caseTreatmentFields?.casePhysicalTherapy,
             caseItem: mapCaseItemForDraft(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDraft(),
             caseAdjudication: mapCaseAdjudicationForDraft(),
@@ -387,8 +427,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDraft(),
         draftStep: draftStep ?? 1,
         claimEditDraft: {
-            baseClaimVersion: detailData?.data?.claimVersion ?? 0,
-            baseCaseVersion: detailData?.data?.caseVersion ?? 0,
+            // backend ถอด claimVersion / caseVersion ออกจาก GetClaimDetailConsider แล้ว แต่ request ยังบังคับส่ง
+            baseClaimVersion: 0,
+            baseCaseVersion: 0,
             claimEditDraftStatusId: formik.values.considerResult === DECISION_ID.REJECTED ? 3 : 1, // แบบร่าง
         },
     };
@@ -502,7 +543,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: doc.documentId,
                 documentNo: doc.documentNo,
                 documentSubTypeId: doc.documentSubTypeId ?? 0,
-                caseDocumentDetail: mapOcrReceiptDetailForDecision(doc.caseDocumentDetail),
+                ocr: mapOcrReceiptDetailForDecision(doc.caseDocumentDetail),
             })
         );
     };
@@ -514,18 +555,19 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                 documentId: d.documentId,
                 documentNo: d.documentNo,
                 documentSubTypeId: d.documentSubTypeId ?? 0,
-                caseDocumentDetail: [],
+                claimDocumentTypeId: d.claimDocumentTypeId,
+                ocr: [],
             })
         );
     };
 
     const mapOcrReceiptDetailForDecision = (
         details: OcrReceiptRequest[] | undefined
-    ): UpsertClaimDecisionCaseDocumentDetailRequest[] => {
+    ): UpsertClaimDecisionOCRRequest[] => {
         if (!details?.length) return [];
 
         return details.map(
-            (doc): UpsertClaimDecisionCaseDocumentDetailRequest => ({
+            (doc): UpsertClaimDecisionOCRRequest => ({
                 firstName: doc.firstName,
                 lastName: doc.lastName,
                 fullName: doc.fullName,
@@ -552,7 +594,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
                     documentSubTypeId: doc.documentSubTypeId,
                     documentReviewStatusId: doc.checkResult || undefined,
                     documentReviewRemark: doc.remark || undefined,
-                    caseDocumentDetail: [],
+                    ocr: [],
                 })
             );
 
@@ -576,7 +618,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             dischargeTime: asTimeSpan(values.dischargeTime),
             hospitalId: values.hospitalId,
             chiefComplaintId: values.chiefComplaintId,
-            chiefComplaintCustom: values.detail,
+            illnessOrInjuryDetail: values.detail,
             medicalTypeId: values.medicalTypeId,
             productId: customerDetailData?.data?.productId ?? undefined,
             icD10_1stId: values.diagnoses?.[0]?.icd10Id,
@@ -593,6 +635,8 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             hn: caseFields?.hn,
             an: caseFields?.an,
             vn: caseFields?.vn,
+            caseMedicalTreatment: caseTreatmentFields?.caseMedicalTreatment,
+            casePhysicalTherapy: caseTreatmentFields?.casePhysicalTherapy,
             caseItem: mapCaseItemForDecision(), // TODO: ไม่มี array นี้ใน ClaimConsiderValues
             caseAssessment: mapCaseAssessmentForDecision(),
             caseAdjudication: mapCaseAdjudicationForDecision(overrideDecisionId),
@@ -617,10 +661,28 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
         case: mapCaseForDecision(overrideDecisionId),
     });
 
+    /**
+     * กันกด "ยืนยันบันทึกผลพิจารณา" ซ้ำ (DFUAT-052) — ใช้ ref เพราะ isLoading ของ mutation ยังไม่อัปเดต
+     * จนกว่าจะ re-render รอบถัดไป กดรัว ๆ ก่อนหน้านั้นจะยิง /claim/decision ซ้ำ ทำให้ Transaction stamp หลายรอบ
+     */
+    const isConfirmingConsiderRef = useRef(false);
+
     /** overrideDecisionId : ปุ่ม "อนุมัติ" ส่ง DECISION_ID.APPROVED (9) (ผลพิจารณาปกติอ่านจาก formik.values.considerResult) */
     const handleConfirmConsider = async (overrideDecisionId?: number) => {
-        const payload = mapClaimDecisionPayload(overrideDecisionId);
-        await saveClaimDecision.mutateAsync(payload);
+        if (isConfirmingConsiderRef.current) return;
+        // ปฏิเสธต้องแนบเอกสารประกอบการปฏิเสธอย่างน้อย 1 รายการ (เคลมลูกค้า / เคลมโรงพยาบาล)
+        const decisionId = overrideDecisionId ?? formik.values.considerResult;
+        if (decisionId === DECISION_ID.REJECTED && !rejectDocuments?.length) {
+            swalWarning("แจ้งเตือน", "กรุณาแนบเอกสารประกอบการปฏิเสธ");
+            return;
+        }
+        isConfirmingConsiderRef.current = true;
+        try {
+            const payload = mapClaimDecisionPayload(overrideDecisionId);
+            await saveClaimDecision.mutateAsync(payload);
+        } finally {
+            isConfirmingConsiderRef.current = false;
+        }
     };
 
     const mapCasePayableForApprove = (): CasePayableDraft => {
@@ -653,6 +715,9 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
      */
     const buildApproveJsonDetail = (): CalculateCaseClaim => ({
         productId: customerDetailData?.data?.productId,
+        customerDetailId: customerDetailData?.data?.customerDetailId ?? undefined,
+        customerTypeCode: customerDetailData?.data?.customerTypeCode ?? undefined,
+        productName: customerDetailData?.data?.productName ?? undefined,
         coverageTypeId: formik.values.coverageTypeId,
         medicalTypeId: formik.values.medicalTypeId,
         incidentTypeId: formik.values.incidentTypeId,
@@ -668,6 +733,7 @@ const useClaimDetailActionHook = <T extends ClaimConsiderValues = ClaimConsiderV
             nonCoverAmount: item.notCovered,
             reasonId: item.reason,
             remark: item.remark,
+            receiptAmount: item.receiptAmount,
         })),
         disabilityList: [],
     });

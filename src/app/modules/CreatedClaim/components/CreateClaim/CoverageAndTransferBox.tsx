@@ -84,12 +84,13 @@ const CoverageAndTransferBox: React.FC<Props> = ({
     useEffect(() => {
         setLocalAmounts(benefitAmounts);
     }, [benefitAmounts]);
-    useEffect(() => {
-        setLocalAmounts(benefitAmounts);
-    }, [benefitAmounts]);
 
-    // reset ทุกครั้งที่เปลี่ยนประเภทการเบิก (medicalTypeId)
+    // reset ทุกครั้งที่เปลี่ยนประเภทการเบิก (medicalTypeId) — ไม่ reset ตอน mount
+    // (กดย้อนกลับจากหน้าสรุป ต้องคงยอดที่กรอกไว้)
+    const prevMedicalTypeId = useRef(medicalTypeId);
     useEffect(() => {
+        if (prevMedicalTypeId.current === medicalTypeId) return;
+        prevMedicalTypeId.current = medicalTypeId;
         setLocalAmounts({});
         setAmountErrors({});
         onBenefitAmountsChange({});
@@ -119,7 +120,8 @@ const CoverageAndTransferBox: React.FC<Props> = ({
             }));
         } else {
             setAmountErrors((prev) => {
-                const { [benefitId]: _, ...rest } = prev;
+                const rest = { ...prev };
+                delete rest[benefitId];
                 return rest;
             });
         }

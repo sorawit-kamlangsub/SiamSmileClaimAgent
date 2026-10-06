@@ -60,7 +60,11 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
         handleApprove,
     } = useBillingReviewDetailHook(readOnly);
     const expenseTotals = useBillingExpenseHook(formik);
-    const variant = useBillingProductVariant(formik.values.medicalTypeId);
+    const variant = useBillingProductVariant(
+        formik.values.medicalTypeId,
+        detail?.productTypeId,
+        detail?.medicalSubTypeCode
+    );
 
     const isLastStep = activeStep === steps.length - 1;
 
@@ -130,6 +134,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         hospitalName={detail?.hospitalName}
                                         submittedDate={submittedDate}
                                         showStayDays={variant.isIpdLike}
+                                        beLabels={detail}
                                     />
                                 </Grid>
                                 {/* ซ่อนชั่วคราว (2026-09-22) — ดูคอมเมนต์ที่ import ด้านบน
@@ -138,7 +143,10 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                 </Grid>
                                 */}
                                 <Grid item xs={12}>
-                                    <BillingTreatmentSection showIpdFields={variant.isIpdLike} />
+                                    <BillingTreatmentSection
+                                        showIpdFields={variant.isIpdLike}
+                                        reservationRemark={detail?.reservationRemark}
+                                    />
                                 </Grid>
                                 <Grid item xs={12}>
                                     <BillingAttendingDoctorSection />
@@ -155,6 +163,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
                                         aplicationCode={detail?.insured?.policyCode}
+                                        productId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>
@@ -188,6 +197,7 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         reviewReason={reviewReason}
                                         reviewReasonLoading={reviewReasonLoading}
                                         aplicationCode={detail?.insured?.policyCode}
+                                        productId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>
@@ -199,6 +209,10 @@ const BillingClaimDetailsTab = ({ readOnly = false }: BillingClaimDetailsTabProp
                                         submittedDate={submittedDate}
                                         showStayDays={variant.isIpdLike}
                                         allowSeparateCompensation={variant.allowSeparateCompensation}
+                                        beLabels={detail}
+                                        caseAdjudicationId={detail?.caseAdjudicationId}
+                                        productId={detail?.productId}
+                                        productTypeId={detail?.productTypeId}
                                     />
                                 </Grid>
                             </Grid>

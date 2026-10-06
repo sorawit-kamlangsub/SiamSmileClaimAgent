@@ -11,6 +11,8 @@ import extraPaymentSlice from "../app/modules/ExtraPayment/store/extraPaymentSli
 import bankStatusCheckSlice from "../app/modules/BankStatus/store/bankStatusCheckSlice";
 
 import claimConsiderSlice from "../app/modules/ClaimConsider/store/claimConsiderSlice";
+import managePaymentHospitalSlice from "../app/modules/ManageInsuranceFund/ManagePaymentHospital/store/managePaymentHospitalSlice";
+import generateTransferSlice from "../app/modules/ManageInsuranceFund/ManageTransferHospital/store/generateTransferSlice";
 import repaySlice from "../app/modules/ManageTransfer/store/repaySlice";
 import refundSlice from "../app/modules/Refund/store/refundSlice";
 import adjustSlice from "../app/modules/AdjustTransfer/store/adjustTransferMonitorSlice";
@@ -25,6 +27,8 @@ export const rootReducer = combineReducers({
     extraPayment: extraPaymentSlice,
     bankStatusCheck: bankStatusCheckSlice,
     claimConsider: claimConsiderSlice,
+    managePaymentHospital: managePaymentHospitalSlice,
+    generateTransferHospital: generateTransferSlice,
     repay: repaySlice,
     refund: refundSlice,
     adjust: adjustSlice,

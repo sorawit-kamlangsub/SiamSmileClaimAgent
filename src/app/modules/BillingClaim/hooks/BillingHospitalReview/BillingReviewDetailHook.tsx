@@ -4,15 +4,17 @@ import { useFormik } from "formik";
 import { useAppDispatch } from "../../../../../redux";
 import {
     useGetHospitalBillingDetail,
+    useGetHospitalBillingHistory,
+    useRepublishHospitalBillingReview,
     useSubmitHospitalBilling,
     normalizeSubmitError,
 } from "../../../../api/hospitalBillingApi";
 import { useGetDecisionReason, useGetRejectReason } from "../../../../api/coreClaimMastersApi";
 import { ReviewReasonOption } from "../../components/BillingHospitalReview/SubDetailsTab/BillingReviewResultSection";
-import { SubmitHospitalBillingDto } from "../../../../api/coreClaimApi.client";
+import { BillingDetailDto, SubmitHospitalBillingDto } from "../../../../api/coreClaimApi.client";
 import { swalConfirm, swalError, swalSuccess, swalToast, swalWarning } from "../../../_common";
 import { round2, toFormValues, toReviewDataDto } from "../../store/billingMappers";
-import { billingReturnStatusLabel } from "../../store/billingStatusHelpers";
+import { billingReturnStatusLabel, billingStatusLabel } from "../../store/billingStatusHelpers";
 import {
     BILLING_DECISION_ID,
     BILLING_STATUS,
@@ -97,6 +99,8 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         refetch: refetchDetail,
     } = useGetHospitalBillingDetail(billingDetailId);
     const detail = detailData?.data;
+    // ไม่ยิงตอน mount — ดึงเองเฉพาะตอนตรวจหลักฐานหลัง timeout/500 (recoverAfterUnknownOutcome)
+    const { refetch: refetchHistory } = useGetHospitalBillingHistory(billingDetailId, false);
 
     const formik = useFormik<BillingReviewFormValues>({
         initialValues: EMPTY_FORM_VALUES,
@@ -104,11 +108,20 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         onSubmit: () => undefined,
     });
 
+    const syncFormFromDetail = (source: BillingDetailDto) => {
+        if (!source.data) return;
+        // จำนวนวันนอนอยู่ที่ root ของ BillingDetailDto (ไม่ใช่ใน data.claim) จึง sync แยกจาก toFormValues
+        formik.setValues(
+            { ...toFormValues(source.data), ipdDays: source.ipdDayCount ?? 0, icuDays: source.icuDayCount ?? 0 },
+            false
+        );
+    };
+
     /** sync ค่าจาก Detail ลงฟอร์มครั้งเดียวตอนโหลดเสร็จ (enableReinitialize จะล้างค่าที่ผู้ใช้แก้ทุกครั้งที่ refetch) */
     const hasSyncedRef = useRef(false);
     useEffect(() => {
         if (!detail?.data || hasSyncedRef.current) return;
-        formik.setValues(toFormValues(detail.data), false);
+        syncFormFromDetail(detail);
         hasSyncedRef.current = true;
         // ปลดล็อก useGetDocumentType (DocumentScanTable "เอกสารประกอบการปฏิเสธ") — gate ด้วย
         // claimPHSlice.isEnabled ซึ่ง default false และไม่มีใครใน flow นี้ set ให้เดิม ทำให้ query โดน
@@ -117,7 +130,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         dispatch(setEnabled(true));
     }, [detail]);
 
-    /** เปิด sync ใหม่หลัง refetch จาก 409 (ข้อมูลเปลี่ยนไป ต้องโหลดค่าล่าสุดมาแทนของเดิม) */
+    /** เปิด sync ใหม่หลัง refetch จาก 409 (สถานะเปลี่ยนไป ต้องโหลดค่าล่าสุดมาแทนของเดิม) */
     const resyncAfterConflict = () => {
         hasSyncedRef.current = false;
     };
@@ -125,17 +138,11 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     /** แก้ไขได้เฉพาะ statusId = BILLING_STATUS.pendingReview (รอตรวจสอบ) — สถานะอื่นเป็นการดูย้อนหลังอย่างเดียว (handoff ข้อ 1) */
     const isReadOnly = readOnlyProp || detail?.statusId !== BILLING_STATUS.pendingReview;
 
-    /**
-     * requestId : 1 ค่าต่อ 1 ความตั้งใจบันทึก — retry คำขอเดิมต้องใช้ค่าเดิมซ้ำ (handoff ข้อ 7)
-     *
-     * `lastBodyKeyRef` เก็บ body ครั้งก่อน (ไม่รวม requestId เอง) ไว้เทียบตอน submit ครั้งถัดไป: ถ้า body
-     * เหมือนเดิมทุกค่า = retry คำขอเดิม (ใช้ requestId เดิมซ้ำ) ถ้าต่างกัน = ความตั้งใจบันทึกใหม่ (สร้าง
-     * requestId ใหม่) — ครอบคลุมทุก field ที่แก้ได้ ไม่ผูกกับ field ใด field หนึ่งเป็นการเฉพาะ
-     */
-    const requestIdRef = useRef<string>();
-    const lastBodyKeyRef = useRef<string>();
     const submitMutation = useSubmitHospitalBilling();
+    const republishMutation = useRepublishHospitalBillingReview();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    /** กันกดซ้ำแบบ synchronous — submit ไม่มี idempotency key แล้ว คำขอซ้ำที่หลุดไปจะถูกประมวลผลจริง */
+    const isSubmittingRef = useRef(false);
 
     /**
      * สถานะ 2/4/5 ต้องระบุสาเหตุ — 2/5 ใช้ decisionId+decisionReasonId (Decision master), 4 ใช้
@@ -194,11 +201,90 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
     };
 
     /**
+     * 5xx / network / timeout : ยังสรุปไม่ได้ว่า submit บันทึกแล้วหรือไม่ — โหลด Detail + History ด้วย
+     * billingDetailId เดิมมาเป็นหลักฐานก่อน (handoff database-workflow ข้อ 5) ห้ามส่ง submit ซ้ำเอง
+     *
+     * Submit รับเฉพาะตอนสถานะ = รอตรวจสอบ และทุกผลตรวจย้ายสถานะออกจากรอตรวจสอบ ดังนั้นสถานะที่เปลี่ยนไป
+     * แล้ว = มี revision บันทึกแล้ว : ไม่สร้างผลตรวจใหม่ ถ้ายังไม่มีหลักฐานว่าส่งผลออกแล้วให้ผู้ใช้เลือกส่งผล
+     * อีกครั้งด้วย revisionId จริงจาก History คืน true เมื่อ revision ล่าสุดตรงกับผลที่ผู้ใช้ตั้งใจบันทึก
+     */
+    const recoverAfterUnknownOutcome = async (statusId: BillingStatusId): Promise<boolean> => {
+        const [detailResult, historyResult] = await Promise.all([refetchDetail(), refetchHistory()]);
+        const latestDetail = detailResult.data?.data;
+        if (detailResult.isError || historyResult.isError || !latestDetail) {
+            swalError(
+                "ยังสรุปผลการบันทึกไม่ได้",
+                "ไม่สามารถโหลดข้อมูลล่าสุดได้ กรุณาตรวจสอบแท็บประวัติทำรายการก่อนส่งอีกครั้ง"
+            );
+            return false;
+        }
+
+        if (latestDetail.statusId === BILLING_STATUS.pendingReview) {
+            swalError(
+                "บันทึกไม่สำเร็จ",
+                "เกิดข้อผิดพลาดที่ระบบ และยังไม่พบผลตรวจที่บันทึกไว้ กรุณาตรวจทานข้อมูลแล้วกดยืนยันอีกครั้ง"
+            );
+            return false;
+        }
+
+        syncFormFromDetail(latestDetail);
+        const latestRevision = [...(historyResult.data?.data?.revisions ?? [])].sort(
+            (a, b) => (b.version ?? 0) - (a.version ?? 0)
+        )[0];
+        if (!latestRevision?.revisionId) {
+            swalWarning(
+                "สถานะรายการเปลี่ยนไปแล้ว",
+                `รายการอยู่ในสถานะ "${billingStatusLabel(latestDetail.statusId)}" แล้ว กรุณาตรวจสอบแท็บประวัติทำรายการ`
+            );
+            return false;
+        }
+
+        let returnStatus = latestRevision.returnStatus;
+        if (returnStatus !== "Published") {
+            const confirm = await swalConfirm(
+                "บันทึกผลตรวจแล้ว",
+                `ยังไม่มีหลักฐานว่าส่งผลออกสำเร็จ (สถานะคำขอส่งกลับ: ${billingReturnStatusLabel(
+                    returnStatus
+                )}) ต้องการส่งผลอีกครั้งหรือไม่ ?`,
+                "ส่งผลอีกครั้ง",
+                "ยกเลิก"
+            );
+            if (confirm.isConfirmed) {
+                try {
+                    const published = await republishMutation.mutateAsync({
+                        billingDetailId,
+                        revisionId: latestRevision.revisionId,
+                    });
+                    if (!published.isSuccess) {
+                        swalError("ส่งผลอีกครั้งไม่สำเร็จ", published.message || "กรุณาตรวจสอบแท็บประวัติทำรายการ");
+                        return false;
+                    }
+                    returnStatus = published.data?.returnStatus;
+                } catch (rawError) {
+                    swalError("ส่งผลอีกครั้งไม่สำเร็จ", normalizeSubmitError(rawError).message);
+                    return false;
+                }
+            }
+        }
+
+        if (latestRevision.statusId !== statusId) {
+            swalWarning(
+                "สถานะรายการเปลี่ยนไปแล้ว",
+                `รายการถูกบันทึกผลเป็น "${billingStatusLabel(latestRevision.statusId)}" แล้ว`
+            );
+            return false;
+        }
+        await swalSuccess("บันทึกผลตรวจแล้ว", `สถานะคำขอส่งกลับ: ${billingReturnStatusLabel(returnStatus)}`);
+        return true;
+    };
+
+    /**
      * ยิง POST /billing/hospital/{id}/submit ด้วย `statusId` ที่ระบุ — ใช้ร่วมกันทั้ง "ยืนยันบันทึกผลพิจารณา"
      * (รอแก้ไข/ปฏิเสธ, อ่านสาเหตุ/หมายเหตุจาก `formik.values.reviewReasonId`/`reviewRemark`) และ "อนุมัติ"
      * (ไม่มีสาเหตุ — `BILLING_DECISION_ID` ไม่มี entry ของ passed) คืน true เมื่อสำเร็จ (caller navigate เอง)
      */
     const submitReview = async (statusId: BillingStatusId): Promise<boolean> => {
+        if (isSubmittingRef.current) return false;
         if (!detail?.billingDetailId) {
             swalError("บันทึกไม่สำเร็จ", "ไม่พบรายการวางบิลนี้ กรุณาโหลดหน้าใหม่");
             return false;
@@ -225,13 +311,7 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         const isRejected = statusId === BILLING_STATUS.rejected;
         const usesDecisionReason = statusNeedsReason && !isRejected; // 2, 5
 
-        const bodyFields: Omit<SubmitHospitalBillingDto, "requestId"> = {
-            expectedVersion: detail.version,
-            expectedCaseVersion: detail.caseVersion,
-            expectedClaimVersion: detail.claimVersion,
-            rowVersion: detail.rowVersion ?? "",
-            caseRowVersion: detail.caseRowVersion ?? "",
-            claimRowVersion: detail.claimRowVersion ?? "",
+        const body: SubmitHospitalBillingDto = {
             reviewStatusId: statusId,
             rejectReasonId: isRejected ? formik.values.reviewReasonId : undefined,
             decisionId: usesDecisionReason ? reasonDecisionId : undefined,
@@ -239,17 +319,8 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
             reviewRemark: formik.values.reviewRemark || undefined,
             data: toReviewDataDto(formik.values),
         };
-        const bodyKey = JSON.stringify(bodyFields);
 
-        // retry คำขอเดิม (body เหมือนทุกค่ากับครั้งก่อน) ใช้ requestId เดิมซ้ำ — ค่าใดก็ตามเปลี่ยนไปถือเป็น
-        // ความตั้งใจบันทึกใหม่ ต้องขึ้น requestId ใหม่ (handoff ข้อ 7)
-        if (!requestIdRef.current || bodyKey !== lastBodyKeyRef.current) {
-            requestIdRef.current = crypto.randomUUID();
-        }
-        lastBodyKeyRef.current = bodyKey;
-
-        const body: SubmitHospitalBillingDto = { requestId: requestIdRef.current, ...bodyFields };
-
+        isSubmittingRef.current = true;
         setIsSubmitting(true);
         try {
             const response = await submitMutation.mutateAsync({ billingDetailId: detail.billingDetailId, body });
@@ -257,10 +328,6 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
                 swalError("บันทึกไม่สำเร็จ", response.message || "เกิดข้อผิดพลาด กรุณาลองใหม่");
                 return false;
             }
-
-            // สำเร็จแล้ว — ความตั้งใจบันทึกครั้งถัดไปต้องใช้ requestId ใหม่เสมอ
-            requestIdRef.current = undefined;
-            lastBodyKeyRef.current = undefined;
 
             if (statusId === BILLING_STATUS.passed) {
                 // rule 7 (handoff "Business Rule: อนุมัติรายการวางบิลโรงพยาบาล") : แจ้งผู้ใช้ว่ารายการ
@@ -282,14 +349,12 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
         } catch (rawError) {
             const normalized = normalizeSubmitError(rawError);
             if (normalized.isConflict) {
+                // สถานะปัจจุบันไม่อนุญาตให้ทำรายการ (BE ตรวจใน transaction) — โหลดใหม่ ไม่ส่งซ้ำอัตโนมัติ
                 swalWarning(
-                    "ข้อมูลเปลี่ยนไป",
-                    "มีการเปลี่ยนแปลงรายการนี้จากที่อื่นแล้ว ระบบจะโหลดข้อมูลล่าสุดให้ตรวจทานก่อนส่งอีกครั้ง"
+                    "สถานะรายการเปลี่ยนไปแล้ว",
+                    "ไม่สามารถทำรายการนี้ได้เนื่องจากมีการเปลี่ยนแปลงจากที่อื่น ระบบจะโหลดข้อมูลล่าสุดให้ตรวจสอบ"
                 );
                 resyncAfterConflict();
-                // แก้ payload หลังโหลดใหม่ = ความตั้งใจบันทึกใหม่ ต้องใช้ requestId ใหม่เสมอ (handoff ข้อ 7)
-                requestIdRef.current = undefined;
-                lastBodyKeyRef.current = undefined;
                 await refetchDetail();
             } else if (normalized.isNotFound) {
                 await swalError(
@@ -297,18 +362,14 @@ const useBillingReviewDetailHook = (readOnlyProp: boolean) => {
                     "ไม่พบรายการวางบิลนี้ หรือข้อมูลที่จำเป็นไม่พร้อม กรุณากลับไปที่รายการแล้วลองใหม่"
                 );
                 navigate("/billing/hospital");
-            } else if (normalized.isRetryable) {
-                // 500 / network / timeout — ผลบันทึกอาจสำเร็จแล้ว คง requestId + body เดิมไว้ (ไม่แตะ ref
-                // ทั้งสองตัว) ให้กด "ยืนยัน" ซ้ำเพื่อ retry คำขอเดิมได้ (handoff ข้อ 7/10)
-                swalError(
-                    "บันทึกไม่สำเร็จ",
-                    "เกิดข้อผิดพลาดที่ระบบ ผลบันทึกอาจสำเร็จแล้วหรือยังไม่สำเร็จ กรุณากดยืนยันอีกครั้งเพื่อลองส่งคำขอเดิม"
-                );
+            } else if (normalized.isOutcomeUnknown) {
+                return await recoverAfterUnknownOutcome(statusId);
             } else {
                 swalError("บันทึกไม่สำเร็จ", normalized.message);
             }
             return false;
         } finally {
+            isSubmittingRef.current = false;
             setIsSubmitting(false);
         }
     };

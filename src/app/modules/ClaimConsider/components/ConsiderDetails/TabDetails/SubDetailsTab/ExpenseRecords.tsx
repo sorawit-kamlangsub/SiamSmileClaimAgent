@@ -37,8 +37,13 @@ import AddBoxOutlinedIcon from "@mui/icons-material/AddBoxOutlined";
 import MiscellaneousServicesOutlinedIcon from "@mui/icons-material/MiscellaneousServicesOutlined";
 
 import { CATEGORY_ICON_MAP } from "../../../../../ClaimSimulate/components/CategoryIcon";
-import { hasAmountSumError, hasMissingReasonError } from "../../../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    getReceiptReconciliation,
+    hasAmountSumError,
+    hasMissingReasonError,
+} from "../../../../../ClaimSimulate/store/Claimsimulateutils";
 import useClaimExpenseDetailHook from "../../../../hooks/ClaimConsiderDetail/ClaimExpenseDetailHook";
+import IpdCompensationSection from "./IpdCompensationSection";
 
 // ─── Reference styles ──────────────────────────────────────────────
 const REF = {
@@ -149,9 +154,10 @@ const TreeNodeRow = ({
 }) => {
     const isExpanded = expandedIds.includes(node.id);
     const hasChildren = node.children.length > 0;
-    const match = node.label.match(/^([\d.]+)\s+(.+)$/);
-    const code = match?.[1] ?? "";
-    const description = match?.[2] ?? node.label;
+    // ใช้รหัส Master (inputItemCode) ตรงๆ แยกจากข้อความที่แสดง — เดิม parse จาก label ด้วย regex ตัวเลข
+    // ทำให้รหัสแบบ "IPD_Half_5" กลายเป็น code ว่าง (ใช้ตรวจข้อยกเว้นค่าชดเชยผู้ป่วยในไม่ได้)
+    const code = node.code ?? "";
+    const description = code && node.label.startsWith(code) ? node.label.slice(code.length).trim() : node.label;
     const isLeaf = !hasChildren;
     const isSelected = isLeaf && selectedLeafId === node.id;
 
@@ -284,13 +290,28 @@ const errorTooltipProps = {
 interface ExpenseRecordsProps {
     onNext?: () => void;
     expenseDetail: ReturnType<typeof useClaimExpenseDetailHook>;
+    /**
+     * เกณฑ์ของกรอบ "ผลตรวจสอบยอดเงิน" ใต้สรุปยอดเงิน
+     * - "payment" (default, พิจารณาเคลมลูกค้า) : เทียบยอดเงินโอน + ไม่คุ้มครอง กับใบเสร็จสุทธิ (getClaimAmountReconciliation)
+     * - "receipt" (เคลมโรงพยาบาล) : ไม่เทียบเงินโอน — ยอดเงินสุทธิต้องเท่ากับยอดเงินตามใบเสร็จ (getReceiptReconciliation)
+     */
+    reconciliationMode?: "payment" | "receipt";
+    /**
+     * โหมดดูอย่างเดียว (DFUAT-066 : ปุ่มดูรายละเอียดจาก Monitor พิจารณาเคลมโรงพยาบาล) — ปิดทุกช่อง/ปุ่มใน
+     * ตารางค่าใช้จ่าย และซ่อนบล็อก "รายการค่ารักษาเพิ่มเติม" · default false (หน้าพิจารณาปกติแก้ไขได้ตามเดิม)
+     */
+    readOnly?: boolean;
 }
 
 // รับ expenseDetail (ผลลัพธ์จาก useClaimExpenseDetailHook) เป็น prop จากผู้เรียก (ExpenseDetails /
 // TreatmentCostTable) แทนการเรียก hook เองที่นี่ — hook นี้หนัก (formik + query หลายตัว + effect sync ลง
 // Redux) ผู้เรียกบางจุด (ExpenseDetails) ต้องใช้ผลลัพธ์บางส่วน (เช่น benefitName) ก่อนถึงจุดนี้อยู่แล้ว
 // เรียกซ้ำอีกรอบในนี้จะยิง query/formik/effect ซ้ำสองชุดโดยไม่จำเป็น
-const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
+const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({
+    expenseDetail,
+    reconciliationMode = "payment",
+    readOnly = false,
+}) => {
     const {
         expenseItems: filledItems,
         showAddPanel,
@@ -320,7 +341,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
         totalNotCovered,
         netClaimAmount,
         paymentAmount,
-        amountReconciliation,
+        amountReconciliation: paymentReconciliation,
+        ipdCompensation,
         notCoveredReasonOptions,
         isNonCoveredReasonLoading,
         insuranceCompanyOptions,
@@ -335,6 +357,22 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
         pendingReceiptAmount,
         setPendingReceiptAmount,
     } = expenseDetail;
+
+    /**
+     * เคลมโรงพยาบาล (RC-006) + เคลมลูกค้า (RC-004 4.2) : "สิทธิ์เบิก" ระบบคำนวณให้อัตโนมัติ
+     * = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (Disable) claimAmount (ยอดเบิกก่อนหัก ส่งเป็น originalAmount)
+     * จึงผูกกับยอดเงินตามใบเสร็จเสมอ — สูตรยอดเงินสุทธิ / validation ส่วนลด-ไม่คุ้มครองเดิมยังใช้ได้ตามเดิม
+     * ส่วนเกณฑ์ตรวจยอดเงิน (amountReconciliation) ยังแยกตาม reconciliationMode เหมือนเดิม
+     */
+    const isHospitalClaim = reconciliationMode === "receipt";
+    const updateItem = (item: Parameters<typeof handleUpdateItem>[0]) =>
+        handleUpdateItem({ ...item, claimAmount: Number(item.receiptAmount ?? 0) });
+    /** ยอดที่ส่วนลด/ยอดไม่คุ้มครองห้ามเกิน — เทียบยอดเงินตามใบเสร็จ (= claimAmount) */
+    const baseAmountLabel = "ยอดเงินตามใบเสร็จ";
+
+    const amountReconciliation = isHospitalClaim
+        ? getReceiptReconciliation({ totalReceipt, totalClaim: netClaimAmount + totalDiscount + totalNotCovered })
+        : paymentReconciliation;
 
     // ── ส่วนเกินจากบริษัทประกัน (ยัง UI-only — ต่อ endpoint จริงเมื่อพร้อม) ──
     const [isExcessFromInsurance, setIsExcessFromInsurance] = React.useState(false);
@@ -381,7 +419,9 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
     };
 
     return (
-        <Box sx={{ p: { xs: 1.5, sm: 2.5 } }}>
+        // readOnly : <fieldset disabled> ปิด input/button แบบ native ทุกตัวข้างใน (รวมการพิมพ์ผ่านคีย์บอร์ด)
+        // ส่วน MUI Select ไม่ใช่ native control ต้องส่ง disabled เองรายตัว
+        <Box component="fieldset" disabled={readOnly} sx={{ p: { xs: 1.5, sm: 2.5 }, m: 0, border: 0, minWidth: 0 }}>
             {/* ── ตารางรายการค่ารักษา ── */}
             <Box
                 sx={{
@@ -419,12 +459,12 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                 <TableCell sx={{ ...headCell, width: "30%", textAlign: "left" }}>
                                     รายการค่ารักษา
                                 </TableCell>
-                                {/* ★ ใหม่ */}
+                                {/* RC-006 6.1 / RC-004 4.2 : สิทธิ์เบิกอยู่หลังสาเหตุไม่คุ้มครอง */}
                                 <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินตามใบเสร็จ</TableCell>
-                                <TableCell sx={{ ...headCell, width: "10%" }}>สิทธิ์เบิก</TableCell>
                                 <TableCell sx={{ ...headCell, width: "10%" }}>ส่วนลด</TableCell>
-                                <TableCell sx={{ ...headCell, width: "10%" }}>ยอดไม่คุ้มครอง</TableCell>
+                                <TableCell sx={{ ...headCell, width: "10%" }}>ยอดเงินไม่คุ้มครอง</TableCell>
                                 <TableCell sx={{ ...headCell, width: "15%" }}>สาเหตุไม่คุ้มครอง</TableCell>
+                                <TableCell sx={{ ...headCell, width: "10%" }}>สิทธิ์เบิก</TableCell>
                                 <TableCell sx={{ ...headCell, width: "15%" }}>หมายเหตุ</TableCell>
                                 <TableCell sx={{ ...headCell, width: 40 }}>ลบ</TableCell>
                             </TableRow>
@@ -442,6 +482,167 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                     const rowSumError = hasAmountSumError(item);
                                     const rowReasonError = hasMissingReasonError(item);
 
+                                    // สิทธิ์เบิก = ยอดเงินตามใบเสร็จ − ส่วนลด − ยอดไม่คุ้มครอง (ไม่ติดลบ)
+                                    const claimRight = Math.max(
+                                        Number(item.receiptAmount ?? 0) -
+                                            Number(item.discount ?? 0) -
+                                            Number(item.notCovered ?? 0),
+                                        0
+                                    );
+
+                                    /* ยอดเงินตามใบเสร็จ */
+                                    const receiptCell = (
+                                        <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                            <NumericFormat
+                                                customInput={TextField}
+                                                size="small"
+                                                fullWidth
+                                                sx={tableInputSx}
+                                                value={item.receiptAmount ?? ""}
+                                                onValueChange={(v) =>
+                                                    updateItem({
+                                                        ...item,
+                                                        receiptAmount: v.floatValue ?? 0,
+                                                    })
+                                                }
+                                                thousandSeparator
+                                                decimalScale={2}
+                                                fixedDecimalScale
+                                                allowNegative={false}
+                                            />
+                                        </TableCell>
+                                    );
+
+                                    /* สิทธิ์เบิก — ระบบคำนวณอัตโนมัติ *Default 0.00 และ Disable */
+                                    const claimCell = (
+                                        <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                            <NumericFormat
+                                                customInput={TextField}
+                                                size="small"
+                                                fullWidth
+                                                sx={tableInputSx}
+                                                value={claimRight}
+                                                thousandSeparator
+                                                decimalScale={2}
+                                                fixedDecimalScale
+                                                disabled
+                                            />
+                                        </TableCell>
+                                    );
+
+                                    /* ส่วนลด */
+                                    const discountCell = (
+                                        <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                            <Tooltip
+                                                title={`ส่วนลดต้องไม่มากกว่า${baseAmountLabel}`}
+                                                disableHoverListener={!rowDiscountError}
+                                                {...errorTooltipProps}
+                                            >
+                                                {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
+                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
+                                                <Box>
+                                                    <NumericFormat
+                                                        customInput={TextField}
+                                                        size="small"
+                                                        fullWidth
+                                                        sx={tableInputSx}
+                                                        value={item.discount ?? ""}
+                                                        onValueChange={(v) =>
+                                                            updateItem({
+                                                                ...item,
+                                                                discount: v.floatValue ?? 0,
+                                                            })
+                                                        }
+                                                        thousandSeparator
+                                                        decimalScale={2}
+                                                        fixedDecimalScale
+                                                        allowNegative={false}
+                                                        error={rowDiscountError}
+                                                    />
+                                                </Box>
+                                            </Tooltip>
+                                        </TableCell>
+                                    );
+
+                                    /* ยอดไม่คุ้มครอง */
+                                    const notCoveredCell = (
+                                        <TableCell sx={{ ...bodyCell, p: 0.5 }}>
+                                            <Tooltip
+                                                title={`ยอดไม่คุ้มครองต้องไม่มากกว่า${baseAmountLabel}`}
+                                                {...errorTooltipProps}
+                                                disableHoverListener={!rowSumError}
+                                            >
+                                                {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
+                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
+                                                <Box>
+                                                    <NumericFormat
+                                                        customInput={TextField}
+                                                        size="small"
+                                                        fullWidth
+                                                        sx={tableInputSx}
+                                                        value={item.notCovered ?? ""}
+                                                        onValueChange={(v) =>
+                                                            updateItem({
+                                                                ...item,
+                                                                notCovered: v.floatValue ?? 0,
+                                                            })
+                                                        }
+                                                        thousandSeparator
+                                                        decimalScale={2}
+                                                        fixedDecimalScale
+                                                        allowNegative={false}
+                                                        error={rowSumError}
+                                                    />
+                                                </Box>
+                                            </Tooltip>
+                                        </TableCell>
+                                    );
+
+                                    /* สาเหตุไม่คุ้มครอง — data-missing-reason ให้ปุ่ม "ถัดไป" เลื่อนมา focus แถวแรกที่ยังไม่เลือก */
+                                    const reasonCell = (
+                                        <TableCell
+                                            sx={{ ...bodyCell, p: 0.5 }}
+                                            data-missing-reason={rowReasonError || undefined}
+                                        >
+                                            <Tooltip
+                                                title="กรุณาเลือกสาเหตุไม่คุ้มครอง"
+                                                disableHoverListener={!rowReasonError}
+                                                {...errorTooltipProps}
+                                            >
+                                                <FormControl fullWidth size="small" error={rowReasonError}>
+                                                    <Select
+                                                        displayEmpty
+                                                        disabled={readOnly}
+                                                        value={item.reason ?? ""}
+                                                        sx={tableSelectSx}
+                                                        onChange={(e) =>
+                                                            updateItem({
+                                                                ...item,
+                                                                reason:
+                                                                    e.target.value === ""
+                                                                        ? undefined
+                                                                        : Number(e.target.value),
+                                                            })
+                                                        }
+                                                    >
+                                                        <MenuItem value="">
+                                                            <em>-</em>
+                                                        </MenuItem>
+                                                        {notCoveredReasonOptions.map((o) => (
+                                                            <MenuItem
+                                                                key={o.value}
+                                                                value={o.value}
+                                                                sx={{ fontSize: 13 }}
+                                                            >
+                                                                {o.label}
+                                                            </MenuItem>
+                                                        ))}
+                                                    </Select>
+                                                </FormControl>
+                                            </Tooltip>
+                                        </TableCell>
+                                    );
+
                                     return (
                                         <TableRow key={item.id}>
                                             <TableCell sx={{ ...bodyCell, textAlign: "left" }}>
@@ -449,152 +650,12 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                                     {item.code} {item.description}
                                                 </Typography>
                                             </TableCell>
-                                            {/* ยอดเงินตามใบเสร็จ */}
-                                            <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <NumericFormat
-                                                    customInput={TextField}
-                                                    size="small"
-                                                    fullWidth
-                                                    sx={tableInputSx}
-                                                    value={item.receiptAmount ?? ""}
-                                                    onValueChange={(v) =>
-                                                        handleUpdateItem({
-                                                            ...item,
-                                                            receiptAmount: v.floatValue ?? 0,
-                                                        })
-                                                    }
-                                                    thousandSeparator
-                                                    decimalScale={2}
-                                                    fixedDecimalScale
-                                                    allowNegative={false}
-                                                />
-                                            </TableCell>
-                                            {/* ยอดเบิก */}
-                                            <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <NumericFormat
-                                                    customInput={TextField}
-                                                    size="small"
-                                                    fullWidth
-                                                    sx={tableInputSx}
-                                                    value={item.claimAmount ?? ""}
-                                                    onValueChange={(v) =>
-                                                        handleUpdateItem({
-                                                            ...item,
-                                                            claimAmount: v.floatValue ?? 0,
-                                                        })
-                                                    }
-                                                    thousandSeparator
-                                                    decimalScale={2}
-                                                    fixedDecimalScale
-                                                    allowNegative={false}
-                                                />
-                                            </TableCell>
-
-                                            {/* ส่วนลด */}
-                                            <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <Tooltip
-                                                    title="ส่วนลดต้องไม่มากกว่ายอดเบิก"
-                                                    disableHoverListener={!rowDiscountError}
-                                                    {...errorTooltipProps}
-                                                >
-                                                    {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
-                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
-                                                    <Box>
-                                                        <NumericFormat
-                                                            customInput={TextField}
-                                                            size="small"
-                                                            fullWidth
-                                                            sx={tableInputSx}
-                                                            value={item.discount ?? ""}
-                                                            onValueChange={(v) =>
-                                                                handleUpdateItem({
-                                                                    ...item,
-                                                                    discount: v.floatValue ?? 0,
-                                                                })
-                                                            }
-                                                            thousandSeparator
-                                                            decimalScale={2}
-                                                            fixedDecimalScale
-                                                            allowNegative={false}
-                                                            error={rowDiscountError}
-                                                        />
-                                                    </Box>
-                                                </Tooltip>
-                                            </TableCell>
-
-                                            {/* ยอดไม่คุ้มครอง */}
-                                            <TableCell sx={{ ...bodyCell, p: 0.5 }}>
-                                                <Tooltip
-                                                    title="ยอดไม่คุ้มครองต้องไม่มากกว่ายอดเบิก"
-                                                    {...errorTooltipProps}
-                                                    disableHoverListener={!rowSumError}
-                                                >
-                                                    {/* NumericFormat เป็น function component ธรรมดา ไม่ forward ref
-                                                        ต้องห่อด้วย Box (div) ให้ Tooltip attach ref ได้ */}
-                                                    <Box>
-                                                        <NumericFormat
-                                                            customInput={TextField}
-                                                            size="small"
-                                                            fullWidth
-                                                            sx={tableInputSx}
-                                                            value={item.notCovered ?? ""}
-                                                            onValueChange={(v) =>
-                                                                handleUpdateItem({
-                                                                    ...item,
-                                                                    notCovered: v.floatValue ?? 0,
-                                                                })
-                                                            }
-                                                            thousandSeparator
-                                                            decimalScale={2}
-                                                            fixedDecimalScale
-                                                            allowNegative={false}
-                                                            error={rowSumError}
-                                                        />
-                                                    </Box>
-                                                </Tooltip>
-                                            </TableCell>
-
-                                            {/* สาเหตุไม่คุ้มครอง — data-missing-reason ให้ปุ่ม "ถัดไป" เลื่อนมา focus แถวแรกที่ยังไม่เลือก */}
-                                            <TableCell
-                                                sx={{ ...bodyCell, p: 0.5 }}
-                                                data-missing-reason={rowReasonError || undefined}
-                                            >
-                                                <Tooltip
-                                                    title="กรุณาเลือกสาเหตุไม่คุ้มครอง"
-                                                    disableHoverListener={!rowReasonError}
-                                                    {...errorTooltipProps}
-                                                >
-                                                    <FormControl fullWidth size="small" error={rowReasonError}>
-                                                        <Select
-                                                            displayEmpty
-                                                            value={item.reason ?? ""}
-                                                            sx={tableSelectSx}
-                                                            onChange={(e) =>
-                                                                handleUpdateItem({
-                                                                    ...item,
-                                                                    reason:
-                                                                        e.target.value === ""
-                                                                            ? undefined
-                                                                            : Number(e.target.value),
-                                                                })
-                                                            }
-                                                        >
-                                                            <MenuItem value="">
-                                                                <em>-</em>
-                                                            </MenuItem>
-                                                            {notCoveredReasonOptions.map((o) => (
-                                                                <MenuItem
-                                                                    key={o.value}
-                                                                    value={o.value}
-                                                                    sx={{ fontSize: 13 }}
-                                                                >
-                                                                    {o.label}
-                                                                </MenuItem>
-                                                            ))}
-                                                        </Select>
-                                                    </FormControl>
-                                                </Tooltip>
-                                            </TableCell>
+                                            {/* RC-006 6.1 / RC-004 4.2 */}
+                                            {receiptCell}
+                                            {discountCell}
+                                            {notCoveredCell}
+                                            {reasonCell}
+                                            {claimCell}
 
                                             {/* หมายเหตุ */}
                                             <TableCell sx={{ ...bodyCell, p: 0.5 }}>
@@ -605,7 +666,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                                     value={item.remark ?? ""}
                                                     placeholder="หมายเหตุ"
                                                     onChange={(e) =>
-                                                        handleUpdateItem({
+                                                        updateItem({
                                                             ...item,
                                                             remark: e.target.value || undefined,
                                                         })
@@ -635,6 +696,9 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                     </Table>
                 </TableContainer>
             </Box>
+
+            {/* ── ค่าชดเชยผู้ป่วยใน (เคลมลูกค้า ค่ารักษา IPD/Day Case) — หลังตารางค่ารักษา ก่อนสรุปยอดเงิน ── */}
+            {ipdCompensation && <IpdCompensationSection compensation={ipdCompensation} />}
 
             {/* ── สรุปยอดเงิน ── */}
             <Box
@@ -670,8 +734,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                             gap: 1.5,
                             gridTemplateColumns: {
                                 xs: "1fr",
-                                sm: "repeat(3, 1fr)",
-                                md: "repeat(3, 1fr) auto",
+                                sm: ipdCompensation ? "repeat(2, 1fr)" : "repeat(3, 1fr)",
+                                md: ipdCompensation ? "repeat(4, 1fr) auto" : "repeat(3, 1fr) auto",
                             },
                             alignItems: "stretch",
                         }}
@@ -680,6 +744,10 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                             { label: "ยอดเงินตามใบเสร็จรวม", value: totalReceipt },
                             { label: "ส่วนลดรวม", value: totalDiscount },
                             { label: "ยอดไม่คุ้มครองรวม", value: totalNotCovered },
+                            // flow ค่าชดเชยผู้ป่วยใน : สิทธิ์เบิกรวม = ผลรวมสิทธิ์เบิกทุกแถว (ใบเสร็จ − ส่วนลด − ไม่คุ้มครอง)
+                            ...(ipdCompensation
+                                ? [{ label: "สิทธิ์เบิกรวม", value: ipdCompensation.eligibleTotal }]
+                                : []),
                         ].map((row) => (
                             <Box
                                 key={row.label}
@@ -741,7 +809,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                     </Typography>
                                 </Box>
                                 <Typography fontWeight={700} color="success.main" whiteSpace="nowrap">
-                                    {fmt(netClaimAmount)}{" "}
+                                    {/* flow ค่าชดเชยผู้ป่วยใน : สิทธิ์เบิกรวม + ค่าชดเชย (ไม่บวกค่าชดเชยเมื่อมี IPD_Half_5) */}
+                                    {fmt(ipdCompensation ? ipdCompensation.net : netClaimAmount)}{" "}
                                     <Typography component="span" variant="caption">
                                         บาท
                                     </Typography>
@@ -784,20 +853,36 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                     </Box>
 
                     {/* ── ผลตรวจสอบยอดเงิน ClaimLine (ยอดที่จ่าย+ไม่คุ้มครอง เทียบใบเสร็จสุทธิ / เทียบสิทธิ์เบิก) ── */}
-                    <Alert
-                        severity={
-                            amountReconciliation.status === "ok"
-                                ? "success"
-                                : amountReconciliation.status === "error"
-                                ? "error"
-                                : amountReconciliation.status === "pending"
-                                ? "info"
-                                : "warning"
-                        }
-                        sx={{ mt: 1.5 }}
-                    >
-                        {amountReconciliation.message}
-                    </Alert>
+                    {ipdCompensation ? (
+                        // flow ค่าชดเชยผู้ป่วยใน : แสดงเฉพาะตอนยอดโอนไม่ตรง อัปเดตทันทีโดยไม่เลื่อนหน้า/แย่ง focus
+                        // (tabIndex -1 ให้ปุ่ม "ถัดไป"/"อนุมัติ" เลื่อนมา focus ได้เมื่อผู้ใช้กดดำเนินการต่อ)
+                        amountReconciliation.status === "error" ? (
+                            <Alert severity="error" sx={{ mt: 1.5 }} tabIndex={-1} data-ipd-transfer-error>
+                                {amountReconciliation.message}
+                            </Alert>
+                        ) : (
+                            amountReconciliation.status === "pending" && (
+                                <Alert severity="info" sx={{ mt: 1.5 }}>
+                                    {amountReconciliation.message}
+                                </Alert>
+                            )
+                        )
+                    ) : (
+                        <Alert
+                            severity={
+                                amountReconciliation.status === "ok"
+                                    ? "success"
+                                    : amountReconciliation.status === "error"
+                                    ? "error"
+                                    : amountReconciliation.status === "pending"
+                                    ? "info"
+                                    : "warning"
+                            }
+                            sx={{ mt: 1.5 }}
+                        >
+                            {amountReconciliation.message}
+                        </Alert>
+                    )}
 
                     <Divider sx={{ my: 2 }} />
 
@@ -859,6 +944,7 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                     <Select
                                         displayEmpty
                                         fullWidth
+                                        disabled={readOnly}
                                         value={selectedInsuranceCompany}
                                         onChange={(e) => setSelectedInsuranceCompany(e.target.value)}
                                         sx={{
@@ -892,8 +978,8 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                 </Box>
             </Box>
 
-            {/* ── รายการค่ารักษาเพิ่มเติม — แสดงเฉพาะประเภทความคุ้มครอง = ค่ารักษา ── */}
-            {isMedicalCoverage && (
+            {/* ── รายการค่ารักษาเพิ่มเติม — แสดงเฉพาะประเภทความคุ้มครอง = ค่ารักษา (โหมดดูอย่างเดียวไม่แสดง) ── */}
+            {isMedicalCoverage && !readOnly && (
                 <Box
                     sx={{
                         mt: 2.5,
@@ -1096,21 +1182,11 @@ const ExpenseRecords: React.FC<ExpenseRecordsProps> = ({ expenseDetail }) => {
                                     fullWidth
                                     label="ยอดเงินตามใบเสร็จ"
                                     value={pendingReceiptAmount}
-                                    onValueChange={(v) => setPendingReceiptAmount(v.value)}
-                                    thousandSeparator
-                                    decimalScale={2}
-                                    fixedDecimalScale
-                                    allowNegative={false}
-                                    disabled={!selectedItem}
-                                    sx={refInputSx}
-                                />
-                                <NumericFormat
-                                    customInput={TextField}
-                                    size="small"
-                                    fullWidth
-                                    label="ยอดเบิก"
-                                    value={pendingAmount}
-                                    onValueChange={(v) => setPendingAmount(v.value)}
+                                    onValueChange={(v) => {
+                                        setPendingReceiptAmount(v.value);
+                                        // ยอดเบิก (claimAmount) ผูกกับยอดเงินตามใบเสร็จ ไม่ให้กรอกเอง
+                                        setPendingAmount(v.value);
+                                    }}
                                     thousandSeparator
                                     decimalScale={2}
                                     fixedDecimalScale

@@ -1,16 +1,4 @@
-import {
-    Box,
-    Button,
-    Dialog,
-    DialogContent,
-    DialogTitle,
-    FormHelperText,
-    IconButton,
-    TextField,
-    ToggleButton,
-    ToggleButtonGroup,
-    Tooltip,
-} from "@mui/material";
+import { Box, Button, Dialog, DialogContent, DialogTitle, IconButton, Tooltip } from "@mui/material";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Visibility } from "@mui/icons-material";
 import FactCheckIcon from "@mui/icons-material/FactCheck";
@@ -23,12 +11,7 @@ import { HeadingWithColor } from "../../../../_common/components/CustomComponent
 import { StandardDataTable } from "../../../../_common";
 import { cellAlignOptions, defaultOptionStandardDataTable, handleClickLink } from "../../../../../functionHelpers";
 import { DOC_STORAGE_URL } from "../../../../../../Const";
-import {
-    DOCUMENT_CHECK_RESULTS,
-    DocumentCheckResult,
-    DocumentCheckResultOption,
-    DocumentCheckRow,
-} from "../mock/hospitalConsiderMock";
+import { DocumentCheckRow } from "../mock/hospitalConsiderMock";
 import { HospitalConsiderValues } from "../../../hooks/ClaimConsiderHospital/HospitalConsiderDetailHook";
 import { DocStorageDocInfo } from "../../../hooks/ClaimConsiderHospital/HospitalDocumentVerifyHook";
 import DocumentFileViewer from "./DocumentFileViewer";
@@ -43,46 +26,28 @@ const EMPTY_DOC_INFO: DocStorageDocInfo = {
 };
 
 type DocumentVerifyTableProps = {
-    onChange: <TField extends keyof DocumentCheckRow>(
-        rowIndex: number,
-        field: TField,
-        value: DocumentCheckRow[TField]
-    ) => void;
-    /** สแกน/ค้นหาเอกสารแถวนั้นใหม่ : ล้างผลตรวจเดิมเฉพาะแถวนั้น (CR Ver2 ข้อ 4) */
-    onScan?: (rowIndex: number) => void;
-    /** ตัวเลือกผลการตรวจเอกสาร จาก Master API (/api/Masters/document/review/status) */
-    options: DocumentCheckResultOption[];
     /**
      * ข้อมูลเอกสารจริงใน DocStorage ต่อ documentId (GET /document/documentid/list)
      * ใช้แสดงคอลัมน์ "รายการเอกสาร" (documentTypeName) + "จำนวนเอกสาร" (fileCount)
      * และ fileCount เป็นเงื่อนไขเปิด modal ดูรายละเอียด (0 = เปิดไม่ได้)
      */
     documentInfoByDocumentId: Record<string, DocStorageDocInfo>;
-    /** โหมดดูอย่างเดียว : แก้ผลการตรวจและหมายเหตุไม่ได้ แต่ยังกดดูเอกสารได้ */
+    /** โหมดดูอย่างเดียว : สแกนเอกสารไม่ได้ แต่ยังกดดูเอกสารได้ */
     readOnly?: boolean;
 };
 
-/** หมายเหตุบังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม */
-const isRemarkRequired = (result: DocumentCheckResult | "") =>
-    result === DOCUMENT_CHECK_RESULTS.failed || result === DOCUMENT_CHECK_RESULTS.waiting;
-
-const DocumentVerifyTable = ({
-    onChange,
-    onScan,
-    options,
-    documentInfoByDocumentId,
-    readOnly = false,
-}: DocumentVerifyTableProps) => {
+/**
+ * ตาราง "ตรวจสอบเอกสาร" ของหน้าพิจารณาเคลมโรงพยาบาล
+ * RC-005 5.7 ตัดคอลัมน์ "ผลการตรวจ" และ "หมายเหตุ" ออกแล้ว — เหลือ รายการเอกสาร / สแกน / จำนวน / รายละเอียด
+ */
+const DocumentVerifyTable = ({ documentInfoByDocumentId, readOnly = false }: DocumentVerifyTableProps) => {
     const formik = useFormikContext<HospitalConsiderValues>();
     const rows = formik.values.documentChecks;
 
     /** ข้อมูล DocStorage ของแถวนั้น (ไม่มีใน map = ยังไม่มีเอกสารแนบ) */
     const getDocInfo = (documentId: string) => documentInfoByDocumentId[documentId] ?? EMPTY_DOC_INFO;
 
-    /**
-     * ปุ่ม "สแกนเอกสาร" : เปิดหน้า DocStorage เพื่อแนบเอกสารของ documentId นั้น (เหมือน DocumentScanTable)
-     * แล้วล้างผลการตรวจของแถวนั้นให้ตรวจซ้ำ — พฤติกรรมเดิม (CR Ver2 ข้อ 4) ยังคงไว้
-     */
+    /** ปุ่ม "สแกนเอกสาร" : เปิดหน้า DocStorage เพื่อแนบเอกสารของ documentId นั้น (เหมือน DocumentScanTable) */
     const handleScan = (rowIndex: number) => {
         const row = rows[rowIndex];
         const info = getDocInfo(row.documentId);
@@ -95,13 +60,7 @@ const DocumentVerifyTable = ({
                 `&searchIndex=${info.searchIndex}`;
             handleClickLink(url);
         }
-        onScan?.(rowIndex);
     };
-
-    /** error ระดับฟอร์ม : หมายเหตุยังไม่ครบสำหรับเอกสารที่ผล ไม่ผ่าน / รอเอกสารเพิ่มเติม */
-    const { error: documentChecksError, touched: documentChecksTouched } =
-        formik.getFieldMeta<DocumentCheckRow[]>("documentChecks");
-    const showRequiredError = !!documentChecksTouched && typeof documentChecksError === "string";
 
     /** รายการเอกสารที่กำลังเปิดดูไฟล์อยู่ (undefined = ปิดหน้าต่าง) */
     const [viewingRowIndex, setViewingRowIndex] = useState<number>();
@@ -182,101 +141,6 @@ const DocumentVerifyTable = ({
                 },
             },
         },
-        {
-            name: "checkResult",
-            label: "ผลการตรวจ",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = rows[tableMeta.rowIndex];
-
-                    return (
-                        <ToggleButtonGroup
-                            exclusive
-                            size="small"
-                            value={row.checkResult}
-                            onChange={(_event, value: DocumentCheckResult | null) =>
-                                onChange(tableMeta.rowIndex, "checkResult", value ?? "")
-                            }
-                            sx={{
-                                gap: 1,
-                                // แสดงเป็นปุ่มแยกกัน ไม่ใช่ปุ่มติดกันแบบค่าเริ่มต้นของ ToggleButtonGroup
-                                "& .MuiToggleButtonGroup-grouped": {
-                                    border: "1px solid #DDE3EA",
-                                    borderRadius: "8px !important",
-                                    marginLeft: 0,
-                                },
-                            }}
-                        >
-                            {options.map((option) => (
-                                <ToggleButton
-                                    key={option.value}
-                                    value={option.value}
-                                    disableRipple
-                                    disabled={readOnly}
-                                    sx={{
-                                        px: 2,
-                                        py: 0.75,
-                                        whiteSpace: "nowrap",
-                                        textTransform: "none",
-                                        fontSize: 14,
-                                        color: "#5A6B7B",
-                                        bgcolor: "#fff",
-                                        "&:hover": { bgcolor: `${option.color}12` },
-                                        "&.Mui-selected": {
-                                            color: "#fff",
-                                            bgcolor: option.color,
-                                            borderColor: option.color,
-                                            fontWeight: 700,
-                                            "&:hover": { bgcolor: option.color },
-                                        },
-                                    }}
-                                >
-                                    {option.label}
-                                </ToggleButton>
-                            ))}
-                        </ToggleButtonGroup>
-                    );
-                },
-            },
-        },
-        {
-            name: "remark",
-            label: "หมายเหตุ",
-            options: {
-                filter: false,
-                sort: false,
-                ...cellAlignOptions({ align: "center" }),
-                customBodyRender: (_value, tableMeta) => {
-                    const row = rows[tableMeta.rowIndex];
-                    const required = isRemarkRequired(row.checkResult);
-
-                    return (
-                        <TextField
-                            size="small"
-                            fullWidth
-                            disabled={readOnly}
-                            value={row.remark}
-                            placeholder="ระบุหมายเหตุ"
-                            // บังคับกรอกเมื่อผลการตรวจเป็น ไม่ผ่าน หรือ รอเอกสารเพิ่มเติม
-                            error={required && !row.remark}
-                            onChange={(event) => onChange(tableMeta.rowIndex, "remark", event.target.value)}
-                            sx={{
-                                minWidth: 240,
-                                "& .MuiOutlinedInput-root": {
-                                    bgcolor: "#F4F7FA",
-                                    borderRadius: 2,
-                                    "& fieldset": { borderColor: "#E4EAF0" },
-                                    "&:hover fieldset": { borderColor: "#C9D4DF" },
-                                },
-                            }}
-                        />
-                    );
-                },
-            },
-        },
     ];
 
     return (
@@ -295,11 +159,6 @@ const DocumentVerifyTable = ({
                     displayFooter={false}
                     options={defaultOptionStandardDataTable}
                 />
-                {showRequiredError && (
-                    <FormHelperText error sx={{ mt: 1, ml: 1.5 }}>
-                        {documentChecksError}
-                    </FormHelperText>
-                )}
             </Box>
 
             <Dialog

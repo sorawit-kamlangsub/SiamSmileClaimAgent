@@ -84,6 +84,11 @@ export type OcrReceiptSectionProps = {
     onOcrLoadingChange?: (isLoading: boolean) => void;
     claimLineItemOptions?: ClaimLineItemOption[];
     onMatchLineItem?: (lineItem: ReceiptLineItem, selected: ClaimLineItemOption) => void;
+    /**
+     * โหมดดูอย่างเดียว (DFUAT-066) — อัปโหลด / อ่าน OCR ใหม่ / ลบ / จับคู่รายการ ไม่ได้ เหลือแค่ "ดูเอกสาร"
+     * default false (หน้าพิจารณาปกติใช้งานได้ตามเดิม)
+     */
+    readOnly?: boolean;
 };
 
 const PROJECT_ID = 1;
@@ -110,6 +115,7 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
     onOcrLoadingChange,
     claimLineItemOptions = [],
     onMatchLineItem,
+    readOnly = false,
 }) => {
     const uploadInputRef = useRef<HTMLInputElement>(null);
 
@@ -355,8 +361,15 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
                 </Box>
             </Stack>
 
+            {/* โหมดดูอย่างเดียว : ไม่มีไฟล์ก็ไม่เปิดให้อัปโหลด */}
+            {!hasFile && readOnly && (
+                <Typography variant="body2" color="text.secondary" textAlign="center" sx={{ py: 3 }}>
+                    ไม่มีใบแจ้งค่ารักษา
+                </Typography>
+            )}
+
             {/* dropzone / empty state (shown until a file exists) */}
-            {!hasFile && (
+            {!hasFile && !readOnly && (
                 <Box
                     onDragOver={(e) => {
                         e.preventDefault();
@@ -509,7 +522,7 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
                                     />
                                 )}
 
-                                {isError ? (
+                                {readOnly ? null : isError ? (
                                     <Tooltip title="ลองอ่าน OCR อีกครั้ง">
                                         <Button
                                             variant="outlined"
@@ -561,7 +574,7 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
                                             size="small"
                                             color="error"
                                             onClick={handleReceiptRemove}
-                                            disabled={isProcessing}
+                                            disabled={isProcessing || readOnly}
                                             aria-label="ลบเอกสาร"
                                             sx={{ width: 36, height: 36, "&:hover": { bgcolor: "#FFCFC9" } }}
                                         >
@@ -651,6 +664,7 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
                                     >
                                         <Autocomplete
                                             size="small"
+                                            disabled={readOnly}
                                             options={claimLineItemOptions}
                                             getOptionLabel={(opt) => opt.label}
                                             noOptionsText="ไม่พบรายการค่ารักษาที่ตรงกัน"
@@ -667,7 +681,7 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
                                             <Button
                                                 variant="contained"
                                                 size="small"
-                                                disabled={!lineItemSelections[item.id]}
+                                                disabled={readOnly || !lineItemSelections[item.id]}
                                                 onClick={() => handleConfirmMatch(item)}
                                                 sx={{
                                                     textTransform: "none",
@@ -682,6 +696,7 @@ const OcrReceiptSection: React.FC<OcrReceiptSectionProps> = ({
                                             <Tooltip title="ไม่นำรายการนี้เข้าตาราง">
                                                 <IconButton
                                                     size="small"
+                                                    disabled={readOnly}
                                                     onClick={() => handleIgnoreLineItem(item)}
                                                     aria-label="ข้ามรายการนี้"
                                                     sx={{ width: 36, height: 36, border: "1px solid #e0e0e0" }}

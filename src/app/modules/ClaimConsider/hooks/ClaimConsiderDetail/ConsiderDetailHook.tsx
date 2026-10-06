@@ -102,7 +102,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             (claimContinueData?.data ?? []).map((item) => ({
                 claimNo: item.claimNo ?? "-",
                 caseNo: item.caseNo ?? "-",
-                chiefComplaint: item.chiefComplaint ?? item.chiefComplaintCustom ?? "-",
+                chiefComplaint: item.chiefComplaint ?? item.illnessOrInjuryDetail ?? "-",
                 incidentDate: formatDateString(item.incidentDate?.toString() ?? "", "DD/MM/BBBB") ?? "-",
                 totalClaimAmount: item.totalCaseAmount ?? 0,
                 totalPaidAmount: item.totalPaidAmount ?? 0,
@@ -110,7 +110,7 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                 claimInfo: item.claimDetail ?? "-",
                 diagnosis1: item.icD10Detail ?? "-",
                 remainingLimit: item.remainAmount ?? 0,
-                remark: item.chiefComplaintCustom ?? "-",
+                remark: item.illnessOrInjuryDetail ?? "-",
                 // BE ยังไม่ส่งเลขที่เคส/สถานะของเคลมเดิมมา
                 previousCaseNo: "-",
                 previousCaseStatus: "-",
@@ -231,6 +231,10 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
                         icd10Id: req,
                     },
                 ];
+            }
+            // RC-003 3.4 : ติ๊ก "เป็นกายภาพบำบัด" แล้วต้องเลือกความจำเป็นทางการแพทย์
+            if (values.isPhysicalTherapyChecked && !values.physicalTherapyNecessityReasonId) {
+                errors.physicalTherapyNecessityReasonId = "โปรดเลือก";
             }
             return errors;
         },
@@ -444,6 +448,9 @@ const useConsiderDetailHook = ({ enableDraftOverlay = false }: UseConsiderDetail
             { icd10Id: detail.icD10_3rdId ?? undefined, icd10Detail: undefined },
         ];
         newValues.detail = detail.remark;
+        // ข้อมูลกายภาพบำบัด (RC-003 3.4) : default จากค่าที่บันทึกไว้ — GetClaimDetailConsider ส่งมาแล้ว
+        newValues.isPhysicalTherapyChecked = detail.isPhysicalTherapy === true;
+        newValues.physicalTherapyNecessityReasonId = detail.physicalTherapyNecessityReasonId ?? undefined;
 
         // ตั้งค่าทั้งหมดพร้อมกัน
         formik.setValues((prev) => ({ ...prev, ...newValues }), false);

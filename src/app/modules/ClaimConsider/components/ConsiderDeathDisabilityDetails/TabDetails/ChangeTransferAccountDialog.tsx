@@ -17,14 +17,13 @@ import AccountBalanceWalletIcon from "@mui/icons-material/AccountBalanceWallet";
 import InfoIcon from "@mui/icons-material/Info";
 import EditNoteIcon from "@mui/icons-material/EditNote";
 import AccountBalanceIcon from "@mui/icons-material/AccountBalance";
+import PersonIcon from "@mui/icons-material/Person";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SaveIcon from "@mui/icons-material/Save";
-import { FormikDropdown, FormikTextField } from "../../../../_common";
-import TitlePersonDropdown from "../../../../_common/components/ClaimAgent/CustomDropdown/TitlePersonDropdown";
+import { FormikAutocomplete, FormikDropdown, FormikTextField } from "../../../../_common";
 import DocumentScanTable from "../../../../CreatedClaim/components/CreateClaim/DocumentScanTable";
 import { CaseDocumentV2Request } from "../../../../../api/coreClaimApi.client";
 import useChangeTransferAccountHook, {
-    ACCOUNT_TYPE_OPTIONS,
     TRANSFER_ACCOUNT_DOCUMENT_TYPE,
     TransferAccountChange,
 } from "../../../hooks/ClaimConsiderDeathDisabilityDetail/ChangeTransferAccountHook";
@@ -52,6 +51,13 @@ type ChangeTransferAccountDialogProps = {
     /** ใช้กับตารางสแกนเอกสารประกอบการเปลี่ยนบัญชี (DocumentScanTable) */
     productTypeId: number | undefined;
     aplicationCode: string | undefined;
+    /** แก้ไขรายการเดิม — เติมค่าเดิมในฟอร์ม (ไม่ส่ง = เพิ่มใหม่) */
+    initialChange?: TransferAccountChange;
+    /** ปุ่มบันทึกแสดง loading ระหว่างยิง API */
+    isSaving?: boolean;
+    /** แก้ไขรายการที่บันทึกแล้ว — ดึงเอกสารประกอบการเปลี่ยนบัญชีที่ผูกกับเคสมาแสดงในตาราง (ไม่ส่ง = ไม่ดึง) */
+    caseId?: string;
+    claimSourceId?: number;
 };
 
 type ChangeTransferAccountFormProps = Omit<ChangeTransferAccountDialogProps, "open">;
@@ -68,9 +74,17 @@ const ChangeTransferAccountForm = ({
     amount,
     productTypeId,
     aplicationCode,
+    initialChange,
+    isSaving = false,
+    caseId,
+    claimSourceId,
 }: ChangeTransferAccountFormProps) => {
     const [attachedDocuments, setAttachedDocuments] = useState<CaseDocumentV2Request[]>([]);
-    const { formik, bankOptions, bankLoading } = useChangeTransferAccountHook({ onSaved, attachedDocuments });
+    const { formik, bankOptions, bankLoading, titleOptions, titleLoading } = useChangeTransferAccountHook({
+        onSaved,
+        attachedDocuments,
+        initialChange,
+    });
 
     const summaryItems = [
         { icon: <DescriptionIcon />, label: "เลขที่ CL", value: claimNo },
@@ -121,9 +135,47 @@ const ChangeTransferAccountForm = ({
                     />
                 </SectionRow>
 
+                <SectionRow icon={<PersonIcon />}>
+                    <Grid container spacing={2}>
+                        <Grid item xs={12} sm={4} md={3}>
+                            {/* ไม่ใช้ TitlePersonDropdown เพราะ label ตายตัว "คำนำหน้าชื่อ" — ใช้ master ชุดเดียวกัน (personTypeId = 2) */}
+                            <FormikAutocomplete
+                                formik={formik}
+                                name="payeeTitleId"
+                                label="คำนำหน้าผู้รับเงินแทน"
+                                sx={{ mt: 0 }}
+                                data={titleOptions}
+                                isLoading={titleLoading}
+                                valueFieldName="titleId"
+                                displayFieldName="titleName"
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={12} sm={8} md={4.5}>
+                            <FormikTextField
+                                formik={formik}
+                                name="payeeFirstName"
+                                label="ชื่อผู้รับเงินแทน"
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                        <Grid item xs={12} md={4.5}>
+                            <FormikTextField
+                                formik={formik}
+                                name="payeeLastName"
+                                label="นามสกุลผู้รับเงินแทน"
+                                fullWidth
+                                required
+                            />
+                        </Grid>
+                    </Grid>
+                </SectionRow>
+
                 <SectionRow icon={<AccountBalanceIcon />}>
                     <Grid container spacing={2}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} md={4}>
                             <FormikDropdown
                                 formik={formik}
                                 name="bankId"
@@ -137,20 +189,7 @@ const ChangeTransferAccountForm = ({
                                 required
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
-                            <FormikDropdown
-                                formik={formik}
-                                name="accountTypeId"
-                                label="ประเภทบัญชี"
-                                data={ACCOUNT_TYPE_OPTIONS}
-                                valueFieldName="value"
-                                displayFieldName="label"
-                                firstItemText="---เลือก---"
-                                fullWidth
-                                required
-                            />
-                        </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={6} md={4}>
                             <FormikTextField
                                 formik={formik}
                                 name="accountNo"
@@ -160,22 +199,8 @@ const ChangeTransferAccountForm = ({
                                 required
                             />
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid item xs={12} sm={6} md={4}>
                             <FormikTextField formik={formik} name="accountName" label="ชื่อบัญชี" fullWidth required />
-                        </Grid>
-                        <Grid item xs={12}>
-                            <Typography variant="body2" color="text.secondary" mt={1}>
-                                ผู้รับเงินแทน (ถ้ามี)
-                            </Typography>
-                        </Grid>
-                        <Grid item xs={12} sm={4} md={3}>
-                            <TitlePersonDropdown formik={formik} name="payeeTitleId" firstItemText="---เลือก---" />
-                        </Grid>
-                        <Grid item xs={12} sm={8} md={4.5}>
-                            <FormikTextField formik={formik} name="payeeFirstName" label="ชื่อ" fullWidth />
-                        </Grid>
-                        <Grid item xs={12} md={4.5}>
-                            <FormikTextField formik={formik} name="payeeLastName" label="นามสกุล" fullWidth />
                         </Grid>
                     </Grid>
                 </SectionRow>
@@ -192,6 +217,9 @@ const ChangeTransferAccountForm = ({
                         documentType={TRANSFER_ACCOUNT_DOCUMENT_TYPE}
                         aplicationCode={aplicationCode ?? ""}
                         onAttachedDocumentsChange={setAttachedDocuments}
+                        caseId={caseId}
+                        claimSourceId={claimSourceId}
+                        filterCaseDocumentsByType
                     />
                 </SectionRow>
             </DialogContent>
@@ -204,6 +232,7 @@ const ChangeTransferAccountForm = ({
                     variant="contained"
                     startIcon={<SaveIcon />}
                     onClick={() => formik.handleSubmit()}
+                    disabled={isSaving}
                     sx={{ ...dialogActionButtonSx, fontWeight: 600 }}
                 >
                     บันทึกการเปลี่ยนบัญชี

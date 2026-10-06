@@ -11,8 +11,7 @@ import CustomBox from "../../_common/components/CustomComponent/CustomBox";
 import { Box, Divider, Link, Typography, useMediaQuery, useTheme } from "@mui/material";
 import { GetCustomerDetailByIdDtoResponse } from "../../../api/coreClaimApi.client";
 import AccountCircleIcon from "@mui/icons-material/AccountCircle";
-
-const APPLICATION_DETAIL_URL = "";
+import { PA_APPLICATION_DETAIL_URL, getApplicationDetailUrl } from "../../../functionHelpers";
 
 const NATIONAL_ID_CARD_TYPE = 2;
 const PASSPORT_CARD_TYPE = 3;
@@ -176,19 +175,22 @@ const InsuredInfoCardPA: React.FC<InsuredInfoCardProps> = ({ data }) => {
         };
     }, [data]);
 
-    const applicationIdLink = (
-        <Link
-            href={APPLICATION_DETAIL_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            underline="hover"
-            variant="body2"
-            fontWeight={700}
-            sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
-        >
-            {vm.applicationId}
-        </Link>
-    );
+    const applicationIdLink =
+        vm.applicationId !== "-" ? (
+            <Link
+                href={getApplicationDetailUrl(PA_APPLICATION_DETAIL_URL, vm.applicationId)}
+                target="_blank"
+                rel="noopener noreferrer"
+                underline="hover"
+                variant="body2"
+                fontWeight={700}
+                sx={{ wordBreak: "break-word", overflowWrap: "anywhere" }}
+            >
+                {vm.applicationId}
+            </Link>
+        ) : (
+            "-"
+        );
 
     const statusValue =
         vm.status !== "-" ? (

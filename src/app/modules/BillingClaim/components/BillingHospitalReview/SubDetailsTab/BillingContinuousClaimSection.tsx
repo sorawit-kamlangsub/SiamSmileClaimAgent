@@ -61,7 +61,7 @@ const BillingContinuousClaimSection = ({ applicationId, readOnly = false }: Bill
                             label="วันที่เข้า รพ."
                             value={formatDateString(selected.admissionDate, "DD/MM/BBBB")}
                         />
-                        <CustomDisplayText label="การวินิจฉัย 1" value={selected.icD10Detail} />
+                        <CustomDisplayText label="การวินิจฉัย 1 (Diagnosis 1)" value={selected.icD10Detail} />
                         <CustomDisplayText label="วงเงินคงเหลือ" value={numberWithCommas(selected.remainAmount ?? 0)} />
                     </Grid>
                     {!readOnly && (

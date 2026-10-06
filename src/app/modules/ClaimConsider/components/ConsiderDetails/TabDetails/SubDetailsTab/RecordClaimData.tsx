@@ -28,6 +28,8 @@ type RecordClaimDataProps = {
     causeOfIncident: ChipOption[];
     medicalType: ChipOption[];
     incidentTypeMappingLoading: boolean;
+    /** label ของช่อง detail — default "รายละเอียดการเจ็บป่วย/การบาดเจ็บ" (เคลมลูกค้า RC-003 3.2 / เคลม รพ. RC-005 5.3) */
+    detailLabel?: string;
     /* เป็นเคลมต่อเนื่อง — คอมเมนต์โค้ดที่เกี่ยวข้องออกก่อน (step 1)
     continuousClaimRows: ContinuousClaimRow[];
     continuousClaimOpen: boolean;
@@ -47,6 +49,7 @@ const RecordClaimData = ({
     causeOfIncident,
     medicalType,
     incidentTypeMappingLoading,
+    detailLabel = "รายละเอียดการเจ็บป่วย/การบาดเจ็บ",
 }: RecordClaimDataProps) => {
     const formik = useFormikContext<ClaimConsiderValues>();
     const { values } = formik;
@@ -284,6 +287,7 @@ const RecordClaimData = ({
                             <Grid item xs={12} lg={12} key={index}>
                                 <CD10Autocomplete
                                     name={`diagnoses.${index}.icd10Id`}
+                                    diagnosisNo={index + 1}
                                     formik={formik}
                                     required={index === 0}
                                 />
@@ -293,7 +297,7 @@ const RecordClaimData = ({
                             <Box data-field-name="remark">
                                 <FormikTextField
                                     name="detail"
-                                    label="รายละเอียด"
+                                    label={detailLabel}
                                     formik={formik}
                                     size="small"
                                     multiline

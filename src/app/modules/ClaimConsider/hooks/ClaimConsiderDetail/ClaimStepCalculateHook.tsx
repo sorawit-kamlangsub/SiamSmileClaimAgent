@@ -6,20 +6,20 @@ import {
     CalculateCaseClaimDtoRequest,
     GetCustomerDetailByIdDtoResponse,
 } from "../../../../api/coreClaimApi.client";
-import { useAppDispatch, useAppSelector } from "../../../../../redux";
+import { useAppDispatch } from "../../../../../redux";
 import { useCalculateCaseClaim } from "../../../../api/coreClaimApi";
 import { swalError } from "../../../_common";
-import {
-    ClaimConsiderValues,
-    ClaimExpenseItem,
-    claimConsiderSelector,
-    setCalculateExpenseResult,
-} from "../../store/claimConsiderSlice";
+import { ClaimConsiderValues, ClaimExpenseItem, setCalculateExpenseResult } from "../../store/claimConsiderSlice";
 import {
     getClaimAmountReconciliation,
     hasMissingReasonError,
     sumClaimExpenseItems,
 } from "../../../ClaimSimulate/store/Claimsimulateutils";
+import {
+    focusIpdCompensationError,
+    getIpdCompensationBlocker,
+    isIpdCompensationFlow,
+} from "../../store/ipdCompensationCalculator";
 
 /**
  * แจ้งเตือนว่ายังไม่เลือกสาเหตุไม่คุ้มครอง แล้ว (หลังปิด alert) เลื่อนไป focus ช่องสาเหตุของแถวแรกที่ยังไม่เลือก
@@ -52,6 +52,7 @@ const STEP_1_ERROR_ORDER: (keyof ClaimConsiderValues)[] = [
     "hospitalId",
     "chiefComplaintId",
     "diagnoses",
+    "physicalTherapyNecessityReasonId",
 ];
 
 type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
@@ -61,6 +62,8 @@ type UseClaimStepCalculateHookProps<TValues extends ClaimConsiderValues> = {
     stepsLength: number;
     /** ยอดที่จ่ายจริง (detail.paymentAmount) — ใช้เช็คยอดเงิน ClaimLine ก่อนปล่อยผ่าน Step 2 */
     paymentAmount?: number;
+    /** อัตราค่าชดเชยผู้ป่วยในต่อวันจากสิทธิ์ความคุ้มครอง (useIpdCompensationBenefit) — ใช้กับ gate Step 2 */
+    ipdCompensationDailyRate?: number;
 };
 
 const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
@@ -69,11 +72,9 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
     filledItems,
     stepsLength,
     paymentAmount,
+    ipdCompensationDailyRate,
 }: UseClaimStepCalculateHookProps<TValues>) => {
     const dispatch = useAppDispatch();
-    // sync มาจาก ClaimExpenseDetailHook (/standard-medical-expense/case) — อ่านจาก store แทนการรับเป็น param
-    // เพื่อไม่ต้องแก้ call site ทั้งสองที่ของ hook นี้
-    const { caseAdjudicationId } = useAppSelector(claimConsiderSelector);
     const [activeStep, setActiveStep] = useState(0);
     const [furthestStep, setFurthestStep] = useState(0);
     const [isCalculating, setIsCalculating] = useState(false);
@@ -122,15 +123,15 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
         };
 
         return {
-            caseAdjudicationId: caseAdjudicationId ?? undefined,
-            isSimulateCase: false,
+            // ไม่ผูก adjudication ของเคส + คำนวณแบบจำลองยอด (เหมือนเคลม รพ.) — jsonDetail จะส่งไปอีกรอบตอนอนุมัติ
+            caseAdjudicationId: undefined,
+            isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId: customerDetail?.productTypeId ?? undefined,
             jsonDetail: calculateDetail,
         };
     };
-
-    console.log("caseAdjudicationId", caseAdjudicationId);
 
     /** @returns สำเร็จหรือไม่ — handleNext ต้องเช็คก่อนเลื่อน step ต่อ ไม่งั้นเลื่อนไปหน้าสรุปทั้งที่ยอดคำนวณผิด/ไม่มี */
     const handleCalculate = async (): Promise<boolean> => {
@@ -174,6 +175,9 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
             chiefComplaintId: errors.chiefComplaintId ? true : formik.touched.chiefComplaintId,
             hospitalId: errors.hospitalId ? true : formik.touched.hospitalId,
             diagnoses: errors.diagnoses ? [{ icd10Id: true }] : formik.touched.diagnoses,
+            physicalTherapyNecessityReasonId: errors.physicalTherapyNecessityReasonId
+                ? true
+                : formik.touched.physicalTherapyNecessityReasonId,
         };
         await formik.setTouched(touched, false);
 
@@ -209,14 +213,32 @@ const useClaimStepCalculateHook = <TValues extends ClaimConsiderValues>({
                     alertMissingNonCoveredReason();
                     return;
                 }
-                const totals = sumClaimExpenseItems(filledItems);
-                // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
-                // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ
-                // ทั้งที่ควรเป็น "pending" (ดู ClaimAmountReconciliationInput.paymentAmount)
-                const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
-                if (reconciliation.status === "error") {
-                    swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
-                    return;
+                if (isIpdCompensationFlow(formik.values.coverageTypeId, formik.values.medicalTypeId)) {
+                    // ค่ารักษา IPD/Day Case : ใช้ตัวคำนวณกลางชุดเดียวกับ UI (ExpenseRecords) — ข้อมูลค่าชดเชยไม่สมบูรณ์
+                    // หรือยอดโอนไม่ตรงยอดเงินสุทธิ = คงอยู่ Step 2 แล้วเลื่อน+focus ไปที่ข้อความผิดพลาด
+                    const blocker = getIpdCompensationBlocker({
+                        items: filledItems,
+                        coverageTypeId: formik.values.coverageTypeId,
+                        medicalTypeId: formik.values.medicalTypeId,
+                        ipdDays: formik.values.ipdDays,
+                        icuDays: formik.values.icuDays,
+                        paymentAmount,
+                        dailyRate: ipdCompensationDailyRate,
+                    });
+                    if (blocker) {
+                        focusIpdCompensationError(blocker);
+                        return;
+                    }
+                } else {
+                    const totals = sumClaimExpenseItems(filledItems);
+                    // ห้าม fallback paymentAmount เป็น 0 — undefined/null ("ยังไม่มีข้อมูลยอดโอน") ต้องแยกจาก 0
+                    // ("ยืนยันแล้วว่าไม่ได้โอน") ไม่งั้น getClaimAmountReconciliation จะขึ้น status "error" ผิดๆ
+                    // ทั้งที่ควรเป็น "pending" (ดู ClaimAmountReconciliationInput.paymentAmount)
+                    const reconciliation = getClaimAmountReconciliation({ ...totals, paymentAmount });
+                    if (reconciliation.status === "error") {
+                        swalError("ไม่สามารถดำเนินการต่อได้", reconciliation.message);
+                        return;
+                    }
                 }
                 const calculated = await handleCalculate();
                 if (!calculated) return;

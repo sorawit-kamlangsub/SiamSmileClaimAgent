@@ -33,7 +33,7 @@ export interface DaysCalculateFormValues {
 // - 1 วัน 0 ชม - 1 วัน 5 ชม 59 นาที = 1 วัน
 // - 1 วัน 6 ชม ขึ้นไป = 2 วัน
 // สรุป: ทุก 1 วัน + >=6 ชม จะปัดขึ้น 1
-const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): number => {
+export const calcIpdDays = (admit: Dayjs | undefined, discharge: Dayjs | undefined): number => {
     if (!admit || !discharge) return 0;
 
     const diffMinutes = dayjs(discharge).diff(dayjs(admit), "minute");
@@ -345,6 +345,7 @@ export const useDaysCalculate = () => {
             isSimulateCase: true,
             isCheckIncludeCompensate: false,
             isCheckIncludeCompensateAll: false,
+            productTypeId: selectedInsured?.productTypeId ?? undefined,
             jsonDetail: calculateDetail,
         };
 
@@ -361,6 +362,28 @@ export const useDaysCalculate = () => {
             setIsCalculating(false);
         }
     };
+
+    /**
+     * DFUAT-109 : เลือกเคลมต่อเนื่องแล้ว default "วันที่เกิดเหตุ" ให้ตรงกับเคลมที่เลือกอัตโนมัติ
+     * ทำครั้งเดียวต่อการเลือกแต่ละครั้ง (จำ claimId ล่าสุดไว้) — ผู้ใช้แก้วันที่ต่อเองได้ และไม่ถูกทับตอนรายการเคลมโหลดซ้ำ
+     */
+    const selectedContinueClaim = formik.values.isContinuous
+        ? claimContinueOptions.find((opt) => opt.claimId === formik.values.continuousFromClaimNo)
+        : undefined;
+    const selectedContinueClaimId = selectedContinueClaim?.claimId;
+    const selectedContinueIncidentDate = selectedContinueClaim?.incidentDate;
+    const defaultedContinueClaimIdRef = useRef<string | undefined>(undefined);
+    useEffect(() => {
+        if (!selectedContinueClaimId) {
+            defaultedContinueClaimIdRef.current = undefined;
+            return;
+        }
+        if (defaultedContinueClaimIdRef.current === selectedContinueClaimId) return;
+        defaultedContinueClaimIdRef.current = selectedContinueClaimId;
+        const incidentDate = selectedContinueIncidentDate ? dayjs(selectedContinueIncidentDate) : undefined;
+        // sync ลง Redux ทำโดย effect ของวันที่ด้านบน (ฟัง formik.values.dateHappen)
+        if (incidentDate?.isValid()) formik.setFieldValue("dateHappen", incidentDate);
+    }, [selectedContinueClaimId, selectedContinueIncidentDate]);
 
     const handleContinuousChange = (checked: boolean) => {
         formik.setFieldValue("isContinuous", checked);
