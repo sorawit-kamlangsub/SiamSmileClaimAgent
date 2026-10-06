@@ -4,7 +4,8 @@ import SendIcon from "@mui/icons-material/Send";
 import { numberWithCommas } from "../../../functionHelpers";
 import { useState } from "react";
 import { useAppSelector } from "../../../../redux";
-import { useGetInquiryMonitors, useSentToBank } from "../bankStatusCheckAPI";
+import { useGetInquiryMonitors } from "../../../api/coreClaimApi";
+import { useSentToBank } from "../../../api/claimFundApi";
 import { PaginationSortableDto, swalConfirm, swalError, swalSuccess } from "../../_common";
 import dayjs from "dayjs";
 
@@ -14,11 +15,13 @@ const useBankStatusCheckDataTableHook = () => {
         page: 1,
         recordsPerPage: 10,
     });
-    const { data: getInquiryMonitorsData, isLoading: getInquiryMonitorsIsLoading } = useGetInquiryMonitors({
-        searchDetail: searchBankStatusCheck.searchDetail,
-        page: paginated.page,
-        recordsPerPage: paginated.recordsPerPage,
-    });
+    const { data: getInquiryMonitorsData, isLoading: getInquiryMonitorsIsLoading } = useGetInquiryMonitors(
+        searchBankStatusCheck.searchDetail,
+        undefined,
+        undefined,
+        paginated.page,
+        paginated.recordsPerPage
+    );
 
     const handleSuccess = () => {
         swalSuccess("แจ้งเตือน", "ทำรายการสำเร็จ");
@@ -157,8 +160,14 @@ const useBankStatusCheckDataTableHook = () => {
                                     "ยกเลิก"
                                 ).then((res) => {
                                     if (res.isConfirmed) {
+                                        const refCode = getInquiryMonitorsData?.data?.[rowIndex]?.payListHeaderId;
+                                        if (!refCode) {
+                                            handleError("ไม่พบรหัสอ้างอิงสำหรับสอบถามธนาคาร");
+                                            return;
+                                        }
+
                                         sentToBankMutate({
-                                            refCode: getInquiryMonitorsData?.data?.[rowIndex]?.payListHeaderId,
+                                            refCode,
                                         });
                                     }
                                 });

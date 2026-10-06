@@ -2,6 +2,8 @@ import axios from "axios";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { API_CLAIM_FUND_URL } from "../../Const";
+import type { BaseResponseServiceResponse } from "./coreClaimApi.client";
+import { inquiryQueryKeys } from "./coreClaimApi";
 
 // แจ้งเคลม : EncryptText / CreatePayment ยิงตรงไป ClaimFund API (VITE_CLAIM_FUND_API_URL) ไม่ผ่าน API Gateway
 const claimFundAPI_URL = `${API_CLAIM_FUND_URL}/api`;
@@ -63,5 +65,43 @@ export const getEncryptText = (
             }
 
             return res.data;
+        });
+};
+
+export const useSentToBank = (
+    onSuccessCallBack: (response: BaseResponseServiceResponse) => void,
+    onErrorCallback: (error: string) => void
+) => {
+    const queryClient = useQueryClient();
+    return useMutation((payload: { refCode: string }) => sentToBankWithRefCode(payload), {
+        onSuccess: (response) => {
+            if (!response.isSuccess) {
+                onErrorCallback(response.message || response.exceptionMessage || "Unknown error");
+            } else {
+                onSuccessCallBack(response);
+            }
+
+            queryClient.invalidateQueries([inquiryQueryKeys.monitors]);
+        },
+        onError: (error: Error) => {
+            onErrorCallback(error.message);
+            queryClient.invalidateQueries([inquiryQueryKeys.monitors]);
+        },
+    });
+};
+
+const sentToBankWithRefCode = (payload: { refCode: string }) => {
+    const url = `${claimFundAPI_URL}/PayTransfer/inquirytransectionbank`;
+    return axios
+        .post<BaseResponseServiceResponse>(url, payload)
+        .then((res) => {
+            if (res.data.isSuccess) {
+                return res.data;
+            }
+
+            throw new Error(res.data.message || res.data.exceptionMessage || "Unknown error");
+        })
+        .catch((error: Error) => {
+            throw error;
         });
 };

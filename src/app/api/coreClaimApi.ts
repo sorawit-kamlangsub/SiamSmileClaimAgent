@@ -171,6 +171,41 @@ export const useIncreaseTransferLimitChangeStatus = (
     );
 };
 
+// ---- สอบถามธนาคาร (ClaimFund / Inquiry) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
+export const inquiryQueryKeys = {
+    monitors: "getInquiryMonitorsKey",
+    detail: "getInquiryDetailMonitorKey",
+} as const;
+
+export const useGetInquiryMonitors = (
+    searchDetail?: string,
+    orderingField?: string,
+    ascendingOrder?: boolean,
+    page?: number,
+    recordsPerPage?: number
+) => {
+    return useQuery(
+        [inquiryQueryKeys.monitors, searchDetail, orderingField, ascendingOrder, page, recordsPerPage],
+        () => claimFundClient.inquiryMonitors(searchDetail, orderingField, ascendingOrder, page, recordsPerPage),
+        {
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
+export const useGetInquiryDetail = (payTransferTransactionId: string) => {
+    return useQuery(
+        [inquiryQueryKeys.monitors, inquiryQueryKeys.detail, payTransferTransactionId],
+        () => claimFundClient.inquiryDetail(payTransferTransactionId),
+        {
+            enabled: !!payTransferTransactionId,
+            refetchOnMount: "always",
+            cacheTime: 0,
+        }
+    );
+};
+
 // ---- แก้ไขการโอนเงิน (ClaimFund / FailedPayTransfer) — ใช้จาก CodeGen (ClaimFundClient) เท่านั้น ----
 const getFailedPayTransferMonitorQueryKey = ["getFailedPayTransferMonitor"];
 const getFailedPayTransferDetailQueryKey = ["getFailedPayTransferDetail"];
